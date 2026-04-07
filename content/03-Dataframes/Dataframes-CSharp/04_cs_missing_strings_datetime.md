@@ -1,9 +1,9 @@
 ---
 title: "04. Missing Data, Strings & DateTime - C#"
-tags: [csharp, deedle, polars, dataframes]
+tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones
-description: "Polars.NET / C# DataFrames reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [04_py_missing_strings_datetime](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime) for the Python equivalent."
+description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 04/10 - Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [04_py_missing_strings_datetime](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime) for the Python equivalent."
 parent: "[[domain-transform-and-analyze]]"
 links:
   - "[[03_py_transforms_expressions]]"
@@ -14,7 +14,7 @@ links:
   - "[[06_py_lazy_performance]]"
   - "[[06_cs_lazy_performance]]"
 created: 2026-03-27
-updated: 2026-04-04
+updated: 2026-04-07
 status: complete
 ---
 
@@ -25,11 +25,11 @@ status: complete
 >
 > — **Oz du Soleil**
 
-Three foundational topics that every data pipeline must handle correctly: detecting and filling missing values, cleaning and transforming string columns, and parsing, extracting, and computing with dates and times. Each operation is shown side by side in Polars.NET (expression-based, vectorized) and Deedle (lambda-based, LINQ-oriented) so you can compare ergonomics and capabilities directly.
+Three foundational topics that every data pipeline must handle correctly: detecting and filling missing values, cleaning and transforming string columns, and parsing, extracting, and computing with dates and times. Each operation is shown side by side in Polars.NET (expression-based, vectorized) and Microsoft.Data.Analysis (typed-column, CLR-oriented) so you can compare built-in columnar operations against explicit .NET materialization patterns directly.
 
-> [!info] Deedle maintenance status and alternatives
+> [!info] Current API and execution-model check | 2026-04
 >
-> Deedle is a community project under `fslaborg` — the last release was **v3.0.0 (2023)** and the project is in low-maintenance mode. For new .NET DataFrame projects, consider **`Microsoft.Data.Analysis`** (preview, actively developed by Microsoft, natively composable with ML.NET via `IDataView`) or **Polars.NET** (community wrapper around the Rust Polars engine, expression-based API). This notebook retains Deedle examples as a reference for existing codebases.
+> Polars documents missing-data, string, and time-series workflows in its [expressions guide](https://docs.pola.rs/user-guide/expressions/) and [missing-data guide](https://docs.pola.rs/user-guide/expressions/missing-data/). Microsoft documents [`DataFrame`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe?view=ml-dotnet-preview), [`DataFrame.LoadCsv`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe.loadcsv?view=ml-dotnet-preview), [`PrimitiveDataFrameColumn<T>`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.primitivedataframecolumn-1?view=ml-dotnet-preview), and [`StringDataFrameColumn`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.stringdataframecolumn?view=ml-dotnet-preview) as an eager typed-column API.
 
 ---
 
@@ -61,60 +61,63 @@ optionsField.SetValue(csharpKernel, newOptions);
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
-#r "nuget: Deedle, 4.0.1"
-#r "nuget: Deedle.Interactive, 3.0.0"
+#r "nuget: Microsoft.Data.Analysis, 0.23.0"
 
+using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Polars.CSharp;
 using static Polars.CSharp.Polars;
-using Deedle;
+using MDA = Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
 
-// Redirect Deedle's FSharp.Core 10.1.0.0 request to the SDK's 11.0.0.0 already loaded
-System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (ctx, name) =>
-{
-    if (name.Name == "FSharp.Core")
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "FSharp.Core");
-    return null;
-};
-
-// Register HTML formatter for Polars.NET types (Deedle.Interactive handles Deedle)
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
-    // Strip surrounding quotes from Polars string values in HTML
     html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)(.+?)(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
-    var css = """
-        """;
-    writer.Write(css + html);
+    writer.Write(html);
 }, "text/html");
 Formatter.Register<Polars.CSharp.Series>((s, writer) =>
     writer.Write($"<pre style='font-size:14px'>{s}</pre>"), "text/html");
 
 var DATA = Path.Combine("..", "data");
+Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-### Load the primary datasets used throughout this notebook
+```text
+Data directory: c:\Users\aperi\DEV\LANG\data
+```
+
+### Load the datasets used throughout this notebook
 
 ```csharp
-// Load primary datasets
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
-var dfD = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
-display($"OHLCV — Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
+var dfM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
+display($"OHLCV - Polars: {dfP.Shape}  |  MDA: ({dfM.Rows.Count}, {dfM.Columns.Count})");
 
-// scores_daily has real nulls in pe_zscore, pb_zscore, ev_ebitda_zscore, yield_zscore, recommendation_mean
 var scP = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDates: true);
-var scD = Frame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"));
-display($"Scores — Polars: {scP.Shape}  |  Deedle: {scD.RowCount} x {scD.ColumnCount}");
+var scM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "scores_daily.csv"));
+display($"Scores - Polars: {scP.Shape}  |  MDA: ({scM.Rows.Count}, {scM.Columns.Count})");
+
+var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "index_dim.csv"));
+var dimM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "index_dim.csv"));
+display($"index_dim - Polars: {dimP.Shape}  |  MDA: ({dimM.Rows.Count}, {dimM.Columns.Count})");
 ```
 
-    OHLCV — Polars: (66355, 12)  |  Deedle: 66355 x 12
+```text
+OHLCV - Polars: (66355, 12)  |  MDA: (66355, 12)
+```
 
-    Scores — Polars: (466, 36)  |  Deedle: 466 x 36
+```text
+Scores - Polars: (466, 36)  |  MDA: (466, 36)
+```
+
+```text
+index_dim - Polars: (169, 26)  |  MDA: (169, 26)
+```
 
 ---
 
@@ -122,15 +125,17 @@ display($"Scores — Polars: {scP.Shape}  |  Deedle: {scD.RowCount} x {scD.Colum
 
 Real-world datasets almost always contain missing values — sensor gaps, optional fields, failed joins, or upstream ETL issues. How you detect, quantify, and resolve nulls determines whether downstream aggregations and models produce correct results or silently propagate errors.
 
-> [!info] Polars.NET null model vs Deedle missing values
+> [!info] Polars.NET null model vs MDA typed nulls
 >
-> **Polars.NET** uses a native `null` representation for all data types — integers, floats, strings, dates, and booleans can all hold `null` without type coercion. A column of `[1, null, 3]` stays `Int64`.
+> **Polars.NET** keeps null handling, fill strategies, and interpolation inside expressions. **Microsoft.Data.Analysis** keeps the same semantics explicit through `NullCount`, `ElementwiseIsNull()`, typed repair columns, and `Filter(...)`.
+
+> [!tip] Fix null generation upstream when possible
 >
-> **Deedle** uses .NET optional values (`OptionalValue<T>`). For numeric columns, missing values surface as `NaN` in float series or as absent keys. The `ValueCount` property returns only non-missing entries, and `RowsDense` filters to rows where every column has a value.
+> As *Fundamentals of Data Engineering.epub* emphasizes, null checks and data-quality guards are strongest near ingestion and transformation boundaries. Use local fills when the rule is analytical, not as a substitute for upstream contracts.
 
 > [!question] Which null strategy to use?
 >
-> The right approach depends on the nature of the missing data and the downstream use case. Use the decision tree below to select the appropriate strategy.
+> Pick the least misleading repair strategy for the data-generation pattern, not just the shortest code path.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -147,14 +152,14 @@ Real-world datasets almost always contain missing values — sensor gaps, option
 }}}%%
 flowchart TD
     A["Rows with nulls"] --> B{"Nulls random<br/>and few?"}
-    B -- Yes --> C["Drop rows<br/>DropNulls / DropSparseRows"]
+    B -- Yes --> C["Drop rows<br/>DropNulls / Filter(mask)"]
     B -- No --> D{"Known default<br/>value?"}
-    D -- Yes --> E["Fill literal<br/>FillNull(Lit(0)) / FillMissing(0)"]
-    D -- No --> F{"Time-series<br/>data?"}
-    F -- Yes --> G{"Continuous<br/>measurement?"}
-    G -- Yes --> H["Interpolate<br/>Interpolate()"]
-    G -- No --> I["Forward/Backward fill<br/>ForwardFill / Direction.Forward"]
-    F -- No --> J["Fill with statistic<br/>FillNull(Mean) / FillMissing(mean)"]
+    D -- Yes --> E["Fill literal<br/>FillNull / typed fill column"]
+    D -- No --> F{"Ordered or time-series<br/>data?"}
+    F -- Yes --> G{"Continuous numeric<br/>signal?"}
+    G -- Yes --> H["Interpolate<br/>Interpolate / manual loop"]
+    G -- No --> I["Carry nearest value<br/>Forward/Backward scan"]
+    F -- No --> J["Fill with statistic or flag<br/>Mean/median or missing-indicator"]
 ```
 
 ### Detect Nulls
@@ -181,52 +186,56 @@ scP.Filter(Col("ev_ebitda_zscore").IsNull()).Head(5)
     .Select("symbol", "score_date", "ev_ebitda_zscore", "pe_zscore")
 ```
 
-    Null counts per column:
+Null counts per column:
 
-      pe_zscore                       3 nulls
+pe_zscore                       3 nulls
       pb_zscore                       6 nulls
       ev_ebitda_zscore               71 nulls
       yield_zscore                   35 nulls
       recommendation_mean            14 nulls
 
-    Rows where ev_ebitda_zscore IS null (first 5):
+Rows where ev_ebitda_zscore IS null (first 5):
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.9133885393</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.4585988913</td></tr><tr><td>ISP.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3666188825</td></tr><tr><td>UCG.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.45250099</td></tr><tr><td>INGA.AS</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3799166699</td></tr></tbody></table></div>
 
-#### Deedle | Detect missing values with ValueCount and RowsDense
+#### Microsoft.Data.Analysis | Detect nulls with NullCount and ElementwiseIsNull
 
-Deedle tracks missingness through its optional-value system. `ValueCount` returns the count of present (non-missing) values in a series, so `RowCount - ValueCount` gives the missing count. `RowsDense` returns only rows where every column has a value — useful for understanding how many complete rows survive after all missing values are accounted for.
+MDA uses direct `NullCount` metadata and boolean masks for null inspection.
 
-_Iterates over all column keys in `scD`, computing missing count as `RowCount − ValueCount` for each column, then reports how many complete (dense) rows survive when every column must be non-missing._
+_Prints sparse-column null counts and previews the first five null `ev_ebitda_zscore` rows._
 
 ```csharp
-display("Missing counts per column:");
-foreach (var col in scD.ColumnKeys)
+display("Null counts per column:");
+foreach (var col in scM.Columns)
 {
-    var s = scD.Columns[col];
-    var missing = scD.RowCount - s.ValueCount;
-    if (missing > 0)
-        Console.WriteLine($"  {col,-28} {missing,4} missing");
+    var nc = col.NullCount;
+    if (nc > 0)
+        Console.WriteLine($"  {col.Name,-28} {nc,4} nulls");
 }
 
-// Show symbols that have missing ev_ebitda_zscore
-// RowsDense only keeps rows where ALL columns have values
-var denseCount = scD.RowsDense.KeyCount;
-display($"Rows with no missing values (dense): {denseCount} / {scD.RowCount}");
-display($"Rows with at least one missing value: {scD.RowCount - denseCount}");
+display("Rows where ev_ebitda_zscore IS null (first 5):");
+var nullMaskM = (MDA.PrimitiveDataFrameColumn<bool>)scM.Columns["ev_ebitda_zscore"].ElementwiseIsNull();
+var filteredNullsM = scM.Filter(nullMaskM);
+new MDA.DataFrame(filteredNullsM.Columns["symbol"], filteredNullsM.Columns["score_date"], filteredNullsM.Columns["ev_ebitda_zscore"], filteredNullsM.Columns["pe_zscore"]).Head(5)
 ```
 
-    Missing counts per column:
+```text
+Null counts per column:
+```
 
-      pe_zscore                       3 missing
-      pb_zscore                       6 missing
-      ev_ebitda_zscore               71 missing
-      yield_zscore                   35 missing
-      recommendation_mean            14 missing
+```text
+  pe_zscore                       3 nulls
+  pb_zscore                       6 nulls
+  ev_ebitda_zscore               71 nulls
+  yield_zscore                   35 nulls
+  recommendation_mean            14 nulls
+```
 
-    Rows with no missing values (dense): 346 / 466
+```text
+Rows where ev_ebitda_zscore IS null (first 5):
+```
 
-    Rows with at least one missing value: 120
+<table id="table_639110919315428295"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.91338855</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>SAN.MC</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.45859888</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ISP.MI</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.36661887</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>UCG.MI</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.452501</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>INGA.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.37991667</pre></div></td></tr></tbody></table>
 
 ### Count Nulls
 
@@ -245,34 +254,41 @@ foreach (var col in nullCols)
 display($"Total rows: {scP.Height}");
 ```
 
-      pe_zscore                       3 / 466
+pe_zscore                       3 / 466
       pb_zscore                       6 / 466
       ev_ebitda_zscore               71 / 466
       yield_zscore                   35 / 466
       recommendation_mean            14 / 466
 
-    Total rows: 466
+Total rows: 466
 
-#### Deedle | Count missing values per column with ValueCount
+#### Microsoft.Data.Analysis | Count nulls with DataFrameColumn.NullCount
 
-Deedle does not have a direct `NullCount` property. Instead, subtract `ValueCount` (the number of present values) from `RowCount` to compute the number of missing entries. This requires iterating over the column's internal representation.
+`NullCount` is direct in MDA, so completeness checks are simpler than indirect present-value counting patterns.
 
-_Mirrors the Polars count by computing `RowCount − series.ValueCount` for each of the same 5 columns, producing identical counts using Deedle's optional-value API._
+_Reports null counts for the five known sparse score columns._
 
 ```csharp
-var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
-foreach (var col in nullCols)
+var nullColsM = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
+foreach (var col in nullColsM)
 {
-    var s = scD.Columns[col];
-    Console.WriteLine($"  {col,-28} {scD.RowCount - s.ValueCount,4} / {scD.RowCount}");
+    if(scM.Columns.IndexOf(col) >= 0)
+        Console.WriteLine($"  {col,-28} {scM.Columns[col].NullCount,4} / {scM.Rows.Count}");
 }
+display($"Total rows: {scM.Rows.Count}");
 ```
 
-      pe_zscore                       3 / 466
-      pb_zscore                       6 / 466
-      ev_ebitda_zscore               71 / 466
-      yield_zscore                   35 / 466
-      recommendation_mean            14 / 466
+```text
+  pe_zscore                       3 / 466
+  pb_zscore                       6 / 466
+  ev_ebitda_zscore               71 / 466
+  yield_zscore                   35 / 466
+  recommendation_mean            14 / 466
+```
+
+```text
+Total rows: 466
+```
 
 ### Drop Nulls
 
@@ -290,37 +306,38 @@ display($"Before: {scP.Height} rows  |  After DropNulls: {scPDropped.Height} row
 scPDropped.Select("symbol", "score_date", "ev_ebitda_zscore", "pe_zscore").Head(5)
 ```
 
-    Before: 466 rows  |  After DropNulls: 346 rows
+Before: 466 rows  |  After DropNulls: 346 rows
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td><td>0.3265870647</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td><td>0.5093979371</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td><td>-0.9027376753</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td><td>0.4740837062</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td><td>0.6911063935</td></tr></tbody></table></div>
 
-#### Deedle | Drop missing rows with DropSparseRows()
+#### Microsoft.Data.Analysis | Drop rows by building a validity mask
 
-`DropSparseRows()` removes rows where any column has a missing value — equivalent to Polars' `DropNulls()`. The name "sparse" refers to Deedle's internal representation where missing values create sparse series.
+The notebook uses an explicit boolean mask plus `Filter(...)` for whole-row null dropping.
 
-_Calls `DropSparseRows()` on the Deedle scores frame, matching Polars' result of 346 surviving rows from 466, then displays the first 5 rows via integer-based row key selection._
+_Scans each score row for nulls, filters valid rows, and previews the first five survivors._
 
 ```csharp
-var scDDropped = scD.DropSparseRows();
-display($"Before: {scD.RowCount} rows  |  After DropSparseRows: {scDDropped.RowCount} rows");
-scDDropped.Rows[scDDropped.RowKeys.Take(5)].Columns[new[] { "symbol", "score_date", "ev_ebitda_zscore", "pe_zscore" }]
+var validMaskM = new MDA.PrimitiveDataFrameColumn<bool>("maskM", scM.Rows.Count);
+for (long i = 0; i < scM.Rows.Count; i++)
+{
+    bool hasNull = false;
+    foreach (var col in scM.Columns)
+    {
+        if (col[i] == null) { hasNull = true; break; }
+    }
+    validMaskM[i] = !hasNull;
+}
+
+var scMDropped = scM.Filter(validMaskM);
+display($"Before: {scM.Rows.Count} rows  |  After DropNulls: {scMDropped.Rows.Count} rows");
+new MDA.DataFrame(scMDropped.Columns["symbol"], scMDropped.Columns["score_date"], scMDropped.Columns["ev_ebitda_zscore"], scMDropped.Columns["pe_zscore"]).Head(5)
 ```
 
-    Before: 466 rows  |  After DropSparseRows: 346 rows
+```text
+Before: 466 rows  |  After DropNulls: 346 rows
+```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(float)</th><th>(Decimal)</th></thead>
-
-<tr><td><b>1</b></td><td class="no-wrap">-></td><td>DTE.DE</td><td>04-Mar-26 0:00:00</td><td>0.3795319290535272</td><td>0.32658706468715487</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>IFX.DE</td><td>04-Mar-26 0:00:00</td><td>0.6770676016907706</td><td>0.5093979370966721</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ENR.DE</td><td>04-Mar-26 0:00:00</td><td>-1.693211811112902</td><td>-0.902737675317518</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Mar-26 0:00:00</td><td>0.5527390805672748</td><td>0.47408370618998047</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>04-Mar-26 0:00:00</td><td>0.4496104875609825</td><td>0.69110639353589</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919390461653"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.37953192</pre></div></td><td><div class="dni-plaintext"><pre>0.32658705</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td><td><div class="dni-plaintext"><pre>0.5093979</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932118</pre></div></td><td><div class="dni-plaintext"><pre>-0.9027377</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td><td><div class="dni-plaintext"><pre>0.4740837</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>TTE.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.4496105</pre></div></td><td><div class="dni-plaintext"><pre>0.6911064</pre></div></td></tr></tbody></table>
 
 ### Fill with Literal
 
@@ -348,26 +365,39 @@ display($"Nulls after FillNull(0.0): {scPFilled.Column("ev_ebitda_zscore").NullC
 scPFilled.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 ```
 
-    Nulls after FillNull(0.0): 0
+Nulls after FillNull(0.0): 0
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
-#### Deedle | Fill missing values with a constant using FillMissing()
+#### Microsoft.Data.Analysis | Fill nulls with an explicit typed replacement column
 
-Deedle's `FillMissing(value)` on a series replaces all missing entries with the given constant. Unlike Polars, Deedle operates on individual series rather than DataFrame-level expressions — you extract the column, fill it, then reassemble if needed.
+MDA repairs a column by materializing a typed output column and swapping it back into the frame.
 
-_Extracts `ev_ebitda_zscore` as a double series, fills missing entries with `0.0`, and displays the first 5 values as formatted strings — showing `0.00` in the position that was previously missing._
+_Fills null `ev_ebitda_zscore` values with `0.0` and confirms the null count drops to zero._
 
 ```csharp
-var evFilled = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(0.0);
-var missingAfter = evFilled.Values.Count(v => double.IsNaN(v));
-display($"Missing after FillMissing(0.0): {missingAfter}");
-display($"First 5 values: [{string.Join(", ", evFilled.Values.Take(5).Select(v => v.ToString("F2")))}]");
+var filledColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore_filled", scM.Rows.Count);
+var origColM = scM.Columns["ev_ebitda_zscore"];
+
+for(long i = 0; i < scM.Rows.Count; i++)
+{
+    filledColM[i] = origColM[i] != null ? Convert.ToDouble(origColM[i]) : 0.0;
+}
+
+var scMFilled = scM.Clone();
+scMFilled.Columns.Remove("ev_ebitda_zscore");
+filledColM.SetName("ev_ebitda_zscore");
+scMFilled.Columns.Add(filledColM);
+
+display($"Nulls after FillNull(0.0): {scMFilled.Columns["ev_ebitda_zscore"].NullCount}");
+new MDA.DataFrame(scMFilled.Columns["symbol"], scMFilled.Columns["score_date"], scMFilled.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
-    Missing after FillMissing(0.0): 0
+```text
+Nulls after FillNull(0.0): 0
+```
 
-    First 5 values: [0.00, 0.38, 0.68, -1.69, 0.55]
+<table id="table_639110919408100857"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770675778388977</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932117938995361</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527390837669373</pre></div></td></tr></tbody></table>
 
 ### Forward and Backward Fill
 
@@ -391,26 +421,39 @@ display($"Nulls after ForwardFill: {scPFfill.Column("ev_ebitda_zscore").NullCoun
 scPFfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 ```
 
-    Nulls after ForwardFill: 1
+Nulls after ForwardFill: 1
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
-#### Deedle | Forward fill with Direction.Forward
+#### Microsoft.Data.Analysis | Forward fill with a carry-forward loop
 
-Deedle's `FillMissing(Direction.Forward)` is equivalent to Polars' `ForwardFill()`. It propagates the last present value forward through missing entries. Same caveat applies: if the series starts with a missing value, it stays missing.
+Forward fill in MDA is usually an ordered scan with explicit state.
 
-_Applies `FillMissing(Direction.Forward)` to the Deedle series, confirming 1 missing entry remains (the leading `BNP.PA` row with no prior value to carry) and printing the first 5 present values._
+_Carries the last observed `ev_ebitda_zscore` value forward through later gaps._
 
 ```csharp
-var evFfill = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Forward);
-var missingFfill = evFfill.KeyCount - evFfill.ValueCount;
-display($"Missing after forward fill: {missingFfill}");
-display($"First 5 values: [{string.Join(", ", evFfill.Values.Take(5).Select(v => v.ToString("F2")))}]");
+var ffillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
+double? lastValidM = null;
+
+for(long i = 0; i < scM.Rows.Count; i++)
+{
+    if (origColM[i] != null) lastValidM = Convert.ToDouble(origColM[i]);
+    if (lastValidM.HasValue) ffillColM[i] = lastValidM.Value;
+}
+
+var scMFfill = scM.Clone();
+scMFfill.Columns.Remove("ev_ebitda_zscore");
+scMFfill.Columns.Add(ffillColM);
+
+display($"Nulls after ForwardFill: {scMFfill.Columns["ev_ebitda_zscore"].NullCount}");
+new MDA.DataFrame(scMFfill.Columns["symbol"], scMFfill.Columns["score_date"], scMFfill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
-    Missing after forward fill: 1
+```text
+Nulls after ForwardFill: 1
+```
 
-    First 5 values: [0.38, 0.68, -1.69, 0.55, 0.38]
+<table id="table_639110919428178862"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770675778388977</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932117938995361</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527390837669373</pre></div></td></tr></tbody></table>
 
 #### Polars.NET | Backward fill nulls with BackwardFill()
 
@@ -426,26 +469,39 @@ display($"Nulls after BackwardFill: {scPBfill.Column("ev_ebitda_zscore").NullCou
 scPBfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 ```
 
-    Nulls after BackwardFill: 0
+Nulls after BackwardFill: 0
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
-#### Deedle | Backward fill with Direction.Backward
+#### Microsoft.Data.Analysis | Backward fill with a reverse scan
 
-Deedle's `FillMissing(Direction.Backward)` is the reverse of forward fill — it propagates the next present value backward through missing entries.
+Backward fill is the same idea in reverse order.
 
-_Applies `FillMissing(Direction.Backward)` to eliminate all missing values, with the first 5 present values showing `[0.38, 0.38, 0.68, -1.69, 0.55]` — the leading missing entry is filled with the value from its next non-missing neighbour._
+_Propagates the next observed `ev_ebitda_zscore` value backward into earlier gaps._
 
 ```csharp
-var evBfill = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Backward);
-var missingBfill = evBfill.KeyCount - evBfill.ValueCount;
-display($"Missing after backward fill: {missingBfill}");
-display($"First 5 values: [{string.Join(", ", evBfill.Values.Take(5).Select(v => v.ToString("F2")))}]");
+var bfillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
+double? nextValidM = null;
+
+for(long i = scM.Rows.Count - 1; i >= 0; i--)
+{
+    if (origColM[i] != null) nextValidM = Convert.ToDouble(origColM[i]);
+    if (nextValidM.HasValue) bfillColM[i] = nextValidM.Value;
+}
+
+var scMBfill = scM.Clone();
+scMBfill.Columns.Remove("ev_ebitda_zscore");
+scMBfill.Columns.Add(bfillColM);
+
+display($"Nulls after BackwardFill: {scMBfill.Columns["ev_ebitda_zscore"].NullCount}");
+new MDA.DataFrame(scMBfill.Columns["symbol"], scMBfill.Columns["score_date"], scMBfill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
-    Missing after backward fill: 0
+```text
+Nulls after BackwardFill: 0
+```
 
-    First 5 values: [0.38, 0.38, 0.68, -1.69, 0.55]
+<table id="table_639110919455091846"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770675778388977</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932117938995361</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527390837669373</pre></div></td></tr></tbody></table>
 
 ### Fill with Statistics
 
@@ -465,28 +521,43 @@ display($"Nulls after FillNull(mean): {scPMeanFill.Column("ev_ebitda_zscore").Nu
 scPMeanFill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 ```
 
-    Nulls after FillNull(mean): 0
+Nulls after FillNull(mean): 0
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.03804613962</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
-#### Deedle | Fill missing values with series mean
+#### Microsoft.Data.Analysis | Fill nulls with the column mean
 
-In Deedle, compute the mean separately using `series.Mean()`, then pass the result to `FillMissing()`. This is a two-step process — Deedle does not support expression-based fill like Polars.
+A common MDA pattern is compute-then-materialize: first the statistic, then the repaired column.
 
-_Computes the series mean as `0.0380`, stores it in `meanVal`, then fills all missing entries with that value — confirming zero remaining missing values without modifying the frame structure._
+_Computes the mean of non-null values and fills gaps with that mean._
 
 ```csharp
-var evCol = scD.GetColumn<double>("ev_ebitda_zscore");
-var meanVal = evCol.Mean();
-var evMeanFilled = evCol.FillMissing(meanVal);
-display($"Mean value used: {meanVal:F4}");
-var missingMean = evMeanFilled.KeyCount - evMeanFilled.ValueCount;
-display($"Missing after FillMissing(mean): {missingMean}");
+double sumM = 0; int countM = 0;
+for(long i = 0; i < scM.Rows.Count; i++)
+{
+    if(origColM[i] != null) { sumM += Convert.ToDouble(origColM[i]); countM++; }
+}
+double meanM = countM > 0 ? sumM / countM : 0;
+
+var meanFillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
+for(long i = 0; i < scM.Rows.Count; i++)
+{
+    meanFillColM[i] = origColM[i] != null ? Convert.ToDouble(origColM[i]) : meanM;
+}
+
+var scMMeanFill = scM.Clone();
+scMMeanFill.Columns.Remove("ev_ebitda_zscore");
+scMMeanFill.Columns.Add(meanFillColM);
+
+display($"Nulls after FillNull(meanM): {scMMeanFill.Columns["ev_ebitda_zscore"].NullCount}");
+new MDA.DataFrame(scMMeanFill.Columns["symbol"], scMMeanFill.Columns["score_date"], scMMeanFill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
-    Mean value used: 0.0380
+```text
+Nulls after FillNull(mean): 0
+```
 
-    Missing after FillMissing(mean): 0
+<table id="table_639110919476347635"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.038046139499314034</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770675778388977</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932117938995361</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527390837669373</pre></div></td></tr></tbody></table>
 
 ### Interpolate
 
@@ -506,32 +577,49 @@ display($"Nulls after Interpolate: {scPInterp.Column("ev_ebitda_zscore").NullCou
 scPInterp.Select("symbol", "score_date", "ev_ebitda_zscore").Head(10)
 ```
 
-    Nulls after Interpolate: 1
+Nulls after Interpolate: 1
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr><tr><td>VOW.DE</td><td>2026-03-04</td><td>0.3798301687</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td></tr><tr><td>DG.PA</td><td>2026-03-04</td><td>0.9287967228</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td>0.4340322959</td></tr><tr><td>SU.PA</td><td>2026-03-04</td><td>-0.06073213096</td></tr></tbody></table></div>
 
-#### Deedle | Interpolate (forward fill approximation)
+#### Microsoft.Data.Analysis | Interpolate missing values manually
 
-> [!warning] Deedle has no built-in linear interpolation
->
-> Unlike Polars, Deedle does not provide an `Interpolate()` method. The closest built-in option is `FillMissing(Direction.Forward)` (LOCF), which carries the last known value forward. This is a step function, not a linear estimate.
+MDA has no interpolation expression, so the notebook computes linear interpolation explicitly.
 
-> [!success] Use Math.NET Numerics for true interpolation
->
-> If you need linear interpolation in Deedle, extract the series keys and values, compute interpolated values using `MathNet.Numerics.Interpolation`, and reassemble the series. Alternatively, perform the interpolation in Polars.NET and transfer the result.
-
-_Uses `FillMissing(Direction.Forward)` as a step-function approximation since Deedle has no native interpolation — 1 missing entry remains (the leading row), identical to Polars' result but with a step rather than a linear estimate._
+_Searches backward and forward for neighboring values and linearly interpolates each gap._
 
 ```csharp
-var evInterp = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Forward);
-var missingAfterInterp = evInterp.KeyCount - evInterp.ValueCount;
-display($"Missing after forward fill (LOCF): {missingAfterInterp}");
-display("Deedle has no built-in linear interpolation — forward fill is the closest built-in.");
+var interpColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
+for(long i = 0; i < scM.Rows.Count; i++)
+{
+    if(origColM[i] != null) { interpColM[i] = Convert.ToDouble(origColM[i]); }
+    else {
+        double? prev = null; long prevIdx = -1;
+        for(long j = i - 1; j >= 0; j--) if(origColM[j] != null) { prev = Convert.ToDouble(origColM[j]); prevIdx = j; break; }
+
+        double? next = null; long nextIdx = -1;
+        for(long j = i + 1; j < scM.Rows.Count; j++) if(origColM[j] != null) { next = Convert.ToDouble(origColM[j]); nextIdx = j; break; }
+
+        if(prev.HasValue && next.HasValue) {
+            double ratio = (double)(i - prevIdx) / (nextIdx - prevIdx);
+            interpColM[i] = prev.Value + ratio * (next.Value - prev.Value);
+        } else if (prev.HasValue) { interpColM[i] = prev.Value; }
+        else if (next.HasValue) { interpColM[i] = next.Value; }
+    }
+}
+
+var scMInterp = scM.Clone();
+scMInterp.Columns.Remove("ev_ebitda_zscore");
+scMInterp.Columns.Add(interpColM);
+
+display($"Nulls after Interpolate: {scMInterp.Columns["ev_ebitda_zscore"].NullCount}");
+new MDA.DataFrame(scMInterp.Columns["symbol"], scMInterp.Columns["score_date"], scMInterp.Columns["ev_ebitda_zscore"]).Head(10)
 ```
 
-    Missing after forward fill (LOCF): 1
+```text
+Nulls after Interpolate: 0
+```
 
-    Deedle has no built-in linear interpolation — forward fill is the closest built-in.
+<table id="table_639110919515978946"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319199562073</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770675778388977</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.6932117938995361</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527390837669373</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>VOW.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.37983018159866333</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>TTE.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.44961050152778625</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DG.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.9287967085838318</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>SAN.MC</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.4340322893112898</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>SU.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-0.06073212996125221</pre></div></td></tr></tbody></table>
 
 ### Coalesce
 
@@ -564,13 +652,42 @@ coalResult
 
 ---
 
+#### Microsoft.Data.Analysis | Coalesce columns with the null-coalescing operator
+
+MDA emulates `coalesce` by testing candidate columns in order and writing the first non-null value.
+
+_Combines `primary`, `secondary`, and `fallback` into a single `best` column._
+
+```csharp
+var primaryColM = new MDA.PrimitiveDataFrameColumn<double>("primary", new double?[] { 100.0, null, 300.0, null });
+var secondaryColM = new MDA.PrimitiveDataFrameColumn<double>("secondary", new double?[] { null, 200.0, null, 400.0 });
+var fallbackColM = new MDA.PrimitiveDataFrameColumn<double>("fallback", new double?[] { 50.0, 50.0, 50.0, 50.0 });
+var coalDfM = new MDA.DataFrame(primaryColM, secondaryColM, fallbackColM);
+
+var bestColM = new MDA.PrimitiveDataFrameColumn<double>("best", coalDfM.Rows.Count);
+for(long i = 0; i < coalDfM.Rows.Count; i++)
+{
+    bestColM[i] = primaryColM[i] ?? secondaryColM[i] ?? fallbackColM[i];
+}
+
+var coalResultM = coalDfM.Clone();
+coalResultM.Columns.Add(bestColM);
+coalResultM
+```
+
+<table id="table_639110919951583920"><thead><tr><th><i>index</i></th><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>50</pre></div></td><td><div class="dni-plaintext"><pre>100</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>200</pre></div></td><td><div class="dni-plaintext"><pre>50</pre></div></td><td><div class="dni-plaintext"><pre>200</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>300</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>50</pre></div></td><td><div class="dni-plaintext"><pre>300</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>400</pre></div></td><td><div class="dni-plaintext"><pre>50</pre></div></td><td><div class="dni-plaintext"><pre>400</pre></div></td></tr></tbody></table>
+
 ## String Operations
 
-String manipulation is essential for cleaning column values, extracting components from composite identifiers (like ticker symbols), standardizing text for joins, and filtering by patterns. Polars.NET provides a `.Str` accessor with vectorized string operations that execute inside the native engine. Deedle has no string accessor — all string operations require extracting values to C# arrays and applying LINQ lambdas.
+String manipulation is essential for cleaning column values, extracting components from composite identifiers, standardizing text for joins, and filtering by patterns. Polars.NET provides a `.Str` accessor with vectorized operations; Microsoft.Data.Analysis relies on `StringDataFrameColumn`, `Regex`, and CLR string methods over materialized values.
 
-> [!info] Polars.NET Str accessor vs Deedle lambda approach
+> [!info] Polars.NET Str accessor vs MDA CLR string workflow
 >
-> Polars.NET's `.Str.*` methods (`ToUpper()`, `Contains()`, `Replace()`, `Extract()`, etc.) operate on entire columns as vectorized expressions — the engine processes all values in a single pass without crossing the managed/.NET boundary per row. Deedle requires extracting values to C# collections and applying standard `string` methods via LINQ, which is more verbose but gives access to the full .NET string API.
+> Polars keeps string transforms inside expression space. MDA keeps them explicit through managed string operations and typed string columns.
+
+> [!question] Where should string normalization happen?
+>
+> Put shared canonicalization rules upstream. Keep local string transforms for notebook-side feature engineering and service-local formatting.
 
 ### Case Conversion
 
@@ -593,41 +710,22 @@ caseDemo.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>upper</th><th>lower</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr><tr><td>AIR.PA</td><td>AIR.PA</td><td>air.pa</td></tr><tr><td>ALV.DE</td><td>ALV.DE</td><td>alv.de</td></tr><tr><td>ARGX.BR</td><td>ARGX.BR</td><td>argx.br</td></tr><tr><td>ASML.AS</td><td>ASML.AS</td><td>asml.as</td></tr><tr><td>BAS.DE</td><td>BAS.DE</td><td>bas.de</td></tr></tbody></table></div>
 
-#### Deedle | Convert to upper and lower case with LINQ lambda
+#### Microsoft.Data.Analysis | Convert to upper and lower case with StringDataFrameColumn
 
-Without a string accessor, Deedle requires extracting the column values, applying `.ToUpper()` / `.ToLower()` on each string, and rebuilding a new frame with the results.
+MDA uses CLR string transforms plus new typed string columns.
 
-_Extracts 10 distinct symbols as a string array, builds three series (original, upper, lower) using LINQ and `FrameBuilder`, and reassembles them into a frame with output matching the Polars result._
+_Builds uppercase and lowercase symbol columns and previews the first ten rows._
 
 ```csharp
-var symArr = dfD.GetColumn<string>("symbol").Observations
-    .Select(o => o.Value).Distinct().Take(10).ToArray();
+var symbolsM = dfM.Columns["symbol"].Cast<string>().Distinct().ToArray();
+var upperColM = new MDA.StringDataFrameColumn("upper", symbolsM.Select(s => s?.ToUpper()));
+var lowerColM = new MDA.StringDataFrameColumn("lower", symbolsM.Select(s => s?.ToLower()));
 
-var idx = Enumerable.Range(0, symArr.Length).ToArray();
-var symSeries  = new Series<int, string>(idx, symArr);
-var upperArr   = symArr.Select(s => s.ToUpper()).ToArray();
-var lowerArr   = symArr.Select(s => s.ToLower()).ToArray();
-
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", symSeries);
-builder.Add("upper", new Series<int, string>(idx, upperArr));
-builder.Add("lower", new Series<int, string>(idx, lowerArr));
-builder.Frame
+var caseDemoM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), upperColM, lowerColM);
+caseDemoM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>upper</th><th>lower</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>AIR.PA</td><td>air.pa</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ALV.DE</td><td>ALV.DE</td><td>alv.de</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ARGX.BR</td><td>ARGX.BR</td><td>argx.br</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>ASML.AS</td><td>asml.as</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>BAS.DE</td><td>BAS.DE</td><td>bas.de</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919584939381"><thead><tr><th><i>index</i></th><th>symbol</th><th>upper</th><th>lower</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td>AIR.PA</td><td>air.pa</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td>ALV.DE</td><td>alv.de</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td>ARGX.BR</td><td>argx.br</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td>ASML.AS</td><td>asml.as</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td>BAS.DE</td><td>bas.de</td></tr></tbody></table>
 
 ### Contains, StartsWith, EndsWith
 
@@ -646,28 +744,27 @@ display("German exchange symbols (.DE):");
 germanP
 ```
 
-    German exchange symbols (.DE):
+German exchange symbols (.DE):
 
 <!-- Polars DataFrame: (16 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ADS.DE</td></tr><tr><td>ALV.DE</td></tr><tr><td>BAS.DE</td></tr><tr><td>BAYN.DE</td></tr><tr><td>BMW.DE</td></tr><tr><td>DB1.DE</td></tr><tr><td>DHL.DE</td></tr><tr><td>DTE.DE</td></tr><tr><td>ENR.DE</td></tr><tr><td>IFX.DE</td></tr><tr><td colspan='1'>... 6 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle | Filter with Contains lambda
+#### Microsoft.Data.Analysis | Filter symbols with .Contains()
 
-Deedle requires extracting the column as observations, applying `.Where()` with a `.Contains()` predicate, and collecting the results.
+For light string filters, MDA often materializes a string array and filters it with CLR predicates.
 
-_Applies `.Where(s => s.Contains(".DE"))` to the observations of the symbol column and deduplicates — producing the same 16 German symbols as Polars, printed as a comma-separated string._
+_Filters unique symbols to the German exchange tickers containing `.DE`._
 
 ```csharp
-var germanD = dfD.GetColumn<string>("symbol").Observations
-    .Select(o => o.Value)
-    .Where(s => s.Contains(".DE"))
-    .Distinct().ToArray();
-display("German exchange symbols (.DE):");
-display(string.Join(", ", germanD));
+var germanSymbolsM = symbolsM.Where(s => s != null && s.Contains(".DE")).ToArray();
+display("German exchange symbolsM (.DE):");
+new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", germanSymbolsM))
 ```
 
-    German exchange symbols (.DE):
+```text
+German exchange symbols (.DE):
+```
 
-    ADS.DE, ALV.DE, BAS.DE, BAYN.DE, BMW.DE, DB1.DE, DHL.DE, DTE.DE, ENR.DE, IFX.DE, MBG.DE, MUV2.DE, RHM.DE, SAP.DE, SIE.DE, VOW.DE
+<table id="table_639110919604235417"><thead><tr><th><i>index</i></th><th>symbol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ADS.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ALV.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>BAS.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>BAYN.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>BMW.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>DB1.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>DHL.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DTE.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ENR.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>IFX.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>MBG.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>MUV2.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>12</pre></div></i></td><td>RHM.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>13</pre></div></i></td><td>SAP.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>14</pre></div></i></td><td>SIE.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>15</pre></div></i></td><td>VOW.DE</td></tr></tbody></table>
 
 #### Polars.NET | Filter with Str.StartsWith() and Str.EndsWith()
 
@@ -692,33 +789,33 @@ display(HTML($"<div style='display:flex;gap:40px'><div><b>StartsWith S</b>{leftH
 <!-- Polars DataFrame: (7 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>SAF.PA</td></tr><tr><td>SAN.MC</td></tr><tr><td>SAN.PA</td></tr><tr><td>SAP.DE</td></tr><tr><td>SGO.PA</td></tr><tr><td>SIE.DE</td></tr><tr><td>SU.PA</td></tr></tbody></table></div></div><div><b>EndsWith .BR</b>
 <!-- Polars DataFrame: (2 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>ARGX.BR</td></tr></tbody></table></div></div></div>
 
-#### Deedle | Filter with StartsWith and EndsWith lambda
+#### Microsoft.Data.Analysis | Filter with StartsWith and EndsWith
 
-Standard .NET `string.StartsWith()` and `string.EndsWith()` methods, applied via LINQ to the extracted column values.
+Prefix and suffix filters follow the same CLR-first pattern.
 
-_Builds a `HashSet<string>` of unique symbols, then applies `.StartsWith("S")` and `.EndsWith(".BR")` predicates separately, printing both result sets as comma-separated strings._
+_Displays symbols starting with `S` and symbols ending with `.BR`._
 
 ```csharp
-var symSet = new HashSet<string>();
-foreach (var o in dfD.GetColumn<string>("symbol").Observations)
-    symSet.Add(o.Value);
+var startsSM = symbolsM.Where(s => s != null && s.StartsWith("S")).ToArray();
+var endsBRM = symbolsM.Where(s => s != null && s.EndsWith(".BR")).ToArray();
 
-var startsSd = symSet.Where(s => s.StartsWith("S")).ToArray();
-display("Symbols starting with S:");
-display(string.Join(", ", startsSd));
-
-var endsBRd = symSet.Where(s => s.EndsWith(".BR")).ToArray();
-display("Symbols ending with .BR:");
-display(string.Join(", ", endsBRd));
+display("StartsWith S:");
+display(new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", startsSM)));
+display("EndsWith .BR:");
+new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", endsBRM))
 ```
 
-    Symbols starting with S:
+```text
+StartsWith S:
+```
 
-    SAF.PA, SAN.MC, SAN.PA, SAP.DE, SGO.PA, SIE.DE, SU.PA
+<table id="table_639110919623856899"><thead><tr><th><i>index</i></th><th>symbol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>SAF.PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>SAN.MC</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>SAN.PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>SAP.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>SGO.PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>SIE.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>SU.PA</td></tr></tbody></table>
 
-    Symbols ending with .BR:
+```text
+EndsWith .BR:
+```
 
-    ABI.BR, ARGX.BR
+<table id="table_639110919623873618"><thead><tr><th><i>index</i></th><th>symbol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ARGX.BR</td></tr></tbody></table>
 
 ### Replace
 
@@ -739,27 +836,31 @@ display("Replace '.DE' with '_GER':");
 replaced.Filter(Col("replaced").Str.Contains("_GER"))
 ```
 
-    Replace '.DE' with '_GER':
+Replace '.DE' with '_GER':
 
 <!-- Polars DataFrame: (16 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>replaced</th></tr></thead><tbody><tr><td>ADS.DE</td><td>ADS_GER</td></tr><tr><td>ALV.DE</td><td>ALV_GER</td></tr><tr><td>BAS.DE</td><td>BAS_GER</td></tr><tr><td>BAYN.DE</td><td>BAYN_GER</td></tr><tr><td>BMW.DE</td><td>BMW_GER</td></tr><tr><td>DB1.DE</td><td>DB1_GER</td></tr><tr><td>DHL.DE</td><td>DHL_GER</td></tr><tr><td>DTE.DE</td><td>DTE_GER</td></tr><tr><td>ENR.DE</td><td>ENR_GER</td></tr><tr><td>IFX.DE</td><td>IFX_GER</td></tr><tr><td colspan='2'>... 6 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle | Replace substrings with lambda
+#### Microsoft.Data.Analysis | Replace substrings with CLR string replacement
 
-Standard `string.Replace()` via LINQ. Deedle has no vectorized replace — each value is processed individually.
+Replacement is explicit managed-code work over the string values.
 
-_Applies `string.Replace(".DE", "_GER")` via LINQ over all unique symbols, then filters to those containing `"_GER"` — producing the same 16 transformed identifiers as Polars._
+_Replaces `.DE` with `_GER` and shows only the affected identifiers._
 
 ```csharp
-var uniqueSymbols = dfD.GetColumn<string>("symbol").Values.Distinct().ToArray();
-var replaced = uniqueSymbols.Select(s => s.Replace(".DE", "_GER")).ToArray();
-var germanOnly = replaced.Where(s => s.Contains("_GER")).ToArray();
-display("Replace .DE with _GER (German symbols only):");
-display(string.Join(", ", germanOnly));
+var replacedArrM = symbolsM.Select(s => s?.Replace(".DE", "_GER")).ToArray();
+var replacedDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("replaced", replacedArrM));
+
+display("Replace '.DE' with '_GER':");
+var maskM = new MDA.PrimitiveDataFrameColumn<bool>("maskM", replacedDfM.Rows.Count);
+for(long i = 0; i < replacedDfM.Rows.Count; i++) maskM[i] = replacedArrM[i]?.Contains("_GER") == true;
+replacedDfM.Filter(maskM)
 ```
 
-    Replace .DE with _GER (German symbols only):
+```text
+Replace '.DE' with '_GER':
+```
 
-    ADS_GER, ALV_GER, BAS_GER, BAYN_GER, BMW_GER, DB1_GER, DHL_GER, DTE_GER, ENR_GER, IFX_GER, MBG_GER, MUV2_GER, RHM_GER, SAP_GER, SIE_GER, VOW_GER
+<table id="table_639110919640713912"><thead><tr><th><i>index</i></th><th>symbol</th><th>replaced</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ADS.DE</td><td>ADS_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ALV.DE</td><td>ALV_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>BAS.DE</td><td>BAS_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>BAYN.DE</td><td>BAYN_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>BMW.DE</td><td>BMW_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>DB1.DE</td><td>DB1_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>DHL.DE</td><td>DHL_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DTE.DE</td><td>DTE_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ENR.DE</td><td>ENR_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>IFX.DE</td><td>IFX_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>MBG.DE</td><td>MBG_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>MUV2.DE</td><td>MUV2_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>12</pre></div></i></td><td>RHM.DE</td><td>RHM_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>13</pre></div></i></td><td>SAP.DE</td><td>SAP_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>14</pre></div></i></td><td>SIE.DE</td><td>SIE_GER</td></tr><tr><td><i><div class="dni-plaintext"><pre>15</pre></div></i></td><td>VOW.DE</td><td>VOW_GER</td></tr></tbody></table>
 
 ### Length and Slicing
 
@@ -782,39 +883,19 @@ lengths.Sort("char_len", descending: true).Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>char_len</th></tr></thead><tbody><tr><td>NDA-FI.HE</td><td>9</td></tr><tr><td>ADYEN.AS</td><td>8</td></tr><tr><td>ARGX.BR</td><td>7</td></tr><tr><td>ASML.AS</td><td>7</td></tr><tr><td>BAYN.DE</td><td>7</td></tr><tr><td>BBVA.MC</td><td>7</td></tr><tr><td>ENEL.MI</td><td>7</td></tr><tr><td>INGA.AS</td><td>7</td></tr><tr><td>MUV2.DE</td><td>7</td></tr><tr><td>RACE.MI</td><td>7</td></tr></tbody></table></div>
 
-#### Deedle | Measure string length with lambda
+#### Microsoft.Data.Analysis | Measure string length with a typed numeric column
 
-Extract values, apply `.Length` on each string, and rebuild the frame. Straightforward LINQ pattern.
+String length in MDA is usually projected into a numeric typed column.
 
-_Extracts 50 distinct symbols, maps each to its `.Length`, and builds a two-column frame — showing all symbols from length 5 (`AD.AS`) to 8 (`ADYEN.AS`) across the index members._
+_Computes symbol lengths and orders the result by descending length._
 
 ```csharp
-var symUniq = dfD.GetColumn<string>("symbol").Observations
-    .Select(o => o.Value).Distinct().ToArray();
-var idx = Enumerable.Range(0, symUniq.Length).ToArray();
-
-display("Symbol lengths (sample):");
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symUniq));
-builder.Add("char_len", new Series<int, double>(idx, symUniq.Select(s => (double)s.Length).ToArray()));
-builder.Frame
+var lengthsM = symbolsM.Select(s => s != null ? (double)s.Length : 0).ToArray();
+var lenDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.PrimitiveDataFrameColumn<double>("char_len", lengthsM));
+lenDfM.OrderByDescending("char_len").Head(10)
 ```
 
-    Symbol lengths (sample):
-
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>char_len</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>6</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>5</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>6</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>8</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>5</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>45</b></td><td class="no-wrap">-></td><td>SU.PA</td><td>5</td></tr><tr><td><b>46</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>6</td></tr><tr><td><b>47</b></td><td class="no-wrap">-></td><td>UCG.MI</td><td>6</td></tr><tr><td><b>48</b></td><td class="no-wrap">-></td><td>VOW.DE</td><td>6</td></tr><tr><td><b>49</b></td><td class="no-wrap">-></td><td>WKL.AS</td><td>6</td></tr>
-
-</table>
-
-<p><b>50</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919662953215"><thead><tr><th><i>index</i></th><th>symbol</th><th>char_len</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>NDA-FI.HE</td><td><div class="dni-plaintext"><pre>9</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ADYEN.AS</td><td><div class="dni-plaintext"><pre>8</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>INGA.AS</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENEL.MI</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ARGX.BR</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>BAYN.DE</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>BBVA.MC</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>MUV2.DE</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>RACE.MI</td><td><div class="dni-plaintext"><pre>7</pre></div></td></tr></tbody></table>
 
 #### Polars.NET | Extract substrings with Str.Slice()
 
@@ -832,37 +913,23 @@ sliced.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>first_3</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>AD.AS</td><td>AD.</td></tr><tr><td>ADS.DE</td><td>ADS</td></tr><tr><td>ADYEN.AS</td><td>ADY</td></tr><tr><td>AI.PA</td><td>AI.</td></tr><tr><td>AIR.PA</td><td>AIR</td></tr><tr><td>ALV.DE</td><td>ALV</td></tr><tr><td>ARGX.BR</td><td>ARG</td></tr><tr><td>ASML.AS</td><td>ASM</td></tr><tr><td>BAS.DE</td><td>BAS</td></tr></tbody></table></div>
 
-#### Deedle | Extract substrings with Substring() lambda
+#### Microsoft.Data.Analysis | Slice strings with Substring()
 
-Standard `string.Substring(start, length)` via LINQ. Add a length guard to avoid `ArgumentOutOfRangeException` for strings shorter than the requested slice.
+Fixed-position slicing uses CLR substring logic before materialization.
 
-_Applies `Substring(0, 3)` to each symbol via LINQ, guarding against short strings with a length check — building a two-column frame showing all 50 symbols alongside their three-character prefixes._
+_Extracts the first three characters of each symbol into `first_3`._
 
 ```csharp
-var first3 = symUniq.Select(s => s.Length >= 3 ? s.Substring(0, 3) : s).ToArray();
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symUniq));
-builder.Add("first_3", new Series<int, string>(idx, first3));
-builder.Frame
+var first3ArrM = symbolsM.Select(s => s != null ? (s.Length >= 3 ? s.Substring(0, 3) : s) : null).ToArray();
+var slicedM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("first_3", first3ArrM));
+slicedM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>first_3</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>ABI</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>AD.</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>ADS</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>ADY</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>AI.</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>45</b></td><td class="no-wrap">-></td><td>SU.PA</td><td>SU.</td></tr><tr><td><b>46</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>TTE</td></tr><tr><td><b>47</b></td><td class="no-wrap">-></td><td>UCG.MI</td><td>UCG</td></tr><tr><td><b>48</b></td><td class="no-wrap">-></td><td>VOW.DE</td><td>VOW</td></tr><tr><td><b>49</b></td><td class="no-wrap">-></td><td>WKL.AS</td><td>WKL</td></tr>
-
-</table>
-
-<p><b>50</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919683691818"><thead><tr><th><i>index</i></th><th>symbol</th><th>first_3</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td>ABI</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>AD.</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td>ADS</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>ADY</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td>AI.</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td>AIR</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td>ALV</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td>ARG</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td>ASM</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td>BAS</td></tr></tbody></table>
 
 ### Split
 
-Splitting strings by a delimiter decomposes composite identifiers into their parts — for example, splitting `"ASML.AS"` on `"."` yields the ticker (`ASML`) and the exchange code (`AS`). Polars returns a list column; Deedle requires manual array handling.
+Splitting strings by a delimiter decomposes composite identifiers into their parts — for example, splitting `"ASML.AS"` on `"."` yields the ticker (`ASML`) and the exchange code (`AS`). Polars returns a list column; Microsoft.Data.Analysis usually materializes a display-friendly string or a custom typed projection instead.
 
 #### Polars.NET | Split strings with Str.Split()
 
@@ -880,36 +947,19 @@ split.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>parts</th></tr></thead><tbody><tr><td>ABI.BR</td><td>[ABI, BR]</td></tr><tr><td>AD.AS</td><td>[AD, AS]</td></tr><tr><td>ADS.DE</td><td>[ADS, DE]</td></tr><tr><td>ADYEN.AS</td><td>[ADYEN, AS]</td></tr><tr><td>AI.PA</td><td>[AI, PA]</td></tr><tr><td>AIR.PA</td><td>[AIR, PA]</td></tr><tr><td>ALV.DE</td><td>[ALV, DE]</td></tr><tr><td>ARGX.BR</td><td>[ARGX, BR]</td></tr><tr><td>ASML.AS</td><td>[ASML, AS]</td></tr><tr><td>BAS.DE</td><td>[BAS, DE]</td></tr></tbody></table></div>
 
-#### Deedle | Split strings with String.Split() lambda
+#### Microsoft.Data.Analysis | Split strings and materialize a display column
 
-Standard `string.Split()` in LINQ. Since Deedle does not have list columns, each part must be extracted into a separate column explicitly.
+MDA does not expose a list-typed split result, so the notebook stores a readable serialized form.
 
-_Splits each symbol on `"."`, explicitly mapping each part to a separate column (`ticker`, `exchange`) — since Deedle has no list column type, each component must be extracted individually._
+_Splits each symbol on `.` and stores the rendered parts string for inspection._
 
 ```csharp
-var tickerPart = symUniq.Select(s => s.Split(".")[0]).ToArray();
-var exchPart = symUniq.Select(s => s.Contains(".") ? s.Split(".")[1] : "").ToArray();
-
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symUniq));
-builder.Add("ticker", new Series<int, string>(idx, tickerPart));
-builder.Add("exchange", new Series<int, string>(idx, exchPart));
-builder.Frame
+var splitArrM = symbolsM.Select(s => s != null ? $"[\"{string.Join("\", \"", s.Split('.'))}\"]" : null).ToArray();
+var splitDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("parts", splitArrM));
+splitDfM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>ticker</th><th>exchange</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>ABI</td><td>BR</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>AD</td><td>AS</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>ADS</td><td>DE</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>ADYEN</td><td>AS</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>AI</td><td>PA</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td><td>...</td></tr><tr><td><b>45</b></td><td class="no-wrap">-></td><td>SU.PA</td><td>SU</td><td>PA</td></tr><tr><td><b>46</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>TTE</td><td>PA</td></tr><tr><td><b>47</b></td><td class="no-wrap">-></td><td>UCG.MI</td><td>UCG</td><td>MI</td></tr><tr><td><b>48</b></td><td class="no-wrap">-></td><td>VOW.DE</td><td>VOW</td><td>DE</td></tr><tr><td><b>49</b></td><td class="no-wrap">-></td><td>WKL.AS</td><td>WKL</td><td>AS</td></tr>
-
-</table>
-
-<p><b>50</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919752064990"><thead><tr><th><i>index</i></th><th>symbol</th><th>parts</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td>[&quot;ABI&quot;, &quot;BR&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>[&quot;AD&quot;, &quot;AS&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td>[&quot;ADS&quot;, &quot;DE&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>[&quot;ADYEN&quot;, &quot;AS&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td>[&quot;AI&quot;, &quot;PA&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td>[&quot;AIR&quot;, &quot;PA&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td>[&quot;ALV&quot;, &quot;DE&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td>[&quot;ARGX&quot;, &quot;BR&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td>[&quot;ASML&quot;, &quot;AS&quot;]</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td>[&quot;BAS&quot;, &quot;DE&quot;]</td></tr></tbody></table>
 
 ### Regex Extract
 
@@ -931,38 +981,20 @@ extracted.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>exchange</th></tr></thead><tbody><tr><td>ABI.BR</td><td>BR</td></tr><tr><td>AD.AS</td><td>AS</td></tr><tr><td>ADS.DE</td><td>DE</td></tr><tr><td>ADYEN.AS</td><td>AS</td></tr><tr><td>AI.PA</td><td>PA</td></tr><tr><td>AIR.PA</td><td>PA</td></tr><tr><td>ALV.DE</td><td>DE</td></tr><tr><td>ARGX.BR</td><td>BR</td></tr><tr><td>ASML.AS</td><td>AS</td></tr><tr><td>BAS.DE</td><td>DE</td></tr></tbody></table></div>
 
-#### Deedle | Extract with Regex.Match lambda
+#### Microsoft.Data.Analysis | Extract regex groups with Regex.Match
 
-Use `System.Text.RegularExpressions.Regex` in a LINQ lambda. Compile the regex once outside the loop for performance when processing large series.
+Regex extraction is standard .NET regex work over the materialized string values.
 
-_Compiles the same regex outside the loop for efficiency, applies `Regex.Match()` per symbol, and extracts group 1 — building a two-column frame with identical exchange code results as the Polars approach._
+_Captures the exchange code after the dot and previews the first ten results._
 
 ```csharp
-var regexPattern = new Regex(@"\.(\w+)");
-var exchExtract = symUniq.Select(s => {
-    var m = regexPattern.Match(s);
-    return m.Success ? m.Groups[1].Value : "";
-}).ToArray();
-
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symUniq));
-builder.Add("exchange", new Series<int, string>(idx, exchExtract));
-builder.Frame
+var regexM = new Regex(@"\.(\w+)");
+var exchangeArrM = symbolsM.Select(s => s != null && regexM.IsMatch(s) ? regexM.Match(s).Groups[1].Value : null).ToArray();
+var extractedM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("exchange", exchangeArrM));
+extractedM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>exchange</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>BR</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>AS</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>DE</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>AS</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>PA</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>45</b></td><td class="no-wrap">-></td><td>SU.PA</td><td>PA</td></tr><tr><td><b>46</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>PA</td></tr><tr><td><b>47</b></td><td class="no-wrap">-></td><td>UCG.MI</td><td>MI</td></tr><tr><td><b>48</b></td><td class="no-wrap">-></td><td>VOW.DE</td><td>DE</td></tr><tr><td><b>49</b></td><td class="no-wrap">-></td><td>WKL.AS</td><td>AS</td></tr>
-
-</table>
-
-<p><b>50</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919771298394"><thead><tr><th><i>index</i></th><th>symbol</th><th>exchange</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td>BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td>DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td>PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td>PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td>DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td>BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td>AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td>DE</td></tr></tbody></table>
 
 ### Padding
 
@@ -984,33 +1016,19 @@ symDfPad.HStack(paddedSeries).Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>padded</th></tr></thead><tbody><tr><td>ABI.BR</td><td>0000ABI.BR</td></tr><tr><td>AD.AS</td><td>00000AD.AS</td></tr><tr><td>ADS.DE</td><td>0000ADS.DE</td></tr><tr><td>ADYEN.AS</td><td>00ADYEN.AS</td></tr><tr><td>AI.PA</td><td>00000AI.PA</td></tr><tr><td>AIR.PA</td><td>0000AIR.PA</td></tr><tr><td>ALV.DE</td><td>0000ALV.DE</td></tr><tr><td>ARGX.BR</td><td>000ARGX.BR</td></tr><tr><td>ASML.AS</td><td>000ASML.AS</td></tr><tr><td>BAS.DE</td><td>0000BAS.DE</td></tr></tbody></table></div>
 
-#### Deedle | Pad strings with PadLeft lambda
+#### Microsoft.Data.Analysis | Pad strings with PadLeft
 
-Standard `string.PadLeft(totalWidth, paddingChar)` applied via LINQ. Identical syntax to the Polars.NET workaround since both fall back to .NET string methods.
+Padding fits naturally with MDA's CLR-centric string workflow.
 
-_Applies `PadLeft(10, '0')` to all 50 unique symbols via LINQ, building a two-column frame — output matches the Polars workaround exactly since both fall back to .NET string methods._
+_Pads each symbol to width 10 with leading zeroes._
 
 ```csharp
-var padded = symUniq.Select(s => s.PadLeft(10, '0')).ToArray();
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symUniq));
-builder.Add("padded", new Series<int, string>(idx, padded));
-builder.Frame
+var paddedArrM = symbolsM.Select(s => s?.PadLeft(10, '0')).ToArray();
+var symDfPadM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("padded", paddedArrM));
+symDfPadM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>padded</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>0000ABI.BR</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>00000AD.AS</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>0000ADS.DE</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>00ADYEN.AS</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>00000AI.PA</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>45</b></td><td class="no-wrap">-></td><td>SU.PA</td><td>00000SU.PA</td></tr><tr><td><b>46</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>0000TTE.PA</td></tr><tr><td><b>47</b></td><td class="no-wrap">-></td><td>UCG.MI</td><td>0000UCG.MI</td></tr><tr><td><b>48</b></td><td class="no-wrap">-></td><td>VOW.DE</td><td>0000VOW.DE</td></tr><tr><td><b>49</b></td><td class="no-wrap">-></td><td>WKL.AS</td><td>0000WKL.AS</td></tr>
-
-</table>
-
-<p><b>50</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919788722319"><thead><tr><th><i>index</i></th><th>symbol</th><th>padded</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td>0000ABI.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>00000AD.AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td>0000ADS.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>00ADYEN.AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td>00000AI.PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td>0000AIR.PA</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td>0000ALV.DE</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td>000ARGX.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td>000ASML.AS</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td>0000BAS.DE</td></tr></tbody></table>
 
 ### Concatenation
 
@@ -1032,26 +1050,26 @@ dimP.Select("short_name", "country").HStack(dnSeries).Head(10)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>short_name</th><th>country</th><th>display_name</th></tr></thead><tbody><tr><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td>L'OREAL</td><td>France</td><td>L'OREAL (France)</td></tr><tr><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></tbody></table>
 
-#### Deedle | Concatenate strings via LINQ Zip
+#### Microsoft.Data.Analysis | Concatenate columns into a display label
 
-Same pattern — extract, combine, rebuild frame.
+String interpolation over source columns is the common MDA pattern for labels and reporting fields.
 
-_Mirrors the Polars approach for Deedle: extracts both columns as arrays, zips them with the same interpolation template, and builds a three-column frame — producing identical display names for the first 10 rows._
+_Builds `display_name = short_name + " (country)"` from `index_dim` and previews the first ten rows._
 
 ```csharp
-var dNames = dimD.GetColumn<string>("short_name").Values.ToArray();
-var dCountries = dimD.GetColumn<string>("country").Values.ToArray();
-var dDisplay = dNames.Zip(dCountries, (n, c) => $"{n} ({c})").ToArray();
-var dIdx = Enumerable.Range(0, dDisplay.Length).ToArray();
+var shortNameColM = dimM.Columns["short_name"];
+var countryColM = dimM.Columns["country"];
+var displayNamesM = new MDA.StringDataFrameColumn("display_name", dimM.Rows.Count);
 
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("short_name", new Series<int, string>(dIdx, dNames));
-builder.Add("country", new Series<int, string>(dIdx, dCountries));
-builder.Add("display_name", new Series<int, string>(dIdx, dDisplay));
-builder.Frame.Rows[dIdx.Take(10)]
+for(long i = 0; i < dimM.Rows.Count; i++)
+{
+    displayNamesM[i] = $"{shortNameColM[i]} ({countryColM[i]})";
+}
+
+new MDA.DataFrame(shortNameColM, countryColM, displayNamesM).Head(10)
 ```
 
-<div><table><thead><th></th><th></th><th>short_name</th><th>country</th><th>display_name</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead><tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>L'OREAL</td><td>France</td><td>L'OREAL (France)</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></table><p><b>10</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p></div>
+<table id="table_639110919977546068"><thead><tr><th><i>index</i></th><th>short_name</th><th>country</th><th>display_name</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>L&#39;OREAL</td><td>France</td><td>L&#39;OREAL (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></tbody></table>
 
 ### Stripping / Trimming
 
@@ -1073,6 +1091,24 @@ dirtyDf.HStack(trimSeries)
 ```
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>name</th><th>stripped</th></tr></thead><tbody><tr><td>  ASML  </td><td>ASML</td></tr><tr><td>  SAP </td><td>SAP</td></tr><tr><td> MC</td><td>MC</td></tr></tbody></table>
+
+#### Microsoft.Data.Analysis | Trim whitespace with CLR string methods
+
+Whitespace stripping is straightforward once values are already materialized as CLR strings.
+
+_Builds a small demo frame and trims leading and trailing whitespace from each value._
+
+```csharp
+var dirtyArrM = new[] { "  ASML  ", "  SAP ", " MC" };
+var dirtySeriesM = new MDA.StringDataFrameColumn("name", dirtyArrM);
+var dirtyDfM = new MDA.DataFrame(dirtySeriesM);
+
+var trimSeriesM = new MDA.StringDataFrameColumn("stripped", dirtyArrM.Select(s => s?.Trim()));
+dirtyDfM.Columns.Add(trimSeriesM);
+dirtyDfM
+```
+
+<table id="table_639110919999998878"><thead><tr><th><i>index</i></th><th>name</th><th>stripped</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>  ASML  </td><td>ASML</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>  SAP </td><td>SAP</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td> MC</td><td>MC</td></tr></tbody></table>
 
 ### Regex Extract All
 
@@ -1102,15 +1138,42 @@ textDf
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td>2</td></tr><tr><td>No numbers</td><td></td><td>0</td></tr><tr><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td>2</td></tr></tbody></table>
 
----
+#### Microsoft.Data.Analysis | Extract all regex matches with Regex.Matches
+
+For all-match extraction, MDA relies on the CLR regex engine and explicit output columns.
+
+_Extracts all numeric substrings, stores the joined matches, and records their count._
+
+```csharp
+var textArrM = new[] {
+    "ASML closed at 900.5 up from 895.2",
+    "No numbers",
+    "PE: 45.3, PB: 12.1"
+};
+var numRegexM = new Regex(@"[0-9]+\.?[0-9]*");
+var textDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("text", textArrM));
+
+var numbersArrM = textArrM.Select(s => string.Join(", ", numRegexM.Matches(s).Select(m => m.Value))).ToArray();
+var countArrM = textArrM.Select(s => (double)numRegexM.Matches(s).Count).ToArray();
+
+textDfM.Columns.Add(new MDA.StringDataFrameColumn("numbers", numbersArrM));
+textDfM.Columns.Add(new MDA.PrimitiveDataFrameColumn<double>("count", countArrM));
+textDfM
+```
+
+<table id="table_639110920017564198"><thead><tr><th><i>index</i></th><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>No numbers</td><td></td><td><div class="dni-plaintext"><pre>0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr></tbody></table>
 
 ## DateTime Operations
 
-Date and time handling is central to financial data pipelines: filtering by trading days, computing rolling windows, resampling to monthly OHLC bars, and calculating returns require reliable date parsing, component extraction, and arithmetic. Polars.NET provides a `.Dt` accessor for vectorized datetime operations. Deedle relies on .NET's `DateTime` struct and lambda-based transformations.
+Date and time handling is central to financial data pipelines: filtering by trading days, computing rolling windows, resampling to monthly OHLC bars, and calculating returns require reliable date parsing, component extraction, and arithmetic. Polars.NET provides a `.Dt` accessor for vectorized datetime operations. Microsoft.Data.Analysis relies on typed `DateTime` values and explicit CLR date logic for most higher-level temporal transforms.
 
-> [!info] Polars Date vs .NET DateTime
+> [!info] Polars temporal types vs MDA DateTime columns
 >
-> Polars uses distinct `Date` (calendar date, no time component) and `Datetime` (with time and optional timezone) types. .NET's `DateTime` always carries both date and time components, even when the time is midnight. When converting between the two, be aware that Polars `Date` has no time ambiguity, while `DateTime` at midnight could be misinterpreted as "start of day" vs "unknown time."
+> Polars distinguishes `Date`, `Datetime`, and duration-aware expressions. MDA usually lands dates as CLR `DateTime` values, so extraction and arithmetic use standard .NET temporal APIs.
+
+> [!question] Where should rolling and resampling logic live?
+>
+> Keep shared business-calendar and resampling logic upstream. Use local dataframe code when the transform is exploratory or owned by a single .NET boundary.
 
 ### Parse Dates
 
@@ -1136,35 +1199,54 @@ display($"After Str.ToDate: {dfParsed.Column("date_reparsed").DataTypeName}");
 dfParsed.Select("symbol", "date", "date_str", "date_reparsed").Head(5)
 ```
 
-    date column type: date
+date column type: date
 
-    Cast to string: str
+Cast to string: str
 
-    After Str.ToDate: date
+After Str.ToDate: date
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>date_str</th><th>date_reparsed</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-04</td><td>2021-01-04</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-05</td><td>2021-01-05</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-06</td><td>2021-01-06</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-07</td><td>2021-01-07</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-08</td><td>2021-01-08</td></tr></tbody></table></div>
 
-#### Deedle | Parse string column to DateTime with DateTime.Parse
+#### Microsoft.Data.Analysis | Rely on LoadCsv inference or parse into DateTime
 
-Deedle stores dates as strings by default when reading CSV. To enable date operations, extract the string column and parse each value to `DateTime` using `DateTime.Parse()` or `DateTime.ParseExact()` for strict format control.
+MDA often lands dates as CLR `DateTime` values during `LoadCsv`; reparsing is explicit when needed.
 
-_Extracts the `date` column as strings from the Deedle frame, maps each to `DateTime` with `DateTime.Parse()`, and confirms the parsed type and the formatted output of the first 5 dates._
+_Prints the inferred type, materializes a string version, reparses it, and shows the columns together._
 
 ```csharp
-var dateStrings = dfD.GetColumn<string>("date");
-var dateKeys = dateStrings.Keys.ToArray();
-var dateVals = dateStrings.Values.Select(s => DateTime.Parse(s)).ToArray();
-var dateParsed = new Series<int, DateTime>(dateKeys, dateVals);
-display($"Parsed type: {dateVals[0].GetType().Name}");
-display("First 5 parsed dates:");
-display(string.Join(", ", dateVals.Take(5).Select(d => d.ToString("yyyy-MM-dd"))));
+display($"date column type: {dfM.Columns["date"].DataType.Name}");
+
+var dateStrColM = new MDA.StringDataFrameColumn("date_str", dfM.Rows.Count);
+var dateReparsedColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date_reparsed", dfM.Rows.Count);
+
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    if(dfM.Columns["date"][i] is DateTime dt)
+    {
+        string s = dt.ToString("yyyy-MM-dd");
+        dateStrColM[i] = s;
+        if(DateTime.TryParse(s, out var p)) dateReparsedColM[i] = p;
+    }
+}
+
+display($"Cast to string: {dateStrColM.DataType.Name}");
+display($"After Parse: {dateReparsedColM.DataType.Name}");
+new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dateStrColM, dateReparsedColM).Head(5)
 ```
 
-    Parsed type: DateTime
+```text
+date column type: DateTime
+```
 
-    First 5 parsed dates:
+```text
+Cast to string: String
+```
 
-    2021-01-04, 2021-01-05, 2021-01-06, 2021-01-07, 2021-01-08
+```text
+After Parse: DateTime
+```
+
+<table id="table_639110919809421615"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>date_str</th><th>date_reparsed</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td>2021-01-04</td><td><span>2021-01-04 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td>2021-01-05</td><td><span>2021-01-05 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td>2021-01-06</td><td><span>2021-01-06 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td>2021-01-07</td><td><span>2021-01-07 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td>2021-01-08</td><td><span>2021-01-08 00:00:00Z</span></td></tr></tbody></table>
 
 ### Extract Date Components
 
@@ -1187,42 +1269,35 @@ dateComponents.Select(new[] { "symbol", "date", "year", "month", "weekday" }).He
 
 <!-- Polars DataFrame: (10 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>year</th><th>month</th><th>weekday</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>2021</td><td>1</td><td>5</td></tr></tbody></table></div>
 
-#### Deedle | Extract year, month, weekday with DateTime lambda
+#### Microsoft.Data.Analysis | Extract year, month, and weekday with DateTime
 
-Extract components using `DateTime` properties (`.Year`, `.Month`, `.DayOfWeek`) in LINQ. Note: .NET `DayOfWeek` uses Sunday = 0, Monday = 1 numbering (not ISO), so results align with Polars in this case but diverge for Sunday.
+Temporal feature extraction uses `DateTime` properties and typed target columns.
 
-_Extracts year, month, and weekday from the pre-parsed `dateVals` array using `.Year`, `.Month`, and `.DayOfWeek`, building a four-column frame — the first 5 rows match Polars' output, with the caveat that .NET Sunday = 0 (vs ISO Sunday = 7)._
+_Adds `year`, `month`, and ISO-like `weekday` columns derived from the typed date column._
 
 ```csharp
-var yearArr = dateVals.Select(d => (double)d.Year).ToArray();
-var monthArr = dateVals.Select(d => (double)d.Month).ToArray();
-var wdayArr = dateVals.Select(d => (double)d.DayOfWeek).ToArray();
+var yearColM = new MDA.PrimitiveDataFrameColumn<int>("year", dfM.Rows.Count);
+var monthColM = new MDA.PrimitiveDataFrameColumn<int>("month", dfM.Rows.Count);
+var weekdayColM = new MDA.PrimitiveDataFrameColumn<int>("weekday", dfM.Rows.Count);
 
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("date", new Series<int, string>(dateKeys, dateStrings.Values.ToArray()));
-builder.Add("year", new Series<int, double>(dateKeys, yearArr));
-builder.Add("month", new Series<int, double>(dateKeys, monthArr));
-builder.Add("weekday", new Series<int, double>(dateKeys, wdayArr));
-builder.Frame.Rows[dateKeys.Take(5)]
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    if(dfM.Columns["date"][i] is DateTime dt)
+    {
+        yearColM[i] = dt.Year;
+        monthColM[i] = dt.Month;
+        weekdayColM[i] = (int)dt.DayOfWeek == 0 ? 7 : (int)dt.DayOfWeek; // Standardize to 1-7 (Mon-Sun)
+    }
+}
+
+new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], yearColM, monthColM, weekdayColM).Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>date</th><th>year</th><th>month</th><th>weekday</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>04-Jan-21 0:00:00</td><td>2021</td><td>1</td><td>1</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>05-Jan-21 0:00:00</td><td>2021</td><td>1</td><td>2</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>06-Jan-21 0:00:00</td><td>2021</td><td>1</td><td>3</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>07-Jan-21 0:00:00</td><td>2021</td><td>1</td><td>4</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>08-Jan-21 0:00:00</td><td>2021</td><td>1</td><td>5</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919833402728"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>year</th><th>month</th><th>weekday</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>4</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-14 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>4</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-15 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2021</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>5</pre></div></td></tr></tbody></table>
 
 ### Date Arithmetic
 
-Adding or subtracting durations from date columns is essential for computing settlement dates, lookback windows, and expiration dates. Polars uses string-encoded duration offsets (`"7d"`, `"1mo"`). Deedle relies on .NET's `DateTime.AddDays()` and `TimeSpan`.
+Adding or subtracting durations from date columns is essential for computing settlement dates, lookback windows, and expiration dates. Polars uses string-encoded duration offsets (`"7d"`, `"1mo"`). Microsoft.Data.Analysis relies on CLR `DateTime.AddDays()` and related .NET temporal APIs.
 
 #### Polars.NET | Add days with Dt.OffsetBy()
 
@@ -1239,34 +1314,22 @@ dfPlus7.Select(new[] { "symbol", "date", "date_plus_7" }).Head(5)
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>date_plus_7</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-11</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-12</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-13</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-14</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-15</td></tr></tbody></table></div>
 
-#### Deedle | Add days with AddDays lambda
+#### Microsoft.Data.Analysis | Add days with DateTime.AddDays
 
-Standard `DateTime.AddDays(n)` applied via LINQ. The result is formatted back to a string for display since Deedle stores the column as string type.
+Date arithmetic in MDA is direct CLR date logic written into a typed target column.
 
-_Maps each parsed `DateTime` through `AddDays(7)` and formats back to `"yyyy-MM-dd"`, building a two-column frame — the first 5 rows confirm the same calendar offsets as Polars._
+_Adds seven calendar days to each date and previews the first five rows._
 
 ```csharp
-var datePlus7 = dateVals.Select(d => d.AddDays(7).ToString("yyyy-MM-dd")).ToArray();
-
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("date", new Series<int, string>(dateKeys, dateStrings.Values.ToArray()));
-builder.Add("date_plus_7", new Series<int, string>(dateKeys, datePlus7));
-builder.Frame.Rows[dateKeys.Take(5)]
+var plus7ColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date_plus_7", dfM.Rows.Count);
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    if(dfM.Columns["date"][i] is DateTime dt) plus7ColM[i] = dt.AddDays(7);
+}
+new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], plus7ColM).Head(5)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>date</th><th>date_plus_7</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>04-Jan-21 0:00:00</td><td>2021-01-11</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>05-Jan-21 0:00:00</td><td>2021-01-12</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>06-Jan-21 0:00:00</td><td>2021-01-13</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>07-Jan-21 0:00:00</td><td>2021-01-14</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>08-Jan-21 0:00:00</td><td>2021-01-15</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919854544452"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>date_plus_7</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><span>2021-01-11 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><span>2021-01-12 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><span>2021-01-13 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><span>2021-01-14 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><span>2021-01-15 00:00:00Z</span></td></tr></tbody></table>
 
 ### Shift and Lag
 
@@ -1287,41 +1350,36 @@ display("ABI.BR with lagged close (first 5):");
 abiShifted.Select(new[] { "date", "close", "prev_close" }).Head(5)
 ```
 
-    ABI.BR with lagged close (first 5):
+ABI.BR with lagged close (first 5):
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>date</th><th>close</th><th>prev_close</th></tr></thead><tbody><tr><td>2021-01-04</td><td>57.21</td><td class='pl-null'>null</td></tr><tr><td>2021-01-05</td><td>57.18</td><td>57.21</td></tr><tr><td>2021-01-06</td><td>58.77</td><td>57.18</td></tr><tr><td>2021-01-07</td><td>58.4</td><td>58.77</td></tr><tr><td>2021-01-08</td><td>57.86</td><td>58.4</td></tr></tbody></table></div>
 
-#### Deedle | Shift a series with Shift()
+#### Microsoft.Data.Analysis | Build a lag column with an explicit shift loop
 
-Deedle's `Shift(n)` works the same as Polars — positive `n` shifts down, creating a lag. Missing values at the boundary are represented as Deedle's `<missing>`.
+Lagging a column in MDA means reading the typed source and writing each previous value into a target column.
 
-_Filters the Deedle frame to `ABI.BR` rows, applies `Shift(1)` to the close series, and displays the first 5 rows — row 0 shows `<missing>` for `prev_close`, matching the Polars null behavior._
+_Filters to `ABI.BR`, shifts close by one row, and previews the first five lagged values._
 
 ```csharp
-var abiDRows = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ABI.BR");
-var closeSeries = abiDRows.GetColumn<double>("close");
-var prevClose = closeSeries.Shift(1);
+var abiMaskM = (MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ABI.BR");
+var abiPricesM = dfM.Filter(abiMaskM);
+var abiCloseM = (MDA.PrimitiveDataFrameColumn<float>)abiPricesM.Columns["close"];
 
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("date", abiDRows.GetColumn<string>("date"));
-builder.Add("close", closeSeries);
-builder.Add("prev_close", prevClose);
-builder.Frame.Rows[abiDRows.RowKeys.Take(5)]
+var prevCloseColM = new MDA.PrimitiveDataFrameColumn<float>("prev_close", abiPricesM.Rows.Count);
+for(long i = 1; i < abiPricesM.Rows.Count; i++)
+{
+    if (abiCloseM[i - 1].HasValue) prevCloseColM[i] = abiCloseM[i - 1].Value;
+}
+
+display("ABI.BR with lagged close (first 5):");
+new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["close"], prevCloseColM).Head(5)
 ```
 
-<div>
+```text
+ABI.BR with lagged close (first 5):
+```
 
-<table>
-
-<thead><th></th><th></th><th>date</th><th>close</th><th>prev_close</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>04-Jan-21 0:00:00</td><td>57.21</td><td><missing></td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>57.21</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>57.18</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>58.77</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>58.4</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>3</b> columns</p><p><b>1</b> missing values</p>
-
-</div>
+<table id="table_639110919876220330"><thead><tr><th><i>index</i></th><th>date</th><th>close</th><th>prev_close</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td></tr></tbody></table>
 
 ### Cumulative Operations
 
@@ -1342,47 +1400,31 @@ abiCum.Select(new[] { "date", "volume", "cum_volume" }).Head(10)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>2021-01-04</td><td>1513937</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>1382722</td><td>2896659</td></tr><tr><td>2021-01-06</td><td>1370204</td><td>4266863</td></tr><tr><td>2021-01-07</td><td>1469911</td><td>5736774</td></tr><tr><td>2021-01-08</td><td>1428681</td><td>7165455</td></tr><tr><td>2021-01-11</td><td>1518079</td><td>8683534</td></tr><tr><td>2021-01-12</td><td>1649991</td><td>10333525</td></tr><tr><td>2021-01-13</td><td>1090806</td><td>11424331</td></tr><tr><td>2021-01-14</td><td>1523045</td><td>12947376</td></tr><tr><td>2021-01-15</td><td>1769988</td><td>14717364</td></tr></tbody></table></div>
 
-#### Deedle | Cumulative sum with manual running total
+#### Microsoft.Data.Analysis | Cumulative volume with a running accumulator
 
-Deedle does not have a built-in `CumSum()` method. Compute it manually by iterating over the series values and maintaining a running total. For large series, this is less efficient than Polars' native implementation.
+Running totals are explicit stateful scans in MDA.
 
-_Iterates over `ABI.BR` volume values with a running accumulator, manually computing `cum_volume` for each row — the last 10 rows confirm the same accumulated totals as the Polars `CumSum()` result._
+_Accumulates `ABI.BR` volume into `cum_volume` and previews the first ten rows._
 
 ```csharp
-var volSeries = abiDRows.GetColumn<double>("volume");
-var cumVals = new List<double>();
-double running = 0;
-foreach (var v in volSeries.Values)
-{
-    running += v;
-    cumVals.Add(running);
-}
-var cumVolSeries = new Series<int, double>(volSeries.Keys.ToArray(), cumVals.ToArray());
+var abiVolM = abiPricesM.Columns["volume"];
+var cumVolColM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", abiPricesM.Rows.Count);
+double currentCumM = 0;
 
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("date", abiDRows.GetColumn<string>("date"));
-builder.Add("volume", volSeries);
-builder.Add("cum_volume", cumVolSeries);
-builder.Frame.Rows[abiDRows.RowKeys.Take(10)]
+for(long i = 0; i < abiPricesM.Rows.Count; i++)
+{
+    currentCumM += Convert.ToDouble(abiVolM[i] ?? 0.0);
+    cumVolColM[i] = currentCumM;
+}
+
+new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["volume"], cumVolColM).Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>date</th><th>volume</th><th>cum_volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>04-Jan-21 0:00:00</td><td>1513937</td><td>1513937</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>05-Jan-21 0:00:00</td><td>1382722</td><td>2896659</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>06-Jan-21 0:00:00</td><td>1370204</td><td>4266863</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>07-Jan-21 0:00:00</td><td>1469911</td><td>5736774</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>08-Jan-21 0:00:00</td><td>1428681</td><td>7165455</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>11-Jan-21 0:00:00</td><td>1518079</td><td>8683534</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>12-Jan-21 0:00:00</td><td>1649991</td><td>10333525</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>13-Jan-21 0:00:00</td><td>1090806</td><td>11424331</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>14-Jan-21 0:00:00</td><td>1523045</td><td>12947376</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>15-Jan-21 0:00:00</td><td>1769988</td><td>14717364</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919892052888"><thead><tr><th><i>index</i></th><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>2896659</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>4266863</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1469911</pre></div></td><td><div class="dni-plaintext"><pre>5736774</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1428681</pre></div></td><td><div class="dni-plaintext"><pre>7165455</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1518079</pre></div></td><td><div class="dni-plaintext"><pre>8683534</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1649991</pre></div></td><td><div class="dni-plaintext"><pre>10333525</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1090806</pre></div></td><td><div class="dni-plaintext"><pre>11424331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2021-01-14 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1523045</pre></div></td><td><div class="dni-plaintext"><pre>12947376</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2021-01-15 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1769988</pre></div></td><td><div class="dni-plaintext"><pre>14717364</pre></div></td></tr></tbody></table>
 
 ### Filter by Date Range
 
-Filtering rows by date range is the most common datetime operation — selecting a specific month, quarter, or year for analysis. Polars uses expression-based filtering with `Dt` component comparisons. Deedle requires lambda predicates over parsed `DateTime` values.
+Filtering rows by date range is the most common datetime operation — selecting a specific month, quarter, or year for analysis. Polars uses expression-based filtering with `Dt` component comparisons. Microsoft.Data.Analysis uses explicit predicates over typed `DateTime` values.
 
 #### Polars.NET | Filter by date components
 
@@ -1400,42 +1442,39 @@ display("SAP.DE in January 2024:");
 jan2024.Select(new[] { "symbol", "date", "close", "volume" })
 ```
 
-    SAP.DE in January 2024:
+SAP.DE in January 2024:
 
 <!-- Polars DataFrame: (22 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>SAP.DE</td><td>2024-01-02</td><td>137.34</td><td>1442435</td></tr><tr><td>SAP.DE</td><td>2024-01-03</td><td>137.12</td><td>1311703</td></tr><tr><td>SAP.DE</td><td>2024-01-04</td><td>136.44</td><td>1114133</td></tr><tr><td>SAP.DE</td><td>2024-01-05</td><td>137.08</td><td>1171604</td></tr><tr><td>SAP.DE</td><td>2024-01-08</td><td>138.78</td><td>992579</td></tr><tr><td>SAP.DE</td><td>2024-01-09</td><td>139.28</td><td>1043679</td></tr><tr><td>SAP.DE</td><td>2024-01-10</td><td>142.04</td><td>1619033</td></tr><tr><td>SAP.DE</td><td>2024-01-11</td><td>141.88</td><td>1354264</td></tr><tr><td>SAP.DE</td><td>2024-01-12</td><td>144.86</td><td>1155152</td></tr><tr><td>SAP.DE</td><td>2024-01-15</td><td>144.56</td><td>732435</td></tr><tr><td colspan='4'>... 12 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle | Filter by date range with DateTime lambda
+#### Microsoft.Data.Analysis | Filter a typed DateTime column by year and month
 
-Use `frame.Where()` with a row predicate that parses the date string and checks year/month components. This is verbose but gives full access to .NET's `DateTime` comparison operators.
+Date filters in MDA are CLR predicates over typed `DateTime` values.
 
-_Uses a row predicate that parses `date` with `DateTime.Parse()` and checks both `symbol == "SAP.DE"` and `dt.Year == 2024 && dt.Month == 1` — matching the same 22 rows as Polars but parsing the date string on every row evaluation._
+_Builds a mask for `SAP.DE` rows in January 2024 and renders the matching records._
 
 ```csharp
-var jan2024D = dfD.Where(row =>
+var jan24MaskM = new MDA.PrimitiveDataFrameColumn<bool>("maskM", dfM.Rows.Count);
+var dfSymbolM = (MDA.StringDataFrameColumn)dfM.Columns["symbol"];
+var dfDateM = dfM.Columns["date"];
+
+for(long i = 0; i < dfM.Rows.Count; i++)
 {
-    var sym = row.Value.GetAs<string>("symbol");
-    var dt = DateTime.Parse(row.Value.GetAs<string>("date"));
-    return sym == "SAP.DE" && dt.Year == 2024 && dt.Month == 1;
-});
+    if (dfSymbolM[i] == "SAP.DE" && dfDateM[i] is DateTime dt)
+    {
+        jan24MaskM[i] = (dt.Year == 2024 && dt.Month == 1);
+    }
+}
+
+var jan2024M = dfM.Filter(jan24MaskM);
 display("SAP.DE in January 2024:");
-jan2024D.Columns[new[] { "symbol", "date", "close", "volume" }]
+new MDA.DataFrame(jan2024M.Columns["symbol"], jan2024M.Columns["date"], jan2024M.Columns["close"], jan2024M.Columns["volume"])
 ```
 
-    SAP.DE in January 2024:
+```text
+SAP.DE in January 2024:
+```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(int)</th></thead>
-
-<tr><td><b>56505</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>02-Jan-24 0:00:00</td><td>137.34</td><td>1442435</td></tr><tr><td><b>56506</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>03-Jan-24 0:00:00</td><td>137.12</td><td>1311703</td></tr><tr><td><b>56507</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>04-Jan-24 0:00:00</td><td>136.44</td><td>1114133</td></tr><tr><td><b>56508</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>05-Jan-24 0:00:00</td><td>137.08</td><td>1171604</td></tr><tr><td><b>56509</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>08-Jan-24 0:00:00</td><td>138.78</td><td>992579</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td><td>...</td><td>...</td></tr><tr><td><b>56522</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>25-Jan-24 0:00:00</td><td>160.76</td><td>3408973</td></tr><tr><td><b>56523</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>26-Jan-24 0:00:00</td><td>160.0</td><td>2548387</td></tr><tr><td><b>56524</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>29-Jan-24 0:00:00</td><td>162.0</td><td>1669174</td></tr><tr><td><b>56525</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>30-Jan-24 0:00:00</td><td>162.42</td><td>1411612</td></tr><tr><td><b>56526</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>31-Jan-24 0:00:00</td><td>160.8</td><td>2021425</td></tr>
-
-</table>
-
-<p><b>22</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110919908898738"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>137.34</pre></div></td><td><div class="dni-plaintext"><pre>1442435</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>137.12</pre></div></td><td><div class="dni-plaintext"><pre>1311703</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>136.44</pre></div></td><td><div class="dni-plaintext"><pre>1114133</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>137.08</pre></div></td><td><div class="dni-plaintext"><pre>1171604</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>138.78</pre></div></td><td><div class="dni-plaintext"><pre>992579</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>139.28</pre></div></td><td><div class="dni-plaintext"><pre>1043679</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>142.04</pre></div></td><td><div class="dni-plaintext"><pre>1619033</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>141.88</pre></div></td><td><div class="dni-plaintext"><pre>1354264</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>144.86</pre></div></td><td><div class="dni-plaintext"><pre>1155152</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-15 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>144.56</pre></div></td><td><div class="dni-plaintext"><pre>732435</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-16 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>144.58</pre></div></td><td><div class="dni-plaintext"><pre>966319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-17 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>144.82</pre></div></td><td><div class="dni-plaintext"><pre>1359745</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>12</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-18 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>147.26</pre></div></td><td><div class="dni-plaintext"><pre>1346568</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>13</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-19 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>148.88</pre></div></td><td><div class="dni-plaintext"><pre>1962585</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>14</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-22 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>150.34</pre></div></td><td><div class="dni-plaintext"><pre>1744799</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>15</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-23 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>149.36</pre></div></td><td><div class="dni-plaintext"><pre>1451296</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>16</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-24 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>160.76</pre></div></td><td><div class="dni-plaintext"><pre>5268147</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>17</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-25 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>160.76</pre></div></td><td><div class="dni-plaintext"><pre>3408973</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>18</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-26 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>160</pre></div></td><td><div class="dni-plaintext"><pre>2548387</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>19</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-29 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>162</pre></div></td><td><div class="dni-plaintext"><pre>1669174</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>20</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-30 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>162.42</pre></div></td><td><div class="dni-plaintext"><pre>1411612</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>21</pre></div></i></td><td>SAP.DE</td><td><span>2024-01-31 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>160.8</pre></div></td><td><div class="dni-plaintext"><pre>2021425</pre></div></td></tr></tbody></table>
 
 ### Date Range Generation
 
@@ -1461,9 +1500,33 @@ display($"Date range: {dates.Length} days from {dates.First()} to {dates.Last()}
 dateRangeDf.Select("date")
 ```
 
-    Date range: 10 days from 2026-01-01 to 2026-01-10
+Date range: 10 days from 2026-01-01 to 2026-01-10
 
 <!-- Polars DataFrame: (10 rows, 1 columns) --><table><thead><tr><th>date</th></tr></thead><tbody><tr><td>2026-01-01</td></tr><tr><td>2026-01-02</td></tr><tr><td>2026-01-03</td></tr><tr><td>2026-01-04</td></tr><tr><td>2026-01-05</td></tr><tr><td>2026-01-06</td></tr><tr><td>2026-01-07</td></tr><tr><td>2026-01-08</td></tr><tr><td>2026-01-09</td></tr><tr><td>2026-01-10</td></tr></tbody></table>
+
+#### Microsoft.Data.Analysis | Generate a DateTime range explicitly
+
+Date-range generation in MDA is explicit CLR date arithmetic written into a typed date column.
+
+_Builds a 10-day inclusive `DateTime` range from 2026-01-01 through 2026-01-10._
+
+```csharp
+var startM = new DateTime(2026, 1, 1);
+var endM = new DateTime(2026, 1, 10);
+var totalDaysM = (endM - startM).Days + 1;
+
+var datesColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date", totalDaysM);
+for(int i = 0; i < totalDaysM; i++) datesColM[i] = startM.AddDays(i);
+
+display($"Date range: {totalDaysM} days from {startM:yyyy-MM-dd} to {endM:yyyy-MM-dd}");
+new MDA.DataFrame(datesColM)
+```
+
+```text
+Date range: 10 days from 2026-01-01 to 2026-01-10
+```
+
+<table id="table_639110920038429100"><thead><tr><th><i>index</i></th><th>date</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2026-01-01 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2026-01-02 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2026-01-03 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2026-01-04 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2026-01-05 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2026-01-06 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2026-01-07 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2026-01-08 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2026-01-09 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2026-01-10 00:00:00Z</span></td></tr></tbody></table>
 
 ### Rolling Windows
 
@@ -1490,53 +1553,44 @@ asmlRolling.Select(new[] { "date", "close", "sma_7", "sma_30" }).Tail(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>2026-03-05</td><td>1186</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>2026-03-06</td><td>1147</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table>
 
-#### Deedle | Rolling mean via manual sliding window
+#### Microsoft.Data.Analysis | Rolling means with explicit sliding windows
 
-Deedle does not have a built-in `RollingMean`. Compute it manually by iterating over the values array and averaging each window.
+Rolling windows are explicit loops over ordered rows in MDA.
 
-_Manually computes a 7-period moving average by iterating over `ASML.AS` close values with a sliding window accumulator, printing the last 10 rows — producing the same rounded SMA-7 values as Polars._
+_Computes 7-row and 30-row moving averages for `ASML.AS` close prices._
 
 ```csharp
-var asmlD = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ASML.AS");
-var closeVals = asmlD.GetColumn<double>("close").Values.ToArray();
-var closeKeys = asmlD.GetColumn<double>("close").Keys.ToArray();
-int window = 7;
-var sma7 = new double?[closeVals.Length];
-for (int i = 0; i < closeVals.Length; i++)
+var asmlPM = dfM.Filter((MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ASML.AS")).OrderBy("date");
+var sma7ColM = new MDA.PrimitiveDataFrameColumn<double>("sma_7", asmlPM.Rows.Count);
+var sma30ColM = new MDA.PrimitiveDataFrameColumn<double>("sma_30", asmlPM.Rows.Count);
+var rcM = asmlPM.Columns["close"];
+
+for(long i = 0; i < asmlPM.Rows.Count; i++)
 {
-    if (i < window - 1) { sma7[i] = null; continue; }
-    double sum = 0;
-    for (int j = i - window + 1; j <= i; j++) sum += closeVals[j];
-    sma7[i] = sum / window;
+    double sum7 = 0; int count7 = 0;
+    for(long j = 0; j < 7 && (i - j) >= 0; j++) {
+        if (rcM[i - j] != null) { sum7 += Convert.ToDouble(rcM[i - j]); count7++; }
+    }
+    if (count7 > 0) sma7ColM[i] = sum7 / count7;
+
+    double sum30 = 0; int count30 = 0;
+    for(long j = 0; j < 30 && (i - j) >= 0; j++) {
+        if (rcM[i - j] != null) { sum30 += Convert.ToDouble(rcM[i - j]); count30++; }
+    }
+    if (count30 > 0) sma30ColM[i] = sum30 / count30;
 }
 
-display("ASML.AS — last 10 rows with SMA-7:");
-var lastKeys = closeKeys.Skip(closeVals.Length - 10).ToArray();
-foreach (var k in lastKeys)
-{
-    int i = Array.IndexOf(closeKeys, k);
-    var smaStr = sma7[i].HasValue ? sma7[i].Value.ToString("F2") : "null";
-    Console.WriteLine($"  close={closeVals[i],10:F2}   sma_7={smaStr,10}");
-}
+var asmlRollingM = asmlPM.Clone();
+asmlRollingM.Columns.Add(sma7ColM);
+asmlRollingM.Columns.Add(sma30ColM);
+new MDA.DataFrame(asmlRollingM.Columns["date"], asmlRollingM.Columns["close"], sma7ColM, sma30ColM).Tail(10)
 ```
 
-```text
-ASML.AS — last 10 rows with SMA-7:
-  close=   1233.40   sma_7=   1251.51
-  close=   1210.40   sma_7=   1247.54
-  close=   1161.80   sma_7=   1234.14
-  close=   1199.80   sma_7=   1227.09
-  close=   1186.00   sma_7=   1216.03
-  close=   1147.00   sma_7=   1195.83
-  close=   1147.60   sma_7=   1183.71
-  close=   1200.00   sma_7=   1178.94
-  close=   1198.80   sma_7=   1177.29
-  close=   1190.80   sma_7=   1181.43
-```
+<table id="table_639110920055645234"><thead><tr><th><i>index</i></th><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1251.5142822265625</pre></div></td><td><div class="dni-plaintext"><pre>1201.400008138021</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>1247.5428641183037</pre></div></td><td><div class="dni-plaintext"><pre>1204.400008138021</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>1234.1428745814733</pre></div></td><td><div class="dni-plaintext"><pre>1205.1266764322916</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>1227.0857456752233</pre></div></td><td><div class="dni-plaintext"><pre>1206.6266764322916</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186</pre></div></td><td><div class="dni-plaintext"><pre>1216.028599330357</pre></div></td><td><div class="dni-plaintext"><pre>1206.9466756184895</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147</pre></div></td><td><div class="dni-plaintext"><pre>1195.8285958426338</pre></div></td><td><div class="dni-plaintext"><pre>1205.9066772460938</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>1183.7143031529017</pre></div></td><td><div class="dni-plaintext"><pre>1204.8933430989584</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200</pre></div></td><td><div class="dni-plaintext"><pre>1178.94287109375</pre></div></td><td><div class="dni-plaintext"><pre>1204.3066772460938</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>1177.2857317243304</pre></div></td><td><div class="dni-plaintext"><pre>1204.4533447265626</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>1181.4285888671875</pre></div></td><td><div class="dni-plaintext"><pre>1204.4133463541666</pre></div></td></tr></tbody></table>
 
 ### Resampling
 
-Change time frequency — downsampling daily data to monthly OHLC bars. Polars.NET 0.4.0 does not expose `GroupByDynamic`, so use `Dt.Year()` / `Dt.Month()` with `GroupBy` as a reliable alternative.
+Change time frequency by downsampling daily data to monthly OHLC bars. Polars.NET 0.4.0 does not expose `GroupByDynamic`, so the examples use extracted year/month keys. Microsoft.Data.Analysis has no dynamic resampling API either, so monthly bars become explicit grouping logic.
 
 #### Polars.NET | Monthly OHLC via GroupBy year and month
 
@@ -1564,9 +1618,73 @@ display("ASML.AS — Monthly OHLC (last 6 months):");
 asmlMonthly.Tail(6)
 ```
 
-    ASML.AS — Monthly OHLC (last 6 months):
+ASML.AS — Monthly OHLC (last 6 months):
 
 <!-- Polars DataFrame: (6 rows, 7 columns) --><table><thead><tr><th>year</th><th>month</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>2025</td><td>10</td><td>818</td><td>938.6</td><td>812.1</td><td>918.1</td><td>16383868</td></tr><tr><td>2025</td><td>11</td><td>917</td><td>930.9</td><td>822.2</td><td>903.4</td><td>12064891</td></tr><tr><td>2025</td><td>12</td><td>910</td><td>977.1</td><td>866.4</td><td>921.4</td><td>10360738</td></tr><tr><td>2026</td><td>1</td><td>919.4</td><td>1309</td><td>919.2</td><td>1215.6</td><td>16549130</td></tr><tr><td>2026</td><td>2</td><td>1178.6</td><td>1312.8</td><td>1117.6</td><td>1233.4</td><td>11528098</td></tr><tr><td>2026</td><td>3</td><td>1192.8</td><td>1231.4</td><td>1060.2</td><td>1190.8</td><td>6344179</td></tr></tbody></table>
+
+#### Microsoft.Data.Analysis | Monthly OHLC with explicit monthly grouping
+
+MDA has no dynamic time-window grouping API, so monthly OHLC becomes explicit grouping state over ordered rows.
+
+_Groups `ASML.AS` observations by calendar month and shows the last six monthly bars._
+
+```csharp
+var groupedM = new List<(int Year, int Month, double Open, double High, double Low, double Close, double Volume)>();
+var currentGroupM = new List<(DateTime Date, double Open, double High, double Low, double Close, double Volume)>();
+
+void ProcessGroupM() {
+    if (!currentGroupM.Any()) return;
+    var ordered = currentGroupM.OrderBy(x => x.Date).ToList();
+    groupedM.Add((
+        ordered.First().Date.Year,
+        ordered.First().Date.Month,
+        ordered.First().Open,
+        ordered.Max(x => x.High),
+        ordered.Min(x => x.Low),
+        ordered.Last().Close,
+        ordered.Sum(x => x.Volume)
+    ));
+}
+
+for(long i = 0; i < asmlPM.Rows.Count; i++)
+{
+    if(asmlPM.Columns["date"][i] is DateTime dt)
+    {
+        if (currentGroupM.Any() && (currentGroupM.First().Date.Year != dt.Year || currentGroupM.First().Date.Month != dt.Month))
+        {
+            ProcessGroupM();
+            currentGroupM.Clear();
+        }
+        currentGroupM.Add((dt,
+            Convert.ToDouble(asmlPM.Columns["open"][i] ?? 0),
+            Convert.ToDouble(asmlPM.Columns["high"][i] ?? 0),
+            Convert.ToDouble(asmlPM.Columns["low"][i] ?? 0),
+            Convert.ToDouble(asmlPM.Columns["close"][i] ?? 0),
+            Convert.ToDouble(asmlPM.Columns["volume"][i] ?? 0)
+        ));
+    }
+}
+ProcessGroupM();
+
+var asmlMonthlyM = new MDA.DataFrame(
+    new MDA.PrimitiveDataFrameColumn<int>("year", groupedM.Select(g => g.Year)),
+    new MDA.PrimitiveDataFrameColumn<int>("month", groupedM.Select(g => g.Month)),
+    new MDA.PrimitiveDataFrameColumn<double>("open", groupedM.Select(g => g.Open)),
+    new MDA.PrimitiveDataFrameColumn<double>("high", groupedM.Select(g => g.High)),
+    new MDA.PrimitiveDataFrameColumn<double>("low", groupedM.Select(g => g.Low)),
+    new MDA.PrimitiveDataFrameColumn<double>("close", groupedM.Select(g => g.Close)),
+    new MDA.PrimitiveDataFrameColumn<double>("volume", groupedM.Select(g => g.Volume))
+);
+
+display("ASML.AS — Monthly OHLC (last 6 months):");
+asmlMonthlyM.Tail(6)
+```
+
+```text
+ASML.AS — Monthly OHLC (last 6 months):
+```
+
+<table id="table_639110920081411349"><thead><tr><th><i>index</i></th><th>year</th><th>month</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td><td><div class="dni-plaintext"><pre>818</pre></div></td><td><div class="dni-plaintext"><pre>938.5999755859375</pre></div></td><td><div class="dni-plaintext"><pre>812.0999755859375</pre></div></td><td><div class="dni-plaintext"><pre>918.0999755859375</pre></div></td><td><div class="dni-plaintext"><pre>16383868</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>11</pre></div></td><td><div class="dni-plaintext"><pre>917</pre></div></td><td><div class="dni-plaintext"><pre>930.9000244140625</pre></div></td><td><div class="dni-plaintext"><pre>822.2000122070312</pre></div></td><td><div class="dni-plaintext"><pre>903.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>12064891</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>12</pre></div></td><td><div class="dni-plaintext"><pre>910</pre></div></td><td><div class="dni-plaintext"><pre>977.0999755859375</pre></div></td><td><div class="dni-plaintext"><pre>866.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>921.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>10360738</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>919.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>1309</pre></div></td><td><div class="dni-plaintext"><pre>919.2000122070312</pre></div></td><td><div class="dni-plaintext"><pre>1215.5999755859375</pre></div></td><td><div class="dni-plaintext"><pre>16549130</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>1178.5999755859375</pre></div></td><td><div class="dni-plaintext"><pre>1312.800048828125</pre></div></td><td><div class="dni-plaintext"><pre>1117.5999755859375</pre></div></td><td><div class="dni-plaintext"><pre>1233.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>11528098</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td><div class="dni-plaintext"><pre>1192.800048828125</pre></div></td><td><div class="dni-plaintext"><pre>1231.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>1060.199951171875</pre></div></td><td><div class="dni-plaintext"><pre>1190.800048828125</pre></div></td><td><div class="dni-plaintext"><pre>6344179</pre></div></td></tr></tbody></table>
 
 ### Cumulative Max and Min
 
@@ -1589,82 +1707,73 @@ asmlCum.Select(new[] { "date", "close", "volume", "cum_volume", "running_high", 
 
 <!-- Polars DataFrame: (10 rows, 6 columns) --><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-05</td><td>1186</td><td>778081</td><td>942032421</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-06</td><td>1147</td><td>857271</td><td>942889692</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-10</td><td>1200</td><td>800815</td><td>944379593</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td><td>397.45</td></tr></tbody></table>
 
-#### Deedle | Cumulative max and min via manual running aggregates
+#### Microsoft.Data.Analysis | Running high, low, and cumulative volume with explicit state
 
-Deedle has no built-in `CumMax` or `CumMin`. Compute manually by iterating over the values and tracking running extremes.
+Running extrema use the same explicit state pattern as cumulative totals.
 
-_Manually tracks running high and low by iterating over `ASML.AS` close values with `Math.Max` and `Math.Min`, printing the last 10 rows — confirming the same all-time extremes (high: 1288.40, low: 397.45) as Polars._
+_Tracks cumulative volume together with the running high and running low for `ASML.AS`._
 
 ```csharp
-var asmlClose = asmlD.GetColumn<double>("close");
-var keys = asmlClose.Keys.ToArray();
-var vals = asmlClose.Values.ToArray();
+var cumVolM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", asmlPM.Rows.Count);
+var runHighM = new MDA.PrimitiveDataFrameColumn<double>("running_high", asmlPM.Rows.Count);
+var runLowM = new MDA.PrimitiveDataFrameColumn<double>("running_low", asmlPM.Rows.Count);
 
-var cumMax = new double[vals.Length];
-var cumMin = new double[vals.Length];
-cumMax[0] = vals[0];
-cumMin[0] = vals[0];
-for (int i = 1; i < vals.Length; i++)
+double currentVM = 0;
+double? highVM = null;
+double? lowVM = null;
+
+for(long i = 0; i < asmlPM.Rows.Count; i++)
 {
-    cumMax[i] = Math.Max(cumMax[i - 1], vals[i]);
-    cumMin[i] = Math.Min(cumMin[i - 1], vals[i]);
+    currentVM += Convert.ToDouble(asmlPM.Columns["volume"][i] ?? 0);
+    cumVolM[i] = currentVM;
+
+    if (asmlPM.Columns["close"][i] != null)
+    {
+        double c = Convert.ToDouble(asmlPM.Columns["close"][i]);
+        highVM = highVM == null ? c : Math.Max(highVM.Value, c);
+        lowVM = lowVM == null ? c : Math.Min(lowVM.Value, c);
+    }
+
+    if (highVM.HasValue) runHighM[i] = highVM.Value;
+    if (lowVM.HasValue) runLowM[i] = lowVM.Value;
 }
 
-display("ASML.AS — last 10 rows with running high/low:");
-for (int i = vals.Length - 10; i < vals.Length; i++)
-    Console.WriteLine($"  close={vals[i],10:F2}   running_high={cumMax[i],10:F2}   running_low={cumMin[i],10:F2}");
+var asmlCumM = asmlPM.Clone();
+asmlCumM.Columns.Add(cumVolM);
+asmlCumM.Columns.Add(runHighM);
+asmlCumM.Columns.Add(runLowM);
+
+new MDA.DataFrame(asmlCumM.Columns["date"], asmlCumM.Columns["close"], asmlCumM.Columns["volume"], cumVolM, runHighM, runLowM).Tail(10)
 ```
 
-```text
-ASML.AS — last 10 rows with running high/low:
-  close=   1233.40   running_high=   1288.40   running_low=    397.45
-  close=   1210.40   running_high=   1288.40   running_low=    397.45
-  close=   1161.80   running_high=   1288.40   running_low=    397.45
-  close=   1199.80   running_high=   1288.40   running_low=    397.45
-  close=   1186.00   running_high=   1288.40   running_low=    397.45
-  close=   1147.00   running_high=   1288.40   running_low=    397.45
-  close=   1147.60   running_high=   1288.40   running_low=    397.45
-  close=   1200.00   running_high=   1288.40   running_low=    397.45
-  close=   1198.80   running_high=   1288.40   running_low=    397.45
-  close=   1190.80   running_high=   1288.40   running_low=    397.45
-```
-
----
+<table id="table_639110920211151590"><thead><tr><th><i>index</i></th><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1010698</pre></div></td><td><div class="dni-plaintext"><pre>938726541</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>871267</pre></div></td><td><div class="dni-plaintext"><pre>939597808</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>941945</pre></div></td><td><div class="dni-plaintext"><pre>940539753</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>714587</pre></div></td><td><div class="dni-plaintext"><pre>941254340</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186</pre></div></td><td><div class="dni-plaintext"><pre>778081</pre></div></td><td><div class="dni-plaintext"><pre>942032421</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147</pre></div></td><td><div class="dni-plaintext"><pre>857271</pre></div></td><td><div class="dni-plaintext"><pre>942889692</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>689086</pre></div></td><td><div class="dni-plaintext"><pre>943578778</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200</pre></div></td><td><div class="dni-plaintext"><pre>800815</pre></div></td><td><div class="dni-plaintext"><pre>944379593</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>562904</pre></div></td><td><div class="dni-plaintext"><pre>944942497</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>128223</pre></div></td><td><div class="dni-plaintext"><pre>945070720</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td></tr></tbody></table>
 
 ## Summary
 
-Quick reference comparing Polars.NET expression-based API to Deedle's lambda-based approach for all operations covered in this notebook.
+This chapter shows the practical boundary clearly. Polars.NET gives you built-in null repair, string transforms, rolling windows, and temporal grouping as composable expressions. Microsoft.Data.Analysis gives you typed columns and CLR control, which works well for service-local preprocessing and notebook-side inspection, but many advanced repairs and calendar operations become explicit loops.
 
-| Operation | Polars.NET | Deedle |
+### API Comparison
+
+| Operation | Polars.NET | Microsoft.Data.Analysis |
 |---|---|---|
-| **Detect nulls** | `Col("c").IsNull()` filter | `RowCount - ValueCount` |
-| **Count nulls** | `series.NullCount` (property, O(1)) | `RowCount - series.ValueCount` |
-| **Drop nulls** | `df.DropNulls()` | `frame.DropSparseRows()` |
-| **Fill with literal** | `Col("c").FillNull(Lit(0.0))` | `series.FillMissing(0.0)` |
-| **Forward fill** | `Col("c").ForwardFill()` | `FillMissing(Direction.Forward)` |
-| **Backward fill** | `Col("c").BackwardFill()` | `FillMissing(Direction.Backward)` |
-| **Fill with expression** | `Col("c").FillNull(Col("c").Mean())` | `series.FillMissing(series.Mean())` |
-| **Interpolate** | `Col("c").Interpolate()` | No built-in (forward fill or Math.NET) |
-| **To upper/lower** | `.Str.ToUpper()` / `.ToLower()` | Lambda: `.ToUpper()` / `.ToLower()` |
-| **Contains** | `.Str.Contains("text")` | Lambda: `.Contains("text")` |
-| **StartsWith/EndsWith** | `.Str.StartsWith("S")` | Lambda: `.StartsWith()` / `.EndsWith()` |
-| **Replace** | `.Str.ReplaceAll("old", "new")` | Lambda: `.Replace()` |
-| **String length** | C# workaround (`.Length` via array) | Lambda: `.Length` |
-| **Slice/Substring** | `.Str.Slice(0, 5)` | Lambda: `.Substring(0, 5)` |
-| **Split** | `.Str.Split(".")` → `List[Str]` | Lambda: `.Split('.')` |
-| **Regex extract** | `.Str.Extract(pattern, group)` | Lambda: `Regex.Match()` |
-| **Pad** | C# workaround (`.PadLeft()` via array) | Lambda: `.PadLeft(10, '0')` |
-| **Parse date** | `.Str.ToDate("%Y-%m-%d")` | `DateTime.Parse()` / `.ParseExact()` |
-| **Extract year/month** | `.Dt.Year()`, `.Dt.Month()` | Lambda: `.Year`, `.Month` |
-| **Date arithmetic** | `.Dt.OffsetBy("7d")` | Lambda: `.AddDays(7)` |
-| **Shift/Lag** | `Col("c").Shift(1)` | `series.Shift(1)` |
-| **Cumulative sum** | `Col("c").CumSum()` | Manual running total |
-| **Cumulative max/min** | `Col("c").CumMax()` / `.CumMin()` | Manual running max/min |
-| **Date filter** | `.Dt.Year() == Lit(2024)` | Lambda: `dt.Year == 2024` |
-| **Date range** | C# `Enumerable.Range` → `Str.ToDate` | C# `Enumerable.Range` + `AddDays` |
-| **Rolling mean** | `Col("c").RollingMean("7")` | Manual sliding window |
-| **Resample (monthly)** | `GroupBy("year", "month").Agg(...)` | Manual grouping |
-| **Coalesce** | Chained `FillNull(Col("b")).FillNull(Col("c"))` | N/A |
-| **String concat** | C# `Zip` + `HStack` | C# `Zip` + `FrameBuilder` |
-| **String trim** | C# `Trim()` + `HStack` | C# `Trim()` + `FrameBuilder` |
-| **Regex extract all** | C# `Regex.Matches` + `HStack` | C# `Regex.Matches` |
+| **Detect nulls** | `IsNull()` and `NullCount` | `NullCount` and `ElementwiseIsNull()` |
+| **Drop nulls** | `DropNulls()` | `DropNulls(...)` or explicit mask + `Filter(...)` |
+| **Fill / interpolate** | Built-in fill and interpolation expressions | Typed repair columns and manual interpolation loops |
+| **String transforms** | `.Str.*` namespace | `StringDataFrameColumn` plus CLR `string` / `Regex` logic |
+| **Date parsing and extraction** | `Str.ToDate(...)` and `.Dt.*` | `LoadCsv` inference plus CLR `DateTime` properties |
+| **Lag / rolling / cumulative** | Built-in expressions | Explicit stateful loops |
+| **Resampling** | Declarative grouping workarounds | Manual calendar grouping |
+
+### Engineering Recommendations
+
+As *Fundamentals of Data Engineering.epub* argues, data-quality fixes are strongest when they stay close to the source. Use local dataframe fills and cleanups as deliberate analytical choices, not as a substitute for upstream contracts.
+
+| Scenario | Prefer | Why |
+|---|---|---|
+| Shared null or canonical string rules across multiple consumers | Upstream SQL / dbt / ETL | Centralizes semantics and avoids notebook drift. |
+| Local .NET cleanup with custom CLR string or `DateTime` logic | Microsoft.Data.Analysis | Typed columns and native .NET APIs keep service-local logic straightforward. |
+| Repeated fill, rolling, regex-heavy, or resampling work over large local frames | Polars.NET | Built-in expression operators reduce custom loop code. |
+| Small diagnostic or one-off repair steps where explicit state matters | Microsoft.Data.Analysis | Manual masks and typed columns make every repair step visible. |
+| Time-series-heavy analytical notebooks expected to grow in complexity | Polars.NET | The expression model scales better as window and calendar logic accumulates. |
+
+If the same cleanup or temporal logic will be reused across teams or serving paths, move it upstream. Keep MDA and Polars notebook code for local exploration, service-bound preprocessing, and explicit verification of data semantics.

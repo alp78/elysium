@@ -1,9 +1,9 @@
 ---
 title: "05. Aggregation and Reshaping - C#"
-tags: [csharp, deedle, polars, dataframes]
+tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
-description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
+description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 05/10 - Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
 parent: "[[domain-transform-and-analyze]]"
 links:
   - "[[03_py_transforms_expressions]]"
@@ -14,7 +14,7 @@ links:
   - "[[06_py_lazy_performance]]"
   - "[[06_cs_lazy_performance]]"
 created: 2026-03-27
-updated: 2026-03-27
+updated: 2026-04-07
 status: complete
 ---
 
@@ -25,9 +25,16 @@ status: complete
 >
 > — **Aaron Levenstein**
 
-Polars.NET vs Deedle: Group-by, aggregation, joins, concat, pivot, melt.
+Polars.NET vs Microsoft.Data.Analysis: group-by, window functions, joins, concatenation, pivot, and melt in a .NET notebook workflow.
+
+Aggregation and reshaping are where the difference between the two C# dataframe libraries becomes operationally obvious. Polars.NET keeps grouping, windowing, and reshaping inside a compact expression and join API; Microsoft.Data.Analysis exposes a typed, eager `DataFrame` model that integrates naturally with CLR code, explicit loops, and ML.NET-style in-process data preparation.
+
+> [!info] Current API and execution-model check | 2026-04
+>
+> Polars documents [window functions](https://docs.pola.rs/user-guide/expressions/window-functions/), [joins](https://docs.pola.rs/user-guide/transformations/joins/), [pivot](https://docs.pola.rs/user-guide/transformations/pivot/), and [unpivot](https://docs.pola.rs/user-guide/transformations/unpivot/) as first-class dataframe transformations. Microsoft documents [`DataFrame`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe?view=ml-dotnet-preview), [`DataFrame.Join`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe.join?view=ml-dotnet-preview), and [`DataFrame.Merge`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe.merge?view=ml-dotnet-preview) as an eager columnar API. In practice, Polars is stronger when the transformation graph itself is the product; MDA is strongest when the dataframe is an in-process staging object around other .NET code.
 
 ---
+
 ## Setup
 
 ### Warning Suppression
@@ -53,39 +60,29 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ### NuGet Packages and Imports
 
-Install Polars.NET and Deedle via NuGet in .NET Interactive. The formatter registration renders Polars DataFrames and Series as HTML tables in the notebook output, making output cells readable.
+Install Polars.NET and Microsoft.Data.Analysis in the notebook. Alias `Microsoft.Data.Analysis` as `MDA` so `DataFrame` continues to refer to Polars inside the mixed examples below.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
-#r "nuget: Deedle, 4.0.1"
-#r "nuget: Deedle.Interactive, 3.0.0"
+#r "nuget: Microsoft.Data.Analysis, 0.23.0"
 
+using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Polars.CSharp;
 using static Polars.CSharp.Polars;
-using Deedle;
+using MDA = Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
-
-System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (ctx, name) =>
-{
-    if (name.Name == "FSharp.Core")
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "FSharp.Core");
-    return null;
-};
 
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
-    // Strip surrounding quotes from Polars string values in HTML
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)(.+?)(<|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)(.+?)(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
-    var css = """
-        """;
-    writer.Write(css + html);
+    writer.Write(html);
 }, "text/html");
 Formatter.Register<Polars.CSharp.Series>((s, writer) =>
     writer.Write($"<pre style='font-size:14px'>{s}</pre>"), "text/html");
@@ -94,25 +91,32 @@ var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+```text
+Data directory: c:\Users\aperi\DEV\LANG\data
+```
 
 ### Dataset Loading
 
-Load the same CSV files into both Polars.NET and Deedle. This file uses two datasets: `eurostoxx50_ohlcv.csv` (~66K daily OHLCV rows) and `dim_index.csv` (4-row dimension table). Loading both libraries side-by-side lets us verify output parity.
+Load the same CSV files into both Polars.NET and Microsoft.Data.Analysis. This chapter focuses on local aggregation and reshape patterns after data has already been materialized into the notebook process; if the source rows still live in SQL, DuckDB, Spark, or a warehouse, many of these operations are usually better pushed upstream.
 
 ```csharp
-// Load datasets
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "dim_index.csv"));
-var dfD = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
-var dimD = Frame.ReadCsv(Path.Combine(DATA, "dim_index.csv"));
-display($"OHLCV — Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
-display($"DimIndex — Polars: {dimP.Shape}  |  Deedle: {dimD.RowCount} x {dimD.ColumnCount}");
+
+var dfM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
+var dimM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "dim_index.csv"));
+
+display($"OHLCV - Polars: {dfP.Shape}  |  MDA: ({dfM.Rows.Count}, {dfM.Columns.Count})");
+display($"DimIndex - Polars: {dimP.Shape}  |  MDA: ({dimM.Rows.Count}, {dimM.Columns.Count})");
 ```
 
-    OHLCV — Polars: (66355, 12)  |  Deedle: 66355 x 12
+```text
+OHLCV - Polars: (66355, 12)  |  MDA: (66355, 12)
+```
 
-    DimIndex — Polars: (4, 5)  |  Deedle: 4 x 5
+```text
+DimIndex - Polars: (4, 5)  |  MDA: (4, 5)
+```
 
 ### Exchange Dimension Table
 
@@ -156,56 +160,57 @@ dimExP
 
 <!-- Polars DataFrame: (7 rows, 3 columns) --><table><thead><tr><th>suffix</th><th>exchange_name</th><th>country</th></tr></thead><tbody><tr><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>.AS</td><td>Euronext Amsterdam</td><td>Netherlands</td></tr><tr><td>.DE</td><td>XETRA Frankfurt</td><td>Germany</td></tr><tr><td>.PA</td><td>Euronext Paris</td><td>France</td></tr><tr><td>.MC</td><td>Bolsa de Madrid</td><td>Spain</td></tr><tr><td>.MI</td><td>Borsa Italiana</td><td>Italy</td></tr><tr><td>.HE</td><td>Nasdaq Helsinki</td><td>Finland</td></tr></tbody></table></div>
 
-#### Deedle | Build exchange dimension frame
+#### Microsoft.Data.Analysis | Build exchange dimension frame
 
-Deedle equivalent of the exchange dimension table, built with `FrameBuilder.Columns`. Deedle requires explicit integer row keys rather than a keyless column store.
+MDA builds the same 7-row lookup explicitly from typed string columns and then clones the OHLCV frame to append a computed `suffix` join key. The result is operationally close to working with an ADO.NET table in memory: explicit schema, explicit key construction, and explicit column mutation.
+
+_Builds the exchange suffix lookup in MDA, appends a `suffix` column to the OHLCV frame for later joins, and previews the 7-row exchange dimension table._
 
 ```csharp
-// Deedle — Build matching exchange dimension frame
-var dimExD = new FrameBuilder.Columns<int, string>()
+// MDA — Build an exchange lookup from symbol suffixes
+var exchangeDataM = new Dictionary<string, (string name, string country)>
 {
-    { "suffix", new SeriesBuilder<int, string>()
-        { { 0, ".BR" }, { 1, ".AS" }, { 2, ".DE" }, { 3, ".PA" }, { 4, ".MC" }, { 5, ".MI" }, { 6, ".HE" } }.Series },
-    { "exchange_name", new SeriesBuilder<int, string>()
-        { { 0, "Euronext Brussels" }, { 1, "Euronext Amsterdam" }, { 2, "XETRA Frankfurt" }, { 3, "Euronext Paris" }, { 4, "Bolsa de Madrid" }, { 5, "Borsa Italiana" }, { 6, "Nasdaq Helsinki" } }.Series },
-    { "country", new SeriesBuilder<int, string>()
-        { { 0, "Belgium" }, { 1, "Netherlands" }, { 2, "Germany" }, { 3, "France" }, { 4, "Spain" }, { 5, "Italy" }, { 6, "Finland" } }.Series }
-}.Frame;
+    [".BR"]  = ("Euronext Brussels", "Belgium"),
+    [".AS"]  = ("Euronext Amsterdam", "Netherlands"),
+    [".DE"]  = ("XETRA Frankfurt", "Germany"),
+    [".PA"]  = ("Euronext Paris", "France"),
+    [".MC"]  = ("Bolsa de Madrid", "Spain"),
+    [".MI"]  = ("Borsa Italiana", "Italy"),
+    [".HE"]  = ("Nasdaq Helsinki", "Finland")
+};
 
-// Add suffix column to Deedle frame
-var deedleSymbols = dfD.GetColumn<string>("symbol");
-var deedleSuffixes = new SeriesBuilder<int, string>();
-foreach (var obs in deedleSymbols.Observations)
-    deedleSuffixes.Add(obs.Key, "." + obs.Value.Split('.').Last());
-var dfDWithSuffix = dfD.Clone();
-dfDWithSuffix.AddColumn("suffix", deedleSuffixes.Series);
+var dimExM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("suffix", exchangeDataM.Keys),
+    new MDA.StringDataFrameColumn("exchange_name", exchangeDataM.Values.Select(v => v.name)),
+    new MDA.StringDataFrameColumn("country", exchangeDataM.Values.Select(v => v.country))
+);
 
-dimExD
+// Add a suffix column to OHLCV for joining
+var suffixColM = new MDA.StringDataFrameColumn("suffix", dfM.Rows.Count);
+var symColM = dfM.Columns["symbol"];
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    if (s != null) suffixColM[i] = "." + s.Split('.').Last();
+}
+
+var dfWithSuffixM = dfM.Clone();
+dfWithSuffixM.Columns.Add(suffixColM);
+
+dimExM
 ```
 
-<div>
+<table id="table_639111782430388456"><thead><tr><th><i>index</i></th><th>suffix</th><th>exchange_name</th><th>country</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>.AS</td><td>Euronext Amsterdam</td><td>Netherlands</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>.DE</td><td>XETRA Frankfurt</td><td>Germany</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>.PA</td><td>Euronext Paris</td><td>France</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>.MC</td><td>Bolsa de Madrid</td><td>Spain</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>.MI</td><td>Borsa Italiana</td><td>Italy</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>.HE</td><td>Nasdaq Helsinki</td><td>Finland</td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>suffix</th><th>exchange_name</th><th>country</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>.AS</td><td>Euronext Amsterdam</td><td>Netherlands</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>.DE</td><td>XETRA Frankfurt</td><td>Germany</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>.PA</td><td>Euronext Paris</td><td>France</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>.MC</td><td>Bolsa de Madrid</td><td>Spain</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>.MI</td><td>Borsa Italiana</td><td>Italy</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>.HE</td><td>Nasdaq Helsinki</td><td>Finland</td></tr>
-
-</table>
-
-<p><b>7</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Grouping & Aggregation
 
-> [!info] Polars.NET GroupBy() returns flat DataFrame
+> [!info] Aggregation model | Expression graph vs eager typed columns
 >
-> Polars.NET `GroupBy()` always returns a flat DataFrame — no index concept.
-> Deedle's `GroupRowsBy<T>()` creates a hierarchical row key, requiring explicit
-> flattening before further operations. Choose Polars for pipeline code where flat
-> DataFrames chain cleanly; Deedle when you need time-series-aware operations.
+> Polars.NET keeps group-by, window, and reshape operations inside the dataframe engine. Microsoft.Data.Analysis can join and append frames directly, but many grouped and windowed patterns are still expressed through dictionaries, masks, and explicitly materialized typed columns. Use Polars when the transformation graph itself is the main workload. Use MDA when the dataframe is only one stage inside broader CLR, LINQ, or ML.NET-oriented application logic.
+
+> [!tip] Push large aggregations upstream when the data is not local yet
+>
+> As *SQL Server Query Tuning and Optimization Optimize Microsoft SQL Server 2022 queries and applications.pdf* and *Fundamentals of Data Engineering.epub* both reinforce, large joins and aggregates are usually best executed where the optimizer can choose hash, merge, broadcast, or indexed strategies before data reaches the notebook. Local dataframe aggregation is strongest after extraction, for feature engineering, QA, or iterative analysis.
 
 ### GroupBy Single Column
 
@@ -226,40 +231,37 @@ avgCloseP.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th></tr></thead><tbody><tr><td>ABI.BR</td><td>54.86423366</td></tr><tr><td>AD.AS</td><td>29.6526559</td></tr><tr><td>ADS.DE</td><td>205.4264804</td></tr><tr><td>ADYEN.AS</td><td>1545.976409</td></tr><tr><td>AI.PA</td><td>145.4284434</td></tr><tr><td>AIR.PA</td><td>134.5841172</td></tr><tr><td>ALV.DE</td><td>252.1937311</td></tr><tr><td>ARGX.BR</td><td>413.6919609</td></tr><tr><td>ASML.AS</td><td>671.3489106</td></tr><tr><td>BAS.DE</td><td>50.56185423</td></tr></tbody></table></div>
 
-#### Deedle | GroupBy single column
+#### Microsoft.Data.Analysis | GroupBy single column
 
-Deedle `GroupRowsBy<T>()` returns a `Frame<(string,int),string>` — a hierarchical row key, not a flat result. Computing the mean requires extracting the column, grouping via LINQ, and iterating. Much more verbose than Polars.NET for simple aggregations.
+MDA does not provide a Polars-style high-level group aggregation expression. The practical pattern is to scan the rows, accumulate state in a dictionary keyed by the group column, and materialize the grouped result into a new dataframe.
 
-_Performs the same symbol-level mean aggregation using LINQ on grouped observations, printing the first 10 symbol/avg-close pairs and confirming 50 total groups._
+_Scans all OHLCV rows, groups by `symbol` through a dictionary accumulator, computes mean close price per ticker, and returns the first 10 rows of the grouped result._
 
 ```csharp
-// Deedle — Average closing price per symbol
-var avgCloseD = dfD.GroupRowsBy<string>("symbol")
-    .GetColumn<double>("close")
-    .Observations
-    .GroupBy(o => o.Key.Item1)
-    .Select(g => KeyValuePair.Create(g.Key, g.Average(o => o.Value)))
-    .OrderBy(kv => kv.Key);
+// MDA — Average closing price per symbol
+var closeColM = dfM.Columns["close"];
+var avgGroupsM = new Dictionary<string, (double sum, int count)>();
 
-Console.WriteLine($"{"Symbol",-12} {"Avg Close",12}");
-foreach (var kv in avgCloseD.Take(10))
-    Console.WriteLine($"{kv.Key,-12} {kv.Value,12:F2}");
-display($"Total groups: {avgCloseD.Count()}");
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    if (s != null && closeColM[i] != null)
+    {
+        var cv = Convert.ToDouble(closeColM[i]);
+        if(!avgGroupsM.ContainsKey(s)) avgGroupsM[s] = (0, 0);
+        var g = avgGroupsM[s];
+        avgGroupsM[s] = (g.sum + cv, g.count + 1);
+    }
+}
+
+var avgCloseDfM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("symbol", avgGroupsM.Keys),
+    new MDA.PrimitiveDataFrameColumn<double>("avg_close", avgGroupsM.Values.Select(g => g.sum / g.count))
+);
+avgCloseDfM.Head(10)
 ```
 
-    Symbol          Avg Close
-    ABI.BR              54.86
-    AD.AS               29.65
-    ADS.DE             205.43
-    ADYEN.AS          1545.98
-    AI.PA              145.43
-    AIR.PA             134.58
-    ALV.DE             252.19
-    ARGX.BR            413.69
-    ASML.AS            671.35
-    BAS.DE              50.56
-
-    Total groups: 50
+<table id="table_639111782430959380"><thead><tr><th><i>index</i></th><th>symbol</th><th>avg_close</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td><div class="dni-plaintext"><pre>29.652655860161442</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td><div class="dni-plaintext"><pre>205.42648054969996</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td><div class="dni-plaintext"><pre>1545.9764069543576</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td><div class="dni-plaintext"><pre>145.42844344439317</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td><div class="dni-plaintext"><pre>134.58411722161733</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td><div class="dni-plaintext"><pre>252.19373112934954</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td><div class="dni-plaintext"><pre>413.69196057624157</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>671.3489114373004</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td><div class="dni-plaintext"><pre>50.5618542933392</pre></div></td></tr></tbody></table>
 
 ### GroupBy Multiple Columns
 
@@ -280,44 +282,38 @@ multiGroupP.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>is_filled</th><th>row_count</th></tr></thead><tbody><tr><td>ABI.BR</td><td>false</td><td>1331</td></tr><tr><td>AD.AS</td><td>false</td><td>1331</td></tr><tr><td>ADS.DE</td><td>false</td><td>1324</td></tr><tr><td>ADYEN.AS</td><td>false</td><td>1331</td></tr><tr><td>AI.PA</td><td>false</td><td>1331</td></tr><tr><td>AIR.PA</td><td>false</td><td>1331</td></tr><tr><td>ALV.DE</td><td>false</td><td>1324</td></tr><tr><td>ARGX.BR</td><td>false</td><td>1331</td></tr><tr><td>ASML.AS</td><td>false</td><td>1331</td></tr><tr><td>BAS.DE</td><td>false</td><td>1324</td></tr></tbody></table></div>
 
-#### Deedle | GroupBy multiple columns
+#### Microsoft.Data.Analysis | GroupBy multiple columns
 
-Deedle's `GroupRowsBy<T>()` supports only one key column. For multi-column grouping, concatenate the key values into a composite string key and group on that.
+For composite keys, MDA uses the same pattern as single-key grouping but with tuple keys. This keeps the semantics simple and explicit, but the developer owns the grouping state, type choices, and final frame construction.
 
-_Concatenates `symbol` and `is_filled` into a composite key `"ABI.BR|False"`, groups on that string to count rows per combination, then prints the top 10 most frequent groups._
+_Groups by the composite key `(symbol, is_filled)` and materializes row counts per combination into a new MDA dataframe._
 
 ```csharp
-// Deedle — Group by symbol + is_filled, count rows
-// Deedle GroupRowsBy supports one key; create a composite key
-var symbolSeries = dfD.GetColumn<string>("symbol");
-var filledVals = dfD.GetColumn<bool>("is_filled");
+// MDA — Group by symbol + is_filled, count rows
+var isFilledColM = dfM.Columns["is_filled"];
+var filledGroupsM = new Dictionary<(string, bool), int>();
 
-var compositeKeys = new SeriesBuilder<int, string>();
-foreach (var obs in symbolSeries.Observations)
-    compositeKeys.Add(obs.Key, $"{obs.Value}|{filledVals.TryGet(obs.Key).Value}");
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    var f = isFilledColM[i] != null && Convert.ToBoolean(isFilledColM[i]);
+    if (s != null)
+    {
+        var key = (s, f);
+        if(!filledGroupsM.ContainsKey(key)) filledGroupsM[key] = 0;
+        filledGroupsM[key]++;
+    }
+}
 
-var grouped = compositeKeys.Series.Values
-    .GroupBy(k => k)
-    .Select(g => new { Key = g.Key, Count = g.Count() })
-    .OrderByDescending(x => x.Count)
-    .Take(10);
-
-Console.WriteLine($"{"Key",-30} {"Count",6}");
-foreach (var r in grouped)
-    Console.WriteLine($"{r.Key,-30} {r.Count,6}");
+var multiGroupDfM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("symbol", filledGroupsM.Keys.Select(k => k.Item1)),
+    new MDA.PrimitiveDataFrameColumn<bool>("is_filled", filledGroupsM.Keys.Select(k => k.Item2)),
+    new MDA.PrimitiveDataFrameColumn<int>("row_count", filledGroupsM.Values)
+);
+multiGroupDfM.Head(10)
 ```
 
-    Key                             Count
-    ABI.BR|False                     1331
-    AD.AS|False                      1331
-    ADYEN.AS|False                   1331
-    AI.PA|False                      1331
-    AIR.PA|False                     1331
-    ARGX.BR|False                    1331
-    ASML.AS|False                    1331
-    BN.PA|False                      1331
-    BNP.PA|False                     1331
-    CS.PA|False                      1331
+<table id="table_639111782431672249"><thead><tr><th><i>index</i></th><th>symbol</th><th>is_filled</th><th>row_count</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td><div class="dni-plaintext"><pre>False</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td></tr></tbody></table>
 
 ### Multiple Aggregations
 
@@ -345,55 +341,44 @@ multiAggP.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 7 columns) --><table><thead><tr><th>symbol</th><th>sum_close</th><th>mean_close</th><th>count</th><th>min_close</th><th>max_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>73024.295</td><td>54.86423366</td><td>1331</td><td>45.06</td><td>68.82</td><td>2114455849</td></tr><tr><td>AD.AS</td><td>39467.685</td><td>29.6526559</td><td>1331</td><td>21.72</td><td>41.77</td><td>3214250982</td></tr><tr><td>ADS.DE</td><td>271984.66</td><td>205.4264804</td><td>1324</td><td>93.95</td><td>336.25</td><td>740793162</td></tr><tr><td>ADYEN.AS</td><td>2057694.6</td><td>1545.976409</td><td>1331</td><td>630.8</td><td>2766</td><td>110400463</td></tr><tr><td>AI.PA</td><td>193565.2582</td><td>145.4284434</td><td>1331</td><td>103.0579</td><td>186.64</td><td>1023869587</td></tr><tr><td>AIR.PA</td><td>179131.46</td><td>134.5841172</td><td>1331</td><td>83.11</td><td>220.2</td><td>1648955654</td></tr><tr><td>ALV.DE</td><td>333904.5</td><td>252.1937311</td><td>1324</td><td>159.62</td><td>392.7</td><td>1101960308</td></tr><tr><td>ARGX.BR</td><td>550624</td><td>413.6919609</td><td>1331</td><td>208.8</td><td>803</td><td>94592244</td></tr><tr><td>ASML.AS</td><td>893565.4</td><td>671.3489106</td><td>1331</td><td>397.45</td><td>1288.4</td><td>945070720</td></tr><tr><td>BAS.DE</td><td>66943.895</td><td>50.56185423</td><td>1324</td><td>38.85</td><td>72.61</td><td>3570432622</td></tr></tbody></table></div>
 
-#### Deedle | Multiple aggregations via LINQ
+#### Microsoft.Data.Analysis | Multiple aggregations in one manual pass
 
-Deedle has no multi-aggregation equivalent to `Agg()`. Each statistic requires a separate LINQ scan of the grouped observations. Results are then assembled into a new frame via `FrameBuilder.Columns`.
+MDA can still compute many statistics efficiently, but the code is explicit rather than declarative. Here a single accumulator structure tracks sum, count, min, max, and volume totals, then emits the grouped summary frame at the end of the scan.
 
-> [!warning] Deedle multi-aggregation scans each column N times
->
-> Computing `sum`, `mean`, `min`, `max`, and `count` requires 5 separate LINQ iterations over the grouped data. For large frames this is significantly slower than Polars.NET's single-pass `.Agg()`. Prefer Polars.NET for analytical aggregation pipelines.
-
-_Reproduces the same 6 aggregation statistics across 50 symbol groups using separate LINQ scans, then assembles the results into a frame via `FrameBuilder.Columns` — with significantly higher runtime cost than Polars' single-pass `Agg()`._
+_Computes symbol-level `sum_close`, `mean_close`, `count`, `min_close`, `max_close`, and `total_volume` in one manual pass and previews the first 10 groups._
 
 ```csharp
-// Deedle — Deedle has no multi-agg; aggregate each stat via LINQ
-var grouped = dfD.GroupRowsBy<string>("symbol");
-var closeObs = grouped.GetColumn<double>("close").Observations.GroupBy(o => o.Key.Item1);
-var volObs = grouped.GetColumn<double>("volume").Observations.GroupBy(o => o.Key.Item1);
+// MDA — Multiple Aggregations
+var volColM = dfM.Columns["volume"];
+var multiAggDataM = new Dictionary<string, (double sumC, int count, double minC, double maxC, double sumV)>();
 
-var symbols = closeObs.Select(g => g.Key).ToArray();
-var sumClose  = closeObs.Select(g => g.Sum(o => o.Value)).ToArray();
-var meanClose = closeObs.Select(g => g.Average(o => o.Value)).ToArray();
-var countArr  = closeObs.Select(g => (double)g.Count()).ToArray();
-var minClose  = closeObs.Select(g => g.Min(o => o.Value)).ToArray();
-var maxClose  = closeObs.Select(g => g.Max(o => o.Value)).ToArray();
-var totalVol  = volObs.Select(g => g.Sum(o => o.Value)).ToArray();
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    if (s != null && closeColM[i] != null)
+    {
+        double c = Convert.ToDouble(closeColM[i]);
+        double v = volColM[i] != null ? Convert.ToDouble(volColM[i]) : 0;
+        if(!multiAggDataM.ContainsKey(s)) multiAggDataM[s] = (0, 0, double.MaxValue, double.MinValue, 0);
 
-var idx = Enumerable.Range(0, symbols.Length).ToArray();
-var builder = new FrameBuilder.Columns<int, string>();
-builder.Add("symbol", new Series<int, string>(idx, symbols));
-builder.Add("sum_close", new Series<int, double>(idx, sumClose));
-builder.Add("mean_close", new Series<int, double>(idx, meanClose));
-builder.Add("count", new Series<int, double>(idx, countArr));
-builder.Add("min_close", new Series<int, double>(idx, minClose));
-builder.Add("max_close", new Series<int, double>(idx, maxClose));
-builder.Add("total_volume", new Series<int, double>(idx, totalVol));
-builder.Frame.Rows[Enumerable.Range(0, 10)]
+        var g = multiAggDataM[s];
+        multiAggDataM[s] = (g.sumC + c, g.count + 1, Math.Min(g.minC, c), Math.Max(g.maxC, c), g.sumV + v);
+    }
+}
+
+var multiAggDfM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("symbol", multiAggDataM.Keys),
+    new MDA.PrimitiveDataFrameColumn<double>("sum_close", multiAggDataM.Values.Select(g => g.sumC)),
+    new MDA.PrimitiveDataFrameColumn<double>("mean_close", multiAggDataM.Values.Select(g => g.sumC / g.count)),
+    new MDA.PrimitiveDataFrameColumn<int>("count", multiAggDataM.Values.Select(g => g.count)),
+    new MDA.PrimitiveDataFrameColumn<double>("min_close", multiAggDataM.Values.Select(g => g.minC)),
+    new MDA.PrimitiveDataFrameColumn<double>("max_close", multiAggDataM.Values.Select(g => g.maxC)),
+    new MDA.PrimitiveDataFrameColumn<double>("total_volume", multiAggDataM.Values.Select(g => g.sumV))
+);
+multiAggDfM.Head(10)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>sum_close</th><th>mean_close</th><th>count</th><th>min_close</th><th>max_close</th><th>total_volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>73024.29499999993</td><td>54.864233658903025</td><td>1331</td><td>45.06</td><td>68.82</td><td>2114455849</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>AD.AS</td><td>39467.68500000005</td><td>29.652655897821223</td><td>1331</td><td>21.72</td><td>41.77</td><td>3214250982</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ADS.DE</td><td>271984.6599999997</td><td>205.42648036253752</td><td>1324</td><td>93.95</td><td>336.25</td><td>740793162</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ADYEN.AS</td><td>2057694.6</td><td>1545.9764087152519</td><td>1331</td><td>630.8</td><td>2766</td><td>110400463</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AI.PA</td><td>193565.2581999998</td><td>145.42844342599534</td><td>1331</td><td>103.0579</td><td>186.64</td><td>1023869587</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>179131.46000000005</td><td>134.58411720510898</td><td>1331</td><td>83.11</td><td>220.2</td><td>1648955654</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ALV.DE</td><td>333904.5000000002</td><td>252.1937311178249</td><td>1324</td><td>159.62</td><td>392.7</td><td>1101960308</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ARGX.BR</td><td>550623.9999999994</td><td>413.6919609316299</td><td>1331</td><td>208.8</td><td>803</td><td>94592244</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>893565.4000000005</td><td>671.348910593539</td><td>1331</td><td>397.45</td><td>1288.4</td><td>945070720</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>BAS.DE</td><td>66943.89499999997</td><td>50.561854229607235</td><td>1324</td><td>38.85</td><td>72.61</td><td>3570432622</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>7</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111782432419366"><thead><tr><th><i>index</i></th><th>symbol</th><th>sum_close</th><th>mean_close</th><th>count</th><th>min_close</th><th>max_close</th><th>total_volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>73024.29499053955</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>45.060001373291016</pre></div></td><td><div class="dni-plaintext"><pre>68.81999969482422</pre></div></td><td><div class="dni-plaintext"><pre>2114455849</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td><div class="dni-plaintext"><pre>39467.68494987488</pre></div></td><td><div class="dni-plaintext"><pre>29.652655860161442</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>21.719999313354492</pre></div></td><td><div class="dni-plaintext"><pre>41.77000045776367</pre></div></td><td><div class="dni-plaintext"><pre>3214250982</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ADS.DE</td><td><div class="dni-plaintext"><pre>271984.66024780273</pre></div></td><td><div class="dni-plaintext"><pre>205.42648054969996</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td><td><div class="dni-plaintext"><pre>93.94999694824219</pre></div></td><td><div class="dni-plaintext"><pre>336.25</pre></div></td><td><div class="dni-plaintext"><pre>740793162</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td><div class="dni-plaintext"><pre>2057694.59765625</pre></div></td><td><div class="dni-plaintext"><pre>1545.9764069543576</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>630.7999877929688</pre></div></td><td><div class="dni-plaintext"><pre>2766</pre></div></td><td><div class="dni-plaintext"><pre>110400463</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AI.PA</td><td><div class="dni-plaintext"><pre>193565.2582244873</pre></div></td><td><div class="dni-plaintext"><pre>145.42844344439317</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>103.05789947509766</pre></div></td><td><div class="dni-plaintext"><pre>186.63999938964844</pre></div></td><td><div class="dni-plaintext"><pre>1023869587</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AIR.PA</td><td><div class="dni-plaintext"><pre>179131.46002197266</pre></div></td><td><div class="dni-plaintext"><pre>134.58411722161733</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>83.11000061035156</pre></div></td><td><div class="dni-plaintext"><pre>220.1999969482422</pre></div></td><td><div class="dni-plaintext"><pre>1648955654</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ALV.DE</td><td><div class="dni-plaintext"><pre>333904.5000152588</pre></div></td><td><div class="dni-plaintext"><pre>252.19373112934954</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td><td><div class="dni-plaintext"><pre>159.6199951171875</pre></div></td><td><div class="dni-plaintext"><pre>392.70001220703125</pre></div></td><td><div class="dni-plaintext"><pre>1101960308</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ARGX.BR</td><td><div class="dni-plaintext"><pre>550623.9995269775</pre></div></td><td><div class="dni-plaintext"><pre>413.69196057624157</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>208.8000030517578</pre></div></td><td><div class="dni-plaintext"><pre>803</pre></div></td><td><div class="dni-plaintext"><pre>94592244</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>893565.4011230469</pre></div></td><td><div class="dni-plaintext"><pre>671.3489114373004</pre></div></td><td><div class="dni-plaintext"><pre>1331</pre></div></td><td><div class="dni-plaintext"><pre>397.45001220703125</pre></div></td><td><div class="dni-plaintext"><pre>1288.4000244140625</pre></div></td><td><div class="dni-plaintext"><pre>945070720</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>BAS.DE</td><td><div class="dni-plaintext"><pre>66943.8950843811</pre></div></td><td><div class="dni-plaintext"><pre>50.5618542933392</pre></div></td><td><div class="dni-plaintext"><pre>1324</pre></div></td><td><div class="dni-plaintext"><pre>38.849998474121094</pre></div></td><td><div class="dni-plaintext"><pre>72.61000061035156</pre></div></td><td><div class="dni-plaintext"><pre>3570432622</pre></div></td></tr></tbody></table>
 
 ### Group Head
 
@@ -404,6 +389,14 @@ Return the first N rows within each group without collapsing rows. Polars.NET ha
 > [!info] GroupBy().Head() workaround in Polars.NET
 >
 > Polars Python supports `group_by().head(n)` natively. In Polars.NET 0.4.x this method exists on the `GroupBy` object only for some overloads. The safe workaround is `Lit(1).CumSum().Over("group_col")` to number rows within each group, then `.Filter(Col("row_num") <= Lit(n))`.
+
+> [!bug] Stored Polars.NET 0.4.x output is inconsistent in this notebook snapshot
+>
+> The saved output below does not reduce to the expected `150` rows and shows `row_num = 0` after the first row, which means the recorded notebook result is not demonstrating the intended group-head semantics correctly.
+>
+> [!success] Validate group-head output against your installed Polars.NET build
+>
+> For this dataset, the expected result is `50 symbols x 3 rows = 150` rows. If your local output does not match that, treat this as a version-specific notebook issue and verify the row-number pattern or any available `group head` helper against the package version you are actually running.
 
 _Adds a cumulative row number per symbol via `Lit(1).CumSum().Over("symbol")`, then filters to `row_num <= 3` — returning the first 3 rows for each of the 50 symbols._
 
@@ -420,46 +413,55 @@ display($"Group head shape: {groupHeadP.Shape}");
 groupHeadP.Select("symbol", "date", "close", "row_num").Head(9)
 ```
 
-    Group head shape: (66355, 13)
+Group head shape: (66355, 13)
 
 <!-- Polars DataFrame: (9 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>row_num</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>56.96</td><td>0</td></tr></tbody></table></div>
 
-#### Deedle | Group head (top N per group)
+#### Microsoft.Data.Analysis | Group head (top N per group)
 
-Deedle exposes group row keys via `.RowKeys`. Take the first N from each group with LINQ `.GroupBy().SelectMany(g => g.Take(n))`, then slice the frame to those keys.
+MDA has no built-in grouped `head(n)` operator, so the usual pattern is to number rows per group and then build a boolean mask for the first `n` rows in each partition. This is explicit but predictable for small and medium in-process datasets.
 
-_Groups the hierarchical row keys from `GroupRowsBy` by symbol (Item1), takes the first 3 keys per group with LINQ, then slices the frame to those 150 keys — yielding 3 rows for each of the 50 symbols._
+_Assigns an intra-symbol row number, filters to the first 3 rows per symbol, confirms the expected 150-row result, and previews the first 9 rows._
 
 ```csharp
-// Deedle — First 3 rows per symbol
-var groupedD = dfD.GroupRowsBy<string>("symbol");
-var headKeys = groupedD.RowKeys
-    .GroupBy(k => k.Item1)
-    .SelectMany(g => g.Take(3));
+// MDA — First 3 rows per symbol (group head equivalent)
+var rowNumColM = new MDA.PrimitiveDataFrameColumn<int>("row_num", dfM.Rows.Count);
+var symCountsM = new Dictionary<string, int>();
+var headMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", dfM.Rows.Count);
 
-var groupHeadD = groupedD.Rows[headKeys];
-display($"Group head rows: {groupHeadD.RowCount}");
-groupHeadD.Rows[groupHeadD.RowKeys.Take(9)]
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    if (s != null)
+    {
+        if(!symCountsM.ContainsKey(s)) symCountsM[s] = 0;
+        symCountsM[s]++;
+        rowNumColM[i] = symCountsM[s];
+        headMaskM[i] = symCountsM[s] <= 3;
+    }
+}
+
+var dfNumberedM = dfM.Clone();
+dfNumberedM.Columns.Add(rowNumColM);
+var groupHeadDfM = dfNumberedM.Filter(headMaskM);
+
+display($"Group head shape: ({groupHeadDfM.Rows.Count}, {groupHeadDfM.Columns.Count})");
+new MDA.DataFrame(groupHeadDfM.Columns["symbol"], groupHeadDfM.Columns["date"], groupHeadDfM.Columns["close"], groupHeadDfM.Columns["row_num"]).Head(9)
 ```
 
-    Group head rows: 150
+```text
+Group head shape: (150, 13)
+```
 
-<div>
+<table id="table_639111782433413334"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>row_num</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>AD.AS</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>23.79</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AD.AS</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>23.68</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>AD.AS</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>23.76</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ADS.DE</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>295.4</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ADS.DE</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>289.6</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ADS.DE</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>291.7</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>ABI.BR</b></td><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>AD.AS</b></td><td><b>1331</b></td><td class="no-wrap">-></td><td>59438</td><td>AD.AS</td><td>04-Jan-21 0:00:00</td><td>23.38</td><td>23.83</td><td>23.38</td><td>23.79</td><td>19.9339</td><td>3526165</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>1332</b></td><td class="no-wrap">-></td><td>59439</td><td>AD.AS</td><td>05-Jan-21 0:00:00</td><td>23.71</td><td>23.93</td><td>23.61</td><td>23.68</td><td>19.8417</td><td>3405805</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>1333</b></td><td class="no-wrap">-></td><td>59440</td><td>AD.AS</td><td>06-Jan-21 0:00:00</td><td>23.7</td><td>23.87</td><td>23.61</td><td>23.76</td><td>19.9088</td><td>3033335</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>ADS.DE</b></td><td><b>2662</b></td><td class="no-wrap">-></td><td>62088</td><td>ADS.DE</td><td>04-Jan-21 0:00:00</td><td>300.0</td><td>300.5</td><td>293.0</td><td>295.4</td><td>282.2904</td><td>440364</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>2663</b></td><td class="no-wrap">-></td><td>62089</td><td>ADS.DE</td><td>05-Jan-21 0:00:00</td><td>292.9</td><td>295.4</td><td>288.2</td><td>289.6</td><td>276.7479</td><td>436591</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b></b></td><td><b>2664</b></td><td class="no-wrap">-></td><td>62090</td><td>ADS.DE</td><td>06-Jan-21 0:00:00</td><td>290.7</td><td>292.7</td><td>286.8</td><td>291.7</td><td>278.7546</td><td>392602</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-
-</table>
-
-<p><b>9</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Window Functions
+
+Window functions preserve row-level granularity while computing group-relative statistics such as broadcast averages, rankings, and rolling means. Conceptually they are the same family of operations exposed in SQL through `OVER (PARTITION BY ... ORDER BY ...)`, but the execution model differs sharply between Polars expressions and MDA's explicit typed-column materialization.
+
+> [!question] Should this window stay local or move upstream?
+>
+> Keep window logic in Polars.NET or MDA when the data is already local, the transformation is notebook-scoped, or the result must feed immediate in-process .NET logic. If the source is still in a database or warehouse, prefer SQL window functions for large partitions and wide joins so the engine can optimize sort, frame, and memory behavior before extraction.
 
 The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) applies the same windowed aggregations to produce final analytical tables.
 
@@ -486,44 +488,30 @@ withMeanP.Head(8)
 
 <!-- Polars DataFrame: (8 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>mean_close_over</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>54.86423366</td></tr></tbody></table></div>
 
-#### Deedle | Mean over group
+#### Microsoft.Data.Analysis | Mean over group
 
-Deedle has no `.Over()` equivalent. The workaround: compute a group-mean dictionary via LINQ, then iterate every row and map the symbol to its pre-computed mean. This is O(n) but requires explicit iteration.
+Broadcasted window-style statistics in MDA are usually built from a precomputed group aggregate map. Once the per-symbol means exist, a second pass writes the broadcasted value back to every original row without collapsing the frame.
 
-_Pre-computes a symbol→mean dictionary from grouped observations, then iterates all 66K rows to map each symbol to its pre-computed mean — producing the same broadcast result as Polars' `Over()` via explicit LINQ + loop._
+_Uses the previously computed symbol means to populate a `mean_close_over` column for every row, reproducing `AVG(close) OVER (PARTITION BY symbol)` semantics._
 
 ```csharp
-// Deedle — Compute group mean, then map back to each row
-var symbolMeansD = dfD.GroupRowsBy<string>("symbol")
-    .GetColumn<double>("close")
-    .Observations
-    .GroupBy(o => o.Key.Item1)
-    .ToDictionary(g => g.Key, g => g.Average(o => o.Value));
+// MDA — Mean close over each symbol (broadcasted to each row)
+var meanOverColM = new MDA.PrimitiveDataFrameColumn<double>("mean_close_over", dfM.Rows.Count);
 
-var symCol = dfD.GetColumn<string>("symbol");
-var meanOverD = new SeriesBuilder<int, double>();
-foreach (var obs in symCol.Observations)
-    meanOverD.Add(obs.Key, symbolMeansD[obs.Value]);
+for(long i = 0; i < dfM.Rows.Count; i++)
+{
+    var s = symColM[i]?.ToString();
+    if (s != null && avgGroupsM.ContainsKey(s))
+    {
+        meanOverColM[i] = avgGroupsM[s].sum / avgGroupsM[s].count;
+    }
+}
 
-var dfDWithMean = dfD.Clone();
-dfDWithMean.AddColumn("mean_close_by_symbol", meanOverD.Series);
-dfDWithMean.Columns[new[] { "symbol", "date", "close", "mean_close_by_symbol" }]
-    .Rows[dfDWithMean.RowKeys.Take(8)]
+var withMeanDfM = new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dfM.Columns["close"], meanOverColM);
+withMeanDfM.Head(8)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>mean_close_by_symbol</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>54.864233658903025</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>54.864233658903025</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>54.864233658903025</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>54.864233658903025</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>54.864233658903025</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>54.864233658903025</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>54.864233658903025</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>54.864233658903025</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111782433969494"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>mean_close_over</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>54.8642336517953</pre></div></td></tr></tbody></table>
 
 ### Rank within Group
 
@@ -548,51 +536,42 @@ withRankP.Head(8)
 
 <!-- Polars DataFrame: (8 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>rank_in_group</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>946.5</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>940.5</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1126</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1085.5</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1024</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>887.5</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>875.5</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>871</td></tr></tbody></table></div>
 
-#### Deedle | Rank within group (manual)
+#### Microsoft.Data.Analysis | Rank within group
 
-Deedle has no rank window function. Sort the values within each group, assign ordinal positions with a loop, then write results into a `SeriesBuilder`.
+MDA ranking is explicit: collect row indices by group, sort each group by the measure of interest, and assign ordinal positions back into a typed result column. Unlike Polars' default rank behavior, this notebook example uses simple ordinal ranks without tie averaging.
 
-_Sorts close values within each symbol group, assigns integer ordinal ranks 1–N via loop, and adds the result as a new column — producing integer ranks (no tie-averaging) compared to Polars' float ranks._
+_Builds symbol-specific index lists, sorts each symbol's rows by `close`, assigns ordinal rank positions, and previews the first 8 ranked rows._
 
 ```csharp
-// Deedle — Manual rank: sort values within group, assign ordinal rank
-var closeCol = dfD.GetColumn<double>("close");
-var symColR = dfD.GetColumn<string>("symbol");
+// MDA — Rank close price within each symbol
+var rankColM = new MDA.PrimitiveDataFrameColumn<double>("rank_in_group", dfM.Rows.Count);
+var symIndicesM = new Dictionary<string, List<long>>();
 
-var rankBuilder = new SeriesBuilder<int, int>();
-var groupedObs = symColR.Observations
-    .GroupBy(o => o.Value);
-
-foreach (var grp in groupedObs)
+for(long i = 0; i < dfM.Rows.Count; i++)
 {
-    // Get close values for this group, sort, assign rank
-    var sorted = grp
-        .Select(o => (Key: o.Key, Close: closeCol[o.Key]))
-        .OrderBy(x => x.Close)
-        .ToList();
-
-    for (int i = 0; i < sorted.Count; i++)
-        rankBuilder.Add(sorted[i].Key, i + 1);
+    var s = symColM[i]?.ToString();
+    if (s != null)
+    {
+        if(!symIndicesM.ContainsKey(s)) symIndicesM[s] = new List<long>();
+        symIndicesM[s].Add(i);
+    }
 }
 
-var dfDWithRank = dfD.Clone();
-dfDWithRank.AddColumn("rank_in_group", rankBuilder.Series);
-dfDWithRank.Columns[new[] { "symbol", "date", "close", "rank_in_group" }].Rows[dfDWithRank.RowKeys.Take(8)]
+foreach(var kvp in symIndicesM)
+{
+    var sorted = kvp.Value
+        .Where(idx => closeColM[idx] != null)
+        .OrderBy(idx => Convert.ToDouble(closeColM[idx]))
+        .ToList();
+
+    for(int r = 0; r < sorted.Count; r++) rankColM[sorted[r]] = r + 1;
+}
+
+var withRankDfM = new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dfM.Columns["close"], rankColM);
+withRankDfM.Head(8)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>rank_in_group</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(int)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>946</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>940</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>1125</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>1085</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>1023</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>887</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>875</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>871</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111782435305830"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>rank_in_group</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>946</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>940</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>1125</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>1085</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>1023</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>887</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>875</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>871</pre></div></td></tr></tbody></table>
 
 ### Rolling Mean over Group
 
@@ -621,57 +600,41 @@ withRollingP.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>rolling_mean_20</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>57.195</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>57.72</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>57.89</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>57.884</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>57.67166667</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>57.50571429</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>57.3775</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>56.96</td><td>57.33111111</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>56.74</td><td>57.272</td></tr></tbody></table></div>
 
-#### Deedle | Rolling mean over group (manual)
+#### Microsoft.Data.Analysis | Rolling mean over group
 
-Deedle has no rolling window functions. Implement manually: for each group, iterate rows in order and maintain a sliding sum over the last 20 values. This is O(n) but requires explicit loops and careful index tracking.
+Rolling windows in MDA are straightforward but manual: maintain group-local order, scan the trailing frame, and write the aggregate into a typed output column. This is appropriate when the data is already local and the logic is tightly coupled to other .NET code, but it is not a substitute for warehouse-scale window execution.
 
-_Implements a 20-row trailing mean per symbol group with a manual sliding-sum loop — for each row i, sums values from `max(0, i-19)` to `i` and divides by the actual window size, matching Polars' output._
+_Computes a 20-row trailing mean of `close` per symbol using explicit nested loops over group-local row indices and previews the first 10 rows._
 
 ```csharp
-// Deedle — 20-row rolling mean per symbol using Window
-var symColW = dfD.GetColumn<string>("symbol");
-var closeColW = dfD.GetColumn<double>("close");
+// MDA — 20-row rolling mean of close, per symbol
+var rollingColM = new MDA.PrimitiveDataFrameColumn<double>("rolling_mean_20", dfM.Rows.Count);
 
-var rollingBuilder = new SeriesBuilder<int, double>();
-var groupedObsW = symColW.Observations.GroupBy(o => o.Value);
-
-foreach (var grp in groupedObsW)
+foreach(var kvp in symIndicesM)
 {
-    var keys = grp.Select(o => o.Key).ToList();
-    var vals = keys.Select(k => closeColW[k]).ToList();
-
-    for (int i = 0; i < keys.Count; i++)
+    var indices = kvp.Value; // Relies on underlying chronological dataset order
+    for(int i = 0; i < indices.Count; i++)
     {
-        int start = Math.Max(0, i - 19);
-        double mean = 0;
-        for (int j = start; j <= i; j++)
-            mean += vals[j];
-        mean /= (i - start + 1);
-        rollingBuilder.Add(keys[i], mean);
+        double sum = 0;
+        int count = 0;
+        for(int j = 0; j < 20 && (i - j) >= 0; j++)
+        {
+            var cVal = closeColM[indices[i - j]];
+            if (cVal != null) { sum += Convert.ToDouble(cVal); count++; }
+        }
+        if (count > 0) rollingColM[indices[i]] = sum / count;
     }
 }
 
-var dfDWithRolling = dfD.Clone();
-dfDWithRolling.AddColumn("rolling_mean_20", rollingBuilder.Series);
-dfDWithRolling.Columns[new[] { "symbol", "date", "close", "rolling_mean_20" }].Rows[dfDWithRolling.RowKeys.Take(10)]
+var withRollingDfM = new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dfM.Columns["close"], rollingColM);
+withRollingDfM.Head(10)
 ```
 
-<div>
+<table id="table_639111782436745667"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>rolling_mean_20</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>57.209999084472656</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>57.19499969482422</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>57.71999994913737</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>57.890000343322754</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>57.88400039672852</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>57.67166709899902</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>57.505714416503906</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>57.37750005722046</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-14 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.96</pre></div></td><td><div class="dni-plaintext"><pre>57.33111106024848</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-15 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.74</pre></div></td><td><div class="dni-plaintext"><pre>57.27200012207031</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>rolling_mean_20</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>57.21</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>57.195</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>57.72</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>57.89</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>57.884</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>57.671666666666674</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>57.50571428571429</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>57.377500000000005</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>14-Jan-21 0:00:00</td><td>56.96</td><td>57.33111111111111</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>15-Jan-21 0:00:00</td><td>56.74</td><td>57.272000000000006</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Joins
+
+Joins are the point where row-count mistakes become expensive. For tiny dimensions or post-extract enrichment, local joins are fine. For fact-to-fact joins, duplicated keys, or large shuffle-style workloads, prefer database or warehouse execution so the optimizer can reorder joins, push filters early, and avoid unnecessary in-memory expansion.
 
 > [!danger] Joins with duplicate keys silently
 >
@@ -718,64 +681,41 @@ display($"Inner join shape: {innerP.Shape}");
 innerP.Select("symbol", "date", "close", "suffix", "exchange_name", "country").Head(8)
 ```
 
-    Inner join shape: (66355, 15)
+Inner join shape: (66355, 15)
 
 <!-- Polars DataFrame: (8 rows, 6 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>suffix</th><th>exchange_name</th><th>country</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr></tbody></table></div>
 
-#### Deedle | Inner join
+#### Microsoft.Data.Analysis | Inner join
 
-Deedle has no native `Join(otherFrame)` on DataFrames. Simulate an inner join with a dictionary lookup: build a key → value map from the right side, iterate the left frame, and collect only matching keys.
+Unlike many other grouped transformations, MDA does expose database-style join primitives directly through `Merge`. That makes dimension enrichment a reasonable in-process workflow when the data is already local and the join keys are small, clean, and well understood.
 
-_Simulates an inner join via a dictionary lookup on `suffix`, adding `exchange_name` and `country` columns only for rows with a matching key — yielding 66355 matched rows, identical to the Polars result._
+_Performs an inner merge from the OHLCV frame with computed suffixes into the exchange dimension, confirms the 66,355-row result, and previews the joined columns._
 
 ```csharp
-// Deedle — Inner join by building a lookup dictionary
-var exLookup = new Dictionary<string, (string name, string country)>();
-var dimSuffix = dimExD.GetColumn<string>("suffix");
-var dimName   = dimExD.GetColumn<string>("exchange_name");
-var dimCountry = dimExD.GetColumn<string>("country");
+// MDA — Inner join OHLCV (with suffix) to exchange dimension
+var innerDfM = dfWithSuffixM.Merge(dimExM, new[] { "suffix" }, new[] { "suffix" }, joinAlgorithm: MDA.JoinAlgorithm.Inner);
 
-foreach (var obs in dimSuffix.Observations)
-    exLookup[obs.Value] = (dimName[obs.Key], dimCountry[obs.Key]);
+display($"Inner join shape: ({innerDfM.Rows.Count}, {innerDfM.Columns.Count})");
 
-var suffixColD = dfDWithSuffix.GetColumn<string>("suffix");
-var exNameBuilder = new SeriesBuilder<int, string>();
-var exCountryBuilder = new SeriesBuilder<int, string>();
+// MDA renames the join key. We clone it and rename it back to 'suffix' for a clean projection.
+var cleanSuffixM = innerDfM.Columns["suffix_left"].Clone();
+cleanSuffixM.SetName("suffix");
 
-foreach (var obs in suffixColD.Observations)
-{
-    if (exLookup.ContainsKey(obs.Value))
-    {
-        exNameBuilder.Add(obs.Key, exLookup[obs.Value].name);
-        exCountryBuilder.Add(obs.Key, exLookup[obs.Value].country);
-    }
-}
-
-// Inner: keep only rows that had a match
-var matchedKeys = exNameBuilder.Series.Keys.ToArray();
-var innerD = dfDWithSuffix.Rows[matchedKeys].Clone();
-innerD.AddColumn("exchange_name", exNameBuilder.Series);
-innerD.AddColumn("country", exCountryBuilder.Series);
-
-display($"Inner join rows: {innerD.RowCount}");
-innerD.Columns[new[] { "symbol", "date", "close", "suffix", "exchange_name", "country" }].Rows[innerD.RowKeys.Take(8)]
+new MDA.DataFrame(
+    innerDfM.Columns["symbol"],
+    innerDfM.Columns["date"],
+    innerDfM.Columns["close"],
+    cleanSuffixM,
+    innerDfM.Columns["exchange_name"],
+    innerDfM.Columns["country"]
+).Head(8)
 ```
 
-    Inner join rows: 66355
+```text
+Inner join shape: (66355, 16)
+```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>suffix</th><th>exchange_name</th><th>country</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>6</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111783403036187"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>suffix</th><th>exchange_name</th><th>country</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr></tbody></table>
 
 ### Left Join
 
@@ -807,64 +747,64 @@ leftP.GroupBy("symbol").Agg(Col("suffix").First().Alias("suffix"), Col("exchange
     .Sort("suffix").Head(10)
 ```
 
-    Left join shape: (66355, 14)
+Left join shape: (66355, 14)
 
-    Null exchange_name count: 15889 (unmatched .BR, .MC, .MI, .HE)
+Null exchange_name count: 15889 (unmatched .BR, .MC, .MI, .HE)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>suffix</th><th>exchange_name</th></tr></thead><tbody><tr><td>AD.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>ADYEN.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>ASML.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>INGA.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>PRX.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>WKL.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td>ABI.BR</td><td>.BR</td><td class='pl-null'>null</td></tr><tr><td>ARGX.BR</td><td>.BR</td><td class='pl-null'>null</td></tr><tr><td>ADS.DE</td><td>.DE</td><td>XETRA Frankfurt</td></tr><tr><td>ALV.DE</td><td>.DE</td><td>XETRA Frankfurt</td></tr></tbody></table></div>
 
-#### Deedle | Left join
+#### Microsoft.Data.Analysis | Left join
 
-Simulate a left join by iterating all rows of the left frame and looking up each key in the right-side dictionary. Rows without a match receive a sentinel value (`"N/A"`) rather than a true null — Deedle strings have no native null representation.
+Left joins in MDA use the same `Merge` primitive with a different join algorithm. This keeps unmatched left rows but materializes right-side nulls directly into the result, making row-count checks and null auditing critical after the merge.
 
-> [!info] Deedle uses OptionalValue, not null, for missing data
->
-> Deedle represents missing values as `OptionalValue<T>.Missing`, not `null`. When building string columns with `SeriesBuilder`, there is no way to insert a true missing string — use a sentinel like `"N/A"` or `""` instead. This differs from Polars.NET, where unmatched left-join rows produce `null` in the output column.
-
-_Iterates all 66K OHLCV rows, filling `exchange_name` and `country` with the matched exchange data or `"N/A"` for the 15889 unmatched rows — preserving all rows in the left frame._
+_Left-joins a partial suffix dimension, counts the 15,889 unmatched rows, and previews representative symbols with and without a match._
 
 ```csharp
-// Deedle — Left join: keep all rows, fill missing with "N/A"
-var leftNameBuilder = new SeriesBuilder<int, string>();
-var leftCountryBuilder = new SeriesBuilder<int, string>();
+// MDA — Left join with partial dimM table
+var dimPartialM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("suffix", new[] { ".DE", ".PA", ".AS" }),
+    new MDA.StringDataFrameColumn("exchange_name", new[] { "XETRA Frankfurt", "Euronext Paris", "Euronext Amsterdam" })
+);
 
-foreach (var obs in suffixColD.Observations)
+var leftDfM = dfWithSuffixM.Merge(dimPartialM, new[] { "suffix" }, new[] { "suffix" }, joinAlgorithm: MDA.JoinAlgorithm.Left);
+display($"Left join shape: ({leftDfM.Rows.Count}, {leftDfM.Columns.Count})");
+
+var nullCountM = 0;
+var leftExchM = leftDfM.Columns["exchange_name"];
+for(long i = 0; i < leftDfM.Rows.Count; i++) if (leftExchM[i] == null) nullCountM++;
+
+display($"Null exchange_name count: {nullCountM} (unmatched .BR, .MC, .MI, .HE)");
+
+// Unique symbols demonstration
+var displayedSymsM = new HashSet<string>();
+var partialShowMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", leftDfM.Rows.Count);
+for(long i = 0; i < leftDfM.Rows.Count; i++)
 {
-    if (exLookup.ContainsKey(obs.Value))
+    var s = leftDfM.Columns["symbol"][i]?.ToString();
+    if(s != null && !displayedSymsM.Contains(s))
     {
-        leftNameBuilder.Add(obs.Key, exLookup[obs.Value].name);
-        leftCountryBuilder.Add(obs.Key, exLookup[obs.Value].country);
-    }
-    else
-    {
-        leftNameBuilder.Add(obs.Key, "N/A");
-        leftCountryBuilder.Add(obs.Key, "N/A");
+        displayedSymsM.Add(s);
+        partialShowMaskM[i] = true;
     }
 }
 
-var leftD = dfDWithSuffix.Clone();
-leftD.AddColumn("exchange_name", leftNameBuilder.Series);
-leftD.AddColumn("country", leftCountryBuilder.Series);
+var uniqueLeftM = leftDfM.Filter(partialShowMaskM).OrderBy("suffix_left"); // Use suffix_left here
 
-display($"Left join rows: {leftD.RowCount}");
-leftD.Columns[new[] { "symbol", "close", "suffix", "exchange_name", "country" }].Rows[leftD.RowKeys.Take(8)]
+var cleanSuffixLeftM = uniqueLeftM.Columns["suffix_left"].Clone();
+cleanSuffixLeftM.SetName("suffix");
+
+new MDA.DataFrame(uniqueLeftM.Columns["symbol"], cleanSuffixLeftM, uniqueLeftM.Columns["exchange_name"]).Head(10)
 ```
 
-    Left join rows: 66355
+```text
+Left join shape: (66355, 15)
+```
 
-<div>
+```text
+Null exchange_name count: 15889 (unmatched .BR, .MC, .MI, .HE)
+```
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>close</th><th>suffix</th><th>exchange_name</th><th>country</th></thead><thead><th></th><th></th><th>(string)</th><th>(Decimal)</th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.21</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.18</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.77</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.4</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.86</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>56.61</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>56.51</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>56.48</td><td>.BR</td><td>Euronext Brussels</td><td>Belgium</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111783529487523"><thead><tr><th><i>index</i></th><th>symbol</th><th>suffix</th><th>exchange_name</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>WKL.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>AD.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>PRX.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ADYEN.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>INGA.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td>.AS</td><td>Euronext Amsterdam</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ARGX.BR</td><td>.BR</td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td>.BR</td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ENR.DE</td><td>.DE</td><td>XETRA Frankfurt</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ALV.DE</td><td>.DE</td><td>XETRA Frankfurt</td></tr></tbody></table>
 
 ### Anti Join
 
@@ -887,40 +827,45 @@ display($"Unique unmatched suffixes: {unmatchedSuffixes}");
 antiP.Select("symbol", "date", "suffix").Head(8)
 ```
 
-    Anti join shape: (15889, 13) (rows without .DE, .PA, .AS)
+Anti join shape: (15889, 13) (rows without .DE, .PA, .AS)
 
-    Unique unmatched suffixes: .BR, .HE, .MI, .MC
+Unique unmatched suffixes: .BR, .HE, .MI, .MC
 
 <!-- Polars DataFrame: (8 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>suffix</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>.BR</td></tr></tbody></table></div>
 
-#### Deedle | Anti join (manual set difference)
+#### Microsoft.Data.Analysis | Anti join equivalent
 
-Deedle has no anti join. Filter the left frame by set difference: build a `HashSet<string>` from the right-side keys, then keep only left rows whose key is **not** in the set.
+MDA has no dedicated anti-join operator in the dataframe API used here, so the practical pattern is a left join followed by a null filter on the right-side enrichment column. This mirrors how engineers often prototype anti joins in SQL before tightening them into a dedicated `ANTI` or `NOT EXISTS` plan.
 
-_Builds a `HashSet<string>` of all 7 exchange suffixes, then filters the OHLCV suffix column to rows NOT in that set — returning 0 rows because all 7 suffixes are present in the full dimension table._
+_Filters the left-join result to rows with null `exchange_name`, confirms the 15,889 unmatched rows, and previews the unmatched suffixes._
 
 ```csharp
-// Deedle — Anti join: Deedle has no native anti join
-// Keep rows whose suffix is NOT in the exchange dimension
-var dimSuffixSet = new HashSet<string>(dimExD.GetColumn<string>("suffix").Observations.Select(o => o.Value));
-var antiKeys = suffixColD.Observations
-    .Where(o => !dimSuffixSet.Contains(o.Value))
-    .Select(o => o.Key)
-    .ToArray();
+// MDA — Anti join equivalent (Left join + filter where right is null)
+var antiMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", leftDfM.Rows.Count);
+for(long i = 0; i < leftDfM.Rows.Count; i++) antiMaskM[i] = leftDfM.Columns["exchange_name"][i] == null;
+var antiDfM = leftDfM.Filter(antiMaskM);
 
-if (antiKeys.Length > 0)
-{
-    var antiD = dfDWithSuffix.Rows[antiKeys];
-    display($"Anti join rows: {antiD.RowCount}");
-    display(antiD.Rows[antiD.RowKeys.Take(5)]);
-}
-else
-{
-    display("Anti join: 0 rows — all suffixes matched the dimension table.");
-}
+display($"Anti join shape: ({antiDfM.Rows.Count}, {antiDfM.Columns.Count}) (rows without .DE, .PA, .AS)");
+
+// Extract unique suffixes using suffix_left
+var unqSuffixesM = antiDfM.Columns["suffix_left"].Cast<string>().Where(x => x != null).Distinct().ToList();
+display($"Unique unmatched suffixes: {string.Join(", ", unqSuffixesM)}");
+
+var cleanSuffixAntiM = antiDfM.Columns["suffix_left"].Clone();
+cleanSuffixAntiM.SetName("suffix");
+
+new MDA.DataFrame(antiDfM.Columns["symbol"], antiDfM.Columns["date"], cleanSuffixAntiM).Head(8)
 ```
 
-    Anti join: 0 rows — all suffixes matched the dimension table.
+```text
+Anti join shape: (15889, 15) (rows without .DE, .PA, .AS)
+```
+
+```text
+Unique unmatched suffixes: .BR, .MC, .MI, .HE
+```
+
+<table id="table_639111783743454419"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>suffix</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td>.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td>.BR</td></tr></tbody></table>
 
 ### Semi Join
 
@@ -928,9 +873,9 @@ else
 
 `JoinType.Semi` returns only the rows from the left frame whose key **has a match** in the right frame — but without adding any columns from the right. Use it to filter a large frame down to rows that exist in a reference set.
 
-> [!info] Semi join has no Deedle equivalent
+> [!info] Semi join is a pure existence filter
 >
-> Deedle has no semi join. The equivalent is a manual set-intersection filter: build a `HashSet<T>` from the right-side keys and keep left rows whose key is in the set. This is identical in behavior but requires explicit iteration.
+> A semi join keeps only the left-side rows whose keys exist on the right and does not project right-side columns. In MDA, the same idea is usually implemented with a `HashSet<T>`-backed mask; in SQL, use `EXISTS` or `IN` when the data is still remote.
 
 _Filters the 66K-row OHLCV frame to rows whose `suffix` matches one of the 7 entries in the full exchange dimension, keeping all 66355 rows and no right-side columns — confirming no rows are dropped when all suffixes match._
 
@@ -945,9 +890,19 @@ display($"Semi join shape: {semiP.Shape}  (original: {dfPWithSuffix.Shape})");
 semiP.Select("symbol", "date", "suffix").Head(5)
 ```
 
-    Semi join shape: (66355, 13)  (original: (66355, 13))
+Semi join shape: (66355, 13)  (original: (66355, 13))
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>suffix</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>.BR</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>.BR</td></tr></tbody></table></div>
+
+#### Microsoft.Data.Analysis | Semi join via HashSet-backed filter
+
+MDA does not expose a dedicated semi-join algorithm in the same way Polars exposes `how: Semi`. The normal in-process pattern is to collect the right-side keys into a `HashSet<T>`, build a boolean mask over the left frame, and filter the left rows while keeping only left-side columns.
+
+_Use a semi join in MDA as a row-existence predicate when the data is already local. If the right side still lives in a database or warehouse, push this logic upstream as `EXISTS`, `IN`, or a filtered dimension pull so the optimizer can prune rows before extraction._
+
+> [!tip] Prefer semi joins as predicates, not enrichment joins
+>
+> A semi join answers “does a match exist?” and should usually avoid materializing right-side payload columns. When the right frame is large, a full merge just to discard the right columns is unnecessary memory work.
 
 ### Cross Join
 
@@ -959,9 +914,9 @@ semiP.Select("symbol", "date", "suffix").Head(5)
 >
 > A cross join of two 1,000-row frames produces 1,000,000 rows. Never cross-join large frames without filtering or limiting both sides first. Always verify `result.Shape` before using the output.
 
-> [!info] Cross join has no Deedle equivalent
+> [!info] Cross join is a deliberate Cartesian product
 >
-> Deedle has no cross join. Implement in LINQ with `from r1 in leftRows from r2 in rightRows select (r1, r2)`, then build a new frame from the paired tuples.
+> MDA has no dedicated cross-join helper in this notebook workflow. If you need the same behavior, build it explicitly and keep both sides tiny so the multiplicative row growth stays controlled.
 
 _Cross-joins a 2-symbol frame (`ASML.AS`, `MC.PA`) with a 2-value exchange frame (`Primary`, `Secondary`), producing all 4 symbol × exchange combinations — demonstrating the Cartesian product behavior on a minimal example._
 
@@ -980,11 +935,26 @@ display($"Cross join shape: {crossP.Shape}");
 crossP
 ```
 
-    Cross join shape: (4, 2)
+Cross join shape: (4, 2)
 
 <!-- Polars DataFrame: (4 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>exchange</th></tr></thead><tbody><tr><td>ASML.AS</td><td>Primary</td></tr><tr><td>ASML.AS</td><td>Secondary</td></tr><tr><td>MC.PA</td><td>Primary</td></tr><tr><td>MC.PA</td><td>Secondary</td></tr></tbody></table></div>
 
+#### Microsoft.Data.Analysis | Cross join via explicit Cartesian construction
+
+MDA has no dedicated cross-join helper in this chapter's workflow. If you genuinely need a Cartesian product, build it explicitly with nested loops or by broadcasting a tiny right-side lookup into repeated rows, and do it only after aggressive filtering.
+
+_Reserve cross joins in MDA for tiny scenario matrices, parameter grids, or notebook-scale lookup expansion. For anything larger, let a database, warehouse, Spark, or Polars lazy plan own the cardinality growth._
+
+> [!warning] Cross joins amplify row counts multiplicatively
+>
+> A `10,000 x 1,000` Cartesian product creates 10 million rows before any downstream transform. This is a memory and notebook-responsiveness risk in both libraries.
+>
+> [!success] Keep cross joins tiny or move them upstream
+>
+> Filter both sides first, project only the needed columns, and prefer upstream execution when the product is larger than a small exploratory or feature-grid workload.
+
 ---
+
 ## Concatenation
 
 ### Vertical Concatenation
@@ -1005,41 +975,41 @@ display($"Top: {topP.Shape}  Bot: {botP.Shape}  VStack: {vcatP.Shape}");
 vcatP.Head(5)
 ```
 
-    Top: (10, 12)  Bot: (10, 12)  VStack: (20, 12)
+Top: (10, 12)  Bot: (10, 12)  VStack: (20, 12)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle | Vertical concatenation
+#### Microsoft.Data.Analysis | Vertical concatenation
 
-`frame1.Merge(frame2)` combines two frames vertically by aligning on column names. **Row keys must not overlap** — Deedle uses integer row keys, so take rows from the original frame using non-overlapping key ranges.
+MDA does not expose a Polars-style `VStack` convenience, but it can append rows in place once the schema is aligned. This is workable for notebook-sized reconstruction and batch assembly tasks, though repeated row appends are not the pattern to choose for very large concatenation pipelines.
 
-_Merges rows 0–9 and rows 10–19 from the OHLCV frame into a single 20-row frame using `Merge`, aligning on column names — row keys must not overlap for Deedle's integer-indexed frames._
+_Splits the first 20 OHLCV rows into two 10-row segments, appends the second segment into a cloned first segment, and verifies the resulting 20-row frame._
 
 ```csharp
-// Deedle — Merge two frames vertically (row keys must not overlap)
-var topD = dfD.Rows[dfD.RowKeys.Take(10)];
-var botD = dfD.Rows[dfD.RowKeys.Skip(10).Take(10)];
-var vcatD = topD.Merge(botD);
+// MDA — Split first 10 and next 10, then vertical concat (VStack)
+var topM = dfM.Head(10);
 
-display($"Top: {topD.RowCount}  Bot: {botD.RowCount}  Concat: {vcatD.RowCount} x {vcatD.ColumnCount}");
-vcatD.Rows[vcatD.RowKeys.Take(5)]
+var botMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", dfM.Rows.Count);
+for(long i = 10; i < 20 && i < dfM.Rows.Count; i++) botMaskM[i] = true;
+var botM = dfM.Filter(botMaskM);
+
+var vcatM = topM.Clone();
+for(long i = 0; i < botM.Rows.Count; i++)
+{
+    var rowVals = new List<KeyValuePair<string, object>>();
+    foreach(var c in botM.Columns) rowVals.Add(new KeyValuePair<string, object>(c.Name, c[i]));
+    vcatM.Append(rowVals, inPlace: true);
+}
+
+display($"Top: ({topM.Rows.Count}, {topM.Columns.Count})  Bot: ({botM.Rows.Count}, {botM.Columns.Count})  Concat: ({vcatM.Rows.Count}, {vcatM.Columns.Count})");
+vcatM.Head(5)
 ```
 
-    Top: 10  Bot: 10  Concat: 20 x 12
+```text
+Top: (10, 12)  Bot: (10, 12)  Concat: (20, 12)
+```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>21163</td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>21164</td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111782434593848"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>21160</pre></div></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>53.5761</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>21161</pre></div></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>53.548</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>21162</pre></div></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>55.037</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>21163</pre></div></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td><div class="dni-plaintext"><pre>58.86</pre></div></td><td><div class="dni-plaintext"><pre>57.88</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>54.6905</pre></div></td><td><div class="dni-plaintext"><pre>1469911</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>21164</pre></div></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>57.43</pre></div></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>54.1848</pre></div></td><td><div class="dni-plaintext"><pre>1428681</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
 
 ### Horizontal Concatenation
 
@@ -1064,44 +1034,37 @@ display($"Left: {leftCols.Shape}  Right: {rightCols.Shape}  HStacked: {hcatP.Sha
 hcatP
 ```
 
-    Left: (5, 3)  Right: (5, 3)  HStacked: (5, 6)
+Left: (5, 3)  Right: (5, 3)  HStacked: (5, 6)
 
 <!-- Polars DataFrame: (5 rows, 6 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th><th>high</th><th>low</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1513937</td><td>58.85</td><td>56.78</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1382722</td><td>57.98</td><td>56.75</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1370204</td><td>58.94</td><td>57.39</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1469911</td><td>58.86</td><td>57.88</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1428681</td><td>58.4</td><td>57.43</td></tr></tbody></table></div>
 
-#### Deedle | Horizontal concatenation
+#### Microsoft.Data.Analysis | Horizontal concatenation
 
-`frame1.Join(frame2, JoinKind.Inner)` aligns two frames on their shared row keys and concatenates their columns. Use `JoinKind.Inner` to keep only rows present in both, or `JoinKind.Outer` to keep all rows and fill gaps with missing values.
+Horizontal combination in MDA is schema-first rather than key-aware by default. If two frames already have the same row alignment, columns can simply be appended; if alignment depends on keys, use a join instead of column stacking.
 
-_Joins two 5-row, 3-column frames on shared integer row keys using `JoinKind.Inner`, producing a (5, 6) frame with columns from both sides aligned by key — equivalent to Polars' HStack but key-aligned._
+_Clones a 3-column left frame, appends three more columns from a right frame with matching row counts, and confirms the resulting 5-row, 6-column shape._
 
 ```csharp
-// Deedle — Join frames side by side (aligns on row keys)
-var leftColsD = dfD.Columns[new[] { "symbol", "date", "close" }].Rows[dfD.RowKeys.Take(5)];
-var rightColsD = dfD.Columns[new[] { "volume", "high", "low" }].Rows[dfD.RowKeys.Take(5)];
-var hcatD = leftColsD.Join(rightColsD, JoinKind.Inner);
+// MDA — Horizontal concat (HStack equivalent)
+var leftColsM = new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dfM.Columns["close"]).Head(5);
+var rightColsM = new MDA.DataFrame(dfM.Columns["volume"], dfM.Columns["high"], dfM.Columns["low"]).Head(5);
 
-display($"Left: {leftColsD.RowCount}x{leftColsD.ColumnCount}  Right: {rightColsD.RowCount}x{rightColsD.ColumnCount}  Joined: {hcatD.RowCount}x{hcatD.ColumnCount}");
-hcatD
+var hcatM = leftColsM.Clone();
+foreach(var c in rightColsM.Columns) hcatM.Columns.Add(c);
+
+display($"Left: ({leftColsM.Rows.Count}, {leftColsM.Columns.Count})  Right: ({rightColsM.Rows.Count}, {rightColsM.Columns.Count})  HStacked: ({hcatM.Rows.Count}, {hcatM.Columns.Count})");
+hcatM
 ```
 
-    Left: 5x3  Right: 5x3  Joined: 5x6
+```text
+Left: (5, 3)  Right: (5, 3)  HStacked: (5, 6)
+```
 
-<div>
+<table id="table_639111783765694260"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>volume</th><th>high</th><th>low</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>1469911</pre></div></td><td><div class="dni-plaintext"><pre>58.86</pre></div></td><td><div class="dni-plaintext"><pre>57.88</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>1428681</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>57.43</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>volume</th><th>high</th><th>low</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>1513937</td><td>58.85</td><td>56.78</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>1382722</td><td>57.98</td><td>56.75</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>1370204</td><td>58.94</td><td>57.39</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>1469911</td><td>58.86</td><td>57.88</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>1428681</td><td>58.4</td><td>57.43</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>6</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Reshaping
+
+Pivot and melt are often presentation or feature-construction steps rather than core storage layouts. Wide pivots can explode column counts, while unpivot multiplies row counts. The safest pattern is to filter and aggregate first, then reshape only the subset that genuinely needs a wide report matrix or a long modeling layout.
 
 ### Pivot (Long to Wide)
 
@@ -1128,58 +1091,82 @@ display($"Pivot shape: {pivotP.Shape}");
 pivotP.Head(10)
 ```
 
-    Subset: (30, 3)
+Subset: (30, 3)
 
-    Pivot shape: (1, 31)
+Pivot shape: (1, 31)
 
 <!-- Polars DataFrame: (1 rows, 31 columns) --><table><thead><tr><th>symbol</th><th>2021-01-04</th><th>2021-01-05</th><th>2021-01-06</th><th>2021-01-07</th><th>2021-01-08</th><th>2021-01-11</th><th>2021-01-12</th><th>2021-01-13</th><th>2021-01-14</th><th>2021-01-15</th><th>2021-01-18</th><th>2021-01-19</th><th>2021-01-20</th><th>2021-01-21</th><th>2021-01-22</th><th>2021-01-25</th><th>2021-01-26</th><th>2021-01-27</th><th>2021-01-28</th><th>2021-01-29</th><th>2021-02-01</th><th>2021-02-02</th><th>2021-02-03</th><th>2021-02-04</th><th>2021-02-05</th><th>2021-02-08</th><th>2021-02-09</th><th>2021-02-10</th><th>2021-02-11</th><th>2021-02-12</th></tr></thead><tbody><tr><td>ASML.AS</td><td>406.25</td><td>406.9</td><td>402.85</td><td>403.9</td><td>416.05</td><td>414.9</td><td>418.95</td><td>422.45</td><td>447.35</td><td>435.85</td><td>437.6</td><td>439.9</td><td>453.15</td><td>470.55</td><td>462.9</td><td>461.35</td><td>458.55</td><td>440.65</td><td>449</td><td>439.45</td><td>454.9</td><td>457.5</td><td>457.15</td><td>459.55</td><td>460</td><td>467.1</td><td>469.75</td><td>464.1</td><td>480.45</td><td>494.75</td></tr></tbody></table></div>
 
-#### Deedle | Pivot (manual FrameBuilder)
+#### Microsoft.Data.Analysis | Pivot (long to wide)
 
-Deedle's native `PivotTable<R,C,V>()` API requires homogeneous types and is cumbersome for mixed-type frames. The practical alternative: build one `Series<date, double>` per symbol and assemble them into a frame with `FrameBuilder.Columns`.
+MDA has no single-call pivot API in this notebook workflow, so pivoting means explicitly enumerating the unique row and column keys, creating the wide schema, and populating the matrix cell by cell. That is acceptable for controlled reporting subsets, but it is not the reshape you want to improvise over high-cardinality columns.
 
-> [!info] Deedle's natural pivot is a "wide" frame indexed by date
->
-> Deedle's approach — one Series per symbol aligned on a shared date index — produces a frame where dates are row keys and symbols are column keys. This is the canonical Deedle representation for time-series cross-sectional data and is more idiomatic than the Polars long→wide pivot for this use case.
-
-_Builds one `Series<date, double>` per symbol (SAP.DE, ASML.AS, MC.PA) and assembles them via `FrameBuilder.Columns`, producing a 1331-row × 3-column frame where dates are row keys and symbols are column headers._
+_Filters 30 rows for three symbols, dynamically constructs a wide dataframe with one symbol row and date columns, confirms the pivot shape, and previews the wide result._
 
 ```csharp
-// Deedle — Manual pivot: reshape long to wide
-var symFilter = new HashSet<string> { "SAP.DE", "ASML.AS", "MC.PA" };
-var symColPvt = dfD.GetColumn<string>("symbol");
-var dateColPvt = dfD.GetColumn<string>("date");
-var closeColPvt = dfD.GetColumn<double>("close");
-
-// Build one Series<date, close> per symbol, then combine into a Frame
-var builder = new FrameBuilder.Columns<string, string>();
-foreach (var sym in symFilter)
+// MDA — Pivot: daily close prices with symbols as columns
+var filterSymsM = new[] { "SAP.DE", "ASML.AS", "MC.PA" };
+var pivotMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", dfM.Rows.Count);
+int addedM = 0;
+for(long i = 0; i < dfM.Rows.Count && addedM < 30; i++)
 {
-    var keys = symColPvt.Observations.Where(o => o.Value == sym).Select(o => o.Key).ToArray();
-    var dates = keys.Select(k => dateColPvt.Observations.First(o => o.Key == k).Value).ToArray();
-    var closes = keys.Select(k => closeColPvt.Observations.First(o => o.Key == k).Value).ToArray();
-    builder.Add(sym, new Series<string, double>(dates, closes));
+    var s = symColM[i]?.ToString();
+    if(s != null && filterSymsM.Contains(s))
+    {
+        pivotMaskM[i] = true;
+        addedM++;
+    }
 }
-var pivotD = builder.Frame;
-display($"Pivot shape: {pivotD.RowCount} x {pivotD.ColumnCount}");
-pivotD.Rows[pivotD.RowKeys.Take(10)]
+
+var pivotSubsetM = dfM.Filter(pivotMaskM);
+var finalSubsetM = new MDA.DataFrame(pivotSubsetM.Columns["symbol"], pivotSubsetM.Columns["date"], pivotSubsetM.Columns["close"]);
+display($"Subset: ({finalSubsetM.Rows.Count}, {finalSubsetM.Columns.Count})");
+
+// Extract distinct pivot values
+var pivotSymsM = finalSubsetM.Columns["symbol"].Cast<string>().Distinct().ToList();
+var pivotDatesM = finalSubsetM.Columns["date"].Cast<DateTime?>().Distinct().OrderBy(d => d).ToList();
+
+// Build dynamically pivoted columns
+var pivotColsM = new List<MDA.DataFrameColumn>();
+
+// Initialize the String column safely using the explicit length
+var symColumnM = new MDA.StringDataFrameColumn("symbol", pivotSymsM.Count);
+for(int i = 0; i < pivotSymsM.Count; i++) symColumnM[i] = pivotSymsM[i];
+pivotColsM.Add(symColumnM);
+
+foreach(var d in pivotDatesM)
+{
+    pivotColsM.Add(new MDA.PrimitiveDataFrameColumn<double>(d?.ToString("yyyy-MM-dd"), pivotSymsM.Count));
+}
+var pivotDfM = new MDA.DataFrame(pivotColsM);
+
+// Populate matrix
+for(long i = 0; i < finalSubsetM.Rows.Count; i++)
+{
+    var s = finalSubsetM.Columns["symbol"][i]?.ToString();
+    var d = ((DateTime?)finalSubsetM.Columns["date"][i])?.ToString("yyyy-MM-dd");
+    var c = Convert.ToDouble(finalSubsetM.Columns["close"][i]);
+
+    int rIdx = pivotSymsM.IndexOf(s);
+    if(rIdx >= 0 && d != null) pivotDfM.Columns[d][rIdx] = c;
+}
+
+display($"Pivot shape: ({pivotDfM.Rows.Count}, {pivotDfM.Columns.Count})");
+
+// FIXED: Manually clamp the Head request to avoid MDA's out-of-bounds bug
+int headCountM = (int)Math.Min(10, pivotDfM.Rows.Count);
+pivotDfM.Head(headCountM)
 ```
 
-    Pivot shape: 1331 x 3
+```text
+Subset: (30, 3)
+```
 
-<div>
+```text
+Pivot shape: (1, 31)
+```
 
-<table>
-
-<thead><th></th><th></th><th>SAP.DE</th><th>ASML.AS</th><th>MC.PA</th></thead><thead><th></th><th></th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>04-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>105.32</td><td>406.25</td><td>512.1</td></tr><tr><td><b>05-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>105.04</td><td>406.9</td><td>506.2</td></tr><tr><td><b>06-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>105.48</td><td>402.85</td><td>502.3</td></tr><tr><td><b>07-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>104.52</td><td>403.9</td><td>515.3</td></tr><tr><td><b>08-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>106.18</td><td>416.05</td><td>525.3</td></tr><tr><td><b>11-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>106.04</td><td>414.9</td><td>522.4</td></tr><tr><td><b>12-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>105.74</td><td>418.95</td><td>515.8</td></tr><tr><td><b>13-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>105.36</td><td>422.45</td><td>512.1</td></tr><tr><td><b>14-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>104.2</td><td>447.35</td><td>508</td></tr><tr><td><b>15-Jan-21 0:00:00</b></td><td class="no-wrap">-></td><td>103.52</td><td>435.85</td><td>493.95</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639111784464572633"><thead><tr><th><i>index</i></th><th>symbol</th><th>2021-01-04</th><th>2021-01-05</th><th>2021-01-06</th><th>2021-01-07</th><th>2021-01-08</th><th>2021-01-11</th><th>2021-01-12</th><th>2021-01-13</th><th>2021-01-14</th><th>2021-01-15</th><th>2021-01-18</th><th>2021-01-19</th><th>2021-01-20</th><th>2021-01-21</th><th>2021-01-22</th><th>2021-01-25</th><th>2021-01-26</th><th>2021-01-27</th><th>2021-01-28</th><th>2021-01-29</th><th>2021-02-01</th><th>2021-02-02</th><th>2021-02-03</th><th>2021-02-04</th><th>2021-02-05</th><th>2021-02-08</th><th>2021-02-09</th><th>2021-02-10</th><th>2021-02-11</th><th>2021-02-12</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>406.25</pre></div></td><td><div class="dni-plaintext"><pre>406.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>402.8500061035156</pre></div></td><td><div class="dni-plaintext"><pre>403.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>416.04998779296875</pre></div></td><td><div class="dni-plaintext"><pre>414.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>418.95001220703125</pre></div></td><td><div class="dni-plaintext"><pre>422.45001220703125</pre></div></td><td><div class="dni-plaintext"><pre>447.3500061035156</pre></div></td><td><div class="dni-plaintext"><pre>435.8500061035156</pre></div></td><td><div class="dni-plaintext"><pre>437.6000061035156</pre></div></td><td><div class="dni-plaintext"><pre>439.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>453.1499938964844</pre></div></td><td><div class="dni-plaintext"><pre>470.54998779296875</pre></div></td><td><div class="dni-plaintext"><pre>462.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>461.3500061035156</pre></div></td><td><div class="dni-plaintext"><pre>458.54998779296875</pre></div></td><td><div class="dni-plaintext"><pre>440.6499938964844</pre></div></td><td><div class="dni-plaintext"><pre>449</pre></div></td><td><div class="dni-plaintext"><pre>439.45001220703125</pre></div></td><td><div class="dni-plaintext"><pre>454.8999938964844</pre></div></td><td><div class="dni-plaintext"><pre>457.5</pre></div></td><td><div class="dni-plaintext"><pre>457.1499938964844</pre></div></td><td><div class="dni-plaintext"><pre>459.54998779296875</pre></div></td><td><div class="dni-plaintext"><pre>460</pre></div></td><td><div class="dni-plaintext"><pre>467.1000061035156</pre></div></td><td><div class="dni-plaintext"><pre>469.75</pre></div></td><td><div class="dni-plaintext"><pre>464.1000061035156</pre></div></td><td><div class="dni-plaintext"><pre>480.45001220703125</pre></div></td><td><div class="dni-plaintext"><pre>494.75</pre></div></td></tr></tbody></table>
 
 ### Unpivot (Wide to Long)
 
@@ -1204,99 +1191,82 @@ display($"Melted shape: {meltedP.Shape}");
 meltedP.Head(12)
 ```
 
-    Melted shape: (20, 4)
+Melted shape: (20, 4)
 
 <!-- Polars DataFrame: (12 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>variable</th><th>value</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>open</td><td>58.15</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>open</td><td>56.9</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>open</td><td>57.96</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>open</td><td>58.68</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>open</td><td>58.16</td></tr><tr><td>ABI.BR</td><td>2021-01-04</td><td>high</td><td>58.85</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>high</td><td>57.98</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>high</td><td>58.94</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>high</td><td>58.86</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>high</td><td>58.4</td></tr><tr><td colspan='4'>... 2 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle | Unpivot (manual reshape)
+#### Microsoft.Data.Analysis | Unpivot (wide to long)
 
-Deedle has no melt/unpivot operation. Implement by iterating each row and emitting one output row per value column, building four parallel lists (symbol, date, variable, value) and assembling them into a new frame.
+Unpivot in MDA is the inverse manual process: iterate the measure columns, emit one output row per original value, and materialize the long-form result into typed columns. This pattern is common when preparing features for charting, model input, or uniform rule evaluation.
 
-_Iterates the 5 subset rows, emitting 4 output rows per input row (one per OHLC column) — assembling the 20-row result via parallel `List<T>` collectors and a new `FrameBuilder.Columns` frame._
+_Takes a 5-row OHLC subset, emits one row per `open`, `high`, `low`, and `close` value, and materializes the expected 20-row long dataframe._
 
 ```csharp
-// Deedle — Manual melt: iterate rows, emit one row per value column
-var meltCols = new[] { "open", "high", "low", "close" };
-var subsetD = dfD.Columns[new[] { "symbol", "date", "open", "high", "low", "close" }]
-    .Rows[dfD.RowKeys.Take(5)];
+// MDA — Melt/Unpivot: turn OHLC columns into rows
+var ohlcSubsetM = new MDA.DataFrame(dfM.Columns["symbol"], dfM.Columns["date"], dfM.Columns["open"], dfM.Columns["high"], dfM.Columns["low"], dfM.Columns["close"]).Head(5);
 
-var meltSymbol = new List<string>();
-var meltDate   = new List<string>();
-var meltVar    = new List<string>();
-var meltVal    = new List<double>();
+var varsM = new[] { "open", "high", "low", "close" };
+// FIXED: Changed int to long
+long meltedCountM = ohlcSubsetM.Rows.Count * varsM.Length;
 
-foreach (var rowKey in subsetD.RowKeys)
+var meltSymM = new MDA.StringDataFrameColumn("symbol", meltedCountM);
+var meltDateM = new MDA.PrimitiveDataFrameColumn<DateTime>("date", meltedCountM);
+var meltVarM = new MDA.StringDataFrameColumn("variable", meltedCountM);
+var meltValM = new MDA.PrimitiveDataFrameColumn<double>("value", meltedCountM);
+
+long mIdxM = 0; // FIXED: Consistent with long indexing
+foreach(var v in varsM)
 {
-    var row = subsetD.Rows[rowKey];
-    var sym = row.GetAs<string>("symbol");
-    var dt  = row.GetAs<string>("date");
-    foreach (var col in meltCols)
+    for(long i = 0; i < ohlcSubsetM.Rows.Count; i++)
     {
-        meltSymbol.Add(sym);
-        meltDate.Add(dt);
-        meltVar.Add(col);
-        meltVal.Add(row.GetAs<double>(col));
+        meltSymM[mIdxM] = ohlcSubsetM.Columns["symbol"][i]?.ToString();
+        if(ohlcSubsetM.Columns["date"][i] is DateTime dt) meltDateM[mIdxM] = dt;
+        meltVarM[mIdxM] = v;
+        meltValM[mIdxM] = Convert.ToDouble(ohlcSubsetM.Columns[v][i]);
+        mIdxM++;
     }
 }
 
-var sbSym = new SeriesBuilder<int, string>();
-var sbDate = new SeriesBuilder<int, string>();
-var sbVar = new SeriesBuilder<int, string>();
-var sbVal = new SeriesBuilder<int, double>();
-for (int i = 0; i < meltSymbol.Count; i++)
-{
-    sbSym.Add(i, meltSymbol[i]);
-    sbDate.Add(i, meltDate[i]);
-    sbVar.Add(i, meltVar[i]);
-    sbVal.Add(i, meltVal[i]);
-}
-
-var meltedD = new FrameBuilder.Columns<int, string>()
-{
-    { "symbol",   sbSym.Series },
-    { "date",     sbDate.Series },
-    { "variable", sbVar.Series },
-    { "value",    sbVal.Series }
-}.Frame;
-
-display($"Melted shape: {meltedD.RowCount} x {meltedD.ColumnCount}");
-meltedD.Rows[meltedD.RowKeys.Take(12)]
+var meltedDfM = new MDA.DataFrame(meltSymM, meltDateM, meltVarM, meltValM);
+display($"Melted shape: ({meltedDfM.Rows.Count}, {meltedDfM.Columns.Count})");
+meltedDfM.Head(12)
 ```
 
-    Melted shape: 20 x 4
+```text
+Melted shape: (20, 4)
+```
 
-<div>
+<table id="table_639111784838809365"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>variable</th><th>value</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td>open</td><td><div class="dni-plaintext"><pre>58.150001525878906</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td>open</td><td><div class="dni-plaintext"><pre>56.900001525878906</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td>open</td><td><div class="dni-plaintext"><pre>57.959999084472656</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td>open</td><td><div class="dni-plaintext"><pre>58.68000030517578</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td>open</td><td><div class="dni-plaintext"><pre>58.15999984741211</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td>high</td><td><div class="dni-plaintext"><pre>58.849998474121094</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td>high</td><td><div class="dni-plaintext"><pre>57.97999954223633</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td>high</td><td><div class="dni-plaintext"><pre>58.939998626708984</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td>high</td><td><div class="dni-plaintext"><pre>58.86000061035156</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td>high</td><td><div class="dni-plaintext"><pre>58.400001525878906</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td>low</td><td><div class="dni-plaintext"><pre>56.779998779296875</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td>low</td><td><div class="dni-plaintext"><pre>56.75</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>variable</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>open</td><td>58.15</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>high</td><td>58.85</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>low</td><td>56.78</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>close</td><td>57.21</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>open</td><td>56.9</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td><td>...</td><td>...</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>close</td><td>57.18</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>open</td><td>57.96</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>high</td><td>58.94</td></tr><tr><td><b>10</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>low</td><td>57.39</td></tr><tr><td><b>11</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>close</td><td>58.77</td></tr>
-
-</table>
-
-<p><b>12</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Summary Comparison
 
-| Operation | Polars.NET | Deedle |
+| Operation | Polars.NET | Microsoft.Data.Analysis |
 |---|---|---|
-| **GroupBy + single agg** | `.GroupBy("col").Agg(Col("x").Mean())` | `.GroupRowsBy<T>("col").GetColumn<T>("x").LINQ GroupBy + Average(...)` |
-| **GroupBy + multi agg** | `.GroupBy().Agg(sum, mean, count, ...)` in one call | Separate `LINQ GroupBy + Sum`, `LINQ GroupBy + Average`, `LINQ GroupBy + Count` calls |
-| **GroupBy multiple cols** | `.GroupBy("a", "b")` | Composite key workaround |
-| **Group head** | `.GroupBy("col").Head(n)` | Manual: group keys, `Take(n)` per group |
-| **Window: mean over** | `Col("x").Mean().Over("g")` | Manual: compute group stat, map back |
-| **Window: rank** | `Col("x").Rank().Over("g")` | Manual: sort within group, assign ordinal |
-| **Window: rolling** | `Col("x").RollingMean("20i").Over("g")` | Manual loop with sliding window |
-| **Inner join** | `.Join(other, on: "key")` | Dictionary lookup + manual column add |
-| **Left join** | `.Join(other, on: "key", how: Left)` | Dictionary lookup, fill missing |
-| **Anti join** | `.Join(other, on: "key", how: Anti)` | Manual set-difference filter |
-| **Semi join** | `.Join(other, on: "key", how: Semi)` | Manual: HashSet filter (keep matching keys) |
-| **Cross join** | `.Join(other, how: Cross)` | Manual: LINQ nested loop (no native support) |
-| **Vertical concat** | `Polars.Concat(df1, df2)` | `frame1.Merge(frame2)` |
-| **Horizontal concat** | `.HStack(series)` per column | `frame1.Join(frame2, JoinKind.Inner)` |
-| **Pivot** | `.Pivot("index", "columns", "values")` | `.PivotTable<R, C, V>(rowCol, colCol, fn)` |
-| **Unpivot / Melt** | `.Unpivot(on, index)` | Manual: iterate rows, build long frame |
+| **GroupBy + single agg** | `.GroupBy("col").Agg(Col("x").Mean())` | Manual accumulator dictionary, then materialize grouped result frame |
+| **GroupBy + multi agg** | `.GroupBy().Agg(sum, mean, count, ...)` in one call | Single explicit pass is possible, but you manage accumulator state and output schema |
+| **GroupBy multiple cols** | `.GroupBy("a", "b")` | Tuple-key dictionary aggregation |
+| **Group head** | Expression workaround or grouped row-numbering pattern | Manual row numbering plus boolean mask |
+| **Window: mean over** | `Col("x").Mean().Over("g")` | Precompute group means, then broadcast via second pass |
+| **Window: rank** | `Col("x").Rank().Over("g")` | Sort indices within each group and assign ordinal ranks explicitly |
+| **Window: rolling** | `Col("x").RollingMean("20i").Over("g")` | Manual trailing-window loop per group |
+| **Inner / left join** | `.Join(..., how: Inner/Left)` | `Merge(..., joinAlgorithm: ...)` |
+| **Anti join** | `.Join(..., how: Anti)` | Left merge plus null filter on right-side columns |
+| **Semi join** | `.Join(..., how: Semi)` | HashSet-backed filter pattern |
+| **Cross join** | `.Join(..., how: Cross)` | Manual Cartesian construction only for tiny sets |
+| **Vertical concat** | `.VStack(other)` | Clone and `Append(..., inPlace: true)` row by row |
+| **Horizontal concat** | `.HStack(series)` / select-then-stack | Append aligned columns directly; use `Merge` when alignment is key-based |
+| **Pivot** | `.Pivot(...)` | Build the wide schema and populate cells manually |
+| **Unpivot / Melt** | `.Unpivot(on, index)` | Emit long-form rows manually and materialize typed result columns |
+
+> [!question] Which library should own aggregation and reshape work?
+>
+> Prefer **Polars.NET** when the main job is analytical transformation: many grouped metrics, chained windows, repeated joins, reshape-heavy notebook work, or pipelines that benefit from a compact expression API and a clearer transformation graph.
+>
+> Prefer **Microsoft.Data.Analysis** when the dataframe is one in-process component inside a broader .NET application: custom CLR logic, typed column control, ML.NET-adjacent preparation, or explicit notebook demonstrations where transparency matters more than terse syntax.
+>
+> Prefer **neither** for warehouse-scale joins, large rollups, or fact-to-fact windows if the data is still remote. Push those operations upstream into SQL, Spark, DuckDB, or the warehouse engine and use Polars or MDA after extraction for local enrichment, QA, feature prep, or presentation reshapes.
+
+> [!quote]
+> Assemble pipelines as isolated, reusable transformations and let the right execution engine own the expensive stage.
+>
+> Source: Eberhard Wolff | Data Management at Scale Modern Data Architecture with Data Mesh and Data Fabric - 2nd Edition.pdf

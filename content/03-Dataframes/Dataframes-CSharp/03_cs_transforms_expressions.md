@@ -1,9 +1,9 @@
 ---
 title: "03. Transforms, Expressions & Chaining - C#"
-tags: [csharp, deedle, polars, dataframes]
+tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - with_columns, IfElse, apply, transform
-description: "Polars.NET / C# DataFrames reference 03/10 — Transforms, Expressions & Chaining (WithColumns, IfElse, Cast). Executable examples with cell outputs. See [03_py_transforms_expressions](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/03_py_transforms_expressions) for the Python equivalent."
+description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 03/10 - Transforms, Expressions & Chaining (WithColumns, IfElse, Cast). Executable examples with cell outputs. See [03_py_transforms_expressions](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/03_py_transforms_expressions) for the Python equivalent."
 parent: "[[domain-transform-and-analyze]]"
 links:
   - "[[03_py_transforms_expressions]]"
@@ -14,7 +14,7 @@ links:
   - "[[06_py_lazy_performance]]"
   - "[[06_cs_lazy_performance]]"
 created: 2026-03-27
-updated: 2026-04-04
+updated: 2026-04-07
 status: complete
 ---
 
@@ -25,7 +25,7 @@ status: complete
 >
 > — **Ronald Coase**, attributed remark (c. 1960s)
 
-Polars.NET vs Deedle: Create columns, expressions, method chaining.
+Polars.NET vs Microsoft.Data.Analysis: create columns, transform values, and compose multi-step pipelines.
 
 ---
 
@@ -46,66 +46,68 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-Install NuGet packages and import namespaces.
+Install NuGet packages and import namespaces. Alias Microsoft.Data.Analysis as `MDA` so `DataFrame` continues to refer to Polars.NET inside mixed examples.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
-#r "nuget: Deedle, 4.0.1"
-#r "nuget: Deedle.Interactive, 3.0.0"
+#r "nuget: Microsoft.Data.Analysis, 0.23.0"
 
+using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Polars.CSharp;
 using static Polars.CSharp.Polars;
-using Deedle;
+using MDA = Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
-
-System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (ctx, name) =>
-{
-    if (name.Name == "FSharp.Core")
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "FSharp.Core");
-    return null;
-};
 
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
     html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)(.+?)(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
-    var css = """
-        """;
-    writer.Write(css + html);
+    writer.Write(html);
 }, "text/html");
 Formatter.Register<Polars.CSharp.Series>((s, writer) =>
     writer.Write($"<pre style='font-size:14px'>{s}</pre>"), "text/html");
 
 var DATA = Path.Combine("..", "data");
+Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Loading extensions from `C:\Users\aperi\.nuget\packages\deedle.interactive\3.0.0\lib\netstandard2.1\Deedle.Interactive.dll`
+```text
+Data directory: c:\Users\aperi\DEV\LANG\data
+```
 
-Load the primary datasets used throughout this notebook. Both libraries read the same CSV — Polars.NET with date parsing enabled, Deedle with default inference.
+Load the primary dataset used throughout this notebook. Both libraries read the same CSV, so the rest of the page focuses on transform style, execution model, and notebook ergonomics rather than data differences.
 
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
-var dfD = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
-display($"Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
+var df = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
+
+display($"Polars: {dfP.Shape}  |  MDA: ({df.Rows.Count}, {df.Columns.Count})");
 ```
 
-    Polars: (66355, 12)  |  Deedle: 66355 x 12
+```text
+Polars: (66355, 12)  |  MDA: (66355, 12)
+```
+
+> [!info] Current API and execution-model check | 2026-04
+>
+> Polars' [expressions guide](https://docs.pola.rs/user-guide/expressions/) and [lazy optimization guide](https://docs.pola.rs/user-guide/lazy/optimizations/) document expressions, window functions, folds, categorical data, and optimizer-driven execution as first-class concepts. Microsoft's [`DataFrame`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.dataframe?view=ml-dotnet-preview), [`PrimitiveDataFrameColumn<T>`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.primitivedataframecolumn-1?view=ml-dotnet-preview), and [`StringDataFrameColumn`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.analysis.stringdataframecolumn?view=ml-dotnet-preview) document an eager typed-column API centered on explicit materialization. In practice, Polars favors declarative transform graphs; MDA favors direct CLR-native column operations.
 
 ---
+
 ## Column Transforms
 
-Adding, modifying, and overwriting columns is the most common DataFrame operation. Polars.NET uses the expression-based `.WithColumns()` method that returns a new DataFrame, while Deedle uses imperative `.AddColumn()` that mutates the frame in place.
+Adding, modifying, and overwriting columns is the core dataframe workflow. Polars.NET expresses these transforms declaratively through `.WithColumns()`, while Microsoft.Data.Analysis usually computes typed target columns explicitly and then appends them to a cloned or newly constructed frame.
 
-> [!info] Mutability difference
-> Polars DataFrames are **immutable** — `.WithColumns()` always returns a new frame, leaving the original unchanged. Deedle frames are **mutable** — `.AddColumn()` and `.ReplaceColumn()` modify the frame in place. Always `.Clone()` a Deedle frame first if you need to preserve the original.
+> [!info] Polars expressions vs MDA materialization
+> Polars DataFrames stay close to an expression graph: `.WithColumns()` returns a new frame and the transform can later participate in lazy optimization. Microsoft.Data.Analysis is eager and explicit: `Clone()`, `Columns.Add(...)`, and `new MDA.DataFrame(...)` materialize each added column immediately. That makes debugging straightforward, but it also means the developer owns more of the transform plumbing.
 
-### Polars.NET / Deedle | Arithmetic Columns
+### Polars.NET / Microsoft.Data.Analysis | Arithmetic Columns
 
 #### Polars.NET | Add a computed column with WithColumns
 
@@ -122,36 +124,28 @@ dfRange.Select("symbol", "date", "high", "low", "range").Head(5)
 
 <!-- Polars DataFrame: (5 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>high</th><th>low</th><th>range</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.85</td><td>56.78</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.98</td><td>56.75</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.94</td><td>57.39</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.86</td><td>57.88</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.4</td><td>57.43</td><td>0.97</td></tr></tbody></table></div>
 
-#### Deedle | Add a computed column with AddColumn
+#### Microsoft.Data.Analysis | Add a computed column by cloning and appending
 
-Deedle uses `.GetColumn<T>()` to extract typed Series objects, then standard C# arithmetic operators to combine them. The result is added to the frame with `.AddColumn()`. Because Deedle mutates in place, clone the frame first to avoid side effects.
+`Microsoft.Data.Analysis` does not expose a Polars-style expression builder. The standard pattern is to cast the source columns to typed `PrimitiveDataFrameColumn<T>` objects, compute the derived column directly, name it with `SetName`, and append it to a cloned frame.
 
-_Clones `dfD`, extracts `high` and `low` as `double` Series, subtracts element-wise to produce `range`, adds it with `.AddColumn()`, and displays the first 5 ABI.BR rows — matching the Polars output with minor floating-point differences._
+_Computes `range = high - low`, appends it to a cloned MDA frame, and previews `symbol`, `date`, `high`, `low`, and `range` for the first five rows._
 
 ```csharp
-var dfDRange = dfD.Clone();
-var high  = dfDRange.GetColumn<double>("high");
-var low   = dfDRange.GetColumn<double>("low");
-dfDRange.AddColumn("range", high - low);
+var highColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["high"];
+var lowColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["low"];
+var rangeColM = highColM - lowColM;
+rangeColM.SetName("range");
 
-dfDRange.Columns[new[] { "symbol", "date", "high", "low", "range" }].Rows[dfD.RowKeys.Take(5)]
+var dfRangeM = df.Clone();
+dfRangeM.Columns.Add(rangeColM);
+
+var selectedM = new MDA.DataFrame(dfRangeM.Columns["symbol"], dfRangeM.Columns["date"], dfRangeM.Columns["high"], dfRangeM.Columns["low"], dfRangeM.Columns["range"]);
+selectedM.Head(5)
 ```
 
-<div>
+<table id="table_639110912777173997"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>high</th><th>low</th><th>range</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>2.0699997</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>1.2299995</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>1.5499992</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.86</pre></div></td><td><div class="dni-plaintext"><pre>57.88</pre></div></td><td><div class="dni-plaintext"><pre>0.97999954</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>57.43</pre></div></td><td><div class="dni-plaintext"><pre>0.9700012</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>high</th><th>low</th><th>range</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.85</td><td>56.78</td><td>2.0700000000000003</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.98</td><td>56.75</td><td>1.2299999999999969</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.94</td><td>57.39</td><td>1.5499999999999972</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.86</td><td>57.88</td><td>0.9799999999999969</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>58.4</td><td>57.43</td><td>0.9699999999999989</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Column Overwrite via Cast
+### Polars.NET / Microsoft.Data.Analysis | Column Overwrite via Cast
 
 #### Polars.NET | Overwrite a column with Cast
 
@@ -168,39 +162,39 @@ display($"Before: {dfP["volume"].DataTypeName}  |  After: {dfCast["volume"].Data
 dfCast.Select("symbol", "date", "volume").Head(3)
 ```
 
-    Before: i64  |  After: f64
+Before: i64  |  After: f64
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1370204</td></tr></tbody></table></div>
 
-#### Deedle | Overwrite a column by replacing it with a converted Series
+#### Microsoft.Data.Analysis | Add a converted numeric column explicitly
 
-Deedle's CSV reader infers `volume` as `double` by default, so there is no integer-to-float cast to demonstrate. Instead, `.ReplaceColumn()` is shown here rounding the existing values — the same method used to overwrite any column with a transformed Series.
+MDA type conversion is usually explicit: read the source values from the existing column, create a new typed target column, and populate it row by row. This is more verbose than Polars `Cast`, but it makes the materialization step obvious and debuggable.
 
-_Rounds each value in `volume` to 0 decimal places via a `.Select()` lambda and overwrites the column in place with `.ReplaceColumn()`, then displays the first 3 rows confirming rounded integer-like values._
+_Converts `volume` into a new `volume_f64` column, appends it to a cloned frame, prints the source and target CLR types, and previews the first three rows._
 
 ```csharp
-var dfDCast = dfD.Clone();
-var vol = dfDCast.GetColumn<double>("volume");
-dfDCast.ReplaceColumn("volume", vol.Select(kvp => Math.Round(kvp.Value, 0)));
+var volColM = df.Columns["volume"];
+var volDoubleM = new MDA.PrimitiveDataFrameColumn<double>("volume_f64", df.Rows.Count);
 
-dfDCast.Columns[new[] { "symbol", "date", "volume" }].Rows[dfD.RowKeys.Take(3)]
+for(long i = 0; i < df.Rows.Count; i++)
+{
+    if (volColM[i] != null) volDoubleM[i] = Convert.ToDouble(volColM[i]);
+}
+
+var dfCastM = df.Clone();
+dfCastM.Columns.Add(volDoubleM);
+
+display($"Before: {volColM.DataType.Name}  |  After: {volDoubleM.DataType.Name}");
+new MDA.DataFrame(dfCastM.Columns["symbol"], dfCastM.Columns["date"], dfCastM.Columns["volume_f64"]).Head(3)
 ```
 
-<div>
+```text
+Before: Single  |  After: Double
+```
 
-<table>
+<table id="table_639110912796452929"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>volume_f64</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td></tr></tbody></table>
 
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>1513937</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>1382722</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>1370204</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Percentage Change
+### Polars.NET / Microsoft.Data.Analysis | Percentage Change
 
 #### Polars.NET | Percentage change with expressions
 
@@ -218,36 +212,28 @@ dfPct.Select("symbol", "date", "open", "close", "daily_return_pct").Head(5)
 
 <!-- Polars DataFrame: (5 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>-1.616509028</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>0.4920913884</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>1.397515528</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>-0.4771642808</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>-0.5158184319</td></tr></tbody></table></div>
 
-#### Deedle | Percentage change with Series arithmetic
+#### Microsoft.Data.Analysis | Percentage change with typed column arithmetic
 
-The equivalent Deedle approach extracts each column as a `Series<int, double>`, then uses C# arithmetic operators. Each intermediate operation (subtraction, division, multiplication) materializes a new Series object, making this less memory-efficient than the Polars expression approach for large datasets.
+Once numeric inputs are typed as `PrimitiveDataFrameColumn<float>`, MDA supports elementwise arithmetic directly. The transform still materializes eagerly, but the code remains vector-style for straightforward numeric feature engineering.
 
-_Extracts `open` and `close` as typed Series, applies three sequential arithmetic operators to build `daily_return_pct`, adds it to the cloned frame, and shows the same 5 ABI.BR rows with full floating-point precision._
+_Computes `daily_return_pct = (close - open) / open * 100`, appends it to a cloned frame, and previews the first five rows._
 
 ```csharp
-var dfDPct = dfD.Clone();
-var openS = dfDPct.GetColumn<double>("open");
-var closeS = dfDPct.GetColumn<double>("close");
-dfDPct.AddColumn("daily_return_pct", (closeS - openS) / openS * 100.0);
+var openColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["open"];
+var closeColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["close"];
 
-dfDPct.Columns[new[] { "symbol", "date", "open", "close", "daily_return_pct" }].Rows[dfD.RowKeys.Take(5)]
+var pctColM = (closeColM - openColM) / openColM * 100.0f;
+pctColM.SetName("daily_return_pct");
+
+var dfPctM = df.Clone();
+dfPctM.Columns.Add(pctColM);
+
+new MDA.DataFrame(dfPctM.Columns["symbol"], dfPctM.Columns["date"], dfPctM.Columns["open"], dfPctM.Columns["close"], dfPctM.Columns["daily_return_pct"]).Head(5)
 ```
 
-<div>
+<table id="table_639110912815710512"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>daily_return_pct</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>-1.6165131</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>0.49208924</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>1.3975179</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>-0.47716218</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>-0.5158171</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>daily_return_pct</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>57.21</td><td>-1.6165090283748886</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.18</td><td>0.492091388400705</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.77</td><td>1.3975155279503144</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.68</td><td>58.4</td><td>-0.47716428084526435</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>58.16</td><td>57.86</td><td>-0.5158184319119621</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Multiple Transforms in One Pass
+### Polars.NET / Microsoft.Data.Analysis | Multiple Transforms in One Pass
 
 #### Polars.NET | Multiple expressions in a single WithColumns call
 
@@ -267,47 +253,32 @@ dfMulti.Select("symbol", "date", "range", "midpoint", "daily_return_pct").Head(5
 
 <!-- Polars DataFrame: (5 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>range</th><th>midpoint</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2.07</td><td>57.815</td><td>-1.616509028</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1.23</td><td>57.365</td><td>0.4920913884</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1.55</td><td>58.165</td><td>1.397515528</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>0.98</td><td>58.37</td><td>-0.4771642808</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>0.97</td><td>57.915</td><td>-0.5158184319</td></tr></tbody></table></div>
 
-#### Deedle | Multiple transforms with chained AddColumn calls
+#### Microsoft.Data.Analysis | Multiple transforms with eager column adds
 
-Deedle has no multi-expression equivalent. Each `.AddColumn()` call mutates the frame and materializes immediately. For multiple transforms, chain the calls sequentially — each one operates on the already-mutated frame.
+MDA has no single-call `WithColumns` equivalent. The practical pattern is to compute each derived column first and then append them to a cloned frame. This keeps the control flow explicit, but each new column is materialized eagerly.
 
-_Extracts `high`, `low`, `open`, and `close` up front, then calls `.AddColumn()` three times sequentially to add `range`, `midpoint`, and `daily_return_pct` — materializing a new Series at each step._
+_Adds `range`, `midpoint`, and `daily_return_pct` to a cloned frame and previews all three derived columns together._
 
 ```csharp
-var dfDMulti = dfD.Clone();
-var hCol = dfDMulti.GetColumn<double>("high");
-var lCol = dfDMulti.GetColumn<double>("low");
-var oCol = dfDMulti.GetColumn<double>("open");
-var cCol = dfDMulti.GetColumn<double>("close");
+var midColM = (highColM + lowColM) / 2.0f;
+midColM.SetName("midpoint");
 
-dfDMulti.AddColumn("range", hCol - lCol);
-dfDMulti.AddColumn("midpoint", (hCol + lCol) / 2.0);
-dfDMulti.AddColumn("daily_return_pct", (cCol - oCol) / oCol * 100.0);
+var dfMultiM = df.Clone();
+dfMultiM.Columns.Add(rangeColM);
+dfMultiM.Columns.Add(midColM);
+dfMultiM.Columns.Add(pctColM);
 
-dfDMulti.Columns[new[] { "symbol", "date", "range", "midpoint", "daily_return_pct" }].Rows[dfD.RowKeys.Take(5)]
+new MDA.DataFrame(dfMultiM.Columns["symbol"], dfMultiM.Columns["date"], dfMultiM.Columns["range"], dfMultiM.Columns["midpoint"], dfMultiM.Columns["daily_return_pct"]).Head(5)
 ```
 
-<div>
+<table id="table_639110912831961321"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>range</th><th>midpoint</th><th>daily_return_pct</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>2.0699997</pre></div></td><td><div class="dni-plaintext"><pre>57.815</pre></div></td><td><div class="dni-plaintext"><pre>-1.6165131</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1.2299995</pre></div></td><td><div class="dni-plaintext"><pre>57.364998</pre></div></td><td><div class="dni-plaintext"><pre>0.49208924</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1.5499992</pre></div></td><td><div class="dni-plaintext"><pre>58.165</pre></div></td><td><div class="dni-plaintext"><pre>1.3975179</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.97999954</pre></div></td><td><div class="dni-plaintext"><pre>58.370003</pre></div></td><td><div class="dni-plaintext"><pre>-0.47716218</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.9700012</pre></div></td><td><div class="dni-plaintext"><pre>57.915</pre></div></td><td><div class="dni-plaintext"><pre>-0.5158171</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>range</th><th>midpoint</th><th>daily_return_pct</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>2.0700000000000003</td><td>57.815</td><td>-1.6165090283748886</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>1.2299999999999969</td><td>57.364999999999995</td><td>0.492091388400705</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>1.5499999999999972</td><td>58.165</td><td>1.3975155279503144</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>0.9799999999999969</td><td>58.370000000000005</td><td>-0.47716428084526435</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>0.9699999999999989</td><td>57.915</td><td>-0.5158184319119621</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Expression System
 
-Polars' expression engine is the core differentiator from Deedle. Expressions are lazy, composable, and optimizable — the query planner can reorder, fuse, and parallelize them before execution. Deedle has no equivalent expression system; all operations are eager and imperative.
+Polars' expression engine is the core differentiator in this chapter. Expressions are composable and can later flow into lazy optimization, while Microsoft.Data.Analysis centers the API on eager `DataFrame` / `DataFrameColumn` operations and explicit per-column materialization.
 
-> [!info] Polars expressions vs Deedle imperative model
-> In Polars, `Col("x") + Col("y")` does not compute anything immediately — it builds an expression tree that the engine evaluates when the DataFrame method (`.Select()`, `.WithColumns()`, `.Filter()`) runs. This enables optimizations like predicate pushdown and column pruning. In Deedle, `series1 + series2` executes immediately and allocates a new Series in memory.
+> [!info] Polars expressions vs MDA managed columns
+> In Polars, `Col("x") + Col("y")` is an expression object that remains reusable across `Select`, `WithColumns`, `Filter`, window functions, and lazy plans. In Microsoft.Data.Analysis, `PrimitiveDataFrameColumn<T>` arithmetic executes eagerly and produces a concrete target column immediately. That difference matters most once transformation graphs become long, stateful, or production-bound.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -334,7 +305,7 @@ flowchart LR
     style E fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
 ```
 
-### Polars.NET / Deedle | Col, Lit, and Alias
+### Polars.NET / Microsoft.Data.Analysis | Col, Lit, and Alias
 
 #### Polars.NET | Col, Lit, and Alias basics
 
@@ -355,35 +326,26 @@ dfExpr.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>close</th><th>eur_to_usd</th><th>close_usd</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>1.1</td><td>62.931</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.1</td><td>62.898</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.1</td><td>64.647</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>1.1</td><td>64.24</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>1.1</td><td>63.646</td></tr></tbody></table></div>
 
-#### Deedle | Equivalent using direct Series arithmetic
+#### Microsoft.Data.Analysis | Explicit constants and typed column arithmetic
 
-Deedle has no expression system. The equivalent requires extracting each column as a typed Series, performing arithmetic with C# operators, and adding the results back to the frame imperatively.
+MDA does not have `Col`, `Lit`, or `Alias`. To express the same idea, you build the constant column explicitly, apply typed arithmetic on the underlying columns, and materialize the final projection into a new dataframe.
 
-_Fills `eur_to_usd` by repeating the scalar `1.10` across all rows with `Enumerable.Repeat`, multiplies the `close` Series by `1.10` to add `close_usd`, and displays the first 5 rows confirming identical values to the Polars output._
+_Creates a constant `eur_to_usd` column, computes `close_usd = close * 1.10`, and shows the first five rows of the projected result._
 
 ```csharp
-var dfDExpr = dfD.Clone();
-dfDExpr.AddColumn("eur_to_usd", Enumerable.Repeat(1.10, dfD.RowCount).ToArray());
-dfDExpr.AddColumn("close_usd", dfDExpr.GetColumn<double>("close") * 1.10);
+var eurToUsdColM = new MDA.PrimitiveDataFrameColumn<float>("eur_to_usd", df.Rows.Count);
+for (long i = 0; i < df.Rows.Count; i++) eurToUsdColM[i] = 1.10f;
 
-dfDExpr.Columns[new[] { "symbol", "close", "eur_to_usd", "close_usd" }].Rows[dfD.RowKeys.Take(5)]
+var closeUsdColM = closeColM * 1.10f;
+closeUsdColM.SetName("close_usd");
+
+var dfExprM = new MDA.DataFrame(df.Columns["symbol"], df.Columns["close"], eurToUsdColM, closeUsdColM);
+dfExprM.Head(5)
 ```
 
-<div>
+<table id="table_639110912852896285"><thead><tr><th><i>index</i></th><th>symbol</th><th>close</th><th>eur_to_usd</th><th>close_usd</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>1.1</pre></div></td><td><div class="dni-plaintext"><pre>62.931</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>1.1</pre></div></td><td><div class="dni-plaintext"><pre>62.898003</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>1.1</pre></div></td><td><div class="dni-plaintext"><pre>64.647</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>1.1</pre></div></td><td><div class="dni-plaintext"><pre>64.240005</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>1.1</pre></div></td><td><div class="dni-plaintext"><pre>63.646004</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>close</th><th>eur_to_usd</th><th>close_usd</th></thead><thead><th></th><th></th><th>(string)</th><th>(Decimal)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.21</td><td>1.1</td><td>62.931000000000004</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.18</td><td>1.1</td><td>62.898</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.77</td><td>1.1</td><td>64.647</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.4</td><td>1.1</td><td>64.24000000000001</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.86</td><td>1.1</td><td>63.64600000000001</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Conditional Expressions
+### Polars.NET / Microsoft.Data.Analysis | Conditional Expressions
 
 #### Polars.NET | Conditional column with IfElse
 
@@ -414,41 +376,29 @@ dfCond.Select("symbol", "date", "open", "close", "return_pct", "direction").Head
 
 <!-- Polars DataFrame: (8 rows, 6 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th><th>direction</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>-1.616509028</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>0.4920913884</td><td>up</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>1.397515528</td><td>up</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>-0.4771642808</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>-0.5158184319</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>57.73</td><td>56.61</td><td>-1.940065824</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.7</td><td>56.51</td><td>-0.3350970018</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.5</td><td>56.48</td><td>-0.03539823009</td><td>down</td></tr></tbody></table></div>
 
-#### Deedle | Conditional column via Series.Select lambda
+#### Microsoft.Data.Analysis | Conditional column with an explicit string pass
 
-Deedle uses `.ZipInner()` to align two Series by key, then `.Select()` with a lambda containing C# ternary operators. This is functionally equivalent but imperative — the lambda runs once per row with no opportunity for the framework to optimize.
+Conditional logic in MDA is usually an explicit per-row pass that writes the result into a `StringDataFrameColumn` or a typed boolean column. That is straightforward to debug, but it does not become a reusable expression tree the way it does in Polars.
 
-_Zips `close` and `open` with `.ZipInner()`, applies a three-way C# ternary per row, adds both `return_pct` and `direction` columns, and displays 8 ABI.BR rows confirming parity with the Polars.NET output._
+_Builds a `direction` string column from `close` versus `open`, appends both `daily_return_pct` and `direction`, and previews the first eight rows._
 
 ```csharp
-var dfDCond = dfD.Clone();
-var openCol = dfDCond.GetColumn<double>("open");
-var closeCol = dfDCond.GetColumn<double>("close");
-var retPct = (closeCol - openCol) / openCol * 100.0;
-dfDCond.AddColumn("return_pct", retPct);
+var dirColM = new MDA.StringDataFrameColumn("direction", df.Rows.Count);
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    float c = closeColM[i].GetValueOrDefault();
+    float o = openColM[i].GetValueOrDefault();
+    dirColM[i] = c > o ? "up" : (c < o ? "down" : "flat");
+}
 
-var direction = closeCol.ZipInner(openCol).Select(kvp =>
-    kvp.Value.Item1 > kvp.Value.Item2 ? "up"
-    : kvp.Value.Item1 < kvp.Value.Item2 ? "down"
-    : "flat");
-dfDCond.AddColumn("direction", direction);
+var dfCondM = df.Clone();
+dfCondM.Columns.Add(pctColM);
+dfCondM.Columns.Add(dirColM);
 
-dfDCond.Columns[new[] { "symbol", "date", "open", "close", "return_pct", "direction" }].Rows[dfD.RowKeys.Take(8)]
+new MDA.DataFrame(dfCondM.Columns["symbol"], dfCondM.Columns["date"], dfCondM.Columns["open"], dfCondM.Columns["close"], dfCondM.Columns["daily_return_pct"], dfCondM.Columns["direction"]).Head(8)
 ```
 
-<div>
-
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th><th>direction</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(float)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>57.21</td><td>-1.6165090283748886</td><td>down</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.18</td><td>0.492091388400705</td><td>up</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.77</td><td>1.3975155279503144</td><td>up</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.68</td><td>58.4</td><td>-0.47716428084526435</td><td>down</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>58.16</td><td>57.86</td><td>-0.5158184319119621</td><td>down</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>57.73</td><td>56.61</td><td>-1.9400658236618697</td><td>down</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.7</td><td>56.51</td><td>-0.3350970017636769</td><td>down</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.5</td><td>56.48</td><td>-0.03539823008850111</td><td>down</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>6</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
+<table id="table_639110912880007312"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>daily_return_pct</th><th>direction</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>-1.6165131</pre></div></td><td>down</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>0.49208924</pre></div></td><td>up</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>1.3975179</pre></div></td><td>up</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>-0.47716218</pre></div></td><td>down</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>-0.5158171</pre></div></td><td>down</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.73</pre></div></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>-1.940064</pre></div></td><td>down</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.7</pre></div></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>-0.3351013</pre></div></td><td>down</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.5</pre></div></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>-0.035399042</pre></div></td><td>down</td></tr></tbody></table>
 
 #### Polars.NET | Nested IfElse for multiple conditions
 
@@ -472,38 +422,36 @@ dfTier.GroupBy("vol_tier").Agg(Col("vol_tier").Count().Alias("count"))
 ```
 
 <!-- Polars DataFrame: (8 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>vol_tier</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>1513937</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1382722</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1370204</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>1469911</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>1428681</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>1518079</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>1649991</td><td>medium</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>1090806</td><td>medium</td></tr></tbody></table></div>
-
 <!-- Polars DataFrame: (4 rows, 2 columns) --><table><thead><tr><th>vol_tier</th><th>count</th></tr></thead><tbody><tr><td>medium</td><td>24964</td></tr><tr><td>low</td><td>27061</td></tr><tr><td>high</td><td>5887</td></tr><tr><td>very_high</td><td>8443</td></tr></tbody></table></div>
 
-#### Deedle | Equivalent tier classification with imperative logic
+#### Microsoft.Data.Analysis | Multi-branch classification with manual thresholds
 
-The Deedle equivalent uses a `Series.Select` lambda with chained ternary operators — a direct C# translation of the nested `IfElse` logic.
+Multi-branch logic is just an explicit pass over the typed source column. This notebook writes the final label into a string column and then uses `ValueCounts()` to validate the distribution across the full dataset.
 
-_Applies a four-level ternary chain inside `.Select()` on the `volume` Series to produce the same tier labels, groups with LINQ, and confirms identical tier counts (27K low, 25K medium, 5.9K high, 8.4K very_high)._
+_Classifies each row into `low`, `medium`, `high`, or `very_high` volume tiers, previews the first eight rows, and then counts the tier distribution._
 
 ```csharp
-var dfDTier = dfD.Clone();
-var volSeries = dfDTier.GetColumn<double>("volume");
+var tierColM = new MDA.StringDataFrameColumn("vol_tier", df.Rows.Count);
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    double v = volDoubleM[i].GetValueOrDefault();
+    if (v > 10000000) tierColM[i] = "very_high";
+    else if (v > 5000000) tierColM[i] = "high";
+    else if (v > 1000000) tierColM[i] = "medium";
+    else tierColM[i] = "low";
+}
 
-var tier = volSeries.Select(kvp =>
-    kvp.Value > 10_000_000 ? "very_high"
-    : kvp.Value > 5_000_000 ? "high"
-    : kvp.Value > 1_000_000 ? "medium"
-    : "low");
-dfDTier.AddColumn("vol_tier", tier);
+var dfTierM = df.Clone();
+dfTierM.Columns.Add(tierColM);
 
-var tierCounts = tier.GroupBy(v => v.Value).Select(g =>
-    KeyValuePair.Create(g.Key, g.Value.KeyCount));
-foreach (var kv in tierCounts.Observations)
-    Console.WriteLine($"  {kv.Key}: {kv.Value}");
+display(new MDA.DataFrame(dfTierM.Columns["symbol"], dfTierM.Columns["date"], dfTierM.Columns["volume"], dfTierM.Columns["vol_tier"]).Head(8));
+dfTierM.Columns["vol_tier"].ValueCounts()
 ```
 
-      medium: [medium, 24964]
-      low: [low, 27061]
-      high: [high, 5887]
-      very_high: [very_high, 8443]
+<table id="table_639110912900525849"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>volume</th><th>vol_tier</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1469911</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1428681</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1518079</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1649991</pre></div></td><td>medium</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1090806</pre></div></td><td>medium</td></tr></tbody></table>
+<table id="table_639110912900622619"><thead><tr><th><i>index</i></th><th>Values</th><th>Counts</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>medium</td><td><div class="dni-plaintext"><pre>24964</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>low</td><td><div class="dni-plaintext"><pre>27061</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>high</td><td><div class="dni-plaintext"><pre>5887</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>very_high</td><td><div class="dni-plaintext"><pre>8443</pre></div></td></tr></tbody></table>
 
-### Polars.NET / Deedle | Horizontal Arithmetic
+### Polars.NET / Microsoft.Data.Analysis | Horizontal Arithmetic
 
 #### Polars.NET | Horizontal arithmetic across columns
 
@@ -521,38 +469,25 @@ dfHoriz.Select("symbol", "date", "open", "high", "low", "close", "ohlc_avg").Hea
 
 <!-- Polars DataFrame: (5 rows, 7 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>ohlc_avg</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>57.7475</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>57.2025</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>58.265</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>58.455</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>57.9625</td></tr></tbody></table></div>
 
-#### Deedle | Horizontal arithmetic across columns
+#### Microsoft.Data.Analysis | Horizontal arithmetic with column addition
 
-The Deedle equivalent extracts four Series and combines them with standard arithmetic operators. Each intermediate operation (`+`, `/`) materializes a new Series.
+Horizontal row-wise math is still written as typed column arithmetic. Because there is no horizontal expression namespace, the notebook computes the OHLC average directly from the four typed numeric columns.
 
-_Extracts `open`, `high`, `low`, `close` as four `double` Series, sums them with the `+` operator, divides by `4.0`, and adds `ohlc_avg` to the frame — producing the same per-row averages as Polars with minor floating-point differences._
+_Computes `ohlc_avg` from `open`, `high`, `low`, and `close`, appends it to a cloned frame, and previews the first five rows._
 
 ```csharp
-var dfDHoriz = dfD.Clone();
-var oH = dfDHoriz.GetColumn<double>("open");
-var hH = dfDHoriz.GetColumn<double>("high");
-var lH = dfDHoriz.GetColumn<double>("low");
-var cH = dfDHoriz.GetColumn<double>("close");
-dfDHoriz.AddColumn("ohlc_avg", (oH + hH + lH + cH) / 4.0);
+var ohlcAvgM = (openColM + highColM + lowColM + closeColM) / 4.0f;
+ohlcAvgM.SetName("ohlc_avg");
 
-dfDHoriz.Columns[new[] { "symbol", "date", "open", "high", "low", "close", "ohlc_avg" }].Rows[dfD.RowKeys.Take(5)]
+var dfHorizM = df.Clone();
+dfHorizM.Columns.Add(ohlcAvgM);
+
+new MDA.DataFrame(dfHorizM.Columns["symbol"], dfHorizM.Columns["date"], dfHorizM.Columns["open"], dfHorizM.Columns["high"], dfHorizM.Columns["low"], dfHorizM.Columns["close"], dfHorizM.Columns["ohlc_avg"]).Head(5)
 ```
 
-<div>
+<table id="table_639110912922103474"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>ohlc_avg</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>57.747498</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>57.2025</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>58.265</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td><div class="dni-plaintext"><pre>58.86</pre></div></td><td><div class="dni-plaintext"><pre>57.88</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>58.455</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>57.43</pre></div></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>57.962498</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>ohlc_avg</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>57.7475</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>57.2025</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>58.26500000000001</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>58.455</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>57.962500000000006</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>7</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | String Operations
+### Polars.NET / Microsoft.Data.Analysis | String Operations
 
 #### Polars.NET | Build a direction tag with IfElse
 
@@ -574,50 +509,33 @@ dfLabel.Select("symbol", "date", "close", "open", "tag").Head(5)
 
 <!-- Polars DataFrame: (5 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>open</th><th>tag</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>58.15</td><td>DOWN</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>56.9</td><td>UP</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>57.96</td><td>UP</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>58.68</td><td>DOWN</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>58.16</td><td>DOWN</td></tr></tbody></table></div>
 
-#### Deedle | String concatenation with Series.Select
+#### Microsoft.Data.Analysis | Build a direction tag with explicit string assignment
 
-Deedle builds the label by zipping the symbol and close/open Series, applying a ternary for direction, then zipping again with the symbol to concatenate via string interpolation. This multi-zip pattern is the standard Deedle approach for combining values from multiple columns row-wise.
+MDA string transforms usually mean allocating a `StringDataFrameColumn` and filling it inside a loop. For short label-generation logic, that is perfectly serviceable and keeps the resulting column strongly associated with the source frame.
 
-_Zips `close` and `open` to build a direction Series, then zips that with `symbol` and uses string interpolation to produce composite labels like "ABI.BR_DOWN", displaying 5 rows confirming direction parity._
+_Builds a `tag` column with `UP`, `DOWN`, or `FLAT` based on `close` versus `open` and previews the first five rows._
 
 ```csharp
-var dfDLabel = dfD.Clone();
-var symS = dfDLabel.GetColumn<string>("symbol");
-var oLbl = dfDLabel.GetColumn<double>("open");
-var cLbl = dfDLabel.GetColumn<double>("close");
+var tagColM = new MDA.StringDataFrameColumn("tag", df.Rows.Count);
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    float c = closeColM[i].GetValueOrDefault();
+    float o = openColM[i].GetValueOrDefault();
+    tagColM[i] = c > o ? "UP" : (c < o ? "DOWN" : "FLAT");
+}
 
-var tagSeries = cLbl.ZipInner(oLbl).Select(kvp =>
-    kvp.Value.Item1 > kvp.Value.Item2 ? "UP"
-    : kvp.Value.Item1 < kvp.Value.Item2 ? "DOWN"
-    : "FLAT");
-
-var label = symS.ZipInner(tagSeries).Select(kvp =>
-    $"{kvp.Value.Item1}_{kvp.Value.Item2}");
-dfDLabel.AddColumn("label", label);
-
-dfDLabel.Columns[new[] { "symbol", "date", "close", "open", "label" }].Rows[dfD.RowKeys.Take(5)]
+var dfLabelM = df.Clone();
+dfLabelM.Columns.Add(tagColM);
+new MDA.DataFrame(dfLabelM.Columns["symbol"], dfLabelM.Columns["date"], dfLabelM.Columns["close"], dfLabelM.Columns["open"], dfLabelM.Columns["tag"]).Head(5)
 ```
 
-<div>
+<table id="table_639110912937795851"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>open</th><th>tag</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td>DOWN</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td>UP</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td>UP</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td>DOWN</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td>DOWN</td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>open</th><th>label</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>58.15</td><td>ABI.BR_DOWN</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>56.9</td><td>ABI.BR_UP</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>57.96</td><td>ABI.BR_UP</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>58.68</td><td>ABI.BR_DOWN</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>58.16</td><td>ABI.BR_DOWN</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Type Casting
 
-Type casting converts column data types — numeric promotions, string-to-date parsing, and categorical encoding. Polars.NET uses `.Cast(DataType.X)` within expressions; Deedle requires manual conversion via `Series.Select` lambdas.
+Type casting converts column data into the representation your downstream code actually needs. Polars.NET keeps casting inside expressions; Microsoft.Data.Analysis usually builds an explicitly typed target column and populates it value by value or through typed column arithmetic.
 
-### Polars.NET / Deedle | Numeric Cast
+### Polars.NET / Microsoft.Data.Analysis | Numeric Cast
 
 #### Polars.NET | Cast a column to Float64 with Col.Cast
 
@@ -634,40 +552,44 @@ display($"id dtype: {dfCast1["id"].DataTypeName}  |  id_float dtype: {dfCast1["i
 dfCast1.Select("id", "id_float").Head(3)
 ```
 
-    id dtype: i64  |  id_float dtype: f64
+id dtype: i64  |  id_float dtype: f64
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>id</th><th>id_float</th></tr></thead><tbody><tr><td>21160</td><td>21160</td></tr><tr><td>21161</td><td>21161</td></tr><tr><td>21162</td><td>21162</td></tr></tbody></table></div>
 
-#### Deedle | Manual type conversion with Series.Select
+#### Microsoft.Data.Analysis | Convert id to float with a typed target column
 
-Deedle has no `.Cast()` method. Instead, extract the column as the source type, then use `.Select()` with a lambda that performs the C# cast. The converted Series is added as a new column.
+MDA exposes each column's CLR type, but cross-type conversion still usually means constructing a new typed target column and populating it explicitly. This example also checks for column existence first so the notebook fails gracefully if the CSV schema changes.
 
-_Extracts `id` as `int`, converts each value to `double` via `(double)kvp.Value` in a lambda, adds the result as `id_float`, and shows 3 rows confirming integers 21160–21162 appear in both the source and cast columns._
+_Checks that `id` exists, converts it into `id_float`, prints both data types, and previews the first three rows._
 
 ```csharp
-var dfDCast1 = dfD.Clone();
-var idInt = dfDCast1.GetColumn<int>("id");
-var idFloat = idInt.Select(kvp => (double)kvp.Value);
-dfDCast1.AddColumn("id_float", idFloat);
+MDA.DataFrame resultM = null;
 
-dfDCast1.Columns[new[] { "id", "id_float" }].Rows[dfD.RowKeys.Take(3)]
+if (df.Columns.IndexOf("id") >= 0)
+{
+    var idColM = df.Columns["id"];
+    var idFloatM = new MDA.PrimitiveDataFrameColumn<double>("id_float", df.Rows.Count);
+    for (long i = 0; i < df.Rows.Count; i++) if (idColM[i] != null) idFloatM[i] = Convert.ToDouble(idColM[i]);
+
+    Console.WriteLine($"id dtype: {idColM.DataType.Name}  |  id_float dtype: {idFloatM.DataType.Name}");
+
+    resultM = new MDA.DataFrame(idColM, idFloatM).Head(3);
+}
+else
+{
+    Console.WriteLine("'id' column not present in this CSV structure.");
+}
+
+resultM
 ```
 
-<div>
+```text
+id dtype: Single  |  id_float dtype: Double
+```
 
-<table>
+<table id="table_639110914032163236"><thead><tr><th><i>index</i></th><th>id</th><th>id_float</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>21160</pre></div></td><td><div class="dni-plaintext"><pre>21160</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>21161</pre></div></td><td><div class="dni-plaintext"><pre>21161</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>21162</pre></div></td><td><div class="dni-plaintext"><pre>21162</pre></div></td></tr></tbody></table>
 
-<thead><th></th><th></th><th>id</th><th>id_float</th></thead><thead><th></th><th></th><th>(int)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>21160</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>21161</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>21162</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Date Parsing
+### Polars.NET / Microsoft.Data.Analysis | Date Parsing
 
 #### Polars.NET | Parse string dates with Str.ToDate
 
@@ -688,43 +610,37 @@ display($"date_str dtype: {dfDateParsed["date_str"].DataTypeName}  |  date_parse
 dfDateParsed.Select("date_str", "date_parsed").Head(3)
 ```
 
-    date_str dtype: str  |  date_parsed dtype: date
+date_str dtype: str  |  date_parsed dtype: date
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>date_str</th><th>date_parsed</th></tr></thead><tbody><tr><td>2021-01-04</td><td>2021-01-04</td></tr><tr><td>2021-01-05</td><td>2021-01-05</td></tr><tr><td>2021-01-06</td><td>2021-01-06</td></tr></tbody></table></div>
 
-#### Deedle | Parse date strings to DateTime with Series.Select
+#### Microsoft.Data.Analysis | Parse string dates into a typed DateTime column
 
-Deedle uses `DateTime.Parse()` inside a `.Select()` lambda. The parsed values become a `Series<int, DateTime>` that can be added back to the frame. For format-specific parsing, use `DateTime.ParseExact()` instead.
+Date parsing is explicit in MDA: allocate a `PrimitiveDataFrameColumn<DateTime>` and write parsed values only when `DateTime.TryParse` succeeds. That gives you predictable null behavior when parsing semi-clean strings.
 
-_Extracts the `date` column as `string`, parses each value with `DateTime.Parse()`, adds `date_parsed` to the cloned frame, and verifies both the type name (`DateTime`) and the first 3 rows match the original dates._
+_Parses `date` into a new `date_parsed` column, prints both data types, and previews the first three rows._
 
 ```csharp
-var dfDDate = dfD.Clone();
-var dateStr = dfDDate.GetColumn<string>("date");
-var dateParsed = dateStr.Select(kvp => DateTime.Parse(kvp.Value));
-dfDDate.AddColumn("date_parsed", dateParsed);
+var dateStrColM = df.Columns["date"];
+var dateParsedColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date_parsed", df.Rows.Count);
 
-display($"First date: {dateParsed.GetAt(0):yyyy-MM-dd}  Type: {dateParsed.GetAt(0).GetType().Name}");
-dfDDate.Columns[new[] { "date", "date_parsed" }].Rows[dfD.RowKeys.Take(3)]
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    var val = dateStrColM[i]?.ToString();
+    if (DateTime.TryParse(val, out var dt)) dateParsedColM[i] = dt;
+}
+
+display($"date dtype: {dateStrColM.DataType.Name}  |  date_parsed dtype: {dateParsedColM.DataType.Name}");
+new MDA.DataFrame(dateStrColM, dateParsedColM).Head(3)
 ```
 
-    First date: 2021-01-04  Type: DateTime
+```text
+date dtype: DateTime  |  date_parsed dtype: DateTime
+```
 
-<div>
+<table id="table_639110914072078686"><thead><tr><th><i>index</i></th><th>date</th><th>date_parsed</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2021-01-04 00:00:00Z</span></td><td><span>2021-01-04 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2021-01-05 00:00:00Z</span></td><td><span>2021-01-05 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2021-01-06 00:00:00Z</span></td><td><span>2021-01-06 00:00:00Z</span></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>date</th><th>date_parsed</th></thead><thead><th></th><th></th><th>(DateTime)</th><th>(DateTime)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>04-Jan-21 0:00:00</td><td>04-Jan-21 0:00:00</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>05-Jan-21 0:00:00</td><td>05-Jan-21 0:00:00</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>06-Jan-21 0:00:00</td><td>06-Jan-21 0:00:00</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Categorical Encoding
+### Polars.NET / Microsoft.Data.Analysis | Categorical Encoding
 
 #### Polars.NET | Cast to Categorical for memory-efficient string storage
 
@@ -742,44 +658,50 @@ display($"Unique symbols: {dfCat["symbol_cat"].NUnique}");
 dfCat.Select("symbol", "symbol_cat").Head(3)
 ```
 
-    symbol dtype: str  |  symbol_cat dtype: cat
+symbol dtype: str  |  symbol_cat dtype: cat
 
-    Unique symbols: 50
+Unique symbols: 50
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>symbol_cat</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td></tr></tbody></table></div>
 
-#### Deedle | No categorical type — manual encoding workaround
+#### Microsoft.Data.Analysis | No native categorical type in the dataframe API
 
-Deedle has no native categorical type. The workaround maps unique string values to integer codes manually using a `Dictionary<string, int>`. This reduces memory but lacks the integration benefits of Polars' categorical type (e.g., optimized groupby, join performance).
+Unlike Polars categorical casting, the MDA dataframe API centers on primitive and string columns. A practical notebook pattern is to keep the string column and inspect distinct cardinality with `ValueCounts()`; if you need encoded features, create numeric codes explicitly at the model-facing layer.
 
-_Builds a `symbolToCode` dictionary from 50 distinct symbols, maps each row's `symbol` to its integer code, and prints the count (50) plus the first 3 code values (all 0 = ABI.BR, the first unique symbol)._
+_Reports the `symbol` column type, counts distinct values with `ValueCounts()`, and previews the first three rows of the original string column._
 
-> [!info] Deedle categorical limitation
-> Deedle's lack of native categorical support means group-by operations on string columns always hash the full string. For datasets with high-cardinality string columns, consider using Polars.NET or `Microsoft.Data.Analysis` which support dictionary encoding natively.
+> [!question] Where should encoding happen?
+>
+> Keep business-readable labels in the dataframe while you are exploring or validating the data. If you need stable numeric encoding for a model, build that encoding deliberately in the feature-engineering or ML pipeline stage instead of assuming the dataframe library has a native categorical abstraction.
 
 ```csharp
-var symbols = dfD.GetColumn<string>("symbol");
-var uniqueSymbols = symbols.Values.Distinct().ToList();
-var symbolToCode = uniqueSymbols.Select((s, i) => (s, i)).ToDictionary(x => x.s, x => x.i);
-var coded = symbols.Select(kvp => symbolToCode[kvp.Value]);
+var symbolStrColM = (MDA.StringDataFrameColumn)df.Columns["symbol"];
+var uniqueCountM = symbolStrColM.ValueCounts().Rows.Count;
 
-display($"Unique symbols: {uniqueSymbols.Count}");
-display($"Sample codes: {coded.GetAt(0)}, {coded.GetAt(1)}, {coded.GetAt(2)}");
-Console.WriteLine("Deedle has no native Categorical type — manual encoding shown above.");
+display($"symbol dtype: {symbolStrColM.DataType.Name}");
+display($"Unique symbolsM: {uniqueCountM}");
+new MDA.DataFrame(symbolStrColM).Head(3)
 ```
 
-    Unique symbols: 50
+```text
+symbol dtype: String
+```
 
-    Sample codes: 0, 0, 0
+```text
+Unique symbols: 50
+```
 
-    Deedle has no native Categorical type — manual encoding shown above.
+<table id="table_639110914090660577"><thead><tr><th><i>index</i></th><th>symbol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td></tr></tbody></table>
 
----
 ## Method Chaining & Window Functions
 
-Method chaining composes multiple DataFrame operations into a single fluent pipeline. Polars.NET's immutable API returns a new DataFrame from each method, enabling natural chaining. Deedle's mutable model requires separate statements for each step.
+Method chaining composes multiple dataframe operations into a readable pipeline. In Polars.NET, the chain is still expression-oriented and can later move toward lazy execution. In Microsoft.Data.Analysis, the same work is usually expressed as a sequence of named intermediate frames and typed columns.
 
-### Polars.NET / Deedle | Fluent Chaining
+> [!question] When should rolling or window logic stay in the dataframe layer?
+>
+> If the data is already local and the goal is notebook-side feature engineering, either library is acceptable. If the same rolling or window logic becomes a recurring production transform over larger partitions, prefer Polars or move the computation upstream into SQL, Spark, or a streaming engine so you do not own custom loop code as pipeline infrastructure.
+
+### Polars.NET / Microsoft.Data.Analysis | Fluent Chaining
 
 #### Polars.NET | Fluent chain with Filter, WithColumns, Sort, Head, Select
 
@@ -802,47 +724,30 @@ dfChain
 
 <!-- Polars DataFrame: (10 rows, 5 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2024-10-15</td><td>795.7</td><td>668.1</td><td>-16.03619455</td></tr><tr><td>ASML.AS</td><td>2026-01-28</td><td>1300</td><td>1194.4</td><td>-8.123076923</td></tr><tr><td>ASML.AS</td><td>2024-07-17</td><td>946</td><td>870.9</td><td>-7.938689218</td></tr><tr><td>ASML.AS</td><td>2025-04-10</td><td>623</td><td>577.6</td><td>-7.287319422</td></tr><tr><td>ASML.AS</td><td>2022-01-10</td><td>667.5</td><td>622.3</td><td>-6.771535581</td></tr><tr><td>ASML.AS</td><td>2025-07-16</td><td>669.5</td><td>625.8</td><td>-6.527259149</td></tr><tr><td>ASML.AS</td><td>2023-08-24</td><td>643.5</td><td>603.6</td><td>-6.2004662</td></tr><tr><td>ASML.AS</td><td>2022-06-16</td><td>478.05</td><td>448.85</td><td>-6.108147683</td></tr><tr><td>ASML.AS</td><td>2021-09-28</td><td>708.4</td><td>665.2</td><td>-6.098249577</td></tr><tr><td>ASML.AS</td><td>2022-07-05</td><td>434.2</td><td>409</td><td>-5.803777061</td></tr></tbody></table></div>
 
-#### Deedle | Equivalent multi-step pipeline
+#### Microsoft.Data.Analysis | Equivalent staged pipeline
 
-Deedle lacks fluent chaining — each step (filter, add column, sort, take) is a separate statement. Sorting requires extracting the column, ordering observations with LINQ, then re-indexing the frame by the sorted keys.
+MDA can express the same pipeline, but each stage is a named intermediate: filter, compute a return column, append it, sort, then trim. That explicitness is useful in debugging-heavy notebook work, but less concise than Polars chaining when transform graphs grow.
 
-_Filters ASML.AS rows by key, adds `return_pct` imperatively, applies `.OrderByDescending().Take(10)` via LINQ to surface the 10 best sessions (led by +11.4% on 2022-11-10), and slices to 5 columns across 4 separate statements._
+_Filters to `ASML.AS`, computes `return_pct`, sorts descending by that derived value, keeps the top ten rows, and projects the final columns._
 
 ```csharp
-var asmlRows = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsml = dfD.Rows[asmlRows];
+var isAsmlMaskM = (MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)df.Columns["symbol"]).ElementwiseEquals("ASML.AS");
+var dfAsmlM = df.Filter(isAsmlMaskM);
 
-var oA = dfDAsml.GetColumn<double>("open");
-var cA = dfDAsml.GetColumn<double>("close");
-var retA = (cA - oA) / oA * 100.0;
-var dfDAsml2 = dfDAsml.Clone();
-dfDAsml2.AddColumn("return_pct", retA);
+var asmlOpenM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlM.Columns["open"];
+var asmlCloseM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlM.Columns["close"];
+var asmlRetM = (asmlCloseM - asmlOpenM) / asmlOpenM * 100.0f;
+asmlRetM.SetName("return_pct");
 
-var sortedKeys = dfDAsml2.GetColumn<double>("return_pct")
-    .Observations
-    .OrderByDescending(o => o.Value)
-    .Take(10)
-    .Select(o => o.Key);
+dfAsmlM.Columns.Add(asmlRetM);
 
-dfDAsml2.Rows[sortedKeys].Columns[new[] { "symbol", "date", "open", "close", "return_pct" }]
+var dfChainM = dfAsmlM.OrderByDescending("return_pct").Head(10);
+new MDA.DataFrame(dfChainM.Columns["symbol"], dfChainM.Columns["date"], dfChainM.Columns["open"], dfChainM.Columns["close"], dfChainM.Columns["return_pct"])
 ```
 
-<div>
+<table id="table_639110914107550915"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2022-11-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>488.5</pre></div></td><td><div class="dni-plaintext"><pre>544.2</pre></div></td><td><div class="dni-plaintext"><pre>11.402254</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2024-08-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>680</pre></div></td><td><div class="dni-plaintext"><pre>746</pre></div></td><td><div class="dni-plaintext"><pre>9.705882</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2026-01-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>919.4</pre></div></td><td><div class="dni-plaintext"><pre>986.3</pre></div></td><td><div class="dni-plaintext"><pre>7.2764807</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1072</pre></div></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>7.0522366</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2024-06-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>883</pre></div></td><td><div class="dni-plaintext"><pre>943.6</pre></div></td><td><div class="dni-plaintext"><pre>6.8629646</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2022-07-20 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>470</pre></div></td><td><div class="dni-plaintext"><pre>501.2</pre></div></td><td><div class="dni-plaintext"><pre>6.6383004</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2025-04-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>516</pre></div></td><td><div class="dni-plaintext"><pre>550</pre></div></td><td><div class="dni-plaintext"><pre>6.5891476</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2022-02-22 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>530.6</pre></div></td><td><div class="dni-plaintext"><pre>564.5</pre></div></td><td><div class="dni-plaintext"><pre>6.388999</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><span>2025-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>703.8</pre></div></td><td><div class="dni-plaintext"><pre>747.8</pre></div></td><td><div class="dni-plaintext"><pre>6.251776</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ASML.AS</td><td><span>2022-02-24 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>527.1</pre></div></td><td><div class="dni-plaintext"><pre>558.2</pre></div></td><td><div class="dni-plaintext"><pre>5.9002156</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>11113</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>10-Nov-22 0:00:00</td><td>488.5</td><td>544.2</td><td>11.402251791197553</td></tr><tr><td><b>11555</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Aug-24 0:00:00</td><td>680.0</td><td>746.0</td><td>9.705882352941178</td></tr><tr><td><b>11915</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>02-Jan-26 0:00:00</td><td>919.4</td><td>986.3</td><td>7.276484663911244</td></tr><tr><td><b>11961</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>09-Mar-26 0:00:00</td><td>1072.0</td><td>1147.6</td><td>7.05223880597014</td></tr><tr><td><b>11512</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jun-24 0:00:00</td><td>883.0</td><td>943.6</td><td>6.862967157417896</td></tr><tr><td><b>11032</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>20-Jul-22 0:00:00</td><td>470.0</td><td>501.2</td><td>6.638297872340424</td></tr><tr><td><b>11727</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Apr-25 0:00:00</td><td>516.0</td><td>550.0</td><td>6.5891472868217065</td></tr><tr><td><b>10928</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>22-Feb-22 0:00:00</td><td>530.6</td><td>564.5</td><td>6.388993592159814</td></tr><tr><td><b>11662</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-25 0:00:00</td><td>703.8</td><td>747.8</td><td>6.251776072747941</td></tr><tr><td><b>10930</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>24-Feb-22 0:00:00</td><td>527.1</td><td>558.2</td><td>5.900208689053315</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>5</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Window Functions
+### Polars.NET / Microsoft.Data.Analysis | Window Functions
 
 #### Polars.NET | Group-level mean with Over
 
@@ -860,43 +765,44 @@ dfOver.Select("symbol", "date", "close", "mean_close_by_symbol").Head(8)
 
 <!-- Polars DataFrame: (8 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>mean_close_by_symbol</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>54.86423366</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>54.86423366</td></tr></tbody></table></div>
 
-#### Deedle | Group-level mean via GroupBy and manual broadcast
+#### Microsoft.Data.Analysis | Group-level mean via dictionary broadcast
 
-Deedle has no window function. The equivalent requires: (1) computing the group-level aggregate with LINQ's `GroupBy`, (2) storing results in a `Dictionary`, and (3) mapping each row's symbol to the precomputed mean.
+There is no `Over`-style window expression in MDA. The equivalent pattern is to compute group aggregates in dictionaries and then broadcast the result back into a new column. This works well for modest in-memory frames but gets verbose for richer window logic.
 
-_Zips `symbol` and `close`, groups by symbol with LINQ, averages each group into a `meanBySymbol` dictionary, then maps every row back to its symbol's mean — producing the same ~54.86 broadcast for all ABI.BR rows._
+_Computes the mean `close` per `symbol`, broadcasts it back into `mean_close_by_symbol`, and previews the first eight rows._
 
 ```csharp
-var symCol = dfD.GetColumn<string>("symbol");
-var closeCol2 = dfD.GetColumn<double>("close");
+var symbolsM = (MDA.StringDataFrameColumn)df.Columns["symbol"];
+var sumsM = new Dictionary<string, double>();
+var countsM = new Dictionary<string, int>();
 
-var meanBySymbol = symCol.ZipInner(closeCol2)
-    .Observations
-    .GroupBy(o => o.Value.Item1)
-    .ToDictionary(g => g.Key, g => g.Average(o => o.Value.Item2));
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    var s = symbolsM[i];
+    var c = closeColM[i];
+    if (s != null && c.HasValue)
+    {
+        if (!sumsM.ContainsKey(s)) { sumsM[s] = 0; countsM[s] = 0; }
+        sumsM[s] += c.Value;
+        countsM[s]++;
+    }
+}
 
-var meanCol = symCol.Select(kvp => meanBySymbol[kvp.Value]);
-var dfDOver = dfD.Clone();
-dfDOver.AddColumn("mean_close_by_symbol", meanCol);
+var meanColM = new MDA.PrimitiveDataFrameColumn<float>("mean_close_by_symbol", df.Rows.Count);
+for (long i = 0; i < df.Rows.Count; i++)
+{
+    var s = symbolsM[i];
+    if (s != null && countsM.ContainsKey(s)) meanColM[i] = (float)(sumsM[s] / countsM[s]);
+}
 
-dfDOver.Columns[new[] { "symbol", "date", "close", "mean_close_by_symbol" }].Rows[dfD.RowKeys.Take(8)]
+var dfOverM = df.Clone();
+dfOverM.Columns.Add(meanColM);
+new MDA.DataFrame(dfOverM.Columns["symbol"], dfOverM.Columns["date"], dfOverM.Columns["close"], dfOverM.Columns["mean_close_by_symbol"]).Head(8)
 ```
 
-<div>
+<table id="table_639110914130443728"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>mean_close_by_symbol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>54.864235</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>mean_close_by_symbol</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>54.864233658903025</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>54.864233658903025</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>54.864233658903025</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>54.864233658903025</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>54.864233658903025</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>54.864233658903025</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>54.864233658903025</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>54.864233658903025</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Rolling Aggregates
+### Polars.NET / Microsoft.Data.Analysis | Rolling Aggregates
 
 #### Polars.NET | Rolling mean with RollingMean
 
@@ -916,46 +822,36 @@ dfRoll.Select("symbol", "date", "close", "close_ma20").Head(25)
 
 <!-- Polars DataFrame: (25 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_ma20</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td><td>406.25</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td><td>406.575</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td><td>405.3333333</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td><td>404.975</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td><td>407.19</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>414.9</td><td>408.475</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>418.95</td><td>409.9714286</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>422.45</td><td>411.53125</td></tr><tr><td>ASML.AS</td><td>2021-01-14</td><td>447.35</td><td>415.5111111</td></tr><tr><td>ASML.AS</td><td>2021-01-15</td><td>435.85</td><td>417.545</td></tr><tr><td colspan='4'>... 15 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle | Rolling mean with Series.Window
+#### Microsoft.Data.Analysis | Rolling mean with an explicit sliding loop
 
-`.Window(20)` produces a `Series<int, Series<int, double>>` — a series of overlapping sub-series, each containing 20 consecutive values. `.Select(kvp => kvp.Value.Mean())` collapses each window into its mean. Unlike Polars, Deedle returns `<missing>` for the first 19 rows where the full window is not yet available.
+Rolling logic in MDA is stateful code over the ordered frame. The example sorts ASML rows and then computes a 20-row moving mean manually. This gives full control over window semantics, but the developer owns every edge-case detail.
 
-_Filters ASML.AS rows, applies `.Window(20).Select(kvp => kvp.Value.Mean())` on `close`, yielding `<missing>` for the first 19 rows and the first valid 20-row mean (~436.86) at row 20 of 25 shown._
-
-> [!info] Partial window behavior
-> Polars fills partial windows at series start (row 1 gets a 1-element mean, row 2 a 2-element mean, etc.). Deedle produces `<missing>` until the full window size is reached. Align behavior by setting `min_periods` in Polars or pre-filling Deedle's missing values.
+_Builds a 20-row rolling mean over ASML closes and previews the first 25 rows of the ordered result._
 
 ```csharp
-var asmlKeys = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsmlR = dfD.Rows[asmlKeys];
+var dfRollBaseM = dfAsmlM.OrderByDescending("date");
+var rollCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfRollBaseM.Columns["close"];
+var ma20ColM = new MDA.PrimitiveDataFrameColumn<float>("close_ma20", dfRollBaseM.Rows.Count);
 
-var closeSeries = dfDAsmlR.GetColumn<double>("close");
-var ma20 = closeSeries
-    .Window(20)
-    .Select(kvp => kvp.Value.Mean());
+for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+{
+    float sum = 0;
+    int count = 0;
+    for (long j = 0; j < 20 && (i - j) >= 0; j++)
+    {
+        var val = rollCloseColM[i - j];
+        if (val.HasValue) { sum += val.Value; count++; }
+    }
+    if (count > 0) ma20ColM[i] = sum / count;
+}
 
-var dfDRoll = dfDAsmlR.Clone();
-dfDRoll.AddColumn("close_ma20", ma20);
-
-dfDRoll.Columns[new[] { "symbol", "date", "close", "close_ma20" }].Rows[dfDRoll.RowKeys.Take(25)]
+dfRollBaseM.Columns.Add(ma20ColM);
+new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_ma20"]).Head(25)
 ```
 
-<div>
+<table id="table_639110914150891450"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>close_ma20</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>1194.8</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200</pre></div></td><td><div class="dni-plaintext"><pre>1196.5333</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>1184.3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147</pre></div></td><td><div class="dni-plaintext"><pre>1176.8401</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186</pre></div></td><td><div class="dni-plaintext"><pre>1178.3667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>1181.4286</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>1178.975</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>1182.4666</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1187.5599</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-26 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1232.4</pre></div></td><td><div class="dni-plaintext"><pre>1191.6362</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-25 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>1199.7</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>12</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-24 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1263.4</pre></div></td><td><div class="dni-plaintext"><pre>1204.5999</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>13</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-23 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1249.2</pre></div></td><td><div class="dni-plaintext"><pre>1207.7858</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>14</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-20 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1255.6</pre></div></td><td><div class="dni-plaintext"><pre>1210.9733</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>15</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-19 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1238.2</pre></div></td><td><div class="dni-plaintext"><pre>1212.675</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>16</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-18 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1244.8</pre></div></td><td><div class="dni-plaintext"><pre>1214.5648</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>17</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-17 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.2</pre></div></td><td><div class="dni-plaintext"><pre>1213.7113</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>18</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-16 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1195</pre></div></td><td><div class="dni-plaintext"><pre>1212.7264</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>19</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.4</pre></div></td><td><div class="dni-plaintext"><pre>1211.6101</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>20</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1179.8</pre></div></td><td><div class="dni-plaintext"><pre>1211.0602</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>21</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1207.8</pre></div></td><td><div class="dni-plaintext"><pre>1211.5101</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>22</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1193</pre></div></td><td><div class="dni-plaintext"><pre>1211.1602</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>23</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1204.8</pre></div></td><td><div class="dni-plaintext"><pre>1214.0201</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>24</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1193.8</pre></div></td><td><div class="dni-plaintext"><pre>1216.3601</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>close_ma20</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>10634</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Jan-21 0:00:00</td><td>406.25</td><td><missing></td></tr><tr><td><b>10635</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jan-21 0:00:00</td><td>406.9</td><td><missing></td></tr><tr><td><b>10636</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-21 0:00:00</td><td>402.85</td><td><missing></td></tr><tr><td><b>10637</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Jan-21 0:00:00</td><td>403.9</td><td><missing></td></tr><tr><td><b>10638</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>08-Jan-21 0:00:00</td><td>416.05</td><td><missing></td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td><td>...</td><td>...</td></tr><tr><td><b>10654</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>01-Feb-21 0:00:00</td><td>454.9</td><td>436.85999999999996</td></tr><tr><td><b>10655</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>02-Feb-21 0:00:00</td><td>457.5</td><td>439.39</td></tr><tr><td><b>10656</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>03-Feb-21 0:00:00</td><td>457.15</td><td>442.1049999999999</td></tr><tr><td><b>10657</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Feb-21 0:00:00</td><td>459.55</td><td>444.88749999999993</td></tr><tr><td><b>10658</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Feb-21 0:00:00</td><td>460.0</td><td>447.0849999999999</td></tr>
-
-</table>
-
-<p><b>25</b> rows x <b>4</b> columns</p><p><b>19</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Cumulative Operations
+### Polars.NET / Microsoft.Data.Analysis | Cumulative Operations
 
 #### Polars.NET | Cumulative sum with CumSum
 
@@ -976,49 +872,31 @@ dfAsmlCum.Select("symbol", "date", "volume", "cum_volume").Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>789502</td><td>789502</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>798787</td><td>1588289</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>875711</td><td>2464000</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>874780</td><td>3338780</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>975243</td><td>4314023</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>717929</td><td>5031952</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>787472</td><td>5819424</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>669646</td><td>6489070</td></tr><tr><td>ASML.AS</td><td>2021-01-14</td><td>1272594</td><td>7761664</td></tr><tr><td>ASML.AS</td><td>2021-01-15</td><td>1291058</td><td>9052722</td></tr></tbody></table></div>
 
-#### Deedle | Cumulative sum with manual loop
+#### Microsoft.Data.Analysis | Cumulative volume with a running accumulator
 
-Deedle has no `.CumSum()` method. The workaround extracts values as an array and accumulates them in a `for` loop. The result is wrapped back into a `Series<int, double>` using the original keys.
+Cumulative transforms are another explicit-state pattern in MDA: hold the running accumulator in a scalar, write each step into a typed target column, and append the result to the working frame.
 
-_Extracts ASML.AS `volume` as a `double[]`, accumulates with a `for` loop into `cumVals`, wraps the result as a `Series<int, double>` with the original keys, and adds it as `cum_volume` — producing identical totals to the Polars output._
+_Accumulates ASML trading volume into `cum_volume` and previews the first ten rows._
 
 ```csharp
-var asmlKeysC = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsmlC = dfD.Rows[asmlKeysC];
+var cumVolColM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", dfRollBaseM.Rows.Count);
+var rollVolColM = dfRollBaseM.Columns["volume"];
+double currentCumM = 0;
 
-var volC = dfDAsmlC.GetColumn<double>("volume");
+for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+{
+    double v = Convert.ToDouble(rollVolColM[i] ?? 0.0);
+    currentCumM += v;
+    cumVolColM[i] = currentCumM;
+}
 
-var keys = volC.Keys.ToArray();
-var vals = volC.Values.ToArray();
-var cumVals = new double[vals.Length];
-cumVals[0] = vals[0];
-for (int j = 1; j < vals.Length; j++)
-    cumVals[j] = cumVals[j - 1] + vals[j];
-var cumSeries = new Series<int, double>(keys, cumVals);
-
-var dfDAsmlC2 = dfDAsmlC.Clone();
-dfDAsmlC2.AddColumn("cum_volume", cumSeries);
-
-var first10Keys = dfDAsmlC2.RowKeys.Take(10);
-dfDAsmlC2.Columns[new[] { "symbol", "date", "volume", "cum_volume" }].Rows[first10Keys]
+dfRollBaseM.Columns.Add(cumVolColM);
+new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["volume"], dfRollBaseM.Columns["cum_volume"]).Head(10)
 ```
 
-<div>
+<table id="table_639110914183552788"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>128223</pre></div></td><td><div class="dni-plaintext"><pre>128223</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>562904</pre></div></td><td><div class="dni-plaintext"><pre>691127</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>800815</pre></div></td><td><div class="dni-plaintext"><pre>1491942</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>689086</pre></div></td><td><div class="dni-plaintext"><pre>2181028</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>857271</pre></div></td><td><div class="dni-plaintext"><pre>3038299</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>778081</pre></div></td><td><div class="dni-plaintext"><pre>3816380</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>714587</pre></div></td><td><div class="dni-plaintext"><pre>4530967</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>941945</pre></div></td><td><div class="dni-plaintext"><pre>5472912</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>871267</pre></div></td><td><div class="dni-plaintext"><pre>6344179</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1010698</pre></div></td><td><div class="dni-plaintext"><pre>7354877</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>volume</th><th>cum_volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(int)</th><th>(float)</th></thead>
-
-<tr><td><b>10634</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Jan-21 0:00:00</td><td>789502</td><td>789502</td></tr><tr><td><b>10635</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jan-21 0:00:00</td><td>798787</td><td>1588289</td></tr><tr><td><b>10636</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-21 0:00:00</td><td>875711</td><td>2464000</td></tr><tr><td><b>10637</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Jan-21 0:00:00</td><td>874780</td><td>3338780</td></tr><tr><td><b>10638</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>08-Jan-21 0:00:00</td><td>975243</td><td>4314023</td></tr><tr><td><b>10639</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>11-Jan-21 0:00:00</td><td>717929</td><td>5031952</td></tr><tr><td><b>10640</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>12-Jan-21 0:00:00</td><td>787472</td><td>5819424</td></tr><tr><td><b>10641</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>13-Jan-21 0:00:00</td><td>669646</td><td>6489070</td></tr><tr><td><b>10642</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>14-Jan-21 0:00:00</td><td>1272594</td><td>7761664</td></tr><tr><td><b>10643</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>15-Jan-21 0:00:00</td><td>1291058</td><td>9052722</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Rank
+### Polars.NET / Microsoft.Data.Analysis | Rank
 
 #### Polars.NET | Rank with Col.Rank expression
 
@@ -1039,46 +917,34 @@ dfRank.Select("symbol", "date", "close", "close_rank").Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rank</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td><td>6</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td><td>7</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td><td>3</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td><td>5</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td><td>13</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>414.9</td><td>11.5</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>418.95</td><td>14</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>422.45</td><td>16</td></tr><tr><td>ASML.AS</td><td>2021-01-14</td><td>447.35</td><td>44</td></tr><tr><td>ASML.AS</td><td>2021-01-15</td><td>435.85</td><td>25</td></tr></tbody></table></div>
 
-#### Deedle | Manual rank computation with LINQ
+#### Microsoft.Data.Analysis | Rank values by sorting indexed observations
 
-Deedle has no `.Rank()` method. The manual approach sorts observations by value, assigns ranks by position using a dictionary, then maps each original key to its rank. This implementation uses ordinal ranking (no tie handling) — ties receive different ranks based on sort order.
+MDA has no built-in rank expression, so ranking is a two-step algorithm: gather the non-null values with their row positions, sort them, and then write the ordinal rank back into a new numeric column.
 
-_Sorts ASML.AS `close` observations by value, builds a rank dictionary by 1-based position, maps each row's key to its rank, and confirms the first 10 rows agree with Polars except at row 6 (2021-01-11), where ordinal ranking assigns 11 instead of Polars' 11.5._
+_Ranks ASML close prices by value, writes the 1-based rank into `close_rank`, and previews the first ten rows._
 
 ```csharp
-var asmlKeysR = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsmlRnk = dfD.Rows[asmlKeysR];
+var rankColM = new MDA.PrimitiveDataFrameColumn<double>("close_rank", dfRollBaseM.Rows.Count);
+var indexedClosesM = new List<(long Index, float Value)>();
 
-var closeR = dfDAsmlRnk.GetColumn<double>("close");
+for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+{
+    if (rollCloseColM[i].HasValue) indexedClosesM.Add((i, rollCloseColM[i].Value));
+}
 
-var sorted = closeR.Observations.OrderBy(o => o.Value).ToList();
-var rankDict = new Dictionary<int, int>();
-for (int i = 0; i < sorted.Count; i++)
-    rankDict[sorted[i].Key] = i + 1;
+var sortedClosesM = indexedClosesM.OrderBy(x => x.Value).ToList();
+for (int r = 0; r < sortedClosesM.Count; r++)
+{
+    rankColM[sortedClosesM[r].Index] = r + 1; // 1-based rank
+}
 
-var rankSeries = closeR.Select(kvp => rankDict[kvp.Key]);
-var dfDRnk = dfDAsmlRnk.Clone();
-dfDRnk.AddColumn("close_rank", rankSeries);
-
-dfDRnk.Columns[new[] { "symbol", "date", "close", "close_rank" }].Rows[dfDRnk.RowKeys.Take(10)]
+dfRollBaseM.Columns.Add(rankColM);
+new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_rank"]).Head(10)
 ```
 
-<div>
+<table id="table_639110914203573201"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>close_rank</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>1308</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>1314</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200</pre></div></td><td><div class="dni-plaintext"><pre>1317</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>1295</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147</pre></div></td><td><div class="dni-plaintext"><pre>1294</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186</pre></div></td><td><div class="dni-plaintext"><pre>1305</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>1316</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>1299</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>1320</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1325</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>close_rank</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(int)</th></thead>
-
-<tr><td><b>10634</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Jan-21 0:00:00</td><td>406.25</td><td>6</td></tr><tr><td><b>10635</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jan-21 0:00:00</td><td>406.9</td><td>7</td></tr><tr><td><b>10636</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-21 0:00:00</td><td>402.85</td><td>3</td></tr><tr><td><b>10637</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Jan-21 0:00:00</td><td>403.9</td><td>5</td></tr><tr><td><b>10638</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>08-Jan-21 0:00:00</td><td>416.05</td><td>13</td></tr><tr><td><b>10639</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>11-Jan-21 0:00:00</td><td>414.9</td><td>11</td></tr><tr><td><b>10640</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>12-Jan-21 0:00:00</td><td>418.95</td><td>14</td></tr><tr><td><b>10641</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>13-Jan-21 0:00:00</td><td>422.45</td><td>16</td></tr><tr><td><b>10642</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>14-Jan-21 0:00:00</td><td>447.35</td><td>44</td></tr><tr><td><b>10643</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>15-Jan-21 0:00:00</td><td>435.85</td><td>25</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Percent Change
+### Polars.NET / Microsoft.Data.Analysis | Percent Change
 
 #### Polars.NET | Day-over-day percent change with PctChange
 
@@ -1099,51 +965,39 @@ dfPctChg.Select("symbol", "date", "close", "close_pct_change").Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_pct_change</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td><td class='pl-null'>null</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td><td>0.0016</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td><td>-0.00995330548</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td><td>0.002606429192</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td><td>0.03008170339</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>414.9</td><td>-0.002764090854</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>418.95</td><td>0.009761388286</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>422.45</td><td>0.008354218881</td></tr><tr><td>ASML.AS</td><td>2021-01-14</td><td>447.35</td><td>0.05894188661</td></tr><tr><td>ASML.AS</td><td>2021-01-15</td><td>435.85</td><td>-0.02570694087</td></tr></tbody></table></div>
 
-#### Deedle | Manual percent change with Shift
+#### Microsoft.Data.Analysis | Day-over-day percent change with explicit lag logic
 
-Deedle's `.Shift(1)` offsets the series by one position, producing a `<missing>` value at the start. The percent change formula `(current - shifted) / shifted` then computes the same metric. The first row propagates the missing value from the shift.
+Lag-based transforms are explicit loops in MDA. The current row and prior row are read from the typed price column, and the result is written only when both values are present and the prior value is nonzero.
 
-_Applies `.Shift(1)` to ASML.AS `close`, computes `(closePct − shifted) / shifted` element-wise, adds `close_pct_change`, and shows 10 rows with `<missing>` on row 1 and identical fractional values to Polars for all subsequent rows._
+_Computes day-over-day percent change for ASML closes and previews the first ten rows._
 
 ```csharp
-var asmlKeysPct = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsmlPct = dfD.Rows[asmlKeysPct];
+var pctChangeColM = new MDA.PrimitiveDataFrameColumn<float>("close_pct_change", dfRollBaseM.Rows.Count);
 
-var closePct = dfDAsmlPct.GetColumn<double>("close");
-var shifted = closePct.Shift(1);
+for (long i = 1; i < dfRollBaseM.Rows.Count; i++)
+{
+    var curr = rollCloseColM[i];
+    var prev = rollCloseColM[i - 1];
+    if (curr.HasValue && prev.HasValue && prev.Value != 0)
+    {
+        pctChangeColM[i] = (curr.Value - prev.Value) / prev.Value;
+    }
+}
 
-var pctChange = (closePct - shifted) / shifted;
-
-var dfDPctChg = dfDAsmlPct.Clone();
-dfDPctChg.AddColumn("close_pct_change", pctChange);
-
-dfDPctChg.Columns[new[] { "symbol", "date", "close", "close_pct_change" }].Rows[dfDPctChg.RowKeys.Take(10)]
+dfRollBaseM.Columns.Add(pctChangeColM);
+new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_pct_change"]).Head(10)
 ```
 
-<div>
+<table id="table_639110914221966047"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>close_pct_change</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>0.006718172</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200</pre></div></td><td><div class="dni-plaintext"><pre>0.0010009602</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>-0.043666687</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147</pre></div></td><td><div class="dni-plaintext"><pre>-0.000522809</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186</pre></div></td><td><div class="dni-plaintext"><pre>0.034001745</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>0.0116357915</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>-0.031671945</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>ASML.AS</td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>0.041831616</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>ASML.AS</td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>0.019001983</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>close_pct_change</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>10634</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Jan-21 0:00:00</td><td>406.25</td><td><missing></td></tr><tr><td><b>10635</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jan-21 0:00:00</td><td>406.9</td><td>0.0015999999999999441</td></tr><tr><td><b>10636</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-21 0:00:00</td><td>402.85</td><td>-0.00995330548046192</td></tr><tr><td><b>10637</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Jan-21 0:00:00</td><td>403.9</td><td>0.0026064291920068375</td></tr><tr><td><b>10638</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>08-Jan-21 0:00:00</td><td>416.05</td><td>0.030081703391928782</td></tr><tr><td><b>10639</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>11-Jan-21 0:00:00</td><td>414.9</td><td>-0.0027640908544646894</td></tr><tr><td><b>10640</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>12-Jan-21 0:00:00</td><td>418.95</td><td>0.009761388286334084</td></tr><tr><td><b>10641</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>13-Jan-21 0:00:00</td><td>422.45</td><td>0.00835421888053467</td></tr><tr><td><b>10642</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>14-Jan-21 0:00:00</td><td>447.35</td><td>0.05894188661380053</td></tr><tr><td><b>10643</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>15-Jan-21 0:00:00</td><td>435.85</td><td>-0.025706940874035987</td></tr>
-
-</table>
-
-<p><b>10</b> rows x <b>4</b> columns</p><p><b>1</b> missing values</p>
-
-</div>
-
----
 ## Apply / Map / UDF
 
-User-defined functions (UDFs) apply custom logic element-wise or row-wise. Polars encourages using native expressions over UDFs for performance, but when custom logic is unavoidable, the workaround in Polars.NET 0.4.0 is to extract a column to a C# array, transform it, and add the result back.
+User-defined functions (UDFs) apply custom logic element-wise or row-wise. Polars encourages native expressions over UDF-style code because expressions stay vectorized and optimizable. Microsoft.Data.Analysis is more comfortable with explicit CLR loops, but those loops are still eager notebook code rather than reusable query semantics.
 
-> [!tip] Prefer expressions over UDFs
-> Polars expressions (arithmetic, `IfElse`, `Cast`, string methods) are vectorized and optimized by the query engine. UDFs force row-by-row evaluation and prevent parallelization. Only use UDFs for logic that cannot be expressed declaratively.
+> [!tip] Prefer built-in column operations over manual loops
+> In Polars, expression-based transforms keep the work vectorized and compatible with lazy optimization. In Microsoft.Data.Analysis, typed column arithmetic is still preferable to per-row loops whenever possible because it keeps the code shorter and reduces custom state handling.
 
-### Polars.NET / Deedle | Element-wise UDF
+### Polars.NET / Microsoft.Data.Analysis | Element-wise UDF
 
 #### Polars.NET | Element-wise UDF via extract-transform-add
 
@@ -1153,6 +1007,9 @@ _Extracts ASML.AS `close` as a `double[]`, applies `Math.Log()` element-wise via
 
 > [!warning] MapElements not available in Polars.NET 0.4.0
 > The Python Polars `map_elements()` function has no direct equivalent in the .NET bindings at version 0.4.0. Use the extract-transform-add pattern shown below.
+
+> [!success] Preferred workaround
+> Keep the transformation in Polars expressions whenever possible. Use extract-transform-add only for CLR-specific logic that genuinely cannot be expressed with the current Polars.NET API surface.
 
 ```csharp
 var dfAsmlU = dfP
@@ -1169,39 +1026,29 @@ dfUdf.Select("symbol", "date", "close", "log_close").Head(8)
 
 <!-- Polars DataFrame: (8 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>log_close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td><td>6.006968734</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td><td>6.008567455</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td><td>5.998564284</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td><td>6.001167323</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td><td>6.030805445</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>414.9</td><td>6.028037527</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>418.95</td><td>6.037751581</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>422.45</td><td>6.046071097</td></tr></tbody></table></div>
 
-#### Deedle | Element-wise transform with Series.Select
+#### Microsoft.Data.Analysis | Element-wise transform with an explicit target column
 
-Deedle's `.Select()` is the natural UDF mechanism — it takes a lambda that receives each key-value pair and returns the transformed value. This is idiomatic Deedle and has no performance penalty relative to its normal operation model (all Deedle operations are eager and row-wise).
+In MDA, custom elementwise transforms are usually direct loops over a typed source column. That is mechanically simple and fits CLR-native math well, but it is still eager, notebook-local materialization rather than an optimizable expression.
 
-_Applies `Math.Log(kvp.Value)` inside a `.Select()` lambda to the ASML.AS `close` Series, adds `log_close` to the cloned frame, and shows 8 rows confirming the same natural log values as the Polars extract-transform-add output._
+_Applies `Math.Log()` to ASML close prices, appends `log_close`, and previews the first eight rows._
 
 ```csharp
-var asmlKeysU = dfD.GetColumn<string>("symbol")
-    .Where(kvp => kvp.Value == "ASML.AS").Keys;
-var dfDAsmlU = dfD.Rows[asmlKeysU].Clone();
+var dfAsmlLogM = dfAsmlM.OrderBy("date");
+var asmlLogCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlLogM.Columns["close"];
+var logColM = new MDA.PrimitiveDataFrameColumn<double>("log_close", dfAsmlLogM.Rows.Count);
 
-var closeU = dfDAsmlU.GetColumn<double>("close");
-var logClose = closeU.Select(kvp => Math.Log(kvp.Value));
-dfDAsmlU.AddColumn("log_close", logClose);
+for (long i = 0; i < dfAsmlLogM.Rows.Count; i++)
+{
+    if (asmlLogCloseColM[i].HasValue) logColM[i] = Math.Log(asmlLogCloseColM[i].Value);
+}
 
-dfDAsmlU.Columns[new[] { "symbol", "date", "close", "log_close" }].Rows[dfDAsmlU.RowKeys.Take(8)]
+dfAsmlLogM.Columns.Add(logColM);
+new MDA.DataFrame(dfAsmlLogM.Columns["symbol"], dfAsmlLogM.Columns["date"], dfAsmlLogM.Columns["close"], dfAsmlLogM.Columns["log_close"]).Head(8)
 ```
 
-<div>
+<table id="table_639110914242677140"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>log_close</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>406.25</pre></div></td><td><div class="dni-plaintext"><pre>6.006968733643947</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>406.9</pre></div></td><td><div class="dni-plaintext"><pre>6.008567440007606</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>402.85</pre></div></td><td><div class="dni-plaintext"><pre>5.998564299374044</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>403.9</pre></div></td><td><div class="dni-plaintext"><pre>6.001167307457915</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>416.05</pre></div></td><td><div class="dni-plaintext"><pre>6.03080541600614</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>414.9</pre></div></td><td><div class="dni-plaintext"><pre>6.028037512628011</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>418.95</pre></div></td><td><div class="dni-plaintext"><pre>6.037751610196498</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ASML.AS</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>422.45</pre></div></td><td><div class="dni-plaintext"><pre>6.046071125494655</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>log_close</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(float)</th></thead>
-
-<tr><td><b>10634</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>04-Jan-21 0:00:00</td><td>406.25</td><td>6.006968733643947</td></tr><tr><td><b>10635</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>05-Jan-21 0:00:00</td><td>406.9</td><td>6.008567455007644</td></tr><tr><td><b>10636</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>06-Jan-21 0:00:00</td><td>402.85</td><td>5.998564284223205</td></tr><tr><td><b>10637</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>07-Jan-21 0:00:00</td><td>403.9</td><td>6.001167322569367</td></tr><tr><td><b>10638</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>08-Jan-21 0:00:00</td><td>416.05</td><td>6.030805445346439</td></tr><tr><td><b>10639</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>11-Jan-21 0:00:00</td><td>414.9</td><td>6.028037527338822</td></tr><tr><td><b>10640</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>12-Jan-21 0:00:00</td><td>418.95</td><td>6.037751581059295</td></tr><tr><td><b>10641</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>13-Jan-21 0:00:00</td><td>422.45</td><td>6.046071096598854</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
-### Polars.NET / Deedle | Row-wise Logic
+### Polars.NET / Microsoft.Data.Analysis | Row-wise Logic
 
 #### Polars.NET | Row-wise logic with expressions (preferred over UDFs)
 
@@ -1222,71 +1069,80 @@ display($"Bullish high-vol rows: {dfRowWise.Filter(Col("bullish_high_vol") == Li
 dfRowWise.Select("symbol", "date", "close", "open", "volume", "bullish_high_vol").Head(8)
 ```
 
-    Bullish high-vol rows: (13931, 13)
+Bullish high-vol rows: (13931, 13)
 
 <!-- Polars DataFrame: (8 rows, 6 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>open</th><th>volume</th><th>bullish_high_vol</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>58.15</td><td>1513937</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>56.9</td><td>1382722</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>57.96</td><td>1370204</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>58.68</td><td>1469911</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>58.16</td><td>1428681</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>57.73</td><td>1518079</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>56.7</td><td>1649991</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>56.5</td><td>1090806</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle | Row-wise apply with ZipInner
+#### Microsoft.Data.Analysis | Row-wise boolean flag with an explicit bool column
 
-The Deedle equivalent zips three Series together and applies a lambda that evaluates the combined condition. `.ZipInner()` chains for multi-column logic — each `.ZipInner()` adds one more series to the tuple.
+Multi-column row logic is expressed by reading the relevant typed columns together and writing the boolean outcome into a `PrimitiveDataFrameColumn<bool>`. This is the clearest MDA pattern when the condition cannot be reduced to a simpler precomputed numeric transform.
 
-_Chains two `.ZipInner()` calls to combine `close`, `open`, and `volume` into a 3-tuple per row, evaluates `c > o && v > 2,000,000` in a lambda, confirms 13,931 matching rows, and displays the first 8 ABI.BR rows (all `False`)._
+_Flags rows where `close > open` and `volume > 2,000,000`, prints the filtered shape, and previews the first eight rows._
 
 ```csharp
-var cD = dfD.GetColumn<double>("close");
-var oD = dfD.GetColumn<double>("open");
-var vD = dfD.GetColumn<double>("volume");
+var bullishVolColM = new MDA.PrimitiveDataFrameColumn<bool>("bullish_high_vol", df.Rows.Count);
 
-var bullish = cD.ZipInner(oD).ZipInner(vD).Select(kvp =>
+for (long i = 0; i < df.Rows.Count; i++)
 {
-    var c = kvp.Value.Item1.Item1;
-    var o = kvp.Value.Item1.Item2;
-    var v = kvp.Value.Item2;
-    return c > o && v > 2_000_000;
-});
+    var c = closeColM[i];
+    var o = openColM[i];
+    var v = volDoubleM[i];
 
-var dfDRow = dfD.Clone();
-dfDRow.AddColumn("bullish_high_vol", bullish);
+    bullishVolColM[i] = c.HasValue && o.HasValue && v.HasValue
+                        && (c.Value > o.Value)
+                        && (v.Value > 2_000_000.0);
+}
 
-var trueCount = bullish.Where(kvp => kvp.Value).KeyCount;
-display($"Bullish high-vol rows: {trueCount}");
-dfDRow.Columns[new[] { "symbol", "date", "close", "open", "volume", "bullish_high_vol" }].Rows[dfD.RowKeys.Take(8)]
+var dfRowWiseM = df.Clone();
+dfRowWiseM.Columns.Add(bullishVolColM);
+
+var filteredBullishM = dfRowWiseM.Filter(bullishVolColM);
+display($"Bullish high-vol rows: ({filteredBullishM.Rows.Count}, {filteredBullishM.Columns.Count})");
+new MDA.DataFrame(dfRowWiseM.Columns["symbol"], dfRowWiseM.Columns["date"], dfRowWiseM.Columns["close"], dfRowWiseM.Columns["open"], dfRowWiseM.Columns["volume"], dfRowWiseM.Columns["bullish_high_vol"]).Head(8)
 ```
 
-    Bullish high-vol rows: 13931
+```text
+Bullish high-vol rows: (13931, 13)
+```
 
-<div>
+<table id="table_639110914260645964"><thead><tr><th><i>index</i></th><th>symbol</th><th>date</th><th>close</th><th>open</th><th>volume</th><th>bullish_high_vol</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.4</pre></div></td><td><div class="dni-plaintext"><pre>58.68</pre></div></td><td><div class="dni-plaintext"><pre>1469911</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.86</pre></div></td><td><div class="dni-plaintext"><pre>58.16</pre></div></td><td><div class="dni-plaintext"><pre>1428681</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.61</pre></div></td><td><div class="dni-plaintext"><pre>57.73</pre></div></td><td><div class="dni-plaintext"><pre>1518079</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.51</pre></div></td><td><div class="dni-plaintext"><pre>56.7</pre></div></td><td><div class="dni-plaintext"><pre>1649991</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>ABI.BR</td><td><span>2021-01-13 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.48</pre></div></td><td><div class="dni-plaintext"><pre>56.5</pre></div></td><td><div class="dni-plaintext"><pre>1090806</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>open</th><th>volume</th><th>bullish_high_vol</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>57.21</td><td>58.15</td><td>1513937</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>57.18</td><td>56.9</td><td>1382722</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>58.77</td><td>57.96</td><td>1370204</td><td>False</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>07-Jan-21 0:00:00</td><td>58.4</td><td>58.68</td><td>1469911</td><td>False</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>08-Jan-21 0:00:00</td><td>57.86</td><td>58.16</td><td>1428681</td><td>False</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>11-Jan-21 0:00:00</td><td>56.61</td><td>57.73</td><td>1518079</td><td>False</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>12-Jan-21 0:00:00</td><td>56.51</td><td>56.7</td><td>1649991</td><td>False</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>13-Jan-21 0:00:00</td><td>56.48</td><td>56.5</td><td>1090806</td><td>False</td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>6</b> columns</p><p><b>0</b> missing values</p>
-
-</div>
-
----
 ## Summary
 
-| Operation | Polars.NET | Deedle |
-|---|---|---|
-| **Add column** | `df.WithColumns(expr.Alias("name"))` | `frame.AddColumn("name", series)` |
-| **Arithmetic** | `Col("a") + Col("b")` expression | `series1 + series2` eager |
-| **Conditional** | `IfElse(cond, x, IfElse(...))` | `series.Select(kvp => ternary)` |
-| **Type cast** | `Col("c").Cast(DataType.X)` | `series.Select(kvp => (T)kvp.Value)` |
-| **Parse date** | `Col("d").Str.ToDate(fmt)` | `series.Select(kvp => DateTime.Parse(...))` |
-| **Categorical** | `Col("c").Cast(DataType.Categorical)` | Not supported natively |
-| **Method chaining** | `.Filter().WithColumns().Sort().Head()` | Manual — filter/sort/take separate |
-| **Window (Over)** | `Col("c").Mean().Over("g")` | GroupBy + manual broadcast |
-| **Rolling mean** | `Col("c").RollingMean(n)` | `series.Window(n).Select(mean)` |
-| **Cumulative sum** | `Col("c").CumSum()` | Manual loop or scan |
-| **Rank** | `Col("c").Rank()` | Manual sort + index |
-| **Pct change** | `Col("c").PctChange(n)` | `(s - s.Shift(n)) / s.Shift(n)` |
-| **Element UDF** | Extract → LINQ → `HStack` (0.4.0) | `series.Select(kvp => fn(kvp.Value))` |
-| **Row-wise logic** | Prefer expressions (`When/Then`) | `Rows.Select` or zip series |
+This chapter is where the libraries diverge most clearly. Polars.NET gives you a declarative transformation DSL that scales from notebook experimentation into lazy analytical pipelines. Microsoft.Data.Analysis gives you explicit typed-column mechanics that fit .NET-centric preprocessing, ML.NET handoff, and situations where you want total control over every materialized step.
 
-**Key takeaway:** Polars.NET's expression system enables declarative, composable transforms that can be optimized by the query engine. Deedle is imperative — each step eagerly materializes, requiring more boilerplate for equivalent operations.
+### API Comparison
+
+| Operation | Polars.NET | Microsoft.Data.Analysis |
+|---|---|---|
+| **Add column** | `df.WithColumns(expr.Alias("name"))` | Build a typed column and append with `Columns.Add(...)` or `new MDA.DataFrame(...)` |
+| **Multiple transforms** | Many expressions in one `.WithColumns(...)` | Compute each target column explicitly and append eagerly |
+| **Literal / scalar injection** | `Lit(value)` | Build a constant target column explicitly |
+| **Conditional logic** | `IfElse(cond, x, y)` | Manual pass into `StringDataFrameColumn` or `PrimitiveDataFrameColumn<bool>` |
+| **Horizontal arithmetic** | Expression arithmetic or folds | Typed column arithmetic across the source columns |
+| **Numeric cast** | `Col("c").Cast(DataType.X)` | Construct a new typed target column and populate it |
+| **Date parsing** | `Col("d").Str.ToDate(fmt)` | Parse into `PrimitiveDataFrameColumn<DateTime>` |
+| **Categorical encoding** | `Col("c").Cast(DataType.Categorical)` | No native categorical type in the dataframe API |
+| **Fluent chaining** | `.Filter().WithColumns().Sort().Head()` | Named eager stages and intermediate frames |
+| **Window / broadcast** | `Col("c").Mean().Over("g")` | Aggregate into dictionaries and broadcast back manually |
+| **Rolling mean** | `Col("c").RollingMean(n)` | Explicit sliding loop over the ordered frame |
+| **Cumulative sum** | `Col("c").CumSum()` | Running accumulator into a target column |
+| **Rank** | `Col("c").Rank()` | Sort indexed observations and write ranks back |
+| **Pct change** | `Col("c").PctChange(n)` | Manual prior-row loop |
+| **Element UDF** | Extract / transform / `HStack` workaround in 0.4.0 | Explicit loop into a target column |
+| **Row-wise logic** | Prefer expressions with `IfElse`, `&`, and `|` | Explicit boolean target column populated row by row |
+
+### Engineering Recommendations
+
+As *Fundamentals of Data Engineering.epub* argues, the best architecture decisions stay reversible. Applied here, that means not overcommitting to notebook-local loop code if the same transformation is likely to migrate into a larger batch, SQL, or streaming pipeline later.
+
+| Scenario | Prefer | Why |
+|---|---|---|
+| Expression-heavy transforms that may grow into lazy analytical pipelines | Polars.NET | The expression model, window functions, rolling ops, and categorical support stay declarative and closer to optimizer-friendly execution. |
+| Small or medium in-memory feature engineering inside a .NET notebook or service | Microsoft.Data.Analysis | Typed columns and explicit loops make every materialized step easy to inspect, debug, and adapt to CLR-native business logic. |
+| Repeated rolling, ranking, or stateful time-series transforms | Polars.NET | Built-in rolling, window, cumulative, rank, and percent-change operations reduce custom state code substantially. |
+| Feature prep immediately upstream of ML.NET | Microsoft.Data.Analysis | `DataFrame` implements `IDataView`, which makes the handoff into ML.NET natural once features are ready. |
+| String-heavy domains that need compact categorical storage | Polars.NET | Native categorical casting avoids ad hoc code tables and keeps labels human-readable. |
+| One-off CLR-specific math or row checks where explicit control matters more than optimizer behavior | Microsoft.Data.Analysis | Manual target-column construction is acceptable when the dataset is already local and the transform belongs in application code. |
+
+If the same transformation can run earlier in SQL, DuckDB, Spark, or a lakehouse engine, prefer that upstream execution boundary first. Local dataframe transforms are most valuable when the data is already in memory, the goal is exploratory feature engineering, or the transform sits squarely within a .NET application boundary.
