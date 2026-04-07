@@ -307,8 +307,6 @@ a {
     }
 
     .center {
-      display: flex;
-      justify-content: center;
       grid-area: grid-center;
       max-width: 100%;
       min-width: 0;
@@ -327,6 +325,8 @@ a {
 
     .center > article {
       width: min(100%, $measure-readable);
+      margin-left: auto;
+      margin-right: auto;
     }
 
     footer {
