@@ -1,10 +1,13 @@
 .content-meta {
   margin-top: 0;
   color: var(--darkgray);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 
   &[show-comma="true"] {
     > *:not(:last-child) {
-      margin-right: 8px;
+      margin-right: 0.25rem;
 
       &::after {
         content: ",";

@@ -1,36 +1,45 @@
 .clipboard-button {
   position: absolute;
-  display: flex;
-  float: right;
+  top: 0;
   right: 0;
-  padding: 0.4rem;
-  margin: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  margin: 0.5rem;
   color: var(--gray);
-  border-color: var(--dark);
-  background-color: var(--light);
-  border: 1px solid;
-  border-radius: 5px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   opacity: 0;
-  transition: 0.2s;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 
   & > svg {
-    fill: var(--light);
-    filter: contrast(0.3);
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: currentColor;
+    filter: none;
   }
 
   &:hover {
+    color: var(--dark);
     cursor: pointer;
-    border-color: var(--secondary);
+    border-color: var(--borderStrong);
+    background-color: var(--surfaceElevated);
   }
 
-  &:focus {
-    outline: 0;
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
 }
 
 pre {
   &:hover > .clipboard-button {
     opacity: 1;
-    transition: 0.2s;
   }
 }

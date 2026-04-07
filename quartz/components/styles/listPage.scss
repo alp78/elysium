@@ -2,37 +2,61 @@
 
 ul.section-ul {
   list-style: none;
-  margin-top: 2em;
+  margin-top: var(--space-6);
   padding-left: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 li.section-li {
-  margin-bottom: 1em;
+  margin: 0;
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border);
+
+  &:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
 
   & > .section {
     display: grid;
-    grid-template-columns: fit-content(8em) 3fr 1fr;
+    grid-template-columns: minmax(6.75rem, auto) minmax(0, 1fr) auto;
+    gap: var(--space-3) var(--space-4);
+    align-items: start;
 
     @media all and ($mobile) {
+      grid-template-columns: minmax(0, 1fr);
+
       & > .tags {
         display: none;
       }
     }
 
+    & > .desc > h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
     & > .desc > h3 > a {
       background-color: transparent;
+      color: var(--dark);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--secondary);
+      }
     }
 
     & .meta {
-      margin: 0 1em 0 0;
-      opacity: 0.6;
+      margin: 0;
+      color: var(--gray);
+      font-size: var(--font-size-xs);
     }
   }
 }
 
-// modifications in popover context
 .popover .section {
-  grid-template-columns: fit-content(8em) 1fr !important;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr);
 
   & > .tags {
     display: none;

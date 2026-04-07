@@ -2,22 +2,38 @@
 
 .backlinks {
   flex-direction: column;
+  gap: var(--space-3);
 
   & > h3 {
-    font-size: 1rem;
     margin: 0;
   }
 
   & > ul.overflow {
     list-style: none;
     padding: 0;
-    margin: 0.5rem 0;
+    margin: 0;
     max-height: calc(100% - 2rem);
     overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
 
     & > li {
+      margin: 0;
+
       & > a {
-        background-color: transparent;
+        display: block;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background-color: var(--surfaceElevated);
+        color: var(--darkgray);
+        text-decoration: none;
+
+        &:hover {
+          color: var(--dark);
+          background-color: var(--surface-hover);
+        }
       }
     }
   }

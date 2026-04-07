@@ -8,6 +8,11 @@ export interface ColorScheme {
   tertiary: string
   highlight: string
   textHighlight: string
+  surface: string
+  surfaceElevated: string
+  surfaceSubtle: string
+  border: string
+  borderStrong: string
 }
 
 interface Colors {
@@ -154,6 +159,11 @@ ${stylesheet.join("\n\n")}
   --tertiary: ${theme.colors.lightMode.tertiary};
   --highlight: ${theme.colors.lightMode.highlight};
   --textHighlight: ${theme.colors.lightMode.textHighlight};
+  --surface: ${theme.colors.lightMode.surface};
+  --surfaceElevated: ${theme.colors.lightMode.surfaceElevated};
+  --surfaceSubtle: ${theme.colors.lightMode.surfaceSubtle};
+  --border: ${theme.colors.lightMode.border};
+  --borderStrong: ${theme.colors.lightMode.borderStrong};
 
   --titleFont: "${getFontSpecificationName(theme.typography.title || theme.typography.header)}", ${DEFAULT_SANS_SERIF};
   --headerFont: "${getFontSpecificationName(theme.typography.header)}", ${DEFAULT_SANS_SERIF};
@@ -171,6 +181,11 @@ ${stylesheet.join("\n\n")}
   --tertiary: ${theme.colors.darkMode.tertiary};
   --highlight: ${theme.colors.darkMode.highlight};
   --textHighlight: ${theme.colors.darkMode.textHighlight};
+  --surface: ${theme.colors.darkMode.surface};
+  --surfaceElevated: ${theme.colors.darkMode.surfaceElevated};
+  --surfaceSubtle: ${theme.colors.darkMode.surfaceSubtle};
+  --border: ${theme.colors.darkMode.border};
+  --borderStrong: ${theme.colors.darkMode.borderStrong};
 }
 `
 }
