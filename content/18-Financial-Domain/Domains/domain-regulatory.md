@@ -12,7 +12,7 @@ Financial benchmark regulation — IOSCO principles, EU BMR administrator obliga
 
 ```mermaid
 mindmap
-  ((Regulatory))
+  root["Benchmark regulation"]
     (IOSCO principles)
     (EU BMR)
     (SFDR data)

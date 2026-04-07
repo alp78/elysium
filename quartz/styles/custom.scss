@@ -12,7 +12,8 @@ body {
   letter-spacing: -0.01em;
 }
 
-code, pre code {
+code,
+pre code {
   font-size: 13px !important;
 }
 
@@ -22,29 +23,59 @@ code, pre code {
 
 /* ── Headings: Tokyo Night (dark only) ────────────────────────── */
 [saved-theme="dark"] h1 {
-  color: #7aa2f7 !important;
+  color: #cecece !important;
   font-weight: 700 !important;
   border-bottom: 1px solid #29344a;
   padding-bottom: 0.3em;
 }
-[saved-theme="dark"] h2 { color: #d97b40 !important; font-weight: 600 !important; }
-[saved-theme="dark"] h3 { color: #7aa2f7 !important; font-weight: 600 !important; }
-[saved-theme="dark"] h4 { color: #9ece6a !important; font-weight: 500 !important; }
-[saved-theme="dark"] h5 { color: #e0af68 !important; font-weight: 500 !important; }
-[saved-theme="dark"] h6 { color: #ff9e64 !important; font-weight: 500 !important; }
+[saved-theme="dark"] h2 {
+  color: #db6b26 !important;
+  font-weight: 600 !important;
+}
+[saved-theme="dark"] h3 {
+  color: #1d58d8 !important;
+  font-weight: 600 !important;
+}
+[saved-theme="dark"] h4 {
+  color: #427e03 !important;
+  font-weight: 500 !important;
+}
+[saved-theme="dark"] h5 {
+  color: #b1a71a !important;
+  font-weight: 500 !important;
+}
+[saved-theme="dark"] h6 {
+  color: #94278b !important;
+  font-weight: 500 !important;
+}
 
 /* ── Headings: Light mode ────────────────────────────────────── */
 [saved-theme="light"] h1 {
-  color: #2d2a5e !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
   border-bottom: 1px solid #d0cdd8;
   padding-bottom: 0.3em;
 }
-[saved-theme="light"] h2 { color: #5a3e8a !important; font-weight: 600 !important; }
-[saved-theme="light"] h3 { color: #2e6b8a !important; font-weight: 600 !important; }
-[saved-theme="light"] h4 { color: #4a7a3e !important; font-weight: 500 !important; }
-[saved-theme="light"] h5 { color: #8a6d2e !important; font-weight: 500 !important; }
-[saved-theme="light"] h6 { color: #9a5a2e !important; font-weight: 500 !important; }
+[saved-theme="light"] h2 {
+  color: #5a3e8a !important;
+  font-weight: 600 !important;
+}
+[saved-theme="light"] h3 {
+  color: #2e6b8a !important;
+  font-weight: 600 !important;
+}
+[saved-theme="light"] h4 {
+  color: #4a7a3e !important;
+  font-weight: 500 !important;
+}
+[saved-theme="light"] h5 {
+  color: #8a6d2e !important;
+  font-weight: 500 !important;
+}
+[saved-theme="light"] h6 {
+  color: #9a5a2e !important;
+  font-weight: 500 !important;
+}
 
 /* ── Code blocks (dark) ──────────────────────────────────────── */
 [saved-theme="dark"] pre {
@@ -57,8 +88,9 @@ code, pre code {
 }
 
 [saved-theme="dark"] :not(pre) > code {
-  background-color: #1a1b2e !important;
-  color: #c0caf5 !important;
+  font-family: var(--codeFont) !important;
+  background-color: #131313 !important;
+  color: #ffffff !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
@@ -201,12 +233,14 @@ table {
 }
 
 /* ── Bold, italic, marks ─────────────────────────────────────── */
-[saved-theme="dark"] strong, [saved-theme="dark"] b {
+[saved-theme="dark"] strong,
+[saved-theme="dark"] b {
   color: #c0caf5 !important;
   font-weight: 600;
 }
 
-[saved-theme="dark"] em, [saved-theme="dark"] i {
+[saved-theme="dark"] em,
+[saved-theme="dark"] i {
   color: var(--darkgray) !important;
 }
 
@@ -310,11 +344,19 @@ a.tag-link:hover {
 
 /* ── Page and article titles ─────────────────────────────────── */
 [saved-theme="dark"] .article-title {
-  color: #7aa2f7 !important;
+  color: #ffffff !important;
 }
 
 [saved-theme="dark"] .page-title {
-  color: #c0caf5 !important;
+  color: #ffffff !important;
+}
+
+[saved-theme="light"] .article-title {
+  color: #ffffff !important;
+}
+
+[saved-theme="light"] .page-title {
+  color: #ffffff !important;
 }
 
 /* ── Explorer sidebar — match Obsidian style ─────────────────── */

@@ -13,8 +13,8 @@ Comprehensive glossary of ISS-STOXX terminology — index construction, index fa
 
 ```mermaid
 mindmap
-  ((ISS-STOXX Glossary))
-    (ISS-STOXX landing)
+  root["ISS and STOXX glossary"]
+    (glossary landing)
     (index construction)
     (index families)
     (financial metrics)

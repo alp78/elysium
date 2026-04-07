@@ -29,6 +29,15 @@ type NodeData = {
 
 type SimpleLinkData = { source: SimpleSlug; target: SimpleSlug }
 type LinkData = { source: NodeData; target: NodeData } & SimulationLinkDatum<NodeData>
+type ClusterTarget = {
+  parentId: SimpleSlug
+  angle: number
+  radius: number
+  strength: number
+}
+type CustomForce = ((alpha: number) => void) & {
+  initialize?: (nodes: NodeData[]) => void
+}
 
 // --- Visited tracking ---
 const localStorageKey = "graph-visited"
@@ -76,8 +85,65 @@ const NODE_SCALE = 3.2
 
 function getNodeRadius(node: { linkCount: number }): number {
   const lc = node.linkCount ?? 0
-  if (lc <= 1) return NODE_MIN_RADIUS + 1  // 3px for minimal nodes
+  if (lc <= 1) return NODE_MIN_RADIUS + 1 // 3px for minimal nodes
   return Math.min(NODE_MAX_RADIUS, NODE_MIN_RADIUS + Math.sqrt(lc) * NODE_SCALE)
+}
+
+function stableHash(text: string): number {
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0
+  }
+  return hash
+}
+
+function sharedPathPrefixLength(a: string, b: string): number {
+  const aParts = a.split("/")
+  const bParts = b.split("/")
+  let shared = 0
+  for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+    if (aParts[i] !== bParts[i]) break
+    shared++
+  }
+  return shared
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function createClusterForce(
+  targets: Map<SimpleSlug, ClusterTarget>,
+  fallbackX: number,
+  fallbackY: number,
+): CustomForce {
+  let localNodes: NodeData[] = []
+  let byId = new Map<SimpleSlug, NodeData>()
+
+  const force = ((alpha: number) => {
+    for (const node of localNodes) {
+      const target = targets.get(node.id)
+      if (!target) continue
+
+      const parent = byId.get(target.parentId)
+      const parentX = parent?.x ?? fallbackX
+      const parentY = parent?.y ?? fallbackY
+      const nodeX = node.x ?? fallbackX
+      const nodeY = node.y ?? fallbackY
+      const targetX = parentX + Math.cos(target.angle) * target.radius
+      const targetY = parentY + Math.sin(target.angle) * target.radius
+
+      node.vx = (node.vx ?? 0) + (targetX - nodeX) * target.strength * alpha
+      node.vy = (node.vy ?? 0) + (targetY - nodeY) * target.strength * alpha
+    }
+  }) as CustomForce
+
+  force.initialize = (nodes: NodeData[]) => {
+    localNodes = nodes
+    byId = new Map(nodes.map((node) => [node.id, node]))
+  }
+
+  return force
 }
 
 // --- Main render function ---
@@ -97,6 +163,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     opacityScale,
     removeTags,
     showTags,
+    focusOnHover = false,
+    enableRadial = false,
   } = JSON.parse(graph.dataset["cfg"]!) as D3Config
 
   const data: Map<SimpleSlug, ContentDetails> = new Map(
@@ -175,99 +243,257 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
   // ========== NODE TYPE CLASSIFICATION ==========
   function getNodeTier(id: string): number {
-    if (id.endsWith("index") && !id.includes("/")) return 0  // index = center
-    if (id.includes("moc-")) return 1                         // MOCs = inner ring
-    if (id.includes("domain-")) return 2                      // domains = middle ring
-    return 3                                                   // content = outer petals
+    if (id.startsWith("tags/")) return 4
+    if (id.endsWith("index") && !id.includes("/")) return 0 // index = center
+    if (id.includes("moc-")) return 1 // MOCs = inner ring
+    if (id.includes("domain-")) return 2 // domains = middle ring
+    return 3 // content = outer petals
   }
 
   const cx = width / 2
   const cy = height / 2
   const baseRadius = Math.min(width, height) * 0.3
+  const chargeFactor = Math.max(0.35, repelForce)
+  const effectiveCenterForce = Math.max(0.15, centerForce)
+  const baseLinkDistance = Math.max(18, linkDistance)
+  const alphaScale = clamp(opacityScale, 0.25, 1.35)
+  const labelFontPx = Math.max(10, Math.round(18 * fontSize))
 
-  // ========== PHYSICS (orbital flower layout) ==========
+  const adjacency = new Map<SimpleSlug, NodeData[]>(nodes.map((node) => [node.id, []]))
+  for (const link of graphLinks) {
+    adjacency.get(link.source.id)?.push(link.target)
+    adjacency.get(link.target.id)?.push(link.source)
+  }
+
+  function scorePrimaryParent(node: NodeData, candidate: NodeData, hopDepth: number): number {
+    const sameSection = node.id.split("/")[0] === candidate.id.split("/")[0] ? 1 : 0
+    return (
+      (hopDepth === 1 ? 200 : 100) +
+      sharedPathPrefixLength(node.id, candidate.id) * 35 +
+      sameSection * 40 +
+      candidate.linkCount * 0.25
+    )
+  }
+
+  function findPrimaryParent(node: NodeData, targetTier: number, maxDepth = 2): NodeData | null {
+    const visited = new Set<SimpleSlug>([node.id])
+    const queue: Array<{ id: SimpleSlug; depth: number }> = [{ id: node.id, depth: 0 }]
+    const candidates: Array<{ node: NodeData; score: number }> = []
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      if (current.depth >= maxDepth) continue
+
+      for (const neighbor of adjacency.get(current.id) ?? []) {
+        if (visited.has(neighbor.id)) continue
+        visited.add(neighbor.id)
+
+        const nextDepth = current.depth + 1
+        if (getNodeTier(neighbor.id) === targetTier) {
+          candidates.push({
+            node: neighbor,
+            score: scorePrimaryParent(node, neighbor, nextDepth),
+          })
+        }
+
+        if (nextDepth < maxDepth) {
+          queue.push({ id: neighbor.id, depth: nextDepth })
+        }
+      }
+    }
+
+    candidates.sort((a, b) => b.score - a.score || a.node.id.localeCompare(b.node.id))
+    return candidates[0]?.node ?? null
+  }
+
+  function buildClusterTargets(
+    groups: Map<SimpleSlug, NodeData[]>,
+    {
+      baseTargetRadius,
+      ringStep,
+      ringSize,
+      strength,
+    }: {
+      baseTargetRadius: number
+      ringStep: number
+      ringSize: number
+      strength: number
+    },
+  ): Map<SimpleSlug, ClusterTarget> {
+    const targets = new Map<SimpleSlug, ClusterTarget>()
+
+    for (const [parentId, members] of groups.entries()) {
+      const sorted = [...members].sort((a, b) => a.id.localeCompare(b.id))
+      const phase = (stableHash(parentId) / 0xffffffff) * Math.PI * 2
+
+      sorted.forEach((member, index) => {
+        const ring = Math.floor(index / ringSize)
+        const slot = index % ringSize
+        const ringStart = ring * ringSize
+        const slotsInRing = Math.min(ringSize, sorted.length - ringStart)
+        const angle = phase + (slot / Math.max(1, slotsInRing)) * Math.PI * 2
+
+        targets.set(member.id, {
+          parentId,
+          angle,
+          radius: baseTargetRadius + ring * ringStep,
+          strength,
+        })
+      })
+    }
+
+    return targets
+  }
+
+  const domainGroups = new Map<SimpleSlug, NodeData[]>()
+  const pageGroups = new Map<SimpleSlug, NodeData[]>()
+
+  for (const node of nodes) {
+    const tier = getNodeTier(node.id)
+    if (tier === 2) {
+      const mocParent = findPrimaryParent(node, 1, 2)
+      if (!mocParent) continue
+      const siblings = domainGroups.get(mocParent.id) ?? []
+      siblings.push(node)
+      domainGroups.set(mocParent.id, siblings)
+    } else if (tier === 3) {
+      const domainParent = findPrimaryParent(node, 2, 2)
+      if (!domainParent) continue
+      const siblings = pageGroups.get(domainParent.id) ?? []
+      siblings.push(node)
+      pageGroups.set(domainParent.id, siblings)
+    }
+  }
+
+  const clusterTargets = new Map<SimpleSlug, ClusterTarget>([
+    ...buildClusterTargets(domainGroups, {
+      baseTargetRadius: baseLinkDistance * 1.45,
+      ringStep: baseLinkDistance * 0.55,
+      ringSize: 6,
+      strength: enableRadial ? 0.045 : 0.07,
+    }),
+    ...buildClusterTargets(pageGroups, {
+      baseTargetRadius: baseLinkDistance * 1.05,
+      ringStep: baseLinkDistance * 0.45,
+      ringSize: 10,
+      strength: enableRadial ? 0.075 : 0.13,
+    }),
+  ])
+
+  // ========== PHYSICS (compact clustered force layout) ==========
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(nodes)
-    .force(
-      "charge",
-      forceManyBody<NodeData>()
-        .strength((d) => {
-          const tier = getNodeTier(d.id)
-          if (tier === 0) return -500   // index pushes MOCs outward
-          if (tier === 1) return -250   // MOCs push domains outward
-          if (tier === 2) return -150   // domains push pages outward
-          return -200                    // pages repel each other — spread around parent
-        })
-        .distanceMin(15)
-        .distanceMax(600)
-        .theta(0.9),
-    )
-    .force(
-      "link",
-      forceLink<NodeData, LinkData>(graphLinks)
-        .distance((l) => {
-          const srcTier = getNodeTier((l.source as NodeData).id)
-          const tgtTier = getNodeTier((l.target as NodeData).id)
-          const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 180  // index → MOC: wide orbit
-          if (minTier === 1) return 80   // MOC → domain: room to breathe
-          return 90                       // domain → page: loose petal, room to spread
-        })
-        .strength((l) => {
-          const srcTier = getNodeTier((l.source as NodeData).id)
-          const tgtTier = getNodeTier((l.target as NodeData).id)
-          const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 0.35 // MOCs orbit index
-          if (minTier === 1) return 0.6  // domains stay near their MOC
-          return 0.1                      // pages loosely orbit domain — fan out wide
-        }),
-    )
-    .force("center", forceCenter(cx, cy).strength(0.003))
-    .force(
-      "collide",
-      forceCollide<NodeData>()
-        .radius((d) => {
-          const tier = getNodeTier(d.id)
-          if (tier === 0) return 40
-          if (tier === 1) return 25
-          if (tier === 2) return 15
-          return getNodeRadius(d) + 14
-        })
-        .strength(0.6)
-        .iterations(3),
-    )
-    .force(
+
+  simulation.force(
+    "charge",
+    forceManyBody<NodeData>()
+      .strength((d) => {
+        const tier = getNodeTier(d.id)
+        if (tier === 0) return -220 * chargeFactor
+        if (tier === 1) return -140 * chargeFactor
+        if (tier === 2) return -95 * chargeFactor
+        if (tier === 4) return -50 * chargeFactor
+        return -70 * chargeFactor
+      })
+      .distanceMin(8)
+      .distanceMax(Math.max(240, baseLinkDistance * 12))
+      .theta(0.85),
+  )
+
+  simulation.force(
+    "link",
+    forceLink<NodeData, LinkData>(graphLinks)
+      .distance((l) => {
+        const source = l.source as NodeData
+        const target = l.target as NodeData
+        const srcTier = getNodeTier(source.id)
+        const tgtTier = getNodeTier(target.id)
+        const minTier = Math.min(srcTier, tgtTier)
+
+        if (srcTier === 4 || tgtTier === 4) return baseLinkDistance * 0.95
+        if (minTier === 0) return baseLinkDistance * 1.8
+        if (minTier === 1) return baseLinkDistance * 1.25
+        if (minTier === 2) return baseLinkDistance * 0.9
+        return baseLinkDistance
+      })
+      .strength((l) => {
+        const source = l.source as NodeData
+        const target = l.target as NodeData
+        const srcTier = getNodeTier(source.id)
+        const tgtTier = getNodeTier(target.id)
+        const minTier = Math.min(srcTier, tgtTier)
+
+        if (srcTier === 4 || tgtTier === 4) return 0.18
+        if (minTier === 0) return 0.18 + effectiveCenterForce * 0.08
+        if (minTier === 1) return 0.32 + effectiveCenterForce * 0.08
+        if (minTier === 2) return 0.55
+        return 0.28
+      }),
+  )
+
+  simulation.force("center", forceCenter(cx, cy).strength(0.012 * effectiveCenterForce))
+
+  simulation.force(
+    "collide",
+    forceCollide<NodeData>()
+      .radius((d) => {
+        const tier = getNodeTier(d.id)
+        if (tier === 0) return 28
+        if (tier === 1) return 20
+        if (tier === 2) return 14
+        if (tier === 4) return getNodeRadius(d) + 4
+        return getNodeRadius(d) + Math.max(4, baseLinkDistance * 0.2)
+      })
+      .strength(0.78)
+      .iterations(2),
+  )
+
+  simulation.force("cluster", createClusterForce(clusterTargets, cx, cy))
+
+  if (enableRadial) {
+    simulation.force(
       "radial",
       forceRadial<NodeData>(
         (d) => {
           const tier = getNodeTier(d.id)
-          if (tier === 0) return 0                  // index pinned to center
-          if (tier === 1) return baseRadius * 0.5   // MOCs: inner ring
-          if (tier === 2) return baseRadius * 0.85  // domains: middle ring (hint only)
-          return baseRadius * 1.3                    // pages: wide outer fan
+          if (tier === 0) return 0
+          if (tier === 1) return baseRadius * 0.36
+          if (tier === 2) return baseRadius * 0.62
+          if (tier === 4) return baseRadius * 0.95
+          return baseRadius * 0.88
         },
         cx,
         cy,
       ).strength((d) => {
         const tier = getNodeTier(d.id)
-        if (tier === 0) return 1.0     // pin index hard
-        if (tier === 1) return 0.12    // MOCs held in ring
-        if (tier === 2) return 0.02    // domains: WEAK radial — link force dominates
-        return 0.015                    // pages: very weak radial — follow their domain
+        if (tier === 0) return 0.4
+        if (tier === 1) return 0.08
+        if (tier === 2) return 0.05
+        if (tier === 4) return 0.02
+        return 0.025
       }),
     )
-    .velocityDecay(0.5)
-    .alphaDecay(0.008)
-    .alphaMin(0.001)
+  }
+
+  simulation
+    .velocityDecay(enableRadial ? 0.42 : 0.36)
+    .alphaDecay(0.018)
+    .alphaMin(0.002)
     .alpha(1)
 
-  // Pre-settle: run 150 physics ticks silently before rendering
-  for (let i = 0; i < 150; i++) simulation.tick()
-  simulation.alpha(0.15)  // gentle remaining settling the user will see
+  // Pre-settle before rendering so the graph opens in a coherent state.
+  for (let i = 0; i < 220; i++) simulation.tick()
+  simulation.alpha(0.12)
 
   // ========== CSS Vars ==========
   const cssVars = [
-    "--secondary", "--tertiary", "--gray", "--light",
-    "--lightgray", "--dark", "--darkgray", "--bodyFont",
+    "--secondary",
+    "--tertiary",
+    "--gray",
+    "--light",
+    "--lightgray",
+    "--dark",
+    "--darkgray",
+    "--bodyFont",
   ] as const
   const css = cssVars.reduce(
     (acc, key) => {
@@ -320,7 +546,13 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const isTag = n.id.startsWith("tags/")
     const isCurrent = n.id === slug
     const isMoc = n.id.includes("moc-") || n.id.endsWith("index")
-    const baseColor = isCurrent ? 0xffffff : isTag ? 0x6b7280 : isMoc ? 0xffffff : getSectionColor(n.id)
+    const baseColor = isCurrent
+      ? 0xffffff
+      : isTag
+        ? 0x6b7280
+        : isMoc
+          ? 0xffffff
+          : getSectionColor(n.id)
     const r = getNodeRadius(n) * (isCurrent ? 1.3 : 1) * (isTag ? 0.6 : 1)
 
     const gfx = new Graphics({
@@ -339,7 +571,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       alpha: 0,
       anchor: { x: 0.5, y: -0.6 },
       style: {
-        fontSize: 13,
+        fontSize: labelFontPx,
         fill: isDark ? 0xb0bec5 : 0x37474f,
         fontFamily: css["--bodyFont"],
         fontWeight: "400",
@@ -369,6 +601,15 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   let dragStartTime = 0
 
   function setHover(nodeId: string | null) {
+    if (!focusOnHover) {
+      hoveredId = null
+      for (const nr of nodeRenders) {
+        nr.targetAlpha = 1
+        nr.targetScale = 1
+      }
+      return
+    }
+
     hoveredId = nodeId
     if (!nodeId) {
       for (const nr of nodeRenders) {
@@ -392,12 +633,12 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   for (const nr of nodeRenders) {
     nr.gfx
       .on("pointerover", () => {
-        if (dragging) return // don't change hover while dragging
+        if (!focusOnHover || dragging) return // don't change hover while dragging
         setHover(nr.sim.id)
         updateLabels(currentTransform.k)
       })
       .on("pointerleave", () => {
-        if (dragging) return
+        if (!focusOnHover || dragging) return
         setHover(null)
         updateLabels(currentTransform.k)
       })
@@ -508,7 +749,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       if (isConnected && depth < 0) {
         // Connected nodes: show labels only in global graph view
         nr.label.visible = true
-        nr.label.alpha = 0.9
+        nr.label.alpha = Math.min(1, 0.9 * alphaScale)
         nr.label.scale.set(BASE_LABEL_SCALE)
         nr.label.style.fontWeight = "400"
         continue
@@ -525,7 +766,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       }
 
       // Check collision with placed labels
-      const lx = (nr.sim.x ?? 0)
+      const lx = nr.sim.x ?? 0
       const ly = (nr.sim.y ?? 0) + getNodeRadius(nr.sim) + 4
       const lw = (nr.label.width / zoomK) * BASE_LABEL_SCALE
       const lh = (nr.label.height / zoomK) * BASE_LABEL_SCALE
@@ -544,7 +785,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       } else {
         nr.label.visible = true
         const fadeProgress = Math.min(1, (screenR - minScreenR) / 6)
-        nr.label.alpha = fadeProgress * 0.9
+        nr.label.alpha = Math.min(1, fadeProgress * 0.9 * alphaScale)
         placed.push(bounds)
       }
     }
@@ -554,12 +795,15 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   let stopAnimation = false
   const LERP = 0.12
   const edgeColor = isDark ? 0x4a5568 : 0x94a3b8
-  const edgeAlpha = isDark ? 0.40 : 0.25
+  const edgeAlpha = Math.min(1, (isDark ? 0.3 : 0.18) * alphaScale)
   let autoFitLocked = false // once user zooms/drags, stop auto-fitting
 
   function fitStageToNodes() {
     if (autoFitLocked) return
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
     for (const n of nodes) {
       const r = getNodeRadius(n)
       if (n.x != null && n.y != null) {
@@ -621,7 +865,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     // Draw ALL edges — two-pass when hovering for starburst effect
     edgeGfx.clear()
 
-    if (hoveredId) {
+    if (focusOnHover && hoveredId) {
       // PASS 1: Non-connected edges (nearly invisible)
       const dimColor = isDark ? 0x2a2e3a : 0xd0d5dd
       for (const l of graphLinks) {
@@ -631,7 +875,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         if (s.id === hoveredId || t.id === hoveredId) continue
         edgeGfx.moveTo(s.x, s.y)
         edgeGfx.lineTo(t.x, t.y)
-        edgeGfx.stroke({ width: 0.5, color: dimColor, alpha: 0.04 })
+        edgeGfx.stroke({ width: 0.5, color: dimColor, alpha: 0.04 * alphaScale })
       }
       // PASS 2: Connected edges (bright starburst)
       const brightColor = isDark ? 0xa0c4ff : 0x3b82f6
@@ -642,7 +886,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         if (s.id !== hoveredId && t.id !== hoveredId) continue
         edgeGfx.moveTo(s.x, s.y)
         edgeGfx.lineTo(t.x, t.y)
-        edgeGfx.stroke({ width: 1.8, color: brightColor, alpha: 0.75 })
+        edgeGfx.stroke({ width: 1.6, color: brightColor, alpha: Math.min(1, 0.72 * alphaScale) })
       }
     } else {
       // DEFAULT: No hover — all edges uniform
@@ -698,7 +942,9 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   document.addEventListener("themechange", onTheme)
   window.addCleanup(() => document.removeEventListener("themechange", onTheme))
 
-  const globalContainers = [...document.getElementsByClassName("global-graph-outer")] as HTMLElement[]
+  const globalContainers = [
+    ...document.getElementsByClassName("global-graph-outer"),
+  ] as HTMLElement[]
 
   async function renderGlobal() {
     const s = getFullSlug(window)
