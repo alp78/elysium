@@ -8,63 +8,53 @@ import * as Plugin from "./quartz/plugins"
  */
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "Elysium", // ← your vault name
-    pageTitleSuffix: " — Data Engineering", // ← appears in browser tab
+    pageTitle: "Elysium",                    // ← your vault name
+    pageTitleSuffix: " — Data Engineering",  // ← appears in browser tab
     enableSPA: true,
     enablePopovers: true,
-    analytics: null, // ← remove plausible unless you have an account
+    analytics: null,                         // ← remove plausible unless you have an account
     locale: "en-US",
     baseUrl: "alp78.github.io/elysium", // ← your GitHub Pages URL or custom domain
     ignorePatterns: [
-      "_workspace", // ← internal planning docs
-      "_archive", // ← archived out-of-scope content
-      "_scripts", // ← build scripts
-      "_quartz-config", // ← quartz config copies
-      "_attachments", // ← attachment files
-      "Templates", // ← obsidian templates
-      ".obsidian", // ← keep this one
+      "_workspace",        // ← internal planning docs
+      "_archive",          // ← archived out-of-scope content
+      "_scripts",          // ← build scripts
+      "_quartz-config",    // ← quartz config copies
+      "_attachments",      // ← attachment files
+      "Templates",         // ← obsidian templates
+      ".obsidian",         // ← keep this one
     ],
     defaultDateType: "modified",
     theme: {
       fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
-        header: "Inter", // ← matches your vault
-        body: "Inter", // ← clean screen font
-        code: "JetBrains Mono", // ← matches your vault
+        header: "Inter",              // ← matches your vault
+        body: "Inter",                // ← clean screen font
+        code: "JetBrains Mono",       // ← matches your vault
       },
       colors: {
         lightMode: {
-          light: "#f5f7fb", // page background
-          lightgray: "#e9eef5", // subtle neutral layer
-          gray: "#607080", // muted text
-          darkgray: "#233241", // body text
-          dark: "#101a26", // headings
-          secondary: "#245e91", // links and accents
-          tertiary: "#163f67", // hover state
-          highlight: "rgba(36, 94, 145, 0.10)",
+          light: "#f0f0f2",           // warm off-white background
+          lightgray: "#e0dfe4",       // sidebar/borders — less harsh
+          gray: "#9a96a6",            // muted text
+          darkgray: "#3b3950",        // body text — deep purple-gray
+          dark: "#1e1b2e",            // headings — near-black purple
+          secondary: "#5a4fcf",       // links — muted indigo (not blue)
+          tertiary: "#7c6dd8",        // hover — lighter indigo
+          highlight: "rgba(90, 79, 207, 0.08)",  // subtle indigo tint
           textHighlight: "#e0af6833",
-          surface: "#ffffff",
-          surfaceElevated: "#fbfcfe",
-          surfaceSubtle: "#f1f5fa",
-          border: "#d6e0eb",
-          borderStrong: "#b8c6d7",
         },
         darkMode: {
-          light: "#0f141b", // page background
-          lightgray: "#1b2631", // subtle neutral layer
-          gray: "#8c99a8", // muted text
-          darkgray: "#d8e1ec", // body text
-          dark: "#f4f7fb", // headings
-          secondary: "#7cb0dc", // links and accents
-          tertiary: "#a4c8e7", // hover state
-          highlight: "rgba(124, 176, 220, 0.16)",
+          light: "#13141d",           // Tokyo Night background (darker surround)
+          lightgray: "#1a1b26",       // borders/dividers
+          gray: "#565f89",            // muted text
+          darkgray: "#a9b1d6",        // body text
+          dark: "#c0caf5",            // headings
+          secondary: "#7aa2f7",       // links — Tokyo Night blue
+          tertiary: "#bb9af7",        // hover — Tokyo Night purple
+          highlight: "rgba(122, 162, 247, 0.08)",
           textHighlight: "#e0af6833",
-          surface: "#131b24",
-          surfaceElevated: "#18232e",
-          surfaceSubtle: "#101821",
-          border: "#2a3948",
-          borderStrong: "#3c5266",
         },
       },
     },
@@ -78,7 +68,7 @@ const config: QuartzConfig = {
       Plugin.SyntaxHighlighting({
         theme: {
           light: "github-light",
-          dark: "tokyo-night", // ← match your theme
+          dark: "tokyo-night",         // ← match your theme
         },
         keepBackground: false,
       }),
@@ -108,5 +98,6 @@ const config: QuartzConfig = {
     ],
   },
 }
+
 
 export default config

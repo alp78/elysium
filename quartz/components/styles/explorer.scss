@@ -2,7 +2,8 @@
 
 @media all and ($mobile) {
   .page > #quartz-body {
-    > :not(.sidebar.left:has(.explorer)) {
+    // Shift page position when toggling Explorer on mobile.
+    & > :not(.sidebar.left:has(.explorer)) {
       transition: transform 300ms ease-in-out;
     }
 
@@ -11,12 +12,13 @@
       transition: transform 300ms ease-in-out;
     }
 
+    // Sticky top bar (stays in place when scrolling down on mobile).
     .sidebar.left:has(.explorer) {
       box-sizing: border-box;
       position: sticky;
-      padding: 0;
+      background-color: var(--light);
+      padding: 1rem 0 1rem 0;
       margin: 0;
-      background-color: transparent;
     }
 
     .hide-until-loaded ~ .explorer-content {
@@ -27,30 +29,24 @@
 
 .explorer {
   display: flex;
-  flex: 0 1 auto;
   flex-direction: column;
-  min-height: 1.2rem;
-  overflow: hidden;
+  overflow-y: hidden;
 
-  @media all and not ($mobile) {
-    padding: var(--space-4);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background-color: var(--surface);
-  }
+  min-height: 1.2rem;
+  flex: 0 1 auto;
 
   &.collapsed {
-    flex: 0 1 3rem;
+    flex: 0 1 1.2rem;
 
-    .fold {
+    & .fold {
       transform: rotateZ(-90deg);
     }
   }
 
-  .fold {
-    margin-left: auto;
-    opacity: 0.65;
+  & .fold {
+    margin-left: 0.5rem;
     transition: transform 0.3s ease;
+    opacity: 0.8;
   }
 
   @media all and ($mobile) {
@@ -73,7 +69,7 @@
 
   @media all and ($mobile) {
     button.mobile-explorer {
-      display: inline-flex;
+      display: flex;
     }
 
     button.desktop-explorer {
@@ -91,7 +87,7 @@
     pointer-events: all;
     transition: transform 0.35s ease;
 
-    > polyline {
+    & > polyline {
       pointer-events: none;
     }
   }
@@ -99,33 +95,29 @@
 
 button.mobile-explorer,
 button.desktop-explorer {
-  display: flex;
-  align-items: center;
-  color: var(--dark);
+  background-color: transparent;
+  border: none;
   text-align: left;
   cursor: pointer;
+  padding: 0;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
 
-  h2 {
+  & h2 {
+    font-size: 1rem;
+    display: inline-block;
     margin: 0;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    letter-spacing: -0.01em;
   }
 }
 
-button.desktop-explorer {
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-}
-
 .explorer-content {
-  margin-top: var(--space-3);
-  overflow: hidden auto;
   list-style: none;
+  overflow: hidden;
+  overflow-y: auto;
+  margin-top: 0.5rem;
 
-  ul {
+  & ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -134,25 +126,15 @@ button.desktop-explorer {
       overscroll-behavior: contain;
     }
 
-    li > a {
-      display: block;
-      padding: 0.45rem 0.6rem;
-      border-radius: var(--radius-md);
-      color: var(--darkgray);
-      font-size: var(--font-size-sm);
-      line-height: 1.45;
-      text-decoration: none;
-
-      &:hover {
-        background-color: var(--surface-hover);
-        color: var(--dark);
-      }
+    & li > a {
+      color: var(--dark);
+      opacity: 0.75;
+      pointer-events: all;
 
       &.active {
         opacity: 1;
-        color: var(--dark);
+        color: var(--secondary) !important;
         font-weight: 600;
-        background-color: var(--surfaceSubtle);
       }
     }
   }
@@ -173,49 +155,49 @@ button.desktop-explorer {
 
   .folder-outer > ul {
     overflow: hidden;
-    margin-left: 0.2rem;
-    padding-left: 0.85rem;
-    border-left: 1px solid var(--border);
+    margin-left: 6px;
+    padding-left: 0.8rem;
+    border-left: 1px solid var(--lightgray);
   }
 }
 
 .folder-container {
-  display: flex;
   flex-direction: row;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
   user-select: none;
 
-  div > a {
-    color: var(--dark);
+  & div > a {
+    color: var(--secondary);
     font-family: var(--headerFont);
-    font-size: var(--font-size-sm);
+    font-size: 0.95rem;
     font-weight: $semiBoldWeight;
     line-height: 1.5rem;
     display: inline-block;
-    text-decoration: none;
   }
 
-  div > a:hover {
-    color: var(--secondary);
+  & div > a:hover {
+    color: var(--tertiary);
   }
 
-  div > button {
-    display: flex;
-    align-items: center;
-    padding: 0;
-    border: none;
-    background-color: transparent;
+  & div > button {
     color: var(--dark);
+    background-color: transparent;
+    border: none;
     text-align: left;
     cursor: pointer;
+    padding-left: 0;
+    padding-right: 0;
+    display: flex;
+    align-items: center;
     font-family: var(--headerFont);
 
-    span {
-      margin: 0;
-      color: var(--dark);
-      font-size: var(--font-size-sm);
+    & span {
+      font-size: 0.95rem;
+      display: inline-block;
+      color: var(--secondary);
       font-weight: $semiBoldWeight;
+      margin: 0;
       line-height: 1.5rem;
       pointer-events: none;
     }
@@ -223,8 +205,8 @@ button.desktop-explorer {
 }
 
 .folder-icon {
-  margin-right: 0;
-  color: var(--gray);
+  margin-right: 5px;
+  color: var(--secondary);
   cursor: pointer;
   transition: transform 0.3s ease;
   backface-visibility: visible;
@@ -235,66 +217,58 @@ li:has(> .folder-outer:not(.open)) > .folder-container > svg {
   transform: rotate(-90deg);
 }
 
-.folder-icon:hover,
-.folder-container div > button:hover span {
-  color: var(--secondary);
+.folder-icon:hover {
+  color: var(--tertiary);
 }
 
 .explorer {
   @media all and ($mobile) {
     &.collapsed {
-      flex: 0 0 2.25rem;
+      flex: 0 0 34px;
 
-      > .explorer-content {
+      & > .explorer-content {
         transform: translateX(-100vw);
         visibility: hidden;
       }
     }
 
     &:not(.collapsed) {
-      flex: 0 0 2.25rem;
+      flex: 0 0 34px;
 
-      > .explorer-content {
+      & > .explorer-content {
         transform: translateX(0);
         visibility: visible;
       }
     }
 
     .explorer-content {
+      box-sizing: border-box;
+      z-index: 100;
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 100;
-      width: min(100vw, 22rem);
-      max-width: 100vw;
-      height: 100dvh;
-      max-height: 100dvh;
       margin-top: 0;
-      padding: 4.5rem 1rem 2rem;
-      overflow: hidden;
-      background-color: var(--surface);
-      border-right: 1px solid var(--border);
-      box-shadow: var(--shadow-subtle);
+      background-color: var(--light);
+      max-width: 100vw;
+      width: 100vw;
       transform: translateX(-100vw);
       transition:
         transform 200ms ease,
         visibility 200ms ease;
+      overflow: hidden;
+      padding: 4rem 0 2rem 0;
+      height: 100dvh;
+      max-height: 100dvh;
       visibility: hidden;
     }
 
     .mobile-explorer {
-      z-index: 101;
-      justify-content: center;
-      width: 2.25rem;
-      height: 2.25rem;
       margin: 0;
-      padding: 0;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      background-color: var(--surface);
+      padding: 5px;
+      z-index: 101;
 
       .lucide-menu {
-        stroke: var(--gray);
+        stroke: var(--darkgray);
       }
     }
   }

@@ -1,46 +1,481 @@
 @use "./base.scss";
-@use "./themes";
 
-:root {
-  --font-size-2xs: 0.75rem;
-  --font-size-xs: 0.8125rem;
-  --font-size-sm: 0.9375rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.375rem;
-  --font-size-2xl: 1.75rem;
-  --font-size-3xl: 2.25rem;
+/* ══════════════════════════════════════════════════════════════
+   Tokyo Night Theme — matching Obsidian vault exactly
+   Font: Inter (body), JetBrains Mono (code)
+   ══════════════════════════════════════════════════════════════ */
 
-  --line-height-tight: 1.2;
-  --line-height-heading: 1.25;
-  --line-height-body: 1.72;
-
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-
-  --radius-xs: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-pill: 999px;
-
-  --measure-readable: 54rem;
-  --focus-ring: 0 0 0 3px rgba(36, 94, 145, 0.14);
-  --shadow-subtle: 0 14px 36px rgba(15, 23, 35, 0.08);
-  --overlay-backdrop: rgba(15, 23, 35, 0.3);
-  --surface-hover: #eef3f8;
+/* ── Base typography ─────────────────────────────────────────── */
+body {
+  font-size: 15px !important;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
 }
 
-:root[saved-theme="dark"] {
-  --focus-ring: 0 0 0 3px rgba(124, 176, 220, 0.22);
-  --shadow-subtle: 0 18px 46px rgba(0, 0, 0, 0.35);
-  --overlay-backdrop: rgba(2, 6, 12, 0.58);
-  --surface-hover: #1d2a36;
+code, pre code {
+  font-size: 13px !important;
+}
+
+:not(pre) > code {
+  font-size: 12.5px !important;
+}
+
+/* ── Headings: Tokyo Night (dark only) ────────────────────────── */
+[saved-theme="dark"] h1 {
+  color: #7aa2f7 !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid #29344a;
+  padding-bottom: 0.3em;
+}
+[saved-theme="dark"] h2 { color: #d97b40 !important; font-weight: 600 !important; }
+[saved-theme="dark"] h3 { color: #7aa2f7 !important; font-weight: 600 !important; }
+[saved-theme="dark"] h4 { color: #9ece6a !important; font-weight: 500 !important; }
+[saved-theme="dark"] h5 { color: #e0af68 !important; font-weight: 500 !important; }
+[saved-theme="dark"] h6 { color: #ff9e64 !important; font-weight: 500 !important; }
+
+/* ── Headings: Light mode ────────────────────────────────────── */
+[saved-theme="light"] h1 {
+  color: #2d2a5e !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid #d0cdd8;
+  padding-bottom: 0.3em;
+}
+[saved-theme="light"] h2 { color: #5a3e8a !important; font-weight: 600 !important; }
+[saved-theme="light"] h3 { color: #2e6b8a !important; font-weight: 600 !important; }
+[saved-theme="light"] h4 { color: #4a7a3e !important; font-weight: 500 !important; }
+[saved-theme="light"] h5 { color: #8a6d2e !important; font-weight: 500 !important; }
+[saved-theme="light"] h6 { color: #9a5a2e !important; font-weight: 500 !important; }
+
+/* ── Code blocks (dark) ──────────────────────────────────────── */
+[saved-theme="dark"] pre {
+  background-color: #13131e !important;
+  border: 1px solid #29344a !important;
+  border-radius: 6px !important;
+  padding: 1em !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+
+[saved-theme="dark"] :not(pre) > code {
+  background-color: #1a1b2e !important;
+  color: #c0caf5 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* ── Code blocks (light) — reduced contrast ─────────────────── */
+[saved-theme="light"] pre {
+  background-color: #e8e6ed !important;
+  border: 1px solid #d0cdd8 !important;
+  border-radius: 6px !important;
+  padding: 1em !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+
+[saved-theme="light"] :not(pre) > code {
+  background-color: #e4e2ea !important;
+  color: #3b3950 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* Reduce gaps between code blocks and output */
+pre + table {
+  margin-top: 0 !important;
+}
+
+pre + pre {
+  margin-top: 0 !important;
+}
+
+p + pre {
+  margin-top: 4px !important;
+}
+
+pre + p {
+  margin-top: 8px !important;
+}
+
+/* ── Tables ──────────────────────────────────────────────────── */
+.table-container > table {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.table-container > table th,
+.table-container > table td {
+  min-width: auto !important;
+}
+
+table {
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: auto;
+}
+
+/* ── Headers ── */
+[saved-theme="dark"] th {
+  background-color: #292e42 !important;
+  color: #7aa2f7 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.02em;
+  padding: 4px 8px !important;
+  border-bottom: 2px solid #3b4261 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+[saved-theme="light"] th {
+  background-color: #e0dfe4 !important;
+  color: #2d2a5e !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 4px 8px !important;
+  border-bottom: 2px solid #c8c6d0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* ── Cells ── */
+[saved-theme="dark"] td {
+  font-size: 12.5px !important;
+  padding: 3px 8px !important;
+  border-bottom: 1px solid rgba(59, 66, 97, 0.5) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+[saved-theme="light"] td {
+  font-size: 12.5px !important;
+  padding: 3px 8px !important;
+  border-bottom: 1px solid rgba(208, 205, 216, 0.7) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* ── Code inside tables — transparent bg, subtle border ── */
+[saved-theme="dark"] td code,
+[saved-theme="dark"] th code {
+  background: transparent !important;
+  border: 1px solid rgba(122, 162, 247, 0.25) !important;
+  color: #c0caf5 !important;
+  font-size: 12px !important;
+  padding: 1px 5px !important;
+  border-radius: 3px;
+}
+
+[saved-theme="light"] td code,
+[saved-theme="light"] th code {
+  background: transparent !important;
+  border: 1px solid rgba(90, 79, 207, 0.2) !important;
+  color: #3b3950 !important;
+  font-size: 12px !important;
+  padding: 1px 5px !important;
+  border-radius: 3px;
+}
+
+/* ── Zebra striping ── */
+[saved-theme="dark"] tr:nth-child(even) {
+  background-color: rgba(41, 46, 66, 0.25);
+}
+[saved-theme="light"] tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* ── Row hover ── */
+[saved-theme="dark"] tbody tr:hover {
+  background-color: rgba(40, 52, 87, 0.4);
+}
+[saved-theme="light"] tbody tr:hover {
+  background-color: rgba(90, 79, 207, 0.06);
+}
+
+/* ── Bold, italic, marks ─────────────────────────────────────── */
+[saved-theme="dark"] strong, [saved-theme="dark"] b {
+  color: #c0caf5 !important;
+  font-weight: 600;
+}
+
+[saved-theme="dark"] em, [saved-theme="dark"] i {
+  color: var(--darkgray) !important;
+}
+
+mark {
+  background-color: rgba(224, 175, 104, 0.2) !important;
+  color: #e0af68 !important;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ── Blockquotes ─────────────────────────────────────────────── */
+[saved-theme="dark"] blockquote {
+  border-left: 3px solid #3d59a1 !important;
+  background-color: rgba(31, 35, 53, 0.5);
+  color: #9aa5ce;
+}
+
+[saved-theme="light"] blockquote {
+  border-left: 3px solid #5a4fcf !important;
+  background-color: rgba(90, 79, 207, 0.04);
+  color: #4e4a6a;
+}
+
+/* ── Horizontal rules ────────────────────────────────────────── */
+hr {
+  border-color: #29344a !important;
+}
+
+/* ── Selection ───────────────────────────────────────────────── */
+::selection {
+  background-color: #283457 !important;
+}
+
+/* ── Tags ────────────────────────────────────────────────────── */
+a.tag-link {
+  color: #9ece6a !important;
+  background-color: rgba(158, 206, 106, 0.1) !important;
+}
+
+a.tag-link:hover {
+  background-color: #9ece6a !important;
+  color: #1a1b26 !important;
+  transition: all 0.15s ease;
+}
+
+/* ── Callouts (matching Obsidian) ────────────────────────────── */
+.callout {
+  border-radius: 6px;
+  border-width: 1px;
+}
+
+.callout[data-callout="tip"] {
+  --callout-color: 158, 206, 106;
+  background-color: rgba(158, 206, 106, 0.05) !important;
+}
+
+.callout[data-callout="warning"] {
+  --callout-color: 224, 175, 104;
+  background-color: rgba(224, 175, 104, 0.05) !important;
+}
+
+.callout[data-callout="danger"] {
+  --callout-color: 247, 118, 142;
+  background-color: rgba(247, 118, 142, 0.05) !important;
+}
+
+.callout[data-callout="info"] {
+  --callout-color: 122, 162, 247;
+  background-color: rgba(122, 162, 247, 0.05) !important;
+}
+
+.callout[data-callout="question"] {
+  --callout-color: 125, 207, 255;
+  background-color: rgba(125, 207, 255, 0.05) !important;
+}
+
+.callout[data-callout="important"] {
+  --callout-color: 187, 154, 247;
+  background-color: rgba(187, 154, 247, 0.05) !important;
+}
+
+/* ── Page layout — darker surround, lighter content ──────────── */
+[saved-theme="dark"] body {
+  background-color: #13141d !important;
+}
+
+[saved-theme="dark"] .page {
+  background-color: #13141d !important;
+}
+
+[saved-theme="dark"] .center > article {
+  background-color: #1a1b26;
+  border-radius: 8px;
+  padding: 1.5em 2em !important;
+}
+
+[saved-theme="dark"] .left-sidebar,
+[saved-theme="dark"] .right-sidebar {
+  background-color: transparent !important;
+}
+
+/* ── Page and article titles ─────────────────────────────────── */
+[saved-theme="dark"] .article-title {
+  color: #7aa2f7 !important;
+}
+
+[saved-theme="dark"] .page-title {
+  color: #c0caf5 !important;
+}
+
+/* ── Explorer sidebar — match Obsidian style ─────────────────── */
+.explorer ul li a,
+.sidebar a {
+  font-weight: 400 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0 !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.folder-title {
+  font-weight: 400 !important;
+  font-size: 13.5px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.folder-icon svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+[saved-theme="dark"] .explorer ul li a,
+[saved-theme="dark"] .sidebar a {
+  color: #a9b1d6 !important;
+}
+
+[saved-theme="dark"] .folder-title {
+  color: #c0caf5 !important;
+}
+
+/* ── Breadcrumbs ─────────────────────────────────────────────── */
+[saved-theme="dark"] .breadcrumb-element a {
+  color: #565f89 !important;
+}
+
+[saved-theme="dark"] .breadcrumb-element a:hover {
+  color: #7aa2f7 !important;
+}
+
+/* ── Hover effects ───────────────────────────────────────────── */
+.folder-title:hover,
+.folder-title:hover .folder-icon {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+.explorer ul li a:hover,
+.sidebar a:hover {
+  color: var(--secondary) !important;
+  background-color: rgba(40, 52, 87, 0.5) !important;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.toc a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+.backlinks a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+article a:hover {
+  color: #bb9af7 !important;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb-element a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+/* ── Graph ───────────────────────────────────────────────────── */
+.graph-outer {
+  --graph-line: #29344a;
+  --graph-node: #7aa2f7;
+  --graph-node-focused: #bb9af7;
+  --graph-node-tag: #9ece6a;
+  --graph-node-attachment: #ff9e64;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1b26;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #292e42;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b4261;
+}
+
+/* ── Hide darkmode toggle (dark-only theme) ─────────────────── */
+button.darkmode {
+  display: none !important;
+}
+
+/* ── Mermaid diagrams ────────────────────────────────────────── */
+.mermaid {
+  background-color: transparent !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.mermaid .mindmap-node text {
+  font-size: 12px !important;
+}
+
+.mermaid .mindmap-node rect,
+.mermaid .mindmap-node circle,
+.mermaid .mindmap-node ellipse,
+.mermaid .mindmap-node path {
+  rx: 6px;
+  ry: 6px;
+}
+
+.mermaid .mindmap-node foreignObject {
+  font-size: 12px !important;
+}
+
+.mermaid .mindmap-node foreignObject div {
+  padding: 2px 6px !important;
+  font-size: 12px !important;
+}
+
+/* ── Callout collapse artifact — hide inner content overflow ──── */
+.callout.is-collapsed .callout-content {
+  display: none !important;
+}
+
+/* ── MOC nested callouts — white links inside abstract callouts ── */
+[saved-theme="dark"] .callout[data-callout="example"] .callout[data-callout="abstract"] a {
+  color: #c0caf5 !important;
+  background-color: transparent !important;
+}
+
+[saved-theme="dark"] .callout[data-callout="example"] .callout[data-callout="abstract"] a:hover {
+  color: #bb9af7 !important;
+}
+
+[saved-theme="light"] .callout[data-callout="example"] .callout[data-callout="abstract"] a {
+  color: #3b3950 !important;
+  background-color: transparent !important;
+}
+
+[saved-theme="light"] .callout[data-callout="example"] .callout[data-callout="abstract"] a:hover {
+  color: #5a4fcf !important;
 }

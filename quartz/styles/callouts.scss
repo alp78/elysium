@@ -1,31 +1,21 @@
 @use "./variables.scss" as *;
+@use "sass:color";
 
 .callout {
-  --color: #4d7ea8;
-  --border: rgba(77, 126, 168, 0.22);
-  --bg: rgba(77, 126, 168, 0.08);
-  --callout-icon: var(--callout-icon-note);
-
-  margin: var(--space-6) 0;
-  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  border-radius: 5px;
+  padding: 0 1rem;
   overflow-y: hidden;
   box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg);
 
   & > .callout-content {
     display: grid;
-    overflow: hidden;
     transition: grid-template-rows 0.1s cubic-bezier(0.02, 0.01, 0.47, 1);
+    overflow: hidden;
 
-    > :first-child {
+    & > :first-child {
       margin-top: 0;
-    }
-
-    > :last-child {
-      margin-bottom: 0;
     }
   }
 
@@ -45,23 +35,24 @@
   --callout-icon-fold: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpolyline points="6 9 12 15 18 9"%3E%3C/polyline%3E%3C/svg%3E');
 
   &[data-callout] {
+    --color: #448aff;
+    --border: #448aff44;
+    --bg: #448aff10;
     --callout-icon: var(--callout-icon-note);
   }
 
-  &[data-callout="abstract"],
-  &[data-callout="info"],
-  &[data-callout="todo"],
-  &[data-callout="note"] {
-    --color: #4d7ea8;
-    --border: rgba(77, 126, 168, 0.22);
-    --bg: rgba(77, 126, 168, 0.08);
-  }
-
   &[data-callout="abstract"] {
+    --color: #00b0ff;
+    --border: #00b0ff44;
+    --bg: #00b0ff10;
     --callout-icon: var(--callout-icon-abstract);
   }
 
-  &[data-callout="info"] {
+  &[data-callout="info"],
+  &[data-callout="todo"] {
+    --color: #00b8d4;
+    --border: #00b8d444;
+    --bg: #00b8d410;
     --callout-icon: var(--callout-icon-info);
   }
 
@@ -69,41 +60,40 @@
     --callout-icon: var(--callout-icon-todo);
   }
 
-  &[data-callout="tip"],
-  &[data-callout="success"] {
-    --color: #2f8a67;
-    --border: rgba(47, 138, 103, 0.22);
-    --bg: rgba(47, 138, 103, 0.08);
-  }
-
   &[data-callout="tip"] {
+    --color: #00bfa5;
+    --border: #00bfa544;
+    --bg: #00bfa510;
     --callout-icon: var(--callout-icon-tip);
   }
 
   &[data-callout="success"] {
+    --color: #09ad7a;
+    --border: #09ad7144;
+    --bg: #09ad7110;
     --callout-icon: var(--callout-icon-success);
   }
 
   &[data-callout="question"] {
-    --color: #8e772e;
-    --border: rgba(142, 119, 46, 0.24);
-    --bg: rgba(142, 119, 46, 0.08);
+    --color: #dba642;
+    --border: #dba64244;
+    --bg: #dba64210;
     --callout-icon: var(--callout-icon-question);
   }
 
   &[data-callout="warning"] {
-    --color: #b06d2d;
-    --border: rgba(176, 109, 45, 0.24);
-    --bg: rgba(176, 109, 45, 0.08);
+    --color: #db8942;
+    --border: #db894244;
+    --bg: #db894210;
     --callout-icon: var(--callout-icon-warning);
   }
 
   &[data-callout="failure"],
   &[data-callout="danger"],
   &[data-callout="bug"] {
-    --color: #b5524a;
-    --border: rgba(181, 82, 74, 0.24);
-    --bg: rgba(181, 82, 74, 0.08);
+    --color: #db4242;
+    --border: #db424244;
+    --bg: #db424210;
     --callout-icon: var(--callout-icon-failure);
   }
 
@@ -115,85 +105,83 @@
     --callout-icon: var(--callout-icon-danger);
   }
 
-  &[data-callout="example"],
-  &[data-callout="important"] {
-    --color: #6872aa;
-    --border: rgba(104, 114, 170, 0.24);
-    --bg: rgba(104, 114, 170, 0.08);
+  &[data-callout="example"] {
+    --color: #7a43b5;
+    --border: #7a43b544;
+    --bg: #7a43b510;
     --callout-icon: var(--callout-icon-example);
   }
 
   &[data-callout="quote"] {
-    --color: var(--gray);
-    --border: var(--borderStrong);
-    --bg: var(--surfaceSubtle);
+    --color: var(--secondary);
+    --border: var(--lightgray);
     --callout-icon: var(--callout-icon-quote);
   }
 
   &.is-collapsed {
-    > .callout-title > .fold-callout-icon {
+    & > .callout-title > .fold-callout-icon {
       transform: rotateZ(-90deg);
     }
 
-    .callout-content > * {
-      overflow-y: clip;
-      height: 0;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-      transition:
-        height 0.1s cubic-bezier(0.02, 0.01, 0.47, 1),
-        margin 0.1s cubic-bezier(0.02, 0.01, 0.47, 1),
-        padding 0.1s cubic-bezier(0.02, 0.01, 0.47, 1);
-    }
-
-    .callout-content > :first-child {
-      margin-top: calc(-1 * var(--space-4));
+    .callout-content {
+      & > * {
+        transition:
+          height 0.1s cubic-bezier(0.02, 0.01, 0.47, 1),
+          margin 0.1s cubic-bezier(0.02, 0.01, 0.47, 1),
+          padding 0.1s cubic-bezier(0.02, 0.01, 0.47, 1);
+        overflow-y: clip;
+        height: 0;
+        margin-bottom: 0;
+        margin-top: 0;
+        padding-bottom: 0;
+        padding-top: 0;
+      }
+      & > :first-child {
+        margin-top: -1rem;
+      }
     }
   }
 }
 
 .callout-title {
-  --icon-size: 1rem;
-
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
-  padding-bottom: var(--space-3);
+  gap: 5px;
+  padding: 1rem 0;
   color: var(--color);
 
-  .callout-icon,
-  .fold-callout-icon {
-    flex: 0 0 var(--icon-size);
-    width: var(--icon-size);
-    height: var(--icon-size);
-    margin-top: 0.15rem;
-    background-color: var(--color);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: var(--icon-size) var(--icon-size);
-    mask-image: var(--callout-icon);
-    mask-position: center;
-    mask-repeat: no-repeat;
-    mask-size: var(--icon-size) var(--icon-size);
-  }
+  --icon-size: 18px;
 
-  .fold-callout-icon {
-    cursor: pointer;
-    opacity: 0.72;
+  & .fold-callout-icon {
     transition: transform 0.15s ease;
+    opacity: 0.8;
+    cursor: pointer;
     --callout-icon: var(--callout-icon-fold);
   }
 
-  > .callout-title-inner {
-    font-weight: $semiBoldWeight;
-    letter-spacing: -0.01em;
+  & > .callout-title-inner > p {
+    color: var(--color);
+    margin: 0;
   }
 
-  > .callout-title-inner > p {
-    margin: 0;
-    color: var(--dark);
-    line-height: 1.45;
+  .callout-icon,
+  & .fold-callout-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex: 0 0 var(--icon-size);
+
+    // icon support
+    background-size: var(--icon-size) var(--icon-size);
+    background-position: center;
+    background-color: var(--color);
+    mask-image: var(--callout-icon);
+    mask-size: var(--icon-size) var(--icon-size);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    padding: 0.2rem 0;
+  }
+
+  .callout-title-inner {
+    font-weight: $semiBoldWeight;
   }
 }
