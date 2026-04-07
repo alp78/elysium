@@ -185,7 +185,7 @@ new MDA.DataFrame(prices)
 Name: prices  |  Length: 5  |  DataType: Double
 ```
 
-<table id="table_639110702375365306"><thead><tr><th><i>index</i></th><th>prices</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>100</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>102.5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>101.8</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>103.2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>104.1</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>prices</th></tr></thead><tbody><tr><td>100</td></tr><tr><td>102.5</td></tr><tr><td>101.8</td></tr><tr><td>103.2</td></tr><tr><td>104.1</td></tr></tbody></table>
 
 Microsoft.Data.Analysis maps .NET arrays to concrete column classes: numerics become `PrimitiveDataFrameColumn<T>`, strings use `StringDataFrameColumn`, and temporal data typically stays as `DateTime`.
 
@@ -225,7 +225,7 @@ Length: 5  |  NullCount: 2
 ```
 
 <!-- Polars DataFrame: (5 rows, 1 columns) -->
-<table><thead><tr><th>with_nulls</th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>5</td></tr></tbody></table></div>
+<table><thead><tr><th>with_nulls</th></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr><tr><td>null</td></tr><tr><td>5</td></tr></tbody></table></div>
 
 #### Microsoft.Data.Analysis | Handle nulls natively in columns
 
@@ -245,7 +245,7 @@ new MDA.DataFrame(s)
 Length: 5  |  NullCount: 2
 ```
 
-<table id="table_639110702410980364"><thead><tr><th><i>index</i></th><th>with_nulls</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>5</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>with_nulls</th></tr></thead><tbody><tr><td>1</td></tr><tr><td>&lt;null&gt;</td></tr><tr><td>3</td></tr><tr><td>&lt;null&gt;</td></tr><tr><td>5</td></tr></tbody></table>
 
 ---
 
@@ -362,7 +362,7 @@ div.SetName("a / b");
 new MDA.DataFrame(add, sub, mul, div)
 ```
 
-<table id="table_639110702884159625"><thead><tr><th><i>index</i></th><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>11</pre></div></td><td><div class="dni-plaintext"><pre>9</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>22</pre></div></td><td><div class="dni-plaintext"><pre>18</pre></div></td><td><div class="dni-plaintext"><pre>40</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>33</pre></div></td><td><div class="dni-plaintext"><pre>27</pre></div></td><td><div class="dni-plaintext"><pre>90</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></tr></thead><tbody><tr><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td>33</td><td>27</td><td>90</td><td>10</td></tr></tbody></table>
 
 ---
 
@@ -413,7 +413,7 @@ new MDA.DataFrame(
 )
 ```
 
-<table id="table_639110702908547987"><thead><tr><th><i>index</i></th><th>stat</th><th>value</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>sum</td><td><div class="dni-plaintext"><pre>150</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>mean</td><td><div class="dni-plaintext"><pre>30</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>std</td><td><div class="dni-plaintext"><pre>15.811388300841896</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>min</td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>max</td><td><div class="dni-plaintext"><pre>50</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>stat</th><th>value</th></tr></thead><tbody><tr><td>sum</td><td>150</td></tr><tr><td>mean</td><td>30</td></tr><tr><td>std</td><td>15.811388300841896</td></tr><tr><td>min</td><td>10</td></tr><tr><td>max</td><td>50</td></tr></tbody></table>
 
 ---
 
@@ -432,7 +432,7 @@ df.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 2 columns) -->
-<table><thead><tr><th>statistic</th><th>prices</th></tr></thead><tbody><tr><td>count</td><td>5</td></tr><tr><td>null_count</td><td>0</td></tr><tr><td>mean</td><td>102.32</td></tr><tr><td>std</td><td>1.551450934</td></tr><tr><td>min</td><td>100</td></tr><tr><td>25%</td><td>101.8</td></tr><tr><td>50%</td><td>102.5</td></tr><tr><td>75%</td><td>103.2</td></tr><tr><td>max</td><td>104.1</td></tr></tbody></table></div>
+<table><thead><tr><th>statistic</th><th>prices</th></tr></thead><tbody><tr><td>count</td><td>5</td></tr><tr><td>null_count</td><td>0</td></tr><tr><td>mean</td><td>102.32</td></tr><tr><td>std</td><td>1.551450934</td></tr><tr><td>min</td><td>100</td></tr></tbody></table></div>
 
 #### Microsoft.Data.Analysis | Summarise a column with `Description()`
 
@@ -447,7 +447,7 @@ var df = new MDA.DataFrame(s);
 df.Description()
 ```
 
-<table id="table_639110702929011300"><thead><tr><th><i>index</i></th><th>Description</th><th>prices</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Length (excluding null values)</td><td><div class="dni-plaintext"><pre>5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Max</td><td><div class="dni-plaintext"><pre>104.1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>Min</td><td><div class="dni-plaintext"><pre>100</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>Mean</td><td><div class="dni-plaintext"><pre>102.32</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Description</th><th>prices</th></tr></thead><tbody><tr><td>Length (excluding null values)</td><td>5</td></tr><tr><td>Max</td><td>104.1</td></tr><tr><td>Min</td><td>100</td></tr><tr><td>Mean</td><td>102.32</td></tr></tbody></table>
 
 ---
 
@@ -535,7 +535,7 @@ df
 Shape: (5, 3)
 ```
 
-<table id="table_639110702947000189"><thead><tr><th><i>index</i></th><th>Symbol</th><th>Sector</th><th>Price</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td>Technology</td><td><div class="dni-plaintext"><pre>680.5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>SAP.DE</td><td>Technology</td><td><div class="dni-plaintext"><pre>175.2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>SIE.DE</td><td>Industrials</td><td><div class="dni-plaintext"><pre>168.9</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>TTE.PA</td><td>Energy</td><td><div class="dni-plaintext"><pre>58.3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>AIR.PA</td><td>Industrials</td><td><div class="dni-plaintext"><pre>152.7</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Symbol</th><th>Sector</th><th>Price</th></tr></thead><tbody><tr><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr></tbody></table>
 
 ---
 
@@ -585,7 +585,7 @@ var df = new MDA.DataFrame(
 df
 ```
 
-<table id="table_639110702966001853"><thead><tr><th><i>index</i></th><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2024-01-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>105</pre></div></td><td><div class="dni-plaintext"><pre>99</pre></div></td><td><div class="dni-plaintext"><pre>103.5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2024-01-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>103.5</pre></div></td><td><div class="dni-plaintext"><pre>106</pre></div></td><td><div class="dni-plaintext"><pre>102</pre></div></td><td><div class="dni-plaintext"><pre>104.8</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2024-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>104.8</pre></div></td><td><div class="dni-plaintext"><pre>107.5</pre></div></td><td><div class="dni-plaintext"><pre>103</pre></div></td><td><div class="dni-plaintext"><pre>106.2</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody><tr><td>2024-01-02 00:00:00Z</td><td>100</td><td>105</td><td>99</td><td>103.5</td></tr><tr><td>2024-01-03 00:00:00Z</td><td>103.5</td><td>106</td><td>102</td><td>104.8</td></tr><tr><td>2024-01-04 00:00:00Z</td><td>104.8</td><td>107.5</td><td>103</td><td>106.2</td></tr></tbody></table>
 
 ---
 
@@ -623,7 +623,7 @@ var df = new MDA.DataFrame(names, ages, scores);
 df
 ```
 
-<table id="table_639110702983146244"><thead><tr><th><i>index</i></th><th>name</th><th>age</th><th>score</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Alice</td><td><div class="dni-plaintext"><pre>30</pre></div></td><td><div class="dni-plaintext"><pre>95.5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Bob</td><td><div class="dni-plaintext"><pre>25</pre></div></td><td><div class="dni-plaintext"><pre>88</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>name</th><th>age</th><th>score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr></tbody></table>
 
 ---
 
@@ -731,8 +731,8 @@ var filter = df.Columns["Symbol"].ElementwiseEquals("SAP.DE");
 display(df.Filter(filter));
 ```
 
-<table id="table_639110703035198348"><thead><tr><th><i>index</i></th><th>Symbol</th><th>Price</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML.AS</td><td><div class="dni-plaintext"><pre>680.5</pre></div></td></tr></tbody></table>
-<table id="table_639110703035211902"><thead><tr><th><i>index</i></th><th>Symbol</th><th>Price</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>175.2</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Symbol</th><th>Price</th></tr></thead><tbody><tr><td>ASML.AS</td><td>680.5</td></tr></tbody></table>
+<table><thead><tr><th>Symbol</th><th>Price</th></tr></thead><tbody><tr><td>SAP.DE</td><td>175.2</td></tr></tbody></table>
 
 ---
 
@@ -835,7 +835,7 @@ numeric
 ```
 
 <!-- Polars DataFrame: (3 rows, 1 columns) -->
-<table><thead><tr><th>mixed</th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr></tbody></table></div>
+<table><thead><tr><th>mixed</th></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
 
@@ -859,7 +859,7 @@ df.Info();
 df
 ```
 
-<table id="table_639110703074933160"><thead><tr><th><i>index</i></th><th>Id</th><th>Value</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>20</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td><div class="dni-plaintext"><pre>30</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Id</th><th>Value</th></tr></thead><tbody><tr><td>1</td><td>10</td></tr><tr><td>2</td><td>20</td></tr><tr><td>3</td><td>30</td></tr></tbody></table>
 
 Safe parsing to a nullable numeric column requires explicit looping or LINQ logic; unparseable values do not become null automatically unless you code that path yourself.
 
@@ -875,7 +875,7 @@ var df = new MDA.DataFrame(numeric);
 df
 ```
 
-<table id="table_639110703093579717"><thead><tr><th><i>index</i></th><th>mixed</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>1</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>mixed</th></tr></thead><tbody><tr><td>1</td></tr><tr><td>&lt;null&gt;</td></tr><tr><td>3</td></tr></tbody></table>
 
 ---
 
@@ -922,7 +922,7 @@ new MDA.DataFrame(
 )
 ```
 
-<table id="table_639110703116537491"><thead><tr><th><i>index</i></th><th>format</th><th>rows</th><th>cols</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>CSV</td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>12</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>format</th><th>rows</th><th>cols</th></tr></thead><tbody><tr><td>CSV</td><td>66355</td><td>12</td></tr></tbody></table>
 
 ---
 
@@ -986,7 +986,7 @@ ohlcv.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 10 columns) -->
-<table><thead><tr><th>statistic</th><th>id</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
+<table><thead><tr><th>statistic</th><th>id</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
 Key observations: **null_count** is 0 for all columns — this dataset is complete. The **std** for `volume` (16.2M) is nearly 3x the mean (5.9M), indicating high right-skew — a few stocks dominate trading volume. The `dividends` and `stock_splits` columns have mean ≈ 0, confirming that corporate actions are sparse events.
 
@@ -1054,13 +1054,13 @@ display(ohlcv.Tail(3));
 First 3 rows:
 ```
 
-<table id="table_639110703147313322"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>21160</pre></div></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>53.5761</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>21161</pre></div></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>53.548</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>21162</pre></div></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>55.037</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04 00:00:00Z</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05 00:00:00Z</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06 00:00:00Z</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>False</td></tr></tbody></table>
 
 ```text
 Last 3 rows:
 ```
 
-<table id="table_639110703147363158"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>66876</pre></div></td><td>WKL.AS</td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>68.8</pre></div></td><td><div class="dni-plaintext"><pre>69.16</pre></div></td><td><div class="dni-plaintext"><pre>66.34</pre></div></td><td><div class="dni-plaintext"><pre>67.16</pre></div></td><td><div class="dni-plaintext"><pre>67.16</pre></div></td><td><div class="dni-plaintext"><pre>1355645</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>66877</pre></div></td><td>WKL.AS</td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>67.5</pre></div></td><td><div class="dni-plaintext"><pre>69.6</pre></div></td><td><div class="dni-plaintext"><pre>67.02</pre></div></td><td><div class="dni-plaintext"><pre>67.22</pre></div></td><td><div class="dni-plaintext"><pre>67.22</pre></div></td><td><div class="dni-plaintext"><pre>1142531</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>66929</pre></div></td><td>WKL.AS</td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>67</pre></div></td><td><div class="dni-plaintext"><pre>67.54</pre></div></td><td><div class="dni-plaintext"><pre>66.28</pre></div></td><td><div class="dni-plaintext"><pre>67.32</pre></div></td><td><div class="dni-plaintext"><pre>67.32</pre></div></td><td><div class="dni-plaintext"><pre>210379</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66876</td><td>WKL.AS</td><td>2026-03-10 00:00:00Z</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0</td><td>0</td><td>False</td></tr><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11 00:00:00Z</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>False</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12 00:00:00Z</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>False</td></tr></tbody></table>
 
 `Description()` in MDA returns a compact summary rather than the percentile-rich profile Polars exposes with `Describe()`.
 
@@ -1074,7 +1074,7 @@ ohlcv.Info();
 ohlcv.Description()
 ```
 
-<table id="table_639110703186304625"><thead><tr><th><i>index</i></th><th>Description</th><th>id</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Length (excluding null values)</td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td><td><div class="dni-plaintext"><pre>66355</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Max</td><td><div class="dni-plaintext"><pre>66930</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>2926</pre></div></td><td><div class="dni-plaintext"><pre>2957</pre></div></td><td><div class="dni-plaintext"><pre>2813</pre></div></td><td><div class="dni-plaintext"><pre>2839</pre></div></td><td><div class="dni-plaintext"><pre>2802.9382</pre></div></td><td><div class="dni-plaintext"><pre>376391550</pre></div></td><td><div class="dni-plaintext"><pre>22.5</pre></div></td><td><div class="dni-plaintext"><pre>5</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>Min</td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>1.601</pre></div></td><td><div class="dni-plaintext"><pre>1.6628</pre></div></td><td><div class="dni-plaintext"><pre>1.5842</pre></div></td><td><div class="dni-plaintext"><pre>1.6066</pre></div></td><td><div class="dni-plaintext"><pre>1.2013</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>Mean</td><td><div class="dni-plaintext"><pre>33179.312</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>197.04108</pre></div></td><td><div class="dni-plaintext"><pre>199.36696</pre></div></td><td><div class="dni-plaintext"><pre>194.58563</pre></div></td><td><div class="dni-plaintext"><pre>197.03654</pre></div></td><td><div class="dni-plaintext"><pre>190.49628</pre></div></td><td><div class="dni-plaintext"><pre>5942157.5</pre></div></td><td><div class="dni-plaintext"><pre>0.01175667</pre></div></td><td><div class="dni-plaintext"><pre>0.00017203267</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>Description</th><th>id</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>Length (excluding null values)</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>Max</td><td>66930</td><td>&lt;null&gt;</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391550</td><td>22.5</td><td>5</td></tr><tr><td>Min</td><td>1</td><td>&lt;null&gt;</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>Mean</td><td>33179.312</td><td>&lt;null&gt;</td><td>197.04108</td><td>199.36696</td><td>194.58563</td><td>197.03654</td><td>190.49628</td><td>5942157.5</td><td>0.01175667</td><td>0.00017203267</td></tr></tbody></table>
 
 `NullCount` is available per column, so a frame-wide null audit is a short loop over `df.Columns`.
 
@@ -1094,7 +1094,7 @@ new MDA.PrimitiveDataFrameColumn<long>("null_count", ncCounts)
 )
 ```
 
-<table id="table_639110703199778576"><thead><tr><th><i>index</i></th><th>column</th><th>null_count</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>pe_zscore</td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>pb_zscore</td><td><div class="dni-plaintext"><pre>6</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ev_ebitda_zscore</td><td><div class="dni-plaintext"><pre>71</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>yield_zscore</td><td><div class="dni-plaintext"><pre>35</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>recommendation_mean</td><td><div class="dni-plaintext"><pre>14</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table>
 
 A quick memory estimate is still manual in MDA; there is no direct equivalent to Polars' native memory accounting helpers.
 
@@ -1202,13 +1202,13 @@ new MDA.StringDataFrameColumn("B", new[] { "x", "y", "z" })
 df
 ```
 
-<table id="table_639110703235480164"><thead><tr><th><i>index</i></th><th>property</th><th>value</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Name</td><td>x</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Length</td><td>3</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>DataType</td><td>Int32</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>Value[0]</td><td>1</td></tr></tbody></table>
+<table><thead><tr><th>property</th><th>value</th></tr></thead><tbody><tr><td>Name</td><td>x</td></tr><tr><td>Length</td><td>3</td></tr><tr><td>DataType</td><td>Int32</td></tr><tr><td>Value[0]</td><td>1</td></tr></tbody></table>
 
 ```text
 As int[]: [1, 2, 3]
 ```
 
-<table id="table_639110703235516829"><thead><tr><th><i>index</i></th><th>A</th><th>B</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td>x</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td>y</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td>z</td></tr></tbody></table>
+<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>x</td></tr><tr><td>2</td><td>y</td></tr><tr><td>3</td><td>z</td></tr></tbody></table>
 
 ---
 
@@ -1416,7 +1416,7 @@ df.Head(3)
 Shape: (66355, 12)
 ```
 
-<table id="table_639110703287515504"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>21160</pre></div></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>53.5761</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>21161</pre></div></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>53.548</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>21162</pre></div></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>55.037</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04 00:00:00Z</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05 00:00:00Z</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06 00:00:00Z</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>False</td></tr></tbody></table>
 
 #### Polars.NET | Lazy scan CSV with LazyFrame.ScanCsv
 
@@ -1466,7 +1466,7 @@ result
 No Query Plan available (Eager Execution).
 ```
 
-<table id="table_639110703309419255"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td>ASML.AS</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>404</pre></div></td><td><div class="dni-plaintext"><pre>411</pre></div></td><td><div class="dni-plaintext"><pre>402.25</pre></div></td><td><div class="dni-plaintext"><pre>406.25</pre></div></td><td><div class="dni-plaintext"><pre>387.709</pre></div></td><td><div class="dni-plaintext"><pre>789502</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td>ASML.AS</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>406.55</pre></div></td><td><div class="dni-plaintext"><pre>412.05</pre></div></td><td><div class="dni-plaintext"><pre>401.15</pre></div></td><td><div class="dni-plaintext"><pre>406.9</pre></div></td><td><div class="dni-plaintext"><pre>388.3294</pre></div></td><td><div class="dni-plaintext"><pre>798787</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td>ASML.AS</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>406.8</pre></div></td><td><div class="dni-plaintext"><pre>407.2</pre></div></td><td><div class="dni-plaintext"><pre>399.2</pre></div></td><td><div class="dni-plaintext"><pre>402.85</pre></div></td><td><div class="dni-plaintext"><pre>384.4644</pre></div></td><td><div class="dni-plaintext"><pre>875711</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>4</pre></div></td><td>ASML.AS</td><td><span>2021-01-07 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>404.8</pre></div></td><td><div class="dni-plaintext"><pre>407.8</pre></div></td><td><div class="dni-plaintext"><pre>400.35</pre></div></td><td><div class="dni-plaintext"><pre>403.9</pre></div></td><td><div class="dni-plaintext"><pre>385.4664</pre></div></td><td><div class="dni-plaintext"><pre>874780</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>5</pre></div></td><td>ASML.AS</td><td><span>2021-01-08 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>414.25</pre></div></td><td><div class="dni-plaintext"><pre>419.1</pre></div></td><td><div class="dni-plaintext"><pre>413.4</pre></div></td><td><div class="dni-plaintext"><pre>416.05</pre></div></td><td><div class="dni-plaintext"><pre>397.0618</pre></div></td><td><div class="dni-plaintext"><pre>975243</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04 00:00:00Z</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>False</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05 00:00:00Z</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>False</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06 00:00:00Z</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>False</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07 00:00:00Z</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>False</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08 00:00:00Z</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>False</td></tr></tbody></table>
 
 ---
 
@@ -1556,7 +1556,7 @@ df.Head(3)
 Shape: (66355, 12)
 ```
 
-<table id="table_639110712848019003"><thead><tr><th><i>index</i></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>21160</pre></div></td><td>ABI.BR</td><td><span>2021-01-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>58.15</pre></div></td><td><div class="dni-plaintext"><pre>58.85</pre></div></td><td><div class="dni-plaintext"><pre>56.78</pre></div></td><td><div class="dni-plaintext"><pre>57.21</pre></div></td><td><div class="dni-plaintext"><pre>53.5761</pre></div></td><td><div class="dni-plaintext"><pre>1513937</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>21161</pre></div></td><td>ABI.BR</td><td><span>2021-01-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>56.9</pre></div></td><td><div class="dni-plaintext"><pre>57.98</pre></div></td><td><div class="dni-plaintext"><pre>56.75</pre></div></td><td><div class="dni-plaintext"><pre>57.18</pre></div></td><td><div class="dni-plaintext"><pre>53.548</pre></div></td><td><div class="dni-plaintext"><pre>1382722</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>21162</pre></div></td><td>ABI.BR</td><td><span>2021-01-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>57.96</pre></div></td><td><div class="dni-plaintext"><pre>58.94</pre></div></td><td><div class="dni-plaintext"><pre>57.39</pre></div></td><td><div class="dni-plaintext"><pre>58.77</pre></div></td><td><div class="dni-plaintext"><pre>55.037</pre></div></td><td><div class="dni-plaintext"><pre>1370204</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>False</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04 00:00:00Z</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05 00:00:00Z</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06 00:00:00Z</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>False</td></tr></tbody></table>
 
 ---
 
@@ -1681,7 +1681,7 @@ finalResult.Head(5)
 Shape: (1324, 3)
 ```
 
-<table id="table_639110703573641266"><thead><tr><th><i>index</i></th><th>date</th><th>symbol</th><th>close</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2021-01-04 00:00:00Z</span></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>105.32</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2021-01-05 00:00:00Z</span></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>105.04</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2021-01-06 00:00:00Z</span></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>105.48</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2021-01-07 00:00:00Z</span></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>104.52</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2021-01-08 00:00:00Z</span></td><td>SAP.DE</td><td><div class="dni-plaintext"><pre>106.18</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr></thead><tbody><tr><td>2021-01-04 00:00:00Z</td><td>SAP.DE</td><td>105.32</td></tr><tr><td>2021-01-05 00:00:00Z</td><td>SAP.DE</td><td>105.04</td></tr><tr><td>2021-01-06 00:00:00Z</td><td>SAP.DE</td><td>105.48</td></tr><tr><td>2021-01-07 00:00:00Z</td><td>SAP.DE</td><td>104.52</td></tr><tr><td>2021-01-08 00:00:00Z</td><td>SAP.DE</td><td>106.18</td></tr></tbody></table>
 
 ---
 
@@ -1893,7 +1893,7 @@ new MDA.DataFrame(
 scores_daily: (466, 36) — 5 columns with nulls
 ```
 
-<table id="table_639110704159325458"><thead><tr><th><i>index</i></th><th>column</th><th>null_count</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>pe_zscore</td><td><div class="dni-plaintext"><pre>3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>pb_zscore</td><td><div class="dni-plaintext"><pre>6</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ev_ebitda_zscore</td><td><div class="dni-plaintext"><pre>71</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>yield_zscore</td><td><div class="dni-plaintext"><pre>35</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>recommendation_mean</td><td><div class="dni-plaintext"><pre>14</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table>
 
 #### Polars.NET | Use custom column separators and delimiters
 
@@ -1944,13 +1944,13 @@ dfSsv.Head(3)
 TSV: (212, 2)
 ```
 
-<table id="table_639110704224551444"><thead><tr><th><i>index</i></th><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Afghanistan</td><td>AF</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Albania</td><td>AL</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>Algeria</td><td>DZ</td></tr></tbody></table>
+<table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr></tbody></table>
 
 ```text
 SSV: (212, 2)
 ```
 
-<table id="table_639110704224597936"><thead><tr><th><i>index</i></th><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>Afghanistan</td><td>AF</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>Albania</td><td>AL</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>Algeria</td><td>DZ</td></tr></tbody></table>
+<table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr></tbody></table>
 
 ---
 
@@ -2190,7 +2190,7 @@ new MDA.PrimitiveDataFrameColumn<double>("size_kb", fmtSizes)
 )
 ```
 
-<table id="table_639110704325648951"><thead><tr><th><i>index</i></th><th>format</th><th>size_kb</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>csv</td><td><div class="dni-plaintext"><pre>5162</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>json</td><td><div class="dni-plaintext"><pre>17668.3</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>parquet</td><td><div class="dni-plaintext"><pre>2426.7</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>format</th><th>size_kb</th></tr></thead><tbody><tr><td>csv</td><td>5162</td></tr><tr><td>json</td><td>17668.3</td></tr><tr><td>parquet</td><td>2426.7</td></tr></tbody></table>
 
 #### Polars.NET | Benchmark read performance across formats
 
@@ -2245,7 +2245,7 @@ new MDA.PrimitiveDataFrameColumn<double>("avg_ms", benchTimes)
 )
 ```
 
-<table id="table_639110704355478299"><thead><tr><th><i>index</i></th><th>format</th><th>avg_ms</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>CSV</td><td><div class="dni-plaintext"><pre>180.8</pre></div></td></tr></tbody></table>
+<table><thead><tr><th>format</th><th>avg_ms</th></tr></thead><tbody><tr><td>CSV</td><td>180.8</td></tr></tbody></table>
 
 ---
 
@@ -2297,7 +2297,7 @@ df.Info();
 df
 ```
 
-<table id="table_639110704372770902"><thead><tr><th><i>index</i></th><th>DateStr</th><th>Value</th><th>Date</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>2024-01-02</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><span>2024-01-02 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>2024-01-03</td><td><div class="dni-plaintext"><pre>102.5</pre></div></td><td><span>2024-01-03 00:00:00Z</span></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>2024-01-04</td><td><div class="dni-plaintext"><pre>101.8</pre></div></td><td><span>2024-01-04 00:00:00Z</span></td></tr></tbody></table>
+<table><thead><tr><th>DateStr</th><th>Value</th><th>Date</th></tr></thead><tbody><tr><td>2024-01-02</td><td>100</td><td>2024-01-02 00:00:00Z</td></tr><tr><td>2024-01-03</td><td>102.5</td><td>2024-01-03 00:00:00Z</td></tr><tr><td>2024-01-04</td><td>101.8</td><td>2024-01-04 00:00:00Z</td></tr></tbody></table>
 
 #### Polars.NET | Use Categorical type for low-cardinality string columns
 

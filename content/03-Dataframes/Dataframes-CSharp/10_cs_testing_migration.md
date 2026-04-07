@@ -560,7 +560,7 @@ else
       Total trading days: 1331
       Gaps > 4 calendar days: 7
 
-<!-- Polars DataFrame: (7 rows, 2 columns) --><table><thead><tr><th>date</th><th>date_diff</th></tr></thead><tbody><tr><td>2021-04-06</td><td>432000000000us</td></tr><tr><td>2022-04-19</td><td>432000000000us</td></tr><tr><td>2023-04-11</td><td>432000000000us</td></tr><tr><td>2023-12-27</td><td>432000000000us</td></tr><tr><td>2024-04-02</td><td>432000000000us</td></tr><tr><td>2025-04-22</td><td>432000000000us</td></tr><tr><td>2025-12-29</td><td>432000000000us</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (7 rows, 2 columns) --><table><thead><tr><th>date</th><th>date_diff</th></tr></thead><tbody><tr><td>2021-04-06</td><td>432000000000us</td></tr><tr><td>2022-04-19</td><td>432000000000us</td></tr><tr><td>2023-04-11</td><td>432000000000us</td></tr><tr><td>2023-12-27</td><td>432000000000us</td></tr><tr><td>2024-04-02</td><td>432000000000us</td></tr></tbody></table></div>
 
 ### Quarantine Pattern
 
@@ -744,7 +744,7 @@ display(step3.Head(5));
     === Step 2: Add daily return ===
       Shape: 1329 rows × 13 cols
 
-<!-- Polars DataFrame: (3 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>10578</td><td>SAN.MC</td><td>2021-01-04</td><td>2.592</td><td>2.5975</td><td>2.514</td><td>2.5665</td><td>2.1491</td><td>61027452</td><td>0</td><td>0</td><td>false</td><td class='pl-null'>null</td></tr><tr><td>10579</td><td>SAN.MC</td><td>2021-01-05</td><td>2.5335</td><td>2.5935</td><td>2.528</td><td>2.5755</td><td>2.1566</td><td>34085777</td><td>0</td><td>0</td><td>false</td><td>0.3506721216</td></tr><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td><td>6.872451951</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (3 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>10578</td><td>SAN.MC</td><td>2021-01-04</td><td>2.592</td><td>2.5975</td><td>2.514</td><td>2.5665</td><td>2.1491</td><td>61027452</td><td>0</td><td>0</td><td>false</td><td>null</td></tr><tr><td>10579</td><td>SAN.MC</td><td>2021-01-05</td><td>2.5335</td><td>2.5935</td><td>2.528</td><td>2.5755</td><td>2.1566</td><td>34085777</td><td>0</td><td>0</td><td>false</td><td>0.3506721216</td></tr><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td><td>6.872451951</td></tr></tbody></table></div>
 
     
     === Step 3: Filter high-volatility days ===

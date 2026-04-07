@@ -213,7 +213,7 @@ aggCat.Head(10)
 
     Aggregation on categorical column: (50, 3)
 
-<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr></tbody></table></div>
 
 ### Deedle | Categorical
 
@@ -496,13 +496,7 @@ dfFromPolars.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<table>
-
-<thead><th></th><th></th><th>symbol</th><th>open</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr>
-
-</table>
+<table><thead><tr><th>0</th><th>-&gt;</th><th>ABI.BR</th><th>58.15</th><th>57.21</th><th>1513937</th></tr></thead><tbody><tr><td>1</td><td>-&gt;</td><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>2</td><td>-&gt;</td><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>3</td><td>-&gt;</td><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>4</td><td>-&gt;</td><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table>
 
 <p><b>5</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
 
@@ -617,13 +611,7 @@ dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 
 <div>
 
-<table>
-
-<thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Afghanistan</td><td>AF</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Albania</td><td>AL</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Algeria</td><td>DZ</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>American Samoa</td><td>AS</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>Andorra</td><td>AD</td></tr>
-
-</table>
+<table><thead><tr><th>0</th><th>-&gt;</th><th>Afghanistan</th><th>AF</th></tr></thead><tbody><tr><td>1</td><td>-&gt;</td><td>Albania</td><td>AL</td></tr><tr><td>2</td><td>-&gt;</td><td>Algeria</td><td>DZ</td></tr><tr><td>3</td><td>-&gt;</td><td>American Samoa</td><td>AS</td></tr><tr><td>4</td><td>-&gt;</td><td>Andorra</td><td>AD</td></tr></tbody></table>
 
 <p><b>5</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 

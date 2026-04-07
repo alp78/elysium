@@ -290,7 +290,7 @@ dfCombined.Head(10)
 
     High-volume trades: (14330, 4)
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.338</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.1555</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>2.3305</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>3.31</td><td>306973344</td></tr><tr><td>SAN.MC</td><td>2022-10-19</td><td>2.6345</td><td>304539953</td></tr><tr><td>ISP.MI</td><td>2022-03-07</td><td>1.8432</td><td>286679922</td></tr><tr><td>ISP.MI</td><td>2021-02-03</td><td>1.9512</td><td>284805919</td></tr><tr><td>ISP.MI</td><td>2022-03-09</td><td>2.0725</td><td>284368758</td></tr><tr><td>ISP.MI</td><td>2023-03-15</td><td>2.2435</td><td>282185531</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.338</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.1555</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>2.3305</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>3.31</td><td>306973344</td></tr></tbody></table></div>
 
 #### Polars.NET | Lazy GroupBy with aggregation
 
@@ -316,7 +316,7 @@ dfGrouped.Head(10)
 
     Grouped result: (50, 4)
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>num_days</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td><td>1321</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td><td>1329</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td><td>1321</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td><td>1329</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td><td>1321</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td><td>1321</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td><td>1331</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td><td>1329</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td><td>1324</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td><td>1306</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>num_days</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td><td>1321</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td><td>1329</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td><td>1321</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td><td>1329</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td><td>1321</td></tr></tbody></table></div>
 
 #### Polars.NET | Lazy WithColumns: add computed columns
 
