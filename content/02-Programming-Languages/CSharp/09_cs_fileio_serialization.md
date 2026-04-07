@@ -18,34 +18,6 @@ status: complete
 >
 > — **Jim Gray**, Turing Award lecture (1998)
 
-```csharp
-using System.IO;
-using System.Diagnostics;
-using System.IO.MemoryMappedFiles;
-using System.Threading;
-using System.Security.Cryptography;
-using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Reflection;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.CSharp;
-
-var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
-var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
-    BindingFlags.NonPublic | BindingFlags.Instance);
-
-var scriptOptions = optionsField.GetValue(csharpKernel);
-var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
-var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
-optionsField.SetValue(csharpKernel, newOptions);
-
-// WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
-```
-
-    WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
-
 ## Read, Write, Append Files
 
 The `System.IO` namespace provides two tiers of file access: static convenience methods on the `File` class for simple one-shot operations, and `StreamReader`/`StreamWriter` for buffered, line-by-line processing of large files. All text methods default to UTF-8 encoding — always pass `Encoding.UTF8` explicitly to avoid platform-dependent behavior.
