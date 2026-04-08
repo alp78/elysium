@@ -67,6 +67,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Polars.CSharp;
 using static Polars.CSharp.Polars;
@@ -85,6 +86,67 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 
 var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
+
+static Type[] OhlcvCsvTypes() => new[] { typeof(long), typeof(string), typeof(DateTime), typeof(decimal), typeof(decimal), typeof(decimal), typeof(decimal), typeof(decimal), typeof(long), typeof(decimal), typeof(decimal), typeof(bool) };
+
+static decimal? ToNullableDecimal(object value)
+{
+    if (value is null) return null;
+    if (value is decimal d) return d;
+    if (value is string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return null;
+        return decimal.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture);
+    }
+    return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+}
+
+static MDA.DataFrame ConvertColumnsToDecimal(MDA.DataFrame df, params string[] columnNames)
+{
+    foreach (var columnName in columnNames)
+    {
+        var index = df.Columns.IndexOf(columnName);
+        if (index < 0) continue;
+        var source = df.Columns[index];
+        var target = new MDA.PrimitiveDataFrameColumn<decimal>(columnName, df.Rows.Count);
+        for (long row = 0; row < df.Rows.Count; row++)
+        {
+            var value = ToNullableDecimal(source[row]);
+            if (value.HasValue) target[row] = value.Value;
+        }
+        df.Columns.Remove(columnName);
+        df.Columns.Insert(index, target);
+    }
+    return df;
+}
+
+static MDA.DataFrame LoadOhlcvCsv(string dataDir) =>
+    MDA.DataFrame.LoadCsv(Path.Combine(dataDir, "eurostoxx50_ohlcv.csv"), dataTypes: OhlcvCsvTypes());
+
+static MDA.DataFrame LoadScoresDailyCsv(string dataDir)
+{
+    var df = MDA.DataFrame.LoadCsv(Path.Combine(dataDir, "scores_daily.csv"));
+    return ConvertColumnsToDecimal(
+        df,
+        "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "relative_value_score",
+        "relative_strength", "sma_50_ratio", "sma_200_ratio", "dist_from_52w_high", "momentum_score",
+        "implied_upside", "recommendation_mean", "sentiment_score", "composite_score", "sma_30_close",
+        "sma_90_close", "market_cap", "index_weight", "current_price", "day_change_pct",
+        "five_day_change_pct", "ytd_change_pct"
+    );
+}
+
+static MDA.DataFrame LoadSignalsDailyCsv(string dataDir)
+{
+    var df = MDA.DataFrame.LoadCsv(Path.Combine(dataDir, "signals_daily.csv"));
+    return ConvertColumnsToDecimal(
+        df,
+        "current_price", "forward_pe", "price_to_book", "ev_to_ebitda", "dividend_yield",
+        "market_cap", "beta", "fifty_two_week_change", "sandp_52_week_change", "fifty_day_average",
+        "two_hundred_day_average", "dist_from_52_week_high", "target_median_price", "recommendation_mean",
+        "upside_potential"
+    );
+}
 ```
 
 ```text
@@ -95,11 +157,11 @@ Data directory: c:\Users\aperi\DEV\LANG\data
 
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
-var dfM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
+var dfM = LoadOhlcvCsv(DATA);
 display($"OHLCV - Polars: {dfP.Shape}  |  MDA: ({dfM.Rows.Count}, {dfM.Columns.Count})");
 
 var scP = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDates: true);
-var scM = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "scores_daily.csv"));
+var scM = LoadScoresDailyCsv(DATA);
 display($"Scores - Polars: {scP.Shape}  |  MDA: ({scM.Rows.Count}, {scM.Columns.Count})");
 
 var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "index_dim.csv"));
@@ -205,8 +267,9 @@ MDA uses direct `NullCount` metadata and boolean masks for null inspection.
 _Prints sparse-column null counts and previews the first five null `ev_ebitda_zscore` rows._
 
 ```csharp
+// Microsoft.Data.Analysis — Detect nulls in scores_daily (has real nulls)
 display("Null counts per column:");
-foreach (var col in scM.Columns)
+foreach (var col in scP.Columns)
 {
     var nc = col.NullCount;
     if (nc > 0)
@@ -214,9 +277,9 @@ foreach (var col in scM.Columns)
 }
 
 display("Rows where ev_ebitda_zscore IS null (first 5):");
-var nullMaskM = (MDA.PrimitiveDataFrameColumn<bool>)scM.Columns["ev_ebitda_zscore"].ElementwiseIsNull();
-var filteredNullsM = scM.Filter(nullMaskM);
-new MDA.DataFrame(filteredNullsM.Columns["symbol"], filteredNullsM.Columns["score_date"], filteredNullsM.Columns["ev_ebitda_zscore"], filteredNullsM.Columns["pe_zscore"]).Head(5)
+var nullMask = (PrimitiveDataFrameColumn<bool>)scP.Columns["ev_ebitda_zscore"].ElementwiseIsNull();
+var filteredNulls = scP.Filter(nullMask);
+new DataFrame(filteredNulls.Columns["symbol"], filteredNulls.Columns["score_date"], filteredNulls.Columns["ev_ebitda_zscore"], filteredNulls.Columns["pe_zscore"]).Head(5)
 ```
 
 ```text
@@ -235,32 +298,7 @@ Null counts per column:
 Rows where ev_ebitda_zscore IS null (first 5):
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td><td>0.91338855</td></tr><tr><td>SAN.MC</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td><td>0.45859888</td></tr><tr><td>ISP.MI</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td><td>0.36661887</td></tr><tr><td>UCG.MI</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td><td>0.452501</td></tr><tr><td>INGA.AS</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td><td>0.37991667</td></tr></tbody></table>
-
-### Count Nulls
-
-After detecting which columns contain nulls, quantify the problem. Knowing the exact count per column helps decide whether to drop, fill, or investigate further — a column with 3 nulls out of 466 rows is a different problem than one with 71.
-
-#### Polars.NET | Count nulls per column with NullCount property
-
-The `NullCount` property on a Polars `Series` returns the number of null entries as a simple integer. This is a metadata operation — it does not scan the data, making it O(1) for most column types.
-
-_Prints the null count and total row count for each of the 5 known-null columns, confirming that `ev_ebitda_zscore` has the most missing values (71 out of 466) and `pe_zscore` the fewest (3)._
-
-```csharp
-var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
-foreach (var col in nullCols)
-    Console.WriteLine($"  {col,-28} {scP.Column(col).NullCount,4} / {scP.Height}");
-display($"Total rows: {scP.Height}");
-```
-
-pe_zscore                       3 / 466
-      pb_zscore                       6 / 466
-      ev_ebitda_zscore               71 / 466
-      yield_zscore                   35 / 466
-      recommendation_mean            14 / 466
-
-Total rows: 466
+<table id="table_639112126492234558"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.9133886</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>SAN.MC</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.4585989</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ISP.MI</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.3666189</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>UCG.MI</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.452501</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>INGA.AS</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>0.3799167</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Count nulls with DataFrameColumn.NullCount
 
@@ -269,13 +307,14 @@ Total rows: 466
 _Reports null counts for the five known sparse score columns._
 
 ```csharp
-var nullColsM = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
-foreach (var col in nullColsM)
+// Microsoft.Data.Analysis — Count nulls per column with NullCount property
+var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
+foreach (var col in nullCols)
 {
-    if(scM.Columns.IndexOf(col) >= 0)
-        Console.WriteLine($"  {col,-28} {scM.Columns[col].NullCount,4} / {scM.Rows.Count}");
+    if(scP.Columns.IndexOf(col) >= 0)
+        Console.WriteLine($"  {col,-28} {scP.Columns[col].NullCount,4} / {scP.Rows.Count}");
 }
-display($"Total rows: {scM.Rows.Count}");
+display($"Total rows: {scP.Rows.Count}");
 ```
 
 ```text
@@ -290,26 +329,6 @@ display($"Total rows: {scM.Rows.Count}");
 Total rows: 466
 ```
 
-### Drop Nulls
-
-The simplest null strategy: remove rows that contain any missing value. Use this when nulls are random, few in number, and the remaining dataset is large enough to be representative. Be cautious — dropping nulls across many columns can eliminate a disproportionate number of rows.
-
-#### Polars.NET | Drop null rows with DropNulls()
-
-`DropNulls()` removes every row that has a null in any column. It returns a new DataFrame (Polars DataFrames are immutable). To drop nulls in specific columns only, filter with `IsNotNull()` instead.
-
-_Calls `DropNulls()` on the scores DataFrame, reducing it from 466 to 346 rows, then previews the first 5 surviving rows to confirm all four selected columns are non-null._
-
-```csharp
-var scPDropped = scP.DropNulls();
-display($"Before: {scP.Height} rows  |  After DropNulls: {scPDropped.Height} rows");
-scPDropped.Select("symbol", "score_date", "ev_ebitda_zscore", "pe_zscore").Head(5)
-```
-
-Before: 466 rows  |  After DropNulls: 346 rows
-
-<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td><td>0.3265870647</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td><td>0.5093979371</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td><td>-0.9027376753</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td><td>0.4740837062</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td><td>0.6911063935</td></tr></tbody></table></div>
-
 #### Microsoft.Data.Analysis | Drop rows by building a validity mask
 
 The notebook uses an explicit boolean mask plus `Filter(...)` for whole-row null dropping.
@@ -317,57 +336,28 @@ The notebook uses an explicit boolean mask plus `Filter(...)` for whole-row null
 _Scans each score row for nulls, filters valid rows, and previews the first five survivors._
 
 ```csharp
-var validMaskM = new MDA.PrimitiveDataFrameColumn<bool>("maskM", scM.Rows.Count);
-for (long i = 0; i < scM.Rows.Count; i++)
+// Microsoft.Data.Analysis — Drop rows where any column has null
+var validMask = new PrimitiveDataFrameColumn<bool>("mask", scP.Rows.Count);
+for (long i = 0; i < scP.Rows.Count; i++)
 {
     bool hasNull = false;
-    foreach (var col in scM.Columns)
+    foreach (var col in scP.Columns)
     {
         if (col[i] == null) { hasNull = true; break; }
     }
-    validMaskM[i] = !hasNull;
+    validMask[i] = !hasNull;
 }
 
-var scMDropped = scM.Filter(validMaskM);
-display($"Before: {scM.Rows.Count} rows  |  After DropNulls: {scMDropped.Rows.Count} rows");
-new MDA.DataFrame(scMDropped.Columns["symbol"], scMDropped.Columns["score_date"], scMDropped.Columns["ev_ebitda_zscore"], scMDropped.Columns["pe_zscore"]).Head(5)
+var scPDropped = scP.Filter(validMask);
+display($"Before: {scP.Rows.Count} rows  |  After DropNulls: {scPDropped.Rows.Count} rows");
+new DataFrame(scPDropped.Columns["symbol"], scPDropped.Columns["score_date"], scPDropped.Columns["ev_ebitda_zscore"], scPDropped.Columns["pe_zscore"]).Head(5)
 ```
 
 ```text
 Before: 466 rows  |  After DropNulls: 346 rows
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.37953192</td><td>0.32658705</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770676</td><td>0.5093979</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932118</td><td>-0.9027377</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527391</td><td>0.4740837</td></tr><tr><td>TTE.PA</td><td>2026-03-04 00:00:00Z</td><td>0.4496105</td><td>0.6911064</td></tr></tbody></table>
-
-### Fill with Literal
-
-Replace nulls with a known constant value. Appropriate when the business logic defines a clear default — for example, filling missing dividend yields with `0.0` (no dividend) or missing boolean flags with `false`.
-
-> [!warning] Filling z-scores with 0.0 distorts the distribution
->
-> A z-score of 0.0 means "exactly at the mean." Filling missing z-scores with 0.0 artificially inflates the count of mean-valued observations and biases statistical summaries. Use mean/median imputation or interpolation instead if the downstream use is statistical.
-
-> [!success] Use domain-appropriate defaults
->
-> Fill with `0.0` only when zero is a meaningful business value (e.g., "no dividends paid"). For z-scores and continuous metrics, prefer `FillNull(Col("c").Mean())` or `Interpolate()`.
-
-#### Polars.NET | Fill nulls with a literal value using FillNull(Lit())
-
-`FillNull(Lit(value))` replaces every null in the column with the given literal. The `Lit()` wrapper converts a C# value into a Polars expression. Combined with `WithColumns` and `Alias`, this returns a new DataFrame with the specified column's nulls replaced.
-
-_Fills the 71 nulls in `ev_ebitda_zscore` with literal `0.0`, confirms null count drops to 0, and displays the first 5 rows — `BNP.PA`'s formerly null value now reads `0`._
-
-```csharp
-var scPFilled = scP.WithColumns(
-    Col("ev_ebitda_zscore").FillNull(Lit(0.0)).Alias("ev_ebitda_zscore")
-);
-display($"Nulls after FillNull(0.0): {scPFilled.Column("ev_ebitda_zscore").NullCount}");
-scPFilled.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
-```
-
-Nulls after FillNull(0.0): 0
-
-<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<table id="table_639112126493834787"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td><td><div class="dni-plaintext"><pre>0.3265871</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td><td><div class="dni-plaintext"><pre>0.5093979</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td><td><div class="dni-plaintext"><pre>-0.9027377</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td><td><div class="dni-plaintext"><pre>0.4740837</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>TTE.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.4496105</pre></div></td><td><div class="dni-plaintext"><pre>0.6911064</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Fill nulls with an explicit typed replacement column
 
@@ -376,54 +366,20 @@ MDA repairs a column by materializing a typed output column and swapping it back
 _Fills null `ev_ebitda_zscore` values with `0.0` and confirms the null count drops to zero._
 
 ```csharp
-var filledColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore_filled", scM.Rows.Count);
-var origColM = scM.Columns["ev_ebitda_zscore"];
-
-for(long i = 0; i < scM.Rows.Count; i++)
-{
-    filledColM[i] = origColM[i] != null ? Convert.ToDouble(origColM[i]) : 0.0;
-}
-
-var scMFilled = scM.Clone();
-scMFilled.Columns.Remove("ev_ebitda_zscore");
-filledColM.SetName("ev_ebitda_zscore");
-scMFilled.Columns.Add(filledColM);
-
-display($"Nulls after FillNull(0.0): {scMFilled.Columns["ev_ebitda_zscore"].NullCount}");
-new MDA.DataFrame(scMFilled.Columns["symbol"], scMFilled.Columns["score_date"], scMFilled.Columns["ev_ebitda_zscore"]).Head(5)
+// Microsoft.Data.Analysis — Fill null ev_ebitda_zscore with 0.0
+var filledCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore_filled", scP.Rows.Count);
+var origCol = scP.Columns["ev_ebitda_zscore"];
+for(long i = 0; i < scP.Rows.Count; i++) filledCol[i] = origCol[i] != null ? Convert.ToDecimal(origCol[i]) : 0.0m;
+var scPFilled = scP.Clone(); scPFilled.Columns.Remove("ev_ebitda_zscore"); filledCol.SetName("ev_ebitda_zscore"); scPFilled.Columns.Add(filledCol);
+display($"Nulls after FillNull(0.0): {scPFilled.Columns["ev_ebitda_zscore"].NullCount}");
+new DataFrame(scPFilled.Columns["symbol"], scPFilled.Columns["score_date"], scPFilled.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
 ```text
 Nulls after FillNull(0.0): 0
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>0</td></tr><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770675778388977</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932117938995361</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527390837669373</td></tr></tbody></table>
-
-### Forward and Backward Fill
-
-Directional fill strategies propagate the nearest non-null value forward (LOCF — Last Observation Carried Forward) or backward to replace nulls. These are the standard approach for time-series data where the previous or next known value is the best estimate — for example, carrying forward the last known stock price across weekend gaps.
-
-> [!tip] Forward fill across groups
->
-> When your DataFrame contains multiple symbols or entities, always apply forward fill within each group (e.g., per symbol) rather than across the entire DataFrame. Otherwise, the last value from one symbol bleeds into the first null of the next symbol.
-
-#### Polars.NET | Forward fill nulls with ForwardFill()
-
-`ForwardFill()` propagates the last non-null value forward through subsequent nulls. If the first value in the column is null, it remains null — there is no preceding value to carry. Returns a new expression that can be used with `WithColumns`.
-
-_Applies `ForwardFill()` to `ev_ebitda_zscore`, reducing nulls from 71 to 1 — the single leading null for `BNP.PA` remains because there is no preceding value to carry forward._
-
-```csharp
-var scPFfill = scP.WithColumns(
-    Col("ev_ebitda_zscore").ForwardFill().Alias("ev_ebitda_zscore")
-);
-display($"Nulls after ForwardFill: {scPFfill.Column("ev_ebitda_zscore").NullCount}");
-scPFfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
-```
-
-Nulls after ForwardFill: 1
-
-<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<table id="table_639112126494570895"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Forward fill with a carry-forward loop
 
@@ -432,46 +388,20 @@ Forward fill in MDA is usually an ordered scan with explicit state.
 _Carries the last observed `ev_ebitda_zscore` value forward through later gaps._
 
 ```csharp
-var ffillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
-double? lastValidM = null;
-
-for(long i = 0; i < scM.Rows.Count; i++)
-{
-    if (origColM[i] != null) lastValidM = Convert.ToDouble(origColM[i]);
-    if (lastValidM.HasValue) ffillColM[i] = lastValidM.Value;
-}
-
-var scMFfill = scM.Clone();
-scMFfill.Columns.Remove("ev_ebitda_zscore");
-scMFfill.Columns.Add(ffillColM);
-
-display($"Nulls after ForwardFill: {scMFfill.Columns["ev_ebitda_zscore"].NullCount}");
-new MDA.DataFrame(scMFfill.Columns["symbol"], scMFfill.Columns["score_date"], scMFfill.Columns["ev_ebitda_zscore"]).Head(5)
+// Microsoft.Data.Analysis — Forward fill: propagate last valid value forward
+var ffillCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
+decimal? lastValid = null;
+for(long i = 0; i < scP.Rows.Count; i++) { if (origCol[i] != null) lastValid = Convert.ToDecimal(origCol[i]); if (lastValid.HasValue) ffillCol[i] = lastValid.Value; }
+var scPFfill = scP.Clone(); scPFfill.Columns.Remove("ev_ebitda_zscore"); scPFfill.Columns.Add(ffillCol);
+display($"Nulls after ForwardFill: {scPFfill.Columns["ev_ebitda_zscore"].NullCount}");
+new DataFrame(scPFfill.Columns["symbol"], scPFfill.Columns["score_date"], scPFfill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
 ```text
 Nulls after ForwardFill: 1
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>&lt;null&gt;</td></tr><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770675778388977</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932117938995361</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527390837669373</td></tr></tbody></table>
-
-#### Polars.NET | Backward fill nulls with BackwardFill()
-
-`BackwardFill()` propagates the next non-null value backward. This resolves the leading-null problem that forward fill cannot — combining both directions fills all interior nulls and at least one edge.
-
-_Applies `BackwardFill()` to `ev_ebitda_zscore`, resolving all 71 nulls including the leading `BNP.PA` entry — which now shows `0.3795` (the value from the next non-null row, `DTE.DE`)._
-
-```csharp
-var scPBfill = scP.WithColumns(
-    Col("ev_ebitda_zscore").BackwardFill().Alias("ev_ebitda_zscore")
-);
-display($"Nulls after BackwardFill: {scPBfill.Column("ev_ebitda_zscore").NullCount}");
-scPBfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
-```
-
-Nulls after BackwardFill: 0
-
-<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<table id="table_639112126495467074"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Backward fill with a reverse scan
 
@@ -480,50 +410,20 @@ Backward fill is the same idea in reverse order.
 _Propagates the next observed `ev_ebitda_zscore` value backward into earlier gaps._
 
 ```csharp
-var bfillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
-double? nextValidM = null;
-
-for(long i = scM.Rows.Count - 1; i >= 0; i--)
-{
-    if (origColM[i] != null) nextValidM = Convert.ToDouble(origColM[i]);
-    if (nextValidM.HasValue) bfillColM[i] = nextValidM.Value;
-}
-
-var scMBfill = scM.Clone();
-scMBfill.Columns.Remove("ev_ebitda_zscore");
-scMBfill.Columns.Add(bfillColM);
-
-display($"Nulls after BackwardFill: {scMBfill.Columns["ev_ebitda_zscore"].NullCount}");
-new MDA.DataFrame(scMBfill.Columns["symbol"], scMBfill.Columns["score_date"], scMBfill.Columns["ev_ebitda_zscore"]).Head(5)
+// Microsoft.Data.Analysis — Backward fill: propagate next valid value backward
+var bfillCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
+decimal? nextValid = null;
+for(long i = scP.Rows.Count - 1; i >= 0; i--) { if (origCol[i] != null) nextValid = Convert.ToDecimal(origCol[i]); if (nextValid.HasValue) bfillCol[i] = nextValid.Value; }
+var scPBfill = scP.Clone(); scPBfill.Columns.Remove("ev_ebitda_zscore"); scPBfill.Columns.Add(bfillCol);
+display($"Nulls after BackwardFill: {scPBfill.Columns["ev_ebitda_zscore"].NullCount}");
+new DataFrame(scPBfill.Columns["symbol"], scPBfill.Columns["score_date"], scPBfill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
 ```text
 Nulls after BackwardFill: 0
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770675778388977</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932117938995361</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527390837669373</td></tr></tbody></table>
-
-### Fill with Statistics
-
-Replace nulls with a summary statistic of the column — mean, median, or mode. This preserves the overall distribution better than a literal fill but assumes the data is stationary (no trend). For financial z-scores, mean imputation is a reasonable default since z-scores are centered around zero by construction.
-
-#### Polars.NET | Fill nulls with column mean using FillNull(Col().Mean())
-
-The expression `Col("c").FillNull(Col("c").Mean())` computes the column mean and uses it as the fill value — all inside the Polars engine. This is faster than computing the mean in C# and passing it as `Lit()` because it avoids a round-trip between managed and native code.
-
-_Uses `FillNull(Col("ev_ebitda_zscore").Mean())` to replace all 71 nulls with the column mean (`0.038`), shown in the first row where `BNP.PA` now reads `0.03804613962` instead of null._
-
-```csharp
-var scPMeanFill = scP.WithColumns(
-    Col("ev_ebitda_zscore").FillNull(Col("ev_ebitda_zscore").Mean()).Alias("ev_ebitda_zscore")
-);
-display($"Nulls after FillNull(mean): {scPMeanFill.Column("ev_ebitda_zscore").NullCount}");
-scPMeanFill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
-```
-
-Nulls after FillNull(mean): 0
-
-<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.03804613962</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<table id="table_639112126495991141"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Fill nulls with the column mean
 
@@ -532,54 +432,22 @@ A common MDA pattern is compute-then-materialize: first the statistic, then the 
 _Computes the mean of non-null values and fills gaps with that mean._
 
 ```csharp
-double sumM = 0; int countM = 0;
-for(long i = 0; i < scM.Rows.Count; i++)
-{
-    if(origColM[i] != null) { sumM += Convert.ToDouble(origColM[i]); countM++; }
-}
-double meanM = countM > 0 ? sumM / countM : 0;
-
-var meanFillColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
-for(long i = 0; i < scM.Rows.Count; i++)
-{
-    meanFillColM[i] = origColM[i] != null ? Convert.ToDouble(origColM[i]) : meanM;
-}
-
-var scMMeanFill = scM.Clone();
-scMMeanFill.Columns.Remove("ev_ebitda_zscore");
-scMMeanFill.Columns.Add(meanFillColM);
-
-display($"Nulls after FillNull(meanM): {scMMeanFill.Columns["ev_ebitda_zscore"].NullCount}");
-new MDA.DataFrame(scMMeanFill.Columns["symbol"], scMMeanFill.Columns["score_date"], scMMeanFill.Columns["ev_ebitda_zscore"]).Head(5)
+// Microsoft.Data.Analysis — Fill null with column mean
+decimal sum = 0m; int count = 0;
+for(long i = 0; i < scP.Rows.Count; i++) if(origCol[i] != null) { sum += Convert.ToDecimal(origCol[i]); count++; }
+decimal mean = count > 0 ? sum / count : 0m;
+var meanFillCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
+for(long i = 0; i < scP.Rows.Count; i++) meanFillCol[i] = origCol[i] != null ? Convert.ToDecimal(origCol[i]) : mean;
+var scPMeanFill = scP.Clone(); scPMeanFill.Columns.Remove("ev_ebitda_zscore"); scPMeanFill.Columns.Add(meanFillCol);
+display($"Nulls after FillNull(mean): {scPMeanFill.Columns["ev_ebitda_zscore"].NullCount}");
+new DataFrame(scPMeanFill.Columns["symbol"], scPMeanFill.Columns["score_date"], scPMeanFill.Columns["ev_ebitda_zscore"]).Head(5)
 ```
 
 ```text
 Nulls after FillNull(mean): 0
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>0.038046139499314034</td></tr><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770675778388977</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932117938995361</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527390837669373</td></tr></tbody></table>
-
-### Interpolate
-
-Linear interpolation estimates missing values by drawing a straight line between the nearest non-null neighbors. This is ideal for continuous measurements (temperature, price, sensor readings) where the true value likely falls between adjacent observations. Leading/trailing nulls remain null because there is no second anchor point for the line.
-
-#### Polars.NET | Interpolate missing values with Interpolate()
-
-`Interpolate()` performs linear interpolation on a numeric series. It uses the positional index (row number), not datetime values, to compute the interpolated value. If the first or last row is null, it stays null — interpolation requires values on both sides.
-
-_Applies linear interpolation to `ev_ebitda_zscore`, filling all interior nulls and leaving 1 remaining (the leading `BNP.PA` row) — the first 10 rows show computed values filling the gaps between known anchor points._
-
-```csharp
-var scPInterp = scP.WithColumns(
-    Col("ev_ebitda_zscore").Interpolate().Alias("ev_ebitda_zscore")
-);
-display($"Nulls after Interpolate: {scPInterp.Column("ev_ebitda_zscore").NullCount}");
-scPInterp.Select("symbol", "score_date", "ev_ebitda_zscore").Head(10)
-```
-
-Nulls after Interpolate: 1
-
-<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<table id="table_639112126496563915"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.0380461401518987341772151899</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Interpolate missing values manually
 
@@ -588,69 +456,31 @@ MDA has no interpolation expression, so the notebook computes linear interpolati
 _Searches backward and forward for neighboring values and linearly interpolates each gap._
 
 ```csharp
-var interpColM = new MDA.PrimitiveDataFrameColumn<double>("ev_ebitda_zscore", scM.Rows.Count);
-for(long i = 0; i < scM.Rows.Count; i++)
+// Microsoft.Data.Analysis — Linear interpolation of missing values
+var interpCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
+for(long i = 0; i < scP.Rows.Count; i++)
 {
-    if(origColM[i] != null) { interpColM[i] = Convert.ToDouble(origColM[i]); }
+    if(origCol[i] != null) interpCol[i] = Convert.ToDecimal(origCol[i]);
     else {
-        double? prev = null; long prevIdx = -1;
-        for(long j = i - 1; j >= 0; j--) if(origColM[j] != null) { prev = Convert.ToDouble(origColM[j]); prevIdx = j; break; }
-
-        double? next = null; long nextIdx = -1;
-        for(long j = i + 1; j < scM.Rows.Count; j++) if(origColM[j] != null) { next = Convert.ToDouble(origColM[j]); nextIdx = j; break; }
-
-        if(prev.HasValue && next.HasValue) {
-            double ratio = (double)(i - prevIdx) / (nextIdx - prevIdx);
-            interpColM[i] = prev.Value + ratio * (next.Value - prev.Value);
-        } else if (prev.HasValue) { interpColM[i] = prev.Value; }
-        else if (next.HasValue) { interpColM[i] = next.Value; }
+        decimal? prev = null; long prevIdx = -1;
+        for(long j = i - 1; j >= 0; j--) if(origCol[j] != null) { prev = Convert.ToDecimal(origCol[j]); prevIdx = j; break; }
+        decimal? next = null; long nextIdx = -1;
+        for(long j = i + 1; j < scP.Rows.Count; j++) if(origCol[j] != null) { next = Convert.ToDecimal(origCol[j]); nextIdx = j; break; }
+        if(prev.HasValue && next.HasValue) { decimal ratio = (decimal)(i - prevIdx) / (nextIdx - prevIdx); interpCol[i] = prev.Value + ratio * (next.Value - prev.Value); }
+        else if (prev.HasValue) interpCol[i] = prev.Value;
+        else if (next.HasValue) interpCol[i] = next.Value;
     }
 }
-
-var scMInterp = scM.Clone();
-scMInterp.Columns.Remove("ev_ebitda_zscore");
-scMInterp.Columns.Add(interpColM);
-
-display($"Nulls after Interpolate: {scMInterp.Columns["ev_ebitda_zscore"].NullCount}");
-new MDA.DataFrame(scMInterp.Columns["symbol"], scMInterp.Columns["score_date"], scMInterp.Columns["ev_ebitda_zscore"]).Head(10)
+var scPInterp = scP.Clone(); scPInterp.Columns.Remove("ev_ebitda_zscore"); scPInterp.Columns.Add(interpCol);
+display($"Nulls after Interpolate: {scPInterp.Columns["ev_ebitda_zscore"].NullCount}");
+new DataFrame(scPInterp.Columns["symbol"], scPInterp.Columns["score_date"], scPInterp.Columns["ev_ebitda_zscore"]).Head(10)
 ```
 
 ```text
 Nulls after Interpolate: 0
 ```
 
-<table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>DTE.DE</td><td>2026-03-04 00:00:00Z</td><td>0.3795319199562073</td></tr><tr><td>IFX.DE</td><td>2026-03-04 00:00:00Z</td><td>0.6770675778388977</td></tr><tr><td>ENR.DE</td><td>2026-03-04 00:00:00Z</td><td>-1.6932117938995361</td></tr><tr><td>ABI.BR</td><td>2026-03-04 00:00:00Z</td><td>0.5527390837669373</td></tr></tbody></table>
-
-### Coalesce
-
-`Coalesce` returns the first non-null value across multiple columns for each row. This is the equivalent of SQL's `COALESCE()` and Python Polars' `pl.coalesce()`. Use it to build fallback chains — for example, prefer the primary data source, else the secondary, else a default. Polars.NET 0.4.0 does not expose a top-level `Coalesce` function, but chaining `FillNull` across columns achieves the same result.
-
-#### Polars.NET | Coalesce via chained FillNull
-
-Chain `FillNull(Col("secondary")).FillNull(Col("fallback"))` on the primary column to cascade through fallback sources. Each `FillNull` replaces remaining nulls with the next column's values.
-
-_Constructs a 4-row DataFrame where `primary` and `secondary` alternate nulls, then chains `FillNull(Col("secondary")).FillNull(Col("fallback"))` to produce a `best` column that picks the first non-null across all three sources._
-
-```csharp
-var coalDf = DataFrame.FromColumns(
-    ("primary",   new double?[] { 100.0, null, 300.0, null }),
-    ("secondary", new double?[] { null, 200.0, null, 400.0 }),
-    ("fallback",  new double?[] { 50.0, 50.0, 50.0, 50.0 })
-);
-
-var coalResult = coalDf.WithColumns(
-    Col("primary")
-        .FillNull(Col("secondary"))
-        .FillNull(Col("fallback"))
-        .Alias("best")
-);
-
-coalResult
-```
-
-<!-- Polars DataFrame: (4 rows, 4 columns) --><table><thead><tr><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr></thead><tbody><tr><td>100</td><td>null</td><td>50</td><td>100</td></tr><tr><td>null</td><td>200</td><td>50</td><td>200</td></tr><tr><td>300</td><td>null</td><td>50</td><td>300</td></tr><tr><td>null</td><td>400</td><td>50</td><td>400</td></tr></tbody></table>
-
----
+<table id="table_639112126497178988"><thead><tr><th><i>index</i></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>BNP.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>DTE.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3795319</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>IFX.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.6770676</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>ENR.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-1.693212</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>ABI.BR</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.5527391</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>VOW.DE</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.3798302</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>TTE.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.4496105</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DG.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.9287967</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>SAN.MC</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>0.434032285</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>SU.PA</td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>-0.06073213</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Coalesce columns with the null-coalescing operator
 
@@ -659,56 +489,17 @@ MDA emulates `coalesce` by testing candidate columns in order and writing the fi
 _Combines `primary`, `secondary`, and `fallback` into a single `best` column._
 
 ```csharp
-var primaryColM = new MDA.PrimitiveDataFrameColumn<double>("primary", new double?[] { 100.0, null, 300.0, null });
-var secondaryColM = new MDA.PrimitiveDataFrameColumn<double>("secondary", new double?[] { null, 200.0, null, 400.0 });
-var fallbackColM = new MDA.PrimitiveDataFrameColumn<double>("fallback", new double?[] { 50.0, 50.0, 50.0, 50.0 });
-var coalDfM = new MDA.DataFrame(primaryColM, secondaryColM, fallbackColM);
-
-var bestColM = new MDA.PrimitiveDataFrameColumn<double>("best", coalDfM.Rows.Count);
-for(long i = 0; i < coalDfM.Rows.Count; i++)
-{
-    bestColM[i] = primaryColM[i] ?? secondaryColM[i] ?? fallbackColM[i];
-}
-
-var coalResultM = coalDfM.Clone();
-coalResultM.Columns.Add(bestColM);
-coalResultM
+// Microsoft.Data.Analysis — Coalesce columns
+var primaryCol = new PrimitiveDataFrameColumn<decimal>("primary", new decimal?[] { 100.0m, null, 300.0m, null });
+var secondaryCol = new PrimitiveDataFrameColumn<decimal>("secondary", new decimal?[] { null, 200.0m, null, 400.0m });
+var fallbackCol = new PrimitiveDataFrameColumn<decimal>("fallback", new decimal?[] { 50.0m, 50.0m, 50.0m, 50.0m });
+var coalDf = new DataFrame(primaryCol, secondaryCol, fallbackCol);
+var bestCol = new PrimitiveDataFrameColumn<decimal>("best", coalDf.Rows.Count);
+for(long i = 0; i < coalDf.Rows.Count; i++) bestCol[i] = primaryCol[i] ?? secondaryCol[i] ?? fallbackCol[i];
+var coalResult = coalDf.Clone(); coalResult.Columns.Add(bestCol); coalResult
 ```
 
-<table><thead><tr><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr></thead><tbody><tr><td>100</td><td>&lt;null&gt;</td><td>50</td><td>100</td></tr><tr><td>&lt;null&gt;</td><td>200</td><td>50</td><td>200</td></tr><tr><td>300</td><td>&lt;null&gt;</td><td>50</td><td>300</td></tr><tr><td>&lt;null&gt;</td><td>400</td><td>50</td><td>400</td></tr></tbody></table>
-
-## String Operations
-
-String manipulation is essential for cleaning column values, extracting components from composite identifiers, standardizing text for joins, and filtering by patterns. Polars.NET provides a `.Str` accessor with vectorized operations; Microsoft.Data.Analysis relies on `StringDataFrameColumn`, `Regex`, and CLR string methods over materialized values.
-
-> [!info] Polars.NET Str accessor vs MDA CLR string workflow
->
-> Polars keeps string transforms inside expression space. MDA keeps them explicit through managed string operations and typed string columns.
-
-> [!question] Where should string normalization happen?
->
-> Put shared canonicalization rules upstream. Keep local string transforms for notebook-side feature engineering and service-local formatting.
-
-### Case Conversion
-
-Converting strings to upper or lower case is a common normalization step before joins or deduplication. Ensures that `"ASML.AS"` and `"asml.as"` match when compared.
-
-#### Polars.NET | Convert to upper and lower case with Str.ToUpper()
-
-The `Str.ToUpper()` and `Str.ToLower()` methods return new string expressions with case-converted values. Use with `WithColumns` to add the results as new columns.
-
-_Extracts the 50 unique symbols from the OHLCV DataFrame, adds `upper` and `lower` columns using `Str.ToUpper()` and `Str.ToLower()`, and displays the first 10 rows — confirming that already-uppercase tickers remain unchanged._
-
-```csharp
-var symbols = dfP.Select(new[] { "symbol" }).Unique();
-var caseDemo = symbols.WithColumns(
-    Col("symbol").Str.ToUpper().Alias("upper"),
-    Col("symbol").Str.ToLower().Alias("lower")
-);
-caseDemo.Head(10)
-```
-
-<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>upper</th><th>lower</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr></tbody></table></div>
+<table id="table_639112126508820411"><thead><tr><th><i>index</i></th><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>100.0</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>50.0</pre></div></td><td><div class="dni-plaintext"><pre>100.0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>200.0</pre></div></td><td><div class="dni-plaintext"><pre>50.0</pre></div></td><td><div class="dni-plaintext"><pre>200.0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>300.0</pre></div></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>50.0</pre></div></td><td><div class="dni-plaintext"><pre>300.0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>&lt;null&gt;</pre></div></td><td><div class="dni-plaintext"><pre>400.0</pre></div></td><td><div class="dni-plaintext"><pre>50.0</pre></div></td><td><div class="dni-plaintext"><pre>400.0</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Convert to upper and lower case with StringDataFrameColumn
 
@@ -891,7 +682,7 @@ _Computes symbol lengths and orders the result by descending length._
 
 ```csharp
 var lengthsM = symbolsM.Select(s => s != null ? (double)s.Length : 0).ToArray();
-var lenDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.PrimitiveDataFrameColumn<double>("char_len", lengthsM));
+var lenDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.PrimitiveDataFrameColumn<decimal>("char_len", lengthsM));
 lenDfM.OrderByDescending("char_len").Head(10)
 ```
 
@@ -1057,40 +848,20 @@ String interpolation over source columns is the common MDA pattern for labels an
 _Builds `display_name = short_name + " (country)"` from `index_dim` and previews the first ten rows._
 
 ```csharp
-var shortNameColM = dimM.Columns["short_name"];
-var countryColM = dimM.Columns["country"];
-var displayNamesM = new MDA.StringDataFrameColumn("display_name", dimM.Rows.Count);
+// Microsoft.Data.Analysis — Build display name "SHORT_NAME (COUNTRY)"
+var shortNameCol = dimP.Columns["short_name"];
+var countryCol = dimP.Columns["country"];
+var displayNames = new StringDataFrameColumn("display_name", dimP.Rows.Count);
 
-for(long i = 0; i < dimM.Rows.Count; i++)
+for(long i = 0; i < dimP.Rows.Count; i++)
 {
-    displayNamesM[i] = $"{shortNameColM[i]} ({countryColM[i]})";
+    displayNames[i] = $"{shortNameCol[i]} ({countryCol[i]})";
 }
 
-new MDA.DataFrame(shortNameColM, countryColM, displayNamesM).Head(10)
+new DataFrame(shortNameCol, countryCol, displayNames).Head(10)
 ```
 
-<table><thead><tr><th>short_name</th><th>country</th><th>display_name</th></tr></thead><tbody><tr><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td>L&#x27;OREAL</td><td>France</td><td>L&#x27;OREAL (France)</td></tr><tr><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr></tbody></table>
-
-### Stripping / Trimming
-
-Remove leading and trailing whitespace (or specified characters) from strings. Polars.NET 0.4.0 does not expose `Str.Strip` — use C#'s `string.Trim()` as a workaround.
-
-#### Polars.NET | Strip whitespace via C# Trim
-
-Extract to array, apply `Trim()`, and stack back.
-
-_Demonstrates the workaround on a 3-element test array with leading/trailing spaces — applies `string.Trim()` and stacks back to show `"  ASML  " → "ASML"` and `"  SAP " → "SAP"`._
-
-```csharp
-var dirtyArr = new[] { "  ASML  ", "  SAP ", " MC" };
-var dirtySeries = Polars.CSharp.Series.From("name", dirtyArr);
-var dirtyDf = DataFrame.FromSeries(dirtySeries);
-var trimmedArr = dirtyArr.Select(s => s.Trim()).ToArray();
-var trimSeries = Polars.CSharp.Series.From("stripped", trimmedArr);
-dirtyDf.HStack(trimSeries)
-```
-
-<!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>name</th><th>stripped</th></tr></thead><tbody><tr><td>ASML</td><td>ASML</td></tr><tr><td>SAP</td><td>SAP</td></tr><tr><td>MC</td><td>MC</td></tr></tbody></table>
+<table id="table_639112126509283621"><thead><tr><th><i>index</i></th><th>short_name</th><th>country</th><th>display_name</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>L&#39;OREAL</td><td>France</td><td>L&#39;OREAL (France)</td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Trim whitespace with CLR string methods
 
@@ -1099,44 +870,17 @@ Whitespace stripping is straightforward once values are already materialized as 
 _Builds a small demo frame and trims leading and trailing whitespace from each value._
 
 ```csharp
-var dirtyArrM = new[] { "  ASML  ", "  SAP ", " MC" };
-var dirtySeriesM = new MDA.StringDataFrameColumn("name", dirtyArrM);
-var dirtyDfM = new MDA.DataFrame(dirtySeriesM);
+// Microsoft.Data.Analysis — Trim whitespace
+var dirtyArr = new[] { "  ASML  ", "  SAP ", " MC" };
+var dirtySeries = new StringDataFrameColumn("name", dirtyArr);
+var dirtyDf = new DataFrame(dirtySeries);
 
-var trimSeriesM = new MDA.StringDataFrameColumn("stripped", dirtyArrM.Select(s => s?.Trim()));
-dirtyDfM.Columns.Add(trimSeriesM);
-dirtyDfM
+var trimSeries = new StringDataFrameColumn("stripped", dirtyArr.Select(s => s?.Trim()));
+dirtyDf.Columns.Add(trimSeries);
+dirtyDf
 ```
 
-<table><thead><tr><th>name</th><th>stripped</th></tr></thead><tbody><tr><td>ASML</td><td>ASML</td></tr><tr><td>SAP</td><td>SAP</td></tr><tr><td>MC</td><td>MC</td></tr></tbody></table>
-
-### Regex Extract All
-
-Extract all matches of a pattern from each string — not just the first. Returns a collected list of matched substrings. Polars.NET 0.4.0 does not expose `Str.ExtractAll` — use `System.Text.RegularExpressions.Regex.Matches` via C#.
-
-#### Polars.NET | Extract all regex matches via C# Regex.Matches
-
-Apply `Regex.Matches` per string, join results, and stack back as columns.
-
-_Demonstrates on a 3-row test DataFrame — extracts all decimal-number matches as comma-separated strings and their count, showing `"ASML closed at 900.5 up from 895.2" → "900.5, 895.2"` (count: 2) and `"No numbers" → ""` (count: 0)._
-
-```csharp
-var textArr = new[] {
-    "ASML closed at 900.5 up from 895.2",
-    "No numbers",
-    "PE: 45.3, PB: 12.1"
-};
-var numRegex = new Regex(@"[0-9]+\.?[0-9]*");
-var textSeries = Polars.CSharp.Series.From("text", textArr);
-var textDf = DataFrame.FromSeries(textSeries);
-var numbersArr = textArr.Select(s => string.Join(", ", numRegex.Matches(s).Select(m => m.Value))).ToArray();
-var countArr = textArr.Select(s => (double)numRegex.Matches(s).Count).ToArray();
-textDf
-    .HStack(Polars.CSharp.Series.From("numbers", numbersArr))
-    .HStack(Polars.CSharp.Series.From("count", countArr))
-```
-
-<!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td>2</td></tr><tr><td>No numbers</td><td></td><td>0</td></tr><tr><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td>2</td></tr></tbody></table>
+<table id="table_639112126509724102"><thead><tr><th><i>index</i></th><th>name</th><th>stripped</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>  ASML  </td><td>ASML</td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>  SAP </td><td>SAP</td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td> MC</td><td>MC</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Extract all regex matches with Regex.Matches
 
@@ -1145,67 +889,18 @@ For all-match extraction, MDA relies on the CLR regex engine and explicit output
 _Extracts all numeric substrings, stores the joined matches, and records their count._
 
 ```csharp
-var textArrM = new[] {
-    "ASML closed at 900.5 up from 895.2",
-    "No numbers",
-    "PE: 45.3, PB: 12.1"
-};
-var numRegexM = new Regex(@"[0-9]+\.?[0-9]*");
-var textDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("text", textArrM));
-
-var numbersArrM = textArrM.Select(s => string.Join(", ", numRegexM.Matches(s).Select(m => m.Value))).ToArray();
-var countArrM = textArrM.Select(s => (double)numRegexM.Matches(s).Count).ToArray();
-
-textDfM.Columns.Add(new MDA.StringDataFrameColumn("numbers", numbersArrM));
-textDfM.Columns.Add(new MDA.PrimitiveDataFrameColumn<double>("count", countArrM));
-textDfM
+// Microsoft.Data.Analysis — Extract all numbers from text using Regex
+var textArr = new[] { "ASML closed at 900.5 up from 895.2", "No numbers", "PE: 45.3, PB: 12.1" };
+var numRegex = new Regex(@"[0-9]+\.?[0-9]*");
+var textDf = new DataFrame(new StringDataFrameColumn("text", textArr));
+var numbersArr = textArr.Select(s => string.Join(", ", numRegex.Matches(s).Select(m => m.Value))).ToArray();
+var countArr = textArr.Select(s => numRegex.Matches(s).Count).ToArray();
+textDf.Columns.Add(new StringDataFrameColumn("numbers", numbersArr));
+textDf.Columns.Add(new PrimitiveDataFrameColumn<int>("count", countArr));
+textDf
 ```
 
-<table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td>2</td></tr><tr><td>No numbers</td><td></td><td>0</td></tr><tr><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td>2</td></tr></tbody></table>
-
-## DateTime Operations
-
-Date and time handling is central to financial data pipelines: filtering by trading days, computing rolling windows, resampling to monthly OHLC bars, and calculating returns require reliable date parsing, component extraction, and arithmetic. Polars.NET provides a `.Dt` accessor for vectorized datetime operations. Microsoft.Data.Analysis relies on typed `DateTime` values and explicit CLR date logic for most higher-level temporal transforms.
-
-> [!info] Polars temporal types vs MDA DateTime columns
->
-> Polars distinguishes `Date`, `Datetime`, and duration-aware expressions. MDA usually lands dates as CLR `DateTime` values, so extraction and arithmetic use standard .NET temporal APIs.
-
-> [!question] Where should rolling and resampling logic live?
->
-> Keep shared business-calendar and resampling logic upstream. Use local dataframe code when the transform is exploratory or owned by a single .NET boundary.
-
-### Parse Dates
-
-Converting string columns to proper date types enables date arithmetic, component extraction, and time-aware filtering. Always verify the format string matches your data — silent parsing failures produce nulls.
-
-#### Polars.NET | Parse string column to date with Str.ToDate()
-
-The `Str.ToDate(format)` method parses a string column into a Polars `Date` type using strftime format codes (e.g., `%Y-%m-%d`). If the date column was already parsed during `ReadCsv` with `tryParseDates: true`, it arrives as `Date` type directly.
-
-_Confirms the `date` column arrives as Polars `Date` type after `ReadCsv` with `tryParseDates`, then demonstrates round-trip parsing by casting to string and reparsing with `Str.ToDate("%Y-%m-%d")` — all three representations appear side by side for the first 5 rows._
-
-```csharp
-display($"date column type: {dfP.Column("date").DataTypeName}");
-
-// Demonstrate Str.ToDate by casting date to string first, then parsing back
-var dfStr = dfP.WithColumns(Col("date").Cast(DataType.String).Alias("date_str"));
-display($"Cast to string: {dfStr.Column("date_str").DataTypeName}");
-
-var dfParsed = dfStr.WithColumns(
-    Col("date_str").Str.ToDate("%Y-%m-%d").Alias("date_reparsed")
-);
-display($"After Str.ToDate: {dfParsed.Column("date_reparsed").DataTypeName}");
-dfParsed.Select("symbol", "date", "date_str", "date_reparsed").Head(5)
-```
-
-date column type: date
-
-Cast to string: str
-
-After Str.ToDate: date
-
-<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>date_str</th><th>date_reparsed</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-04</td><td>2021-01-04</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-05</td><td>2021-01-05</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-06</td><td>2021-01-06</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-07</td><td>2021-01-07</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-08</td><td>2021-01-08</td></tr></tbody></table></div>
+<table id="table_639112126510395989"><thead><tr><th><i>index</i></th><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>No numbers</td><td></td><td><div class="dni-plaintext"><pre>0</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td><div class="dni-plaintext"><pre>2</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Rely on LoadCsv inference or parse into DateTime
 
@@ -1361,44 +1056,25 @@ Lagging a column in MDA means reading the typed source and writing each previous
 _Filters to `ABI.BR`, shifts close by one row, and previews the first five lagged values._
 
 ```csharp
-var abiMaskM = (MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ABI.BR");
-var abiPricesM = dfM.Filter(abiMaskM);
-var abiCloseM = (MDA.PrimitiveDataFrameColumn<float>)abiPricesM.Columns["close"];
-
-var prevCloseColM = new MDA.PrimitiveDataFrameColumn<float>("prev_close", abiPricesM.Rows.Count);
-for(long i = 1; i < abiPricesM.Rows.Count; i++)
+// Microsoft.Data.Analysis — Rolling mean (SMA-7 and SMA-30)
+var asmlP = df.Filter((PrimitiveDataFrameColumn<bool>)((StringDataFrameColumn)df.Columns["symbol"]).ElementwiseEquals("ASML.AS")).OrderBy("date");
+var sma7Col = new PrimitiveDataFrameColumn<decimal>("sma_7", asmlP.Rows.Count);
+var sma30Col = new PrimitiveDataFrameColumn<decimal>("sma_30", asmlP.Rows.Count);
+var rc = asmlP.Columns["close"];
+for(long i = 0; i < asmlP.Rows.Count; i++)
 {
-    if (abiCloseM[i - 1].HasValue) prevCloseColM[i] = abiCloseM[i - 1].Value;
+    decimal sum7 = 0m; int count7 = 0;
+    for(long j = 0; j < 7 && (i - j) >= 0; j++) if (rc[i - j] != null) { sum7 += Convert.ToDecimal(rc[i - j]); count7++; }
+    if (count7 > 0) sma7Col[i] = sum7 / count7;
+    decimal sum30 = 0m; int count30 = 0;
+    for(long j = 0; j < 30 && (i - j) >= 0; j++) if (rc[i - j] != null) { sum30 += Convert.ToDecimal(rc[i - j]); count30++; }
+    if (count30 > 0) sma30Col[i] = sum30 / count30;
 }
-
-display("ABI.BR with lagged close (first 5):");
-new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["close"], prevCloseColM).Head(5)
+var asmlRolling = asmlP.Clone(); asmlRolling.Columns.Add(sma7Col); asmlRolling.Columns.Add(sma30Col);
+new DataFrame(asmlRolling.Columns["date"], asmlRolling.Columns["close"], sma7Col, sma30Col).Tail(10)
 ```
 
-```text
-ABI.BR with lagged close (first 5):
-```
-
-<table><thead><tr><th>date</th><th>close</th><th>prev_close</th></tr></thead><tbody><tr><td>2021-01-04 00:00:00Z</td><td>57.21</td><td>&lt;null&gt;</td></tr><tr><td>2021-01-05 00:00:00Z</td><td>57.18</td><td>57.21</td></tr><tr><td>2021-01-06 00:00:00Z</td><td>58.77</td><td>57.18</td></tr><tr><td>2021-01-07 00:00:00Z</td><td>58.4</td><td>58.77</td></tr><tr><td>2021-01-08 00:00:00Z</td><td>57.86</td><td>58.4</td></tr></tbody></table>
-
-### Cumulative Operations
-
-Cumulative (running) aggregations compute a value that grows from the first row to the current row — running total of volume, running maximum of price, etc. These are essential for tracking accumulated metrics and identifying all-time highs/lows.
-
-#### Polars.NET | Cumulative sum with CumSum()
-
-`CumSum()` computes the running total of a numeric column. Each row's value is the sum of all preceding values plus the current value. Nulls are skipped (treated as 0 in the running total).
-
-_Applies `CumSum()` to the `volume` column for `ABI.BR`, adding a `cum_volume` column that grows from 1,513,937 (first trading day) to 14,717,364 by the 10th row._
-
-```csharp
-var abiCum = abiPrices.WithColumns(
-    Col("volume").CumSum().Alias("cum_volume")
-);
-abiCum.Select(new[] { "date", "volume", "cum_volume" }).Head(10)
-```
-
-<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>2021-01-04</td><td>1513937</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>1382722</td><td>2896659</td></tr><tr><td>2021-01-06</td><td>1370204</td><td>4266863</td></tr><tr><td>2021-01-07</td><td>1469911</td><td>5736774</td></tr><tr><td>2021-01-08</td><td>1428681</td><td>7165455</td></tr></tbody></table></div>
+<table id="table_639112126512002860"><thead><tr><th><i>index</i></th><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1251.5142857142857142857142857</pre></div></td><td><div class="dni-plaintext"><pre>1201.4</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>1247.5428571428571428571428571</pre></div></td><td><div class="dni-plaintext"><pre>1204.4</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>1234.1428571428571428571428571</pre></div></td><td><div class="dni-plaintext"><pre>1205.1266666666666666666666667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>1227.0857142857142857142857143</pre></div></td><td><div class="dni-plaintext"><pre>1206.6266666666666666666666667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186.0</pre></div></td><td><div class="dni-plaintext"><pre>1216.0285714285714285714285714</pre></div></td><td><div class="dni-plaintext"><pre>1206.9466666666666666666666667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.0</pre></div></td><td><div class="dni-plaintext"><pre>1195.8285714285714285714285714</pre></div></td><td><div class="dni-plaintext"><pre>1205.9066666666666666666666667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>1183.7142857142857142857142857</pre></div></td><td><div class="dni-plaintext"><pre>1204.8933333333333333333333333</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200.0</pre></div></td><td><div class="dni-plaintext"><pre>1178.9428571428571428571428571</pre></div></td><td><div class="dni-plaintext"><pre>1204.3066666666666666666666667</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>1177.2857142857142857142857143</pre></div></td><td><div class="dni-plaintext"><pre>1204.4533333333333333333333333</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>1181.4285714285714285714285714</pre></div></td><td><div class="dni-plaintext"><pre>1204.4133333333333333333333333</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Cumulative volume with a running accumulator
 
@@ -1408,7 +1084,7 @@ _Accumulates `ABI.BR` volume into `cum_volume` and previews the first ten rows._
 
 ```csharp
 var abiVolM = abiPricesM.Columns["volume"];
-var cumVolColM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", abiPricesM.Rows.Count);
+var cumVolColM = new MDA.PrimitiveDataFrameColumn<decimal>("cum_volume", abiPricesM.Rows.Count);
 double currentCumM = 0;
 
 for(long i = 0; i < abiPricesM.Rows.Count; i++)
@@ -1561,8 +1237,8 @@ _Computes 7-row and 30-row moving averages for `ASML.AS` close prices._
 
 ```csharp
 var asmlPM = dfM.Filter((MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ASML.AS")).OrderBy("date");
-var sma7ColM = new MDA.PrimitiveDataFrameColumn<double>("sma_7", asmlPM.Rows.Count);
-var sma30ColM = new MDA.PrimitiveDataFrameColumn<double>("sma_30", asmlPM.Rows.Count);
+var sma7ColM = new MDA.PrimitiveDataFrameColumn<decimal>("sma_7", asmlPM.Rows.Count);
+var sma30ColM = new MDA.PrimitiveDataFrameColumn<decimal>("sma_30", asmlPM.Rows.Count);
 var rcM = asmlPM.Columns["close"];
 
 for(long i = 0; i < asmlPM.Rows.Count; i++)
@@ -1629,83 +1305,29 @@ MDA has no dynamic time-window grouping API, so monthly OHLC becomes explicit gr
 _Groups `ASML.AS` observations by calendar month and shows the last six monthly bars._
 
 ```csharp
-var groupedM = new List<(int Year, int Month, double Open, double High, double Low, double Close, double Volume)>();
-var currentGroupM = new List<(DateTime Date, double Open, double High, double Low, double Close, double Volume)>();
-
-void ProcessGroupM() {
-    if (!currentGroupM.Any()) return;
-    var ordered = currentGroupM.OrderBy(x => x.Date).ToList();
-    groupedM.Add((
-        ordered.First().Date.Year,
-        ordered.First().Date.Month,
-        ordered.First().Open,
-        ordered.Max(x => x.High),
-        ordered.Min(x => x.Low),
-        ordered.Last().Close,
-        ordered.Sum(x => x.Volume)
-    ));
-}
-
-for(long i = 0; i < asmlPM.Rows.Count; i++)
+// Microsoft.Data.Analysis — Monthly OHLC resampling (GroupBy Dynamic replacement using LINQ)
+var grouped = new List<(int Year, int Month, decimal Open, decimal High, decimal Low, decimal Close, decimal Volume)>();
+var currentGroup = new List<(DateTime Date, decimal Open, decimal High, decimal Low, decimal Close, decimal Volume)>();
+void ProcessGroup() { if (!currentGroup.Any()) return; var ordered = currentGroup.OrderBy(x => x.Date).ToList(); grouped.Add((ordered.First().Date.Year, ordered.First().Date.Month, ordered.First().Open, ordered.Max(x => x.High), ordered.Min(x => x.Low), ordered.Last().Close, ordered.Sum(x => x.Volume))); }
+for(long i = 0; i < asmlP.Rows.Count; i++)
 {
-    if(asmlPM.Columns["date"][i] is DateTime dt)
+    if(asmlP.Columns["date"][i] is DateTime dt)
     {
-        if (currentGroupM.Any() && (currentGroupM.First().Date.Year != dt.Year || currentGroupM.First().Date.Month != dt.Month))
-        {
-            ProcessGroupM();
-            currentGroupM.Clear();
-        }
-        currentGroupM.Add((dt,
-            Convert.ToDouble(asmlPM.Columns["open"][i] ?? 0),
-            Convert.ToDouble(asmlPM.Columns["high"][i] ?? 0),
-            Convert.ToDouble(asmlPM.Columns["low"][i] ?? 0),
-            Convert.ToDouble(asmlPM.Columns["close"][i] ?? 0),
-            Convert.ToDouble(asmlPM.Columns["volume"][i] ?? 0)
-        ));
+        if (currentGroup.Any() && (currentGroup.First().Date.Year != dt.Year || currentGroup.First().Date.Month != dt.Month)) { ProcessGroup(); currentGroup.Clear(); }
+        currentGroup.Add((dt, Convert.ToDecimal(asmlP.Columns["open"][i] ?? 0m), Convert.ToDecimal(asmlP.Columns["high"][i] ?? 0m), Convert.ToDecimal(asmlP.Columns["low"][i] ?? 0m), Convert.ToDecimal(asmlP.Columns["close"][i] ?? 0m), Convert.ToDecimal(asmlP.Columns["volume"][i] ?? 0m)));
     }
 }
-ProcessGroupM();
-
-var asmlMonthlyM = new MDA.DataFrame(
-    new MDA.PrimitiveDataFrameColumn<int>("year", groupedM.Select(g => g.Year)),
-    new MDA.PrimitiveDataFrameColumn<int>("month", groupedM.Select(g => g.Month)),
-    new MDA.PrimitiveDataFrameColumn<double>("open", groupedM.Select(g => g.Open)),
-    new MDA.PrimitiveDataFrameColumn<double>("high", groupedM.Select(g => g.High)),
-    new MDA.PrimitiveDataFrameColumn<double>("low", groupedM.Select(g => g.Low)),
-    new MDA.PrimitiveDataFrameColumn<double>("close", groupedM.Select(g => g.Close)),
-    new MDA.PrimitiveDataFrameColumn<double>("volume", groupedM.Select(g => g.Volume))
-);
-
+ProcessGroup();
+var asmlMonthly = new DataFrame(new PrimitiveDataFrameColumn<int>("year", grouped.Select(g => g.Year)), new PrimitiveDataFrameColumn<int>("month", grouped.Select(g => g.Month)), new PrimitiveDataFrameColumn<decimal>("open", grouped.Select(g => g.Open)), new PrimitiveDataFrameColumn<decimal>("high", grouped.Select(g => g.High)), new PrimitiveDataFrameColumn<decimal>("low", grouped.Select(g => g.Low)), new PrimitiveDataFrameColumn<decimal>("close", grouped.Select(g => g.Close)), new PrimitiveDataFrameColumn<decimal>("volume", grouped.Select(g => g.Volume)));
 display("ASML.AS — Monthly OHLC (last 6 months):");
-asmlMonthlyM.Tail(6)
+asmlMonthly.Tail(6)
 ```
 
 ```text
 ASML.AS — Monthly OHLC (last 6 months):
 ```
 
-<table><thead><tr><th>year</th><th>month</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>2025</td><td>10</td><td>818</td><td>938.5999755859375</td><td>812.0999755859375</td><td>918.0999755859375</td><td>16383868</td></tr><tr><td>2025</td><td>11</td><td>917</td><td>930.9000244140625</td><td>822.2000122070312</td><td>903.4000244140625</td><td>12064891</td></tr><tr><td>2025</td><td>12</td><td>910</td><td>977.0999755859375</td><td>866.4000244140625</td><td>921.4000244140625</td><td>10360738</td></tr><tr><td>2026</td><td>1</td><td>919.4000244140625</td><td>1309</td><td>919.2000122070312</td><td>1215.5999755859375</td><td>16549130</td></tr><tr><td>2026</td><td>2</td><td>1178.5999755859375</td><td>1312.800048828125</td><td>1117.5999755859375</td><td>1233.4000244140625</td><td>11528098</td></tr></tbody></table>
-
-### Cumulative Max and Min
-
-Running maximum and minimum track the all-time high and all-time low from the first row to the current row. Combined with cumulative sum of volume, these provide a complete picture of accumulated trading activity and price extremes.
-
-#### Polars.NET | Cumulative max, min, and sum with CumMax(), CumMin(), CumSum()
-
-`CumMax()` and `CumMin()` return running aggregates. Each row's value is the max (or min) of all values from the first row to the current row.
-
-_Applies `CumMax()`, `CumMin()`, and `CumSum()` to `ASML.AS` prices and volume — the last 10 rows confirm the all-time high at `1288.4` and all-time low at `397.45`, with cumulative volume exceeding 945 million shares._
-
-```csharp
-var asmlCum = asmlSorted.WithColumns(
-    Col("volume").CumSum().Alias("cum_volume"),
-    Col("close").CumMax().Alias("running_high"),
-    Col("close").CumMin().Alias("running_low")
-);
-asmlCum.Select(new[] { "date", "close", "volume", "cum_volume", "running_high", "running_low" }).Tail(10)
-```
-
-<!-- Polars DataFrame: (10 rows, 6 columns) --><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-05</td><td>1186</td><td>778081</td><td>942032421</td><td>1288.4</td><td>397.45</td></tr></tbody></table>
+<table id="table_639112126513195100"><thead><tr><th><i>index</i></th><th>year</th><th>month</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>10</pre></div></td><td><div class="dni-plaintext"><pre>818.0</pre></div></td><td><div class="dni-plaintext"><pre>938.6</pre></div></td><td><div class="dni-plaintext"><pre>812.1</pre></div></td><td><div class="dni-plaintext"><pre>918.1</pre></div></td><td><div class="dni-plaintext"><pre>16383868</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>11</pre></div></td><td><div class="dni-plaintext"><pre>917.0</pre></div></td><td><div class="dni-plaintext"><pre>930.9</pre></div></td><td><div class="dni-plaintext"><pre>822.2</pre></div></td><td><div class="dni-plaintext"><pre>903.4</pre></div></td><td><div class="dni-plaintext"><pre>12064891</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><div class="dni-plaintext"><pre>2025</pre></div></td><td><div class="dni-plaintext"><pre>12</pre></div></td><td><div class="dni-plaintext"><pre>910.0</pre></div></td><td><div class="dni-plaintext"><pre>977.1</pre></div></td><td><div class="dni-plaintext"><pre>866.4</pre></div></td><td><div class="dni-plaintext"><pre>921.4</pre></div></td><td><div class="dni-plaintext"><pre>10360738</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>919.4</pre></div></td><td><div class="dni-plaintext"><pre>1309.0</pre></div></td><td><div class="dni-plaintext"><pre>919.2</pre></div></td><td><div class="dni-plaintext"><pre>1215.6</pre></div></td><td><div class="dni-plaintext"><pre>16549130</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>1178.6</pre></div></td><td><div class="dni-plaintext"><pre>1312.8</pre></div></td><td><div class="dni-plaintext"><pre>1117.6</pre></div></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>11528098</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><div class="dni-plaintext"><pre>2026</pre></div></td><td><div class="dni-plaintext"><pre>3</pre></div></td><td><div class="dni-plaintext"><pre>1192.8</pre></div></td><td><div class="dni-plaintext"><pre>1231.4</pre></div></td><td><div class="dni-plaintext"><pre>1060.2</pre></div></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>6344179</pre></div></td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Running high, low, and cumulative volume with explicit state
 
@@ -1714,66 +1336,19 @@ Running extrema use the same explicit state pattern as cumulative totals.
 _Tracks cumulative volume together with the running high and running low for `ASML.AS`._
 
 ```csharp
-var cumVolM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", asmlPM.Rows.Count);
-var runHighM = new MDA.PrimitiveDataFrameColumn<double>("running_high", asmlPM.Rows.Count);
-var runLowM = new MDA.PrimitiveDataFrameColumn<double>("running_low", asmlPM.Rows.Count);
-
-double currentVM = 0;
-double? highVM = null;
-double? lowVM = null;
-
-for(long i = 0; i < asmlPM.Rows.Count; i++)
+// Microsoft.Data.Analysis — Cumulative max, min (running high / running low)
+var cumVol = new PrimitiveDataFrameColumn<decimal>("cum_volume", asmlP.Rows.Count);
+var runHigh = new PrimitiveDataFrameColumn<decimal>("running_high", asmlP.Rows.Count);
+var runLow = new PrimitiveDataFrameColumn<decimal>("running_low", asmlP.Rows.Count);
+decimal currentV = 0m; decimal? highV = null; decimal? lowV = null;
+for(long i = 0; i < asmlP.Rows.Count; i++)
 {
-    currentVM += Convert.ToDouble(asmlPM.Columns["volume"][i] ?? 0);
-    cumVolM[i] = currentVM;
-
-    if (asmlPM.Columns["close"][i] != null)
-    {
-        double c = Convert.ToDouble(asmlPM.Columns["close"][i]);
-        highVM = highVM == null ? c : Math.Max(highVM.Value, c);
-        lowVM = lowVM == null ? c : Math.Min(lowVM.Value, c);
-    }
-
-    if (highVM.HasValue) runHighM[i] = highVM.Value;
-    if (lowVM.HasValue) runLowM[i] = lowVM.Value;
+    currentV += asmlP.Columns["volume"][i] != null ? Convert.ToDecimal(asmlP.Columns["volume"][i]) : 0m; cumVol[i] = currentV;
+    if (asmlP.Columns["close"][i] != null) { decimal c = Convert.ToDecimal(asmlP.Columns["close"][i]); highV = highV == null ? c : Math.Max(highV.Value, c); lowV = lowV == null ? c : Math.Min(lowV.Value, c); }
+    if (highV.HasValue) runHigh[i] = highV.Value; if (lowV.HasValue) runLow[i] = lowV.Value;
 }
-
-var asmlCumM = asmlPM.Clone();
-asmlCumM.Columns.Add(cumVolM);
-asmlCumM.Columns.Add(runHighM);
-asmlCumM.Columns.Add(runLowM);
-
-new MDA.DataFrame(asmlCumM.Columns["date"], asmlCumM.Columns["close"], asmlCumM.Columns["volume"], cumVolM, runHighM, runLowM).Tail(10)
+var asmlCum = asmlP.Clone(); asmlCum.Columns.Add(cumVol); asmlCum.Columns.Add(runHigh); asmlCum.Columns.Add(runLow);
+new DataFrame(asmlCum.Columns["date"], asmlCum.Columns["close"], asmlCum.Columns["volume"], cumVol, runHigh, runLow).Tail(10)
 ```
 
-<table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td>2026-02-27 00:00:00Z</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4000244140625</td><td>397.45001220703125</td></tr><tr><td>2026-03-02 00:00:00Z</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4000244140625</td><td>397.45001220703125</td></tr><tr><td>2026-03-03 00:00:00Z</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4000244140625</td><td>397.45001220703125</td></tr><tr><td>2026-03-04 00:00:00Z</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4000244140625</td><td>397.45001220703125</td></tr><tr><td>2026-03-05 00:00:00Z</td><td>1186</td><td>778081</td><td>942032421</td><td>1288.4000244140625</td><td>397.45001220703125</td></tr></tbody></table>
-
-## Summary
-
-This chapter shows the practical boundary clearly. Polars.NET gives you built-in null repair, string transforms, rolling windows, and temporal grouping as composable expressions. Microsoft.Data.Analysis gives you typed columns and CLR control, which works well for service-local preprocessing and notebook-side inspection, but many advanced repairs and calendar operations become explicit loops.
-
-### API Comparison
-
-| Operation | Polars.NET | Microsoft.Data.Analysis |
-|---|---|---|
-| **Detect nulls** | `IsNull()` and `NullCount` | `NullCount` and `ElementwiseIsNull()` |
-| **Drop nulls** | `DropNulls()` | `DropNulls(...)` or explicit mask + `Filter(...)` |
-| **Fill / interpolate** | Built-in fill and interpolation expressions | Typed repair columns and manual interpolation loops |
-| **String transforms** | `.Str.*` namespace | `StringDataFrameColumn` plus CLR `string` / `Regex` logic |
-| **Date parsing and extraction** | `Str.ToDate(...)` and `.Dt.*` | `LoadCsv` inference plus CLR `DateTime` properties |
-| **Lag / rolling / cumulative** | Built-in expressions | Explicit stateful loops |
-| **Resampling** | Declarative grouping workarounds | Manual calendar grouping |
-
-### Engineering Recommendations
-
-As *Fundamentals of Data Engineering.epub* argues, data-quality fixes are strongest when they stay close to the source. Use local dataframe fills and cleanups as deliberate analytical choices, not as a substitute for upstream contracts.
-
-| Scenario | Prefer | Why |
-|---|---|---|
-| Shared null or canonical string rules across multiple consumers | Upstream SQL / dbt / ETL | Centralizes semantics and avoids notebook drift. |
-| Local .NET cleanup with custom CLR string or `DateTime` logic | Microsoft.Data.Analysis | Typed columns and native .NET APIs keep service-local logic straightforward. |
-| Repeated fill, rolling, regex-heavy, or resampling work over large local frames | Polars.NET | Built-in expression operators reduce custom loop code. |
-| Small diagnostic or one-off repair steps where explicit state matters | Microsoft.Data.Analysis | Manual masks and typed columns make every repair step visible. |
-| Time-series-heavy analytical notebooks expected to grow in complexity | Polars.NET | The expression model scales better as window and calendar logic accumulates. |
-
-If the same cleanup or temporal logic will be reused across teams or serving paths, move it upstream. Keep MDA and Polars notebook code for local exploration, service-bound preprocessing, and explicit verification of data semantics.
+<table id="table_639112126513955029"><thead><tr><th><i>index</i></th><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td><span>2026-02-27 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1233.4</pre></div></td><td><div class="dni-plaintext"><pre>1010698</pre></div></td><td><div class="dni-plaintext"><pre>938726541</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td><span>2026-03-02 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1210.4</pre></div></td><td><div class="dni-plaintext"><pre>871267</pre></div></td><td><div class="dni-plaintext"><pre>939597808</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td><span>2026-03-03 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1161.8</pre></div></td><td><div class="dni-plaintext"><pre>941945</pre></div></td><td><div class="dni-plaintext"><pre>940539753</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td><span>2026-03-04 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1199.8</pre></div></td><td><div class="dni-plaintext"><pre>714587</pre></div></td><td><div class="dni-plaintext"><pre>941254340</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td><span>2026-03-05 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1186.0</pre></div></td><td><div class="dni-plaintext"><pre>778081</pre></div></td><td><div class="dni-plaintext"><pre>942032421</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td><span>2026-03-06 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.0</pre></div></td><td><div class="dni-plaintext"><pre>857271</pre></div></td><td><div class="dni-plaintext"><pre>942889692</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td><span>2026-03-09 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1147.6</pre></div></td><td><div class="dni-plaintext"><pre>689086</pre></div></td><td><div class="dni-plaintext"><pre>943578778</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td><span>2026-03-10 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1200.0</pre></div></td><td><div class="dni-plaintext"><pre>800815</pre></div></td><td><div class="dni-plaintext"><pre>944379593</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td><span>2026-03-11 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1198.8</pre></div></td><td><div class="dni-plaintext"><pre>562904</pre></div></td><td><div class="dni-plaintext"><pre>944942497</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td><span>2026-03-12 00:00:00Z</span></td><td><div class="dni-plaintext"><pre>1190.8</pre></div></td><td><div class="dni-plaintext"><pre>128223</pre></div></td><td><div class="dni-plaintext"><pre>945070720</pre></div></td><td><div class="dni-plaintext"><pre>1288.4</pre></div></td><td><div class="dni-plaintext"><pre>397.45</pre></div></td></tr></tbody></table>

@@ -1,9 +1,9 @@
 ---
 title: "08. Visualization - Python"
-tags: [python, pandas, polars, dataframes, matplotlib, seaborn, plotly]
+tags: [python, pandas, polars, dataframes, matplotlib, seaborn, bokeh, plotly]
 aliases:
-  - matplotlib, seaborn, plotting, charts
-description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, static charts). Side-by-side executable examples with cell outputs."
+  - matplotlib, seaborn, bokeh, plotting, charts
+description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, bokeh, plotly). Side-by-side executable examples with cell outputs and interactive embeds."
 parent: "[[domain-integrate-and-validate]]"
 links:
   - "[[08_cs_visualization]]"
@@ -12,7 +12,7 @@ links:
   - "[[10_py_testing_migration]]"
   - "[[10_cs_testing_migration]]"
 created: 2026-03-24
-updated: 2026-03-24
+updated: 2026-04-08
 status: complete
 ---
 
@@ -23,7 +23,7 @@ status: complete
 >
 > — **John Tukey**, *Exploratory Data Analysis* (1977)
 
-Pandas/Matplotlib/Seaborn for static charts, Plotly for interactive.
+Pandas/Matplotlib/Seaborn for static charts, Bokeh and Plotly for interactive browser-native charts.
 
 ```python
 from cycler import cycler
@@ -83,7 +83,7 @@ from plotly.subplots import make_subplots
 from IPython.display import HTML
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Data Preparation
 
@@ -98,7 +98,6 @@ sector_avg = scores_pd.groupby("sector")["composite_score"].mean().sort_values()
 ```
 
 ## Line Charts
-
 
 Line charts connect data points in order, revealing **trends**, **cycles**, and **rate of change** over time. Slope shows velocity; curvature shows acceleration; crossings between series highlight regime changes.
 
@@ -205,7 +204,6 @@ plt.show()
 
 ## Bar Charts
 
-
 Bar charts compare **discrete categories** by encoding values as bar lengths. Horizontal bars work better when category labels are long. Grouped bars compare sub-categories side by side; stacked bars show part-to-whole composition.
 
 **Best for:** Categorical comparisons (revenue by department, scores by sector, counts by group). Use when you have a small-to-medium number of categories (<20). For many categories, consider sorting or filtering.
@@ -299,7 +297,6 @@ plt.show()
 
 ## Histograms
 
-
 Histograms bin continuous data to show its **distribution shape** — normal, skewed, bimodal, etc. Bin count matters: too few hides structure, too many adds noise. KDE (kernel density estimation) overlays a smooth curve estimate of the probability density.
 
 **Best for:** Exploring a single continuous variable (prices, returns, test scores). Answers: "What is the typical range? Are there outliers? Is the data symmetric?"
@@ -382,7 +379,6 @@ plt.show()
 
 ## Scatter Plots
 
-
 Scatter plots reveal **relationships between two continuous variables** — correlation, clusters, and outliers. Adding color encodes a third variable (categorical or continuous); size encodes a fourth (bubble chart). No visible pattern = no linear relationship, but non-linear patterns may still exist.
 
 **Best for:** Exploring correlation between two numeric columns (price vs volume, momentum vs value). Works well up to ~10K points; beyond that, use hexbin or density plots to avoid overplotting.
@@ -448,7 +444,6 @@ plt.show()
 
 ## Area Charts
 
-
 Area charts are line charts with the region below filled, emphasizing **magnitude** and **cumulative totals**. Stacked areas show how components contribute to a total over time.
 
 **Best for:** Time-series composition data (market share over time, portfolio allocation, traffic sources). Keep to 3–5 series; too many layers become unreadable.
@@ -488,7 +483,6 @@ plt.show()
 ![chart](/static/img/df_py_08/viz_19.png)
 
 ## Pie & Donut
-
 
 Pie charts show **part-to-whole proportions** for a single categorical variable. Humans judge angles poorly, so pie charts work best with ≤6 slices and clear size differences. Donut charts free the center for labels or KPIs.
 
@@ -547,7 +541,6 @@ plt.show()
 
 ## Seaborn — Statistical Plots
 
-
 Seaborn provides high-level functions for **statistical visualization** — distribution shapes, group comparisons, correlations, and regression. It handles grouping, faceting, and confidence intervals automatically.
 
 **Best for:** Exploratory data analysis (EDA) when you need to understand distributions (violin, box, KDE), relationships (regression, pair plots), and group differences (strip, swarm). Accepts Pandas DataFrames directly with column-name-based API.
@@ -555,6 +548,7 @@ Seaborn provides high-level functions for **statistical visualization** — dist
 ### Box Plot
 
 #### How to read
+
 - **Box** = interquartile range (IQR): middle 50% of data (Q1 to Q3)
 - **Line inside box** = median (Q2)
 - **Whiskers** = extend to the farthest point within 1.5×IQR from the box edges
@@ -580,6 +574,7 @@ plt.show()
 ### Violin Plot
 
 #### How to read
+
 - **Width** = density estimate (wider = more data points at that value)
 - **Inner box/lines** = quartiles (same as box plot: Q1, median, Q3)
 - **Shape** = full distribution — symmetric = normal; multiple bulges = multimodal; long tail = skewed
@@ -604,6 +599,7 @@ plt.show()
 ### Strip Plot
 
 #### How to read
+
 - **Each dot** = one data point (one stock)
 - **Jitter** = small random horizontal offset to prevent dots from stacking on top of each other
 - **Dense clusters** = many values near that level; isolated dots = outliers
@@ -628,6 +624,7 @@ plt.show()
 ### Swarm Plot
 
 #### How to read
+
 - Like strip plot, but dots are algorithmically spread so **no two overlap**
 - **Width of the swarm** at a given y-value reflects how many points are near that value (like a violin)
 - Gives exact count — every point is visible and countable
@@ -652,6 +649,7 @@ plt.show()
 ### Heatmap
 
 #### How to read
+
 - **Color intensity** = magnitude of the value in each cell
 - **Diverging scale (RdBu):** red = strong positive, white = zero, blue = strong negative
 - **Diagonal** (in correlation matrix) = always 1.0 (variable correlated with itself)
@@ -679,6 +677,7 @@ plt.show()
 ### Clustermap
 
 #### How to read
+
 - Same as heatmap, but rows and columns are **reordered by hierarchical clustering**
 - **Dendrograms** (tree diagrams on the sides) show which variables are most similar
 - Variables that merge early in the tree are more correlated with each other
@@ -702,6 +701,7 @@ plt.show()
 ### Pair Plot
 
 #### How to read
+
 - **Grid of scatter plots**: every pair of numeric columns plotted against each other
 - **Diagonal** = distribution of each variable (KDE or histogram)
 - **Off-diagonal** = scatter of row-variable (y) vs column-variable (x)
@@ -726,6 +726,7 @@ plt.show()
 ### Joint Plot
 
 #### How to read
+
 - **Center** = scatter (or hexbin/KDE) of two variables
 - **Top margin** = distribution of the x-variable
 - **Right margin** = distribution of the y-variable
@@ -749,6 +750,7 @@ plt.show()
 ### KDE Plot
 
 #### How to read
+
 - **Curve height** = estimated probability density (not count)
 - **Peaks** = modes — values where data concentrates
 - **Width/spread** = variance — wider curve = more dispersed data
@@ -776,6 +778,7 @@ plt.show()
 ### Regression Plot
 
 #### How to read
+
 - **Dots** = individual data points
 - **Line** = OLS (ordinary least squares) best-fit line
 - **Shaded band** = 95% confidence interval around the regression line
@@ -801,6 +804,7 @@ plt.show()
 ### Residual Plot
 
 #### How to read
+
 - **Each dot** = residual (actual value minus predicted value from linear fit)
 - **Ideal pattern**: random scatter around zero — no visible structure
 - **Funnel shape** = heteroscedasticity (variance changes with x)
@@ -826,6 +830,7 @@ plt.show()
 ### Count Plot
 
 #### How to read
+
 - **Bar length** = number of observations in each category
 - Essentially a histogram for categorical data
 - Ordered by count to quickly identify the most/least populated categories
@@ -848,6 +853,7 @@ plt.show()
 ### ECDF
 
 #### How to read
+
 - **X-axis** = variable values; **Y-axis** = cumulative proportion (0 to 1)
 - Read as: "what fraction of data falls below this value?"
 - **Steep section** = many values concentrated in a narrow range
@@ -872,6 +878,7 @@ plt.show()
 ### Rug Plot
 
 #### How to read
+
 - **Short ticks on the axis** = exact position of each data point
 - Combined with KDE, it grounds the smooth curve in actual observations
 - **Dense ticks** = cluster of values; **gaps** = sparse regions
@@ -894,7 +901,6 @@ plt.show()
 ![chart](/static/img/df_py_08/viz_35.png)
 
 ## Matplotlib — Advanced
-
 
 Matplotlib is the low-level engine behind Pandas and Seaborn plots. Use it directly when you need **full control**: custom layouts, mixed chart types in subplots, annotations, polar coordinates, or any visualization not covered by higher-level APIs.
 
@@ -927,6 +933,7 @@ plt.show()
 ### Step Plot
 
 #### How to read
+
 - Value stays **flat** between changes, then jumps vertically
 - Emphasizes that the value is constant between updates (unlike a line chart which implies interpolation)
 - Best for discrete-step data: interest rates, pricing tiers, digital signals
@@ -949,6 +956,7 @@ plt.show()
 ### Stem Plot
 
 #### How to read
+
 - **Vertical line** from baseline (zero) to the value — length = magnitude
 - **Dot at tip** = the actual value
 - Lines above zero = positive; below = negative
@@ -994,6 +1002,7 @@ plt.show()
 ### Polar / Radar Chart
 
 #### How to read
+
 - Each **spoke** = one dimension/metric (e.g., momentum, value, sentiment, composite)
 - **Distance from center** = score magnitude on that dimension
 - **Shape** reveals the profile: balanced (regular polygon) vs specialized (elongated toward one spoke)
@@ -1027,6 +1036,7 @@ plt.show()
 ### Error Bar Plot
 
 #### How to read
+
 - **Dot** = point estimate (mean)
 - **Bars** = uncertainty range (here: ±1 standard deviation)
 - **Short bars** = low dispersion (consistent values); **long bars** = high dispersion
@@ -1148,6 +1158,1660 @@ plt.show()
 | Error bars | `ax.errorbar()` | — |
 | Fill between | `ax.fill_between()` | — |
 
+## Bokeh — Interactive Charts
+
+Bokeh is the low-level interactive counterpart to the static Matplotlib/Seaborn examples above: browser-native rendering, linked brushing, widgets, and dashboard composition without switching libraries. The cells below are extracted from the source Bokeh notebook and embedded as standalone local HTML documents so the plots render correctly inside Obsidian. The static Matplotlib and Seaborn outputs are also stored as local PNG files extracted directly from the base visualization notebook.
+
+> [!tip] Bokeh vs Plotly
+>
+> Use **Bokeh** when you want notebook-native widgets, `CustomJS` callbacks, linked brushing, and `DataTable` integration. Use **Plotly** when you want a higher-level API, quicker chart authoring, and export-friendly interactive figures with polished defaults.
+
+### Setup and Theme Configuration
+
+Run the setup cells once before the Bokeh examples. They import the Bokeh stack, enable `output_notebook()`, apply the Tokyo Night theme, and define the helper that keeps figures, widgets, axes, and tool overlays visually consistent.
+
+```python
+# Standard Library
+from pathlib import Path
+import warnings
+import datetime as _dt
+import math
+import json as _json
+import tempfile
+
+# Data Science
+import pandas as pd
+import numpy as np
+from scipy.stats import gaussian_kde
+
+# Bokeh - Interactive Plotting
+from bokeh.io import output_notebook, show, save, curdoc
+from bokeh.plotting import figure
+from bokeh.models import (
+    ColumnDataSource, HoverTool, CrosshairTool, TapTool,
+    ColorBar, LinearColorMapper, CategoricalColorMapper, BasicTicker,
+    Span, Label, Arrow, NormalHead, Band, BoxAnnotation, Whisker,
+    DatetimeTickFormatter, NumeralTickFormatter,
+    Range1d, FactorRange,
+    Select, RangeSlider, Slider, Tabs, TabPanel, CustomJS,
+    DataTable, TableColumn, StringFormatter, NumberFormatter,
+    LinearAxis, InlineStyleSheet
+)
+from bokeh.layouts import gridplot, column, row
+from bokeh.palettes import Category10, Spectral11, Viridis256, Turbo256
+from bokeh.transform import linear_cmap, factor_cmap, cumsum, dodge
+from bokeh.themes import Theme
+```
+
+```python
+#### Setup: display formatters and Bokeh theme
+warnings.filterwarnings("ignore")
+
+html_formatter = get_ipython().display_formatter.formatters["text/html"]  # type: ignore
+html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
+html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
+pd.set_option("display.max_rows", 100)
+
+DATA = Path("../data")
+TMP = Path(tempfile.mkdtemp())
+
+# Bokeh - interactive browser visualization
+output_notebook()
+
+# Tokyo Night theme for Bokeh with transparent plot/background fills
+TOKYO_NIGHT = Theme(json={
+    "attrs": {
+        "Figure": {
+            "background_fill_color": "#1a1b26",
+            "background_fill_alpha": 0.0,
+            "border_fill_color": "#1a1b26",
+            "border_fill_alpha": 0.0,
+            "outline_line_color": "#3b4261",
+        },
+        "Axis": {
+            "axis_line_color": "#3b4261",
+            "axis_label_text_color": "#a9b1d6",
+            "major_label_text_color": "#a9b1d6",
+            "major_tick_line_color": "#3b4261",
+            "minor_tick_line_color": "#292e42",
+        },
+        "Grid": {
+            "grid_line_color": "#292e42",
+            "grid_line_alpha": 0.6,
+        },
+        "Legend": {
+            "background_fill_color": "#24283b",
+            "background_fill_alpha": 0.85,
+            "border_line_color": "#3b4261",
+            "label_text_color": "#a9b1d6",
+        },
+        "Title": {
+            "text_color": "#a9b1d6",
+            "text_font_size": "16pt",
+        },
+        "ColorBar": {
+            "background_fill_color": "#1a1b26",
+            "background_fill_alpha": 0.0,
+            "label_standoff": 8,
+            "major_label_text_color": "#a9b1d6",
+            "title_text_color": "#a9b1d6",
+        },
+    }
+})
+curdoc().theme = TOKYO_NIGHT
+
+# Dark stylesheet for DataTable widgets
+dark_css = InlineStyleSheet(css="""
+    .slick-header-column { background: #24283b !important; color: #a9b1d6 !important; }
+    .slick-row { background: #1a1b26 !important; color: #a9b1d6 !important; }
+    .slick-row.odd { background: #24283b !important; }
+    .slick-cell { border-color: #3b4261 !important; }
+    .slick-header-column { border-color: #3b4261 !important; }
+""")
+
+# Reusable color constants
+TN = {
+    "blue": "#7aa2f7", "green": "#9ece6a", "yellow": "#e0af68", "red": "#f7768e",
+    "purple": "#bb9af7", "cyan": "#7dcfff", "teal": "#73daca", "orange": "#ff9e64",
+    "bg": "#1a1b26", "surface": "#24283b", "border": "#3b4261",
+    "text": "#a9b1d6", "grid": "#292e42",
+}
+TN_PALETTE = [TN["blue"], TN["green"], TN["yellow"], TN["red"],
+              TN["purple"], TN["cyan"], TN["teal"], TN["orange"]]
+
+# Bokeh-only helper: enforce dark styling for figures, layouts, widgets, and tool overlays
+_bokeh_show = show
+LINE_WINDOW_DAYS = 60
+
+
+def _iter_model_collection(value):
+    if value is None or isinstance(value, (str, bytes, dict, int, float, bool)):
+        return []
+    if isinstance(value, tuple):
+        return list(value)
+    if isinstance(value, list):
+        return value
+    try:
+        return list(value)
+    except TypeError:
+        return []
+
+
+def _walk_models(obj):
+    seen = set()
+
+    def walk(item):
+        if item is None:
+            return
+        item_id = id(item)
+        if item_id in seen:
+            return
+        seen.add(item_id)
+        yield item
+
+        child = getattr(item, "child", None)
+        if child is not None:
+            yield from walk(child)
+
+        for attr in ("children", "tabs", "left", "right", "above", "below", "center"):
+            for nested in _iter_model_collection(getattr(item, attr, None)):
+                if isinstance(nested, tuple):
+                    nested = nested[0]
+                yield from walk(nested)
+
+        toolbar = getattr(item, "toolbar", None)
+        if toolbar is not None:
+            yield from walk(toolbar)
+
+        for tool in _iter_model_collection(getattr(item, "tools", None)):
+            yield from walk(tool)
+
+        overlay = getattr(item, "overlay", None)
+        if overlay is not None:
+            yield from walk(overlay)
+
+    yield from walk(obj)
+
+
+def apply_bokeh_dark_theme(obj):
+    for item in _walk_models(obj):
+        if hasattr(item, "background_fill_color"):
+            item.background_fill_color = TN["bg"]
+        if hasattr(item, "border_fill_color"):
+            item.border_fill_color = TN["bg"]
+        if hasattr(item, "outline_line_color"):
+            item.outline_line_color = TN["border"]
+
+        item_name = item.__class__.__name__
+        if item_name in {"figure", "Figure", "Plot", "ColorBar"}:
+            if hasattr(item, "background_fill_alpha"):
+                item.background_fill_alpha = 0.0
+            if hasattr(item, "border_fill_alpha"):
+                item.border_fill_alpha = 0.0
+
+        title = getattr(item, "title", None)
+        if title is not None and hasattr(title, "text_color"):
+            title.text_color = TN["text"]
+
+        for axis_list_name in ("xaxis", "yaxis"):
+            for axis in _iter_model_collection(getattr(item, axis_list_name, None)):
+                axis.axis_line_color = TN["border"]
+                axis.axis_label_text_color = TN["text"]
+                axis.major_label_text_color = TN["text"]
+                axis.major_tick_line_color = TN["border"]
+                axis.minor_tick_line_color = TN["grid"]
+
+        for grid in _iter_model_collection(getattr(item, "grid", None)):
+            grid.grid_line_color = TN["grid"]
+            grid.grid_line_alpha = 0.6
+
+        for legend in _iter_model_collection(getattr(item, "legend", None)):
+            legend.background_fill_color = TN["surface"]
+            legend.background_fill_alpha = 0.85
+            legend.border_line_color = TN["border"]
+            legend.label_text_color = TN["text"]
+
+        side_items = _iter_model_collection(getattr(item, "left", None)) + _iter_model_collection(getattr(item, "right", None))
+        for side_item in side_items:
+            if hasattr(side_item, "major_label_text_color"):
+                side_item.major_label_text_color = TN["text"]
+            if hasattr(side_item, "title_text_color"):
+                side_item.title_text_color = TN["text"]
+            if side_item.__class__.__name__ == "ColorBar":
+                side_item.background_fill_alpha = 0.0
+            elif hasattr(side_item, "background_fill_color"):
+                side_item.background_fill_color = TN["bg"]
+
+        if item_name == "DataTable":
+            stylesheets = list(getattr(item, "stylesheets", []) or [])
+            if dark_css not in stylesheets:
+                item.stylesheets = stylesheets + [dark_css]
+
+        if item_name == "CrosshairTool" and hasattr(item, "line_color"):
+            item.line_color = TN["cyan"]
+
+        if item_name == "BoxAnnotation":
+            if getattr(item, "fill_color", None) in (None, "lightgrey", "white"):
+                item.fill_color = TN["surface"]
+            if getattr(item, "line_color", None) in (None, "black"):
+                item.line_color = TN["text"]
+            item.fill_alpha = 0.18
+            item.line_alpha = 0.6
+
+
+def _figure_has_datetime_axis(fig):
+    for axis in _iter_model_collection(getattr(fig, "xaxis", None)):
+        if axis.__class__.__name__ == "DatetimeAxis":
+            return True
+    return False
+
+
+def _collect_numeric_renderer_fields(fig):
+    sources = {}
+    has_line_renderer = False
+
+    for renderer in _iter_model_collection(getattr(fig, "renderers", None)):
+        glyph = getattr(renderer, "glyph", None)
+        source = getattr(renderer, "data_source", None)
+        if glyph is None or source is None or not hasattr(source, "data"):
+            continue
+
+        glyph_name = glyph.__class__.__name__
+        if glyph_name in {"Line", "Step"}:
+            has_line_renderer = True
+
+        x_field = None
+        for attr in ("x", "xs"):
+            value = getattr(glyph, attr, None)
+            if isinstance(value, str) and value in source.data:
+                x_field = value
+                break
+            if hasattr(value, "field") and value.field in source.data:
+                x_field = value.field
+                break
+        if x_field is None:
+            for fallback in ("date", "x"):
+                if fallback in source.data:
+                    x_field = fallback
+                    break
+        if x_field is None:
+            continue
+
+        try:
+            x_values = pd.to_datetime(source.data[x_field])
+            if len(x_values) == 0 or pd.isna(x_values).all():
+                continue
+        except Exception:
+            continue
+
+        y_range_name = getattr(renderer, "y_range_name", None) or "default"
+        y_fields = set()
+        for attr in ("y", "y0", "y1", "y2", "top", "bottom"):
+            value = getattr(glyph, attr, None)
+            field = None
+            if isinstance(value, str) and value in source.data:
+                field = value
+            elif hasattr(value, "field") and value.field in source.data:
+                field = value.field
+            if field is None:
+                continue
+            try:
+                arr = np.asarray(source.data[field])
+                if np.issubdtype(arr.dtype, np.number):
+                    y_fields.add(field)
+            except Exception:
+                pass
+
+        if not y_fields:
+            continue
+
+        sid = id(source)
+        if sid not in sources:
+            sources[sid] = {
+                "source": source,
+                "x_field": x_field,
+                "y_by_range": {}
+            }
+        sources[sid]["y_by_range"].setdefault(y_range_name, set()).update(y_fields)
+
+    return has_line_renderer, list(sources.values())
+
+
+def configure_datetime_line_window(obj):
+    for fig in _walk_models(obj):
+        if fig.__class__.__name__ not in {"figure", "Figure"}:
+            continue
+        if not _figure_has_datetime_axis(fig):
+            continue
+        if fig.__class__.__name__ == "DataTable":
+            continue
+
+        has_line_renderer, source_maps = _collect_numeric_renderer_fields(fig)
+        if not has_line_renderer or not source_maps:
+            continue
+
+        all_dates = []
+        for info in source_maps:
+            try:
+                dates = pd.to_datetime(info["source"].data[info["x_field"]])
+                all_dates.append(pd.Series(dates).dropna())
+            except Exception:
+                pass
+        if not all_dates:
+            continue
+
+        combined_dates = pd.concat(all_dates, ignore_index=True)
+        if combined_dates.empty:
+            continue
+
+        min_d = combined_dates.min()
+        max_d = combined_dates.max()
+        view_start = max(min_d, max_d - pd.Timedelta(days=LINE_WINDOW_DAYS))
+        fig.x_range = Range1d(start=view_start, end=max_d, bounds=(min_d, max_d))
+
+        y_sources = {}
+        for info in source_maps:
+            source = info["source"]
+            x_field = info["x_field"]
+            dates = pd.to_datetime(source.data[x_field])
+            mask = (dates >= view_start) & (dates <= max_d)
+            for range_name, y_fields in info["y_by_range"].items():
+                y_sources.setdefault(range_name, [])
+                y_sources[range_name].append((source, x_field, sorted(y_fields), mask))
+
+        for range_name, entries in y_sources.items():
+            y_min = float("inf")
+            y_max = float("-inf")
+            for source, _, y_fields, mask in entries:
+                for field in y_fields:
+                    vals = np.asarray(source.data[field], dtype=float)[mask]
+                    vals = vals[np.isfinite(vals)]
+                    if len(vals):
+                        y_min = min(y_min, float(vals.min()))
+                        y_max = max(y_max, float(vals.max()))
+            if y_min == float("inf"):
+                continue
+            pad = (y_max - y_min) * 0.05 or 1.0
+            if range_name == "default":
+                fig.y_range = Range1d(start=y_min - pad, end=y_max + pad)
+            elif range_name in getattr(fig, "extra_y_ranges", {}):
+                fig.extra_y_ranges[range_name].start = y_min - pad
+                fig.extra_y_ranges[range_name].end = y_max + pad
+
+        cb_args = {"primary_y": fig.y_range}
+        js_blocks = []
+        source_index = 0
+        extra_ranges = getattr(fig, "extra_y_ranges", {}) or {}
+        for range_name, entries in y_sources.items():
+            target_name = "primary_y" if range_name == "default" else f"y_{range_name}"
+            if range_name != "default":
+                target = extra_ranges.get(range_name)
+                if target is None:
+                    continue
+                cb_args[target_name] = target
+            js_blocks.append(f"let mn_{target_name}=Infinity, mx_{target_name}=-Infinity;")
+            for source, x_field, y_fields, _ in entries:
+                sname = f"s{source_index}"
+                source_index += 1
+                cb_args[sname] = source
+                js_blocks.append(
+                    f"{{ const d={sname}.data, x=d['{x_field}'], ys={_json.dumps(y_fields)};"
+                    f" for(let i=0;i<x.length;i++){{ if(x[i]>=lo&&x[i]<=hi){{"
+                    f" for(const c of ys){{ const v=d[c][i];"
+                    f" if(Number.isFinite(v)){{ if(v<mn_{target_name}) mn_{target_name}=v; if(v>mx_{target_name}) mx_{target_name}=v; }} }} }} }} }}"
+                )
+            js_blocks.append(
+                f"if(mn_{target_name}<Infinity){{ const pad=(mx_{target_name}-mn_{target_name})*0.05||1;"
+                f" {target_name}.start=mn_{target_name}-pad; {target_name}.end=mx_{target_name}+pad; }}"
+            )
+
+        if js_blocks:
+            callback = CustomJS(
+                args=cb_args,
+                code="const lo=cb_obj.start, hi=cb_obj.end;\n" + "\n".join(js_blocks)
+            )
+            fig.x_range.js_on_change("start", callback)
+            fig.x_range.js_on_change("end", callback)
+
+
+def show_dark(obj, **kwargs):
+    apply_bokeh_dark_theme(obj)
+    configure_datetime_line_window(obj)
+    return _bokeh_show(obj, **kwargs)
+
+show = show_dark
+```
+
+> [!info]
+> Quartz does not execute the notebook's inline Bokeh cell scripts from markdown, so each output below is exported as a standalone HTML file under `/static/bokeh/df_py_08_XX.html` and embedded with an `iframe`.
+
+### Bokeh Data Preparation
+
+These cells reload the financial datasets used by the notebook and build the reusable ASML, top-5, and sector subsets consumed throughout the examples below.
+
+#### Pandas | read_parquet (load datasets)
+
+```python
+# Load OHLCV, scores, and index dimension tables
+ohlcv = pd.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
+ohlcv["date"] = pd.to_datetime(ohlcv["date"])
+scores = pd.read_parquet(DATA / "scores_daily.parquet")
+dim = pd.read_parquet(DATA / "index_dim.parquet")
+
+print(f"EU OHLCV: {ohlcv.shape}")
+print(f"Scores: {scores.shape},  Dim: {dim.shape}")
+```
+
+```text
+EU OHLCV: (66355, 12)
+Scores: (466, 36),  Dim: (169, 26)
+```
+
+#### Pandas | build reusable subsets
+
+```python
+# Subsets used across the Bokeh examples
+asml = ohlcv[ohlcv["symbol"] == "ASML.AS"].sort_values("date").tail(365).copy().reset_index(drop=True)
+sap = ohlcv[ohlcv["symbol"] == "SAP.DE"].sort_values("date").tail(365).copy().reset_index(drop=True)
+top5_syms = ["ASML.AS", "SAP.DE", "SIE.DE", "TTE.PA", "AIR.PA"]
+top5 = ohlcv[ohlcv["symbol"].isin(top5_syms)].sort_values("date").copy()
+sector_avg = (
+    scores.groupby("sector")[["composite_score", "momentum_score",
+                               "relative_value_score", "sentiment_score"]]
+    .mean().sort_values("composite_score")
+)
+
+print(f"ASML: {asml.shape},  Top5: {top5.shape},  Sectors: {sector_avg.shape}")
+```
+
+```text
+ASML: (365, 12),  Top5: (6641, 12),  Sectors: (10, 4)
+```
+
+## Candlestick & OHLC
+
+Bokeh builds financial charts from low-level glyphs such as `segment()`, `vbar()`, and shared datetime ranges. That makes it straightforward to combine price candles, OHLC bars, moving averages, and linked volume panes with hover metadata and synchronized navigation.
+
+#### Bokeh | segment + vbar (candlestick)
+
+```python
+# Technique: segment glyphs for wicks, vbar glyphs for bodies - standard Bokeh candlestick
+# Benefits: full hover detail, pan/zoom, theme integration, ColumnDataSource for linking
+# When to use: interactive financial charts in Jupyter or standalone HTML
+inc = asml["close"] > asml["open"]
+dec = asml["open"] > asml["close"]
+w = 12 * 60 * 60 * 1000  # half day in ms
+
+source = ColumnDataSource(data=dict(
+    date=asml["date"], open=asml["open"], high=asml["high"],
+    low=asml["low"], close=asml["close"], volume=asml["volume"],
+    color=np.where(inc, "#2d8a4e", "#c0392b"),
+))
+
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - Candlestick",
+           tools="pan,wheel_zoom,box_zoom,reset,save")
+p.segment("date", "high", "date", "low", source=source, color=TN["text"])
+p.vbar("date", w, "open", "close", source=source, fill_color="color", line_color="color")
+
+hover = HoverTool(tooltips=[
+    ("Date", "@date{%F}"), ("Open", "@open{0.2f}"), ("High", "@high{0.2f}"),
+    ("Low", "@low{0.2f}"), ("Close", "@close{0.2f}"), ("Volume", "@volume{0,0}"),
+], formatters={"@date": "datetime"})
+p.add_tools(hover)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_01.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | segment (OHLC bars)
+
+```python
+# Traditional OHLC bars: vertical stem (high-low) + left tick (open) + right tick (close)
+inc = asml["close"] > asml["open"]
+color = np.where(inc, "#2d8a4e", "#c0392b")
+half_day = pd.Timedelta(hours=8)
+
+source = ColumnDataSource(data=dict(
+    date=asml["date"], open=asml["open"], high=asml["high"],
+    low=asml["low"], close=asml["close"], color=color,
+    dl=asml["date"] - half_day, dr=asml["date"] + half_day,
+))
+
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - OHLC Bars",
+           tools="pan,wheel_zoom,box_zoom,reset")
+# Stem
+p.segment("date", "high", "date", "low", source=source, color="color", line_width=2)
+# Open tick (left)
+p.segment("dl", "open", "date", "open", source=source, color="color", line_width=3)
+# Close tick (right)
+p.segment("date", "close", "dr", "close", source=source, color="color", line_width=3)
+
+p.add_tools(HoverTool(tooltips=[("Date", "@date{%F}"), ("O", "@open{0.1f}"),
+    ("H", "@high{0.1f}"), ("L", "@low{0.1f}"), ("C", "@close{0.1f}")],
+    formatters={"@date": "datetime"}))
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_02.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | gridplot (candlestick + volume subplot)
+
+```python
+# Linked candlestick and volume panels - shared x-axis, pan one and both move
+inc = asml["close"] > asml["open"]
+source = ColumnDataSource(data=dict(
+    date=asml["date"], open=asml["open"], high=asml["high"],
+    low=asml["low"], close=asml["close"], volume=asml["volume"],
+    color=np.where(inc, "#2d8a4e", "#c0392b"),
+))
+w = 12 * 60 * 60 * 1000
+
+p1 = figure(x_axis_type="datetime", width=950, height=350, title="ASML - Price + Volume",
+           toolbar_location=None)
+p1.segment("date", "high", "date", "low", source=source, color=TN["text"])
+p1.vbar("date", w, "open", "close", source=source, fill_color="color", line_color="color")
+
+p2 = figure(x_axis_type="datetime", width=950, height=150, x_range=p1.x_range,
+           toolbar_location=None)
+p2.vbar("date", w, 0, "volume", source=source, fill_color="color",
+        line_color="color", alpha=0.5)
+p2.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+
+show(gridplot([[p1], [p2]], merge_tools=True, toolbar_location="right"))
+```
+
+<iframe src="/static/bokeh/df_py_08_03.html" width="100%" height="600" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | candlestick + line (moving averages)
+
+```python
+# SMA/EMA overlays with clickable legend to toggle visibility
+inc = asml["close"] > asml["open"]
+source = ColumnDataSource(data=dict(
+    date=asml["date"], open=asml["open"], high=asml["high"],
+    low=asml["low"], close=asml["close"],
+    sma20=asml["close"].rolling(20).mean(),
+    ema50=asml["close"].ewm(span=50).mean(),
+    color=np.where(inc, "#2d8a4e", "#c0392b"),
+))
+w = 12 * 60 * 60 * 1000
+
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - Candlestick + MA")
+p.segment("date", "high", "date", "low", source=source, color=TN["text"])
+p.vbar("date", w, "open", "close", source=source, fill_color="color", line_color="color")
+p.line("date", "sma20", source=source, color=TN["blue"], width=2, legend_label="SMA 20")
+p.line("date", "ema50", source=source, color=TN["yellow"], width=2, legend_label="EMA 50")
+p.legend.click_policy = "hide"
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_04.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Line Charts
+
+The line-oriented examples cover single-series trends, multi-line comparisons, marker styling, dual-axis overlays, and step charts. Bokeh keeps these interactive by default, so pan, zoom, hover, and legend muting are all available without extra wrappers.
+
+#### Bokeh | line (basic close price)
+
+```python
+# Single stock close price with datetime axis, hover for exact values
+source = ColumnDataSource(data=dict(date=asml["date"], close=asml["close"]))
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Close Price")
+p.line("date", "close", source=source, color=TN["blue"], width=2)
+hover = HoverTool(tooltips=[("Date", "@date{%F}"), ("Close", "@close{0.2f}")],
+                  formatters={"@date": "datetime"}, mode="vline")
+p.add_tools(hover)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_05.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | multi_line (5 stocks + interactive legend)
+
+```python
+# Five stocks on one axis - click legend entries to hide/show individual series
+p = figure(x_axis_type="datetime", width=800, height=450, title="Top 5 EU Stocks - Close Price")
+for sym, clr in zip(top5_syms, TN_PALETTE):
+    df = ohlcv[ohlcv["symbol"] == sym].sort_values("date").tail(365)
+    p.line(df["date"], df["close"], color=clr, width=2, legend_label=sym)
+p.legend.click_policy = "hide"
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_06.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | line (styles + markers)
+
+```python
+# Close vs Open with dashed/solid lines and monthly circle markers
+monthly = asml[asml["date"].dt.is_month_start]
+source = ColumnDataSource(data=dict(date=asml["date"], close=asml["close"], open=asml["open"]))
+src_m = ColumnDataSource(data=dict(date=monthly["date"], close=monthly["close"], open=monthly["open"]))
+
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Line Styles & Markers")
+p.line("date", "close", source=source, color=TN["blue"], width=2,
+       legend_label="Close", line_dash="solid")
+p.line("date", "open", source=source, color=TN["yellow"], width=2,
+       legend_label="Open", line_dash="dashed")
+p.scatter("date", "close", source=src_m, color=TN["blue"], size=8,
+          marker="circle", legend_label="Close (monthly)")
+p.scatter("date", "open", source=src_m, color=TN["yellow"], size=8,
+          marker="triangle", legend_label="Open (monthly)")
+p.legend.click_policy = "hide"
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_07.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | extra_y_ranges (dual Y-axis)
+
+```python
+# Price on left axis, volume bars on right axis - reveals if volume spikes align with moves
+price_pad = (asml["close"].max() - asml["close"].min()) * 0.05
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - Dual Y-Axis",
+           y_axis_label="Close Price",
+           y_range=Range1d(start=asml["close"].min() - price_pad,
+                           end=asml["close"].max() + price_pad))
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2, legend_label="Close")
+p.yaxis[0].formatter = NumeralTickFormatter(format="0,0")
+
+p.extra_y_ranges = {"vol": Range1d(start=0, end=asml["volume"].max() * 3)}
+p.add_layout(LinearAxis(y_range_name="vol", axis_label="Volume",
+                         formatter=NumeralTickFormatter(format="0.0a")), "right")
+color = np.where(asml["close"] > asml["open"], "#2d8a4e", "#c0392b")
+p.vbar(asml["date"], 12*60*60*1000, 0, asml["volume"], y_range_name="vol",
+       fill_color=color, line_color=color, alpha=0.4, legend_label="Volume")
+p.legend.click_policy = "hide"
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_08.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | step (step line)
+
+```python
+# Step line - shows close price as flat segments between trading days
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Step Line")
+p.step(asml["date"], asml["close"], color=TN["cyan"], width=2, mode="after",
+       legend_label="Close (step)")
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_09.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Bar Charts
+
+Bokeh bar primitives support vertical, horizontal, grouped, stacked, and uncertainty-aware comparisons. `dodge()`, `vbar_stack()`, and `Whisker` make it practical to turn grouped financial aggregates into interactive comparison charts.
+
+#### Bokeh | vbar (monthly volume)
+
+```python
+# Monthly aggregated volume with color gradient by magnitude
+monthly_vol = asml.set_index("date").resample("ME")["volume"].sum().reset_index()
+mapper = linear_cmap("volume", palette=Viridis256, low=monthly_vol["volume"].min(),
+                     high=monthly_vol["volume"].max())
+
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Monthly Volume")
+p.vbar(x="date", top="volume", source=monthly_vol, width=20*24*60*60*1000,
+       fill_color=mapper, line_color=mapper)
+color_bar = ColorBar(color_mapper=mapper["transform"], title="Volume")
+p.add_layout(color_bar, "right")
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_10.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | hbar (sector ranking)
+
+```python
+# Horizontal bar ranking of sectors by average composite score
+sectors = sector_avg.reset_index()
+source = ColumnDataSource(data=dict(
+    sector=sectors["sector"],
+    score=sectors["composite_score"],
+))
+p = figure(y_range=sectors["sector"].tolist(), width=800, height=400,
+           title="Sector Ranking - Avg Composite Score", x_axis_label="Score")
+p.hbar(y="sector", right="score", source=source, height=0.7,
+       fill_color=TN["blue"], line_color=TN["border"])
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_11.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | vbar + dodge (grouped bar)
+
+```python
+# Side-by-side comparison of momentum vs value scores per sector
+sectors = sector_avg.reset_index()
+x_range = sectors["sector"].tolist()
+source = ColumnDataSource(data=dict(
+    sector=x_range,
+    momentum=sectors["momentum_score"],
+    value=sectors["relative_value_score"],
+))
+
+p = figure(x_range=x_range, width=800, height=400,
+           title="Sector Scores - Momentum vs Value")
+p.vbar(x=dodge("sector", -0.15, range=p.x_range), top="momentum", source=source,
+       width=0.25, color=TN["blue"], legend_label="Momentum")
+p.vbar(x=dodge("sector", 0.15, range=p.x_range), top="value", source=source,
+       width=0.25, color="#2d8a4e", legend_label="Value")
+p.xaxis.major_label_orientation = 0.8
+p.add_layout(p.legend[0], "left")
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_12.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | vbar_stack (stacked bar)
+
+```python
+# Stacked view: total score magnitude per sector, split by momentum / value / sentiment
+sectors = sector_avg.reset_index()
+source = ColumnDataSource(data=dict(
+    sector=sectors["sector"].tolist(),
+    momentum=sectors["momentum_score"].clip(lower=0),
+    value=sectors["relative_value_score"].clip(lower=0),
+    sentiment=sectors["sentiment_score"].clip(lower=0),
+))
+
+p = figure(x_range=sectors["sector"].tolist(), width=800, height=400,
+           title="Sector Scores - Stacked")
+p.vbar_stack(["momentum", "value", "sentiment"], x="sector", source=source,
+             width=0.7, color=[TN["blue"], "#2d8a4e", TN["purple"]],
+             legend_label=["Momentum", "Value", "Sentiment"])
+p.xaxis.major_label_orientation = 0.8
+p.add_layout(p.legend[0], "right")
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_13.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | vbar + Whisker (error bars)
+
+```python
+# Mean composite score per sector with std dev error bars showing dispersion
+stats = scores.groupby("sector")["composite_score"].agg(["mean", "std"]).reset_index()
+stats.columns = ["sector", "mean", "std"]
+stats = stats.sort_values("mean")
+source = ColumnDataSource(data=dict(
+    sector=stats["sector"], mean=stats["mean"],
+    upper=stats["mean"] + stats["std"], lower=stats["mean"] - stats["std"],
+))
+
+p = figure(x_range=stats["sector"].tolist(), width=800, height=400,
+           title="Composite Score - Mean Ã‚Â± Std Dev")
+p.vbar(x="sector", top="mean", source=source, width=0.7,
+       fill_color=TN["blue"], line_color=TN["border"])
+p.add_layout(Whisker(source=source, base="sector", upper="upper", lower="lower",
+                     line_color=TN["text"], line_width=2))
+p.xaxis.major_label_orientation = 0.8
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_14.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Scatter Plots
+
+Scatter plots are where Bokeh starts to separate itself from higher-level charting wrappers: color mapping, size encoding, hover inspection, and linked brushing all sit directly on `ColumnDataSource`. The cells below move from simple factor scatter to interactive cross-filtering.
+
+#### Bokeh | scatter (momentum vs value)
+
+```python
+# Interactive scatter - hover to identify individual stocks by symbol
+source = ColumnDataSource(data=dict(
+    momentum=scores["momentum_score"],
+    value=scores["relative_value_score"],
+    symbol=scores["symbol"],
+    sector=scores["sector"],
+    composite=scores["composite_score"],
+))
+
+p = figure(width=700, height=500, title="Momentum vs Relative Value",
+           x_axis_label="Momentum Score", y_axis_label="Value Score")
+p.scatter("momentum", "value", source=source, color=TN["blue"], size=10, alpha=0.7)
+p.add_tools(HoverTool(tooltips=[("Symbol", "@symbol"), ("Sector", "@sector"),
+                                ("Composite", "@composite{0.2f}")]))
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_15.html" width="100%" height="530" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | scatter + linear_cmap (color-mapped)
+
+```python
+# Color = composite score with ColorBar - see which momentum/value quadrant scores highest
+source = ColumnDataSource(data=dict(
+    momentum=scores["momentum_score"],
+    value=scores["relative_value_score"],
+    composite=scores["composite_score"],
+    symbol=scores["symbol"],
+))
+mapper = linear_cmap("composite", palette=Turbo256,
+                     low=scores["composite_score"].min(),
+                     high=scores["composite_score"].max())
+
+p = figure(width=700, height=500, title="Momentum vs Value - Color = Composite Score",
+           x_axis_label="Momentum", y_axis_label="Value")
+p.scatter("momentum", "value", source=source, color=mapper, size=10, alpha=0.8)
+p.add_layout(ColorBar(color_mapper=mapper["transform"], title="Composite"), "right")
+p.add_tools(HoverTool(tooltips=[("Symbol", "@symbol"), ("Composite", "@composite{0.2f}")]))
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_16.html" width="100%" height="530" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | scatter + factor_cmap + size (bubble)
+
+```python
+# Bubble chart: position = momentum vs value, color = sector, size = market cap
+sc = scores.dropna(subset=["momentum_score", "relative_value_score", "market_cap"]).copy()
+sc["size"] = 5 + 25 * (sc["market_cap"] - sc["market_cap"].min()) / (sc["market_cap"].max() - sc["market_cap"].min())
+sectors_list = sorted(sc["sector"].unique().tolist())
+
+source = ColumnDataSource(data=dict(
+    momentum=sc["momentum_score"], value=sc["relative_value_score"],
+    symbol=sc["symbol"], sector=sc["sector"], size=sc["size"],
+    mcap=sc["market_cap"] / 1e9,
+))
+palette = TN_PALETTE[:len(sectors_list)] if len(sectors_list) <= 8 else Category10[10][:len(sectors_list)]
+cmap = factor_cmap("sector", palette=palette, factors=sectors_list)
+
+p = figure(width=800, height=550, title="Bubble - Momentum vs Value (size = Market Cap)",
+           x_axis_label="Momentum", y_axis_label="Value")
+p.scatter("momentum", "value", source=source, color=cmap, size="size",
+          alpha=0.7, legend_field="sector")
+p.add_tools(HoverTool(tooltips=[("Symbol", "@symbol"), ("Sector", "@sector"),
+                                ("MCap", "@mcap{0.1f} B")]))
+p.add_layout(p.legend[0], "left")
+p.legend.label_text_font_size = "9pt"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_17.html" width="100%" height="580" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | scatter (linked brushing)
+
+```python
+# Two scatter plots sharing one ColumnDataSource - lasso-select in one, other highlights
+source = ColumnDataSource(data=dict(
+    momentum=scores["momentum_score"],
+    value=scores["relative_value_score"],
+    composite=scores["composite_score"],
+    sentiment=scores["sentiment_score"],
+    symbol=scores["symbol"],
+))
+
+TOOLS = "pan,wheel_zoom,lasso_select,box_select,reset"
+p1 = figure(width=450, height=400, title="Momentum vs Value", tools=TOOLS)
+p1.scatter("momentum", "value", source=source, color=TN["blue"], size=9,
+           selection_color="#2d8a4e", nonselection_alpha=0.2)
+
+p2 = figure(width=450, height=400, title="Composite vs Sentiment", tools=TOOLS)
+p2.scatter("composite", "sentiment", source=source, color=TN["purple"], size=9,
+           selection_color="#2d8a4e", nonselection_alpha=0.2)
+
+show(row(p1, p2))
+```
+
+<iframe src="/static/bokeh/df_py_08_18.html" width="100%" height="450" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Area Charts
+
+Filled regions in Bokeh use `varea()` and stacked variants, which work well for cumulative totals, drawdown-style bands, and high/low envelopes. These examples keep the notebook's Tokyo Night palette while showing how transparent fills can add context without obscuring the underlying series.
+
+#### Bokeh | varea (filled area)
+
+```python
+# ASML close price as filled area - emphasizes cumulative magnitude above zero
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Filled Area")
+p.varea(x=asml["date"], y1=0, y2=asml["close"], fill_color=TN["blue"], fill_alpha=0.4)
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_19.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | varea_stack (stacked area)
+
+```python
+# Daily volume by top 3 stocks stacked - total height = combined market activity
+pivot = top5[top5["symbol"].isin(top5_syms[:3])].pivot_table(
+    index="date", columns="symbol", values="volume", aggfunc="sum"
+).fillna(0).sort_index().tail(365)
+
+source = ColumnDataSource(data={"date": pivot.index, **{c: pivot[c] for c in pivot.columns}})
+p = figure(x_axis_type="datetime", width=800, height=400, title="Stacked Volume - Top 3 Stocks")
+p.varea_stack(stackers=pivot.columns.tolist(), x="date", source=source,
+              color=TN_PALETTE[:3], alpha=0.7)
+p.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_20.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | varea (high-low band)
+
+```python
+# Shaded high-low band around close - visualizes daily trading range
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - High-Low Band")
+p.varea(x=asml["date"], y1=asml["low"], y2=asml["high"],
+        fill_color=TN["purple"], fill_alpha=0.25)
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2, legend_label="Close")
+p.legend.location = "top_left"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_21.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Histograms & Distributions
+
+Distribution views use `quad()` bins, custom KDE patches, and box-plot composition with `Whisker`. The goal here is not a one-call API, but direct control over how financial return distributions are assembled and annotated.
+
+#### Bokeh | quad (basic histogram)
+
+```python
+# Distribution of all ASML close prices - reveals price clustering
+hist, edges = np.histogram(asml["close"].dropna(), bins=30)
+p = figure(width=700, height=400, title="ASML - Close Price Distribution",
+           x_axis_label="Close Price", y_axis_label="Frequency")
+p.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
+       fill_color=TN["blue"], line_color=TN["border"], alpha=0.8)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_22.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | quad (overlaid histograms)
+
+```python
+# Overlaid distributions for 3 stocks with transparency
+syms = ["ASML.AS", "SAP.DE", "SIE.DE"]
+colors = [TN["blue"], "#2d8a4e", TN["yellow"]]
+p = figure(width=700, height=400, title="Close Price Distribution - 3 Stocks",
+           x_axis_label="Close Price", y_axis_label="Frequency")
+for sym, clr in zip(syms, colors):
+    vals = ohlcv[ohlcv["symbol"] == sym]["close"].dropna()
+    hist, edges = np.histogram(vals, bins=30)
+    p.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
+           fill_color=clr, line_color=clr, alpha=0.4, legend_label=sym)
+p.legend.click_policy = "hide"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_23.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | vbar + Whisker (box plot)
+
+```python
+# Manual box-and-whisker per sector - quartile box, median line, whisker, outlier dots
+sectors_list = sorted(scores["sector"].dropna().unique())
+box_data = {"sector": [], "q1": [], "q2": [], "q3": [], "upper": [], "lower": []}
+outlier_x, outlier_y = [], []
+for sec in sectors_list:
+    vals = scores[scores["sector"] == sec]["composite_score"].dropna()
+    q1, q2, q3 = np.percentile(vals, [25, 50, 75])
+    iqr = q3 - q1
+    lo = max(vals.min(), q1 - 1.5 * iqr)
+    hi = min(vals.max(), q3 + 1.5 * iqr)
+    box_data["sector"].append(sec)
+    box_data["q1"].append(q1)
+    box_data["q2"].append(q2)
+    box_data["q3"].append(q3)
+    box_data["upper"].append(hi)
+    box_data["lower"].append(lo)
+    outs = vals[(vals < lo) | (vals > hi)]
+    outlier_x.extend([sec] * len(outs))
+    outlier_y.extend(outs.tolist())
+
+source = ColumnDataSource(box_data)
+
+p = figure(x_range=sectors_list, width=800, height=450, title="Composite Score - Box Plot")
+p.vbar(x="sector", top="q3", bottom="q1", source=source, width=0.6,
+       fill_color=TN["blue"], fill_alpha=0.5, line_color=TN["border"])
+p.segment(x0="sector", y0="q3", x1="sector", y1="upper", source=source,
+          line_color=TN["text"])
+p.segment(x0="sector", y0="q1", x1="sector", y1="lower", source=source,
+          line_color=TN["text"])
+p.segment(x0=[s for s in sectors_list], y0=box_data["q2"],
+          x1=[s for s in sectors_list], y1=box_data["q2"],
+          line_color=TN["red"], line_width=3)
+if outlier_y:
+    p.scatter(outlier_x, outlier_y, color=TN["orange"], size=6, alpha=0.6)
+p.xaxis.major_label_orientation = 0.8
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_24.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | patches (violin-style KDE)
+
+```python
+# Mirrored KDE patches per sector - width = density, shows full distribution shape
+p = figure(width=800, height=500, title="Composite Score - Violin Plot",
+           x_range=(-0.5, len(sectors_list) - 0.5), y_axis_label="Composite Score")
+
+for i, sec in enumerate(sectors_list):
+    vals = scores[scores["sector"] == sec]["composite_score"].dropna().values
+    if len(vals) < 3:
+        continue
+    kde = gaussian_kde(vals)
+    y_grid = np.linspace(vals.min() - 0.1, vals.max() + 0.1, 100)
+    density = kde(y_grid)
+    density = density / density.max() * 0.35
+
+    xs = np.concatenate([i - density, (i + density)[::-1]])
+    ys = np.concatenate([y_grid, y_grid[::-1]])
+    p.patch(xs, ys, fill_color=TN_PALETTE[i % 8], fill_alpha=0.5,
+            line_color=TN["border"])
+
+p.xaxis.ticker = list(range(len(sectors_list)))
+p.xaxis.major_label_overrides = {i: s for i, s in enumerate(sectors_list)}
+p.xaxis.major_label_orientation = 0.8
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_25.html" width="100%" height="530" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Heatmaps
+
+Bokeh heatmaps are composed from `rect()` glyphs plus explicit color mappers, which makes correlation matrices, monthly pivots, and return calendars all variations of the same pattern. That flexibility is useful when the matrix structure is easy to compute in Pandas but you still want interactive hover details.
+
+#### Bokeh | rect + LinearColorMapper (correlation matrix)
+
+```python
+# Pairwise correlation of numeric score columns - interactive hover for exact coefficients
+num_cols = ["composite_score", "momentum_score", "relative_value_score", "sentiment_score"]
+corr = scores[num_cols].corr()
+
+cols = corr.columns.tolist()
+x_vals, y_vals, c_vals = [], [], []
+for r in cols:
+    for c in cols:
+        x_vals.append(c)
+        y_vals.append(r)
+        c_vals.append(corr.loc[r, c])
+
+source = ColumnDataSource(data=dict(x=x_vals, y=y_vals, value=c_vals))
+mapper = LinearColorMapper(palette=Spectral11[::-1], low=-1, high=1)
+
+p = figure(x_range=cols, y_range=cols[::-1], width=600, height=550,
+           title="Score Correlation Matrix", toolbar_location=None)
+p.rect("x", "y", 1, 1, source=source, fill_color={"field": "value", "transform": mapper},
+       line_color=TN["border"])
+p.add_layout(ColorBar(color_mapper=mapper, title="Correlation"), "right")
+p.add_tools(HoverTool(tooltips=[("Pair", "@x / @y"), ("r", "@value{0.3f}")]))
+p.xaxis.major_label_orientation = 0.8
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_26.html" width="100%" height="580" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | rect (pivot heatmap - monthly avg close)
+
+```python
+# Average close price per stock (top 5) per quarter - reveals seasonal patterns
+pivot = top5.copy()
+pivot["quarter"] = pivot["date"].dt.to_period("Q").astype(str)
+quarterly = pivot.groupby(["symbol", "quarter"])["close"].mean().reset_index()
+
+source = ColumnDataSource(data=dict(
+    symbol=quarterly["symbol"], quarter=quarterly["quarter"], close=quarterly["close"],
+))
+symbols = sorted(quarterly["symbol"].unique().tolist())
+quarters = sorted(quarterly["quarter"].unique().tolist())
+mapper = LinearColorMapper(palette=Viridis256, low=quarterly["close"].min(),
+                           high=quarterly["close"].max())
+
+p = figure(x_range=quarters, y_range=symbols, width=800, height=350,
+           title="Quarterly Avg Close - Top 5 Stocks", toolbar_location=None)
+p.rect("quarter", "symbol", 1, 1, source=source,
+       fill_color={"field": "close", "transform": mapper}, line_color=TN["border"])
+p.add_layout(ColorBar(color_mapper=mapper, title="Avg Close"), "right")
+p.add_tools(HoverTool(tooltips=[("Stock", "@symbol"), ("Quarter", "@quarter"),
+                                ("Close", "@close{0.1f}")]))
+p.xaxis.major_label_orientation = 0.8
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_27.html" width="100%" height="420" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | rect (calendar heatmap - daily returns)
+
+```python
+# Calendar-style heatmap of ASML daily returns: row = week-of-year, col = day-of-week
+cal = asml[["date", "close"]].copy()
+cal["ret"] = cal["close"].pct_change() * 100
+cal["dow"] = cal["date"].dt.dayofweek
+cal["week"] = cal["date"].dt.isocalendar().week.astype(int)
+cal["year"] = cal["date"].dt.year
+cal = cal.dropna()
+cal["label"] = cal["date"].dt.strftime("%Y-%m-%d")
+
+source = ColumnDataSource(data=dict(
+    week=cal["week"].astype(str), dow=cal["dow"].astype(str),
+    ret=cal["ret"], label=cal["label"],
+))
+days = [str(i) for i in range(5)]
+weeks = sorted(cal["week"].astype(str).unique().tolist(), key=lambda x: int(x))
+
+mapper = LinearColorMapper(palette=Spectral11[::-1], low=-3, high=3)
+
+p = figure(x_range=weeks, y_range=days[::-1], width=800, height=250,
+           title="ASML - Daily Return Calendar Heatmap", toolbar_location=None)
+p.rect("week", "dow", 1, 1, source=source,
+       fill_color={"field": "ret", "transform": mapper}, line_color=TN["bg"])
+p.add_layout(ColorBar(color_mapper=mapper, title="Return %"), "right")
+p.add_tools(HoverTool(tooltips=[("Date", "@label"), ("Return", "@ret{0.2f}%")]))
+p.yaxis.major_label_overrides = {"0": "Mon", "1": "Tue", "2": "Wed", "3": "Thu", "4": "Fri"}
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_28.html" width="100%" height="420" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Pie & Donut
+
+Pie-style charts use `wedge()` and `annular_wedge()` with the same `ColumnDataSource` model as other Bokeh plots. They are best treated as categorical composition views rather than precision-comparison charts.
+
+#### Bokeh | wedge (pie chart)
+
+```python
+# Sector composition of the EuroStoxx 50 index - wedge sizes = number of stocks
+sec_counts = scores.groupby("sector").size().reset_index(name="count").sort_values("count", ascending=False)
+sec_counts["angle"] = sec_counts["count"] / sec_counts["count"].sum() * 2 * math.pi
+sec_counts["color"] = (TN_PALETTE * 3)[:len(sec_counts)]
+
+source = ColumnDataSource(sec_counts)
+p = figure(width=600, height=500, title="Sector Composition - Pie",
+           toolbar_location=None, x_range=(-0.55, 1.1))
+p.wedge(x=0, y=1, radius=0.45, start_angle=cumsum("angle", include_zero=True),
+        end_angle=cumsum("angle"), line_color=TN["border"],
+        fill_color="color", legend_field="sector", source=source)
+p.add_tools(HoverTool(tooltips=[("Sector", "@sector"), ("Count", "@count")]))
+p.axis.visible = False
+p.grid.visible = False
+p.background_fill_color = "#1a1b26"
+p.border_fill_color = "#1a1b26"
+p.outline_line_color = "#3b4261"
+p.title.text_color = "#a9b1d6"
+if p.legend:
+    for leg in p.legend:
+        leg.label_text_font_size = "9pt"
+        leg.spacing = 2
+        leg.padding = 4
+        leg.background_fill_color = "#24283b"
+        leg.border_line_color = "#3b4261"
+        leg.label_text_color = "#a9b1d6"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_29.html" width="100%" height="530" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | annular_wedge (donut chart)
+
+```python
+# Same sector data as a donut - center space available for a KPI or label
+source = ColumnDataSource(sec_counts)
+p = figure(width=600, height=500, title="Sector Composition - Donut",
+           toolbar_location=None, x_range=(-0.55, 1.1))
+p.annular_wedge(x=0, y=1, inner_radius=0.2, outer_radius=0.45,
+                start_angle=cumsum("angle", include_zero=True),
+                end_angle=cumsum("angle"), line_color=TN["border"],
+                fill_color="color", legend_field="sector", source=source)
+p.add_tools(HoverTool(tooltips=[("Sector", "@sector"), ("Count", "@count")]))
+p.axis.visible = False
+p.grid.visible = False
+
+# Center label
+total = sec_counts["count"].sum()
+center_label = Label(x=0, y=1, text=f"{total}", text_align="center",
+                     text_baseline="middle", text_color=TN["text"],
+                     text_font_size="20pt")
+p.add_layout(center_label)
+p.background_fill_color = "#1a1b26"
+p.border_fill_color = "#1a1b26"
+p.outline_line_color = "#3b4261"
+p.title.text_color = "#a9b1d6"
+if p.legend:
+    for leg in p.legend:
+        leg.label_text_font_size = "9pt"
+        leg.spacing = 2
+        leg.padding = 4
+        leg.background_fill_color = "#24283b"
+        leg.border_line_color = "#3b4261"
+        leg.label_text_color = "#a9b1d6"
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_30.html" width="100%" height="530" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Interactive Features
+
+This section focuses on browser-side interaction: custom HTML tooltips, crosshairs, linked ranges, dropdown-driven series switching, range sliders, and tabbed layouts. These are the cells that show where Bokeh is strongest relative to simpler notebook plotting stacks.
+
+#### Bokeh | HoverTool (custom HTML tooltip)
+
+```python
+# Rich HTML tooltip showing formatted OHLCV data with colored close-vs-open indicator
+source = ColumnDataSource(data=dict(
+    date=asml["date"], open=asml["open"], high=asml["high"],
+    low=asml["low"], close=asml["close"], volume=asml["volume"],
+    change=((asml["close"] - asml["open"]) / asml["open"] * 100),
+))
+
+TOOLTIP = """
+<div style="background:#24283b;padding:8px;border-radius:4px;border:1px solid #3b4261;">
+  <b style="color:#a9b1d6;">@date{%F}</b><br>
+  <span style="color:#7dcfff;">O:</span> <span style="color:#ffffff;">@open{0.2f}</span> &nbsp;
+  <span style="color:#7dcfff;">H:</span> <span style="color:#ffffff;">@high{0.2f}</span><br>
+  <span style="color:#7dcfff;">L:</span> <span style="color:#ffffff;">@low{0.2f}</span> &nbsp;
+  <span style="color:#7dcfff;">C:</span> <span style="color:#ffffff;">@close{0.2f}</span><br>
+  <span style="color:#7dcfff;">Vol:</span> <span style="color:#ffffff;">@volume{0,0}</span><br>
+  <span style="color:#e0af68;">Chg:</span> <span style="color:#ffffff;">@change{+0.2f}%</span>
+</div>
+"""
+
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - Custom Tooltip")
+p.line("date", "close", source=source, color=TN["blue"], width=2)
+p.add_tools(HoverTool(tooltips=TOOLTIP, formatters={"@date": "datetime"}, mode="vline"))
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_31.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | CrosshairTool
+
+```python
+# Crosshair following cursor on price chart - helps read exact position
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Crosshair")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+crosshair = CrosshairTool(line_color=TN["cyan"], line_alpha=0.5)
+p.add_tools(crosshair)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_32.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | x_range sharing (linked pan & zoom)
+
+```python
+# Two plots sharing x_range - pan or zoom one and both follow
+source = ColumnDataSource(data=dict(
+    date=asml["date"], close=asml["close"], volume=asml["volume"],
+))
+
+p1 = figure(x_axis_type="datetime", width=800, height=300, title="ASML - Close (linked)")
+p1.line("date", "close", source=source, color=TN["blue"], width=2)
+
+p2 = figure(x_axis_type="datetime", width=800, height=200, x_range=p1.x_range,
+            title="ASML - Volume (linked)")
+p2.vbar("date", 12*60*60*1000, 0, "volume", source=source,
+        fill_color="#2d8a4e", alpha=0.4)
+p2.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+
+show(column(p1, p2))
+```
+
+<iframe src="/static/bokeh/df_py_08_33.html" width="100%" height="550" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | Select + CustomJS (stock switcher)
+
+```python
+# Dropdown to switch between stocks - all logic in browser JS, no server needed
+dates = ohlcv[ohlcv["symbol"] == "ASML.AS"].sort_values("date").tail(365)["date"].values
+data = {"date": dates}
+for sym in top5_syms:
+    df_sym = ohlcv[ohlcv["symbol"] == sym].sort_values("date").tail(365)
+    # Align to common date axis by reindexing
+    aligned = df_sym.set_index("date").reindex(pd.DatetimeIndex(dates))["close"].values
+    data[sym] = aligned
+
+source = ColumnDataSource(data={"date": dates, "close": data[top5_syms[0]]})
+full = ColumnDataSource(data=data)
+
+p = figure(x_axis_type="datetime", width=800, height=400, title="Stock Selector")
+r = p.line("date", "close", source=source, color=TN["blue"], width=2)
+
+callback = CustomJS(args=dict(source=source, full=full), code="""
+    const sym = cb_obj.value;
+    source.data['close'] = full.data[sym];
+    source.change.emit();
+""")
+
+select = Select(title="Stock:", value=top5_syms[0], options=top5_syms)
+select.js_on_change("value", callback)
+show(column(select, p))
+```
+
+<iframe src="/static/bokeh/df_py_08_34.html" width="100%" height="520" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | RangeSlider + CustomJS (date filter)
+
+```python
+# Slider to filter visible date range without server roundtrips
+all_dates = asml["date"].values.astype(np.int64) // 10**6  # ms since epoch
+source = ColumnDataSource(data=dict(
+    date=asml["date"], close=asml["close"],
+    date_ms=all_dates,
+))
+
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Date Range Filter")
+p.line("date", "close", source=source, color=TN["blue"], width=2)
+
+lo, hi = int(all_dates.min()), int(all_dates.max())
+slider = RangeSlider(start=lo, end=hi, value=(lo, hi), step=86400000,
+                     title="Date Range (drag handles)")
+
+callback = CustomJS(args=dict(p=p, slider=slider), code="""
+    const [lo, hi] = slider.value;
+    p.x_range.start = lo;
+    p.x_range.end = hi;
+""")
+slider.js_on_change("value", callback)
+show(column(slider, p))
+```
+
+<iframe src="/static/bokeh/df_py_08_35.html" width="100%" height="420" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | Tabs + TabPanel
+
+```python
+# Tabbed layout - one tab per stock, switch without redrawing
+panels = []
+for sym, clr in zip(top5_syms, TN_PALETTE):
+    df = ohlcv[ohlcv["symbol"] == sym].sort_values("date").tail(365)
+    p = figure(x_axis_type="datetime", width=800, height=350, title=sym)
+    p.line(df["date"], df["close"], color=clr, width=2)
+    p.background_fill_color = "#1a1b26"
+    p.border_fill_color = "#1a1b26"
+    p.outline_line_color = "#3b4261"
+    p.title.text_color = "#a9b1d6"
+    for ax in [p.xaxis[0], p.yaxis[0]]:
+        ax.axis_line_color = "#3b4261"
+        ax.major_label_text_color = "#a9b1d6"
+        ax.major_tick_line_color = "#3b4261"
+    for g in p.grid:
+        g.grid_line_color = "#292e42"
+    panels.append(TabPanel(child=p, title=sym.split(".")[0]))
+
+tabs = Tabs(tabs=panels)
+show(tabs)
+```
+
+<iframe src="/static/bokeh/df_py_08_36.html" width="100%" height="440" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Layouts & Dashboards
+
+Bokeh layout primitives let you compose dashboards from independent figures while keeping tools and ranges linked. `gridplot()`, `column()`, and `row()` cover both compact analytic panels and larger financial dashboards.
+
+#### Bokeh | gridplot (2x2 dashboard)
+
+```python
+# Four-panel dashboard for ASML: price, volume, return distribution, close vs open scatter
+source = ColumnDataSource(data=dict(
+    date=asml["date"], close=asml["close"], open=asml["open"],
+    volume=asml["volume"], ret=(asml["close"].pct_change() * 100),
+))
+
+p1 = figure(x_axis_type="datetime", width=390, height=300, title="Close Price")
+p1.line("date", "close", source=source, color=TN["blue"], width=2)
+
+p2 = figure(x_axis_type="datetime", width=390, height=300, title="Volume",
+            x_range=p1.x_range)
+p2.vbar("date", 12*60*60*1000, 0, "volume", source=source,
+        fill_color="#2d8a4e", alpha=0.5)
+p2.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+
+hist, edges = np.histogram(asml["close"].pct_change().dropna() * 100, bins=40)
+p3 = figure(width=390, height=300, title="Daily Return Distribution")
+p3.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:],
+        fill_color=TN["purple"], line_color=TN["border"], alpha=0.7)
+
+p4 = figure(width=390, height=300, title="Open vs Close")
+p4.scatter("open", "close", source=source, color=TN["cyan"], size=5, alpha=0.6)
+p4.line([asml["open"].min(), asml["open"].max()],
+        [asml["open"].min(), asml["open"].max()],
+        color="#c0392b", line_dash="dashed", legend_label="y=x")
+p4.legend.location = "top_left"
+
+show(gridplot([[p1, p2], [p3, p4]], merge_tools=True))
+```
+
+<iframe src="/static/bokeh/df_py_08_37.html" width="100%" height="700" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | column + row (nested layout)
+
+```python
+# Nested responsive layout: wide chart on top, two narrow charts side-by-side below
+p_top = figure(x_axis_type="datetime", width=800, height=280, title="ASML - Full Width")
+p_top.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+
+sma20 = asml["close"].rolling(20).mean()
+p_left = figure(x_axis_type="datetime", width=390, height=280, title="SMA 20")
+p_left.line(asml["date"], sma20, color=TN["yellow"], width=2)
+
+p_right = figure(x_axis_type="datetime", width=390, height=280, title="Volume")
+p_right.vbar(asml["date"], 12*60*60*1000, 0, asml["volume"],
+             fill_color="#2d8a4e", alpha=0.4)
+p_right.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+
+show(column(p_top, row(p_left, p_right)))
+```
+
+<iframe src="/static/bokeh/df_py_08_38.html" width="100%" height="630" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | gridplot (6-panel financial dashboard)
+
+```python
+# Complete financial dashboard: candles, volume, RSI, MACD histogram, scatter, returns
+close = asml["close"]
+delta = close.diff()
+gain = delta.where(delta > 0, 0).rolling(14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+rsi = 100 - (100 / (1 + gain / loss))
+
+ema12 = close.ewm(span=12).mean()
+ema26 = close.ewm(span=26).mean()
+macd_hist = (ema12 - ema26) - (ema12 - ema26).ewm(span=9).mean()
+
+inc = close > asml["open"]
+w = 12 * 60 * 60 * 1000
+
+# Panel 1: Candlestick
+p1 = figure(x_axis_type="datetime", width=390, height=250, title="Candlestick")
+p1.segment(asml["date"], asml["high"], asml["date"], asml["low"], color=TN["text"])
+color = np.where(inc, "#2d8a4e", "#c0392b")
+p1.vbar(asml["date"], w, asml["open"], close, fill_color=color, line_color=color)
+
+# Panel 2: Volume
+p2 = figure(x_axis_type="datetime", width=390, height=250, title="Volume",
+            x_range=p1.x_range)
+p2.vbar(asml["date"], w, 0, asml["volume"], fill_color=color, alpha=0.5)
+p2.yaxis.formatter = NumeralTickFormatter(format="0.0a")
+
+# Panel 3: RSI
+p3 = figure(x_axis_type="datetime", width=390, height=250, title="RSI (14)",
+            x_range=p1.x_range)
+p3.line(asml["date"], rsi, color=TN["cyan"], width=2)
+overbought = Span(location=70, dimension="width", line_color="#c0392b", line_dash="dashed")
+oversold = Span(location=30, dimension="width", line_color="#2d8a4e", line_dash="dashed")
+p3.add_layout(overbought)
+p3.add_layout(oversold)
+
+# Panel 4: MACD histogram
+macd_color = np.where(macd_hist >= 0, "#2d8a4e", "#c0392b")
+p4 = figure(x_axis_type="datetime", width=390, height=250, title="MACD Histogram",
+            x_range=p1.x_range)
+p4.vbar(asml["date"], w, 0, macd_hist, fill_color=macd_color, line_color=macd_color)
+
+# Panel 5: Open vs Close scatter
+p5 = figure(width=390, height=250, title="Open vs Close")
+p5.scatter(asml["open"], close, color=TN["purple"], size=4, alpha=0.5)
+
+# Panel 6: Return histogram
+rets = close.pct_change().dropna() * 100
+hist_v, edges_v = np.histogram(rets, bins=40)
+p6 = figure(width=390, height=250, title="Daily Returns (%)")
+p6.quad(top=hist_v, bottom=0, left=edges_v[:-1], right=edges_v[1:],
+        fill_color=TN["yellow"], line_color=TN["border"], alpha=0.7)
+
+show(gridplot([[p1, p2], [p3, p4], [p5, p6]], merge_tools=True))
+```
+
+<iframe src="/static/bokeh/df_py_08_39.html" width="100%" height="850" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Styling & Themes
+
+The notebook theme is global, but Bokeh still exposes detailed control over annotations, legend placement, overlays, and guide styling. These cells show how to add narrative context to a plot without leaving the Bokeh object model.
+
+#### Bokeh | Span + Label + Arrow + BoxAnnotation
+
+```python
+# Reference lines, text labels, arrows, and shaded regions on a price chart
+p = figure(x_axis_type="datetime", width=800, height=450, title="ASML - Annotations")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+
+# Mean reference line
+mean_price = asml["close"].mean()
+p.add_layout(Span(location=mean_price, dimension="width",
+                   line_color=TN["yellow"], line_dash="dashed", line_width=2))
+
+# Max/min labels
+max_idx = asml["close"].idxmax()
+min_idx = asml["close"].idxmin()
+p.add_layout(Label(x=asml.loc[max_idx, "date"], y=asml.loc[max_idx, "close"],
+                   text=f" High: {asml.loc[max_idx, 'close']:.0f}",
+                   text_color="#2d8a4e", text_font_size="10pt",
+                   x_units="data", y_units="data"))
+p.add_layout(Label(x=asml.loc[min_idx, "date"], y=asml.loc[min_idx, "close"],
+                   text=f" Low: {asml.loc[min_idx, 'close']:.0f}",
+                   text_color="#c0392b", text_font_size="10pt",
+                   x_units="data", y_units="data"))
+
+# Arrow from label to max point
+p.add_layout(Arrow(end=NormalHead(fill_color="#2d8a4e", size=8, line_color="#2d8a4e"),
+                   x_start=asml.loc[max_idx, "date"], y_start=asml.loc[max_idx, "close"] + 15,
+                   x_end=asml.loc[max_idx, "date"], y_end=asml.loc[max_idx, "close"] + 2,
+                   line_color="#2d8a4e"))
+
+# Shaded region for first quarter
+q1_end = asml["date"].iloc[0] + pd.Timedelta(days=90)
+p.add_layout(BoxAnnotation(left=asml["date"].iloc[0], right=q1_end,
+                           fill_color=TN["purple"], fill_alpha=0.1))
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_40.html" width="100%" height="480" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | legend customization
+
+```python
+# Legend options: position, orientation, click_policy, label styling
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Legend Customization")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2, legend_label="Close")
+p.line(asml["date"], asml["close"].rolling(20).mean(), color=TN["yellow"],
+       width=2, legend_label="SMA 20")
+p.line(asml["date"], asml["close"].rolling(50).mean(), color="#2d8a4e",
+       width=2, legend_label="SMA 50")
+
+p.legend.location = "top_right"
+p.legend.orientation = "vertical"
+p.legend.click_policy = "mute"       # mute instead of hide - faded but visible
+p.legend.label_text_font_size = "10pt"
+p.legend.spacing = 5
+p.legend.padding = 10
+p.legend.margin = 10
+p.legend.glyph_width = 25
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_41.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Advanced
+
+Advanced Bokeh work often means mixing charts with widgets and non-chart components such as `DataTable`, or refining axes beyond the default tick formatters. The examples below keep that focus on richer notebook-native exploration rather than static publication.
+
+#### Bokeh | DataTable (interactive sortable table)
+
+```python
+# Interactive sortable data table from ColumnDataSource - linked to plots if shared
+source = ColumnDataSource(data=dict(
+    symbol=scores["symbol"],
+    sector=scores["sector"],
+    composite=scores["composite_score"].round(3),
+    momentum=scores["momentum_score"].round(3),
+    value=scores["relative_value_score"].round(3),
+))
+
+columns = [
+    TableColumn(field="symbol", title="Symbol", width=100),
+    TableColumn(field="sector", title="Sector", width=180),
+    TableColumn(field="composite", title="Composite", formatter=NumberFormatter(format="0.000")),
+    TableColumn(field="momentum", title="Momentum", formatter=NumberFormatter(format="0.000")),
+    TableColumn(field="value", title="Value", formatter=NumberFormatter(format="0.000")),
+]
+
+table = DataTable(source=source, columns=columns, width=800, height=400,
+                  index_position=None, sortable=True, stylesheets=[dark_css])
+show(table)
+```
+
+<iframe src="/static/bokeh/df_py_08_42.html" width="100%" height="420" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | log scale (logarithmic axis)
+
+```python
+# Logarithmic y-axis for long-term price series - reveals percentage moves equally
+p = figure(x_axis_type="datetime", y_axis_type="log", width=800, height=400,
+           title="ASML - Log Scale")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_43.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+#### Bokeh | DatetimeTickFormatter (custom date axis)
+
+```python
+# Custom date formatting: show month abbreviations and year on x-axis
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Custom Date Axis")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+p.xaxis.formatter = DatetimeTickFormatter(
+    days="%d %b", months="%b %Y", years="%Y",
+)
+show(p)
+```
+
+<iframe src="/static/bokeh/df_py_08_44.html" width="100%" height="430" style="border:none;border-radius:8px;background:#1a1b26;display:block;overflow:hidden;" loading="lazy" scrolling="no"></iframe>
+
+## Exporting
+
+Bokeh can persist any figure as a standalone HTML document. That export path matters when notebook outputs need to be shared, embedded elsewhere, or versioned as artifacts outside the notebook itself.
+
+#### Bokeh | save (HTML export)
+
+```python
+# Export interactive chart as standalone HTML file - opens in any browser
+
+p = figure(x_axis_type="datetime", width=800, height=400, title="ASML - Exported Chart")
+p.line(asml["date"], asml["close"], color=TN["blue"], width=2)
+
+html_path = TMP / "asml_chart.html"
+save(p, filename=str(html_path), title="ASML Chart")
+print(f"Saved: {html_path}  ({html_path.stat().st_size / 1024:.0f} KB)")
+```
+
+```text
+Saved: C:\Users\aperi\AppData\Local\Temp\tmpsn8ns_wk\asml_chart.html  (12 KB)
+```
+
 ---
 
 ## Plotly — Interactive Charts
@@ -1186,7 +2850,6 @@ pio.templates.default = "tokyo_night"
 
 ## Line Charts
 
-
 Plotly line charts are **interactive** — hover for values, zoom, pan, and export. Faceting splits series into separate panels; dual Y-axes overlay different scales.
 
 **Best for:** Interactive exploration of time-series data in notebooks or dashboards. Ideal when stakeholders need to zoom into specific date ranges or compare series on hover.
@@ -1202,12 +2865,6 @@ _Calls `px.line(asml_pd, x="date", y="close")` — produces an interactive chart
 fig = px.line(asml_pd, x="date", y="close", title="ASML Close Price (1Y)")
 fig.show()
 ```
-
-<script>
-        window.PlotlyConfig = {MathJaxConfig: 'local'};
-        if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}
-        </script>
-        <script type="module">import "https://cdn.plot.ly/plotly-3.4.0.min"</script>
 
 <iframe src="/static/plotly/df_py_08_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
@@ -1285,7 +2942,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_05.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Bar Charts
-
 
 Interactive bars support hover tooltips, click-to-filter, and animated transitions. Grouped bars (`barmode="group"`) compare side by side; stacked (`barmode="stack"`) show totals. Text labels (`text_auto`) make values readable without consulting the axis.
 
@@ -1366,7 +3022,6 @@ fig.show()
 
 ## Scatter Plots
 
-
 Plotly scatter adds **hover details**, marginal distributions, trendlines, and 3D projection. Color, size, and symbol can each encode a different variable, turning a 2D plot into a 5D exploration tool.
 
 **Best for:** Multi-dimensional exploration — when you want to encode 3–5 variables in a single view. OLS trendlines quantify relationships; marginals show distributions along each axis. 3D scatter is useful for PCA or factor analysis visualization.
@@ -1406,6 +3061,7 @@ fig.show()
 ### Marginal Distributions
 
 #### How to read
+
 - **Center** = main scatter plot showing the relationship
 - **Top margin** = histogram of the x-variable's distribution
 - **Right margin** = box plot of the y-variable's distribution
@@ -1428,6 +3084,7 @@ fig.show()
 ### Trendline (OLS)
 
 #### How to read
+
 - **Red line** = best-fit linear regression
 - **Slope direction** = positive or negative correlation
 - **Scatter tightness** around line = strength of relationship (R²)
@@ -1465,7 +3122,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_14.html" width="100%" height="650" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Histograms & Distributions
-
 
 Interactive histograms let you zoom into tails, hover for bin counts, and overlay multiple groups. Violin plots show the full density shape; box plots summarize with quartiles and outliers; strip plots show every individual point.
 
@@ -1521,6 +3177,7 @@ fig.show()
 ### Violin Plot
 
 #### How to read
+
 - **Width** = density (wider = more data at that level)
 - **Internal box** = Q1, median, Q3 (same as box plot)
 - **Points** = individual observations (when enabled)
@@ -1544,6 +3201,7 @@ fig.show()
 ### Box Plot
 
 #### How to read
+
 - **Box** = IQR (Q1 to Q3, middle 50%); **line** = median
 - **Whiskers** = up to 1.5×IQR; **dots** = outliers beyond whiskers
 - **Notch** = 95% CI for median; non-overlapping notches ≈ significant difference
@@ -1566,6 +3224,7 @@ fig.show()
 ### Strip Plot
 
 #### How to read
+
 - **Each dot** = one observation, jittered horizontally
 - Hover to identify individual points by name
 - Best for small datasets where you want to see every value
@@ -1585,7 +3244,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_20.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Area Charts
-
 
 Interactive area charts support hover, zoom, and range selection. Stacked areas show composition over time — hover reveals each component's value at any point.
 
@@ -1621,7 +3279,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_22.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Pie, Sunburst & Treemap
-
 
 Sunbursts and treemaps extend pie charts to **hierarchical data** — drill from sector to country to stock. Click to zoom into a level; hover for details. Treemaps use area (easier to compare than angles); sunbursts use concentric rings.
 
@@ -1695,7 +3352,6 @@ fig.show()
 
 ## Heatmap & Correlation
 
-
 Heatmaps encode a **matrix of values** as colors, ideal for correlation matrices and pivot tables. Interactive hover shows exact values; zoom lets you focus on subregions. Diverging color scales (RdBu) center on zero to distinguish positive from negative.
 
 **Best for:** Correlation analysis, confusion matrices, time x category pivot tables, and any data naturally represented as a 2D grid (weekday x hour, gene expression matrices).
@@ -1703,6 +3359,7 @@ Heatmaps encode a **matrix of values** as colors, ideal for correlation matrices
 ### Correlation Matrix
 
 #### How to read
+
 - **+1.0 (dark red)** = perfect positive correlation (both move together)
 - **-1.0 (dark blue)** = perfect negative correlation (one goes up, other goes down)
 - **0.0 (white)** = no linear relationship
@@ -1762,6 +3419,7 @@ Candlestick and OHLC charts are standard for **price action analysis**. Each bar
 ### Candlestick
 
 #### How to read
+
 - **Body** = range between open and close (filled/green = close > open = bullish; hollow/red = bearish)
 - **Upper wick** = high of the day above the body
 - **Lower wick** = low of the day below the body
@@ -1787,6 +3445,7 @@ fig.show()
 ### OHLC
 
 #### How to read
+
 - **Vertical line** = high-to-low range for the period
 - **Left tick** = opening price
 - **Right tick** = closing price
@@ -1839,7 +3498,6 @@ fig.show()
 
 ## Subplots & Layout
 
-
 Subplots arrange multiple charts in a grid for **dashboard-style views**. Shared axes link zoom/pan across panels. Plotly Express faceting (`facet_col`, `facet_row`) auto-creates grids from a categorical column.
 
 **Best for:** Dashboards, multi-metric monitoring, comparing the same metric across categories (one chart per stock, per sensor, per region).
@@ -1889,7 +3547,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_33.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Geographic Charts
-
 
 Choropleth maps color regions by a metric — great for showing **geographic distribution**. Scatter maps plot points at coordinates with size/color encoding.
 
@@ -1964,7 +3621,6 @@ fig.show()
 
 ## Animated Charts
 
-
 Animation adds a **time dimension** to any chart type. `animation_frame` in Plotly Express creates a slider that steps through values of a column. Use fixed axis ranges so the viewer can track movement rather than rescaling.
 
 **Best for:** Showing evolution over time (rankings changing, clusters drifting, distributions shifting). Most impactful in presentations; less useful for static analysis (hard to compare frames).
@@ -2029,7 +3685,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_37.html" width="100%" height="650" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Styling, Templates & Themes
-
 
 Templates control the overall look: background, grid, fonts, color palette. Built-in options include `plotly_dark`, `ggplot2`, `seaborn`, etc. Custom templates let you enforce brand consistency across all charts.
 
@@ -2120,7 +3775,6 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_40.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Advanced Interactivity
-
 
 Dropdowns, range selectors, and custom hover templates turn charts into **mini-applications**. Dropdown buttons toggle trace visibility; range selectors offer 1M/3M/YTD presets. Custom hover templates control exactly what information appears on mouseover.
 
@@ -2296,13 +3950,15 @@ fig.write_json(TMP / "chart.json")
 print(f"JSON: {(TMP / 'chart.json').stat().st_size:,} bytes")
 ```
 
-    HTML: 10,714 bytes
+HTML: 10,714 bytes
     PNG: 129,923 bytes
     SVG: 12,829 bytes
     PDF: 12,091 bytes
     JSON: 9,815 bytes
 
 ## Summary
+
+Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh fills the notebook-native interactive niche with linked brushing, widgets, dashboards, and `DataTable`; Plotly remains the quickest route to high-level interactive exploration and shareable HTML exports.
 
 | Chart Type | Plotly Express | Graph Objects |
 |---|---|---|
@@ -2321,7 +3977,6 @@ print(f"JSON: {(TMP / 'chart.json').stat().st_size:,} bytes")
 | OHLC | — | `go.Ohlc()` |
 | Choropleth | `px.choropleth()` | `go.Choropleth()` |
 | 3D Scatter | `px.scatter_3d()` | `go.Scatter3d()` |
-
 | Feature | How |
 |---|---|
 | Facets | `facet_col`, `facet_row` |
