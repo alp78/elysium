@@ -1,7 +1,7 @@
 ---
 title: "System Functions and Session Metadata"
 tags: [sql, sql-server, tsql, system-functions, metadata-functions, session-context, scope-identity, rowcount]
-aliases: [system function reference, session metadata, @@ROWCOUNT, SCOPE_IDENTITY]
+aliases: [system function reference, session metadata ROWCOUNT, SCOPE_IDENTITY]
 description: "T-SQL reference for SQL Server system functions and metadata helpers such as @@ROWCOUNT, @@TRANCOUNT, @@SPID, SCOPE_IDENTITY, IDENT_CURRENT, DB_NAME, OBJECT_ID, SESSION_CONTEXT, APP_NAME, HOST_NAME, ORIGINAL_LOGIN, and related helpers."
 parent: "[[domain-query-writing-and-optimization]]"
 links:
