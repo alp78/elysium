@@ -10,7 +10,7 @@ tags:
   - bcp
   - etl
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
-description: "Every method of getting data into SQL Server — benchmarked and compared. Covers bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging."
+description: "Production loading patterns for SQL Server: full refresh, staged validation, upsert, bulk-load interfaces, and minimal-logging decisions."
 parent: "[[domain-pipeline-patterns]]"
 links:
   - "[[sql-server-schema-layering]]"
@@ -21,832 +21,811 @@ links:
   - "[[silver-transforms]]"
   - "[[gold-transforms]]"
 created: 2026-03-29
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
-# SQL Server Loading Patterns — Getting Data In Efficiently
+# SQL Server Loading Patterns
 
-> [!quote]
-> "The best performance improvement is the transition from the nonworking state to the working state."
->
-> — **John Ousterhout**, *A Philosophy of Software Design* (2018)
+Loading patterns decide how data enters SQL Server safely, how much data is replaced on each run, and which interface should carry the bytes. In production, the main questions are:
 
-Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion). For C# benchmarks, see [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).
+- Is this a full replacement, an append, or an upsert
+- Do you need a validation gate before publishing data
+- Does the workload need row-by-row transactional control or raw bulk throughput
+- Can the recovery model and target-table design support minimal logging
 
----
-
-## Loading Methods Comparison
-
-### Method Benchmark Table — throughput at 100K and 10M rows
-
-> [!info] Benchmark Comparison
->
-> Approximate throughput on a 4-core VM with SSD storage. Actual numbers vary with schema, data types, network latency, and indexing. Use these as relative comparisons, not absolutes.
-
-| Method | Language | ~100K rows | ~10M rows | Transactional | Best For |
-|--------|----------|-----------|-----------|---------------|----------|
-| INSERT row-by-row | Any | 45s | Hours | Yes | Never in production |
-| Parameterized `executemany` | Python | 12s | ~20min | Yes | Small loads <100K |
-| pyodbc `fast_executemany` | Python | 1.2s | ~2min | Yes | Python pipelines |
-| `bcp` utility | CLI | 0.8s | ~90s | No* | Bulk loads, any language |
-| `BULK INSERT` | T-SQL | 0.7s | ~80s | Optional | SQL-driven loads |
-| `SqlBulkCopy` | C# | 0.9s | ~100s | Yes | .NET pipelines |
-| `OPENROWSET` | T-SQL | Varies | Varies | Yes | Ad-hoc external file reads |
-
-*bcp uses `TABLOCK` for minimal logging — not transactional in the traditional sense.
-
-### Which Loading Method for Which Scenario
-
-> [!tip] Scenario-based selection
->
-> The benchmark table shows throughput. Here is which method to choose based on your actual pipeline requirements.
-
-**Daily batch pipeline (100K-1M rows, Python orchestrated):**
-→ `pyodbc fast_executemany`. Already in your language, transactional, good enough throughput. Only switch to bcp if profiling shows loading as the bottleneck.
-
-**Initial historical backfill (10M+ rows, one-time):**
-→ `bcp` with format file. Fastest path. Accept the trade-offs (no transactions, encoding quirks) because you're running this once.
-
-**Real-time micro-batches (1K rows every 5 minutes):**
-→ `pyodbc fast_executemany` with small batch size. The overhead of spawning bcp for 1K rows exceeds the throughput gain.
-
-**C# service writing to SQL Server:**
-→ `SqlBulkCopy`. Native .NET, transactional, comparable to bcp throughput. Never use `SqlCommand.ExecuteNonQuery` in a loop.
-
-**Cross-database load (BigQuery → SQL Server):**
-→ Export from BigQuery to GCS as CSV/Parquet → `gcloud storage cp` to VM → `bcp` or `BULK INSERT`. There is no direct connector between BigQuery and SQL Server.
+This note uses the live `stoxx` database for the baseline and then demonstrates the core SQL loading behaviors on disposable demo tables.
 
 ---
 
-## Truncate-and-Reload
+## Live Baseline
 
-The simplest loading strategy: delete existing data, load fresh. Used when the source provides a complete snapshot on every run.
+The right loading pattern depends on the real data shape. Small raw snapshots, multi-year market-history tables, and gold aggregates do not need the same load mechanics.
 
-### TRUNCATE TABLE → INSERT — full refresh pattern
+### Current table volumes across bronze, silver, and gold
 
-> [!info] When to Use Truncate-and-Reload
->
-> Best for small tables (<1M rows), dimension tables, or snapshot data where history is preserved downstream (e.g., in silver). Bronze tables in a [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) are typically truncate-and-reload.
+#### Measure the live row counts of the main pipeline tables
 
-```sql
--- Step 1: Clear existing data for this partition key
-BEGIN TRANSACTION;
+[!info]-
+This query inventories the current row counts of all user tables in the `bronze`, `silver`, and `gold` schemas.
 
-DELETE FROM bronze.signals_daily
-WHERE _index = @index_key;    -- scoped delete, not full truncate
+- `sys.tables` and `sys.schemas` identify the user tables by schema.
+- `sys.partitions` supplies persisted row counts for heap and clustered storage.
+- `p.index_id IN (0,1)` limits the count to the base table storage, not every nonclustered index copy.
+- Ordering by schema and descending row count shows which tables are operationally small snapshot loads and which ones are large historical tables that demand incremental or bulk-aware patterns.
 
--- Step 2: Bulk insert the fresh snapshot
-INSERT INTO bronze.signals_daily (
-    _index, symbol, timestamp, current_price, forward_pe, ...
-) VALUES (?, ?, ?, ?, ?, ...);
-
-COMMIT;
-```
-
-> [!warning] TRUNCATE vs DELETE
->
-> `TRUNCATE TABLE` is faster (minimal logging — logs only page deallocations, not individual rows) but requires `ALTER TABLE` permission, resets `IDENTITY` to the seed value, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). Note: `TRUNCATE` **can** be rolled back inside an explicit `BEGIN TRANSACTION ... ROLLBACK` in SQL Server — a common misconception is that it cannot. However, it deallocates all data pages, so rollback of a large truncate can be as slow as re-inserting the data. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for idempotency patterns around truncate-reload.
-
-> [!success] Use Scoped DELETE Inside a Transaction
->
-> For partition-key-scoped clears (e.g., clearing one index at a time), use `DELETE FROM table WHERE _index = @key` wrapped in `BEGIN TRANSACTION ... COMMIT`. This is fully rollback-safe, does not reset `IDENTITY`, and requires no elevated permissions. Reserve `TRUNCATE` for full-table resets on tables with no surrogate keys exposed downstream.
-
----
-
-## Staging Table + Swap
-
-Load into a staging table, validate, then swap with production. Provides zero-downtime loads with a validation gate.
-
-### sp_rename Swap — fast rename approach
-
-> [!info] Staging Swap Pattern
->
-> Load completes invisibly in a staging table. Readers see the old data until the swap, which is near-instant.
+*This query measures the live row counts of the main bronze, silver, and gold tables in `stoxx`.*
 
 ```sql
--- Step 1: Load into staging (identical DDL to production)
-TRUNCATE TABLE staging.signals_daily;
--- ... bulk load into staging.signals_daily ...
-
--- Step 2: Validate
-IF (SELECT COUNT(*) FROM staging.signals_daily) < 100
-    THROW 50001, 'Row count below threshold — aborting swap', 1;
-
--- Step 3: Swap (atomic rename)
-EXEC sp_rename 'gold.signals_daily',    'signals_daily_old';
-EXEC sp_rename 'staging.signals_daily', 'signals_daily';
-EXEC sp_rename 'gold.signals_daily_old', 'signals_daily';  -- move old to staging
+SELECT s.name AS schema_name,
+       t.name AS table_name,
+       SUM(p.rows) AS row_count
+FROM sys.tables AS t
+JOIN sys.schemas AS s
+    ON s.schema_id = t.schema_id
+JOIN sys.partitions AS p
+    ON p.object_id = t.object_id
+   AND p.index_id IN (0, 1)
+WHERE s.name IN ('bronze', 'silver', 'gold')
+GROUP BY s.name, t.name
+ORDER BY schema_name, row_count DESC, table_name;
 ```
 
-> [!warning] sp_rename Metadata Lock
->
-> `sp_rename` takes a schema modification lock (Sch-M). Any concurrent queries on the table will block until the rename completes. For lock-free swaps, use partition `SWITCH` instead.
+| schema_name | table_name | row_count |
+|---|---|---:|
+| `bronze` | `trading_calendar` | 29335 |
+| `bronze` | `dim_country` | 212 |
+| `bronze` | `index_dim` | 169 |
+| `bronze` | `signals_daily` | 169 |
+| `bronze` | `signals_quarterly` | 169 |
+| `bronze` | `eurostoxx50_ohlcv` | 50 |
+| `bronze` | `stoxxasia50_ohlcv` | 50 |
+| `bronze` | `stoxxusa50_ohlcv` | 50 |
+| `bronze` | `pulse` | 40 |
+| `bronze` | `pulse_tickers` | 40 |
+| `bronze` | `oil20_ohlcv` | 19 |
+| `bronze` | `dim_index` | 4 |
+| `gold` | `index_performance` | 5351 |
+| `gold` | `scores_daily` | 635 |
+| `gold` | `scores_quarterly` | 176 |
+| `silver` | `eurostoxx50_ohlcv` | 67155 |
+| `silver` | `stoxxusa50_ohlcv` | 66000 |
+| `silver` | `stoxxasia50_ohlcv` | 64875 |
+| `silver` | `oil20_ohlcv` | 25080 |
+| `silver` | `signals_daily` | 635 |
+| `silver` | `signals_quarterly` | 188 |
+| `silver` | `index_dim` | 169 |
 
-> [!success] Use Partition SWITCH for Lock-Free Swaps
->
-> Replace the `sp_rename` approach with `ALTER TABLE staging.signals_daily SWITCH TO gold.signals_daily PARTITION N`. The `SWITCH` is a metadata-only operation with no data movement and no Sch-M lock on the production table during the copy phase. Only partition the table if you need this level of concurrency; otherwise, schedule `sp_rename` during a low-traffic window.
+_This inventory shows why one loading rule is not enough. `bronze.signals_daily` is a tiny current-day snapshot, while `silver.eurostoxx50_ohlcv` already holds more than 67K rows of market history. The first can tolerate scoped full replacement; the second should not be reloaded casually from scratch on every run._
 
-### Partition SWITCH — instant, zero-lock swap
+#### Inspect the most recent bronze snapshot arrival
 
-> [!tip] Partition SWITCH for Zero-Downtime
->
-> `SWITCH` is a metadata-only operation — no data moves. Requires matching indexes, same filegroup, and a `CHECK` constraint on the staging table that matches the partition boundary. See [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full `SWITCH` mechanics.
+[!info]-
+This query previews the latest raw snapshot arrivals in `bronze.signals_daily`.
+
+- `_index`, `symbol`, and `CAST([timestamp] AS date)` identify the business slice of the batch.
+- `_ingested_at` shows when SQL Server received the rows.
+- Ordering by `_ingested_at DESC, id DESC` surfaces the newest landed rows first.
+
+*This query previews the latest ingested bronze daily-signal rows so the reader can see the actual raw-batch shape that the load patterns must handle.*
 
 ```sql
--- Staging table has CHECK constraint matching the target partition
-ALTER TABLE staging.signals_daily
-    ADD CONSTRAINT CK_staging_date
-    CHECK (signal_date >= '2025-03-01' AND signal_date < '2025-04-01');
-
--- Instant swap: staging partition → production partition
-ALTER TABLE staging.signals_daily
-    SWITCH TO gold.signals_daily PARTITION 3;
-```
-
----
-
-## Watermarks — The Foundation of Incremental Loading
-
-A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For how Airflow orchestrates watermark-driven loads, see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
-
-### What a Watermark Is — definition and types
-
-> [!info] Watermark Definition
->
-> A watermark is a single value — a date, timestamp, integer ID, or LSN (Log Sequence Number) — that marks the boundary between "already processed" and "not yet processed" data. The pipeline reads only data **after** the watermark, processes it, then **advances** the watermark to the new boundary.
-
-| Watermark Type | Column Example | Best For | Gotchas |
-|----------------|----------------|----------|---------|
-| **Date** | `signal_date`, `trade_date` | Daily batch pipelines, date-partitioned data | Late-arriving data below the date boundary |
-| **Timestamp** | `_ingested_at`, `modified_at` | Near-real-time pipelines, event streams | Clock skew between source and destination |
-| **Monotonic ID** | `IDENTITY`, `BIGINT` sequence | Append-only tables with no updates | Gaps after rollbacks, resets after TRUNCATE |
-| **LSN** | `sys.fn_cdc_get_max_lsn()` | CDC-based change capture | Binary format, not human-readable |
-
-**The watermark contract:** data at or before the watermark has been processed. Data after the watermark has not. The pipeline must advance the watermark only after a successful commit — never before.
-
-### Where Watermarks Are Stored — four approaches
-
-> [!tip] Storage Decision
->
-> Choose based on transactional guarantees, visibility, and who owns the pipeline.
-
-#### Control Table in the Database — transactional with the load
-
-The most robust approach. The watermark update and the data INSERT happen in the same transaction — if the load fails, the watermark doesn't advance.
-
-```sql
--- Control table DDL
-CREATE TABLE meta.watermarks (
-    pipeline_name   VARCHAR(100)  NOT NULL PRIMARY KEY,
-    watermark_value VARCHAR(50)   NOT NULL,   -- stores date, timestamp, or ID as string
-    watermark_type  VARCHAR(20)   NOT NULL,   -- 'date', 'timestamp', 'identity', 'lsn'
-    updated_at      DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME(),
-    updated_by      VARCHAR(100)  NOT NULL DEFAULT SYSTEM_USER
-);
-```
-
-```sql
--- Usage: read watermark, load data, advance watermark — all in one transaction
-BEGIN TRANSACTION;
-
-DECLARE @wm DATE = (
-    SELECT CAST(watermark_value AS DATE)
-    FROM meta.watermarks
-    WHERE pipeline_name = 'ohlcv_europe'
-);
-
-INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
-SELECT symbol, date, ...
-FROM bronze.index_europe_ohlcv
-WHERE date > @wm
-  AND NOT EXISTS (
-      SELECT 1 FROM silver.index_europe_ohlcv t
-      WHERE t.symbol = b.symbol AND t.date = b.date
-  );
-
--- Advance watermark only after successful insert
-UPDATE meta.watermarks
-SET watermark_value = CONVERT(VARCHAR(10), GETDATE(), 120),
-    updated_at = SYSUTCDATETIME()
-WHERE pipeline_name = 'ohlcv_europe';
-
-COMMIT;
-```
-
-#### Derived from Target Table — no storage, computed each run
-
-The simplest approach. Query `MAX(date)` from the target table. No extra table to maintain, but requires a scan of the target each run.
-
-```sql
--- Derived watermark — no control table needed
-DECLARE @wm DATE = (
-    SELECT MAX(date) FROM silver.index_europe_ohlcv
-    WHERE is_filled = 0   -- only real data, not forward-filled rows
-);
-```
-
-> [!warning] Derived Watermark Limitations
->
-> If the target table is empty (first run, or after a truncate), `MAX()` returns `NULL`. Always handle the NULL case: `ISNULL(@wm, '1900-01-01')`. Also: if the target has millions of rows without a clustered index on the watermark column, the `MAX()` scan is expensive. Add a covering index.
-
-> [!success] Seed the NULL Case and Index the Watermark Column
->
-> Always seed the `NULL` result: `DECLARE @wm DATE = ISNULL((SELECT MAX(date) FROM silver.index_europe_ohlcv WHERE is_filled = 0), '1900-01-01')`. Ensure a clustered or covering index exists on the watermark column so `MAX()` is an index seek, not a full table scan.
-
-#### Airflow Variable — orchestrator-managed
-
-Store the watermark in Airflow's metadata database. Visible and editable in the Airflow UI. Good for pipelines where reprocessing means manually changing the variable.
-
-```python
-from airflow.models import Variable
-
-# Read watermark
-wm = Variable.get("ohlcv_europe_watermark", default_var="1900-01-01")
-
-# ... load data where date > wm ...
-
-# Advance watermark after successful load
-Variable.set("ohlcv_europe_watermark", str(new_max_date))
-```
-
-> [!warning] Airflow Variable is not transactional
->
-> `Variable.set()` commits immediately to Airflow's metadata DB. If the data load fails AFTER the variable is set, the watermark has advanced past data that was never loaded — causing a gap. Set the variable only after the database transaction commits.
-
-> [!success] Advance Airflow Variable Only After Successful Commit
->
-> Structure your Airflow operator so the DB transaction commits first, then `Variable.set()` is called in the same `try` block after a confirmed commit. Alternatively, use a control table in the same DB as the load target and update it inside the same transaction — this is the most reliable approach when using SQL Server as both source and target.
-
-#### Pipeline Output File — simple but fragile
-
-Write the watermark to a file on disk or in GCS. Used in simple scripts that don't have access to a database or orchestrator.
-
-```python
-# Read watermark from file
-with open("/opt/pipeline/watermarks/ohlcv_europe.txt") as f:
-    wm = f.read().strip()
-
-# ... load data ...
-
-# Write new watermark
-with open("/opt/pipeline/watermarks/ohlcv_europe.txt", "w") as f:
-    f.write(str(new_max_date))
-```
-
-> [!danger] File-Based Watermarks Are Fragile
->
-> Files can be accidentally deleted, are not transactional, don't survive VM reimaging, and have no audit trail. Use only for throwaway scripts. For anything running in production, use a control table or Airflow Variable.
-
-> [!success] Use a Control Table for Production Watermarks
->
-> Create a `meta.watermarks` table in the same database as the pipeline target. Update the watermark inside the same `BEGIN TRANSACTION ... COMMIT` as the data load — if the load fails, the watermark is not advanced. This is atomic, survives VM reimaging, and provides a built-in audit trail via `updated_at` and `updated_by` columns.
-
-### Watermark Lifecycle — from first run to steady state
-
-> [!info] Watermark State Machine
->
-> A watermark goes through a predictable lifecycle. Understanding each state prevents the most common watermark bugs.
-
-| Phase | Watermark State | What Happens |
-|-------|----------------|--------------|
-| **First run** | NULL or seed value (`1900-01-01`) | Full load — everything from source is loaded. Watermark set to `MAX(date)` of loaded data |
-| **Steady state** | Valid date/timestamp | Incremental load — only data after the watermark. Watermark advances after each successful run |
-| **Backfill** | Manually reset to past date | Reprocesses historical data from the reset point. Must handle deduplication (UNIQUE constraint or `NOT EXISTS`) |
-| **Recovery after failure** | Unchanged (load failed, watermark didn't advance) | Pipeline retries from the same watermark. Idempotent if target has UNIQUE constraint |
-| **Table rebuild** | Must be reset or re-derived | After TRUNCATE or full rebuild, reset watermark to match the new state or let derived `MAX()` handle it |
-
-#### Seed value for first run — handling NULL watermarks
-
-```sql
--- Always handle the NULL case on first run
-DECLARE @wm DATE = ISNULL(
-    (SELECT CAST(watermark_value AS DATE)
-     FROM meta.watermarks
-     WHERE pipeline_name = 'ohlcv_europe'),
-    '1900-01-01'   -- seed: load everything on first run
-);
-```
-
-### Late-Arriving Data — the overlap window pattern
-
-> [!warning] Late-Arriving Data
->
-> Data that arrives after the watermark has advanced is silently missed. This is the most common watermark bug. Sources that cause this: timezone-shifted batch files, retroactive corrections, API responses with stale timestamps, and source systems that backfill data.
-
-> [!success] Apply an Overlap Window with Deduplication
->
-> Subtract an overlap window from the watermark (`DATEADD(DAY, -N, @wm)`) and pair every load with a `NOT EXISTS` check or rely on the target UNIQUE constraint to prevent duplicates. Size the window to your source's maximum expected lateness: 1 day for daily batches, 7 days for weekly corrections, 35 days for monthly restatements.
-
-```sql
--- Mitigation: subtract an overlap window from the watermark
-DECLARE @safe_wm DATE = DATEADD(DAY, -1, @wm);
-
--- Load with overlap, then deduplicate via NOT EXISTS
-INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
-SELECT symbol, date, ...
-FROM bronze.index_europe_ohlcv b
-WHERE b.date > @safe_wm
-  AND NOT EXISTS (
-      SELECT 1 FROM silver.index_europe_ohlcv t
-      WHERE t.symbol = b.symbol AND t.date = b.date
-  );
-```
-
-> [!tip] Choosing the overlap window size
->
-> The overlap should match the maximum expected lateness of your source data. For daily yfinance fetches, 1 day is sufficient. For sources with weekly corrections (e.g., revised economic indicators), use 7 days. For sources with monthly restatements, use 35 days. Wider overlap = more rows re-checked each run, but the `NOT EXISTS` or `UNIQUE` constraint prevents duplicates.
-
-### Watermark Maintenance — keeping them healthy
-
-> [!info] Watermark Hygiene
->
-> Watermarks are persistent state. Like any state, they can become stale, corrupted, or out of sync with reality. These maintenance practices prevent watermark-related incidents.
-
-- **Audit trail:** the `updated_at` and `updated_by` columns in the control table show when the watermark last advanced and who/what changed it. Query this when debugging stale pipelines
-- **Monitoring:** alert when a watermark hasn't advanced in longer than the expected pipeline frequency. A watermark stuck for 24 hours on a pipeline that runs every 6 hours means something is broken
-
-#### SELECT stale watermarks — monitoring query
-
-```sql
--- Watermarks that haven't advanced in 24+ hours
-SELECT pipeline_name,
-       watermark_value,
-       updated_at,
-       DATEDIFF(HOUR, updated_at, SYSUTCDATETIME()) AS hours_stale
-FROM meta.watermarks
-WHERE DATEDIFF(HOUR, updated_at, SYSUTCDATETIME()) > 24
-ORDER BY hours_stale DESC;
-```
-
-- **Manual reset for backfill:** to reprocess historical data, UPDATE the watermark to a past date. The next pipeline run loads everything from that point forward. The target table's UNIQUE constraint prevents duplicates
-
-#### UPDATE watermark — manual reset for backfill
-
-```sql
--- Reset watermark to reprocess from March 1st
-UPDATE meta.watermarks
-SET watermark_value = '2025-03-01',
-    updated_at = SYSUTCDATETIME(),
-    updated_by = 'manual-backfill'
-WHERE pipeline_name = 'ohlcv_europe';
-```
-
-- **Cleanup after table rebuild:** if you TRUNCATE or rebuild a target table, the watermark and the table are out of sync. Either reset the watermark to match (derive from `MAX(date)` in the rebuilt table) or delete the watermark row and let the next run do a full load
-- **Version watermarks alongside schema:** when a schema migration changes the watermark column (e.g., renaming `date` to `trade_date`), the watermark query breaks. Include watermark maintenance in migration scripts
-
-### Watermark Anti-Patterns
-
-#### Advancing watermark before committing the load — data gaps
-
-> [!danger] Watermark Before Commit = Data Loss
->
-> If you advance the watermark, then the INSERT fails, the watermark points past data that was never loaded. The next run skips that data forever. Always advance the watermark INSIDE the same transaction as the load, or AFTER the load transaction commits.
-
-> [!success] Advance Watermark Inside the Same Transaction
->
-> In T-SQL, place the `UPDATE meta.watermarks` statement at the end of the same `BEGIN TRANSACTION ... COMMIT` block as the `INSERT`. In Python, call `Variable.set()` or update the control table only after `conn.commit()` confirms the data load succeeded. Never advance the watermark in a `finally` block that runs regardless of success or failure.
-
-#### No deduplication with overlap windows — duplicate rows
-
-If you use an overlap window (subtract N days from watermark) but the target table has no UNIQUE constraint and the INSERT has no `NOT EXISTS` check, every overlapping row is inserted again on every run. Within a week, you have 7 copies of each row in the overlap window.
-
-#### Using IDENTITY as watermark on a truncate-reload table — broken contract
-
-`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [sql-server-pipeline-anti-patterns > IDENTITY as a Business Key](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#identity-as-a-business-key).
-
-#### No NULL handling on first run — pipeline crashes on empty table
-
-`SELECT MAX(date)` on an empty table returns `NULL`. If the pipeline uses `WHERE date > @wm` without handling NULL, the comparison `date > NULL` is always FALSE — zero rows loaded, forever. Always wrap in `ISNULL(@wm, '1900-01-01')`.
-
-#### Watermark stored outside the load transaction — silent drift
-
-An Airflow Variable, a file, or a separate database write is not transactional with the load. If the load succeeds but the watermark write fails (or vice versa), the watermark and the actual data drift apart. Prefer a control table in the same database as the target, updated in the same transaction.
-
----
-
-## Incremental Append
-
-Insert only rows newer than the last loaded row. Used for append-only data like logs, events, and OHLCV prices. Depends on a reliable watermark (defined above).
-
-### High-Water Mark Load — append new data only
-
-> [!info] Append Pattern
->
-> Read the watermark, load everything after it, advance the watermark. The target table's UNIQUE constraint is the safety net against duplicates.
-
-```sql
--- Step 1: Get the watermark (last loaded date)
-DECLARE @wm DATE = ISNULL(
-    (SELECT MAX(date) FROM silver.index_europe_ohlcv
-     WHERE is_filled = 0),
-    '1900-01-01'
-);
-
--- Step 2: Load everything newer, deduplicate
-INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
-SELECT symbol, date, ...
-FROM bronze.index_europe_ohlcv b
-WHERE b.date > @wm
-  AND NOT EXISTS (
-      SELECT 1 FROM silver.index_europe_ohlcv t
-      WHERE t.symbol = b.symbol AND t.date = b.date
-  );
-```
-
----
-
-## Upsert (INSERT + UPDATE)
-
-An **upsert** (portmanteau of UPDATE + INSERT) is an operation that inserts a row if it doesn't exist in the target, or updates it if it does — ensuring the target table always reflects the latest source state for each key. This is the standard pattern when source data contains both new rows and changes to existing rows (e.g., stock metadata where new symbols appear and existing symbols change sector). Three approaches exist in SQL Server, each with different trade-offs.
-
-### Three Upsert Approaches — compared
-
-> [!info] Upsert Strategy Decision
->
-> Choose based on data volume and control requirements. For full MERGE syntax, see [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert). For idempotency guarantees, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
-
-| Approach | Speed | Safety | Complexity | Best For |
-|----------|-------|--------|------------|----------|
-| DELETE + INSERT | Medium | High | Low | Small-medium tables, simple logic |
-| MERGE | Fast | Medium (has gotchas) | Medium | Single-statement atomicity |
-| Staging + separate INSERT/UPDATE | Fast | Highest | Higher | Large volumes, full control |
-
-**Choose DELETE + INSERT when:** the target table is small (<1M rows), the logic is simple (one partition key), and you want maximum readability. This is what the Medallion-Project bronze loaders use.
-
-**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert)). Best for medium-volume tables with a clear natural key.
-
-**Choose Staging + separate INSERT/UPDATE when:** the volume is large (>1M rows), you want to separate insert and update logic for debugging, or you need to validate before committing. Most production pipelines at scale land here.
-
-### DELETE + INSERT — simplest upsert
-
-```sql
--- Delete existing rows for this key, then insert all rows
-BEGIN TRANSACTION;
-
-DELETE FROM silver.signals_daily
-WHERE _index = @key AND signal_date = @date;
-
-INSERT INTO silver.signals_daily (_index, symbol, signal_date, ...)
-SELECT _index, symbol, signal_date, ...
+SELECT TOP (12)
+       _index,
+       symbol,
+       CAST([timestamp] AS date) AS signal_date,
+       _ingested_at
 FROM bronze.signals_daily
-WHERE _index = @key;
-
-COMMIT;
+ORDER BY _ingested_at DESC, id DESC;
 ```
 
-### Staging Table + Separate INSERT/UPDATE — maximum control
+| _index | symbol | signal_date | _ingested_at |
+|---|---|---|---|
+| `stoxx_usa_50` | `UBER` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `CRM` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `VZ` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `AXP` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `IBM` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `INTC` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `PEP` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `LIN` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `TMUS` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `MCD` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `WFC` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+| `stoxx_usa_50` | `GS` | 2026-04-08 | 2026-04-07 23:29:57.3039180 |
+
+_This is the shape of a snapshot-style landing batch: many business rows with the same ingest timestamp. That usually favors a staged or scoped full-replacement pattern instead of row-by-row mutation logic._
+
+---
+
+## Loading Decision Matrix
+
+Loading method choice should be driven by replacement semantics first and tool choice second.
+
+### Choose the pattern before the interface
+
+| Pattern | What it does | Best Fit | Avoid When |
+|---|---|---|---|
+| Scoped full refresh | Delete one business slice and reload it completely | Small snapshot batches, partition-key slices, bronze landing tables | Large historical tables with expensive reprocessing |
+| Staged validation and publish | Load into stage, validate, then promote | Any load where bad data must not reach the published table | Tiny throwaway test loads where no validation gate is needed |
+| Upsert | Update existing keys and insert new keys | Gold or silver tables that combine new and changed rows | Raw snapshot feeds where replacement is simpler |
+| Bulk import | Use `bcp`, `BULK INSERT`, `SqlBulkCopy`, or `fast_executemany` to move many rows efficiently | Historical backfills, large file loads, service-side batch ingestion | Tiny micro-batches where tool startup dominates |
+
+### Follow the production decision path
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Start<br/>What is the replacement contract?] --> B{Does the source deliver a full business slice?}
+    B --> Y1[YES]
+    B --> N1[NO]
+    Y1 --> C[Use scoped full refresh or staged publish]
+    N1 --> D{Can existing target keys change?}
+    D --> Y2[YES]
+    D --> N2[NO]
+    Y2 --> E[Use upsert with explicit update plus insert logic]
+    N2 --> F[Use append or watermark-driven incremental load]
+    C --> G{Is the batch large enough that row-by-row inserts are inefficient?}
+    E --> G
+    F --> G
+    G --> Y3[YES]
+    G --> N3[NO]
+    Y3 --> H[Choose a bulk interface and validate minimal-logging prerequisites]
+    N3 --> I[Use a simpler transactional client batch]
+
+    classDef yes fill:#1f3b2d,stroke:#73d13d,color:#c0caf5;
+    classDef no fill:#4a1f24,stroke:#db4b4b,color:#c0caf5;
+    class Y1,Y2,Y3 yes;
+    class N1,N2,N3 no;
+```
+
+---
+
+## Scoped Full Refresh
+
+Scoped full refresh is the safest pattern when the source hands you a complete replacement for one business slice, such as one `_index`, one partition, or one reporting date.
+
+### Replace one business slice inside a transaction
+
+This is the default pattern for small snapshot landing tables.
+
+#### Replace one `_index` slice atomically
+
+[!warning]
+A delete-plus-insert load without an explicit transaction can leave the target empty or partially refreshed if the process fails between steps.
+
+[!success]
+Wrap the delete and insert steps in a single transaction and scope the delete to the precise business slice being refreshed.
+
+[!info]-
+This batch creates a disposable target table, loads old rows, replaces only the `euro_stoxx_50` slice inside a transaction, returns the final state, and drops the demo table.
+
+- The target table keeps only the business columns needed to show the pattern clearly.
+- `DELETE ... WHERE _index = 'euro_stoxx_50'` scopes the replacement to one business slice instead of truncating the whole table.
+- The new insert repopulates only the refreshed slice.
+- The final `SELECT` shows both the replaced slice and the untouched slice.
+
+*This batch demonstrates a scoped full refresh that replaces one business slice while leaving unrelated data untouched.*
 
 ```sql
--- Step 1: Load source data into a staging table
--- Step 2: INSERT rows that don't exist in target
-INSERT INTO silver.signals_daily (...)
-SELECT s.* FROM staging.signals s
-WHERE NOT EXISTS (
-    SELECT 1 FROM silver.signals_daily t
-    WHERE t._index = s._index
-      AND t.symbol = s.symbol
-      AND t.signal_date = s.signal_date
+IF OBJECT_ID('dbo.demo_full_refresh_target', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_full_refresh_target;
+
+CREATE TABLE dbo.demo_full_refresh_target
+(
+    _index varchar(20) NOT NULL,
+    symbol varchar(20) NOT NULL,
+    signal_date date NOT NULL
 );
 
--- Step 3: UPDATE rows that exist but changed
-UPDATE t
-SET t.current_price = s.current_price, ...
-FROM silver.signals_daily t
-JOIN staging.signals s
-    ON t._index = s._index
-   AND t.symbol = s.symbol
-   AND t.signal_date = s.signal_date
-WHERE t.current_price <> s.current_price;  -- only update if changed
+INSERT INTO dbo.demo_full_refresh_target
+VALUES ('euro_stoxx_50', 'OLD1', '2026-04-07'),
+       ('euro_stoxx_50', 'OLD2', '2026-04-07'),
+       ('stoxx_usa_50', 'MSFT', '2026-04-07');
+
+BEGIN TRAN;
+
+DELETE FROM dbo.demo_full_refresh_target
+WHERE _index = 'euro_stoxx_50';
+
+INSERT INTO dbo.demo_full_refresh_target(_index, symbol, signal_date)
+VALUES ('euro_stoxx_50', 'ASML.AS', '2026-04-08'),
+       ('euro_stoxx_50', 'AD.AS', '2026-04-08');
+
+COMMIT;
+
+SELECT _index, symbol, signal_date
+FROM dbo.demo_full_refresh_target
+ORDER BY _index, symbol;
+
+DROP TABLE dbo.demo_full_refresh_target;
 ```
+
+| _index | symbol | signal_date |
+|---|---|---|
+| `euro_stoxx_50` | `AD.AS` | 2026-04-08 |
+| `euro_stoxx_50` | `ASML.AS` | 2026-04-08 |
+| `stoxx_usa_50` | `MSFT` | 2026-04-07 |
+
+_The refreshed slice now contains only the new `euro_stoxx_50` rows, while the unrelated `stoxx_usa_50` row survived untouched. That is exactly what a scoped full refresh is supposed to do._
 
 ---
 
-## pyodbc fast_executemany Deep Dive
+## Staged Validation And Publish
 
-The standard Python path for loading data into SQL Server. One configuration flag gives a 10x speedup.
+Staged validation is the safest production default when bad data must never become visible in the published table. Load into stage first, validate business rules there, and promote only after the stage passes.
 
-### cursor.fast_executemany = True — batch mode activation
+### Validate before publish
 
-> [!abstract] How fast_executemany Works
->
-> Without it, pyodbc sends one row per **TDS** (Tabular Data Stream — SQL Server's wire protocol) network round-trip. With it, pyodbc batches all parameter arrays into a single TDS call using the `sp_prepexec` bulk parameter format. The speedup is proportional to network latency — the more round-trips eliminated, the greater the gain.
+Use staged validation when the load must prove basic integrity before the published table is touched.
+
+#### Load into stage, validate the batch, then publish it
+
+[!warning]
+Loading directly into the published table removes your validation gate. If the file has missing keys, unexpectedly low row counts, or a broken type conversion, the only recovery path is another write against the same table.
+
+[!success]
+Load into stage first, validate row count and business keys there, then promote the stage data in one controlled transaction.
+
+[!info]-
+This batch creates a disposable publish table and stage table, loads the stage, validates the batch, publishes it, returns the final published result, and drops both demo tables.
+
+- The first insert seeds the published table with an older business date.
+- The stage table receives the new `2026-04-08` batch.
+- The two validation checks enforce a minimum row count and non-null business keys.
+- The publish transaction inserts only after the stage has passed validation.
+
+*This batch demonstrates a staged validation flow where the new batch is loaded, checked, and then promoted to the published table.*
+
+```sql
+IF OBJECT_ID('dbo.demo_stage_signals', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_stage_signals;
+
+IF OBJECT_ID('dbo.demo_publish_signals', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_publish_signals;
+
+CREATE TABLE dbo.demo_publish_signals
+(
+    symbol varchar(20) NOT NULL,
+    signal_date date NOT NULL,
+    score decimal(6,2) NOT NULL
+);
+
+CREATE TABLE dbo.demo_stage_signals
+(
+    symbol varchar(20) NOT NULL,
+    signal_date date NOT NULL,
+    score decimal(6,2) NOT NULL
+);
+
+INSERT INTO dbo.demo_publish_signals
+VALUES ('ASML.AS', '2026-04-07', 77.50),
+       ('AD.AS', '2026-04-07', 66.10);
+
+INSERT INTO dbo.demo_stage_signals
+VALUES ('ASML.AS', '2026-04-08', 80.25),
+       ('AD.AS', '2026-04-08', 68.90),
+       ('ABI.BR', '2026-04-08', 71.30);
+
+IF (SELECT COUNT(*) FROM dbo.demo_stage_signals) < 3
+    THROW 50001, 'Stage row count below expected threshold', 1;
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.demo_stage_signals
+    WHERE symbol IS NULL OR signal_date IS NULL
+)
+    THROW 50002, 'Stage contains NULL business keys', 1;
+
+BEGIN TRAN;
+
+DELETE FROM dbo.demo_publish_signals
+WHERE signal_date = '2026-04-08';
+
+INSERT INTO dbo.demo_publish_signals(symbol, signal_date, score)
+SELECT symbol, signal_date, score
+FROM dbo.demo_stage_signals;
+
+COMMIT;
+
+SELECT symbol, signal_date, score
+FROM dbo.demo_publish_signals
+ORDER BY signal_date, symbol;
+
+DROP TABLE dbo.demo_stage_signals;
+DROP TABLE dbo.demo_publish_signals;
+```
+
+| symbol | signal_date | score |
+|---|---|---:|
+| `AD.AS` | 2026-04-07 | 66.10 |
+| `ASML.AS` | 2026-04-07 | 77.50 |
+| `ABI.BR` | 2026-04-08 | 71.30 |
+| `AD.AS` | 2026-04-08 | 68.90 |
+| `ASML.AS` | 2026-04-08 | 80.25 |
+
+_The old published date stays intact, and the new date becomes visible only after the stage passed both validation checks. That is the core operational value of staged loading: validation failure happens before the published table is altered._
+
+---
+
+## Upsert
+
+Upsert is the right pattern when the incoming batch mixes brand-new business keys with keys that already exist and need to be updated.
+
+### Prefer explicit update-plus-insert logic over blind `MERGE`
+
+The safest production default in SQL Server is usually two explicit steps: update the matched rows, then insert the unmatched rows.
+
+#### Update existing keys and insert new keys
+
+[!warning]
+Blind `MERGE` statements are easy to write badly and can introduce race conditions or surprising behavior under concurrency if the join keys and locking strategy are not carefully designed.
+
+[!success]
+For most ETL workloads, prefer a separate `UPDATE` joined to stage followed by an `INSERT ... WHERE NOT EXISTS` for the unmatched rows. It is easier to reason about and easier to test.
+
+[!info]-
+This batch creates a disposable target table and stage table, updates a matching row, inserts a new row, returns the final target contents, and drops the demo tables.
+
+- `ASML.AS` already exists in the target and is updated to the new business date and score.
+- `ABI.BR` exists only in stage and is inserted.
+- `AD.AS` remains unchanged because it is absent from the stage batch.
+
+*This batch demonstrates the standard production upsert pattern: update matched rows first, then insert the unmatched rows.*
+
+```sql
+IF OBJECT_ID('dbo.demo_upsert_stage', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_upsert_stage;
+
+IF OBJECT_ID('dbo.demo_upsert_target', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_upsert_target;
+
+CREATE TABLE dbo.demo_upsert_target
+(
+    symbol varchar(20) NOT NULL PRIMARY KEY,
+    score_date date NOT NULL,
+    composite_score decimal(8,4) NOT NULL
+);
+
+CREATE TABLE dbo.demo_upsert_stage
+(
+    symbol varchar(20) NOT NULL,
+    score_date date NOT NULL,
+    composite_score decimal(8,4) NOT NULL
+);
+
+INSERT INTO dbo.demo_upsert_target
+VALUES ('ASML.AS', '2026-04-07', 0.2210),
+       ('AD.AS', '2026-04-07', 0.1815);
+
+INSERT INTO dbo.demo_upsert_stage
+VALUES ('ASML.AS', '2026-04-08', 0.3050),
+       ('ABI.BR', '2026-04-08', 0.2640);
+
+UPDATE t
+SET t.score_date = s.score_date,
+    t.composite_score = s.composite_score
+FROM dbo.demo_upsert_target AS t
+JOIN dbo.demo_upsert_stage AS s
+    ON s.symbol = t.symbol;
+
+INSERT INTO dbo.demo_upsert_target(symbol, score_date, composite_score)
+SELECT s.symbol, s.score_date, s.composite_score
+FROM dbo.demo_upsert_stage AS s
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.demo_upsert_target AS t
+    WHERE t.symbol = s.symbol
+);
+
+SELECT symbol, score_date, composite_score
+FROM dbo.demo_upsert_target
+ORDER BY symbol;
+
+DROP TABLE dbo.demo_upsert_stage;
+DROP TABLE dbo.demo_upsert_target;
+```
+
+| symbol | score_date | composite_score |
+|---|---|---:|
+| `ABI.BR` | 2026-04-08 | 0.2640 |
+| `AD.AS` | 2026-04-07 | 0.1815 |
+| `ASML.AS` | 2026-04-08 | 0.3050 |
+
+_`ASML.AS` was updated, `ABI.BR` was inserted, and `AD.AS` remained untouched. That is the exact behavior an upsert should deliver when the stage batch contains only changed and new keys._
+
+---
+
+## Bulk-Load Interfaces
+
+Once the replacement semantics are clear, choose the byte-moving interface. The goal is not to use the most powerful tool everywhere; it is to use the simplest tool that still meets throughput and operational needs.
+
+### Choose the interface by runtime boundary
+
+| Interface | Runtime Boundary | Transaction Control | Best Fit | Tradeoff |
+|---|---|---|---|---|
+| Table-valued parameter | Client-to-procedure boundary | Strong inside one routine | Medium-size in-memory batches passed to one stored procedure | `READONLY`, no column statistics, not a raw-file loader |
+| `pyodbc` with `fast_executemany` | Python process | Good | Python batch pipelines | Still client-driven, not the fastest raw file loader |
+| `bcp` | Command-line utility | Limited relative to client-side transaction patterns | Large file loads and backfills | Extra file-handling and operational wrapper logic |
+| `BULK INSERT` | T-SQL inside SQL Server | Strong database-side control | Server-visible files and SQL-driven loads | File access and SQL Server service permissions matter |
+| `OPENROWSET(BULK...)` | T-SQL `INSERT ... SELECT` pipeline | Strong database-side control | File-backed loads that need format mapping or bulk-only hints inside a query | Same server-side path and permission constraints as `BULK INSERT` |
+| `SqlBulkCopy` | .NET process | Good | C# services and batch jobs | .NET-specific integration path |
+
+#### Use table-valued parameters for medium-size in-memory batches
+
+[!warning]
+Table-valued parameters are not a general-purpose bulk-load replacement. They are `READONLY`, SQL Server does not maintain statistics on their columns, and plan quality can degrade when the batch is much larger than the routine was designed for.
+
+[!success]
+Use a TVP when the caller already has the rows in memory, the load naturally belongs to one stored procedure boundary, and the batch is usually in the low-thousands or smaller. Microsoft documentation explicitly calls out TVPs as a strong fit for inserts under roughly 1,000 rows, while larger file-style loads usually belong on `bcp`, `BULK INSERT`, `OPENROWSET(BULK...)`, or `SqlBulkCopy`.
+
+[!info]-
+This batch demonstrates the full TVP pattern on disposable objects.
+
+- `CREATE TYPE dbo.ScoreBatchType AS TABLE (...)` defines the user-defined table type that the caller will populate.
+- `PRIMARY KEY (symbol, score_date)` gives the TVP a deterministic key and lets the receiving procedure reason about duplicates.
+- `CREATE PROCEDURE ... @rows dbo.ScoreBatchType READONLY` is the core TVP contract. SQL Server requires TVPs to be input-only and `READONLY`.
+- The procedure inserts the incoming set into a disposable target table and immediately returns the landed rows so the pattern has real visible output.
+- The cleanup step drops the procedure, type, and table so the example leaves no permanent residue in `stoxx`.
+
+*This batch creates a disposable table type and stored procedure, passes three rows through a table-valued parameter, returns the landed rows, and cleans up all demo objects.*
+
+```sql
+IF OBJECT_ID('dbo.usp_demo_load_scores_from_tvp', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.usp_demo_load_scores_from_tvp;
+IF TYPE_ID('dbo.ScoreBatchType') IS NOT NULL
+    DROP TYPE dbo.ScoreBatchType;
+IF OBJECT_ID('dbo.demo_tvp_target', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_tvp_target;
+
+CREATE TABLE dbo.demo_tvp_target
+(
+    symbol varchar(20) NOT NULL,
+    score_date date NOT NULL,
+    composite_score decimal(9,4) NOT NULL,
+    CONSTRAINT PK_demo_tvp_target PRIMARY KEY (symbol, score_date)
+);
+
+CREATE TYPE dbo.ScoreBatchType AS TABLE
+(
+    symbol varchar(20) NOT NULL,
+    score_date date NOT NULL,
+    composite_score decimal(9,4) NOT NULL,
+    PRIMARY KEY (symbol, score_date)
+);
+GO
+
+CREATE PROCEDURE dbo.usp_demo_load_scores_from_tvp
+    @rows dbo.ScoreBatchType READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.demo_tvp_target(symbol, score_date, composite_score)
+    SELECT symbol, score_date, composite_score
+    FROM @rows;
+
+    SELECT symbol, score_date, composite_score
+    FROM dbo.demo_tvp_target
+    ORDER BY symbol, score_date;
+END;
+GO
+
+DECLARE @rows dbo.ScoreBatchType;
+
+INSERT INTO @rows(symbol, score_date, composite_score)
+VALUES ('ABI.BR', '2026-04-08', 0.2640),
+       ('AD.AS', '2026-04-08', 0.1815),
+       ('ASML.AS', '2026-04-08', 0.3050);
+
+EXEC dbo.usp_demo_load_scores_from_tvp @rows = @rows;
+GO
+
+DROP PROCEDURE dbo.usp_demo_load_scores_from_tvp;
+DROP TYPE dbo.ScoreBatchType;
+DROP TABLE dbo.demo_tvp_target;
+```
+
+| symbol | score_date | composite_score |
+|---|---|---:|
+| `ABI.BR` | 2026-04-08 | 0.2640 |
+| `AD.AS` | 2026-04-08 | 0.1815 |
+| `ASML.AS` | 2026-04-08 | 0.3050 |
+
+_This is the exact TVP shape SQL Server is good at: one in-memory batch enters the engine once, arrives in a stored procedure as a set, and is inserted without a client loop. The result is not a raw-loader benchmark; it is a cleaner contract for medium-size batches that belong inside one routine call._
+
+#### Use `pyodbc` batch mode in Python
+
+[!info]-
+This Python snippet activates `fast_executemany`, which makes `executemany()` send batched parameter arrays instead of issuing one network round-trip per row.
+
+*This Python snippet enables `fast_executemany` so a Python loader sends batched rows efficiently to SQL Server.*
 
 ```python
-# One line, 10x speedup — always enable for bulk loads
 cursor.fast_executemany = True
+
 cursor.executemany(
-    "INSERT INTO bronze.signals_daily (...) VALUES (?, ?, ?, ...)",
-    rows    # list of tuples — one tuple per row
+    """
+    INSERT INTO bronze.signals_daily (_index, symbol, [timestamp], current_price)
+    VALUES (?, ?, ?, ?)
+    """,
+    rows,
 )
-conn.commit()
 ```
 
-### fast_executemany Gotchas
+#### Use `bcp` for large file-based loads
 
-> [!warning] NaN and None Handling
->
-> pyodbc sends Python `float('nan')` as the string `"nan"`, not `NULL`. Convert explicitly before loading: `None if math.isnan(v) else v`. Similarly, `numpy.int64` is not a native Python type — cast to `int()` before passing to pyodbc.
+[!warning]
+`bcp` is fast, but it is operationally sharp. File encoding, field terminators, error files, and SQL Server service access all matter. It is the wrong tool if you need fine-grained row-by-row business validation before the load.
 
-> [!success] Sanitise Rows Before fast_executemany
->
-> Apply a row-cleaning function before calling `executemany`: convert `float('nan')` → `None`, cast `numpy.int64` → `int`, and cast `numpy.float64` → `float`. A one-line list comprehension over the row tuple handles all three before the batch is sent to the driver.
+[!success]
+Use `bcp` for large backfills or raw file loads where throughput matters most, and pair it with an error file and pre-load validation of file shape and column widths.
 
-- **Batch size:** 5,000-10,000 rows per `executemany` call is optimal. Too large = memory pressure on the driver; too small = round-trip overhead
-- **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for why this kills performance
-- **None vs NULL:** `None` becomes SQL `NULL` — correct. But `numpy.nan` does not — convert first
+[!info]-
+This command loads a delimited file directly into a SQL Server table from the command line.
 
----
+- `in` tells `bcp` to import into SQL Server.
+- `-c` uses character mode.
+- `-t` and `-r` define field and row terminators.
+- `-e` writes rejected rows to an error file.
 
-## bcp Deep Dive
+*This `bcp` command imports a delimited file into a SQL Server landing table and captures rejected rows separately.*
 
-The fastest path into SQL Server. `bcp` uses the **TDS (Tabular Data Stream) BULK LOAD protocol** to send data directly to the storage engine's bulk insert API, bypassing the query parser and query optimizer that normal `INSERT` statements go through. This eliminates per-row query compilation overhead and enables the storage engine to write data pages in large sequential batches.
-
-### bcp BULK LOAD — command-line syntax
-
-> [!info] bcp Usage
->
-> `bcp` is a command-line utility shipped with SQL Server. It reads flat files (CSV, TSV) and writes directly to tables. Fastest option for large loads from any language that can shell out.
-
-```bash
-# Load a CSV into bronze.signals_daily
-bcp bronze.signals_daily in signals.csv \
-    -S localhost,1434 \
-    -U sa -P "$SA_PASSWORD" \
-    -d analytics_db \
-    -c -t "," \          # character mode, comma delimiter
-    -F 2 \               # skip header row
-    -e errors.log \      # error output file
-    -b 10000             # batch size (rows per transaction)
+```powershell
+bcp bronze.signals_daily in signals_daily.csv `
+  -S localhost,1434 `
+  -d stoxx `
+  -U sa `
+  -c `
+  -t "," `
+  -r "\n" `
+  -e signals_daily.err
 ```
 
-### bcp Gotchas
+#### Use `BULK INSERT` when SQL Server can see the file directly
 
-> [!danger] Silent Truncation
->
-> If a CSV field exceeds the target column width (e.g., 25-char string into `VARCHAR(20)`), bcp **silently truncates** the data. No error, no warning. Always validate row counts and spot-check loaded data.
+[!warning]
+`BULK INSERT` runs inside SQL Server, so file accessibility is determined by the SQL Server service account and server-side path visibility, not by the client running SSMS.
 
-> [!success] Pre-Validate String Lengths Before bcp
->
-> Before running `bcp`, query the source data for any field that exceeds the target column's declared width: `SELECT MAX(LEN(field)) FROM staging_table`. Alternatively, use a format file with wider intermediate columns and apply length validation in a post-load check. Always compare source row count against loaded row count — a mismatch is the first signal of silent truncation.
+[!success]
+Use `BULK INSERT` when the file is already available to the SQL Server host and you want the load to stay inside a SQL transaction or stored procedure boundary.
 
-> [!warning] Encoding and Date Formats
->
-> bcp defaults to OEM codepage, not UTF-8. Use `-w` for Unicode data. Date parsing depends on the server's locale setting — `SET DATEFORMAT ymd` before load or use ISO 8601 format (`YYYY-MM-DD`) in source files.
+[!info]-
+This command loads a server-visible CSV file into a target table from T-SQL.
 
-> [!success] Use -w for Unicode and ISO 8601 Dates
->
-> Always pass `-w` when loading files that contain non-ASCII characters (accented names, CJK characters). Standardise date columns to ISO 8601 (`YYYY-MM-DD`) in the source file to avoid locale-dependent parsing — this works regardless of `DATEFORMAT` setting on the server.
+- `FIELDTERMINATOR` and `ROWTERMINATOR` define the file layout.
+- `FIRSTROW = 2` skips the header row.
+- `TABLOCK` can help eligible loads reach a faster bulk path.
 
-- **Constraints bypassed by default:** bcp does **not** check `CHECK`, `FOREIGN KEY`, or `UNIQUE` constraints during load — invalid data lands in the table silently. Add `-h "CHECK_CONSTRAINTS"` to enforce constraint checking during load
-- **Triggers not fired:** bcp does not fire `INSERT` triggers by default. If the table has triggers that maintain audit tables or denormalized columns, add `-h "FIRE_TRIGGERS"` — but note this significantly reduces throughput
-- **Format files:** `-c` (character/CSV), `-n` (native binary), `-w` (wide character/Unicode)
-- **Error handling:** `-e error_file` logs bad rows, `-m max_errors` sets failure threshold
-- **First-row skip:** `-F 2` skips the header row in CSVs
-- **TABLOCK:** Add `-h "TABLOCK"` for minimal logging (5-10x faster, but blocks concurrent reads). With `TABLOCK`, bcp acquires a Bulk Update (BU) lock — less restrictive than the exclusive (X) lock taken by `INSERT...SELECT WITH (TABLOCK)`, allowing concurrent bulk loads on tables with no indexes
-
-### bcp Complete Flag Reference
-
-Every `bcp` flag in one table. The bullet list above covers the most common flags; this table is the full reference for advanced scenarios like format files, Unicode mode, identity preservation, and query hints.
-
-| Flag | Purpose | Example |
-|------|---------|---------|
-| `-S` | Server name or DSN | `-S prod-sql01` |
-| `-d` | Database name | `-d FinanceDB` |
-| `-U` | Username (SQL auth) | `-U sa` |
-| `-P` | Password | `-P 'P@ss!'` |
-| `-T` | Trusted (Windows) auth | `-T` |
-| `-c` | Character mode (text, recommended for portability) | `-c` |
-| `-n` | Native SQL Server data types | `-n` |
-| `-N` | Unicode chars, native for non-char types | `-N` |
-| `-w` | Unicode character mode | `-w` |
-| `-t` | Field terminator | `-t ","` |
-| `-r` | Row terminator | `-r "\n"` |
-| `-F` | First row to import/export (1-based) | `-F 2` |
-| `-L` | Last row to import/export | `-L 1000` |
-| `-b` | Batch size (rows per transaction) | `-b 10000` |
-| `-e` | Error file path | `-e /logs/err.log` |
-| `-m` | Max errors before abort | `-m 10` |
-| `-f` | Format file path | `-f /fmt/trades.fmt` |
-| `-x` | Generate XML format file (with `-f`) | `-x` |
-| `-q` | Quoted identifiers for table/view names | `-q` |
-| `-k` | Keep NULL values instead of defaults | `-k` |
-| `-E` | Keep identity values from data file | `-E` |
-| `-h` | Hints: `TABLOCK`, `ORDER(col)`, `ROWS_PER_BATCH=N` | `-h "TABLOCK"` |
-| `-a` | Packet size (512–65535 bytes) | `-a 65535` |
-| `-l` | Login timeout | `-l 30` |
-
-### Format File Generation
-
-A format file defines the column mapping between a flat file and a SQL Server table. Use it when column order differs, when you need to skip columns, or when importing into a table with an IDENTITY column. Generate once, reuse across loads.
-
-#### bcp format nul — generate non-XML format file
-
-```bash
-bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.fmt
-```
-
-#### bcp format nul -x — generate XML format file
-
-```bash
-bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.xml -x
-```
-
----
-
-## SqlBulkCopy — C# Bulk Loading
-
-The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).
-
-### SqlBulkCopy WriteToServer — .NET bulk load with transaction
-
-> [!info] C# bulk loading
->
-> `SqlBulkCopy` uses the same TDS bulk-load protocol as bcp. Use `SqlBulkCopyOptions.TableLock` for minimal logging on heaps. Wrap in a transaction for atomicity.
-
-```csharp
-using var connection = new SqlConnection(connectionString);
-connection.Open();
-using var transaction = connection.BeginTransaction();
-
-using var bulkCopy = new SqlBulkCopy(
-    connection, SqlBulkCopyOptions.TableLock, transaction)
-{
-    DestinationTableName = "bronze.signals_daily",
-    BatchSize = 10_000,
-    BulkCopyTimeout = 600   // seconds
-};
-
-// Map source columns to destination columns explicitly
-bulkCopy.ColumnMappings.Add("Symbol", "symbol");
-bulkCopy.ColumnMappings.Add("Date", "signal_date");
-bulkCopy.ColumnMappings.Add("Price", "current_price");
-
-bulkCopy.WriteToServer(dataTable);   // DataTable, IDataReader, or DataRow[]
-transaction.Commit();
-```
-
-> [!warning] SqlBulkCopy silent truncation
->
-> Like bcp, `SqlBulkCopy` silently truncates strings exceeding the destination column width. A 250-character company name loaded into `NVARCHAR(200)` is silently cut to 200 characters — no error, no warning. Validate string lengths before loading or set `bulkCopy.EnableStreaming = true` with a validating `IDataReader` wrapper.
-
-> [!success] Validate String Widths Before SqlBulkCopy
->
-> Before calling `WriteToServer`, iterate the `DataTable` columns and check `MaxLength` against the source data: any value exceeding the destination column's declared width should raise an exception rather than silently truncate. Alternatively, wrap a `DataTableReader` in an `IDataReader` implementation that throws on over-length strings, then pass that reader to `WriteToServer` with `EnableStreaming = true`.
-
----
-
-## BULK INSERT — T-SQL Native Bulk Load
-
-`BULK INSERT` uses the same storage engine bulk insert API as `bcp` but is invoked from T-SQL rather than the command line. This makes it useful when the load is orchestrated by a stored procedure or an automated T-SQL script. It supports the same minimal logging conditions and `TABLOCK` hint as `bcp`.
-
-### BULK INSERT FROM — loading a CSV from T-SQL
-
-> [!info] BULK INSERT
->
-> Reads a file accessible to the SQL Server process (local disk or network share). Cannot read from client machines — the file must be on the server or a UNC path the service account can reach.
+*This `BULK INSERT` command loads a server-visible CSV file directly from T-SQL into a target table.*
 
 ```sql
 BULK INSERT bronze.signals_daily
-FROM '/var/opt/mssql/data/signals.csv'
-WITH (
+FROM '/var/opt/sqlserver/load/signals_daily.csv'
+WITH
+(
+    FORMAT = 'CSV',
+    FIRSTROW = 2,
     FIELDTERMINATOR = ',',
     ROWTERMINATOR = '\n',
-    FIRSTROW = 2,           -- skip header
-    TABLOCK,                -- minimal logging
-    ERRORFILE = '/var/opt/mssql/data/signals_errors.log',
-    MAXERRORS = 100
+    TABLOCK
 );
+```
+
+#### Use `OPENROWSET(BULK...)` when the load must stay inside an `INSERT ... SELECT` pipeline
+
+[!warning]
+`OPENROWSET(BULK...)` has the same server-side file visibility and security constraints as `BULK INSERT`. If SQL Server cannot read the file directly, the load fails even if the client running SSMS can see the path.
+
+[!success]
+Use `OPENROWSET(BULK...)` when the load needs to stay inside a relational `INSERT ... SELECT` pattern, when a format file or external projection logic is part of the design, or when you need bulk-only hints such as `KEEPIDENTITY`, `KEEPDEFAULTS`, `IGNORE_CONSTRAINTS`, or `IGNORE_TRIGGERS`.
+
+[!info]-
+This statement keeps the import inside a query pipeline instead of using a standalone `BULK INSERT` command.
+
+- `OPENROWSET(BULK...)` exposes the file as a rowset source.
+- `INSERT ... SELECT * FROM OPENROWSET(BULK...)` lets the load participate in larger set-based logic instead of existing as an isolated import statement.
+- `TABLOCK` is shown because it is commonly paired with bulk loads when the operational goal is maximum throughput and the table can tolerate the lock.
+- `KEEPIDENTITY` and `KEEPDEFAULTS` are representative bulk-only hints documented by Microsoft for this pattern.
+
+*This statement uses `OPENROWSET(BULK...)` to keep a file-backed import inside an `INSERT ... SELECT` pipeline.*
+
+```sql
+INSERT INTO bronze.signals_daily WITH (TABLOCK, KEEPDEFAULTS, KEEPIDENTITY)
+(
+    _index,
+    symbol,
+    [timestamp],
+    current_price
+)
+SELECT *
+FROM OPENROWSET(
+        BULK '/var/opt/sqlserver/load/signals_daily.csv',
+        FORMAT = 'CSV',
+        FIRSTROW = 2
+     ) WITH
+     (
+        _index varchar(20),
+        symbol varchar(20),
+        [timestamp] datetime2(7),
+        current_price float
+     ) AS src;
+```
+
+#### Use `SqlBulkCopy` in .NET services
+
+[!info]-
+`SqlBulkCopy` is the native .NET bulk-load API. It streams rows from memory or a data reader into SQL Server efficiently without writing a file to disk first.
+
+*This C# snippet streams a `DataTable` into SQL Server with `SqlBulkCopy` inside a .NET process.*
+
+```csharp
+using var bulk = new SqlBulkCopy(connectionString)
+{
+    DestinationTableName = "bronze.signals_daily",
+    BatchSize = 5000
+};
+
+bulk.WriteToServer(dataTable);
 ```
 
 ---
 
 ## Minimal Logging
 
-Under **full logging**, every row inserted generates an individual log record containing the row data — a 10M-row INSERT produces 10M log records. Under **minimal logging**, the engine logs only the page and extent allocations (which data pages were modified), not the individual row values. This dramatically reduces log volume, I/O, and the time the load holds locks. The trade-off: minimally logged operations cannot be recovered to a point-in-time within the bulk operation window, and the log backup taken during or after the operation is larger (it contains the modified data extents).
+Minimal logging reduces transaction-log overhead for eligible bulk operations, but it is a recovery decision as much as a performance decision.
 
-### Minimal Logging Requirements — when it kicks in
+### Validate the recovery tradeoff before chasing log savings
 
-> [!info] Minimal Logging Conditions
->
-> All three conditions must be met: correct recovery model, `TABLOCK` hint, and specific table state. If any condition is missing, the load falls back to full logging.
+Minimal logging is attractive because it reduces log volume during large loads. It is not attractive if the business requires point-in-time recovery through the load window and the recovery model change is not acceptable.
 
-| Condition | Requirement |
-|-----------|-------------|
-| Recovery model | `SIMPLE` or `BULK_LOGGED` |
-| Locking hint | `TABLOCK` on the target table |
-| Table state | Empty heap, or empty clustered index, or `SWITCH` into empty partition |
+#### Inspect the current recovery posture before planning a minimally logged load
 
-- **bcp with TABLOCK:** minimal logging automatically
-- **`INSERT ... SELECT` with TABLOCK on a heap:** minimal logging if table is empty
-- **`INSERT ... SELECT` into a non-empty table with clustered index:** **fully logged** regardless of recovery model, TABLOCK, or SQL Server version. Rows inserted into existing pages must maintain B-tree order, and displaced rows from page splits are also fully logged. SQL Server 2016+ minimally logs only rows that fill **newly allocated pages** (trace flag 610 is no longer needed for this — it's the default). For truly minimal logging at scale, load into an empty table or use partition SWITCH
-- **Impact:** 5-10x faster for large loads, but no point-in-time recovery until the next log backup completes
+[!info]-
+This query checks the current database-level prerequisites that influence the minimal-logging discussion.
 
-> [!warning] BULK_LOGGED Recovery Trade-off
->
-> `BULK_LOGGED` allows minimal logging without losing transactional safety for non-bulk operations. However, if a log backup runs during the bulk operation, that backup contains the bulk-changed data extents — making it larger and non-restorable to a point within the bulk operation.
+- `recovery_model_desc` is the main field. In SQL Server, bulk imports are fully logged under `FULL` recovery and can be minimally logged only when the documented prerequisites are met under `SIMPLE` or `BULK_LOGGED`.
+- `compatibility_level` does not determine logging mode by itself, but it confirms the engine surface the database is running under.
+- `is_read_committed_snapshot_on` is not a minimal-logging prerequisite, but it matters operationally because large bulk loads often run alongside readers and writers. It helps frame the broader concurrency tradeoff.
 
-> [!success] Schedule Bulk Loads Outside Backup Windows
->
-> When using `BULK_LOGGED`, coordinate bulk load schedules with your backup schedule so no log backup runs during the bulk operation. For databases with continuous log backup (e.g., every 15 minutes), switch to `SIMPLE` recovery model for the load window, run the bulk load, then switch back — or accept full logging with `FULL` recovery model if point-in-time recoverability during the load is required.
+*This query checks the live recovery model and row-versioning posture of `stoxx` before any minimal-logging decision.*
 
----
-
-## Schema Migration CI/CD with GitHub Actions
-
-### Automated SQL Server migration — IAP tunnel + sqlcmd
-
-> [!info] Automated SQL Server schema deployment
->
-> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) for more GCP CI/CD patterns.
-
-```yaml
-# .github/workflows/migrate-sql.yml
-name: SQL Server Schema Migration
-on:
-  push:
-    paths: ['db/migrations/**']
-
-jobs:
-  migrate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Open IAP tunnel to SQL Server VM
-        run: |
-          gcloud compute start-iap-tunnel sql-vm 1433 \
-            --local-host-port=127.0.0.1:1433 \
-            --zone=europe-west1-b &
-          sleep 5
-
-      - name: Run migrations
-        run: |
-          for f in db/migrations/*.sql; do
-            sqlcmd -S 127.0.0.1,1433 \
-              -U sa -P "${{ secrets.SA_PASSWORD }}" \
-              -d analytics_db -i "$f" -b
-          done
+```sql
+SELECT d.name AS database_name,
+       d.recovery_model_desc,
+       d.compatibility_level,
+       d.is_read_committed_snapshot_on
+FROM sys.databases AS d
+WHERE d.name = 'stoxx';
 ```
 
-> [!warning] Migration ordering
->
-> `for f in db/migrations/*.sql` relies on lexicographic ordering. Prefix migration files with timestamps: `20260329_001_add_column.sql`. The `-b` flag tells `sqlcmd` to abort on error — without it, a failing migration continues silently and subsequent scripts may break on missing objects.
+| database_name | recovery_model_desc | compatibility_level | is_read_committed_snapshot_on |
+|---|---|---:|---:|
+| `stoxx` | `FULL` | 160 | 0 |
 
-> [!success] Timestamp-Prefix Migrations and Enforce Abort on Error
->
-> Name every migration file with a timestamp prefix (`YYYYMMDD_NNN_description.sql`) so lexicographic sort equals chronological order. Always pass `-b` to `sqlcmd` to abort on error, and check the exit code in the workflow step so the GitHub Actions job fails visibly rather than silently continuing with a broken schema.
+_`stoxx` is currently in the `FULL` recovery model, so a bulk import here is not automatically eligible for minimal logging. Any minimal-logging design would first need an explicit recovery-model decision, a log-backup plan, and table-level validation that the load path actually qualifies for the fast path._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `recovery_model_desc` | `FULL` | &#10060; for minimal logging | Point-in-time recovery is available, but row-insert bulk operations are fully logged. | Large bulk loads can grow the transaction log quickly unless the recovery posture is changed intentionally. |
+| `recovery_model_desc` | `BULK_LOGGED` | &#9989; for eligible bulk windows | Bulk operations can use reduced logging when the table and lock prerequisites are also satisfied. | Common temporary posture for warehouse-style backfills that still want log-backup continuity. |
+| `recovery_model_desc` | `SIMPLE` | &#9989; for eligible reloadable databases | Log truncation is simpler and eligible bulk imports can be minimally logged. | Appropriate only when point-in-time recovery is not required. |
+| `is_read_committed_snapshot_on` | `0` | Context-dependent | Readers still use locking read committed by default. | Bulk windows can create more visible reader/writer interaction if workloads overlap. |
+| `is_read_committed_snapshot_on` | `1` | Context-dependent | Read committed readers use row versions. | Often reduces read blocking during bulk windows, but it is not a logging prerequisite. |
+
+The official Microsoft prerequisites are stricter than "switch to `BULK_LOGGED` and add `TABLOCK`". Use the following rule matrix before calling a load minimally logged:
+
+| Condition | What to watch for | Why it matters |
+|---|---|---|
+| Recovery model | `SIMPLE` or `BULK_LOGGED` during the load window | Under `FULL`, row-insert bulk operations are fully logged. |
+| Table lock | `TABLOCK` on the bulk operation | Microsoft documents `TABLOCK` as part of the qualifying pattern for fast bulk import. |
+| Replication | Table not replicated | When transactional replication is enabled, `BULK INSERT` is fully logged even under `BULK_LOGGED`. |
+| Target structure | Heap, empty clustered table, or other documented eligible state | Empty and non-empty rowstore tables do not log the same way. |
+| Existing indexes | Nonclustered and clustered indexes checked explicitly | Empty indexed tables can bulk-log both data and index pages for the first batch; non-empty indexed tables often force fully logged index-page work. |
+| Batch pattern | First batch versus later batches on an empty table | Microsoft notes that later batches may stop minimally logging index pages even when the first batch qualified. |
+| File order | Input presorted by clustering or partition key when feasible | Chroma guidance from `The Data Warehouse Toolkit.epub` highlights that presorted files reduce post-load indexing work and help sustained throughput. |
+
+#### Use minimally logged bulk imports only when the recovery plan allows it
+
+[!warning]
+Minimal logging is not a free speed flag. Recovery model, target-table state, locking choices, and the exact operation type all influence whether SQL Server can use the fast path. It also changes restore and recovery implications.
+
+[!success]
+Treat minimal logging as an explicit operational decision. Use it for large warehouse-style loads when the recovery model and restore objectives permit it, then return to the normal recovery posture if the database usually runs in full recovery.
+
+[!info]-
+These statements show the common recovery-model transition around a bulk-load window.
+
+- `SET RECOVERY BULK_LOGGED` reduces logging for eligible bulk operations while preserving broader backup semantics than `SIMPLE`.
+- The second statement returns the database to `FULL` after the bulk-load window.
+
+*These statements show the short-term recovery-model change commonly used around eligible minimally logged bulk-load windows.*
+
+```sql
+ALTER DATABASE stoxx SET RECOVERY BULK_LOGGED;
+GO
+
+-- Perform the eligible bulk load here.
+
+ALTER DATABASE stoxx SET RECOVERY FULL;
+GO
+```
 
 ---
 
 ## Anti-Patterns
 
-### Row-by-Row INSERT in a Python Loop — the #1 performance killer
+These are the loading mistakes that keep showing up in production systems.
 
-A `for row in data: cursor.execute("INSERT ...", row)` loop sends one network round-trip per row. At 100K rows, that's 100K round-trips instead of one. Always use `executemany` with `fast_executemany = True`.
+### Row-by-row client inserts for large batches
 
-### Loading Directly to Production — no staging, no validation
+That creates unnecessary network round-trips and turns loading into a chatty OLTP pattern instead of a batch operation.
 
-Without a staging step, a bad file (wrong schema, partial data, corrupt encoding) lands directly in the table your dashboard reads. Always load to staging first, validate, then promote.
+### Loading directly into the published table with no validation gate
 
-### No Transaction Wrapper on Multi-Step Loads
+That removes the safest failure boundary. A bad file becomes a production data problem immediately.
 
-A `DELETE` followed by `INSERT` without a transaction means a failure between the two leaves the table empty. Wrap multi-step loads in `BEGIN TRANSACTION ... COMMIT`.
+### Delete-plus-insert without an explicit transaction
 
-### IDENTITY as a Business Key
+That exposes partial refresh states if the process dies between statements.
 
-`IDENTITY` values reset on `TRUNCATE`, have gaps on rollback, and differ between environments. Use natural keys or UUIDs for business identifiers; reserve `IDENTITY` for surrogate keys that are never exposed to users.
+### Using upsert where scoped replacement is simpler
 
-### VARCHAR Columns Wider Than Needed
+If the source delivers a complete business slice, upsert logic adds complexity with no benefit.
 
-`bcp` allocates memory per column's declared max width. A `VARCHAR(MAX)` column that stores 20-character strings wastes memory during bulk load and can cause out-of-memory errors with `bcp`.
+### Assuming minimal logging is always available
 
-### Missing Indexes on Staging Table Join Keys
+SQL Server only uses the faster logging path when the operation and table state qualify. Recovery implications must be acceptable too.
 
-When using MERGE or staging-based upsert, the join between staging and target becomes a full scan if the staging table has no index on the join columns. Add a non-clustered index on the key columns of the staging table.
+### Treating `bcp` or `BULK INSERT` as business-validation tools
+
+They are byte movers, not full validation frameworks. Validate the data shape before or immediately after the load.
 
 ---
 
-## Medallion-Project Reference
+## Current Recommendation For `stoxx`
 
-> [!guide]- Medallion-Project: JSON → pyodbc → bronze tables
->
-> The financial index pipeline uses truncate-and-reload for most bronze tables and a Python-side merge (INSERT new + UPDATE changed) for OHLCV data:
->
-> ```python
-> # Bronze loader: truncate-and-reload with fast_executemany
-> cursor.fast_executemany = True
-> cursor.execute("DELETE FROM bronze.signals_daily WHERE _index = ?", key)
-> cursor.executemany("INSERT INTO bronze.signals_daily (...) VALUES (?, ...)", rows)
-> conn.commit()
-> ```
->
-> OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full implementation.
+The current `stoxx` workload supports a clear production pattern:
 
+- keep using scoped full refresh or staged publish for small bronze snapshot slices such as `signals_daily`
+- keep historical silver OHLCV tables on incremental or bulk-aware load paths instead of full-table replacement
+- use explicit update-plus-insert upsert logic for gold tables that mix changed and new keys
+- use TVPs when the caller already holds a medium-size rowset in memory and the natural contract is one stored procedure call
+- choose `fast_executemany`, `SqlBulkCopy`, `bcp`, `BULK INSERT`, or `OPENROWSET(BULK...)` based on runtime boundary and operational control, not by habit
+- treat minimal logging as a DBA-level recovery decision, not as an always-on tuning trick
+
+---
 
 ## Related
-- [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and transfer method decision matrix
+
+- [[sql-server-incremental-transforms]]
+- [[sql-server-change-tracking]]
+- [[sql-server-schema-layering]]
+- [[sql-server-pipeline-anti-patterns]]
+- [[bronze-layer-loading]]
+- [[silver-transforms]]
+- [[gold-transforms]]
+
+## References
+
+- Microsoft Learn: [BULK INSERT (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/bulk-insert-transact-sql)
+- Microsoft Learn: [Use table-valued parameters (Database Engine)](https://learn.microsoft.com/en-us/sql/relational-databases/tables/use-table-valued-parameters-database-engine)
+- Microsoft Learn: [Import and export bulk data using bcp](https://learn.microsoft.com/en-us/sql/tools/bcp-utility)
+- Microsoft Learn: [Use BULK INSERT or OPENROWSET(BULK...) to import data](https://learn.microsoft.com/en-us/sql/relational-databases/import-export/import-bulk-data-by-using-bulk-insert-or-openrowset-bulk-sql-server)
+- Microsoft Learn: [SqlBulkCopy class](https://learn.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlbulkcopy)
+- Microsoft Learn: [Prerequisites for minimal logging in bulk import](https://learn.microsoft.com/en-us/sql/relational-databases/import-export/prerequisites-for-minimal-logging-in-bulk-import)
+- ChromaDB supporting context:
+  - `Pro SQL Server 2022 Administration, Third Edition A Guide for the Modern DBA.pdf`
+  - `The Data Warehouse Toolkit.epub`
+  - `Analytics Engineering with SQL and dbt Building Meaningful Data Models at Scale.pdf`

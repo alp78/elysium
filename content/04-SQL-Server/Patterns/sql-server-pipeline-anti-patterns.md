@@ -9,7 +9,7 @@ tags:
   - performance
   - data-quality
 aliases: [Anti-Patterns, Pipeline Mistakes, SQL Server Gotchas, Common Mistakes]
-description: "A dedicated anti-pattern reference for SQL Server data pipelines — 20+ mistakes that cause incidents, data quality issues, or performance crises, with the fix for each."
+description: "Production checklist of SQL Server pipeline anti-patterns, with live sanity checks from `stoxx` and links to the canonical deep-dive notes."
 parent: "[[domain-pipeline-patterns]]"
 links:
   - "[[sql-server-loading-patterns]]"
@@ -20,399 +20,368 @@ links:
   - "[[silver-transforms]]"
   - "[[gold-transforms]]"
 created: 2026-03-29
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
-# SQL Server Pipeline Anti-Patterns — Mistakes That Cost Hours
+# SQL Server Pipeline Anti-Patterns
 
-> [!quote]
-> "There is no code so big, twisted, or complex that maintenance can't make it worse."
->
-> — **Gerald Weinberg**, *The Psychology of Computer Programming* (1971)
+This page is a production checklist of failure modes that repeatedly show up in SQL Server data pipelines. It does not try to be the deepest execution-plan or loading tutorial. Instead, it focuses on the mistakes that cause incidents, corruption, blocking, or avoidable performance collapse, and it points to the canonical note when a full lab or deeper walkthrough already exists elsewhere in the vault.
 
-Every anti-pattern here has been seen in production. Each one looked reasonable at the time. Each one caused an incident, a data quality issue, or a performance crisis.
+---
 
-Each anti-pattern follows the same structure: what it looks like, why people do it, what goes wrong, and the fix.
+## Live Sanity Checks
+
+Before diagnosing anti-patterns in the abstract, verify the basic protections the current database already has or lacks.
+
+### Verify schema separation exists
+
+#### Count user tables by core pipeline schema
+
+[!info]-
+This query counts user tables in the four most relevant schemas for pipeline design.
+
+- `sys.tables` returns user tables.
+- `sys.schemas` maps tables to schemas.
+- Restricting to `bronze`, `silver`, `gold`, and `dbo` shows whether the environment is organized by layer or whether everything is collapsing into the default schema.
+
+*This query counts user tables by schema so the reader can immediately see whether layer isolation exists or whether `dbo` is absorbing most of the workload.*
+
+```sql
+SELECT s.name AS schema_name,
+       COUNT(*) AS table_count
+FROM sys.tables AS t
+JOIN sys.schemas AS s
+    ON s.schema_id = t.schema_id
+WHERE s.name IN ('bronze', 'silver', 'gold', 'dbo')
+GROUP BY s.name
+ORDER BY s.name;
+```
+
+| schema_name | table_count |
+|---|---:|
+| `bronze` | 12 |
+| `dbo` | 19 |
+| `gold` | 3 |
+| `silver` | 7 |
+
+_`stoxx` does have explicit bronze, silver, and gold schemas, which is the correct architectural direction. The presence of many `dbo` tables means you still need discipline: demo or helper tables often drift there first, and production tables should not follow them._
+
+### Verify bronze metadata columns exist
+
+#### Inspect which bronze tables currently carry `_index` and `_ingested_at`
+
+[!info]-
+This query inspects whether bronze tables expose the minimum metadata fields needed to trace batch origin and freshness.
+
+- `INFORMATION_SCHEMA.COLUMNS` is used because the goal is schema readability, not low-level storage metadata.
+- Filtering to `_index` and `_ingested_at` surfaces whether bronze tables can be scoped by business slice and traced by load time.
+- `STRING_AGG` condenses the metadata presence into one row per table.
+
+*This query shows which bronze tables already include the key operational metadata columns `_index` and `_ingested_at`.*
+
+```sql
+SELECT TABLE_SCHEMA,
+       TABLE_NAME,
+       STRING_AGG(COLUMN_NAME, ', ') WITHIN GROUP (ORDER BY ORDINAL_POSITION) AS metadata_columns
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'bronze'
+  AND COLUMN_NAME IN ('_ingested_at', '_index')
+GROUP BY TABLE_SCHEMA, TABLE_NAME
+ORDER BY TABLE_NAME;
+```
+
+| TABLE_SCHEMA | TABLE_NAME | metadata_columns |
+|---|---|---|
+| `bronze` | `eurostoxx50_ohlcv` | `_ingested_at` |
+| `bronze` | `index_dim` | `_index, _ingested_at` |
+| `bronze` | `oil20_ohlcv` | `_ingested_at` |
+| `bronze` | `pulse` | `_index, _ingested_at` |
+| `bronze` | `pulse_tickers` | `_index, _ingested_at` |
+| `bronze` | `signals_daily` | `_index, _ingested_at` |
+| `bronze` | `signals_quarterly` | `_index, _ingested_at` |
+| `bronze` | `stoxxasia50_ohlcv` | `_ingested_at` |
+| `bronze` | `stoxxusa50_ohlcv` | `_ingested_at` |
+
+_This is a healthy sign. The core bronze tables already carry load-time metadata, and most business-sliced tables also carry `_index`. That makes the "missing metadata columns" anti-pattern a known rule, not just a theory, in this environment._
+
+### Verify SCD2 protection exists where history is intended
+
+#### Inspect the filtered unique index on `silver.index_dim`
+
+[!info]-
+This query inspects the index set on the live dimension table and checks whether the current-row uniqueness rule is enforced correctly.
+
+- `is_unique` tells you whether duplicates are blocked.
+- `filter_definition` is the key field: SCD2 protection depends on the unique index applying only to active rows.
+
+*This query verifies whether the live dimension table has the filtered unique index that prevents duplicate current rows.*
+
+```sql
+SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
+       OBJECT_NAME(i.object_id) AS table_name,
+       i.name AS index_name,
+       i.is_unique,
+       i.filter_definition
+FROM sys.indexes AS i
+WHERE i.object_id = OBJECT_ID('silver.index_dim')
+ORDER BY i.index_id;
+```
+
+| schema_name | table_name | index_name | is_unique | filter_definition |
+|---|---|---|---:|---|
+| `silver` | `index_dim` | `PK__index_di__3213E83F590AA69E` | 1 | `NULL` |
+| `silver` | `index_dim` | `UX_silver_index_dim_current` | 1 | `([is_current]=(1))` |
+
+_The filtered unique index is present, which is exactly what prevents the "multiple current rows for one business key" SCD2 anti-pattern. If that second index were missing, history logic could silently corrupt the dimension._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_unique` | `1` | &#9989; | Duplicate key values are blocked within the index scope. | Required for dependable SCD2 enforcement. |
+| `is_unique` | `0` | &#10060; | Duplicate key values are allowed. | Duplicate current rows can survive unnoticed. |
+| `filter_definition` | `([is_current]=(1))` | &#9989; | Only current rows participate in uniqueness. | Historical versions remain legal while active duplicates are blocked. |
+| `filter_definition` | `NULL` on the business-key index | &#10060; | The index is not filtered. | Either history inserts fail or current-row duplication is not constrained properly. |
 
 ---
 
 ## Loading Anti-Patterns
 
-Mistakes in how data enters SQL Server — wrong method, wrong transaction scope, or wrong assumptions about what the loader does silently.
+These mistakes corrupt state before the transformation layer even starts.
 
-### Row-by-Row INSERT in a Loop — the #1 performance killer
+### Row-by-row client inserts for large batches
 
-> [!danger] 100K Rows = 100K Network Round-Trips
->
-> A Python `for` loop with `cursor.execute()` sends one INSERT per network round-trip. At 100K rows, this takes ~45 seconds vs ~1.2 seconds with `fast_executemany`.
+This is still one of the most common self-inflicted performance failures. A client loop that sends one statement per row turns a batch load into an OLTP chatty workload.
 
 ```python
-# BAD: row-by-row insert (45s for 100K rows)
-for row in data:
-    cursor.execute("INSERT INTO bronze.signals (...) VALUES (?, ...)", row)
+for row in rows:
+    cursor.execute(
+        "INSERT INTO bronze.signals_daily (_index, symbol, [timestamp], current_price) VALUES (?, ?, ?, ?)",
+        row,
+    )
 ```
 
-**Why people do it:** it's the first pattern beginners learn; it works for 100 rows.
+Use batched interfaces such as `fast_executemany`, `SqlBulkCopy`, `bcp`, or `BULK INSERT` instead. The canonical guidance is in [[sql-server-loading-patterns]].
 
-**The fix:** batch with `fast_executemany`. See [sql-server-loading-patterns](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns) for benchmarks.
+### Loading directly into the published table
 
-```python
-# GOOD: batch insert (1.2s for 100K rows)
-cursor.fast_executemany = True
-cursor.executemany("INSERT INTO bronze.signals (...) VALUES (?, ...)", rows)
-```
+This removes the validation gate. If a file is malformed, the published table becomes the first place you discover it.
 
-> [!success] Use `fast_executemany = True` for all bulk inserts
->
-> Set `cursor.fast_executemany = True` before `executemany()`. This batches all rows into a single network call, reducing 100K round-trips to one and cutting load time from ~45s to ~1.2s.
+Use a stage table, validate row count and business keys there, then publish. The reproducible pattern is in [[sql-server-loading-patterns]].
 
-### Loading Directly to Production — no staging, no validation
+### Multi-step loads with no explicit transaction
 
-> [!danger] No Rollback Path
->
-> When a corrupt CSV lands directly in the table your dashboard reads, the only fix is to DELETE the bad data and re-run the pipeline — while the dashboard shows garbage.
+[!danger]
+`DELETE` followed by `INSERT` without an explicit transaction is a partial-state anti-pattern. If the process dies after the delete, the target is empty or incomplete.
 
-**Why people do it:** staging tables feel like "extra work" for small pipelines.
+[!success]
+Wrap multi-step refresh logic in one transaction so the target only moves from one valid state to the next valid state.
 
-**The fix:** always load to staging first, validate (row count, NULL rates, schema check), then promote. See [sql-server-loading-patterns > Staging Table + Swap](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#staging-table--swap) for the swap pattern.
+[!info]-
+This pair of snippets contrasts the unsafe pattern with the safe transactional version.
 
-> [!success] Load to staging, validate, then swap atomically
->
-> Load into `stg.*`, run row count and NULL checks, then rename or `INSERT INTO ... SELECT` into the production table inside a transaction. A failed validation aborts before production data is touched.
-
-### No Transaction Wrapper on Multi-Step Loads
-
-> [!danger] Partial Load = Corrupt State
->
-> A `DELETE` followed by `INSERT` without a transaction means a crash between the two leaves the table empty. Every multi-step load must be atomic.
+*These snippets show why a multi-step load must be wrapped in one explicit transaction.*
 
 ```sql
--- BAD: no transaction
-DELETE FROM silver.signals_daily WHERE _index = @key;
--- if crash here: table is empty, dashboard shows nothing
-INSERT INTO silver.signals_daily (...) SELECT ... FROM bronze;
+DELETE FROM silver.signals_daily
+WHERE _index = @key;
 
--- GOOD: atomic operation
-BEGIN TRANSACTION;
-DELETE FROM silver.signals_daily WHERE _index = @key;
-INSERT INTO silver.signals_daily (...) SELECT ... FROM bronze;
+INSERT INTO silver.signals_daily (...)
+SELECT ...
+FROM bronze.signals_daily;
+```
+
+```sql
+BEGIN TRAN;
+
+DELETE FROM silver.signals_daily
+WHERE _index = @key;
+
+INSERT INTO silver.signals_daily (...)
+SELECT ...
+FROM bronze.signals_daily;
+
 COMMIT;
 ```
 
-> [!success] Wrap every multi-step load in `BEGIN TRANSACTION … COMMIT`
->
-> A transaction guarantees that either all steps succeed or none do. If the process dies mid-run, SQL Server rolls back automatically, leaving the table in its previous clean state.
+### Using `IDENTITY` as a cross-system business key
 
-### Silent Truncation with bcp — data loss without warning
-
-> [!danger] bcp Silently Truncates Data
->
-> If a CSV field exceeds the column width (e.g., 25-char string into `VARCHAR(20)`), bcp cuts the data without any error or warning. You only discover this when downstream queries return truncated values.
-
-**Why people do it:** bcp is the fastest loader and the truncation is invisible.
-
-**The fix:** validate data lengths before loading, or use `-e error_file` with `-m 0` (zero tolerance for errors). Always spot-check loaded data against source. See [sql-server-loading-patterns > bcp Gotchas](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#bcp-gotchas).
-
-> [!success] Use `-m 0 -e error_file` and pre-validate column lengths
->
-> Run `bcp` with `-m 0` to fail on the first truncation error, and `-e err.log` to capture rejected rows. Pre-check source data with `MAX(LEN(column))` against the target column width before loading.
-
-### IDENTITY as a Business Key — breaks on truncate and differs per environment
-
-> [!warning] IDENTITY Values Are Not Stable
->
-> IDENTITY resets on TRUNCATE, has gaps after rollbacks, and differs between dev/staging/prod. Any system that stores or references the IDENTITY value externally breaks when the table is rebuilt.
-
-**The fix:** use natural keys (symbol + date) or deterministic surrogate keys (hash of business columns) for anything shared externally. Reserve IDENTITY for internal-only surrogate keys. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
-
-> [!success] Use deterministic surrogate keys for anything shared externally
->
-> Replace external IDENTITY references with a hash key derived from business columns (e.g., `HASHBYTES('SHA2_256', symbol + CAST(date AS VARCHAR))`). The key is stable across environments, survives TRUNCATE, and has no gaps.
+`IDENTITY` is stable only inside one database lifecycle. It can reset on truncate, diverge across environments, and contain gaps after rollbacks. It is appropriate as an internal surrogate key, not as an externally meaningful business identifier.
 
 ---
 
-## Schema Anti-Patterns
+## Schema And Modeling Anti-Patterns
 
-Mistakes in table design and organization that make debugging harder, permissions impossible, and bulk loads slower.
+These mistakes make pipelines hard to secure, hard to debug, and expensive to change.
 
-### Everything in dbo — no isolation, no permissions
+### Everything in `dbo`
 
-> [!warning] Default Schema Trap
->
-> `dbo` (database owner) is SQL Server's default schema — every table created without an explicit `CREATE TABLE myschema.tablename` lands in `dbo` automatically. Mixing raw, cleaned, and gold tables in a single schema makes layer-specific permissions impossible and forces naming-convention prefixes (`raw_`, `stg_`, `dim_`) as a poor substitute for real isolation.
+If raw, transformed, and published tables all live in `dbo`, schema-level permissions and lifecycle boundaries collapse. Naming prefixes are not a substitute for real schema separation.
 
-**The fix:** use schema-per-layer (`bronze`, `silver`, `gold`). See [sql-server-schema-layering](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-schema-layering).
+`stoxx` already demonstrates the correct direction with `bronze`, `silver`, and `gold`. Preserve that pattern and avoid letting production tables drift back into `dbo`.
 
-> [!success] Create explicit schemas for each pipeline layer
->
-> `CREATE SCHEMA bronze; CREATE SCHEMA silver; CREATE SCHEMA gold;` — then always qualify table names. Schema-level `GRANT SELECT ON SCHEMA::gold` replaces dozens of table-level grants.
+### Missing metadata columns in bronze
 
-### VARCHAR(MAX) for Everything — memory and performance waste
+Without `_ingested_at`, freshness becomes guesswork. Without a slice key such as `_index`, scoped reloads and traceability become harder.
 
-> [!warning] VARCHAR(MAX) Allocation
->
-> `bcp` and `SqlBulkCopy` allocate memory based on the declared column width. `VARCHAR(MAX)` = 2GB allocation per row during bulk load, even if the actual data is 20 characters. This causes out-of-memory errors on large loads.
+The live bronze tables already show why this matters: most of them expose `_ingested_at`, and several also expose `_index`. Preserve that contract for every new raw landing table.
 
-**The fix:** size columns to realistic maximums. `VARCHAR(20)` for tickers, `NVARCHAR(200)` for company names, `VARCHAR(500)` for URLs.
+### No control-table or run-ledger layer
 
-> [!success] Size columns to realistic maximums, not `VARCHAR(MAX)`
->
-> Audit actual data lengths with `SELECT MAX(LEN(col)) FROM source_table` before creating the DDL. Use `VARCHAR(MAX)` only for genuinely unbounded free-text fields that cannot fit in `VARCHAR(4000)` or less.
+Pipelines that store watermarks, retry state, run status, and quality events ad hoc in `dbo` or not at all eventually lose the ability to answer basic operational questions:
 
-### Missing Metadata Columns — impossible to debug
+- what was the last successful watermark
+- which run published the current table state
+- was a row-count anomaly detected and accepted or ignored
 
-> [!warning] No _ingested_at, No Debugging
->
-> Without `_ingested_at` and `_source_file` in bronze tables, you cannot determine when a row arrived, trace bad data to its source, or verify pipeline freshness.
+Use a dedicated `meta` or `control` schema for pipeline state instead of scattering control-plane tables through business schemas or job code.
 
-**The fix:** add `_ingested_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()` and `_source_file VARCHAR(500)` to every bronze table. Cost: ~16 bytes per row. Value: hours saved debugging.
+### Automatic schema evolution with no review gate
 
-> [!success] Add `_ingested_at` and `_source_file` to every bronze table
->
-> Include `_ingested_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()` and `_source_file VARCHAR(500)` in every bronze DDL. These two columns cost ~16 bytes per row and make bad data traceable to its exact source file and load time.
+Blindly allowing additive or type-changing schema drift may keep ingestion alive, but it pushes the breakage downstream where it is harder to diagnose. Reports, dbt models, ETL inserts, and typed applications can all fail after the raw load "succeeds".
 
-### No Schema Separation Between Layers
+The safe pattern is schema enforcement plus an explicit review path:
 
-Keeping bronze, silver, and gold tables in the same schema with naming prefixes (`raw_signals`, `clean_signals`, `rpt_signals`) provides no security isolation and makes `GRANT` statements table-by-table instead of schema-level.
+- capture the change
+- classify it as additive, compatible, or breaking
+- approve the downstream contract update deliberately
+- only then publish the new shape beyond the landing edge
 
-**The fix:** one schema per layer. `GRANT SELECT ON SCHEMA::gold` covers all gold tables automatically. See [sql-server-schema-layering > Cross-Schema Security](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-schema-layering#cross-schema-security).
+### `VARCHAR(MAX)` by default
+
+Unbounded string declarations increase storage uncertainty, loader memory pressure, and index awkwardness. Use realistic maximum widths until the data proves otherwise.
 
 ---
 
-## Query Anti-Patterns
+## Query And Performance Anti-Patterns
 
-Mistakes in how queries are written that kill index performance, introduce dirty reads, or force row-by-row processing instead of set-based operations.
+These are the query-shape mistakes that quietly turn ETL jobs into scans, spills, and blocking chains.
 
-### SELECT * in ETL Pipelines — breaks on schema change
+### `SELECT *` in ETL
 
-> [!warning] SELECT * Is Fragile
->
-> When someone adds a column to the source table, `SELECT *` starts returning an extra column. If the INSERT has explicit columns, the column count mismatch throws an error. If it doesn't, the wrong data goes into the wrong column.
+This couples the pipeline to every future schema change. A new source column can break the insert shape or silently misalign data if the target statement is also sloppy.
 
-**The fix:** always list columns explicitly in ETL queries: `SELECT col1, col2, col3 FROM ...`
+Always list columns explicitly in both `SELECT` and `INSERT`.
 
-> [!success] Always list columns explicitly in ETL `SELECT` and `INSERT` statements
->
-> `SELECT col1, col2, col3 FROM ...` is immune to schema additions. If a new column appears in the source, the ETL continues to select only the columns it knows about, and any mismatch surfaces as a clear error rather than silent data corruption.
+### Implicit type conversions in predicates
 
-### Implicit Type Conversions in WHERE Clauses — kills indexes
+If SQL Server has to convert the column rather than the literal or parameter, the index becomes far less useful and the query can fall back to a scan.
 
-> [!warning] Implicit Conversion = Table Scan
->
-> An **implicit type conversion** occurs when SQL Server encounters a comparison between two different data types (e.g., a `VARCHAR` column compared to an `INT` literal) and must automatically convert one to the other. Because the conversion is applied to every row in the column — not to the literal — the engine cannot use the index's **B-tree** (the balanced tree structure that stores index keys in sorted order, enabling binary-search-like navigation from root → intermediate → leaf pages) to navigate directly to matching values. `WHERE varchar_column = 123` converts every row's `varchar_column` to `INT`, forcing a full table scan. The **execution plan** (the step-by-step recipe the optimizer builds to execute a query — viewable in SSMS with `SET STATISTICS XML ON` or `Ctrl+M`) shows a `CONVERT_IMPLICIT` warning.
+Use the exact target types in parameters and predicates. The full plan-level demonstration lives in [[execution-plans]] and [[sargable-queries]].
 
-**The fix:** match types exactly. `WHERE varchar_column = '123'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for the full list of index-killing patterns.
+### `NOLOCK` as a pipeline fix
 
-> [!success] Match parameter types to column types — quote strings, cast numerics
->
-> Use `WHERE varchar_column = '123'` (not `= 123`) and ensure pyodbc sends `VARCHAR` parameters, not `NVARCHAR`. Check for `CONVERT_IMPLICIT` warnings in execution plans to catch remaining mismatches.
+`NOLOCK` does not solve contention safely. It allows dirty reads and unstable results, which is the exact opposite of what a pipeline needs.
 
-### NOLOCK as a "Performance Fix" — dirty reads in production
+If readers block writers or writers block readers, solve the isolation design. Do not solve it by making the data unreliable.
 
-> [!danger] NOLOCK Reads Uncommitted Data
->
-> `WITH (NOLOCK)` / `READ UNCOMMITTED` can read rows from transactions that will roll back, partially written pages, or rows that are being moved by an index rebuild. For dashboards and reports, this means displaying data that never actually existed. In severe cases, SQL Server raises **error 605** (severity 12) — a formal dirty-read corruption event where a transaction reads a row that never existed in the database.
+### Window functions without ordering support
 
-**Why people do it:** it "fixes" blocking without changing the application.
+Window functions are not inherently bad. The anti-pattern is running them on large tables that cannot deliver rows in the required `PARTITION BY` and `ORDER BY` order. Then SQL Server sorts, asks for memory, and may spill to TempDB.
 
-**The fix:** enable **RCSI (Read Committed Snapshot Isolation)** — a database-level setting that stores row versions in **TempDB's** version store. TempDB is SQL Server's shared system database used for temporary tables, sort spills, hash spills, and row versioning — it is recreated empty on every server restart. Readers see the last committed version of each row without taking shared locks, eliminating reader/writer blocking without risking dirty reads. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for the RCSI setup.
+Check the supporting index before scaling the query. The live example is in [[sql-server-incremental-transforms]].
 
-> [!success] Enable RCSI for consistent reads without `NOLOCK`
->
-> `ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;` — readers see a consistent snapshot of committed data with no shared locks, eliminating blocking without risking dirty reads.
+### Table variables for large ETL intermediates
 
-### Cursor-Based ETL — row-by-row processing in T-SQL
+Table variables and TVPs are useful tools, but they do not carry the same statistics behavior as well-indexed temp tables. For large ETL intermediates, that often leads to poor cardinality estimates, bad join choices, and unstable memory grants.
 
-> [!warning] Cursors Are Row-by-Row
->
-> A `DECLARE CURSOR` / `FETCH NEXT` loop processes one row at a time, defeating SQL Server's **set-based** query optimizer. Set-based processing means the engine evaluates entire sets of rows in a single operation, choosing optimal strategies (hash joins, merge joins, parallelism across CPU cores) based on the data volume and available indexes. A cursor forces sequential, single-row processing — the optimizer cannot parallelize or batch the work. A 1M-row cursor transform can be 100x slower than the equivalent set-based query.
-
-**Why it's so much slower (measured):** updating 100 rows one at a time in a `WHILE` loop requires ~200 page reads and 100 separate execution plans. The equivalent set-based `UPDATE ... WHERE id <= 100` requires ~5 reads and 1 plan. SQL Server reads data in 8 KB pages — row-by-row iteration incurs full page reads for every individual operation regardless of row size. A common cursor variant is using `SCOPE_IDENTITY()` in a loop to capture generated keys — replace with `INSERT ... OUTPUT INSERTED.id INTO @temp` to retrieve all keys in a single set operation.
-
-**The fix:** rewrite as a single set-based INSERT/UPDATE with JOINs, window functions, or CTEs.
-
-> [!success] Replace cursors with set-based `INSERT … SELECT` or window functions
->
-> Rewrite cursor logic as a single `INSERT INTO target SELECT … FROM source JOIN …` statement. SQL Server processes the entire set in one optimized operation, using parallelism and index seeks instead of row-by-row loops.
-
-> [!info] Why set-based matters: how the optimizer chooses join strategies
->
-> When you write a set-based `JOIN`, the query optimizer picks the most efficient **physical join operator** based on data volume, available indexes, and memory:
->
-> - **Nested Loop Join:** for each row in the outer (smaller) table, seeks into the inner table's index. Best when the outer set is small and the inner table has a supporting index. Cost: `O(outer × index_seek)`. Zero startup cost, no memory grant needed, and the only join type that works for non-equijoins (range conditions, `CROSS JOIN`).
-> - **Merge Join:** reads both inputs sorted on the join key and walks them in parallel. Requires both sides pre-sorted (from a clustered index or an explicit sort). Best for large, pre-sorted datasets. Cost: `O(n + m)` — linear. Caveat: if both inputs have duplicate join keys (**many-to-many**), the engine materializes duplicates into a worktable in TempDB, adding I/O overhead.
-> - **Hash Join:** builds a hash table in memory from the smaller input (the "build" side), then probes it with the larger input. This is a **blocking operator** during the build phase — no results flow until the entire build side is hashed. Requires a **memory grant** proportional to the build side's size; if the build side exceeds the grant, the hash table **spills to TempDB** (grace hash → recursive hash), degrading performance dramatically. Best for large unsorted datasets where no index exists on the join key.
->
-> A cursor bypasses all three strategies — it forces the equivalent of a nested loop with no index seek (a full scan per row), which is the worst possible execution path. The optimizer cannot choose a better strategy because it never sees the full set.
-
-### Non-SARGable Date Filters — index-killing date functions
-
-A predicate is **SARGable** (Search ARGument able) when it can be evaluated using an index seek — the engine navigates the B-tree directly to the matching rows. Wrapping a column in a function (`YEAR(date)`, `CAST(date AS DATE)`, `ISNULL(col, 0)`) makes the predicate non-SARGable because the function output is not stored in the index.
-
-> [!warning] Functions on Columns Prevent Index Seeks
->
-> `WHERE YEAR(signal_date) = 2025` applies `YEAR()` to every row, converting an index seek into a full table scan. The engine cannot use the `signal_date` index because it stores date values, not the output of `YEAR()`.
-
-**The fix:** use range predicates. `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for more examples.
-
-> [!success] Use range predicates instead of functions in `WHERE` clauses
->
-> `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'` is SARGable — SQL Server can navigate the B-tree index directly to the matching date range instead of scanning the whole table.
+Use temp tables for large intermediate sets that need indexing, statistics, or repeated joins. Keep table variables and TVPs for genuinely small, scoped rowsets.
 
 ---
 
-## Change Tracking Anti-Patterns
+## History And Change-Capture Anti-Patterns
 
-Mistakes in how data history is managed — overwriting instead of versioning, missing integrity constraints, and incorrect comparisons on NULLable or floating-point columns.
+These mistakes destroy traceability or corrupt version chains.
 
-### Overwriting History in Place — destroyed audit trail
+### Overwriting history in place
 
-> [!danger] UPDATE Destroys History
->
-> `UPDATE dim_stock SET sector = 'New' WHERE symbol = 'ASML'` overwrites the old sector value. You can never answer "what sector was ASML in last quarter?"
+If the business needs historical truth, a plain update destroys it. Use manual SCD2, temporal tables, CDC, or an external snapshot pattern instead of pretending the latest row is enough.
 
-**The fix:** use SCD Type 2 (close old row, insert new row) or temporal tables. See [sql-server-change-tracking](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-change-tracking).
+### SCD2 with no filtered unique index
 
-> [!success] Use SCD Type 2 or temporal tables to preserve full history
->
-> SCD2: `UPDATE SET valid_to = GETUTCDATE(), is_current = 0` on the old row, then `INSERT` a new row with the updated value and `valid_to = '9999-12-31'`. Temporal tables (`SYSTEM_VERSIONING = ON`) handle this automatically at the engine level.
+If a dimension tracks history but does not enforce one active row per business key, duplicate current rows can slip in during retries, race conditions, or buggy close-plus-insert logic.
 
-### SCD2 Without Filtered Unique Index — duplicate current rows
+`silver.index_dim` currently avoids this anti-pattern with `UX_silver_index_dim_current`.
 
-> [!danger] Silent Duplicate Active Rows
->
-> Without `CREATE UNIQUE INDEX ... WHERE is_current = 1`, a bug in the close/insert logic creates two rows with `is_current = 1` for the same key. JOINs return duplicates; dashboard shows wrong data.
+### Comparing nullable columns naïvely
 
-**The fix:** always create a filtered unique index on the active key columns. See [sql-server-change-tracking > SCD2 Schema](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-change-tracking#scd2-schema).
+`NULL` does not compare like an ordinary value. Change detection that ignores nullable semantics misses real changes or creates false ones.
 
-> [!success] Add a filtered unique index on the active key to enforce SCD2 integrity
->
-> `CREATE UNIQUE INDEX UX_dim_stock_current ON dim_stock (symbol) WHERE is_current = 1;` — SQL Server rejects the INSERT if a duplicate active row already exists, surfacing bugs in the close/insert logic immediately rather than silently.
+Normalize nullable comparisons explicitly or use null-safe comparison features available in the engine version you run.
 
-### Comparing NULLable Columns Without ISNULL — missed changes
+### Comparing floating-point values with raw equality
 
-> [!warning] NULL != NULL in SQL Server
->
-> `WHERE old_sector <> new_sector` returns FALSE when both are NULL (they're "equal") and also returns FALSE when one is NULL and the other isn't. NULLable column comparisons silently skip changes.
+Binary floating-point representation makes exact equality a poor change detector for business attributes. Use fixed-precision numeric types when possible, or compare within an epsilon band when floats are unavoidable.
 
-```sql
--- BAD: misses NULL-to-value and value-to-NULL changes
-WHERE old_sector <> new_sector
+### Using `rowversion` as business time
 
--- GOOD: handles NULLs correctly
-WHERE ISNULL(old_sector, '___NULL___') <> ISNULL(new_sector, '___NULL___')
+`rowversion` is a technical version stamp, not an event timestamp and not a business-valid-from date. Treating it as chronology or using it as a durable business key creates confusing history semantics and brittle downstream logic.
 
--- BETTER (SQL Server 2022+):
-WHERE old_sector IS DISTINCT FROM new_sector
-```
-
-> [!success] Use `ISNULL(col, sentinel)` or `IS DISTINCT FROM` for NULLable comparisons
->
-> `WHERE ISNULL(old_sector, '___NULL___') <> ISNULL(new_sector, '___NULL___')` correctly detects all four cases: value-to-value, NULL-to-value, value-to-NULL, and NULL-to-NULL (no change). On SQL Server 2022+, `IS DISTINCT FROM` is cleaner.
-
-### Comparing Floating-Point Values for Equality — false change detection
-
-> [!warning] Float Equality Fails
->
-> `3.14` stored as `FLOAT` may become `3.1400000000000001`. A direct `<>` comparison flags this as a "change" and triggers an unnecessary SCD2 close/insert.
-
-**The fix:** round to fixed precision (`ROUND(val, 4)`) or use epsilon comparison (`ABS(old - new) < 0.0001`).
-
-> [!success] Use `DECIMAL`/`NUMERIC` for financial values, or compare with epsilon
->
-> Store monetary and ratio values as `DECIMAL(18,6)` instead of `FLOAT` to eliminate representation errors. For existing `FLOAT` columns, detect real changes with `ABS(old_val - new_val) > 0.0001` instead of `<>`.
+Use `rowversion` only as a technical delta token, and keep real business time in explicit date or datetime columns.
 
 ---
 
-## Concurrency Anti-Patterns
+## Concurrency And Operations Anti-Patterns
 
-Mistakes that cause blocking, deadlocks, or race conditions — usually from misunderstanding how SQL Server's lock manager and isolation levels interact with long-running pipeline operations.
+These mistakes do not always show up in unit tests, but they show up under real workload pressure.
 
-### Long-Running Transactions During Business Hours
+### Long-running write transactions during the business day
 
-> [!warning] Lock Escalation
->
-> **Lock escalation** occurs when either of two thresholds is reached: (1) a single statement acquires more than **5,000 locks on a single table reference** (checked every 1,250 newly acquired locks), or (2) lock memory exceeds **24% of the buffer pool**. SQL Server replaces row/page locks with a single **table-level lock** (never a page-level lock — escalation always goes directly to table). A transform that processes millions of rows in a single transaction triggers this, converting row locks into an exclusive table lock that blocks every other query — including dashboard reads.
+Large write scopes extend lock lifetimes and magnify blocking. Break work into smaller committed units or schedule the heavy path away from the hottest concurrency window.
 
-**The fix:** batch large transforms into chunks (e.g., 10K rows per transaction). Or schedule heavy transforms during off-hours. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for lock escalation thresholds.
+### Blind `MERGE`
 
-> [!success] Batch large transforms into chunks of 10K rows or fewer
->
-> Process updates in a `WHILE` loop with `TOP (10000)` per transaction and a short `COMMIT` between each batch. This keeps the row lock count below the 5,000-lock escalation threshold and releases locks frequently, allowing concurrent dashboard reads. For partitioned tables, set `ALTER TABLE SET (LOCK_ESCALATION = AUTO)` — this escalates to partition-level locks instead of table-level, allowing concurrent writes to different partitions. Monitor escalation pressure with `sys.dm_db_index_operational_stats` (`index_lock_promotion_attempt_count`, `index_lock_promotion_count`).
+`MERGE` is not automatically wrong, but it is frequently used as if it were a magic upsert shortcut. Without a clean key, careful semantics, and concurrency testing, it becomes a bug magnet.
 
-### MERGE Without Proper Locking Hints — race conditions
+For ETL workloads, explicit `UPDATE` plus `INSERT` is usually easier to reason about.
 
-> [!danger] Concurrent MERGE = Duplicate Inserts
->
-> Two concurrent MERGE statements can both evaluate `WHEN NOT MATCHED` for the same key and both INSERT — creating duplicates. MERGE does not take an exclusive lock on "not found" keys by default.
+### No retry logic for transient deadlocks
 
-**The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. `HOLDLOCK` is equivalent to `SERIALIZABLE` isolation for that table reference — it holds range locks on the matched key set until the end of the transaction, preventing phantom inserts by other sessions. See [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) for the full analysis.
+Deadlocks are not always proof of broken logic; sometimes they are transient concurrency collisions. A pipeline with zero retry policy turns a recoverable event into an avoidable job failure.
 
-> [!success] Add `WITH (HOLDLOCK)` to the MERGE target table
->
-> `MERGE silver.signals_daily WITH (HOLDLOCK) AS target USING …` �� `HOLDLOCK` acquires **range locks** on the matched key range. A range lock covers both existing key values and the gaps between them in the B-tree index, preventing **phantom inserts** — rows that appear in a range between two reads of the same query because another session inserted them into the gap. Without range locks, a concurrent session can insert a new key between the MERGE's "not found" check and its INSERT, creating the duplicate.
-
-### No Retry Logic for Deadlocks — pipeline fails on transient errors
-
-> [!warning] Deadlocks Are Normal
->
-> A **deadlock** occurs when two transactions each hold a lock the other needs, forming a circular wait that can never resolve on its own. SQL Server's lock monitor detects this within 5 seconds and kills one transaction (the "deadlock victim", chosen by cost) so the other can proceed. Without retry logic, the killed pipeline run fails permanently instead of retrying on the next attempt.
-
-**The fix:** catch error 1205 and retry with exponential backoff (3 attempts, 1s/2s/4s delay). See [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for C# and Python retry patterns.
-
-> [!success] Catch error 1205 and retry with exponential backoff
->
-> Wrap the database call in a retry loop that catches `pyodbc.Error` with SQL state `40001` (deadlock victim) and retries up to 3 times with delays of 1s, 2s, and 4s. Most deadlocks resolve on the first retry. To diagnose recurring deadlocks, query the **system_health** Extended Events session (enabled by default on every instance) — it captures deadlock graphs automatically via the `xml_deadlock_report` event, accessible in SSMS under Management → Extended Events → Sessions → system_health. No upfront tracing configuration needed.
+Retries do not replace real deadlock analysis, but production jobs should distinguish transient failure from hard data failure.
 
 ---
 
-## Performance Anti-Patterns
+## Current Recommendation For `stoxx`
 
-Mistakes that turn fast queries into slow ones — usually from missing indexes, stale statistics, or unnecessary recomputation.
+The current `stoxx` environment supports a strong baseline:
 
-### Window Functions Without Supporting Indexes — TempDB spill
+- keep enforcing layer separation with `bronze`, `silver`, and `gold`
+- introduce a dedicated control-plane schema when the platform needs durable run state, watermarks, or schema-governance tables
+- keep requiring metadata columns on bronze landing tables
+- gate schema evolution explicitly instead of letting raw-landed changes leak downstream by accident
+- keep protecting historical dimensions with filtered unique indexes when SCD2 is used
+- keep loading through staged or transactional patterns rather than direct publish writes
+- keep large ETL intermediates on temp-table patterns instead of defaulting to table variables
+- keep detailed plan and loading investigations in the canonical notes instead of duplicating ad hoc fixes here
 
-> [!warning] Sort Spill = 10x Slower
->
-> `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date)` without a clustered index on `(symbol, date)` forces a full sort. On a 100M-row table, the sort spills to TempDB disk.
+Use this page as the checklist. Use the companion notes for the full reproduction:
 
-**The fix:** ensure the clustered index matches `PARTITION BY + ORDER BY`. See [sql-server-incremental-transforms > Window Function Performance](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-incremental-transforms#window-function-performance).
+- [[sql-server-loading-patterns]]
+- [[sql-server-incremental-transforms]]
+- [[sql-server-change-tracking]]
+- [[sql-server-schema-layering]]
+- [[execution-plans]]
 
-> [!success] Align the clustered index key order with `PARTITION BY` + `ORDER BY`
->
-> `CREATE CLUSTERED INDEX CIX_signals ON silver.signals_daily (symbol, date)` satisfies `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date)` without a sort operator. The optimizer reads pre-ordered pages directly, eliminating the TempDB spill.
+---
 
-### Full-Table Aggregation That Could Be Incremental
+## Related
 
-Recomputing gold tables from all of silver on every run is wasteful once the table exceeds ~1M rows. If only the last 7 days changed, only recompute the last 7 days.
+- [[sql-server-loading-patterns]]
+- [[sql-server-incremental-transforms]]
+- [[sql-server-change-tracking]]
+- [[sql-server-schema-layering]]
+- [[bronze-layer-loading]]
+- [[silver-transforms]]
+- [[gold-transforms]]
 
-**The fix:** use watermark-based or partition-based incremental processing. See [sql-server-incremental-transforms](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-incremental-transforms).
+## References
 
-### Missing Statistics on Filtered Indexes
-
-**Statistics** are metadata objects that describe the distribution of values in an index or column — essentially a histogram of how data is spread. The query optimizer reads statistics to estimate how many rows a predicate will return (**cardinality estimation**), which determines the execution plan. Stale statistics mean wrong cardinality estimates, which mean wrong plans (e.g., a full scan when a seek would be faster). Filtered indexes (e.g., `WHERE is_current = 1`) have their own separate statistics that only reflect the filtered subset. If these are stale or missing, the optimizer underestimates cardinality for queries against the filtered index and chooses a suboptimal plan.
-
-**The fix:** `UPDATE STATISTICS silver.index_dim UX_silver_index_dim_current` after significant data changes. Or enable auto-stats: `ALTER DATABASE SET AUTO_UPDATE_STATISTICS ON`.
-
-### Parameter Sniffing in ETL Stored Procedures — wrong plan for the wrong batch size
-
-**Parameter sniffing** is SQL Server's behavior of reading the actual parameter values passed to a stored procedure at the time of **first compilation** and building an execution plan optimized for those specific values. The plan is then cached and reused for all subsequent executions, regardless of what parameters they pass.
-
-> [!danger] Plan Compiled for 10 Rows, Executed for 10 Million
->
-> A staging load stored proc first compiled for a small batch (10 rows) produces a nested loop plan. A later full-load call with 10M rows reuses that plan — nested loops on 10M rows is catastrophically slow. Conversely, if first compiled during a full load, the hash join plan wastes memory grants on every subsequent small incremental call.
-
-This is especially common in medallion-architecture pipelines where the same stored proc handles both small incremental loads and large backfills.
-
-> [!success] Use `OPTION (RECOMPILE)` on variable-volume ETL statements
->
-> For batch ETL stored procedures where data volume varies significantly between runs, add `OPTION (RECOMPILE)` to the critical `INSERT` or `MERGE` statement. This forces the optimizer to build a fresh plan using the current parameter values on every execution — eliminating the risk of a cached plan optimized for the wrong batch size. The per-execution compile cost is negligible for batch jobs that run minutes apart.
->
-> On SQL Server 2022+ (compat level 160), **Parameter Sensitive Plan (PSP) Optimization** handles this automatically: the optimizer creates multiple plan variants (one per cardinality range) and routes each execution to the correct variant at runtime. Enable Query Store to monitor variant selection.
-
-### Too Many Indexes on High-Write Staging Tables
-
-Every index on a staging table must be maintained on every INSERT during the bulk load. A staging table with 5 non-clustered indexes is 5x more expensive to load than one with zero.
-
-**The fix:** drop indexes on staging tables before bulk load, recreate after. Or use a **heap** — a table with no clustered index, where rows are stored in no particular order. Heaps are faster for bulk inserts (no B-tree maintenance) but slower for reads (no sort order to exploit). This makes them ideal for staging tables that are always truncated and reloaded.
+- Microsoft Learn: [Table hints (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql-table)
+- Microsoft Learn: [Create filtered indexes](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/create-filtered-indexes)
+- Microsoft Learn: [rowversion (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql)
+- ChromaDB supporting context:
+  - `The Data Warehouse Toolkit.epub`
+  - `Fundamentals of Data Engineering.epub`
+  - `Data Engineering Design Patterns.pdf`
+  - `Expert Performance Indexing in Azure SQL and SQL Server 2022, Fourth Edition Toward Faster Results and Lower Maintenance Both….pdf`

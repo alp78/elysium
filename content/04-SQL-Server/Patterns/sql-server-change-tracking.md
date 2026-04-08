@@ -10,7 +10,7 @@ tags:
   - cdc
   - temporal-tables
 aliases: [Change Tracking, SCD2 SQL Server, Temporal Tables, CDC, Change Data Capture, Slowly Changing Dimensions]
-description: "Every method SQL Server offers for tracking data changes over time — manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots — with a decision matrix and side-by-side comparisons."
+description: "Production choices for tracking data changes in SQL Server: manual SCD2, temporal tables, CDC, Change Tracking, and external snapshot patterns."
 parent: "[[domain-pipeline-patterns]]"
 links:
   - "[[sql-server-loading-patterns]]"
@@ -21,628 +21,863 @@ links:
   - "[[silver-transforms]]"
   - "[[gold-transforms]]"
 created: 2026-03-29
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
-# SQL Server Change Tracking — Capturing Data History
+# SQL Server Change Tracking
 
-> [!quote]
-> "Without a reliable history of what changed and when, you cannot debug a data pipeline, satisfy an auditor, or recover from a bad load."
->
-> — **Ralph Kimball**, *The Data Warehouse Toolkit*
+Change tracking is the discipline of recording what changed, when it changed, and, depending on the method, whether you also need the before image, after image, or a point-in-time table view. In SQL Server, the right mechanism depends on the downstream question:
 
-"How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For dbt's declarative approach, see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd).
+- Do you need a full business history of selected attributes
+- Do you need engine-managed row history for audit or time-travel queries
+- Do you need every insert, update, and delete event for downstream replication
+- Do you only need to know which primary keys changed since the last sync
+
+This note grounds those decisions in the live `stoxx` database. The current production state is simple: engine-managed features are not enabled, but `silver.index_dim` already follows a manual SCD2 pattern with `valid_from`, `valid_to`, `is_current`, and a filtered unique index.
+
+---
+
+## Live Feature State
+
+Before choosing a change-capture design, inspect what the database already has enabled. Production mistakes often start when engineers assume CDC, Change Tracking, or temporal tables are already available and then build downstream logic on features that are actually off.
+
+### Current change-capture surface in `stoxx`
+
+#### Inspect the current engine-managed change-capture state
+
+[!info]-
+This query summarizes the current change-capture capabilities of the `stoxx` database.
+
+- `sys.databases` provides database-level settings such as `compatibility_level`, `is_cdc_enabled`, and row-versioning isolation settings.
+- `EXISTS (SELECT 1 FROM sys.change_tracking_databases ...)` converts Change Tracking enablement into a simple `0` or `1` flag.
+- `sys.tables WHERE temporal_type_desc <> 'NON_TEMPORAL_TABLE'` counts current temporal tables.
+- `SCHEMA_ID('cdc')` checks whether the CDC schema exists in the database.
+- `sys.change_tracking_tables` counts how many tables are currently enrolled in Change Tracking.
+
+*This query shows whether `stoxx` currently has CDC, Change Tracking, temporal tables, or row-versioning prerequisites enabled.*
+
+```sql
+SELECT d.name AS database_name,
+       d.compatibility_level,
+       d.is_cdc_enabled,
+       CASE
+           WHEN EXISTS (
+               SELECT 1
+               FROM sys.change_tracking_databases
+               WHERE database_id = d.database_id
+           ) THEN 1
+           ELSE 0
+       END AS is_change_tracking_enabled,
+       d.snapshot_isolation_state_desc,
+       d.is_read_committed_snapshot_on,
+       (
+           SELECT COUNT(*)
+           FROM sys.tables
+           WHERE temporal_type_desc <> 'NON_TEMPORAL_TABLE'
+       ) AS temporal_table_count,
+       CASE
+           WHEN SCHEMA_ID('cdc') IS NULL THEN 0
+           ELSE 1
+       END AS cdc_schema_present,
+       (
+           SELECT COUNT(*)
+           FROM sys.change_tracking_tables
+       ) AS change_tracking_table_count
+FROM sys.databases AS d
+WHERE d.name = 'stoxx';
+```
+
+| database_name | compatibility_level | is_cdc_enabled | is_change_tracking_enabled | snapshot_isolation_state_desc | is_read_committed_snapshot_on | temporal_table_count | cdc_schema_present | change_tracking_table_count |
+|---|---:|---:|---:|---|---:|---:|---:|---:|
+| `stoxx` | 160 | 0 | 0 | `OFF` | 0 | 0 | 0 | 0 |
+
+_`stoxx` is currently running with none of the engine-managed change-capture features enabled. That means any current history behavior comes from table design and ETL logic, not from CDC, Change Tracking, or temporal tables. It also means a CT-based sync design would first need database-level enablement and a row-versioning discussion before it is production-ready._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `compatibility_level` | `160` | &#9989; | SQL Server 2022 query surface is available. | Modern syntax and optimizer features are available if the design needs them. |
+| `is_cdc_enabled` | `0` | &#10060; | CDC is not enabled at the database level. | No CDC schema, no change tables, and no `fn_cdc_get_*` functions are available. |
+| `is_cdc_enabled` | `1` | &#9989; | CDC is enabled at the database level. | You can then enable individual source tables for CDC. |
+| `is_change_tracking_enabled` | `0` | &#10060; | Change Tracking is off for the database. | `CHANGETABLE(CHANGES ...)` cannot be used against application tables yet. |
+| `is_change_tracking_enabled` | `1` | &#9989; | Change Tracking is enabled at the database level. | Individual tables can then participate in key-level sync tracking. |
+| `snapshot_isolation_state_desc` | `OFF` | Context-dependent | Snapshot isolation is not enabled. | CT can still work, but consistent multi-table sync windows become harder. |
+| `snapshot_isolation_state_desc` | `ON` | &#9989; | Snapshot isolation is enabled. | Safer for readers that need a transactionally consistent sync view. |
+| `is_read_committed_snapshot_on` | `0` | Context-dependent | RCSI is off. | Readers still use lock-based read committed semantics by default. |
+| `is_read_committed_snapshot_on` | `1` | &#9989; | RCSI is on. | Reader/writer blocking is reduced for many operational queries. |
+| `temporal_table_count` | `0` | Context-dependent | No temporal tables currently exist. | Any time-travel requirement would need a new temporal design or a manual SCD pattern. |
+| `temporal_table_count` | `> 0` | &#9989; | One or more temporal tables exist. | Temporal maintenance and retention policy become operational concerns. |
+| `cdc_schema_present` | `0` | &#10060; | No `cdc` schema exists. | CDC metadata tables and change tables have not been created. |
+| `cdc_schema_present` | `1` | &#9989; | CDC metadata schema exists. | Verify whether tracked tables and cleanup jobs are also configured. |
+| `change_tracking_table_count` | `0` | Context-dependent | No tables currently participate in CT. | Even if CT were enabled later, table enrollment would still be required. |
+| `change_tracking_table_count` | `> 0` | &#9989; | One or more tables are tracked. | Consumers can begin using `CHANGETABLE` patterns for those tables. |
+
+### Current manual SCD2 implementation in `silver.index_dim`
+
+The current `stoxx` warehouse already uses the classic SCD2 columns on `silver.index_dim`, which makes this table the most important live example in the note.
+
+#### Measure the live SCD2 state of `silver.index_dim`
+
+[!info]-
+This query measures how the existing dimension table is currently using its SCD2 columns.
+
+- `COUNT(*)` returns total dimension rows.
+- `SUM(CASE WHEN is_current = 1 THEN 1 ELSE 0 END)` counts active versions.
+- `SUM(CASE WHEN is_current = 0 THEN 1 ELSE 0 END)` counts closed historical versions.
+- `MIN(valid_from)` and `MAX(valid_from)` show the version-load time range currently stored.
+- `SUM(CASE WHEN valid_to IS NULL THEN 1 ELSE 0 END)` counts still-open rows.
+
+*This query measures whether `silver.index_dim` is currently using its SCD2 columns as a real history table or only as a current-state dimension with SCD2-compatible structure.*
+
+```sql
+SELECT total_rows = COUNT(*),
+       current_rows = SUM(CASE WHEN is_current = 1 THEN 1 ELSE 0 END),
+       historical_rows = SUM(CASE WHEN is_current = 0 THEN 1 ELSE 0 END),
+       min_valid_from = MIN(valid_from),
+       max_valid_from = MAX(valid_from),
+       open_ended_rows = SUM(CASE WHEN valid_to IS NULL THEN 1 ELSE 0 END)
+FROM silver.index_dim;
+```
+
+| total_rows | current_rows | historical_rows | min_valid_from | max_valid_from | open_ended_rows |
+|---:|---:|---:|---|---|---:|
+| 169 | 169 | 0 | 2026-03-04 22:11:36.1898627 | 2026-03-12 12:09:52.8799122 | 169 |
+
+_`silver.index_dim` is structurally an SCD2 table, but operationally it is still a current-state dimension: every row is current, every row is open-ended, and no closed history rows exist yet. That is a valid starting point, but it means the pipeline has not yet exercised a real version rollover in this table._
+
+#### Preview the newest live dimension rows
+
+[!info]-
+This query previews the newest `silver.index_dim` versions by sorting on `valid_from` descending.
+
+- `_index`, `symbol`, and `sector` show the business identity of each dimension row.
+- `valid_from`, `valid_to`, and `is_current` are the three core SCD2 control columns.
+- Ordering by `valid_from DESC, symbol` surfaces the latest dimension load batch first.
+
+*This query previews the newest live dimension rows in `silver.index_dim` and shows how the current table stores active versions.*
+
+```sql
+SELECT TOP (8)
+       _index,
+       symbol,
+       sector,
+       valid_from,
+       valid_to,
+       is_current
+FROM silver.index_dim
+ORDER BY valid_from DESC, symbol;
+```
+
+| _index | symbol | sector | valid_from | valid_to | is_current |
+|---|---|---|---|---|---:|
+| `oil_20` | `MPC` | `Energy` | 2026-03-12 12:09:52.8799122 | `NULL` | 1 |
+| `oil_20` | `PSX` | `Energy` | 2026-03-12 12:09:52.8799122 | `NULL` | 1 |
+| `oil_20` | `ENB` | `Energy` | 2026-03-12 12:09:52.8757472 | `NULL` | 1 |
+| `oil_20` | `VLO` | `Energy` | 2026-03-12 12:09:52.8757472 | `NULL` | 1 |
+| `oil_20` | `BKR` | `Energy` | 2026-03-12 12:09:52.8715853 | `NULL` | 1 |
+| `oil_20` | `KMI` | `Energy` | 2026-03-12 12:09:52.8715853 | `NULL` | 1 |
+| `oil_20` | `WMB` | `Energy` | 2026-03-12 12:09:52.8715853 | `NULL` | 1 |
+| `oil_20` | `HAL` | `Energy` | 2026-03-12 12:09:52.8674178 | `NULL` | 1 |
+
+_These rows confirm the table is currently storing only active versions. The `valid_from` timestamps are still useful because they show when the latest dimension batch entered the warehouse, but `valid_to = NULL` and `is_current = 1` across the sample mean the table has not yet closed any business history rows._
+
+#### Inspect the filtered unique index that enforces one active row per key
+
+[!info]-
+This query inspects the indexes on `silver.index_dim`, focusing on whether the table has a filtered unique index for current rows.
+
+- `sys.indexes` exposes index metadata.
+- `is_unique` confirms whether duplicate keys are blocked.
+- `filter_definition` shows whether the uniqueness rule applies only to active rows, which is the critical SCD2 pattern.
+
+*This query verifies that `silver.index_dim` enforces one active version per business key with a filtered unique index.*
+
+```sql
+SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
+       OBJECT_NAME(i.object_id) AS table_name,
+       i.name AS index_name,
+       i.is_unique,
+       i.filter_definition
+FROM sys.indexes AS i
+WHERE i.object_id = OBJECT_ID('silver.index_dim')
+ORDER BY i.index_id;
+```
+
+| schema_name | table_name | index_name | is_unique | filter_definition |
+|---|---|---|---:|---|
+| `silver` | `index_dim` | `PK__index_di__3213E83F590AA69E` | 1 | `NULL` |
+| `silver` | `index_dim` | `UX_silver_index_dim_current` | 1 | `([is_current]=(1))` |
+
+_The second row is the key SCD2 safeguard. `UX_silver_index_dim_current` allows many historical versions over time, but it blocks a second simultaneous active row for the same business key because the uniqueness rule applies only where `is_current = 1`._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_unique` | `1` | &#9989; | Duplicate key values are blocked within the index scope. | Required for protecting one-current-row rules. |
+| `is_unique` | `0` | &#10060; | Duplicate key values are allowed. | SCD2 bugs can create multiple simultaneous active rows. |
+| `filter_definition` | `([is_current]=(1))` | &#9989; | Uniqueness applies only to active rows. | This is the standard SQL Server SCD2 protection pattern. |
+| `filter_definition` | `NULL` on the business-key index | &#10060; | Uniqueness would apply to all versions or not at all. | Either history inserts fail or duplicate active rows become possible. |
 
 ---
 
 ## Decision Matrix
 
-Change tracking is the discipline of recording what data changed, when it changed, and (optionally) what the old and new values were. Every data pipeline, audit system, and synchronization pattern depends on answering at least one of these questions: "Which rows are new since my last sync?" (keys only), "What did this row look like before the update?" (before/after images), or "What was the state of this table at a specific point in time?" (time-travel). SQL Server provides five built-in mechanisms — Manual SCD2, Temporal Tables, CDC, Change Tracking, and Triggers — plus two external approaches (dbt Snapshots and application-level logging). Each trades off between capture richness, performance overhead, and implementation complexity.
+The practical difference between the available methods is not just "history or no history". It is the payload, the latency, and the operational owner of the logic.
 
-### Change Tracking Methods — when to use each
+### Choose the method by the downstream question
 
-> [!info] Method Comparison
->
-> Choose based on what you need to capture (keys only vs full row history), who owns the logic (DB engine vs application), and performance tolerance. Performance cost estimates assume a 10M-row OLTP table with ~100K DML operations/day: "Low" adds less than 5% overhead, "Medium" adds 5–15%, "High" adds more than 15% or introduces per-statement contention.
+Use the lightest mechanism that still answers the real downstream requirement.
 
-| Method | Tracks What | Granularity | Perf Cost | Complexity | Best For |
-|--------|-------------|-------------|-----------|------------|----------|
-| Manual SCD2 | Attribute changes | Row-level | Low (you control it) | Medium | Custom history requirements |
-| Temporal Tables | All column changes | Row-level | Low-Medium | Low | Full audit trail, regulatory |
-| CDC | INSERT/UPDATE/DELETE | Row-level | Medium (log reader) | Medium | Streaming, Kafka/Debezium |
-| Change Tracking (CT) | Which rows changed | Keys only | Low | Low | Sync scenarios, "what's new?" |
-| Triggers | Any DML event | Row-level | High (per-statement) | High | Legacy — avoid in new systems |
-| dbt Snapshots | Attribute changes | Row-level | Varies | Low | dbt-managed pipelines |
-| Application-level | Whatever you log | Custom | None on DB | High | When DB-level isn't possible |
+| Method | Captures | History Depth | Typical Latency | Operational Owner | Best Fit |
+|---|---|---|---|---|---|
+| Manual SCD2 | Selected business attributes | Full for the tracked attributes | Batch-oriented | Data engineering | Dimensional history where you choose what counts as a change |
+| Temporal tables | Full row versions | Full row history | Immediate on DML | SQL Server engine | Audit, point-in-time queries, row reconstruction |
+| CDC | Inserts, updates, deletes plus metadata | Full row-level change stream | Near real time to batch | DBA + data engineering | Replication, streaming, downstream event consumers |
+| Change Tracking | Primary keys and operation metadata | No before image, no full row history | Sync-oriented | DBA + application/data engineering | Lightweight pull-based sync |
+| `rowversion` token | Monotonic row stamp on insert or update | No row history and no delete payload | Pull-based / batch | Application or data engineering | Mutable tables where you only need a change token and can reread the current row |
+| dbt snapshots | Selected columns via snapshot strategy | Full for tracked snapshot rows | Batch-oriented | Analytics engineering | Declarative warehouse history outside source SQL Server |
+| Application-level logging | Whatever the app emits | Custom | App-dependent | Application team | When database-level capture is unavailable or undesirable |
+
+### Follow the method-selection path explicitly
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Start<br/>What change information must the consumer get?] --> B{Do you need full row versions<br/>with point-in-time query support?}
+    B --> Y1[YES]
+    B --> N1[NO]
+    Y1 --> C[Use temporal tables]
+    N1 --> D{Do you need a row-level change stream<br/>including deletes?}
+    D --> Y2[YES]
+    D --> N2[NO]
+    Y2 --> E[Use CDC]
+    N2 --> F{Do you only need to know<br/>which keys changed since the last sync?}
+    F --> Y3[YES]
+    F --> N3[NO]
+    Y3 --> G[Use Change Tracking]
+    N3 --> H{Do only selected business attributes<br/>define a meaningful new version?}
+    H --> Y4[YES]
+    H --> N4[NO]
+    Y4 --> I[Use manual SCD2]
+    N4 --> J[Use external snapshots or application logging]
+
+    classDef yes fill:#1f3b2d,stroke:#73d13d,color:#c0caf5;
+    classDef no fill:#4a1f24,stroke:#db4b4b,color:#c0caf5;
+    class Y1,Y2,Y3,Y4 yes;
+    class N1,N2,N3,N4 no;
+```
+
+---
+
+## Rowversion As A Change Token
+
+`rowversion` is SQL Server's lightest built-in change token. It is not a timestamp and it is not a history feature. It is an 8-byte database-scoped incrementing binary value that changes whenever a row containing a `rowversion` column is inserted or updated. That makes it useful for incremental readers that only need "changed since token X" behavior and can reread the current row image from the base table.
+
+### Use `rowversion` only when token-based change detection is enough
+
+`rowversion` is a fit when:
+
+- the source mutates rows in place and a date watermark is unreliable
+- the consumer can reread the current row from the base table
+- deletes are handled separately
+- the team wants a lighter mechanism than CT or CDC
+
+It is the wrong fit when:
+
+- the pipeline needs delete detection from the token itself
+- the consumer needs before images or ordered change events
+- the token will be interpreted as business time
+- the column is treated as a durable key
+
+#### Inspect whether the current database already exposes any `rowversion` columns
+
+[!info]-
+This query measures how many `rowversion` columns currently exist in `stoxx`.
+
+- SQL Server stores `rowversion` columns with `system_type_id = 189`.
+- `COUNT(*)` returns the number of rowversion columns across the database.
+- `COUNT(DISTINCT object_id)` shows how many tables currently use that mechanism.
+- An empty result set would be awkward to read in a note, so the query returns aggregate counts instead of raw rows.
+
+*This query checks whether `stoxx` currently uses `rowversion` anywhere as a change token.*
+
+```sql
+SELECT COUNT(*) AS rowversion_column_count,
+       COUNT(DISTINCT object_id) AS tables_with_rowversion
+FROM sys.columns
+WHERE system_type_id = 189;
+```
+
+| rowversion_column_count | tables_with_rowversion |
+|---:|---:|
+| 0 | 0 |
+
+_`stoxx` does not currently use `rowversion` in any table, which is consistent with the broader live state of this note: the warehouse is relying on explicit ETL design rather than engine-managed change tokens. If a mutable source table later needs a lightweight delta token, `rowversion` would need to be introduced deliberately as part of that table contract._
+
+#### Demonstrate how a `rowversion` token changes after one update
+
+[!warning]
+`rowversion` is not business time and not a full change-feed. Any insert or update to a row with a `rowversion` column changes the token, even if the business change is minor. Deletes do not emit a rowversion, and Microsoft documentation explicitly warns that `rowversion` is a poor key candidate because updates change the value.
+
+[!success]
+Use `rowversion` only as a technical delta token. Persist the last consumed token, reread the current row image from the base table, and keep deletes on a separate path such as soft-delete flags, CT, CDC, or scoped replacement logic.
+
+[!info]-
+This batch creates a disposable rowversion table, captures a snapshot of the tokens, updates one row, and returns the before-and-after comparison.
+
+- `rv rowversion NOT NULL` asks SQL Server to maintain the token automatically.
+- The table variable `@before` stores the initial tokens so the final query can show both the previous and current values.
+- `master.dbo.fn_varbintohexstr(...)` renders the binary token in a readable hexadecimal format.
+- `rowversion_status` is derived by comparing the current token to the earlier snapshot.
+
+*This batch shows how a `rowversion` token changes automatically after one row update and how a consumer can compare the current token to an earlier snapshot.*
+
+```sql
+IF OBJECT_ID('dbo.demo_rowversion_delta', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_rowversion_delta;
+
+CREATE TABLE dbo.demo_rowversion_delta
+(
+    id int NOT NULL PRIMARY KEY,
+    business_key varchar(20) NOT NULL,
+    payload nvarchar(50) NOT NULL,
+    rv rowversion NOT NULL
+);
+
+INSERT INTO dbo.demo_rowversion_delta(id, business_key, payload)
+VALUES (1, 'ABI.BR', N'baseline'),
+       (2, 'ASML.AS', N'before-change');
+
+DECLARE @before TABLE
+(
+    id int PRIMARY KEY,
+    rv_before varbinary(8) NOT NULL
+);
+
+INSERT INTO @before(id, rv_before)
+SELECT id, rv
+FROM dbo.demo_rowversion_delta;
+
+UPDATE dbo.demo_rowversion_delta
+SET payload = N'after-change'
+WHERE id = 2;
+
+SELECT t.id,
+       t.business_key,
+       t.payload,
+       master.dbo.fn_varbintohexstr(b.rv_before) AS rv_before,
+       master.dbo.fn_varbintohexstr(CAST(t.rv AS varbinary(8))) AS rv_after,
+       CASE
+           WHEN CAST(t.rv AS varbinary(8)) > b.rv_before THEN 'CHANGED SINCE SNAPSHOT'
+           ELSE 'UNCHANGED'
+       END AS rowversion_status
+FROM dbo.demo_rowversion_delta AS t
+JOIN @before AS b
+    ON b.id = t.id
+ORDER BY t.id;
+
+DROP TABLE dbo.demo_rowversion_delta;
+```
+
+| id | business_key | payload | rv_before | rv_after | rowversion_status |
+|---:|---|---|---|---|---|
+| 1 | `ABI.BR` | `baseline` | `0x000000000003f245` | `0x000000000003f245` | `UNCHANGED` |
+| 2 | `ASML.AS` | `after-change` | `0x000000000003f246` | `0x000000000003f248` | `CHANGED SINCE SNAPSHOT` |
+
+_This is the exact operational meaning of a rowversion token. The unchanged row keeps the same token, while the updated row receives a newer value without the caller having to assign anything manually. The gap between `0x...246` and `0x...248` also shows why the token should be treated as a monotonic version stamp, not as a row counter or a wall-clock timestamp._
+
+### Compare `rowversion`, Change Tracking, and CDC explicitly
+
+| Mechanism | What the consumer gets | What it does not give you | Best use |
+|---|---|---|---|
+| `rowversion` | One technical change token per inserted or updated row | No deletes, no before image, no built-in change table | Lightweight source-owned delta scans |
+| Change Tracking | Changed keys plus operation metadata | No full before image, no persistent history stream | Pull-based synchronization that can reread current rows |
+| CDC | Ordered change rows with insert, update, and delete semantics | No business interpretation by itself and more operational overhead | Replication, event-style downstream ingestion, replay consumers |
+
+The practical rule is simple:
+
+- choose `rowversion` when the token itself is enough and deletes are handled elsewhere
+- choose CT when the consumer needs changed keys plus operation codes
+- choose CDC when downstream systems need a true row-change stream
 
 ---
 
 ## Manual SCD Type 2
 
-A **Slowly Changing Dimension (SCD)** is a dimension table whose attributes change infrequently and unpredictably — a company's sector reclassification, an employee's department transfer, or a product's category reassignment. "Slowly" distinguishes these from rapidly changing measures (e.g., stock prices) that belong in fact tables. The SCD type number describes how the change is recorded:
+Manual SCD2 is the right tool when the business does not want every column change recorded automatically. It lets the pipeline decide which attributes matter enough to create a new version.
 
-- **Type 1 — Overwrite:** replace the old value in place. No history is preserved. Simplest but destroys the audit trail.
-- **Type 2 — Row versioning:** close the current row (set `valid_to`, clear `is_current`) and insert a new row with the updated attributes. Full history is preserved — every past state is queryable.
-- **Type 3 — Previous-value column:** add `previous_sector` alongside `current_sector`. Preserves exactly one prior value. Rarely used because it only tracks one change deep.
+### Use manual SCD2 for business-defined history
 
-Type 2 is the most common in production data warehouses because it preserves the complete change history without schema changes per tracked column. The trade-off is implementation complexity: you must detect changes, close old rows, and insert new ones atomically. For SCD type definitions (Types 1–6) in the broader data warehouse context, see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture).
+Manual SCD2 is especially strong when:
 
-### SCD2 Schema — valid_from, valid_to, is_current
+- only a subset of attributes should trigger a new version
+- the source system does not expose engine-managed change history
+- the warehouse already owns the conformed dimension logic
+- analysts want a durable "current row plus history" dimension pattern
 
-> [!info] SCD2 Column Pattern
->
-> `valid_to = NULL` means the row is still current. `is_current = 1` is a redundant but useful flag for simpler queries. The filtered unique index enforces one active row per key.
+#### Demonstrate a real SCD2 version rollover on a disposable table
+
+[!warning]
+The filtered unique index in this pattern depends on session `SET` options such as `QUOTED_IDENTIFIER ON` and `ANSI_NULLS ON`. If those settings are wrong at create time, SQL Server rejects the index creation. The same pattern also fails logically if the close step and insert step are not executed as one atomic change unit.
+
+[!success]
+Create the filtered unique index with the required `SET` options enabled, and treat the close-plus-insert sequence as a single transactional version change. That keeps the table from ever exposing two current rows for the same business key.
+
+[!info]-
+This batch creates a disposable SCD2 demo table, inserts one current row, closes it at a chosen change timestamp, inserts the new current version, returns the final history, and then drops the table.
+
+- `valid_from`, `valid_to`, and `is_current` are the core SCD2 control columns.
+- The filtered unique index `WHERE is_current = 1` enforces one active version per symbol.
+- The update step closes the old row by setting `valid_to` and `is_current = 0`.
+- The insert step creates the new current row with the same change timestamp as its `valid_from`.
+
+*This batch demonstrates a complete manual SCD2 rollover on a disposable table and returns the final history chain.*
 
 ```sql
-CREATE TABLE silver.index_dim (
-    id          INT IDENTITY(1,1) PRIMARY KEY,
-    _index      VARCHAR(20)  NOT NULL,
-    symbol      VARCHAR(20)  NOT NULL,
-    sector      NVARCHAR(100),
-    -- ... other attribute columns ...
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 
-    valid_from  DATETIME2    NOT NULL DEFAULT SYSUTCDATETIME(),
-    valid_to    DATETIME2    NULL,          -- NULL = still current
-    is_current  BIT          NOT NULL DEFAULT 1
+IF OBJECT_ID('dbo.demo_scd2_company', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_scd2_company;
+
+CREATE TABLE dbo.demo_scd2_company
+(
+    id int IDENTITY(1,1) PRIMARY KEY,
+    symbol varchar(20) NOT NULL,
+    sector nvarchar(100) NULL,
+    valid_from datetime2(7) NOT NULL,
+    valid_to datetime2(7) NULL,
+    is_current bit NOT NULL
 );
-GO
 
--- Filtered unique index: one active row per (_index, symbol)
-CREATE UNIQUE INDEX UX_dim_current
-    ON silver.index_dim (_index, symbol)
+CREATE UNIQUE INDEX UX_demo_scd2_company_current
+    ON dbo.demo_scd2_company(symbol)
     WHERE is_current = 1;
-```
 
-### SCD2 Three-Step Process — detect, close, insert
+INSERT INTO dbo.demo_scd2_company(symbol, sector, valid_from, valid_to, is_current)
+VALUES ('ASML.AS', 'Technology Hardware', '2026-03-01T00:00:00', NULL, 1);
 
-> [!info] SCD2 Flow
->
-> Compare source snapshot against active dimension rows. Close changed rows, insert new versions. All three steps must run in a single transaction to prevent inconsistent state.
+DECLARE @change_time datetime2(7) = '2026-04-08T09:15:00';
 
-```sql
--- Step 1: Detect change (Python or SQL comparison)
--- Compare each attribute: sector, name, country, etc.
-
--- Step 2: Close the old row
-UPDATE silver.index_dim
-SET valid_to = SYSUTCDATETIME(),
+UPDATE dbo.demo_scd2_company
+SET valid_to = @change_time,
     is_current = 0
-WHERE _index = @key AND symbol = @sym
+WHERE symbol = 'ASML.AS'
   AND is_current = 1;
 
--- Step 3: Insert the new version
-INSERT INTO silver.index_dim (
-    _index, symbol, sector, ...
-    -- valid_from defaults to SYSUTCDATETIME(), is_current defaults to 1
-) VALUES (@key, @sym, @new_sector, ...);
-```
+INSERT INTO dbo.demo_scd2_company(symbol, sector, valid_from, valid_to, is_current)
+VALUES ('ASML.AS', 'Semiconductors', @change_time, NULL, 1);
 
-### SCD2 Edge Cases
-
-> [!warning] SCD2 Gotchas
->
-> These edge cases cause silent data corruption if not handled. Each one has been seen in production pipelines.
-
-- **Same-day changes:** if two changes happen on the same day, `valid_from` collides. Use `DATETIME2` (not `DATE`) for sub-second precision
-- **Retroactive corrections:** source sends a correction for a past date. Decide upfront: close and reopen the chain, or update the current row in place (Type 1)
-- **NULL comparison:** `NULL != NULL` in SQL Server. Comparing NULLable columns requires `ISNULL(a, sentinel) = ISNULL(b, sentinel)` or `IS NOT DISTINCT FROM` (SQL Server 2022+)
-- **Forgetting the filtered index:** without `WHERE is_current = 1`, the unique index prevents inserting a new version because the old `(_index, symbol)` pair still exists
-- **Float comparison:** `3.14 <> 3.14000000001` — never compare floats for change detection. Round to a fixed precision or use `ABS(a - b) < epsilon`
-
-> [!success] Safe SCD2 Patterns
->
-> - Use `DATETIME2` (not `DATE`) for `valid_from`/`valid_to` to avoid same-day collisions.
-> - Always wrap NULL comparisons: `ISNULL(old_val, '') <> ISNULL(new_val, '')` or use `IS NOT DISTINCT FROM` (SQL Server 2022+).
-> - Create the filtered unique index `WHERE is_current = 1` before running SCD2 logic — it enforces one active row per key and will catch close/insert bugs at the DB level.
-> - For float columns, compare with `ABS(old_val - new_val) > 0.0001` instead of `<>` to avoid floating-point false-positives.
-
-> [!tip] Hash-based change detection
->
-> Instead of comparing columns one by one, compute a hash (SHA2 or MD5) over the tracked columns and compare the single hash value. This simplifies the detection logic to a single equality check regardless of how many columns are tracked, and naturally handles NULLs if you coalesce before hashing. The trade-off is that hash collisions are theoretically possible (though vanishingly rare with SHA-256) and debugging is harder — you can see that a row changed but not which column triggered it.
->
-> — Source: Ralph Kimball | *The Data Warehouse Toolkit*; *Data Modeling with Snowflake*
-
----
-
-## SQL Server Temporal Tables (SYSTEM_VERSIONING)
-
-A **temporal table** (also called a system-versioned table) is a pair of tables — one current, one history — managed automatically by the Database Engine. When you UPDATE or DELETE a row in the current table, the engine copies the old row version to the history table before applying the change. This gives you a complete, tamper-proof timeline of every row state without writing any SCD2 logic yourself.
-
-**System versioning** is the SQL Server mechanism that orchestrates this: it adds two `DATETIME2` period columns (`ValidFrom`, `ValidTo`), populates them using the **UTC transaction begin time** (not wall-clock time — all rows modified in the same transaction share the same `ValidFrom`), and maintains the history table transparently. The `ValidTo` for current rows is always `9999-12-31 23:59:59.9999999`. Available in SQL Server 2016+.
-
-### Temporal Table Setup — SYSTEM_VERSIONING = ON
-
-> [!info] Temporal Tables
->
-> SQL Server manages `valid_from` and `valid_to` automatically. Every UPDATE or DELETE copies the old row to the history table. You get point-in-time queries for free.
-
-```sql
--- Add temporal columns (hidden from normal SELECT *)
-ALTER TABLE silver.index_dim
-    ADD valid_from DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN
-        DEFAULT SYSUTCDATETIME(),
-    ADD valid_to   DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN
-        DEFAULT CONVERT(DATETIME2, '9999-12-31 23:59:59.9999999'),
-    ADD PERIOD FOR SYSTEM_TIME (valid_from, valid_to);
-GO
-
--- Enable versioning with a named history table
-ALTER TABLE silver.index_dim
-    SET (SYSTEM_VERSIONING = ON (
-        HISTORY_TABLE = history.index_dim
-    ));
-```
-
-### Temporal Queries — time-travel with FOR SYSTEM_TIME
-
-The `FOR SYSTEM_TIME` clause supports five subclauses, each with different boundary inclusion rules. Understanding the boundary semantics is critical — `FROM...TO` and `BETWEEN...AND` look similar but differ on whether the upper endpoint is inclusive.
-
-> [!info] FOR SYSTEM_TIME Variants
->
-> | Subclause | Row qualifies when | Boundary behavior |
-> |---|---|---|
-> | `AS OF <dt>` | `ValidFrom <= dt AND ValidTo > dt` | Point-in-time snapshot; upper bound exclusive |
-> | `FROM <s> TO <e>` | `ValidFrom < e AND ValidTo > s` | Both endpoints **exclusive** |
-> | `BETWEEN <s> AND <e>` | `ValidFrom <= e AND ValidTo > s` | Upper endpoint **inclusive** (differs from `FROM...TO`) |
-> | `CONTAINED IN (<s>, <e>)` | `ValidFrom >= s AND ValidTo <= e` | Both endpoints inclusive; only rows whose entire lifetime falls within the window; queries history table only — most efficient for data audit |
-> | `ALL` | All rows, both tables | No filter; union of current + history |
-
-`FOR SYSTEM_TIME` can be applied independently per table in multi-table joins, used inside CTEs, TVFs, and stored procedures.
-
-```sql
--- Point-in-time: what was ASML's sector on January 15, 2024?
-SELECT symbol, sector, valid_from, valid_to
-FROM silver.index_dim
-FOR SYSTEM_TIME AS OF '2024-01-15T00:00:00'
-WHERE symbol = 'ASML.AS';
-
--- Full change history for a specific stock
-SELECT symbol, sector, valid_from, valid_to
-FROM silver.index_dim
-FOR SYSTEM_TIME ALL
-WHERE symbol = 'ASML.AS'
+SELECT symbol, sector, valid_from, valid_to, is_current
+FROM dbo.demo_scd2_company
 ORDER BY valid_from;
 
--- All changes within a date range (both endpoints inclusive)
-SELECT symbol, sector, valid_from, valid_to
-FROM silver.index_dim
-FOR SYSTEM_TIME BETWEEN '2024-01-01' AND '2024-06-30'
-WHERE symbol = 'ASML.AS';
-
--- Rows whose entire lifetime falls within a window (audit queries)
-SELECT symbol, sector, valid_from, valid_to
-FROM silver.index_dim
-FOR SYSTEM_TIME CONTAINED IN ('2024-01-01', '2024-06-30')
-WHERE symbol = 'ASML.AS';
+DROP TABLE dbo.demo_scd2_company;
 ```
 
-### Temporal Table Gotchas
+| symbol | sector | valid_from | valid_to | is_current |
+|---|---|---|---|---:|
+| `ASML.AS` | `Technology Hardware` | 2026-03-01 00:00:00.0000000 | 2026-04-08 09:15:00.0000000 | 0 |
+| `ASML.AS` | `Semiconductors` | 2026-04-08 09:15:00.0000000 | `NULL` | 1 |
 
-> [!warning] Temporal Table Limitations
->
-> Temporal tables are powerful but have sharp edges that bite during schema changes and maintenance.
+_This is the canonical SCD2 outcome. The old version is closed, the new version is current, and the timestamps form a contiguous history boundary with no overlap. In production, that same logic must run for every tracked business key that changes._
 
-- **History grows forever:** no automatic retention policy in SQL Server 2016. `HISTORY_RETENTION_PERIOD` was introduced in SQL Server 2017 (not 2022). Supported units: `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Default if omitted: `INFINITE`. For SQL Server 2016, manually archive/purge the history table or use table partitioning
-- **Retention cleanup depends on index type:** with a clustered rowstore (B+ tree) on the history table, cleanup deletes in chunks of up to 10,000 rows. With a clustered columnstore, it removes entire row groups (~1M rows each) — far more efficient for high-velocity workloads. A heap history table cannot use the retention policy at all
-- **Retention disabled after restore:** after a point-in-time restore (PITR), the database-level flag `is_temporal_history_retention_enabled` is automatically set to `OFF`. Must be re-enabled manually or your history will grow unbounded without warning
-- **Schema changes require OFF/ON:** `ALTER TABLE ADD COLUMN` requires `SET (SYSTEM_VERSIONING = OFF)` first, then re-enable after the change. Automate this in migration scripts
-- **No TRUNCATE:** `TRUNCATE TABLE` is blocked when `SYSTEM_VERSIONING = ON`. Use `DELETE` instead (slower, fully logged)
-- **HIDDEN columns:** `valid_from` and `valid_to` are excluded from `SELECT *` by default. Query them explicitly when needed
-- **No CASCADE foreign keys:** `ON DELETE CASCADE` and `ON UPDATE CASCADE` are not permitted on the current table
-- **Zero-duration rows:** multiple updates to the same PK within a single transaction generate rows where `ValidFrom = ValidTo`. `FOR SYSTEM_TIME` queries filter these out — to see them, query the history table directly
-- **History table constraints:** the history table cannot have a primary key, foreign keys, check constraints, or triggers, and must reside in the same database as the current table
+### Production rules for manual SCD2
 
-> [!success] Temporal Table Safe Practices
->
-> - On SQL Server 2017+, set a retention policy at table creation: `HISTORY_RETENTION_PERIOD = 2 YEARS`. On SQL Server 2016, schedule a periodic `DELETE FROM history.index_dim WHERE valid_to < DATEADD(YEAR, -2, SYSUTCDATETIME())`. After any point-in-time restore, verify and re-enable `is_temporal_history_retention_enabled` at the database level.
-> - Automate schema migrations with the OFF/ON dance: `SET (SYSTEM_VERSIONING = OFF)` → `ALTER TABLE` on both current and history tables → `SET (SYSTEM_VERSIONING = ON)`. Add a post-migration check to verify `temporal_type_desc = 'SYSTEM_VERSIONED_TEMPORAL_TABLE'`.
-> - Use `DELETE` (not `TRUNCATE`) for targeted removals; for full rebuilds, disable versioning first, truncate, then re-enable.
-> - Query temporal columns explicitly: `SELECT valid_from, valid_to FROM silver.index_dim FOR SYSTEM_TIME ALL WHERE symbol = 'ASML.AS'`.
+The durable rules are:
+
+- use `DATETIME2`, not `DATE`, for version boundaries
+- compare nullable attributes safely
+- never compare floating-point business attributes with raw equality
+- protect the table with a filtered unique index on the active-row predicate
+- keep the close and insert steps in one transaction or stored-procedure unit
 
 ---
 
-## Manual SCD2 vs Temporal Tables — Side-by-Side
+## Temporal Tables
 
-### Feature Comparison — choosing between the two
+Temporal tables are SQL Server's engine-managed row-history mechanism. When they are enabled, SQL Server copies old row versions to a history table automatically and exposes them through `FOR SYSTEM_TIME`.
 
-> [!info] Decision Guide
->
-> Use temporal tables for audit/compliance where you need every column change tracked automatically. Use manual SCD2 for pipeline-driven dimensions where you control which columns trigger a new version.
+### Use temporal tables when you need full row history, not just selected attributes
 
-| Feature | Manual SCD2 | Temporal Tables |
-|---------|------------|-----------------|
-| SQL Server version | Any | 2016+ |
-| Change detection | You define which columns matter | All columns tracked automatically |
-| History maintenance | You manage close/insert | Engine manages automatically |
-| Time-travel queries | Manual `WHERE valid_to IS NULL` | Built-in `FOR SYSTEM_TIME AS OF` |
-| Schema changes | Normal `ALTER TABLE` | Must disable/re-enable versioning |
-| Custom logic | Full control (e.g., only track sector changes) | All-or-nothing on the table |
-| Performance overhead | Only on your transform runs | On every UPDATE/DELETE (small) |
+Temporal tables are strongest when:
 
-### When to Choose Manual SCD2 vs Temporal Tables — Real-World Scenarios
+- you need point-in-time reconstruction of the full row
+- you want the engine to manage version writes automatically
+- the table is an audit target rather than a heavily customized dimensional object
+- schema restrictions and history-table growth are acceptable operational costs
 
-> [!tip] The practical decision
->
-> The comparison table above lists features. Here is how the choice actually plays out in production.
+#### Demonstrate `FOR SYSTEM_TIME ALL` on a disposable temporal table
 
-**Choose Manual SCD2 when:**
-- You only care about changes to SPECIFIC columns (e.g., sector, country) while ignoring noisy columns (e.g., last_updated timestamp) — temporal tables track ALL columns, generating history rows for irrelevant changes
-- Your pipeline already runs in Python/C# and you want detection logic in application code where it can be unit-tested
-- You need to control WHEN history is captured (only on pipeline runs, not on every ad-hoc UPDATE by a DBA fixing data)
-- You run SQL Server 2014 or earlier (temporal tables require 2016+)
-- Schema changes are frequent — temporal tables require `SYSTEM_VERSIONING = OFF` before any `ALTER TABLE`, which is operationally painful in CI/CD pipelines
+[!warning]
+Temporal tables are not free history. They add write overhead, grow a history table, complicate schema changes, and block `TRUNCATE` while system versioning is on. They are the wrong default for hot staging tables and the wrong fit when only selected business attributes should trigger new versions.
 
-**Choose Temporal Tables when:**
-- Regulatory/compliance requirements demand tracking EVERY column change with tamper-proof timestamps (auditors love `FOR SYSTEM_TIME AS OF`)
-- You need to answer "what was the state at time X?" frequently — temporal tables have native query syntax; manual SCD2 requires complex self-joins
-- Multiple applications write to the same table and you can't guarantee all of them will call your SCD2 logic — temporal tables capture changes regardless of the writer
-- You want minimal application code — temporal tables are set-and-forget (minus retention management)
+[!success]
+Use temporal tables when the requirement is full-row auditability or point-in-time reconstruction, and pair them with an explicit history retention policy and a documented schema-change procedure.
 
-**The hybrid approach (common in practice):**
-Use temporal tables on core reference/audit tables (e.g., customer master, regulatory filings) where you need complete history. Use manual SCD2 on pipeline-driven dimensions (e.g., stock metadata, product catalog) where you control the refresh cycle and want selective change detection.
+[!info]-
+This batch creates a disposable temporal table, inserts one row, updates it after a delay so the period columns diverge, queries the full history with `FOR SYSTEM_TIME ALL`, and then removes the demo objects.
 
-> [!warning] Schema migration with temporal tables
->
-> Every `ALTER TABLE ADD COLUMN` migration requires:
-> 1. `ALTER TABLE ... SET (SYSTEM_VERSIONING = OFF)`
-> 2. Apply the schema change to BOTH the current and history tables
-> 3. `ALTER TABLE ... SET (SYSTEM_VERSIONING = ON)`
->
-> In a GitHub Actions pipeline, this means your migration scripts must handle the OFF/ON dance. Forgetting step 3 leaves the table without history tracking — silently. Add a post-migration check:
-> ```sql
-> SELECT temporal_type_desc FROM sys.tables WHERE name = 'index_dim';
-> -- Must return 'SYSTEM_VERSIONED_TEMPORAL_TABLE', not 'NON_TEMPORAL_TABLE'
-> ```
+- The `PERIOD FOR SYSTEM_TIME` clause defines the row-start and row-end columns.
+- `SYSTEM_VERSIONING = ON` tells SQL Server to manage the history table automatically.
+- `WAITFOR DELAY` is only there to create clearly different timestamps in the demo output.
+- `FOR SYSTEM_TIME ALL` returns both the historical version and the current version.
 
-> [!success] Safe Temporal Migration Pattern
->
-> Wrap every schema migration for a temporal table in a three-step script and include the verification query as the final step:
-> ```sql
-> ALTER TABLE silver.index_dim SET (SYSTEM_VERSIONING = OFF);
-> ALTER TABLE silver.index_dim    ADD new_column NVARCHAR(100) NULL;
-> ALTER TABLE history.index_dim   ADD new_column NVARCHAR(100) NULL;
-> ALTER TABLE silver.index_dim SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = history.index_dim));
-> -- Verify
-> SELECT temporal_type_desc FROM sys.tables WHERE name = 'index_dim';
-> ```
-> Include this pattern as a reusable template in your migration scripts folder so it is never skipped.
-
-### SCD2 Change Detection in Python — the comparison engine
-
-> [!info] Python-driven SCD2
->
-> The T-SQL above handles the close/insert. This Python code drives the comparison logic — reading both bronze and silver, comparing row by row, and executing the appropriate SQL for each case.
-
-```python
-TRACKED_COLUMNS = ["sector", "industry", "country", "long_name", "short_name"]
-
-def detect_scd2_changes(bronze_rows: dict, silver_rows: dict) -> tuple[list, list, list]:
-    """Compare bronze snapshot against active silver rows.
-    Returns (new_symbols, changed_symbols, removed_symbols)."""
-    new, changed, removed = [], [], []
-
-    for key, bronze_row in bronze_rows.items():
-        if key not in silver_rows:
-            new.append(bronze_row)
-        else:
-            silver_row = silver_rows[key]
-            if any(bronze_row.get(col) != silver_row.get(col) for col in TRACKED_COLUMNS):
-                changed.append(bronze_row)
-
-    for key in silver_rows:
-        if key not in bronze_rows:
-            removed.append(silver_rows[key])
-
-    return new, changed, removed
-```
-
----
-
-## Change Data Capture (CDC)
-
-**Change Data Capture (CDC)** is a SQL Server feature that asynchronously reads committed DML operations (INSERT, UPDATE, DELETE) from the **transaction log** and writes them into system-generated **change tables** — one per tracked source table. Unlike Change Tracking (which records only primary keys), CDC captures full before-and-after row images, making it suitable for ETL pipelines, streaming to Kafka/Debezium, and data warehouse loading.
-
-CDC uses the same internal stored procedure (`sp_replcmds`) as transactional replication to scan the log. A dedicated **SQL Server Agent capture job** calls this procedure on a polling interval and writes changes to `cdc.<capture_instance>_CT` tables. A separate **cleanup job** periodically purges old change rows based on a configurable retention period. CDC requires **Standard or Enterprise edition** — it is not available on Express or Developer editions.
-
-Each CDC-enabled table has a **capture instance** — a named snapshot of the table's schema at the time CDC was enabled. The change table's column structure is fixed to the capture instance's schema. A source table can have at most two capture instances simultaneously, which enables zero-downtime schema migrations (create a second instance with the new schema, transition consumers, then drop the old instance).
-
-### CDC Setup — enable on database and table
-
-> [!info] CDC Architecture
->
-> CDC runs a log reader agent (SQL Server Agent job) that reads the transaction log and writes changes to system-generated change tables. Changes are identified by **Log Sequence Numbers (LSNs)** — monotonically increasing identifiers that the transaction log assigns to every write operation. An LSN uniquely positions a change in the log's timeline, and CDC uses LSN ranges to define query windows (e.g., "give me all changes between LSN X and LSN Y").
+*This batch demonstrates a real temporal-table update and returns the combined current-plus-history view through `FOR SYSTEM_TIME ALL`.*
 
 ```sql
--- Enable CDC on the database
+IF OBJECT_ID('dbo.demo_temporal_security_history', 'U') IS NOT NULL
+    DROP TABLE dbo.demo_temporal_security_history;
+
+IF OBJECT_ID('dbo.demo_temporal_security', 'U') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.demo_temporal_security
+        SET (SYSTEM_VERSIONING = OFF);
+    DROP TABLE dbo.demo_temporal_security;
+END;
+
+CREATE TABLE dbo.demo_temporal_security
+(
+    symbol varchar(20) NOT NULL PRIMARY KEY,
+    sector nvarchar(100) NOT NULL,
+    valid_from datetime2(7) GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+    valid_to datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+    PERIOD FOR SYSTEM_TIME (valid_from, valid_to)
+)
+WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.demo_temporal_security_history));
+
+INSERT INTO dbo.demo_temporal_security(symbol, sector)
+VALUES ('ASML.AS', 'Technology Hardware');
+
+WAITFOR DELAY '00:00:01';
+
+UPDATE dbo.demo_temporal_security
+SET sector = 'Semiconductors'
+WHERE symbol = 'ASML.AS';
+
+SELECT symbol, sector, valid_from, valid_to
+FROM dbo.demo_temporal_security
+FOR SYSTEM_TIME ALL
+ORDER BY valid_from;
+
+ALTER TABLE dbo.demo_temporal_security
+    SET (SYSTEM_VERSIONING = OFF);
+
+DROP TABLE dbo.demo_temporal_security_history;
+DROP TABLE dbo.demo_temporal_security;
+```
+
+| symbol | sector | valid_from | valid_to |
+|---|---|---|---|
+| `ASML.AS` | `Technology Hardware` | 2026-04-08 15:45:20.9635196 | 2026-04-08 15:45:21.9778525 |
+| `ASML.AS` | `Semiconductors` | 2026-04-08 15:45:21.9778525 | 9999-12-31 23:59:59.9999999 |
+
+_The output shows the core temporal-table contract: the old version becomes history automatically, the current row receives the open-ended `9999-12-31` end marker, and the engine preserves the full row image without any manual close-and-insert logic._
+
+### Temporal-table production boundaries
+
+The main operational caveats from Microsoft documentation are:
+
+- history tables grow unless retention is designed explicitly
+- schema changes often require a controlled `SYSTEM_VERSIONING = OFF` / `ON` migration sequence
+- hidden period columns do not appear in `SELECT *`
+- `TRUNCATE` is blocked while system versioning is enabled
+
+#### Design retention and cleanup before the history table becomes the next incident
+
+Temporal history is easy to enable and easy to ignore until it becomes large. Microsoft documentation describes three main retention patterns, and they solve different operational problems.
+
+| Retention strategy | Best Fit | What to watch |
+|---|---|---|
+| Built-in retention policy | Moderate history windows with predictable automatic cleanup | Validate edition/version support and monitor whether cleanup keeps pace with write volume |
+| Custom cleanup with `sys.sp_cleanup_temporal_history` | Targeted, explicit cleanup windows | It is an immediate cleanup action, not a gentle background retention policy |
+| Partitioned history with a sliding window | Very large temporal history tables | Requires partition design discipline and ongoing partition maintenance |
+
+Production recommendations:
+
+- use built-in retention when the history window is clear and bounded
+- use `sys.sp_cleanup_temporal_history` only as an explicit operational cleanup tool, not as a substitute for retention design
+- use partitioned sliding-window retention when temporal history is large enough that delete-based cleanup is no longer the right maintenance shape
+- monitor history growth as a separate operational metric; temporal tables are not self-governing archival systems
+
+---
+
+## Change Data Capture
+
+CDC is SQL Server's log-based row-change capture feature. It is built for consumers that need a stream of inserts, updates, and deletes with enough metadata to replay those changes into another system.
+
+### Use CDC when downstream consumers need change events, not just current state
+
+CDC is the right fit when:
+
+- deletes must be captured explicitly
+- downstream systems need ordered change events
+- a sync or replication process consumes the database incrementally
+- the source team accepts the operational overhead of CDC jobs, retention, and cleanup
+
+#### Enable CDC at the database and table level
+
+[!warning]
+CDC changes the operational surface of the database. It reads the transaction log, creates CDC metadata objects and change tables, and relies on retention cleanup. It should not be enabled casually on a production source without validating Agent availability, retention needs, and downstream consumption design.
+
+[!success]
+Enable CDC only for tables that truly need row-level change events, document the capture instance name, and monitor cleanup so change tables do not grow without bound.
+
+[!info]-
+This is the minimum enablement sequence for CDC.
+
+- `sys.sp_cdc_enable_db` enables CDC for the database.
+- `sys.sp_cdc_enable_table` enrolls one source table and creates its capture instance.
+- `@supports_net_changes = 1` asks SQL Server to expose net-change enumeration in addition to all-changes enumeration.
+
+*This batch enables CDC first at the database level and then for one source table with net-change support.*
+
+```sql
 EXEC sys.sp_cdc_enable_db;
 GO
 
--- Enable CDC on a specific table
 EXEC sys.sp_cdc_enable_table
-    @source_schema = 'bronze',
-    @source_name   = 'signals_daily',
-    @role_name     = NULL;    -- NULL = no gating role (any db_owner can query change tables)
-                              -- Set to a role name to restrict access to change data
+    @source_schema = N'silver',
+    @source_name = N'signals_daily',
+    @role_name = NULL,
+    @supports_net_changes = 1;
 GO
 ```
 
-### CDC Query — read changes since last sync
+#### Read CDC rows between two LSN boundaries
 
-To query CDC changes, you specify an LSN range using two boundary functions: `sys.fn_cdc_get_min_lsn()` returns the low watermark (oldest available change) for a capture instance, and `sys.fn_cdc_get_max_lsn()` returns the high watermark (most recently processed log entry). Both endpoints must fall within the capture instance's validity interval or the query fails.
+[!info]-
+After CDC is enabled, consumers query the generated table-valued functions instead of reading the change table directly.
 
-The third parameter of `fn_cdc_get_all_changes_*` controls how updates are returned: `'all'` returns one row per update (after-image only), while `'all update old'` returns two rows per update — one with the before-image (`__$operation = 3`) and one with the after-image (`__$operation = 4`). Use `'all update old'` when your downstream system needs to know what changed from and to.
+- `sys.fn_cdc_get_min_lsn` returns the low boundary for the capture instance.
+- `sys.fn_cdc_get_max_lsn` returns the current high boundary.
+- `fn_cdc_get_all_changes_<capture_instance>` returns one row per captured change image across the specified LSN interval.
+- The final argument controls whether update rows return all images or only rows with actual changes.
+
+*This query reads CDC changes for one capture instance across an LSN interval.*
 
 ```sql
-DECLARE @from_lsn BINARY(10) = sys.fn_cdc_get_min_lsn('bronze_signals_daily');
-DECLARE @to_lsn   BINARY(10) = sys.fn_cdc_get_max_lsn();
+DECLARE @from_lsn binary(10) = sys.fn_cdc_get_min_lsn('silver_signals_daily');
+DECLARE @to_lsn   binary(10) = sys.fn_cdc_get_max_lsn();
 
 SELECT *
-FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
-    @from_lsn, @to_lsn, 'all update old'
-);
+FROM cdc.fn_cdc_get_all_changes_silver_signals_daily(@from_lsn, @to_lsn, 'all');
 ```
 
-> [!info] CDC Metadata Columns
->
-> Every row in a CDC change table includes four metadata columns:
->
-> | Column | Type | Meaning |
-> |---|---|---|
-> | `__$start_lsn` | `BINARY(10)` | Commit LSN of the transaction — rows from the same transaction share this value |
-> | `__$seqval` | `BINARY(10)` | Orders multiple changes within one transaction |
-> | `__$operation` | `INT` | `1` = DELETE, `2` = INSERT, `3` = UPDATE before-image, `4` = UPDATE after-image |
-> | `__$update_mask` | `VARBINARY` | Bitmask where each set bit represents a captured column that changed |
->
-> Use `sys.fn_cdc_map_lsn_to_time()` to translate LSNs to wall-clock timestamps, and `sys.fn_cdc_increment_lsn()` to build non-overlapping query windows across consecutive sync cycles.
+The key metadata columns in CDC output are the ones the consumer must interpret correctly.
 
-### CDC Gotchas
-
-> [!warning] CDC Operational Overhead
->
-> CDC is not "set and forget." The log reader agent must be running, change tables grow unbounded without cleanup, and schema changes can break the capture instance.
-
-- **Edition requirement:** CDC requires Standard or Enterprise edition. Attempting to attach or restore a CDC-enabled database on Express edition produces error 932
-- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/Administration/sql-server-agent-jobs) for Agent on Linux). If the agent stops, changes accumulate in the transaction log — even under Simple recovery model, the log truncation point does not advance past unprocessed CDC changes, eventually filling the log
-- **Capture job defaults:** `maxtrans = 1000` (max transactions per scan cycle), `maxscans = 10` (max cycles before a WAITFOR), `pollinginterval = 5` seconds. Changes via `sys.sp_cdc_change_job` take effect only after the job is stopped and restarted
-- **Cleanup:** CDC change tables grow until you configure retention. The default cleanup runs daily at 2:00 AM with `retention = 4320` minutes (3 days) and `threshold = 5000` rows deleted per DELETE statement (the threshold prevents one giant DELETE from holding locks too long)
-- **Schema changes break CDC:** adding or dropping a column does not update the existing capture instance — new columns are silently ignored, dropped columns return NULL. For zero-downtime migration, create a second capture instance (max 2 per table) with the new schema, transition consumers, then drop the old instance
-
-> [!success] CDC Operational Safeguards
->
-> - Configure cleanup retention immediately after enabling CDC: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (3 days). Monitor change table size weekly.
-> - Add a SQL Server Agent alert (or Airflow sensor) that fires when the log reader job is not running. Catching agent downtime early prevents transaction log fill — check `sys.dm_cdc_log_scan_sessions` for latency metrics.
-> - For schema migrations, create a second capture instance with the new schema instead of disabling and re-enabling CDC (which loses change history during the gap): `EXEC sys.sp_cdc_enable_table @source_schema = 'bronze', @source_name = 'signals_daily', @capture_instance = 'signals_daily_v2', @role_name = NULL;`. Transition consumers to the new instance, then drop the old one with `sys.sp_cdc_disable_table`.
-> - Monitor the `cdc.ddl_history` table to detect schema changes that may require a new capture instance.
-
-### CDC → Pub/Sub — streaming changes to GCP
-
-> [!info] SQL Server CDC to Pub/Sub pipeline
->
-> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [Airflow task](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) or a Cloud Run job on a schedule (e.g., every 5 minutes).
-
-```python
-import pyodbc, json
-from google.cloud import pubsub_v1
-
-publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path("my-project", "sql-server-changes")
-
-conn = pyodbc.connect(conn_str)
-cursor = conn.cursor()
-
-# Read CDC changes since last processed LSN
-cursor.execute("""
-    DECLARE @from_lsn BINARY(10) = sys.fn_cdc_get_min_lsn('bronze_signals_daily');
-    DECLARE @to_lsn   BINARY(10) = sys.fn_cdc_get_max_lsn();
-    SELECT __$operation, symbol, signal_date, current_price
-    FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
-        @from_lsn, @to_lsn, 'all update old'
-    );
-""")
-```
-
-```python
-# Publish each change as a Pub/Sub message
-OP_MAP = {1: "DELETE", 2: "INSERT", 3: "UPDATE_OLD", 4: "UPDATE_NEW"}
-
-for row in cursor.fetchall():
-    message = json.dumps({
-        "operation": OP_MAP.get(row[0], "UNKNOWN"),
-        "symbol": row[1],
-        "signal_date": str(row[2]),
-        "current_price": row[3]
-    }).encode("utf-8")
-    publisher.publish(topic_path, message, source="sql-server-cdc")
-```
-
-### CDC → BigQuery — replicate changes to the warehouse
-
-> [!info] CDC to BigQuery replication
->
-> Read CDC changes, transform to BigQuery-compatible rows, and stream them using the BigQuery streaming insert API. This is the pattern for near-real-time replication without a dedicated CDC tool like Debezium.
-
-```python
-from google.cloud import bigquery
-from datetime import datetime
-
-bq_client = bigquery.Client()
-table_ref = bq_client.dataset("silver").table("signals_daily")
-
-# Transform CDC rows to BigQuery format (INSERT and UPDATE_NEW only)
-rows_to_insert = [
-    {
-        "symbol": row.symbol,
-        "signal_date": str(row.signal_date),
-        "current_price": row.current_price,
-        "_cdc_operation": "UPSERT",
-        "_cdc_timestamp": datetime.utcnow().isoformat()
-    }
-    for row in cdc_changes
-    if row.operation in (2, 4)   # INSERT or UPDATE_NEW only
-]
-
-errors = bq_client.insert_rows_json(table_ref, rows_to_insert)
-if errors:
-    raise RuntimeError(f"BigQuery insert failed: {errors}")
-```
-
-### CDC → Firestore — push dimension changes to real-time store
-
-> [!info] CDC to Firestore for real-time updates
->
-> When stock metadata changes (sector reclassification, name change), push the update to Firestore so dashboards and APIs see it immediately without polling SQL Server.
-
-```python
-from google.cloud import firestore
-
-db = firestore.Client()
-
-for change in dimension_changes:
-    doc_ref = db.collection("stocks").document(change.symbol)
-    doc_ref.set({
-        "symbol": change.symbol,
-        "sector": change.new_sector,
-        "long_name": change.new_name,
-        "updated_at": firestore.SERVER_TIMESTAMP
-    }, merge=True)   # merge=True preserves fields not in this update
-```
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `__$operation` | `1` | Context-dependent | Delete row image. | Consumer should delete or close the target row. |
+| `__$operation` | `2` | &#9989; | Insert row image. | Consumer should insert the row into the target representation. |
+| `__$operation` | `3` | Context-dependent | Update before image. | Present only in all-changes output; used for before/after interpretation. |
+| `__$operation` | `4` | &#9989; | Update after image. | Consumer should apply the new row image. |
+| `__$start_lsn` | Monotonic commit LSN | &#9989; | Commit ordering boundary. | Safe watermark candidate for CDC consumers. |
+| `__$seqval` | Increasing within transaction | &#9989; | Orders changes inside the same transaction. | Required when multiple changes share the same LSN. |
+| `__$update_mask` | Bit mask | Context-dependent | Indicates which captured columns changed. | Useful for partial-change interpretation and downstream optimization. |
 
 ---
 
-## Change Tracking (CT)
+## Change Tracking
 
-**Change Tracking (CT)** is a lightweight, synchronous mechanism that records **which rows** changed but not **what** changed — only the primary key values of affected rows, the operation type, and (optionally) a bitmask of which columns were modified. Unlike CDC (which reads the transaction log asynchronously and stores full before/after images), CT writes tracking data in-line with each DML operation in the same transaction. This makes CT immediate (no latency), agent-free (no dependency on SQL Server Agent), and available on **all editions including Express**.
+Change Tracking is lighter than CDC. It tells consumers which primary keys changed since a version boundary, but it does not preserve full before images or a persistent row-history stream.
 
-CT uses a **version-based model**: the database maintains a monotonically increasing `bigint` version counter. Every committed transaction that touches a CT-enabled table increments this counter. Consumers store the version number after each sync cycle and query "give me everything that changed since version X" on the next cycle.
+### Use CT for pull-based synchronization
 
-### CT Setup and Query — sync-oriented change detection
+CT is strongest when:
 
-> [!info] Change Tracking vs CDC
->
-> CT gives you the primary keys of changed rows plus a change type (`I`/`U`/`D`). CDC gives you full before/after values with LSN ordering. CT is simpler and cheaper; CDC is richer. Use CT for "give me everything new since my last sync" where you re-read the full rows from the source table.
+- the consumer periodically asks "which keys changed since my last sync"
+- the current row can be reread from the base table as needed
+- low overhead matters more than rich historical payload
+- the application or ETL process maintains its own sync version watermark
 
-`TRACK_COLUMNS_UPDATED = ON` enables column-level tracking: `SYS_CHANGE_COLUMNS` in the `CHANGETABLE` output will contain a bitmask identifying which columns changed. Use `CHANGE_TRACKING_IS_COLUMN_IN_MASK(column_id, SYS_CHANGE_COLUMNS)` to test specific columns. Without this option, you only know that a row changed, not which columns.
+#### Enable Change Tracking for the database and one table
+
+[!warning]
+CT still changes database behavior and should be enabled deliberately. The sync client is responsible for tracking and advancing versions correctly, and CT cleanup can invalidate old sync windows if consumers lag too far behind.
+
+[!success]
+Use CT when the consumer can rehydrate the latest row from the base table and only needs changed keys plus operation metadata. Pair it with a stored sync version and consistent-reader strategy.
+
+[!info]-
+This is the minimum database-plus-table enablement pattern for Change Tracking.
+
+- `ALTER DATABASE ... SET CHANGE_TRACKING = ON` enables CT for the database and defines retention.
+- `AUTO_CLEANUP = ON` allows SQL Server to purge old CT metadata according to the retention window.
+- `ALTER TABLE ... ENABLE CHANGE_TRACKING` enrolls one source table.
+- `TRACK_COLUMNS_UPDATED = ON` adds column-change metadata to the CT payload.
+
+*This batch enables Change Tracking for the database and then for one source table with column-update metadata.*
 
 ```sql
--- Enable on database
-ALTER DATABASE analytics_db
+ALTER DATABASE stoxx
 SET CHANGE_TRACKING = ON
-    (CHANGE_RETENTION = 7 DAYS, AUTO_CLEANUP = ON);
+(
+    CHANGE_RETENTION = 7 DAYS,
+    AUTO_CLEANUP = ON
+);
+GO
 
--- Enable on table with column-level tracking
 ALTER TABLE silver.signals_daily
-ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ENABLE CHANGE_TRACKING
+WITH (TRACK_COLUMNS_UPDATED = ON);
+GO
+```
 
--- Query changes since last sync version
-SELECT ct.symbol, ct.signal_date,
-       ct.SYS_CHANGE_OPERATION,    -- 'I' = INSERT, 'U' = UPDATE, 'D' = DELETE
-       ct.SYS_CHANGE_VERSION,      -- version at which this row changed
-       ct.SYS_CHANGE_COLUMNS       -- bitmask of changed columns (if TRACK_COLUMNS_UPDATED = ON)
+#### Read changed keys since the last sync version
+
+[!info]-
+Once CT is enabled, consumers use `CHANGETABLE(CHANGES ...)` and a previously stored sync version.
+
+- `CHANGE_TRACKING_CURRENT_VERSION()` returns the newest committed CT version in the database.
+- `CHANGETABLE(CHANGES ...)` returns the keys and change metadata for rows modified since the supplied version.
+- The consumer typically joins those keys back to the base table to fetch the current row image.
+
+*This query reads Change Tracking keys and operations since a stored sync version.*
+
+```sql
+DECLARE @last_sync_version bigint = 0;
+
+SELECT ct.SYS_CHANGE_VERSION,
+       ct.SYS_CHANGE_OPERATION,
+       ct.SYS_CHANGE_COLUMNS,
+       ct.id
 FROM CHANGETABLE(CHANGES silver.signals_daily, @last_sync_version) AS ct;
 ```
 
-> [!info] CT Version Functions
->
-> | Function | Purpose |
-> |---|---|
-> | `CHANGE_TRACKING_CURRENT_VERSION()` | Returns the version of the last committed transaction — use as the bookmark for the next sync |
-> | `CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('table'))` | Oldest version still available for the table — if your stored version is older, you must do a full sync |
-> | `CHANGETABLE(CHANGES table, version)` | Returns all changed PKs since the given version with operation type and column bitmask |
-> | `CHANGETABLE(VERSION table, (pk_cols), (pk_vals))` | Returns CT metadata for a single specific row — used for conflict detection in two-way sync |
-> | `CHANGE_TRACKING_IS_COLUMN_IN_MASK(col_id, mask)` | Tests whether a specific column changed by interpreting the `SYS_CHANGE_COLUMNS` bitmask |
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `SYS_CHANGE_OPERATION` | `I` | &#9989; | Insert. | The key did not exist at the previous sync boundary. |
+| `SYS_CHANGE_OPERATION` | `U` | &#9989; | Update. | The key exists and at least one tracked column changed. |
+| `SYS_CHANGE_OPERATION` | `D` | Context-dependent | Delete. | The row was removed; consumers must remove or close it downstream. |
+| `SYS_CHANGE_VERSION` | Monotonic bigint | &#9989; | CT version at which the change was committed. | Normal sync watermark for CT consumers. |
+| `SYS_CHANGE_COLUMNS` | `NULL` or bit pattern | Context-dependent | Which non-PK columns changed. | Requires `TRACK_COLUMNS_UPDATED = ON` to be useful. |
 
-> [!warning] Version Window
->
-> CT is version-based, not time-based. If you miss the retention window (don't sync within `CHANGE_RETENTION` days), the version history is purged and you must do a full sync. The auto-cleanup thread runs every 30 minutes (SQL Server 2022 and earlier). SQL Server 2025 introduces adaptive shallow cleanup that processes incrementally instead of scanning the full side table.
+#### Validate the retained sync window before trusting `CHANGETABLE`
 
-> [!success] Handling an Expired CT Version
->
-> Detect a version gap before querying: call `CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('silver.signals_daily'))` and compare against your stored `@last_sync_version`. If the stored version is older than the minimum valid version, fall back to a full sync and reset the stored version to `CHANGE_TRACKING_CURRENT_VERSION()`. Increase `CHANGE_RETENTION` to cover your worst-case sync latency:
-> ```sql
-> ALTER DATABASE analytics_db
->     SET CHANGE_TRACKING (CHANGE_RETENTION = 14 DAYS, AUTO_CLEANUP = ON);
-> ```
->
-> Use snapshot isolation to prevent race conditions between cleanup and reads — without it, cleanup can invalidate your version between the validation check and the `CHANGETABLE()` call:
-> ```sql
-> ALTER DATABASE analytics_db SET ALLOW_SNAPSHOT_ISOLATION ON;
-> SET TRANSACTION ISOLATION LEVEL SNAPSHOT;
-> BEGIN TRAN;
->     -- 1. Validate @last_sync_version >= CHANGE_TRACKING_MIN_VALID_VERSION(...)
->     -- 2. Capture @next_version = CHANGE_TRACKING_CURRENT_VERSION()
->     -- 3. Query CHANGETABLE(CHANGES ..., @last_sync_version)
-> COMMIT TRAN;
-> ```
->
-> After a database restore, a consumer's stored `@last_sync_version` may still pass the `MIN_VALID_VERSION` check, but tracked changes from the restored-away period are silently missing. Store a database ID/version stamp and detect mismatches on reconnect.
+[!warning]
+CT is not an infinite backlog. Microsoft documentation explicitly recommends checking `CHANGE_TRACKING_MIN_VALID_VERSION()` before using an old stored sync version. If the consumer lags past retention, incremental sync is no longer trustworthy and must be reinitialized from a new baseline.
+
+[!success]
+Persist the last successful sync version, compare it to `CHANGE_TRACKING_MIN_VALID_VERSION()` for every tracked table before reading CT rows, and only advance the stored version after the downstream commit succeeds.
+
+[!info]-
+This pattern validates a stored CT sync version before consuming changes.
+
+- `CHANGE_TRACKING_CURRENT_VERSION()` returns the latest committed CT version in the database.
+- `CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID(...))` returns the oldest still-valid version for a tracked table.
+- If `@last_sync_version` is below `min_valid_version`, the consumer must stop incremental processing and rebuild from a fresh baseline.
+- When only a small fraction of rows changed, Microsoft also documents `FORCESEEK` support for `CHANGETABLE` on supported builds so the CT lookup can avoid a larger scan.
+
+*This query validates whether a stored CT watermark is still inside the retained change window before the consumer reads `CHANGETABLE` rows.*
+
+```sql
+DECLARE @last_sync_version bigint = 12345;
+
+SELECT @last_sync_version AS last_sync_version,
+       CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('silver.signals_daily')) AS min_valid_version,
+       CHANGE_TRACKING_CURRENT_VERSION() AS current_version;
+```
+
+If `last_sync_version < min_valid_version`, do not continue with an incremental CT read. Reinitialize the target from a fresh full load or snapshot, then store a new sync version after that baseline completes.
 
 ---
 
-## dbt Snapshots
+## External Snapshot Patterns
 
-**dbt snapshots** implement SCD Type 2 declaratively: you define which source table to track and how to detect changes, and dbt handles the close/insert logic — setting `dbt_valid_from`, `dbt_valid_to`, and generating a unique `dbt_scd_id` for each row version. This is the standard approach for SCD2 in dbt-managed pipelines, removing the need for hand-written close/insert SQL.
+Not every system should push change logic into SQL Server itself.
 
-### dbt Snapshot Strategies — timestamp vs check
+### Use dbt snapshots when the warehouse owns the history logic
 
-> [!info] dbt Snapshot Strategies
->
-> dbt provides two change detection strategies. Both produce identical SCD2 output (versioned rows with `dbt_valid_from`/`dbt_valid_to`), but they differ in how they detect whether a row has changed. See [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) for full syntax and configuration.
+dbt snapshots are strongest when:
 
-- **Timestamp strategy:** detects changes when the source's `updated_at` column advances past the snapshot's recorded `dbt_valid_from`. Fast (only compares timestamps) but misses changes where the source data changes without updating the timestamp — for example, a direct `UPDATE` that skips the application layer's timestamp logic
-- **Check strategy:** compares specified column values on every run using equality checks. Catches all changes regardless of timestamp behavior but requires a full table scan on every execution — `O(n)` per run where `n` is the source row count
-- **Trade-off:** dbt manages the history lifecycle end-to-end, but you lose fine-grained control over detection logic (e.g., you cannot apply epsilon comparisons for float columns or custom NULL handling). For SQL Server-managed history with engine-level guarantees, use temporal tables instead
+- the warehouse, not the source OLTP system, owns the history contract
+- the team wants declarative SCD behavior in the transformation layer
+- the source SQL Server should remain operationally simple
+
+### Use application-level logging when the business event matters more than the row image
+
+Application-side change logs are often better when:
+
+- the event semantics are richer than "row changed"
+- the system needs actor, reason, correlation ID, or domain-event payloads
+- the source database cannot safely enable CDC or CT
 
 ---
 
 ## Anti-Patterns
 
-These are the most common mistakes in change tracking implementations. Each one has caused production incidents.
+These are the recurring failure modes in SQL Server change-capture designs.
 
-### Triggers for Change Tracking — per-row overhead nightmare
+### Temporal tables on high-write staging tables
 
-Triggers fire once per statement (or per row in some configurations), adding overhead to every DML operation. They're hard to debug, invisible to callers, and create hidden dependencies. `INSTEAD OF` triggers are outright blocked on temporal tables. Use CDC or temporal tables instead.
+That creates heavy history growth and solves the wrong problem. Temporal tables are for row-history auditability, not for raw ingest buffers.
 
-### SCD2 Without a Filtered Unique Index
+### CDC without retention monitoring
 
-Without `CREATE UNIQUE INDEX ... WHERE is_current = 1`, nothing prevents two rows with `is_current = 1` for the same key. A bug in the close/insert logic silently creates duplicate current rows — caught only when a dashboard shows wrong data.
+CDC change tables are operational data structures, not archival storage. If cleanup is ignored, they grow until they become a production problem.
 
-### Comparing Floats for Change Detection
+### CT consumers that lag past the retention window
 
-`FLOAT` equality is unreliable: `3.14` stored as `3.1400000000000001` fails an equality check against `3.14`. Use `ABS(old - new) < 0.0001` or round both sides to a fixed decimal precision before comparing. This applies to both manual SCD2 and dbt check-strategy snapshots.
+CT is not perpetual history. If the stored sync version becomes too old, the consumer can no longer reconcile incrementally and must reinitialize.
 
-### CDC Without Cleanup
+### SCD2 without a filtered unique index
 
-CDC change tables grow unbounded. A table with 10M changes/day accumulates 300M rows/month in the change table — eventually filling the disk. Always configure retention: `sp_cdc_change_job @retention = 4320` (3 days in minutes). Set the `threshold` parameter to control the maximum rows deleted per statement (default: 5,000) to avoid lock escalation.
+That leaves the table vulnerable to duplicate current rows for the same business key.
 
-### CDC Schema Change Without a Second Capture Instance
+### Comparing nullable or floating-point attributes naïvely in SCD2 logic
 
-Adding a column to a CDC-enabled table does not update the existing capture instance — the new column is silently ignored in change data. Disabling and re-enabling CDC creates a gap during which changes are lost. Instead, create a second capture instance with the new schema (max 2 per table), transition consumers, then drop the old instance.
+That creates false positives or false negatives in change detection and silently corrupts the version chain.
 
-### Temporal Tables With No Retention Policy
+### Treating CDC as a replacement for an initial full load
 
-The history table grows at least as fast as the rate of changes to the source table. For high-update tables, the history table can be 10x larger than the source within a year. On SQL Server 2017+, set `HISTORY_RETENTION_PERIOD` at table creation. On 2016, schedule periodic purges. Remember that `is_temporal_history_retention_enabled` is automatically disabled after a point-in-time restore.
-
-### Overwriting History in Place
-
-`UPDATE dim_stock SET sector = 'New Sector' WHERE symbol = 'ASML'` destroys the audit trail. You can never answer "what sector was ASML in last quarter?" Use SCD2 or temporal tables instead of in-place updates on dimension tables.
-
-### CT Sync Without Snapshot Isolation
-
-Querying `CHANGETABLE()` without snapshot isolation allows a race condition: the auto-cleanup thread can purge your `@last_sync_version` between your validation check and the actual `CHANGETABLE()` call, causing silent data loss. Always wrap the validate-capture-query cycle in a snapshot transaction.
+CDC captures changes after enablement. It does not automatically provide the historical baseline that downstream replicas often still need.
 
 ---
 
-## Medallion-Project Reference
+## Current Recommendation For `stoxx`
 
-> [!guide]- Medallion-Project: SCD2 on stock dimensions
->
-> The financial index pipeline implements manual SCD2 on `silver.index_dim`:
->
-> 1. Read full bronze snapshot of company attributes
-> 2. Read active silver rows (`WHERE is_current = 1`)
-> 3. Python compares each `(_index, symbol)` pair attribute by attribute
-> 4. Changed stocks: `UPDATE SET is_current = 0, valid_to = SYSUTCDATETIME()` → `INSERT` new version
-> 5. Filtered unique index `UX_silver_index_dim_current` enforces one active row per stock
->
-> See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) for the full detect/close/insert implementation.
+The current state of `stoxx` supports a clear production recommendation:
+
+- keep `silver.index_dim` on the manual SCD2 path because the warehouse already owns the business dimension logic
+- keep CDC and CT disabled until there is a concrete downstream sync or replication consumer that justifies the operational overhead
+- introduce temporal tables only for tables that truly need full-row point-in-time auditability
+- consider `rowversion` only for mutable source-owned tables that need a lightweight delta token and can handle deletes on a separate path
+- if CT is adopted later, pair it with a documented sync version store and a row-versioning isolation review
+- if CDC is adopted later, pair it with explicit retention, capture-instance naming, and downstream replay design
+
+---
+
+## Related
+
+- [[sql-server-loading-patterns]]
+- [[sql-server-incremental-transforms]]
+- [[sql-server-schema-layering]]
+- [[sql-server-pipeline-anti-patterns]]
+- [[silver-transforms]]
+- [[gold-transforms]]
+
+## References
+
+- Microsoft Learn: [Temporal tables](https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables)
+- Microsoft Learn: [rowversion (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql)
+- Microsoft Learn: [What is change data capture (CDC)?](https://learn.microsoft.com/en-us/sql/relational-databases/track-changes/about-change-data-capture-sql-server)
+- Microsoft Learn: [About Change Tracking](https://learn.microsoft.com/en-us/sql/relational-databases/track-changes/about-change-tracking-sql-server)
+- Microsoft Learn: [CHANGETABLE (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-functions/changetable-transact-sql)
+- Microsoft Learn: [Enable and Disable Change Tracking](https://learn.microsoft.com/en-us/sql/relational-databases/track-changes/enable-and-disable-change-tracking-sql-server)
+- Microsoft Learn: [Manage retention of historical data in system-versioned temporal tables](https://learn.microsoft.com/en-us/sql/relational-databases/tables/manage-retention-of-historical-data-in-system-versioned-temporal-tables)
+- Microsoft Learn: [sys.sp_cleanup_temporal_history](https://learn.microsoft.com/sv-se/sql/relational-databases/system-stored-procedures/temporal-table-sys-sp-cleanup-temporal-history)
+- ChromaDB supporting context:
+  - `Building Medallion Architectures.pdf`
+  - `Fundamentals of Data Engineering.epub`
+  - `Data Engineering Design Patterns.pdf`

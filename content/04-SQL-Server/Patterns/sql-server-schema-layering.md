@@ -344,6 +344,85 @@ Recommended flow:
 - `silver.*` for cleaned and deduplicated business-ready tables
 - `gold.*` for published analytics or serving tables
 
+## Control, Audit, And Contract Schemas
+
+Layer schemas explain data maturity, but they do not solve every architectural boundary. Production platforms also need a place for pipeline control state, quality events, and stable consumer contracts. Those objects should not be scattered through `dbo`, and they should not be mixed into `bronze`, `silver`, or `gold` when they serve a different operational purpose.
+
+### Check whether dedicated control-plane schemas already exist
+
+[!info]-
+This query checks for five common supporting schemas that many production platforms eventually adopt.
+
+- `meta` or `control` usually stores watermarks, run ledgers, dependency state, and schema contracts.
+- `audit` or `history` usually stores quality events, reconciliation findings, or explicit audit surfaces.
+- `contract` is useful when stable views or synonyms need to shield consumers from physical table churn.
+- `SCHEMA_ID(...) IS NULL` returns `0` for a missing schema and `1` for an existing one, which makes the output easy to read as a readiness checklist.
+
+*This query checks whether `stoxx` currently has dedicated control, audit, history, or contract schemas.*
+
+```sql
+SELECT CASE WHEN SCHEMA_ID('meta') IS NULL THEN 0 ELSE 1 END AS meta_schema_exists,
+       CASE WHEN SCHEMA_ID('control') IS NULL THEN 0 ELSE 1 END AS control_schema_exists,
+       CASE WHEN SCHEMA_ID('audit') IS NULL THEN 0 ELSE 1 END AS audit_schema_exists,
+       CASE WHEN SCHEMA_ID('history') IS NULL THEN 0 ELSE 1 END AS history_schema_exists,
+       CASE WHEN SCHEMA_ID('contract') IS NULL THEN 0 ELSE 1 END AS contract_schema_exists;
+```
+
+| meta_schema_exists | control_schema_exists | audit_schema_exists | history_schema_exists | contract_schema_exists |
+|---:|---:|---:|---:|---:|
+| 0 | 0 | 0 | 0 | 0 |
+
+_`stoxx` currently has none of these supporting schemas, which keeps the model simple but also means there is no explicit home yet for control tables, quality events, or stable consumer-facing abstractions. If the platform grows beyond a single-admin sandbox, this absence becomes an architectural decision rather than a neutral default._
+
+### Add a `meta` or `control` schema for pipeline state
+
+The control plane of a data platform is not the same thing as the data layers. A `meta` or `control` schema is where the platform stores state about the pipeline itself rather than business data flowing through the pipeline.
+
+Typical contents:
+
+| Object family | Typical contents | Why it belongs outside `bronze / silver / gold` |
+|---|---|---|
+| Watermarks | Last successful processed date, LSN, or rowversion per pipeline step | It describes pipeline progress, not business data |
+| Run ledger | Run IDs, start/end time, row counts, status, error summary | It is operational history for the ETL system |
+| Schema contracts | Expected source columns, allowed type changes, approval state | It governs writes rather than serving analytics directly |
+| Quality events | Failed checks, offending keys, reconciliation results | It is back-room operational evidence, not end-user gold data |
+
+Production recommendation:
+
+- start with one `meta` or `control` schema, not many micro-schemas
+- keep pipeline state tables narrow, append-friendly, and clearly separated from analytical models
+- do not let control tables accumulate in `dbo`, because they become impossible to distinguish from true business tables later
+
+### Separate audit or history surfaces from the core medallion flow
+
+An `audit` or `history` schema is useful when the platform must expose retained operational evidence or explicit history surfaces that are not the same as the medallion layers.
+
+Use it for:
+
+- quality and reconciliation events that need retention
+- curated access to temporal history or CDC-facing helper objects
+- legal or operational audit tables that should not sit beside the published gold model
+
+Avoid it when:
+
+- the only reason is aesthetic symmetry
+- the history is already handled correctly inside a table's own design, such as a well-scoped temporal or SCD2 table
+
+### Expose stable contract views when physical tables keep evolving
+
+A `contract` schema is often the cleanest answer when consumer-facing names must stay stable while the underlying tables continue to evolve.
+
+Good fits:
+
+- views that preserve a public column contract while `silver` or `gold` tables are refactored
+- synonyms or narrow views that hide source-system churn from downstream tools
+- semantic serving surfaces that should not expose internal helper columns such as `_batch_id` or `_ingested_at`
+
+This is not a replacement for `gold`. The pattern is:
+
+- `gold` stores the published physical model
+- `contract` exposes the stable consumer-facing abstraction when that extra decoupling is justified
+
 ## Naming and Metadata Rules
 
 Schema design fails when the naming inside the schema is inconsistent.
@@ -480,6 +559,8 @@ The live database already has the right backbone:
 - keep `bronze`, `silver`, and `gold` as the primary production schemas
 - stop letting `dbo` grow as a mixed-purpose default landing area
 - move long-lived production-facing `dbo` objects into the right layer schema
+- introduce one `meta` or `control` schema when the platform needs durable run state, watermarks, or schema-governance tables
+- reserve `audit`, `history`, or `contract` schemas for clear non-layer purposes instead of letting those objects drift into `dbo`
 - keep demos disposable and clearly separated from production-facing objects
 - start using schema-level roles if this environment becomes more than a single-admin sandbox
 
@@ -496,3 +577,7 @@ The live database already has the right backbone:
 - [CREATE SCHEMA (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/create-schema-transact-sql?view=sql-server-ver17)
 - [GRANT Schema Permissions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=sql-server-ver17)
 - [ALTER SCHEMA (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-schema-transact-sql?view=sql-server-ver17)
+- ChromaDB supporting context:
+  - `Fundamentals of Data Engineering.epub`
+  - `The Data Warehouse Toolkit.epub`
+  - `Building Medallion Architectures.pdf`
