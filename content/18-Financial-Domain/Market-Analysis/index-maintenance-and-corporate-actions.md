@@ -392,7 +392,7 @@ If a backtesting system uses the "corrected" composition, it assumes traders had
 
 **SCD Type 2: The foundation of PIT queries**
 
-PIT queries require [SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was. The [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) layer implements SCD Type 2 for constituent tracking, and [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) automates snapshot generation for dimension history:
+PIT queries require [SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was. The [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) layer implements SCD Type 2 for constituent tracking, and [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) automates snapshot generation for dimension history:
 
 ```sql
 -- silver.index_constituents — SCD Type 2 design
@@ -701,3 +701,4 @@ For formal definitions of the index construction terms discussed above, see the 
 - IOSCO Principles for Financial Benchmarks: https://www.iosco.org/library/pubdocs/pdf/IOSCOPD415.pdf
 - Index Methodology Documentation: available from the index provider
 - SFDR Regulation: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32019R2088
+

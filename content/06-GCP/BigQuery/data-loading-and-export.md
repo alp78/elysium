@@ -205,7 +205,7 @@ Table 'project_data:project_data.ohlcv_restored' successfully created.
 
 > [!tip] Related pattern
 >
-> The `bq load` workflow mirrors the [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
+> The `bq load` workflow mirrors the [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
 
 ### BigQuery Data Format Comparison
 
@@ -261,3 +261,4 @@ flowchart LR
 - [Loading data into BigQuery](https://cloud.google.com/bigquery/docs/loading-data)
 - [Exporting table data](https://cloud.google.com/bigquery/docs/exporting-data)
 - [Time travel](https://cloud.google.com/bigquery/docs/time-travel)
+

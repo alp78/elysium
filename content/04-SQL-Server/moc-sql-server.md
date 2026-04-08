@@ -9,40 +9,37 @@ tags:
 
 # MOC: SQL Server
 
-SQL Server from instance administration through query optimization to
-pipeline construction — covering operations, storage internals, T-SQL craft,
-performance tuning, security, and the medallion pipeline implementation.
-Expand any section to browse page contents.
+This chapter is organized around the three jobs people actually do with SQL Server in production:
 
-> [!guide]+ Server Operations
+1. operate and maintain the server
+2. create and shape databases, tables, and storage structures
+3. write and optimize queries
+
+A fourth track collects the applied pipeline patterns built on top of those foundations.
+
+> [!guide]+ Server Operations and Maintenance
 >
 > [[domain-server-operations]]
 >
-> Instance administration from configuration and connectivity through backup strategy, high availability, and production troubleshooting.
+> Connectivity, instance configuration, backup and restore, security, high availability, audit, incident triage, and estate-level operational review.
 
-> [!guide]+ Storage Internals
+> [!guide]+ Database Design, Tables, and Storage
 >
-> [[domain-storage-internals]]
+> [[domain-database-design-and-storage]]
 >
-> Physical storage from page anatomy and WAL mechanics through index structures, compression, and table partitioning.
+> Database creation, schema and table design, keys and constraints, change tracking, storage internals, index design, compression, partitioning, and maintenance.
 
-> [!guide]+ Query Craft and Performance
+> [!guide]+ Query Writing and Optimization
 >
-> [[domain-query-craft]]
+> [[domain-query-writing-and-optimization]]
 >
-> T-SQL query writing and performance tuning from SARGability and execution plans through wait stats, memory diagnostics, and pipeline integration.
+> Core T-SQL reference, execution plans, Query Store, waits, blocking, deadlocks, race conditions, and production query optimization workflows.
 
-> [!guide]+ Concurrency and Security
+> [!guide]+ Applied SQL Server for Data Pipelines
 >
-> [[domain-concurrency-and-security]]
+> [[domain-applied-sql-server-pipelines]]
 >
-> Authentication hardening, encryption at rest, audit logging, and concurrency control from lock mechanics through deadlock prevention.
-
-> [!guide]+ Pipeline Patterns
->
-> [[domain-pipeline-patterns]]
->
-> Medallion pipeline implementation from loading strategies and schema layering through change tracking, incremental transforms, and bronze-silver-gold layers.
+> Loading patterns, incremental transforms, medallion implementation, pipeline anti-patterns, point-in-time integrity, and pipeline operability guidance.
 
 ## Cross-References
 

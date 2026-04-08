@@ -253,7 +253,7 @@ kill -9 <PID>
 > - Lock files left in `/var/run/`, `/tmp/`, or the application's data directory
 > - Shared memory segments: list with `ipcs -m`, remove with `ipcrm -m <shmid>`
 > - Incomplete file writes: check file sizes and checksums
-> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` — see [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for SQL Server KILL session handling
+> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` — see [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention) for SQL Server KILL session handling
 
 > [!success] Post-kill cleanup checklist
 >
@@ -347,3 +347,4 @@ Get-Process | Where-Object { $_.CommandLine -like "*run_pipeline*" } |
 - [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — find the PID before killing
 - [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — use `systemctl stop` for services (cleaner than `kill`)
 - [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — confirm resource is released after killing
+

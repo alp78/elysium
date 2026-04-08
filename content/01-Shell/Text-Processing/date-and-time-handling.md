@@ -508,7 +508,7 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 
 ### Date Arithmetic in T-SQL
 
-For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [date-and-time-functions](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/date-and-time-functions).
+For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [date-and-time-functions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/date-and-time-functions).
 
 ```sql
 -- ============================================================
@@ -1164,3 +1164,4 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 - [SQL Server AT TIME ZONE](https://docs.microsoft.com/en-us/sql/t-sql/queries/at-time-zone-transact-sql)
 - [.NET DateTimeOffset](https://docs.microsoft.com/en-us/dotnet/api/system.datetimeoffset)
 - [dateutil relativedelta](https://dateutil.readthedocs.io/en/stable/relativedelta.html)
+

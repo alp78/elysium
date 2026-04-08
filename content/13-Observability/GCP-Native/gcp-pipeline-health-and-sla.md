@@ -1548,9 +1548,10 @@ Use this checklist when onboarding a new data pipeline to the monitoring stack.
 - [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, circuit breakers, and alerting thresholds that this monitoring enforces
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotency enables safe retries and reruns
 - [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Airflow retry configuration and SLA callbacks
-- [sql-server-pipeline-anti-patterns](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns) — Pipeline mistakes that monitoring should detect
+- [sql-server-pipeline-anti-patterns](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-pipeline-anti-patterns) — Pipeline mistakes that monitoring should detect
 - [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How production monitoring complements pre-deployment testing
 - [ ] Scheduled health check job running every 15 minutes
 
 > [!tip] Checklist in practice
 > Run this checklist at pipeline design time, not after the first incident. The patterns that hurt most — missing heartbeat checks, no staleness alerting, no SLA definition — all feel optional until a pipeline silently fails for 48 hours before anyone notices.
+

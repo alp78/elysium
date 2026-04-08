@@ -296,7 +296,7 @@ Follow this top-down. The first "yes" is your answer.
 | **Backup** | Full/diff/log backups (you manage) | Automatic time travel (7 days free) |
 | **Best at** | Transactional + analytical hybrid | Pure analytical at any scale |
 
-See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) for SQL Server backup patterns. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery cost control.
+See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/backup-types-and-strategy) for SQL Server backup patterns. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery cost control.
 
 ### When to Add a Second Database
 
@@ -358,7 +358,7 @@ You need a second database when one database cannot serve two workloads without 
 ```
 
 > [!tip] The Zero-Idle-Cost Principle
-> If a workload runs less than 50% of the time, it should not be on a VM. Cloud Run Jobs and Cloud Functions scale to zero. A VM running 24/7 for a job that runs 3 times per day wastes 99.9% of its uptime cost. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) for cost analysis patterns.
+> If a workload runs less than 50% of the time, it should not be on a VM. Cloud Run Jobs and Cloud Functions scale to zero. A VM running 24/7 for a job that runs 3 times per day wastes 99.9% of its uptime cost. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) for cost analysis patterns.
 
 ### Messaging: Pub/Sub vs Direct Calls vs Firestore
 
@@ -416,7 +416,7 @@ How storage maps to the [medallion-architecture](https://alp78.github.io/elysium
 | Secure access to VMs from laptop | **IAP tunneling** | No public IP needed. See [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) |
 | Service-to-service authentication | **Service accounts** | Workload identity for GKE. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) |
 | Restrict data access to VPC | **VPC Service Controls** | Prevents data exfiltration. See [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) |
-| Encrypt data at rest (SQL Server) | **TDE** | Transparent Data Encryption. See [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) |
+| Encrypt data at rest (SQL Server) | **TDE** | Transparent Data Encryption. See [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption) |
 | API authentication | **OAuth 2.0 / API keys** | OAuth for user-context, API keys for service-context |
 | Secret management | **Secret Manager** | Never hardcode credentials. See [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
 | Network between VMs | **VPC + firewall rules** | Least-privilege firewall rules. See [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) |
@@ -772,7 +772,7 @@ Many decisions are not pure build or pure buy. The "semi-build" pattern uses a m
 | Application logs (structured) | **Cloud Logging** or **Datadog Logs** | Cloud Logging is free tier; Datadog for cross-platform. See [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) |
 | Pipeline SLA compliance | **Cloud Monitoring** + custom metrics | Track pipeline freshness against SLAs. See [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) |
 | Infrastructure dashboards | **Datadog** | Unified view across SQL Server, Airflow, GCP. See [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) |
-| Cost anomaly detection | **GCP Billing alerts** + **Cloud Monitoring** | Catch runaway queries or forgotten VMs. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) |
+| Cost anomaly detection | **GCP Billing alerts** + **Cloud Monitoring** | Catch runaway queries or forgotten VMs. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) |
 | Distributed traces | **Cloud Trace** or **Datadog APM** | Track requests across services. See [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) |
 | Data lineage and cataloging | **GCP Data Catalog** or **dbt docs** | Track where data comes from and where it goes. See [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) |
 | Uptime and endpoint health | **Cloud Monitoring** (uptime checks) | Synthetic checks on HTTP endpoints. See [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) |
@@ -872,7 +872,7 @@ When choosing between technologies, cost is a dimension — not the only dimensi
 | Monitoring | Cloud Monitoring (free tier) | Datadog (~$23/host/mo) | Datadog justified when managing 5+ services |
 
 > [!tip] The FinOps Decision Rule
-> Cost optimization is not about choosing the cheapest option — it is about choosing the option with the best cost-to-value ratio for your specific workload pattern. A $350/month Cloud Composer that saves 10 hours/month of ops work is cheaper than a $75/month self-hosted Airflow that requires 10 hours/month of maintenance. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) for detailed cost analysis.
+> Cost optimization is not about choosing the cheapest option — it is about choosing the option with the best cost-to-value ratio for your specific workload pattern. A $350/month Cloud Composer that saves 10 hours/month of ops work is cheaper than a $75/month self-hosted Airflow that requires 10 hours/month of maintenance. See [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) for detailed cost analysis.
 
 ### Reserved vs On-Demand Decisions
 
@@ -948,9 +948,9 @@ For rapid lookup when you just need the answer:
 | ...containerize a Python pipeline | Docker | [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) |
 | ...test data quality | dbt tests | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
 | ...parse a log file quickly | Bash (grep/awk) | [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) |
-| ...manage SQL Server backups | T-SQL + PowerShell | [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) |
+| ...manage SQL Server backups | T-SQL + PowerShell | [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/backup-types-and-strategy) |
 | ...set up CI/CD for a pipeline | GitHub Actions | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
-| ...encrypt data at rest | TDE (SQL Server) or GCS encryption | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) |
+| ...encrypt data at rest | TDE (SQL Server) or GCS encryption | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption) |
 | ...manage service accounts | Terraform + IAM | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) |
 | ...explore a new GCP service | Console (UI), then translate to Terraform | [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) |
 | ...handle schema migrations | Idempotent SQL scripts | [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
@@ -958,7 +958,7 @@ For rapid lookup when you just need the answer:
 | ...set up Airflow on a VM | Docker Compose | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) |
 | ...connect Python to SQL Server | pyodbc or SQLAlchemy | database connections |
 | ...optimize BigQuery costs | Partitioning + clustering + avoid SELECT * | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) |
-| ...debug slow SQL Server queries | Wait stats + execution plans | [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) |
+| ...debug slow SQL Server queries | Wait stats + execution plans | [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/wait-stats-analysis) |
 | ...design a data model for BI | Star schema (Kimball) | [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) |
 | ...audit who has access to what | IAM policy review | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) |
 | ...set up alerting for pipeline failures | Datadog monitors or Cloud Alerting | [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) |
@@ -992,5 +992,6 @@ For rapid lookup when you just need the answer:
 #### Observability and operations
 - [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — monitoring platform
 - [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive) — metrics, logs, traces framework
-- [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) — cost management
+- [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) — cost management
 - [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — SLA tracking
+

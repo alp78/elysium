@@ -57,9 +57,9 @@ The [Airflow DAGs](https://alp78.github.io/elysium/12-Orchestration/Airflow/airf
 yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scored) → Dashboard
 ```
 
-1. **[Bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading)**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[vendor-file-late-or-missing]] runbook
-2. **[Silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms)**: Deduplication, type casting, gap-filling in `silver.*` tables
-3. **[Gold](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)**: Z-scores, composite scores, rankings in `gold.*` tables
+1. **[Bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[vendor-file-late-or-missing]] runbook
+2. **[Silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)**: Deduplication, type casting, gap-filling in `silver.*` tables
+3. **[Gold](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)**: Z-scores, composite scores, rankings in `gold.*` tables
 
 ## Refresh Impact on Scoring
 
@@ -75,6 +75,7 @@ yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scor
 
 - the pipeline steps — Detailed pipeline execution stages
 - the Airflow DAGs — DAG scheduling and configuration
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — How raw data enters the pipeline
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — How raw data enters the pipeline
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Three-layer data architecture
 - [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) — Cap-weighted metrics computed from this data
+

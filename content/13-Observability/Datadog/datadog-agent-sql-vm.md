@@ -186,5 +186,6 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 - [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) — Custom DMV metric queries
 - [datadog-log-management](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-log-management) — Errorlog collection configuration
 - [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — Common issues including missing agent after bootstrap
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — SQL Server VM configuration reference
-- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — DMV queries useful for debugging SQL Server health
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) — SQL Server VM configuration reference
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — DMV queries useful for debugging SQL Server health
+

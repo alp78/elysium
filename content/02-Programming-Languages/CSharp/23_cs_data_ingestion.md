@@ -347,7 +347,7 @@ class IngestResult
 
 ## Schema Setup
 
-The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture. BigQuery schema and load configuration align with [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
+The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) patterns used in the medallion architecture. BigQuery schema and load configuration align with [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
 ### Schema Setup | staging tables
 
@@ -1552,3 +1552,4 @@ Console.WriteLine("  Local exports cleaned up");
 > [!info] Firestore has no collection drop API
 >
 > Overwritten docs remain after cleanup. To remove them, call `FsDeleteCollection` after a kernel restart with `Microsoft.Bcl.AsyncInterfaces` loaded.
+

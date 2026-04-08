@@ -478,7 +478,7 @@ df -h
 
 > [!warning] Check free space before writing
 >
-> SQL Server **stops** when the disk is full. Always verify free space before large copies or data imports. For the full disk-full runbook, see [sql-server-disk-full](https://alp78.github.io/elysium/04-SQL-Server/Administration/disk-management).
+> SQL Server **stops** when the disk is full. Always verify free space before large copies or data imports. For the full disk-full runbook, see [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems#data-disk-full).
 
 > [!success] Monitor inodes as well as bytes
 >

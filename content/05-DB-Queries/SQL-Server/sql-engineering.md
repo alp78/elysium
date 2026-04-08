@@ -741,7 +741,7 @@ ORDER BY date DESC
 
 ## Indexes
 
-Index selection is the single highest-leverage performance decision in SQL Server. The right index can turn a multi-second table scan into a sub-millisecond seek; the wrong index imposes unnecessary write overhead on every `INSERT`, `UPDATE`, and `DELETE`. Index design for data pipelines requires balancing read-query patterns (equality filters, range scans, analytical aggregations) against write throughput. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for columnstore internals, fragmentation maintenance, and missing index DMV analysis.
+Index selection is the single highest-leverage performance decision in SQL Server. The right index can turn a multi-second table scan into a sub-millisecond seek; the wrong index imposes unnecessary write overhead on every `INSERT`, `UPDATE`, and `DELETE`. Index design for data pipelines requires balancing read-query patterns (equality filters, range scans, analytical aggregations) against write throughput. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) for columnstore internals, fragmentation maintenance, and missing index DMV analysis.
 
 > [!tip] Covering Indexes for Pipeline Queries
 >
@@ -813,7 +813,7 @@ Query-pattern-first design: identify the three or four most common predicates an
 
 > [!info] Redundancy Note
 >
-> This section covers index usage patterns for query tuning. For full index internals — B-tree structure, columnstore encodings, fragmentation mechanics, and automated maintenance scripts — see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) in Chapter 04.
+> This section covers index usage patterns for query tuning. For full index internals — B-tree structure, columnstore encodings, fragmentation mechanics, and automated maintenance scripts — see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) in Chapter 04.
 
 ## Slowly Changing Dimensions (SCD)
 
@@ -1370,7 +1370,7 @@ ORDER BY last_update DESC
 
 ## Partitioning Strategies
 
-Table partitioning divides a large table's data into physically separate segments based on a column value range (typically a date). SQL Server's partition elimination allows the query optimizer to skip entire partitions that cannot satisfy the `WHERE` clause predicate — equivalent to a physical shard filter at the storage level. Partitioning also enables instant data archival via `SWITCH`: moving an entire partition between tables is a metadata-only operation requiring no row movement. See [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full implementation details including partition functions, schemes, sliding windows, and maintenance scripts.
+Table partitioning divides a large table's data into physically separate segments based on a column value range (typically a date). SQL Server's partition elimination allows the query optimizer to skip entire partitions that cannot satisfy the `WHERE` clause predicate — equivalent to a physical shard filter at the storage level. Partitioning also enables instant data archival via `SWITCH`: moving an entire partition between tables is a metadata-only operation requiring no row movement. See [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) for full implementation details including partition functions, schemes, sliding windows, and maintenance scripts.
 
 ### Partitioning Strategies — When to Partition
 
@@ -1420,5 +1420,6 @@ SELECT 'Demo objects cleaned up' AS status
         </tr>
     </tbody>
 </table>
+
 
 

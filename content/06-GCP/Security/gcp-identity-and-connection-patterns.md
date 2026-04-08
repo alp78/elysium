@@ -544,7 +544,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 > [!warning] Common Mistake
 >
-> Forgetting that the IAP tunnel command needs time to establish before `sqlcmd` connects. Add a `sleep 5` after starting the tunnel in the workflow. See [sql-server-loading-patterns > Schema Migration CI/CD with GitHub Actions](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#schema-migration-cicd-with-github-actions) for a working workflow example.
+> Forgetting that the IAP tunnel command needs time to establish before `sqlcmd` connects. Add a `sleep 5` after starting the tunnel in the workflow. See [sql-server-loading-patterns > Schema Migration CI/CD with GitHub Actions](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#schema-migration-cicd-with-github-actions) for a working workflow example.
 
 > [!success] Start the Tunnel in the Background, Then Sleep
 >
@@ -590,7 +590,7 @@ Across the full GCP stack, most TLS certificates are Google-managed and invisibl
 | Python → BigQuery API | Google-managed TLS | Google (automatic) | Python `certifi` CA bundle |
 | Python → SQL Server | SQL Server self-signed cert | SQL Server on Linux | `TrustServerCertificate=yes` |
 | GitHub → GCP STS | Google-managed TLS | Google (automatic) | GitHub runner CA bundle |
-| SQL Server TDE (at rest) | GCP KMS-managed DEK | KMS wraps the key | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) |
+| SQL Server TDE (at rest) | GCP KMS-managed DEK | KMS wraps the key | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption) |
 | GCS objects (at rest) | Google-managed or CMEK | Google or KMS | Transparent to readers |
 
 ### TrustServerCertificate=yes — why SQL Server connections use it
@@ -607,8 +607,8 @@ SQL Server on Linux generates a self-signed certificate at startup. Because no C
 
 - **Why this is acceptable:** the IAP tunnel already encrypts the transport end-to-end (workstation → Google edge → VM). The self-signed cert encrypts SQL Server's TDS protocol layer, but the outer layer is already protected by IAP
 - **When this is NOT acceptable:** public-facing SQL Server with no tunnel — use a CA-signed certificate from Let's Encrypt or an internal CA
-- SQL Server TLS setup: [sql-server-authentication > TLS Encryption — network path client → IAP tunnel → VM → SQL Server](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication#tls-encryption--network-path-client--iap-tunnel--vm--sql-server)
-- Certificate generation: [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
+- SQL Server TLS setup: [sql-server-authentication > TLS Encryption — network path client → IAP tunnel → VM → SQL Server](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-authentication#tls-encryption--network-path-client--iap-tunnel--vm--sql-server)
+- Certificate generation: [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
 
 ### KMS and Envelope Encryption — the two-tier model
 
@@ -619,10 +619,10 @@ Cloud KMS uses envelope encryption: data is encrypted with a local Data Encrypti
 > Data is encrypted with a Data Encryption Key (DEK). The DEK is encrypted with a Key Encryption Key (KEK) stored in Cloud KMS. Only the encrypted DEK is stored alongside the ciphertext. To decrypt: call KMS to unwrap the DEK, then use the DEK to decrypt the data.
 
 - **Why two tiers:** the DEK encrypts locally (fast, no network call per row). KMS only wraps/unwraps the DEK (one API call per encrypt/decrypt operation). This keeps KMS costs low even for high-volume encryption
-- Encryption key hierarchy: [tde-encryption > Encryption Key Hierarchy](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption#encryption-key-hierarchy)
+- Encryption key hierarchy: [tde-encryption > Encryption Key Hierarchy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption#encryption-key-hierarchy)
 - Python envelope encryption: [21_py_security_operations > cryptography AESGCM + google-cloud-kms — envelope encryption](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations#cryptography-aesgcm--google-cloud-kms--envelope-encryption)
 - C# envelope encryption: [21_cs_security_operations > AesGcm + KeyManagementServiceClient — envelope encryption](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations#aesgcm--keymanagementserviceclient--envelope-encryption)
-- SQL Server TDE (at-rest encryption using KMS): [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption)
+- SQL Server TDE (at-rest encryption using KMS): [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption)
 
 ---
 
@@ -789,7 +789,7 @@ GCP attaches the project's Compute Engine default service account to every VM th
 >
 > Generate a TLS certificate from Let's Encrypt or an internal CA. Configure
 > SQL Server to use it. Remove `TrustServerCertificate=yes` from connection
-> strings. See [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
+> strings. See [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
 > for the certificate generation procedure.
 
 ---
@@ -811,3 +811,4 @@ GCP attaches the project's Compute Engine default service account to every VM th
 > for your application code. Or set `GOOGLE_APPLICATION_CREDENTIALS` to a
 > key file. See [gcloud-authentication > gcloud auth application-default login — ADC for application code](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#gcloud-auth-application-default-login--adc-for-application-code)
 > for the distinction.
+

@@ -46,4 +46,5 @@ Use this runbook when the scheduled vendor extract does not arrive on time, arri
 ## Related
 
 - [[data-sources-and-refresh]] — upstream data flow and staleness impact
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw-ingest handling patterns
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — raw-ingest handling patterns
+

@@ -218,7 +218,7 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 
 - **Dev:** Local Docker container (`docker run -e SA_PASSWORD=... mcr.microsoft.com/mssql/server`) or a small GCE e2-small VM
 - **Prod:** Production GCE VM with proper sizing, backups, and Datadog monitoring
-- Configuration: see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for memory, recovery model, and RCSI settings
+- Configuration: see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) for memory, recovery model, and RCSI settings
 
 > [!danger] Separate SQL Server Instances
 >
@@ -384,3 +384,4 @@ What each environment actually costs per month. For full per-service pricing det
 - [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — foundational principles including "choose boring technology"
 - [gcp-billing-and-pricing](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-billing-and-pricing) — per-service pricing detail
 - [gcp-total-cost-of-ownership](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — complete architecture cost breakdowns
+

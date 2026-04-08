@@ -883,7 +883,7 @@ For new scripts and pipelines, prefer `gcloud storage`. For existing scripts, `g
 
 ## Linux / PowerShell — SQL Server data transfer
 
-`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to and from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [bronze layer](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) before transformation begins.
+`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to and from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [bronze layer](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) before transformation begins.
 
 ### Linux / PowerShell | bcp | SQL Server bulk copy
 
@@ -1134,3 +1134,4 @@ For transfers over 1 GB, the ability to resume after failure is more valuable th
 - [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) — compress data before or during transfer
 - [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — complete GCP connection guide including GCS
 - [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — local file operations before transfer
+

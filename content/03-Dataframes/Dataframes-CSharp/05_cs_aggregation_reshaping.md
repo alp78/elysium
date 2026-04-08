@@ -474,7 +474,7 @@ Window functions preserve row-level granularity while computing group-relative s
 >
 > Keep window logic in Polars.NET or MDA when the data is already local, the transformation is notebook-scoped, or the result must feed immediate in-process .NET logic. If the source is still in a database or warehouse, prefer SQL window functions for large partitions and wide joins so the engine can optimize sort, frame, and memory behavior before extraction.
 
-The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) applies the same windowed aggregations to produce final analytical tables.
+The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) applies the same windowed aggregations to produce final analytical tables.
 
 ### Mean over Group
 
@@ -1281,3 +1281,4 @@ Melted shape: (20, 4)
 > Assemble pipelines as isolated, reusable transformations and let the right execution engine own the expensive stage.
 >
 > Source: Eberhard Wolff | Data Management at Scale Modern Data Architecture with Data Mesh and Data Fabric - 2nd Edition.pdf
+

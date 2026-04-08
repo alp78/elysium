@@ -758,7 +758,7 @@ display(
 
 Window functions compute per-row values that depend on a partition (group) of the data — without collapsing rows. They are the DataFrame equivalent of SQL `OVER(PARTITION BY col ORDER BY ...)`. Common uses: broadcasting a group mean or sum back to each row, computing within-group ranks, and rolling statistics scoped to a symbol's own history.
 
-Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) applies the same ranking and running-total logic, and [bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) covers BigQuery window functions for identical analytical needs.
+Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) applies the same ranking and running-total logic, and [bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) covers BigQuery window functions for identical analytical needs.
 
 ### Broadcasting Group Statistics
 
@@ -1799,3 +1799,4 @@ display(df.to_dummies())
 | Implode | N/A | implode() |
 | Transpose | .T | .transpose() |
 | One-hot | get_dummies() | to_dummies() |
+

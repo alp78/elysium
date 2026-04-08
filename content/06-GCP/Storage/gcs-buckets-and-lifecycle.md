@@ -25,7 +25,7 @@ status: complete
 >
 > — **Adrian Cockcroft**, VP Cloud Architecture at AWS
 
-Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
+Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
 
 > [!todo] Prerequisites
 >
@@ -76,7 +76,7 @@ Creating gs://data-pipeline-pipeline-data/...
 
 ## Storage Classes and Cost Trade-offs
 
-GCS offers four storage classes with an inverse cost relationship: lower storage cost means higher retrieval cost. Match the class to your access pattern — a single class change on a multi-TB bucket can save thousands per month. Choosing the right storage class is one of the most impactful [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) levers available in GCP.
+GCS offers four storage classes with an inverse cost relationship: lower storage cost means higher retrieval cost. Match the class to your access pattern — a single class change on a multi-TB bucket can save thousands per month. Choosing the right storage class is one of the most impactful [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) levers available in GCP.
 
 | Class | Storage cost | Min duration | Retrieval cost | Availability (regional / multi-region) | Best for |
 |---|---|---|---|---|---|
@@ -386,7 +386,7 @@ Key GCS limits relevant to data engineering pipelines:
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/storage.objectAdmin` on specific buckets (not the project)
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `storage.googleapis.com` is usually enabled by default
 - [tf-compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-compute-and-storage) — Terraform provisioning of GCS buckets with lifecycle rules, versioning, and retention
-- [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) — FinOps cost optimization strategies including storage class selection
+- [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) — FinOps cost optimization strategies including storage class selection
 
 ## References
 
@@ -399,3 +399,4 @@ Key GCS limits relevant to data engineering pipelines:
 - [Object Retention Lock](https://cloud.google.com/storage/docs/object-lock)
 - [Pricing](https://cloud.google.com/storage/pricing)
 - [Quotas and limits](https://cloud.google.com/storage/quotas)
+

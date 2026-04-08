@@ -333,7 +333,7 @@ gs://data-platform-prod-processed/
 > - GCS: `roles/storage.objectAdmin` (on specific buckets only, not project-wide)
 > - Cloud Run: `roles/run.invoker` (to trigger jobs)
 > - Secret Manager: `roles/secretmanager.secretAccessor` (to read credentials)
-> - SQL Server: no IAM role needed — authentication is at the database level (see [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) for the parallel least-privilege patterns)
+> - SQL Server: no IAM role needed — authentication is at the database level (see [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-authentication) for the parallel least-privilege patterns)
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -485,3 +485,4 @@ See [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-a
 - [Service accounts overview](https://cloud.google.com/iam/docs/service-account-overview)
 - [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
 - [Organization Policy: disable SA key creation](https://cloud.google.com/resource-manager/docs/organization-policy/restricting-service-accounts)
+

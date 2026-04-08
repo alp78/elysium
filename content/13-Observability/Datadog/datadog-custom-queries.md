@@ -186,4 +186,5 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 - [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — Agent management and restart commands
 - [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets consuming these custom metrics
 - [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) — Deadlock alert monitor using `sqlserver.deadlocks.total`
-- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Raw DMV queries for manual investigation
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — Raw DMV queries for manual investigation
+

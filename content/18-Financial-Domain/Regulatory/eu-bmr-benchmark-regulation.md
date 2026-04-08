@@ -33,7 +33,7 @@ links:
 
 #### What this means for the pipeline
 - Bronze layer in GCS must be immutable (never overwrite raw files)
-- Every pipeline run records source file path and SHA-256 hash in [lineage metadata](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic)
+- Every pipeline run records source file path and SHA-256 hash in [lineage metadata](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic)
 - Quality gates at each medallion layer catch errors before publication
 
 ### Methodology Documentation (Article 12)
@@ -68,7 +68,7 @@ links:
 ### Restatement and Cessation (Article 13-14)
 
 - If a published benchmark value is materially incorrect: **restate and notify** — this is a formal Article 13 event requiring a documented correction process
-- Document the error, correction, and notification in the audit trail; [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) in SQL Server provides the evidence chain
+- Document the error, correction, and notification in the audit trail; [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/audit-logging) in SQL Server provides the evidence chain
 - See the data restatement procedure for the operational runbook
 - If cessation is planned: 6-month notice to users
 
@@ -94,7 +94,8 @@ links:
 ## Related
 
 - [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — Implementation details for lineage and audit
-- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic) — Point-in-time data integrity and weight validation
+- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic) — Point-in-time data integrity and weight validation
 - Data restatement procedure — Restatement runbook
 - [sfdr-data-requirements](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements) — SFDR data pipeline requirements
 - [iosco-benchmark-principles](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/iosco-benchmark-principles) — International benchmark standards
+

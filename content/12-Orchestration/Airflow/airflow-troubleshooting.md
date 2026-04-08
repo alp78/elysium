@@ -568,7 +568,7 @@ xcom_backend = plugins.gcs_xcom_backend.GCSXComBackend
 
 ## Issue 7: Deadlock Detected in Metadata Database
 
-Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
+Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
 
 **Symptom:** Scheduler or Worker logs contain:
 
@@ -1218,3 +1218,4 @@ Understanding task states is essential for diagnosing stuck or unexpected behavi
 - [Airflow CLI Reference](https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html)
 - [Airflow Best Practices](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html)
 - [Airflow FAQ](https://airflow.apache.org/docs/apache-airflow/stable/faq.html)
+

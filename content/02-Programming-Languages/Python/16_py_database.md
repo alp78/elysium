@@ -403,7 +403,7 @@ idx_trades_ticker
 
 ## SQL Server — pyodbc (ODBC Driver 18)
 
-The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals). For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking).
+The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals). For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/blocking-and-locking).
 
 ### Connection and CRUD
 
@@ -3798,3 +3798,4 @@ pd.DataFrame(results)
 | Export | `COPY TO 'file.parquet'` | `df.write_parquet(path)` | `df.to_parquet(path)` |
 | Lazy eval | No | `pl.scan_parquet(path)` | No |
 | Returns | `.df()` → pandas DataFrame | Polars DataFrame | pandas DataFrame |
+

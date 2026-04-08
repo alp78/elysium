@@ -27,7 +27,7 @@ status: complete
 >
 > — **Kelsey Hightower**, tweet (2019)
 
-This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
+This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
 
 ---
 
@@ -2270,6 +2270,7 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 
 ## Appendix C: Related Notes
 
-- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic) — Point-in-time correctness for historical constituent data
+- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic) — Point-in-time correctness for historical constituent data
 - [dataops-for-indices](https://alp78.github.io/elysium/15-DataOps/dataops-for-indices) — Pipeline orchestration, testing, and deployment
 - [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) — Operational runbooks for specific action types
+

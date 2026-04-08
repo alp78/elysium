@@ -126,4 +126,5 @@ The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which e
 - [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent with Docker socket access
 - [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) — Log-to-trace correlation via `dd.trace_id`
 - [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — "No Logs in Datadog" section
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — SQL Server VM and errorlog location
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) — SQL Server VM and errorlog location
+

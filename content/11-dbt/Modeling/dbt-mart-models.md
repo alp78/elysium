@@ -18,7 +18,7 @@ links:
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-Mart models are the [gold layer](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
+Mart models are the [gold layer](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
 
 ---
 
@@ -531,3 +531,4 @@ exposures:
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
 - [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)
+

@@ -3404,7 +3404,7 @@ print(f"First batch: {df.shape}")
 >
 > This destroys indexes, constraints, permissions, and foreign keys. Use
 > `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
-> `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert).
+> `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert).
 
 > [!success] Use if_exists="append" with a preceding DELETE
 >
@@ -4089,3 +4089,4 @@ print("Test tables and procedures cleaned up")
 | Execute DDL | `engine.execute(text(...))` | `cursor.execute(...)` via pyodbc |
 | Stored procs | `pd.read_sql("EXEC sp_name", engine)` | `pl.read_database("EXEC sp_name", uri)` |
 | Speed | Moderate | Similar speed via SQLAlchemy/pyodbc |
+

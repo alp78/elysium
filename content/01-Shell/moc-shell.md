@@ -73,7 +73,8 @@ mindmap
 
 ## Cross-References
 
-- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — SQL Server command-line operations from the shell
+- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage) — SQL Server command-line operations from the shell
 - [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — GCP authentication underpinning all gcloud CLI work
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Docker container commands are shell operations
 - [cron and crontab](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) — Scheduling shell commands for pipeline automation
+

@@ -358,7 +358,7 @@ print(f'  Loaded {len(ingest_results)} existing results from {INGEST_RESULTS_FIL
 ## Schema Setup
 
 Create unified `ohlcv_bench` staging table in SQL Server and BigQuery.
-Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
+Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
 ### Staging tables
 
@@ -2258,3 +2258,4 @@ print('  Cleanup done')
       ohlcv_bench cleared
       exports/ and staging/ cleaned
       Cleanup done
+

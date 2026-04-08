@@ -43,7 +43,7 @@ Connecting to 'mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&Tr
 
 ## Advanced Window Functions
 
-The window functions in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets. For the foundational `RANK`, `DENSE_RANK`, `LAG`, `LEAD`, and `SUM() OVER` patterns, see [sql-fundamentals > Window Functions](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals#window-functions).
+The window functions in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets. For the foundational `RANK`, `DENSE_RANK`, `LAG`, `LEAD`, and `SUM() OVER` patterns, see [sql-fundamentals > Window Functions](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals#window-functions).
 
 ### Window Functions — ROW_NUMBER for Deduplication
 
@@ -1598,3 +1598,4 @@ flowchart TD
 > [!success] Safe Pattern
 >
 > If a CTE is referenced more than once in a query, materialize it into a `#temp` table first: `SELECT ... INTO #my_cte FROM ...`, then reference `#my_cte` wherever needed. Add an index on the join or filter key with `CREATE INDEX ix ON #my_cte (key_col)` for queries over ~10,000 rows. Use CTEs only for readability when they are referenced exactly once.
+

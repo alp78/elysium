@@ -50,8 +50,9 @@ The complete map of data architecture knowledge — from system blueprints to pr
 
 ## Cross-References
 
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading), [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms), [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — SQL Server implementations of medallion layers
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading), [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms), [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — SQL Server implementations of medallion layers
 - [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — pipeline scheduling patterns for Airflow
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler to Cloud Run patterns
 - [dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt) — full dbt transformation layer section
 - [dbt-transformation-layer](https://alp78.github.io/elysium/dbt-transformation-layer) — concise code-heavy dbt overview
+

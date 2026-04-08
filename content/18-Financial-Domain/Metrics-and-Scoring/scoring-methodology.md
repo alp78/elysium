@@ -59,7 +59,7 @@ Dense rank within each index, descending by score:
 
 **Example:** If three stocks have composite scores of 1.5, 1.2, 1.2, 0.8, they are ranked 1, 2, 2, 3 (dense rank — no gap at rank 3).
 
-**SQL implementation** (executed in the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer):
+**SQL implementation** (executed in the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layer):
 ```sql
 DENSE_RANK() OVER (
     PARTITION BY index_key, trade_date
@@ -92,4 +92,5 @@ Used for P/E, P/B, dividend yield, and other [index-level aggregates](https://al
 - [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) — Quality, health, governance scores
 - [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) — Cap-weighted index aggregates
 - [factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition) — Radar chart normalization (z-score → 0-100 scale)
-- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — SQL implementation of scoring in the gold layer
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — SQL implementation of scoring in the gold layer
+

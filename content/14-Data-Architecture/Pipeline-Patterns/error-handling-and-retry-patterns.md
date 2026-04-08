@@ -84,7 +84,7 @@ No delay between attempts. Only appropriate for extremely fast transient failure
 Retry every N seconds, up to M attempts. Use when the recovery time is predictable (service restart takes ~30 seconds, DNS propagation takes ~60 seconds).
 
 - Airflow implements this via `retry_delay`: [airflow-core-concepts > Complete DAG with All Common Parameters](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts#complete-dag-with-all-common-parameters)
-- SQL Server Agent job retry: [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/Administration/sql-server-agent-jobs)
+- SQL Server Agent job retry: [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-agent-jobs)
 
 ### Exponential Backoff with Jitter — the default choice
 
@@ -124,7 +124,7 @@ def retry_with_backoff(fn, max_attempts=3, base=1.0,
 
 Stack-specific implementations:
 - REST API backoff: [rest-api-design-and-consumption > Exponential Backoff with Jitter](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#exponential-backoff-with-jitter)
-- SQL Server deadlock retry (C#): [deadlock-detection-and-prevention > C# Dapper ExecuteWithRetry — centralized deadlock retry helper](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention#c-dapper-executewithretry--centralized-deadlock-retry-helper)
+- SQL Server deadlock retry (C#): [deadlock-detection-and-prevention > C# Dapper ExecuteWithRetry — centralized deadlock retry helper](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention#c-dapper-executewithretry--centralized-deadlock-retry-helper)
 - Python tenacity decorator: [gcp-pipeline-health-and-sla > Python — custom exponential backoff decorator](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#python--custom-exponential-backoff-decorator)
 - Airflow `retry_exponential_backoff=True`: [airflow-dag-patterns > Key Idempotency Settings](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns#key-idempotency-settings)
 
@@ -202,7 +202,7 @@ class CircuitBreaker:
 | Implementation | DLQ | Vault Reference |
 |----------------|-----|-----------------|
 | Pub/Sub | Dead letter topic | [pubsub-topics-and-subscriptions > Pub/Sub Dead Letter Topics](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions#pubsub-dead-letter-topics) |
-| SQL Server pipeline | `quarantine` table (rejected rows) | [sql-server-pipeline-anti-patterns > Loading Directly to Production — no staging, no validation](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#loading-directly-to-production--no-staging-no-validation) |
+| SQL Server pipeline | `quarantine` table (rejected rows) | [sql-server-pipeline-anti-patterns > Loading Directly to Production — no staging, no validation](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-pipeline-anti-patterns#loading-directly-to-production--no-staging-no-validation) |
 | GCS pipeline | `gs://bucket/failed/` prefix | [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) |
 | REST API | DLQ table or file | [rest-api-design-and-consumption > Dead Letter Queue](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#dead-letter-queue) |
 
@@ -255,10 +255,10 @@ For SQL Server, idempotency ensures that a retry after partial failure doesn't c
 |------|-----------------|-----------------|-----------------|
 | Bash scripts | `set -euo pipefail`, `trap EXIT` | Manual (loop + sleep) | [defensive-scripting > set -e — exit immediately on error](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting#set--e--exit-immediately-on-error) |
 | Airflow | Task state FAILED, `on_failure_callback` | `retries`, `retry_delay`, `retry_exponential_backoff` | [airflow-core-concepts > Complete DAG with All Common Parameters](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts#complete-dag-with-all-common-parameters) |
-| SQL Server (deadlocks) | Error 1205 in TRY/CATCH | WAITFOR + retry loop | [deadlock-detection-and-prevention > C# Dapper ExecuteWithRetry — centralized deadlock retry helper](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention#c-dapper-executewithretry--centralized-deadlock-retry-helper) |
-| SQL Server (MERGE) | XACT_ABORT, TRY/CATCH | Transaction rollback + retry | [merge-and-upsert > TRY/CATCH with XACT_ABORT — The Safe Pattern](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert#trycatch-with-xactabort--the-safe-pattern) |
-| SQL Server (races) | Constraint violations, phantom inserts | Serialization, UPDLOCK | [race-conditions > Strategy 2: Atomic Operations (Combine Read + Write)](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions#strategy-2-atomic-operations-combine-read--write) |
-| pyodbc | `pyodbc.OperationalError` | Application-level backoff | [sql-server-loading-patterns > fast_executemany Gotchas](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#fastexecutemany-gotchas) |
+| SQL Server (deadlocks) | Error 1205 in TRY/CATCH | WAITFOR + retry loop | [deadlock-detection-and-prevention > C# Dapper ExecuteWithRetry — centralized deadlock retry helper](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention#c-dapper-executewithretry--centralized-deadlock-retry-helper) |
+| SQL Server (MERGE) | XACT_ABORT, TRY/CATCH | Transaction rollback + retry | [merge-and-upsert > TRY/CATCH with XACT_ABORT — The Safe Pattern](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert#trycatch-with-xactabort--the-safe-pattern) |
+| SQL Server (races) | Constraint violations, phantom inserts | Serialization, UPDLOCK | [race-conditions > Strategy 2: Atomic Operations (Combine Read + Write)](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions#strategy-2-atomic-operations-combine-read--write) |
+| pyodbc | `pyodbc.OperationalError` | Application-level backoff | [sql-server-loading-patterns > fast_executemany Gotchas](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#fastexecutemany-gotchas) |
 | BigQuery | Job FAILED, 503, quota exceeded | Built-in client library retry | [bigquery-problems > DML Quota Exceeded (20 Concurrent Mutations)](https://alp78.github.io/elysium/06-GCP/BigQuery/bigquery-problems#dml-quota-exceeded-20-concurrent-mutations) |
 | REST APIs | HTTP 429/503 | Backoff with Retry-After header | [rest-api-design-and-consumption > Rate Limiting and Backoff](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#rate-limiting-and-backoff) |
 | Pub/Sub | nack + redelivery | Automatic redelivery with DLQ | [pubsub-topics-and-subscriptions > Pub/Sub Dead Letter Topics](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions#pubsub-dead-letter-topics) |
@@ -343,7 +343,7 @@ For SLA definitions and tracking, see [gcp-pipeline-health-and-sla > Defining Pi
 
 A `pyodbc.ProgrammingError` (bad SQL syntax) or a 404 (resource not found) will never succeed. Retrying wastes compute, fills logs, and delays the alert that tells someone to fix the code.
 
-**The fix:** classify errors before retrying. Only retry errors in the transient category. See [sql-server-pipeline-anti-patterns > No Retry Logic for Deadlocks — pipeline fails on transient errors](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#no-retry-logic-for-deadlocks--pipeline-fails-on-transient-errors) for the correct deadlock retry pattern.
+**The fix:** classify errors before retrying. Only retry errors in the transient category. See [sql-server-pipeline-anti-patterns > No Retry Logic for Deadlocks — pipeline fails on transient errors](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-pipeline-anti-patterns#no-retry-logic-for-deadlocks--pipeline-fails-on-transient-errors) for the correct deadlock retry pattern.
 
 ### No retry at all — fragile pipeline
 
@@ -392,3 +392,4 @@ Failed Pub/Sub messages that are nack'd cycle forever in the subscription, consu
 "Pipeline failed" tells you nothing. WHICH step? WHAT error? WHICH row? Without context, debugging starts from zero.
 
 **The fix:** structured logging with `stage`, `batch_id`, `error_type`, `error_message`, and `row_context`. See [defensive-scripting > trap EXIT — guaranteed cleanup on script exit, error, or signal](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting#trap-exit--guaranteed-cleanup-on-script-exit-error-or-signal) for bash and [gcp-pipeline-health-and-sla > Alerting Runbook for Data Engineers](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#alerting-runbook-for-data-engineers) for pipeline alerting.
+

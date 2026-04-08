@@ -150,7 +150,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 > | `127.0.0.1` | Listen on loopback only (more secure, default if omitted) |
 > | `1435` | Local port on your machine (any free port — does not need to match remote) |
 >
-> After running: connect via SSMS → `127.0.0.1,1435`. For sqlcmd through the tunnel, see [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/Administration/sqlcmd-connection-and-usage).
+> After running: connect via SSMS → `127.0.0.1,1435`. For sqlcmd through the tunnel, see [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage).
 
 > [!danger] IAP 10-minute idle timeout
 >
@@ -401,3 +401,4 @@ Three patterns exist for reaching private VMs in GCP. The right choice depends o
 - [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — diagnose IAP tunnel failures step by step
 - [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) — verify IAP connections visible on the VM side
 - [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — full guide: IAP + SQL Server, Airflow, BigQuery
+

@@ -23,7 +23,7 @@ links:
 >
 > — **Tristan Handy** (creator of dbt)
 
-The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration).
+The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration).
 
 ---
 
@@ -270,7 +270,7 @@ SELECT value FROM STRING_SPLIT(tag_list, ',')
 
 ### SQL Server Post-Hook Indexes
 
-SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy). For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
+SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy). For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
 
 ```sql
 -- models/mart/mart_esg_scores.sql
@@ -396,5 +396,6 @@ connect_timeout: 60
 
 - [moc-sql-server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server)
 - [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning)
-- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/Administration/sqlcmd-connection-and-usage)
+- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage)
 - [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns)
+

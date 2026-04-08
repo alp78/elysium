@@ -1,0 +1,169 @@
+---
+title: "Schemas, Tables, and Constraints"
+tags:
+  - sql-server
+  - schema
+  - create-schema
+  - create-table
+  - constraints
+  - primary-key
+  - foreign-key
+  - check-constraint
+  - unique-constraint
+aliases:
+  - CREATE SCHEMA
+  - CREATE TABLE
+  - table constraints
+  - heap vs clustered
+description: "Reference for CREATE SCHEMA, CREATE TABLE, nullability, clustered versus heap design, and PRIMARY KEY, UNIQUE, CHECK, FOREIGN KEY, and DEFAULT constraints in SQL Server."
+parent: "[[domain-database-design-and-storage]]"
+links:
+  - "[[database-creation-and-file-layout]]"
+  - "[[keys-defaults-identity-and-sequences]]"
+  - "[[index-types-and-strategy]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+created: 2026-04-08
+updated: 2026-04-08
+status: complete
+---
+
+# Schemas, Tables, and Constraints
+
+This note owns the structural DDL that turns a database into a usable model: schema boundaries, table shape, nullability, keys, constraints, and the choice between heaps and clustered tables.
+
+## CREATE SCHEMA and Ownership Boundaries
+
+### Why schemas matter
+
+Schemas are not just naming prefixes. They are:
+
+- a security boundary
+- a deployment boundary
+- a way to group objects by lifecycle and ownership
+- the cleanest way to separate landing, curated, serving, control, and history surfaces inside one database
+
+*This example creates two schemas with explicit ownership rather than leaving all user objects in `dbo`.*
+
+```sql
+CREATE SCHEMA silver AUTHORIZATION dbo;
+GO
+
+CREATE SCHEMA gold AUTHORIZATION dbo;
+GO
+```
+
+### Naming and object ownership
+
+Use schemas to express the role of the object, not the team mood of the week. In production, schema names should survive reorganizations.
+
+Good examples:
+
+- `bronze`, `silver`, `gold`
+- `stage`, `core`, `mart`
+- `control`, `audit`, `history`
+
+## CREATE TABLE Design Basics
+
+### Table grain, key choice, and nullability
+
+Before writing DDL, define three things explicitly:
+
+- the grain: one row per what
+- the business key: what makes a row logically unique
+- the nullability contract: which columns are truly optional
+
+If those are not clear, the DDL is already premature.
+
+*This example creates a table with explicit nullability, business-key enforcement, and a clustered primary key from day one.*
+
+```sql
+CREATE TABLE silver.instrument_price
+(
+    instrument_id     int           NOT NULL,
+    price_date        date          NOT NULL,
+    close_price       decimal(19,4) NOT NULL,
+    volume            bigint        NULL,
+    created_at_utc    datetime2(3)  NOT NULL
+        CONSTRAINT DF_instrument_price_created_at_utc
+        DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT PK_instrument_price
+        PRIMARY KEY CLUSTERED (instrument_id, price_date)
+);
+```
+
+### Heap vs clustered table decisions
+
+A heap is a table without a clustered index. That is not automatically wrong, but it must be deliberate.
+
+Use a clustered table by default when:
+
+- the table is permanent
+- lookups, joins, or ordered access are expected
+- forwarded-row risk from updates would be harmful
+
+Use a heap only when you explicitly want heap behavior, such as:
+
+- narrow landing tables truncated and reloaded in bulk
+- short-lived staging surfaces
+- specialized bulk-load workflows with a clear post-load indexing step
+
+## PRIMARY KEY, UNIQUE, CHECK, and FOREIGN KEY Constraints
+
+### PRIMARY KEY and UNIQUE
+
+- `PRIMARY KEY` defines the main row-identity contract and automatically creates a unique index
+- `UNIQUE` enforces alternate keys that must stay distinct but are not the table's primary identity
+
+### FOREIGN KEY
+
+Foreign keys encode relationship correctness. In production data platforms, the right question is not whether they are fashionable. It is whether the workload benefits more from enforced integrity or from a deliberate staging boundary that postpones integrity checks.
+
+*This example adds a foreign key only after the parent grain and delete/update behavior are clear.*
+
+```sql
+ALTER TABLE silver.instrument_price
+ADD CONSTRAINT FK_instrument_price_instrument
+FOREIGN KEY (instrument_id)
+REFERENCES silver.instrument_dim (instrument_id);
+```
+
+### CHECK and DEFAULT constraints
+
+- `CHECK` constraints enforce domain rules inside the database
+- `DEFAULT` constraints generate values when the insert omits the column
+
+Do not confuse a default with a business rule. A default is a fill value, not proof that the value is semantically correct.
+
+*This example adds a domain check that stops negative prices from entering the table.*
+
+```sql
+ALTER TABLE silver.instrument_price
+ADD CONSTRAINT CK_instrument_price_close_price_nonnegative
+CHECK (close_price >= 0);
+```
+
+## Altering Tables Safely
+
+### Add columns and defaults deliberately
+
+When adding a new non-null column to a populated table, decide whether the value:
+
+- can be backfilled once
+- must be generated by a default
+- requires a phased deployment where code understands both old and new shapes
+
+### Prefer compatibility layers over risky renames
+
+Column renames and breaking shape changes ripple into queries, procedures, ETL, BI, and application code. When contract stability matters, prefer:
+
+- new column plus backfill
+- compatibility view
+- staged deprecation
+
+## Related
+
+- [[database-creation-and-file-layout]] for database-scoped defaults before table creation
+- [[keys-defaults-identity-and-sequences]] for identity and sequence choices
+- [[index-types-and-strategy]] for the index layer that sits on top of table design
+- [[sql-server-schema-layering]] for schema strategy in larger estates

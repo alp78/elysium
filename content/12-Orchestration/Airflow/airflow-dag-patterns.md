@@ -488,7 +488,7 @@ with DAG(
     start_date=datetime(2024, 1, 1),
 
     # CRITICAL: Only one DAG Run active at a time
-    # Prevents parallel runs from corrupting shared resources (a form of [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) prevention)
+    # Prevents parallel runs from corrupting shared resources (a form of [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) prevention)
     max_active_runs=1,
 
     catchup=False,  # Don't auto-backfill — use explicit backfill commands
@@ -833,7 +833,7 @@ with DAG(
 
 ### Medallion Architecture DAG — Bronze to Silver to Gold
 
-A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading).
+A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading).
 
 ```python
 # dags/medallion_pipeline.py
@@ -936,3 +936,4 @@ medallion_pipeline()
 - [Dataset Scheduling](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/datasets.html)
 - [Trigger Rules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#trigger-rules)
 - [Task Groups](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#taskgroups)
+

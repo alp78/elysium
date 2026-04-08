@@ -268,7 +268,7 @@ erDiagram
     }
 ```
 
-In practice, the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
+In practice, the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
 
 ### Why Star Schemas Outperform Normalized Models for Analytics
 
@@ -3275,3 +3275,4 @@ For an index provider, the core model consists of four fact tables (`fact_index_
 Physical implementation varies by platform: SQL Server uses clustered columnstore indexes, partitioning, and PAGE compression on dimensions; BigQuery uses partitioning, clustering, nested STRUCT fields, and materialized views. dbt provides the transformation framework, organizing models into staging, intermediate, and mart layers with built-in lineage and testing.
 
 The key decisions that determine model quality are: grain declaration, SCD type selection per attribute, and conformed dimension alignment across fact tables. Get these right and the rest follows.
+

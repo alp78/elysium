@@ -149,7 +149,7 @@ WHERE counter_name = 'Page life expectancy'
 
 > [!success] Increase SQL Server memory ceiling
 >
-> Raise `max server memory` in SQL Server to give the buffer pool more room. Leave at least 4 GB free for the OS on servers with 16–64 GB RAM, and at least 10% of total RAM on servers above 64 GB. See [max server memory configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for the exact procedure. For buffer pool internals and cache hit ratios, see [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool).
+> Raise `max server memory` in SQL Server to give the buffer pool more room. Leave at least 4 GB free for the OS on servers with 16–64 GB RAM, and at least 10% of total RAM on servers above 64 GB. See [max server memory configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) for the exact procedure. For buffer pool internals and cache hit ratios, see [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool).
 
 ## Linux CPU tools
 
@@ -522,3 +522,4 @@ A queue length of 0.82 means the device is handling requests as fast as they arr
 - [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — terminate runaway processes consuming excess resources
 - [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — check if OOM kills are crashing services
 - [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) — automated monitoring of CPU, memory, and disk I/O with alerting and dashboards
+

@@ -260,7 +260,7 @@ lifecycle {
 
 ## google_compute_instance | SQL Server Database VM
 
-The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). This is a stateful instance — the boot disk holds database files, transaction logs, and TempDB. For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration).
+The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). This is a stateful instance — the boot disk holds database files, transaction logs, and TempDB. For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration).
 
 ```hcl
 resource "google_compute_instance" "sql" {
@@ -443,7 +443,7 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 
 **Application layer:**
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — the Docker containers running on the Airflow VM
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — post-provisioning SQL Server configuration
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) — post-provisioning SQL Server configuration
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — IAP tunnel SSH access patterns
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD workflows for Terraform plan and apply
 
@@ -455,3 +455,4 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 - [OS Login](https://cloud.google.com/compute/docs/oslogin)
 - [Shielded VMs](https://cloud.google.com/compute/shielded-vm/docs/shielded-vm)
 - [Instance Metadata](https://cloud.google.com/compute/docs/metadata/overview)
+

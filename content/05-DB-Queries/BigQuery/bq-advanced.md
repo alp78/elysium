@@ -37,7 +37,7 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 ## Advanced Window Functions
 
-The window functions in this section appear throughout production pipelines. The [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax. BigQuery distributes window function computation across slots — each slot handles a subset of partitions in parallel, making window functions efficient even on large tables.
+The window functions in this section appear throughout production pipelines. The [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax. BigQuery distributes window function computation across slots — each slot handles a subset of partitions in parallel, making window functions efficient even on large tables.
 
 > [!info] Cross-engine comparison
 >
@@ -894,7 +894,7 @@ LIMIT 15
 
 > [!tip] Related pattern
 >
-> For cross-language equivalents of MERGE and window functions, see [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
+> For cross-language equivalents of MERGE and window functions, see [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
 
 ### MERGE (Upsert) — Syntax and Patterns
 
@@ -1612,3 +1612,4 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 > [!tip] Rule of thumb
 >
 > Start with a CTE. If the query is slow and the CTE is referenced multiple times, materialize into a temp table. BigQuery charges per bytes scanned, so a CTE referenced three times triples the scan cost — a temp table pays the scan once.
+

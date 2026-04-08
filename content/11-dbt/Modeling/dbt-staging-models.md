@@ -18,7 +18,7 @@ links:
 >
 > — **Maxime Beauchemin**, "Functional Data Engineering" (2018)
 
-Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.
+Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.
 
 ---
 
@@ -469,4 +469,5 @@ where close_price > 0 and volume > 1000  -- this is analytical logic
 - [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models)
 - [dbt-project-structure](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-project-structure)
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading)
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)
+

@@ -404,7 +404,7 @@ Cloud Logging uses a structured filter language — not regex, not full-text sea
 
 > [!tip] Related patterns
 >
-> SQL Server [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) can forward its audit events to Cloud Logging via the Datadog agent or custom log sinks, unifying database and infrastructure logs in one place. For teams using Datadog as an alternative log destination, [datadog-log-management](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-log-management) provides the routing configuration.
+> SQL Server [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/audit-logging) can forward its audit events to Cloud Logging via the Datadog agent or custom log sinks, unifying database and infrastructure logs in one place. For teams using Datadog as an alternative log destination, [datadog-log-management](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-log-management) provides the routing configuration.
 
 ## Log Buckets and Retention
 
@@ -462,3 +462,4 @@ Cloud Logging pricing applies to log ingestion (writing entries into the service
 - [Log sinks overview](https://cloud.google.com/logging/docs/export/configure_export_v2)
 - [Cloud Audit Logs overview](https://cloud.google.com/logging/docs/audit)
 - [Log buckets and retention](https://cloud.google.com/logging/docs/storage)
+

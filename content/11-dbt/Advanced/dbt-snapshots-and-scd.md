@@ -19,7 +19,7 @@ links:
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms).
+dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms).
 
 ---
 
@@ -625,9 +625,10 @@ Ingest raw data
 
 ## Related
 
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms)
-- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic)
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)
+- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic)
 - [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/eu-bmr-benchmark-regulation)
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
+
