@@ -32,15 +32,15 @@ Start by checking which `sqlcmd` implementation is actually installed. The comma
 
 #### Check the installed `sqlcmd` variant and core flag surface
 
-[!info]-
-This command prints the built-in help banner for the installed `sqlcmd` binary.
-
-- The banner identifies whether this is the classic Microsoft ODBC-based utility or the newer Go-based variant.
-- The usage lines show which flags the installed client supports.
-- In this environment, the current goal is not just to see the syntax. It is to identify which client you are automating against.
-
-*This command identifies the installed `sqlcmd` variant and shows the core connection and execution flags it supports.*
-
+> [!info]-
+> This command prints the built-in help banner for the installed `sqlcmd` binary.
+>
+> - The banner identifies whether this is the classic Microsoft ODBC-based utility or the newer Go-based variant.
+> - The usage lines show which flags the installed client supports.
+> - In this environment, the current goal is not just to see the syntax. It is to identify which client you are automating against.
+>
+> *This command identifies the installed `sqlcmd` variant and shows the core connection and execution flags it supports.*
+>
 ```powershell
 sqlcmd -?
 ```
@@ -66,14 +66,14 @@ usage: Sqlcmd            [-U login id]          [-P password]
 
 #### Check whether `Invoke-Sqlcmd` is available in PowerShell
 
-[!info]-
-`Invoke-Sqlcmd` belongs to the PowerShell `SqlServer` module, not to `sqlcmd` itself.
-
-- If it is installed, PowerShell can execute SQL directly and return objects instead of plain text.
-- If it is not installed, shell automation should use `sqlcmd` rather than assuming the PowerShell cmdlet exists.
-
-*This command checks whether the PowerShell `Invoke-Sqlcmd` cmdlet is installed on the current machine.*
-
+> [!info]-
+> `Invoke-Sqlcmd` belongs to the PowerShell `SqlServer` module, not to `sqlcmd` itself.
+>
+> - If it is installed, PowerShell can execute SQL directly and return objects instead of plain text.
+> - If it is not installed, shell automation should use `sqlcmd` rather than assuming the PowerShell cmdlet exists.
+>
+> *This command checks whether the PowerShell `Invoke-Sqlcmd` cmdlet is installed on the current machine.*
+>
 ```powershell
 if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
     Get-Command Invoke-Sqlcmd | Select-Object Name, Source
@@ -98,19 +98,19 @@ These are the connection patterns that matter most operationally: proving connec
 
 #### Connect with SQL authentication and run a one-shot query
 
-[!info]-
-This is the most common automation pattern for `sqlcmd`:
-
-- `-S` selects the server and port
-- `-U` and `-P` provide SQL authentication
-- `-d` selects the default database
-- `-C` trusts the server certificate, which is often required in lab or self-signed environments
-- `-Q` executes a query and exits immediately
-
-The output of `SELECT DB_NAME()` is a simple but useful proof: it confirms both connectivity and database context.
-
-*This command opens a SQL-authenticated session, executes one query, and exits immediately.*
-
+> [!info]-
+> This is the most common automation pattern for `sqlcmd`:
+>
+> - `-S` selects the server and port
+> - `-U` and `-P` provide SQL authentication
+> - `-d` selects the default database
+> - `-C` trusts the server certificate, which is often required in lab or self-signed environments
+> - `-Q` executes a query and exits immediately
+>
+> The output of `SELECT DB_NAME()` is a simple but useful proof: it confirms both connectivity and database context.
+>
+> *This command opens a SQL-authenticated session, executes one query, and exits immediately.*
+>
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -Q "SELECT DB_NAME() AS current_database;"
 ```
@@ -139,22 +139,22 @@ The two `sqlcmd` features that matter most in automation are variable substituti
 
 #### Pass a SQLCMD variable into a query
 
-[!warning]
-SQLCMD variable substitution is text substitution, not parameterization. Do not feed untrusted input into `$(...)` placeholders.
-
-[!success]
-Use SQLCMD variables for trusted automation inputs such as environment names, database names, or file paths controlled by the deployment process.
-
-[!info]-
-This pattern uses the `-v` flag to define a SQLCMD variable.
-
-- `-v dbname="stoxx"` defines the variable value
-- `$(dbname)` is replaced before SQL Server receives the query text
-
-This is useful for environment-specific scripts that should not hardcode one database name.
-
-*This command passes a SQLCMD variable and proves that the client substitutes it before sending the query to SQL Server.*
-
+> [!warning]
+> SQLCMD variable substitution is text substitution, not parameterization. Do not feed untrusted input into `$(...)` placeholders.
+>
+> [!success]
+> Use SQLCMD variables for trusted automation inputs such as environment names, database names, or file paths controlled by the deployment process.
+>
+> [!info]-
+> This pattern uses the `-v` flag to define a SQLCMD variable.
+>
+> - `-v dbname="stoxx"` defines the variable value
+> - `$(dbname)` is replaced before SQL Server receives the query text
+>
+> This is useful for environment-specific scripts that should not hardcode one database name.
+>
+> *This command passes a SQLCMD variable and proves that the client substitutes it before sending the query to SQL Server.*
+>
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q 'SET NOCOUNT ON; SELECT ''$(dbname)'' AS sqlcmd_variable_value;' -v dbname="stoxx"
 ```
@@ -169,14 +169,14 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q
 
 #### Fail the shell command when SQL Server returns an error
 
-[!warning]
-Without `-b`, `sqlcmd` can print an error and still exit in a way that is too easy to mishandle in automation.
-
-[!success]
-Use `-b` in CI, deployment scripts, and operational automation so SQL errors stop the script immediately and propagate a failure exit code.
-
-*This command pattern makes `sqlcmd` terminate with an error status when a SQL batch fails.*
-
+> [!warning]
+> Without `-b`, `sqlcmd` can print an error and still exit in a way that is too easy to mishandle in automation.
+>
+> [!success]
+> Use `-b` in CI, deployment scripts, and operational automation so SQL errors stop the script immediately and propagate a failure exit code.
+>
+> *This command pattern makes `sqlcmd` terminate with an error status when a SQL batch fails.*
+>
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -i ".\scripts\deploy.sql"
 ```
@@ -201,17 +201,17 @@ Most automation either wants human-readable console output or machine-friendly d
 
 #### Export a query result as delimiter-separated text
 
-[!info]-
-This pattern uses:
-
-- `-s` to choose the delimiter
-- `-W` to trim trailing spaces
-- `-o` to write to a file instead of stdout
-
-For automation, this is often enough when you need a quick flat export without object conversion.
-
-*This command writes a query result to a delimited output file suitable for downstream processing.*
-
+> [!info]-
+> This pattern uses:
+>
+> - `-s` to choose the delimiter
+> - `-W` to trim trailing spaces
+> - `-o` to write to a file instead of stdout
+>
+> For automation, this is often enough when you need a quick flat export without object conversion.
+>
+> *This command writes a query result to a delimited output file suitable for downstream processing.*
+>
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -Q "SELECT TOP (10) symbol, [date], [close] FROM silver.eurostoxx50_ohlcv ORDER BY [date] DESC;" -s "|" -W -o ".\exports\eurostoxx50_ohlcv.txt"
 ```
@@ -226,21 +226,21 @@ The Dedicated Admin Connection exists for cases where ordinary connections are f
 
 #### Connect through the Dedicated Admin Connection with `sqlcmd`
 
-[!warning]
-The DAC is for emergency troubleshooting, not routine administration. It is intentionally limited and should be reserved for serious connectivity or workload pathologies.
-
-[!success]
-When you need it, connect to `master`, keep the workload light, and use only the DMVs required to understand the fault condition.
-
-[!info]-
-The `admin:` prefix tells `sqlcmd` to use the Dedicated Admin Connection endpoint.
-
-- DAC is local-only unless `remote admin connections` is enabled on the server
-- only one DAC session is allowed
-- connect to `master` so the session stays available even if another database is impaired
-
-*This command opens a Dedicated Admin Connection for emergency troubleshooting.*
-
+> [!warning]
+> The DAC is for emergency troubleshooting, not routine administration. It is intentionally limited and should be reserved for serious connectivity or workload pathologies.
+>
+> [!success]
+> When you need it, connect to `master`, keep the workload light, and use only the DMVs required to understand the fault condition.
+>
+> [!info]-
+> The `admin:` prefix tells `sqlcmd` to use the Dedicated Admin Connection endpoint.
+>
+> - DAC is local-only unless `remote admin connections` is enabled on the server
+> - only one DAC session is allowed
+> - connect to `master` so the session stays available even if another database is impaired
+>
+> *This command opens a Dedicated Admin Connection for emergency troubleshooting.*
+>
 ```powershell
 sqlcmd -S admin:localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C
 ```

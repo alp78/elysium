@@ -66,17 +66,17 @@ flowchart TD
 
 ### Starter query: actionable wait families
 
-[!info]-
-This is the first query to run when the complaint is general slowness.
-
-- The `WHERE` clause removes idle and background waits that would otherwise dominate the output without explaining user-facing pain.
-- `wait_sec` is the total wait time for the family since the instance started.
-- `resource_wait_sec` is the non-CPU portion of that wait.
-- `signal_wait_sec` is scheduler delay after the resource was granted.
-- `waiting_tasks_count` tells you whether the problem is many short waits or fewer long waits.
-
-*Surface the top actionable waits on the current instance before choosing a troubleshooting branch.*
-
+> [!info]-
+> This is the first query to run when the complaint is general slowness.
+>
+> - The `WHERE` clause removes idle and background waits that would otherwise dominate the output without explaining user-facing pain.
+> - `wait_sec` is the total wait time for the family since the instance started.
+> - `resource_wait_sec` is the non-CPU portion of that wait.
+> - `signal_wait_sec` is scheduler delay after the resource was granted.
+> - `waiting_tasks_count` tells you whether the problem is many short waits or fewer long waits.
+>
+> *Surface the top actionable waits on the current instance before choosing a troubleshooting branch.*
+>
 ```sql
 WITH waits AS (
     SELECT
@@ -185,16 +185,16 @@ flowchart TD
 
 ### Starter query: current user-session footprint
 
-[!info]-
-This query answers the first operational question for a failed pipeline: is the service visible in SQL Server as a distinct client identity?
-
-- `program_name` comes from the client connection string `Application Name`.
-- `total_sessions` is the current session footprint for that application and login.
-- `sleeping_sessions` are connected but idle sessions.
-- `active_sessions` are sessions not currently in the `sleeping` state.
-
-*Group current user sessions by application and login before investigating a pipeline-side failure.*
-
+> [!info]-
+> This query answers the first operational question for a failed pipeline: is the service visible in SQL Server as a distinct client identity?
+>
+> - `program_name` comes from the client connection string `Application Name`.
+> - `total_sessions` is the current session footprint for that application and login.
+> - `sleeping_sessions` are connected but idle sessions.
+> - `active_sessions` are sessions not currently in the `sleeping` state.
+>
+> *Group current user sessions by application and login before investigating a pipeline-side failure.*
+>
 ```sql
 SELECT
     program_name,
@@ -260,17 +260,17 @@ flowchart TD
 
 ### Starter query: current missing-index signals
 
-[!info]-
-Missing-index DMVs are heuristics, not orders.
-
-- `improvement_measure` is a relative priority score based on estimated cost, estimated impact, and observed usage count.
-- `equality_columns`, `inequality_columns`, and `included_columns` describe the optimizer's suggested shape.
-- `user_seeks` and `user_scans` show how often the optimizer thought the missing index could have helped.
-
-For this routing page, the question is not "what DDL do I run?" It is "is there strong enough evidence to continue down the indexing branch at all?"
-
-*Check whether the current workload has credible missing-index signals for the current database.*
-
+> [!info]-
+> Missing-index DMVs are heuristics, not orders.
+>
+> - `improvement_measure` is a relative priority score based on estimated cost, estimated impact, and observed usage count.
+> - `equality_columns`, `inequality_columns`, and `included_columns` describe the optimizer's suggested shape.
+> - `user_seeks` and `user_scans` show how often the optimizer thought the missing index could have helped.
+>
+> For this routing page, the question is not "what DDL do I run?" It is "is there strong enough evidence to continue down the indexing branch at all?"
+>
+> *Check whether the current workload has credible missing-index signals for the current database.*
+>
 ```sql
 SELECT TOP (10)
     CONVERT(decimal(18,4),
@@ -343,15 +343,15 @@ flowchart TD
 
 ### Starter query: current file and volume free space
 
-[!info]-
-This query combines database-file and host-volume visibility in one result set.
-
-- `type_desc` distinguishes data files from log files.
-- `file_size_mb`, `space_used_mb`, and `free_space_mb` describe the file itself.
-- `volume_total_gb` and `volume_free_gb` describe the underlying host volume seen by SQL Server.
-
-*Check whether the pressure is inside the database file, on the underlying volume, or both.*
-
+> [!info]-
+> This query combines database-file and host-volume visibility in one result set.
+>
+> - `type_desc` distinguishes data files from log files.
+> - `file_size_mb`, `space_used_mb`, and `free_space_mb` describe the file itself.
+> - `volume_total_gb` and `volume_free_gb` describe the underlying host volume seen by SQL Server.
+>
+> *Check whether the pressure is inside the database file, on the underlying volume, or both.*
+>
 ```sql
 SELECT
     DB_NAME() AS database_name,

@@ -33,17 +33,17 @@ Start with the SQL Server facts that most directly influence cost. You do not ne
 
 #### Current database data and log allocation
 
-[!info]-
-This query aggregates `sys.master_files` by database.
-
-- `data_size_mb` is allocated row-data space
-- `log_size_mb` is allocated transaction-log space
-- `total_size_mb` is the combined allocated footprint
-
-This is the first storage-cost view because allocated SQL Server space eventually becomes disk cost, snapshot size, backup size, or all three.
-
-*This query shows how much storage each database currently owns on disk.*
-
+> [!info]-
+> This query aggregates `sys.master_files` by database.
+>
+> - `data_size_mb` is allocated row-data space
+> - `log_size_mb` is allocated transaction-log space
+> - `total_size_mb` is the combined allocated footprint
+>
+> This is the first storage-cost view because allocated SQL Server space eventually becomes disk cost, snapshot size, backup size, or all three.
+>
+> *This query shows how much storage each database currently owns on disk.*
+>
 ```sql
 SELECT
     d.name AS database_name,
@@ -69,17 +69,17 @@ ORDER BY total_size_mb DESC;
 
 #### Current log allocation and usage for `stoxx`
 
-[!info]-
-This query reads `sys.dm_db_log_space_usage` inside the `stoxx` database context.
-
-- `total_log_size_mb` is the current allocated log size
-- `used_log_space_mb` is the log space currently in use
-- `log_since_last_backup_mb` shows how much log has accumulated since the last log backup
-
-This is one of the most important FinOps signals because oversized or unbounded logs drive disk growth, snapshot size, and sometimes unnecessary premium storage choices.
-
-*This query shows whether the transaction log is consuming cost-driving space because of growth, workload, or missing backup cadence.*
-
+> [!info]-
+> This query reads `sys.dm_db_log_space_usage` inside the `stoxx` database context.
+>
+> - `total_log_size_mb` is the current allocated log size
+> - `used_log_space_mb` is the log space currently in use
+> - `log_since_last_backup_mb` shows how much log has accumulated since the last log backup
+>
+> This is one of the most important FinOps signals because oversized or unbounded logs drive disk growth, snapshot size, and sometimes unnecessary premium storage choices.
+>
+> *This query shows whether the transaction log is consuming cost-driving space because of growth, workload, or missing backup cadence.*
+>
 ```sql
 SELECT
     DB_NAME(database_id) AS database_name,
@@ -108,16 +108,16 @@ Backup compression is one of the cleanest cost levers in SQL Server because it r
 
 #### Current backup compression default and observed compression ratio
 
-[!info]-
-This query returns two result sets.
-
-- The first result set checks the instance default for backup compression.
-- The second reads recent full backups from `msdb.dbo.backupset` and computes the actual observed compression ratio.
-
-This combination matters because an instance can have `backup compression default = 0` and still produce compressed backups if the backup command explicitly asks for compression.
-
-*This query shows whether compressed backups are the default and what compression ratio was actually achieved on a recent full backup.*
-
+> [!info]-
+> This query returns two result sets.
+>
+> - The first result set checks the instance default for backup compression.
+> - The second reads recent full backups from `msdb.dbo.backupset` and computes the actual observed compression ratio.
+>
+> This combination matters because an instance can have `backup compression default = 0` and still produce compressed backups if the backup command explicitly asks for compression.
+>
+> *This query shows whether compressed backups are the default and what compression ratio was actually achieved on a recent full backup.*
+>
 ```sql
 SELECT
     value,
@@ -156,14 +156,14 @@ ORDER BY backup_finish_date DESC;
 
 #### Enable backup compression by default
 
-[!warning]
-Compression saves storage and transfer cost, but it is not free. Backup compression consumes CPU. On most general-purpose estates that is a worthwhile trade, but validate it during the backup window.
-
-[!success]
-If the observed compression ratio is strong and backup CPU headroom exists, enable compression by default and let individual backup commands opt out only when necessary.
-
-*This command makes compressed backups the default behavior at the instance level.*
-
+> [!warning]
+> Compression saves storage and transfer cost, but it is not free. Backup compression consumes CPU. On most general-purpose estates that is a worthwhile trade, but validate it during the backup window.
+>
+> [!success]
+> If the observed compression ratio is strong and backup CPU headroom exists, enable compression by default and let individual backup commands opt out only when necessary.
+>
+> *This command makes compressed backups the default behavior at the instance level.*
+>
 ```sql
 EXEC sp_configure 'backup compression default', 1;
 RECONFIGURE;
@@ -173,16 +173,16 @@ RECONFIGURE;
 
 #### Current volume free space seen by SQL Server
 
-[!info]-
-This query uses `sys.dm_os_volume_stats` through `sys.master_files`.
-
-- `total_gb` and `free_gb` come from the host volume metadata visible to SQL Server
-- `volume_mount_point` and `file_system_type` are host metadata fields
-
-On containerized Linux deployments, some mount metadata can be null even when byte counts are still populated.
-
-*This query shows the storage volume capacity and free space visible to SQL Server.*
-
+> [!info]-
+> This query uses `sys.dm_os_volume_stats` through `sys.master_files`.
+>
+> - `total_gb` and `free_gb` come from the host volume metadata visible to SQL Server
+> - `volume_mount_point` and `file_system_type` are host metadata fields
+>
+> On containerized Linux deployments, some mount metadata can be null even when byte counts are still populated.
+>
+> *This query shows the storage volume capacity and free space visible to SQL Server.*
+>
 ```sql
 SELECT DISTINCT TOP (10)
     vs.volume_mount_point,
@@ -221,14 +221,14 @@ SQL Server backups and GCP disk snapshots solve different problems. Treating the
 
 #### Create a snapshot schedule for the SQL Server data disk
 
-[!warning]
-A disk snapshot is not a replacement for a SQL Server backup strategy. It captures storage blocks, not a SQL-aware restore chain.
-
-[!success]
-Use snapshots as a complementary recovery layer: fast infrastructure recovery plus SQL-aware backups for restore granularity and point-in-time recovery.
-
-*This command creates a recurring snapshot schedule on GCP for the backing disk used by the SQL Server instance.*
-
+> [!warning]
+> A disk snapshot is not a replacement for a SQL Server backup strategy. It captures storage blocks, not a SQL-aware restore chain.
+>
+> [!success]
+> Use snapshots as a complementary recovery layer: fast infrastructure recovery plus SQL-aware backups for restore granularity and point-in-time recovery.
+>
+> *This command creates a recurring snapshot schedule on GCP for the backing disk used by the SQL Server instance.*
+>
 ```bash
 gcloud compute resource-policies create snapshot-schedule analytics-sql-daily \
   --region=europe-west1 \
@@ -239,14 +239,14 @@ gcloud compute resource-policies create snapshot-schedule analytics-sql-daily \
 
 #### Use an application-consistent snapshot pattern on SQL Server 2022+
 
-[!warning]
-Do not freeze writes casually on a busy production system. The snapshot window must be short and operationally controlled.
-
-[!success]
-If SQL Server 2022 snapshot-backup semantics are part of the design, freeze writes only for the few seconds needed to take the storage snapshot, then complete the metadata-only backup step immediately.
-
-*This command pattern coordinates SQL Server 2022 snapshot-backup semantics with an infrastructure snapshot.*
-
+> [!warning]
+> Do not freeze writes casually on a busy production system. The snapshot window must be short and operationally controlled.
+>
+> [!success]
+> If SQL Server 2022 snapshot-backup semantics are part of the design, freeze writes only for the few seconds needed to take the storage snapshot, then complete the metadata-only backup step immediately.
+>
+> *This command pattern coordinates SQL Server 2022 snapshot-backup semantics with an infrastructure snapshot.*
+>
 ```sql
 ALTER DATABASE stoxx
 SET SUSPEND_FOR_SNAPSHOT_BACKUP = ON;

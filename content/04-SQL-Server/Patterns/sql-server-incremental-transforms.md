@@ -47,18 +47,18 @@ The `stoxx` pipeline already shows three distinct incremental shapes:
 
 #### Measure the live date coverage of the main source and target datasets
 
-[!info]-
-This query builds a single baseline table across five datasets that participate in the current `stoxx` transformation chain.
-
-- `bronze.signals_daily` uses `CAST([timestamp] AS date)` because the bronze table stores raw event timestamps, not a separate date column.
-- `silver.signals_daily` uses `signal_date`, which is already normalized to a reporting date in the transformed layer.
-- `gold.scores_daily` uses `score_date`, which is the gold-layer scoring date.
-- `silver.eurostoxx50_ohlcv` and `gold.index_performance` provide a longer market-history path so the note can distinguish daily snapshot transforms from multi-year market history transforms.
-- `MIN(...)` and `MAX(...)` show the current processing window for each dataset.
-- `COUNT(*)` shows the volume currently stored in that dataset so the reader can judge whether a full reload would still be cheap or whether an incremental pattern is mandatory.
-
-*This query shows the live date coverage and row volume of the main source and target datasets used in the current `stoxx` pipeline.*
-
+> [!info]-
+> This query builds a single baseline table across five datasets that participate in the current `stoxx` transformation chain.
+>
+> - `bronze.signals_daily` uses `CAST([timestamp] AS date)` because the bronze table stores raw event timestamps, not a separate date column.
+> - `silver.signals_daily` uses `signal_date`, which is already normalized to a reporting date in the transformed layer.
+> - `gold.scores_daily` uses `score_date`, which is the gold-layer scoring date.
+> - `silver.eurostoxx50_ohlcv` and `gold.index_performance` provide a longer market-history path so the note can distinguish daily snapshot transforms from multi-year market history transforms.
+> - `MIN(...)` and `MAX(...)` show the current processing window for each dataset.
+> - `COUNT(*)` shows the volume currently stored in that dataset so the reader can judge whether a full reload would still be cheap or whether an incremental pattern is mandatory.
+>
+> *This query shows the live date coverage and row volume of the main source and target datasets used in the current `stoxx` pipeline.*
+>
 ```sql
 SELECT 'bronze.signals_daily' AS dataset,
        MIN(CAST([timestamp] AS date)) AS min_date,
@@ -104,15 +104,15 @@ _`bronze.signals_daily` is a one-day raw landing table as currently loaded, whil
 
 #### Quantify the current silver-to-gold freshness gap for the performance aggregate
 
-[!info]-
-This query compares the latest processed silver signal date to the latest `gold.index_performance` date for each index.
-
-- The inner grouped subquery on `gold.index_performance` derives the current watermark per `_index`.
-- The outer grouped query on `silver.signals_daily` finds the latest source date and counts how many silver rows are strictly newer than the current gold watermark.
-- `SUM(CASE WHEN s.signal_date > g.max_perf_date THEN 1 ELSE 0 END)` is the key operational field: it tells you how many source rows would need to be considered by an incremental refresh if you ran it now.
-
-*This query measures how far `gold.index_performance` currently lags behind the silver signal layer and how many silver rows are waiting beyond the current gold watermark.*
-
+> [!info]-
+> This query compares the latest processed silver signal date to the latest `gold.index_performance` date for each index.
+>
+> - The inner grouped subquery on `gold.index_performance` derives the current watermark per `_index`.
+> - The outer grouped query on `silver.signals_daily` finds the latest source date and counts how many silver rows are strictly newer than the current gold watermark.
+> - `SUM(CASE WHEN s.signal_date > g.max_perf_date THEN 1 ELSE 0 END)` is the key operational field: it tells you how many source rows would need to be considered by an incremental refresh if you ran it now.
+>
+> *This query measures how far `gold.index_performance` currently lags behind the silver signal layer and how many silver rows are waiting beyond the current gold watermark.*
+>
 ```sql
 SELECT s._index,
        MAX(s.signal_date) AS silver_max_signal_date,
@@ -150,16 +150,16 @@ When the target table is authoritative and small enough to query cheaply, derivi
 
 #### Compute the overlap window from the current silver watermark
 
-[!info]-
-This query derives the current watermark from `silver.signals_daily`, subtracts one day, and counts how many raw bronze rows fall inside that reread window.
-
-- The CTE `daily` computes `MAX(signal_date)` per `_index`.
-- `DATEADD(DAY, -1, d.wm)` creates the overlap boundary. The idea is to reread recent data on purpose so that late-arriving rows still enter the pipeline.
-- The join to `bronze.signals_daily` uses `CAST(b.[timestamp] AS date)` because the bronze feed stores a timestamp, not a transformed signal date.
-- `COUNT(*)` measures how much work the reread window actually creates. This matters operationally because a one-day overlap is cheap if it rereads 50 rows, but it is not cheap if it rereads 50 million rows.
-
-*This query derives a one-day overlap window from the current silver watermark and measures how many bronze rows would be reread per index.*
-
+> [!info]-
+> This query derives the current watermark from `silver.signals_daily`, subtracts one day, and counts how many raw bronze rows fall inside that reread window.
+>
+> - The CTE `daily` computes `MAX(signal_date)` per `_index`.
+> - `DATEADD(DAY, -1, d.wm)` creates the overlap boundary. The idea is to reread recent data on purpose so that late-arriving rows still enter the pipeline.
+> - The join to `bronze.signals_daily` uses `CAST(b.[timestamp] AS date)` because the bronze feed stores a timestamp, not a transformed signal date.
+> - `COUNT(*)` measures how much work the reread window actually creates. This matters operationally because a one-day overlap is cheap if it rereads 50 rows, but it is not cheap if it rereads 50 million rows.
+>
+> *This query derives a one-day overlap window from the current silver watermark and measures how many bronze rows would be reread per index.*
+>
 ```sql
 WITH daily AS (
     SELECT _index, MAX(signal_date) AS wm
@@ -189,17 +189,17 @@ _A one-day overlap is cheap in this environment because it rereads only one fres
 
 #### Deduplicate the bronze daily snapshot before inserting into silver
 
-[!info]-
-This query shows the production-safe deduplication pattern for daily bronze snapshots before loading silver.
-
-- The CTE `src` reads `bronze.signals_daily` and normalizes the raw timestamp to `signal_date`.
-- `ROW_NUMBER() OVER (PARTITION BY _index, symbol, CAST([timestamp] AS date) ORDER BY _ingested_at DESC, id DESC)` keeps exactly one winning row for each business key and day.
-- The partition key `_index, symbol, CAST([timestamp] AS date)` defines what "duplicate" means in this pipeline.
-- The `ORDER BY` clause inside `ROW_NUMBER()` resolves ties by keeping the latest ingested row, then the highest `id` if ingestion timestamps tie.
-- The outer `dedup` CTE filters to `rn = 1`, which is the rowset the pipeline would actually insert into `silver.signals_daily`.
-
-*This query collapses raw bronze duplicates to one deterministic daily row per `_index`, `symbol`, and signal date before an insert into `silver.signals_daily`.*
-
+> [!info]-
+> This query shows the production-safe deduplication pattern for daily bronze snapshots before loading silver.
+>
+> - The CTE `src` reads `bronze.signals_daily` and normalizes the raw timestamp to `signal_date`.
+> - `ROW_NUMBER() OVER (PARTITION BY _index, symbol, CAST([timestamp] AS date) ORDER BY _ingested_at DESC, id DESC)` keeps exactly one winning row for each business key and day.
+> - The partition key `_index, symbol, CAST([timestamp] AS date)` defines what "duplicate" means in this pipeline.
+> - The `ORDER BY` clause inside `ROW_NUMBER()` resolves ties by keeping the latest ingested row, then the highest `id` if ingestion timestamps tie.
+> - The outer `dedup` CTE filters to `rn = 1`, which is the rowset the pipeline would actually insert into `silver.signals_daily`.
+>
+> *This query collapses raw bronze duplicates to one deterministic daily row per `_index`, `symbol`, and signal date before an insert into `silver.signals_daily`.*
+>
 ```sql
 WITH src AS (
     SELECT _index,
@@ -256,22 +256,22 @@ Date watermarks are ideal when the source exposes a reliable event date or inges
 
 #### Demonstrate a `rowversion`-based incremental read boundary
 
-[!warning]
-`rowversion` is not a replacement for CDC or CT. It does not tell you which columns changed, it does not emit a delete event, and it changes on any update to a row with a `rowversion` column. If deletes matter, you need a separate delete path or a richer feature.
-
-[!success]
-Use `rowversion` when the source mutates in place, the current row can be reread cheaply, and the pipeline only needs a technical "changed since token X" boundary. Persist the last consumed token only after the downstream write commits.
-
-[!info]-
-This batch demonstrates a classic rowversion incremental pattern on a disposable table.
-
-- The table starts with two rows and a `rowversion` column named `rv`.
-- `@@DBTS` captures the latest database rowversion after the initial load and acts as the saved watermark.
-- One row is updated and one new row is inserted after that snapshot.
-- The final `SELECT ... WHERE rv > @last_consumed_rowversion` returns only the rows changed after the saved token.
-
-*This batch captures a saved rowversion watermark, changes two rows after that point, and returns only the rows whose rowversion is newer than the stored token.*
-
+> [!warning]
+> `rowversion` is not a replacement for CDC or CT. It does not tell you which columns changed, it does not emit a delete event, and it changes on any update to a row with a `rowversion` column. If deletes matter, you need a separate delete path or a richer feature.
+>
+> [!success]
+> Use `rowversion` when the source mutates in place, the current row can be reread cheaply, and the pipeline only needs a technical "changed since token X" boundary. Persist the last consumed token only after the downstream write commits.
+>
+> [!info]-
+> This batch demonstrates a classic rowversion incremental pattern on a disposable table.
+>
+> - The table starts with two rows and a `rowversion` column named `rv`.
+> - `@@DBTS` captures the latest database rowversion after the initial load and acts as the saved watermark.
+> - One row is updated and one new row is inserted after that snapshot.
+> - The final `SELECT ... WHERE rv > @last_consumed_rowversion` returns only the rows changed after the saved token.
+>
+> *This batch captures a saved rowversion watermark, changes two rows after that point, and returns only the rows whose rowversion is newer than the stored token.*
+>
 ```sql
 IF OBJECT_ID('dbo.demo_rowversion_incremental', 'U') IS NOT NULL
     DROP TABLE dbo.demo_rowversion_incremental;
@@ -322,17 +322,17 @@ Wide dimensions and upsert targets often have too many business attributes for a
 
 #### Compare bronze and current silver dimension rows with one SHA2 signature
 
-[!info]-
-This query computes the same SHA2-256 signature for selected business attributes in `bronze.index_dim` and the current rows in `silver.index_dim`.
-
-- `CONCAT_WS('|', ...)` builds one deterministic string from the selected attributes in a fixed order.
-- `CONVERT(varchar(10), ..., 23)` normalizes the date columns to ISO `yyyy-mm-dd` text before hashing.
-- `HASHBYTES('SHA2_256', ...)` creates the signature for each side.
-- The equality test reduces a wide multi-column comparison to one `UNCHANGED` or `CHANGED` outcome.
-- `s.is_current = 1` makes the comparison use only the active SCD2 version in silver.
-
-*This query collapses a wide bronze-to-silver comparison into one SHA2 signature per business row.*
-
+> [!info]-
+> This query computes the same SHA2-256 signature for selected business attributes in `bronze.index_dim` and the current rows in `silver.index_dim`.
+>
+> - `CONCAT_WS('|', ...)` builds one deterministic string from the selected attributes in a fixed order.
+> - `CONVERT(varchar(10), ..., 23)` normalizes the date columns to ISO `yyyy-mm-dd` text before hashing.
+> - `HASHBYTES('SHA2_256', ...)` creates the signature for each side.
+> - The equality test reduces a wide multi-column comparison to one `UNCHANGED` or `CHANGED` outcome.
+> - `s.is_current = 1` makes the comparison use only the active SCD2 version in silver.
+>
+> *This query collapses a wide bronze-to-silver comparison into one SHA2 signature per business row.*
+>
 ```sql
 SELECT TOP (8)
        b._index,
@@ -453,17 +453,17 @@ The current `stoxx` data gives a real example: `gold.index_performance` is one d
 
 #### Aggregate only the silver dates newer than `gold.index_performance`
 
-[!info]-
-This query derives the current gold watermark, filters silver rows to only the dates beyond that watermark, and computes the aggregate metrics that would feed a new `gold.index_performance` batch.
-
-- The grouped subquery on `gold.index_performance` returns the current `perf_watermark` per index.
-- The `WHERE s.signal_date > w.perf_watermark` predicate is the core incremental boundary.
-- The grouped output is at `_index, signal_date` granularity, which matches the business grain of the aggregate refresh step.
-- `COUNT(*)` is the future `stocks_count`.
-- `AVG(forward_pe)`, `AVG(price_to_book)`, and `AVG(dividend_yield)` show how aggregate measures can be recomputed only for new dates.
-
-*This query computes only the aggregate rows that are newer than the current `gold.index_performance` watermark instead of recomputing the full history.*
-
+> [!info]-
+> This query derives the current gold watermark, filters silver rows to only the dates beyond that watermark, and computes the aggregate metrics that would feed a new `gold.index_performance` batch.
+>
+> - The grouped subquery on `gold.index_performance` returns the current `perf_watermark` per index.
+> - The `WHERE s.signal_date > w.perf_watermark` predicate is the core incremental boundary.
+> - The grouped output is at `_index, signal_date` granularity, which matches the business grain of the aggregate refresh step.
+> - `COUNT(*)` is the future `stocks_count`.
+> - `AVG(forward_pe)`, `AVG(price_to_book)`, and `AVG(dividend_yield)` show how aggregate measures can be recomputed only for new dates.
+>
+> *This query computes only the aggregate rows that are newer than the current `gold.index_performance` watermark instead of recomputing the full history.*
+>
 ```sql
 WITH perf_watermark AS (
     SELECT _index, MAX(perf_date) AS perf_watermark
@@ -499,16 +499,16 @@ A strict high-water mark assumes that all earlier dates are final. That is often
 
 #### Recompute the last five market dates from the dense OHLCV history
 
-[!info]-
-This query models a sliding refresh window on the dense `silver.eurostoxx50_ohlcv` history.
-
-- The `recent_dates` CTE selects the five newest distinct market dates in the table.
-- Joining the base table back to those dates narrows the refresh scope to only the recent window.
-- The grouped output recomputes one daily aggregate per market date, which is the exact shape a downstream gold refresh would publish.
-- `COUNT(*) AS constituents` is a structural sanity check: for this index the recent dates still show the expected 50 constituents.
-
-*This query recomputes only the last five market dates from the dense OHLCV history instead of touching the full time series.*
-
+> [!info]-
+> This query models a sliding refresh window on the dense `silver.eurostoxx50_ohlcv` history.
+>
+> - The `recent_dates` CTE selects the five newest distinct market dates in the table.
+> - Joining the base table back to those dates narrows the refresh scope to only the recent window.
+> - The grouped output recomputes one daily aggregate per market date, which is the exact shape a downstream gold refresh would publish.
+> - `COUNT(*) AS constituents` is a structural sanity check: for this index the recent dates still show the expected 50 constituents.
+>
+> *This query recomputes only the last five market dates from the dense OHLCV history instead of touching the full time series.*
+>
 ```sql
 WITH recent_dates AS (
     SELECT TOP (5) [date]
@@ -551,18 +551,18 @@ Before adding a large rolling calculation to a production transform, confirm tha
 
 #### Inspect the live window-supporting index on `silver.eurostoxx50_ohlcv`
 
-[!info]-
-This query inspects the current index layout of `silver.eurostoxx50_ohlcv`.
-
-- `sys.indexes` provides the logical index objects.
-- `sys.index_columns` and `sys.columns` expand each index into its key and included columns.
-- `OBJECT_ID('silver.eurostoxx50_ohlcv')` limits the inspection to the table used in the moving-average example.
-- `type_desc` shows whether the index is clustered or nonclustered.
-- `is_primary_key` tells you whether the index is also enforcing the primary key.
-- `key_ordinal` shows the order of columns inside the index key, which is what matters for `PARTITION BY symbol ORDER BY date`.
-
-*This query inspects the live index definition that supports rolling calculations on `silver.eurostoxx50_ohlcv`.*
-
+> [!info]-
+> This query inspects the current index layout of `silver.eurostoxx50_ohlcv`.
+>
+> - `sys.indexes` provides the logical index objects.
+> - `sys.index_columns` and `sys.columns` expand each index into its key and included columns.
+> - `OBJECT_ID('silver.eurostoxx50_ohlcv')` limits the inspection to the table used in the moving-average example.
+> - `type_desc` shows whether the index is clustered or nonclustered.
+> - `is_primary_key` tells you whether the index is also enforcing the primary key.
+> - `key_ordinal` shows the order of columns inside the index key, which is what matters for `PARTITION BY symbol ORDER BY date`.
+>
+> *This query inspects the live index definition that supports rolling calculations on `silver.eurostoxx50_ohlcv`.*
+>
 ```sql
 SELECT i.name AS index_name,
        i.type_desc,
@@ -602,18 +602,18 @@ _The important production signal is the nonclustered index on `(symbol, date)`. 
 
 #### Compute 30-day and 90-day moving averages on the live OHLCV history
 
-[!info]-
-This query computes rolling averages directly on the live `silver.eurostoxx50_ohlcv` price history.
-
-- The inner filter limits the dataset to five symbols so the output stays readable.
-- `AVG([close]) OVER (...)` is evaluated per row, not per group collapse.
-- `PARTITION BY o.symbol` resets the moving window per symbol.
-- `ORDER BY o.[date]` establishes chronological order inside each symbol.
-- `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` and `ROWS BETWEEN 89 PRECEDING AND CURRENT ROW` define fixed trading-row windows for the 30-day and 90-day averages.
-- The outer `TOP (12)` returns a small preview from the newest rows so the note shows real values without dumping the full result set.
-
-*This query computes live 30-trading-day and 90-trading-day moving averages on the indexed OHLCV history.*
-
+> [!info]-
+> This query computes rolling averages directly on the live `silver.eurostoxx50_ohlcv` price history.
+>
+> - The inner filter limits the dataset to five symbols so the output stays readable.
+> - `AVG([close]) OVER (...)` is evaluated per row, not per group collapse.
+> - `PARTITION BY o.symbol` resets the moving window per symbol.
+> - `ORDER BY o.[date]` establishes chronological order inside each symbol.
+> - `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` and `ROWS BETWEEN 89 PRECEDING AND CURRENT ROW` define fixed trading-row windows for the 30-day and 90-day averages.
+> - The outer `TOP (12)` returns a small preview from the newest rows so the note shows real values without dumping the full result set.
+>
+> *This query computes live 30-trading-day and 90-trading-day moving averages on the indexed OHLCV history.*
+>
 ```sql
 WITH s AS (
     SELECT TOP (5) symbol
@@ -677,16 +677,16 @@ Dense time-series tables such as OHLCV should usually match the exchange trading
 
 #### Verify that `ASML.AS` has no missing AMS trading days in the recent window
 
-[!info]-
-This query compares the recent `ASML.AS` OHLCV rows to the AMS trading calendar.
-
-- The CTE `calendar_days` defines the expected date set by filtering the exchange calendar to trading days only.
-- The left join to `silver.eurostoxx50_ohlcv` checks whether each expected date has an actual OHLCV row.
-- `WHERE o.symbol IS NULL` turns the left join into a gap detector.
-- `COUNT(*) AS gap_count` gives a compact operational result: zero means the dense series is complete for the tested window.
-
-*This query checks whether `ASML.AS` is missing any AMS trading days between 2026-03-01 and 2026-04-07.*
-
+> [!info]-
+> This query compares the recent `ASML.AS` OHLCV rows to the AMS trading calendar.
+>
+> - The CTE `calendar_days` defines the expected date set by filtering the exchange calendar to trading days only.
+> - The left join to `silver.eurostoxx50_ohlcv` checks whether each expected date has an actual OHLCV row.
+> - `WHERE o.symbol IS NULL` turns the left join into a gap detector.
+> - `COUNT(*) AS gap_count` gives a compact operational result: zero means the dense series is complete for the tested window.
+>
+> *This query checks whether `ASML.AS` is missing any AMS trading days between 2026-03-01 and 2026-04-07.*
+>
 ```sql
 WITH calendar_days AS (
     SELECT c.[date]
@@ -715,16 +715,16 @@ A sparse snapshot table may legitimately have multi-day gaps if the upstream sou
 
 #### Measure the date jumps inside `silver.signals_daily`
 
-[!info]-
-This query looks at the distinct signal dates in `silver.signals_daily` and computes the gap to the next available signal date.
-
-- The inner derived table collapses the dataset to distinct `_index, signal_date` combinations so row counts do not distort the cadence check.
-- `LEAD(signal_date)` returns the next available date within each `_index`.
-- `DATEDIFF(DAY, signal_date, next_signal_date)` converts that next date into a gap size.
-- The final filter keeps only gaps greater than one day.
-
-*This query measures the jumps between available signal dates in `silver.signals_daily` so the pipeline can distinguish sparse source cadence from dense time-series expectations.*
-
+> [!info]-
+> This query looks at the distinct signal dates in `silver.signals_daily` and computes the gap to the next available signal date.
+>
+> - The inner derived table collapses the dataset to distinct `_index, signal_date` combinations so row counts do not distort the cadence check.
+> - `LEAD(signal_date)` returns the next available date within each `_index`.
+> - `DATEDIFF(DAY, signal_date, next_signal_date)` converts that next date into a gap size.
+> - The final filter keeps only gaps greater than one day.
+>
+> *This query measures the jumps between available signal dates in `silver.signals_daily` so the pipeline can distinguish sparse source cadence from dense time-series expectations.*
+>
 ```sql
 WITH next_dates AS (
     SELECT _index,
@@ -776,22 +776,22 @@ Partition switching is a metadata-only reassignment of pages between two aligned
 
 #### Replace a month partition from a validated staging table
 
-[!warning]
-`ALTER TABLE ... SWITCH` is not a casual reload command. Both tables must be structurally aligned, their indexes must match exactly, the staging table must enforce the same partition boundary with a `CHECK` constraint, and the operation still needs a schema-level lock at switch time.
-
-[!success]
-Use `SWITCH` only when the table is already partitioned for operational reasons and the replacement unit is naturally a whole partition. If you only need a simple daily reread or a one-day aggregate refresh, a watermark plus overlap window is the safer default.
-
-[!info]-
-This example shows the sequence for replacing one month partition from a staging table.
-
-- The staging table is loaded and validated first.
-- The `CHECK` constraint proves to SQL Server that every staging row belongs to the target partition boundary.
-- The target partition is truncated only if the operational process is a full replacement.
-- The `SWITCH` itself moves the data as metadata, not row by row.
-
-*This example replaces one monthly partition from a validated staging table using a metadata-only `SWITCH`.*
-
+> [!warning]
+> `ALTER TABLE ... SWITCH` is not a casual reload command. Both tables must be structurally aligned, their indexes must match exactly, the staging table must enforce the same partition boundary with a `CHECK` constraint, and the operation still needs a schema-level lock at switch time.
+>
+> [!success]
+> Use `SWITCH` only when the table is already partitioned for operational reasons and the replacement unit is naturally a whole partition. If you only need a simple daily reread or a one-day aggregate refresh, a watermark plus overlap window is the safer default.
+>
+> [!info]-
+> This example shows the sequence for replacing one month partition from a staging table.
+>
+> - The staging table is loaded and validated first.
+> - The `CHECK` constraint proves to SQL Server that every staging row belongs to the target partition boundary.
+> - The target partition is truncated only if the operational process is a full replacement.
+> - The `SWITCH` itself moves the data as metadata, not row by row.
+>
+> *This example replaces one monthly partition from a validated staging table using a metadata-only `SWITCH`.*
+>
 ```sql
 TRUNCATE TABLE staging.signals_daily;
 
@@ -818,22 +818,22 @@ The current `stoxx` design already follows the safer default: `gold.scores_daily
 
 #### Create an indexed view only for a small, stable aggregate
 
-[!warning]
-Indexed views add write overhead to every base-table `INSERT`, `UPDATE`, and `DELETE`. They are a poor fit for hot staging or raw landing tables, and they come with strict `SCHEMABINDING`, `SET` option, and aggregation restrictions.
-
-[!success]
-Prefer scheduled aggregation tables for most pipeline workloads. Reach for an indexed view only when the aggregate is simple, queried frequently, and must stay current without a refresh job.
-
-[!info]-
-This example shows the minimum structural pattern of an indexed view.
-
-- `WITH SCHEMABINDING` binds the view to the exact base-table schema.
-- `COUNT_BIG(*)` is required for grouped indexed views.
-- The unique clustered index is what materializes the view.
-- The aggregation logic must stay within the indexed-view restrictions documented by Microsoft.
-
-*This example shows the minimum pattern for a SQL Server indexed view that materializes a grouped aggregate.*
-
+> [!warning]
+> Indexed views add write overhead to every base-table `INSERT`, `UPDATE`, and `DELETE`. They are a poor fit for hot staging or raw landing tables, and they come with strict `SCHEMABINDING`, `SET` option, and aggregation restrictions.
+>
+> [!success]
+> Prefer scheduled aggregation tables for most pipeline workloads. Reach for an indexed view only when the aggregate is simple, queried frequently, and must stay current without a refresh job.
+>
+> [!info]-
+> This example shows the minimum structural pattern of an indexed view.
+>
+> - `WITH SCHEMABINDING` binds the view to the exact base-table schema.
+> - `COUNT_BIG(*)` is required for grouped indexed views.
+> - The unique clustered index is what materializes the view.
+> - The aggregation logic must stay within the indexed-view restrictions documented by Microsoft.
+>
+> *This example shows the minimum pattern for a SQL Server indexed view that materializes a grouped aggregate.*
+>
 ```sql
 CREATE VIEW gold.vw_daily_avg_scores
 WITH SCHEMABINDING

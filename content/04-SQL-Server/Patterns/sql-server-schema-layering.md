@@ -76,17 +76,17 @@ The current `stoxx` database already shows why schema layering matters. It has a
 
 ### Current schema footprint in `stoxx`
 
-[!info]-
-This query summarizes the live schema layout.
-
-- `schema_owner` shows who owns the schema.
-- `table_count` shows how many tables live in that schema.
-- `total_rows` gives rough workload scale per schema.
-- `demo_table_count` highlights how much of a schema is documentation or lab residue rather than production data.
-- `explicit_schema_permission_rows` counts schema-level permission rows in `sys.database_permissions`.
-
-*Inspect the live schema distribution before choosing a layering strategy.*
-
+> [!info]-
+> This query summarizes the live schema layout.
+>
+> - `schema_owner` shows who owns the schema.
+> - `table_count` shows how many tables live in that schema.
+> - `total_rows` gives rough workload scale per schema.
+> - `demo_table_count` highlights how much of a schema is documentation or lab residue rather than production data.
+> - `explicit_schema_permission_rows` counts schema-level permission rows in `sys.database_permissions`.
+>
+> *Inspect the live schema distribution before choosing a layering strategy.*
+>
 ```sql
 SELECT
     s.name AS schema_name,
@@ -132,17 +132,17 @@ _This is a good live example of a mostly-correct layered design with one clear w
 
 ### Representative table layout by schema
 
-[!info]-
-This query shows how the live tables actually map onto the layers.
-
-- `bronze` contains small raw landings and lookup tables.
-- `silver` contains the large cleaned OHLCV tables.
-- `gold` contains compact published analytics tables.
-
-This is the strongest practical argument for schema-per-layer: the business meaning of the object is visible in the fully qualified name before you even open the definition.
-
-*Inspect representative table placement across the live schemas.*
-
+> [!info]-
+> This query shows how the live tables actually map onto the layers.
+>
+> - `bronze` contains small raw landings and lookup tables.
+> - `silver` contains the large cleaned OHLCV tables.
+> - `gold` contains compact published analytics tables.
+>
+> This is the strongest practical argument for schema-per-layer: the business meaning of the object is visible in the fully qualified name before you even open the definition.
+>
+> *Inspect representative table placement across the live schemas.*
+>
 ```sql
 WITH row_counts AS (
     SELECT
@@ -208,15 +208,15 @@ For a single SQL Server database serving one pipeline system, schema-per-layer s
 > [!example]
 > Use this when the platform is one database with clear medallion-style stages and shared recovery, compute, and security boundaries.
 
-[!info]-
-This DDL creates the three layer schemas idempotently.
-
-- `CREATE SCHEMA` must be the first statement in its batch.
-- The `EXEC('CREATE SCHEMA ...')` wrapper is used so the existence check stays idempotent.
-- The schema name becomes the namespace boundary for both querying and security.
-
-*Create the standard medallion schemas in one database.*
-
+> [!info]-
+> This DDL creates the three layer schemas idempotently.
+>
+> - `CREATE SCHEMA` must be the first statement in its batch.
+> - The `EXEC('CREATE SCHEMA ...')` wrapper is used so the existence check stays idempotent.
+> - The schema name becomes the namespace boundary for both querying and security.
+>
+> *Create the standard medallion schemas in one database.*
+>
 ```sql
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze')
     EXEC('CREATE SCHEMA bronze');
@@ -242,25 +242,25 @@ Why this is still the best default:
 
 Use separate databases only when the split is driven by a real operational boundary: different recovery model, different admin domain, different compliance boundary, or different restore lifecycle.
 
-[!warning]
-Do not split layers into separate databases just because the names look tidy. Cross-database querying, deployment, testing, and ownership become more complex immediately.
-
-[!success]
-Use separate databases when you genuinely need different backup-chain behavior, restore isolation, or tenant/security boundaries that a single database cannot express cleanly.
-
+> [!warning]
+> Do not split layers into separate databases just because the names look tidy. Cross-database querying, deployment, testing, and ownership become more complex immediately.
+>
+> [!success]
+> Use separate databases when you genuinely need different backup-chain behavior, restore isolation, or tenant/security boundaries that a single database cannot express cleanly.
+>
 ### Example: different recovery models per layer
 
 > [!example]
 > This pattern is appropriate only when the layers truly have different restore expectations.
 
-[!info]-
-These commands express the main operational reason for separate databases: different recovery policies.
-
-- `SIMPLE` is appropriate for re-loadable layers where point-in-time recovery is not required.
-- `FULL` is appropriate when the layer must be recoverable to any point in time and the log-backup chain is part of the operational contract.
-
-*Set different recovery models when the layers truly have different restore obligations.*
-
+> [!info]-
+> These commands express the main operational reason for separate databases: different recovery policies.
+>
+> - `SIMPLE` is appropriate for re-loadable layers where point-in-time recovery is not required.
+> - `FULL` is appropriate when the layer must be recoverable to any point in time and the log-backup chain is part of the operational contract.
+>
+> *Set different recovery models when the layers truly have different restore obligations.*
+>
 ```sql
 ALTER DATABASE bronze_db SET RECOVERY SIMPLE;
 ALTER DATABASE silver_db SET RECOVERY FULL;
@@ -288,14 +288,14 @@ Domain schemas are useful when teams genuinely own their data products end to en
 > [!example]
 > Use this when different teams own their own data products and deployment lifecycle.
 
-[!info]-
-`AUTHORIZATION` sets the schema owner.
-
-- The schema owner becomes the principal responsible for object ownership inside that schema.
-- This is the cleanest SQL Server-native way to align schema boundaries with organizational boundaries.
-
-*Create domain-owned schemas when ownership, not just transformation stage, is the main boundary.*
-
+> [!info]-
+> `AUTHORIZATION` sets the schema owner.
+>
+> - The schema owner becomes the principal responsible for object ownership inside that schema.
+> - This is the cleanest SQL Server-native way to align schema boundaries with organizational boundaries.
+>
+> *Create domain-owned schemas when ownership, not just transformation stage, is the main boundary.*
+>
 ```sql
 CREATE SCHEMA finance AUTHORIZATION finance_owner;
 CREATE SCHEMA operations AUTHORIZATION ops_owner;
@@ -322,14 +322,14 @@ This is a staging-only pattern. It is useful when multiple upstream systems land
 > [!example]
 > Use source-scoped staging only for the source-facing edge of the pipeline, not for the whole warehouse model.
 
-[!info]-
-Each source gets its own isolated landing namespace.
-
-- the schema boundary isolates source-specific column names and ingestion quirks
-- the downstream contract is still to normalize into a common `bronze` surface
-
-*Create dedicated staging schemas when many upstream sources land independently.*
-
+> [!info]-
+> Each source gets its own isolated landing namespace.
+>
+> - the schema boundary isolates source-specific column names and ingestion quirks
+> - the downstream contract is still to normalize into a common `bronze` surface
+>
+> *Create dedicated staging schemas when many upstream sources land independently.*
+>
 ```sql
 CREATE SCHEMA stg_yfinance;
 CREATE SCHEMA stg_bloomberg;
@@ -350,16 +350,16 @@ Layer schemas explain data maturity, but they do not solve every architectural b
 
 ### Check whether dedicated control-plane schemas already exist
 
-[!info]-
-This query checks for five common supporting schemas that many production platforms eventually adopt.
-
-- `meta` or `control` usually stores watermarks, run ledgers, dependency state, and schema contracts.
-- `audit` or `history` usually stores quality events, reconciliation findings, or explicit audit surfaces.
-- `contract` is useful when stable views or synonyms need to shield consumers from physical table churn.
-- `SCHEMA_ID(...) IS NULL` returns `0` for a missing schema and `1` for an existing one, which makes the output easy to read as a readiness checklist.
-
-*This query checks whether `stoxx` currently has dedicated control, audit, history, or contract schemas.*
-
+> [!info]-
+> This query checks for five common supporting schemas that many production platforms eventually adopt.
+>
+> - `meta` or `control` usually stores watermarks, run ledgers, dependency state, and schema contracts.
+> - `audit` or `history` usually stores quality events, reconciliation findings, or explicit audit surfaces.
+> - `contract` is useful when stable views or synonyms need to shield consumers from physical table churn.
+> - `SCHEMA_ID(...) IS NULL` returns `0` for a missing schema and `1` for an existing one, which makes the output easy to read as a readiness checklist.
+>
+> *This query checks whether `stoxx` currently has dedicated control, audit, history, or contract schemas.*
+>
 ```sql
 SELECT CASE WHEN SCHEMA_ID('meta') IS NULL THEN 0 ELSE 1 END AS meta_schema_exists,
        CASE WHEN SCHEMA_ID('control') IS NULL THEN 0 ELSE 1 END AS control_schema_exists,
@@ -434,25 +434,25 @@ Recommended defaults:
 - keep metadata columns explicit and consistent: `_ingested_at`, `_source_file`, `_batch_id`, `_index`
 - prefer predictable index names: `PK_`, `UX_`, `IX_`
 
-[!warning]
-Do not name schemas after tools such as `airflow`, `dbt`, or `spark`. Tool names change. Data meaning should not.
-
-[!success]
-Name schemas after the data boundary they represent: stage, layer, domain, or regulated boundary.
-
+> [!warning]
+> Do not name schemas after tools such as `airflow`, `dbt`, or `spark`. Tool names change. Data meaning should not.
+>
+> [!success]
+> Name schemas after the data boundary they represent: stage, layer, domain, or regulated boundary.
+>
 ### Reserved words in table design
 
 > [!example]
 > Financial OHLCV models often use reserved words such as `open`, `close`, or `date`. SQL Server can handle them, but the quoting discipline must be consistent.
 
-[!info]-
-This DDL shows how to define a layer table that keeps familiar financial names while remaining syntactically valid.
-
-- `[open]` and `[close]` are bracketed because they collide with reserved words
-- the schema name carries the layer, so the table name itself can stay business-oriented
-
-*Define a layer table that keeps familiar financial column names safely.*
-
+> [!info]-
+> This DDL shows how to define a layer table that keeps familiar financial names while remaining syntactically valid.
+>
+> - `[open]` and `[close]` are bracketed because they collide with reserved words
+> - the schema name carries the layer, so the table name itself can stay business-oriented
+>
+> *Define a layer table that keeps familiar financial column names safely.*
+>
 ```sql
 CREATE TABLE bronze.ohlcv
 (
@@ -473,15 +473,15 @@ The live `stoxx` database is structurally ready for schema-level security, but i
 
 ### Current schema security surface
 
-[!info]-
-This query inspects explicit schema-level permission rows.
-
-- `class_desc = SCHEMA` indicates the permission is attached to a schema object, not a table or database.
-- `permission_name` tells you which action was granted or denied.
-- `state_desc` tells you whether it was `GRANT`, `DENY`, or a grant with grant option.
-
-*Inspect explicit schema-level permissions in the current database.*
-
+> [!info]-
+> This query inspects explicit schema-level permission rows.
+>
+> - `class_desc = SCHEMA` indicates the permission is attached to a schema object, not a table or database.
+> - `permission_name` tells you which action was granted or denied.
+> - `state_desc` tells you whether it was `GRANT`, `DENY`, or a grant with grant option.
+>
+> *Inspect explicit schema-level permissions in the current database.*
+>
 ```sql
 SELECT
     dp.class_desc,
@@ -505,15 +505,15 @@ _There are no explicit schema-level grants or denies in `stoxx` right now. That 
 > [!example]
 > Use one database role per service type or reader group, and grant at the schema level.
 
-[!info]-
-This pattern makes permissions durable as tables are added.
-
-- the role owns the permission model
-- new tables inherit the schema boundary automatically
-- `DENY` can enforce hard separation where needed
-
-*Grant layer access through roles, not table-by-table grants to individual users.*
-
+> [!info]-
+> This pattern makes permissions durable as tables are added.
+>
+> - the role owns the permission model
+> - new tables inherit the schema boundary automatically
+> - `DENY` can enforce hard separation where needed
+>
+> *Grant layer access through roles, not table-by-table grants to individual users.*
+>
 ```sql
 CREATE ROLE etl_writer;
 CREATE ROLE dashboard_reader;
@@ -526,12 +526,12 @@ DENY SELECT ON SCHEMA::bronze TO dashboard_reader;
 DENY SELECT ON SCHEMA::silver TO dashboard_reader;
 ```
 
-[!warning]
-Do not rely on `dbo` as a catch-all security boundary. If business tables, support tables, and demos all live there, the permission story becomes vague immediately.
-
-[!success]
-Keep `dbo` nearly empty in production-facing warehouses: utility objects only, or ideally nothing user-facing at all.
-
+> [!warning]
+> Do not rely on `dbo` as a catch-all security boundary. If business tables, support tables, and demos all live there, the permission story becomes vague immediately.
+>
+> [!success]
+> Keep `dbo` nearly empty in production-facing warehouses: utility objects only, or ideally nothing user-facing at all.
+>
 ## Decision Guide
 
 | Scenario | Best pattern | Why |

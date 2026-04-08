@@ -71,18 +71,18 @@ Before using Query Store for regressions, forcing, or hints, verify that it is c
 
 #### Confirm that Query Store is writable and capturing waits
 
-[!info]-
-`sys.database_query_store_options` is the database-level control surface for Query Store.
-
-- `desired_state_desc` is the configured target state.
-- `actual_state_desc` is the real runtime state right now. This is the column that tells you whether Query Store is actually usable.
-- `readonly_reason` is non-zero when Query Store has gone read-only for a specific reason such as memory or storage pressure.
-- `current_storage_size_mb` and `max_storage_size_mb` show whether Query Store is close to its configured size ceiling.
-- `query_capture_mode_desc` determines how aggressively Query Store captures queries.
-- `wait_stats_capture_mode_desc` determines whether per-query wait capture is enabled.
-
-*Check whether Query Store is writable, what capture mode it uses, and whether wait-stat capture is enabled.*
-
+> [!info]-
+> `sys.database_query_store_options` is the database-level control surface for Query Store.
+>
+> - `desired_state_desc` is the configured target state.
+> - `actual_state_desc` is the real runtime state right now. This is the column that tells you whether Query Store is actually usable.
+> - `readonly_reason` is non-zero when Query Store has gone read-only for a specific reason such as memory or storage pressure.
+> - `current_storage_size_mb` and `max_storage_size_mb` show whether Query Store is close to its configured size ceiling.
+> - `query_capture_mode_desc` determines how aggressively Query Store captures queries.
+> - `wait_stats_capture_mode_desc` determines whether per-query wait capture is enabled.
+>
+> *Check whether Query Store is writable, what capture mode it uses, and whether wait-stat capture is enabled.*
+>
 ```sql
 SELECT
     desired_state_desc,
@@ -120,16 +120,16 @@ The fastest way to detect plan regression candidates is to look for queries with
 
 #### Find queries whose plans have materially different runtime profiles
 
-[!info]-
-This query compares runtime spread across plans stored for the same `query_id`.
-
-- `COUNT(DISTINCT qsp.plan_id)` becomes `plan_count`, which is the first signal that Query Store has seen more than one plan shape for the same query.
-- `best_avg_ms` and `worst_avg_ms` are the minimum and maximum average duration values observed across those plans.
-- `regression_factor` divides worst by best, so a value of `7` means the worst plan is seven times slower than the best one.
-- The query groups by `query_id`, not by `plan_id`, because the goal is to find unstable queries, not merely expensive individual plans.
-
-*Find queries with multiple plans and the largest spread between their best and worst average duration.*
-
+> [!info]-
+> This query compares runtime spread across plans stored for the same `query_id`.
+>
+> - `COUNT(DISTINCT qsp.plan_id)` becomes `plan_count`, which is the first signal that Query Store has seen more than one plan shape for the same query.
+> - `best_avg_ms` and `worst_avg_ms` are the minimum and maximum average duration values observed across those plans.
+> - `regression_factor` divides worst by best, so a value of `7` means the worst plan is seven times slower than the best one.
+> - The query groups by `query_id`, not by `plan_id`, because the goal is to find unstable queries, not merely expensive individual plans.
+>
+> *Find queries with multiple plans and the largest spread between their best and worst average duration.*
+>
 ```sql
 SELECT TOP (10)
     qsq.query_id,
@@ -175,22 +175,22 @@ _This output is exactly what Query Store is for: the same logical query can have
 
 The next section is a disposable example on `stoxx`. It creates a temporary lab table, generates two plans for the same query, forces the better plan, then demonstrates a Query Store hint. This is not a production-change pattern; it is a reproducible verification workflow.
 
-[!example]
-This walkthrough uses `dbo.qs_force_demo`, a disposable copy of `silver.eurostoxx50_ohlcv`. It is safe to drop after testing and does not change the real indexed tables used by the application.
-
+> [!example]
+> This walkthrough uses `dbo.qs_force_demo`, a disposable copy of `silver.eurostoxx50_ohlcv`. It is safe to drop after testing and does not change the real indexed tables used by the application.
+>
 ### Build a disposable demo table
 
 #### Create the demo table from real `stoxx` data
 
-[!info]-
-The table below is intentionally simple.
-
-- It copies `symbol`, `date`, `close`, and `volume` from `silver.eurostoxx50_ohlcv`.
-- The clustered primary key is on `id`, not on the predicate columns, so the first execution has no good supporting access path.
-- The row-count output proves the demo table is populated with real data rather than synthetic tiny samples.
-
-*Create a disposable demo table that starts without a supporting index on the predicate columns.*
-
+> [!info]-
+> The table below is intentionally simple.
+>
+> - It copies `symbol`, `date`, `close`, and `volume` from `silver.eurostoxx50_ohlcv`.
+> - The clustered primary key is on `id`, not on the predicate columns, so the first execution has no good supporting access path.
+> - The row-count output proves the demo table is populated with real data rather than synthetic tiny samples.
+>
+> *Create a disposable demo table that starts without a supporting index on the predicate columns.*
+>
 ```sql
 USE stoxx;
 IF OBJECT_ID('dbo.qs_force_demo', 'U') IS NOT NULL
@@ -223,17 +223,17 @@ _The demo table contains the full `silver.eurostoxx50_ohlcv` rowset, so the late
 
 #### Run the same tagged query before and after adding the index
 
-[!info]-
-This batch is the core of the demonstration.
-
-- First, it removes the support index if it already exists.
-- It then runs the same `COUNT(*)` query with a stable Query Store label.
-- After that, it creates `IX_qs_force_demo_symbol_date`.
-- It runs the exact same tagged query again, which lets Query Store store a second plan for the same `query_id`.
-- The output row count stays the same in both executions; only the plan shape changes.
-
-*Execute the same tagged query once without the support index and once after creating it.*
-
+> [!info]-
+> This batch is the core of the demonstration.
+>
+> - First, it removes the support index if it already exists.
+> - It then runs the same `COUNT(*)` query with a stable Query Store label.
+> - After that, it creates `IX_qs_force_demo_symbol_date`.
+> - It runs the exact same tagged query again, which lets Query Store store a second plan for the same `query_id`.
+> - The output row count stays the same in both executions; only the plan shape changes.
+>
+> *Execute the same tagged query once without the support index and once after creating it.*
+>
 ```sql
 USE stoxx;
 IF EXISTS (
@@ -274,16 +274,16 @@ _Both executions return the same `41` rows, which is exactly what you want in a 
 
 #### Compare the two plans stored for the tagged query
 
-[!info]-
-This query reads Query Store for the tagged statement and compares the two recorded plans.
-
-- `query_id` identifies the logical statement.
-- `plan_id` identifies the individual plan variant.
-- `access_pattern` is derived from the stored plan XML text to keep the output human-readable.
-- `avg_ms` and `avg_logical_io_reads` reveal whether the alternate plan is actually better, not just different.
-
-*Compare the scan and seek plans stored by Query Store for the same tagged query.*
-
+> [!info]-
+> This query reads Query Store for the tagged statement and compares the two recorded plans.
+>
+> - `query_id` identifies the logical statement.
+> - `plan_id` identifies the individual plan variant.
+> - `access_pattern` is derived from the stored plan XML text to keep the output human-readable.
+> - `avg_ms` and `avg_logical_io_reads` reveal whether the alternate plan is actually better, not just different.
+>
+> *Compare the scan and seek plans stored by Query Store for the same tagged query.*
+>
 ```sql
 SELECT
     qsq.query_id,
@@ -329,21 +329,21 @@ _This is a clean forcing candidate. The query has two valid plans for the same `
 
 #### Force the low-read plan and verify the force state
 
-[!warning]
-Plan forcing is a temporary operational control, not a substitute for root-cause analysis. Forced plans can become stale after schema changes, data-distribution shifts, or index maintenance.
-
-[!success]
-Force only a plan you have validated, record why it was forced, and review forced plans on a schedule. Unforce them when the underlying issue has been corrected.
-
-[!info]-
-This batch forces plan `594`, the lower-read seek plan from the previous output, and then verifies the force state directly from `sys.query_store_plan`.
-
-- `sp_query_store_force_plan` marks one historical plan as the preferred plan for that `query_id`.
-- `is_forced_plan` should become `1` for the chosen plan.
-- `force_failure_count` and `last_force_failure_reason_desc` tell you whether SQL Server had trouble applying the forced plan.
-
-*Force the validated seek plan and verify that Query Store now marks it as forced.*
-
+> [!warning]
+> Plan forcing is a temporary operational control, not a substitute for root-cause analysis. Forced plans can become stale after schema changes, data-distribution shifts, or index maintenance.
+>
+> [!success]
+> Force only a plan you have validated, record why it was forced, and review forced plans on a schedule. Unforce them when the underlying issue has been corrected.
+>
+> [!info]-
+> This batch forces plan `594`, the lower-read seek plan from the previous output, and then verifies the force state directly from `sys.query_store_plan`.
+>
+> - `sp_query_store_force_plan` marks one historical plan as the preferred plan for that `query_id`.
+> - `is_forced_plan` should become `1` for the chosen plan.
+> - `force_failure_count` and `last_force_failure_reason_desc` tell you whether SQL Server had trouble applying the forced plan.
+>
+> *Force the validated seek plan and verify that Query Store now marks it as forced.*
+>
 ```sql
 DECLARE @query_id bigint = 3161;
 DECLARE @plan_id bigint = 594;
@@ -386,22 +386,22 @@ _The force worked cleanly. Plan `594` is now forced, `force_failure_count = 0`, 
 
 #### Add a Query Store hint without changing code
 
-[!warning]
-Hints are safer than emergency code edits, but they still create operational debt. A hint can outlive the condition that made it useful and then quietly become the new problem.
-
-[!success]
-Use Query Store hints when code cannot be changed quickly, then remove them after the root cause is fixed. Track every active hint explicitly.
-
-[!info]-
-This batch first unforces the demo plan, then applies a Query Store hint to the same `query_id`.
-
-- `sp_query_store_unforce_plan` removes the force so the hint example is isolated.
-- `sp_query_store_set_hints` applies an `OPTION(...)` clause to the query without editing the source text.
-- `sys.query_store_query_hints` is the source of truth for which hints exist, who created them, and whether they failed to apply.
-- The final `sp_query_store_clear_hints` keeps the environment clean after the demonstration.
-
-*Apply a Query Store hint to the same query, inspect the hint metadata, and then clear it.*
-
+> [!warning]
+> Hints are safer than emergency code edits, but they still create operational debt. A hint can outlive the condition that made it useful and then quietly become the new problem.
+>
+> [!success]
+> Use Query Store hints when code cannot be changed quickly, then remove them after the root cause is fixed. Track every active hint explicitly.
+>
+> [!info]-
+> This batch first unforces the demo plan, then applies a Query Store hint to the same `query_id`.
+>
+> - `sp_query_store_unforce_plan` removes the force so the hint example is isolated.
+> - `sp_query_store_set_hints` applies an `OPTION(...)` clause to the query without editing the source text.
+> - `sys.query_store_query_hints` is the source of truth for which hints exist, who created them, and whether they failed to apply.
+> - The final `sp_query_store_clear_hints` keeps the environment clean after the demonstration.
+>
+> *Apply a Query Store hint to the same query, inspect the hint metadata, and then clear it.*
+>
 ```sql
 DECLARE @query_id bigint = 3161;
 DECLARE @plan_id bigint = 594;

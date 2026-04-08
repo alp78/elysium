@@ -47,19 +47,19 @@ This subsection answers a simple but critical operational question: which server
 
 #### Engine build, edition, host, and clustering state
 
-[!info]-
-This query returns two result sets.
-
-- The first result set returns `@@VERSION`, which is the raw version banner emitted by the engine. It includes the SQL Server major version, cumulative update, build number, edition, platform, and OS distribution string.
-- The second result set breaks the same identity information into structured fields using `SERVERPROPERTY(...)`, which is the better format for dashboards, runbooks, and automated checks.
-- `product_version`, `product_level`, and `cu_level` identify the exact build you are troubleshooting.
-- `edition` and `engine_edition` identify licensing and product family. `EngineEdition = 3` means a boxed SQL Server instance, not Azure SQL Database or Managed Instance.
-- `collation` matters for string comparison behavior and cross-database interoperability.
-- `is_clustered` and `is_hadr` tell you whether Windows failover clustering or Always On availability groups are in play.
-- `server_name` and `physical_host` help verify whether you connected to the intended instance and host.
-
-*This query establishes the exact SQL Server build, edition, platform, and HA posture of the instance before any deeper diagnostics.*
-
+> [!info]-
+> This query returns two result sets.
+>
+> - The first result set returns `@@VERSION`, which is the raw version banner emitted by the engine. It includes the SQL Server major version, cumulative update, build number, edition, platform, and OS distribution string.
+> - The second result set breaks the same identity information into structured fields using `SERVERPROPERTY(...)`, which is the better format for dashboards, runbooks, and automated checks.
+> - `product_version`, `product_level`, and `cu_level` identify the exact build you are troubleshooting.
+> - `edition` and `engine_edition` identify licensing and product family. `EngineEdition = 3` means a boxed SQL Server instance, not Azure SQL Database or Managed Instance.
+> - `collation` matters for string comparison behavior and cross-database interoperability.
+> - `is_clustered` and `is_hadr` tell you whether Windows failover clustering or Always On availability groups are in play.
+> - `server_name` and `physical_host` help verify whether you connected to the intended instance and host.
+>
+> *This query establishes the exact SQL Server build, edition, platform, and HA posture of the instance before any deeper diagnostics.*
+>
 ```sql
 SELECT @@VERSION AS version_string;
 
@@ -105,20 +105,20 @@ This subsection answers which databases exist, what recovery models they use, wh
 
 #### Database state, recovery model, compatibility level, and log reuse blockers
 
-[!info]-
-This query reads `sys.databases`, which is the instance-wide catalog view for database metadata.
-
-- `database_id` identifies each database internally.
-- `state_desc` shows whether the database is online and usable.
-- `recovery_model_desc` determines log-backup behavior and point-in-time restore capability.
-- `compatibility_level` controls optimizer and language-surface behavior for the database.
-- `is_read_committed_snapshot_on` shows whether read committed uses row versioning instead of shared locks.
-- `is_cdc_enabled` confirms whether Change Data Capture is enabled.
-- `log_reuse_wait_desc` explains why the transaction log cannot currently truncate reusable VLFs.
-- `create_date` helps identify recently created databases, tempdb recreation, or lab residue.
-
-*This query inventories every database on the instance and surfaces the recovery, compatibility, snapshot-isolation, CDC, and transaction-log reuse state that drive backup, restore, and concurrency behavior.*
-
+> [!info]-
+> This query reads `sys.databases`, which is the instance-wide catalog view for database metadata.
+>
+> - `database_id` identifies each database internally.
+> - `state_desc` shows whether the database is online and usable.
+> - `recovery_model_desc` determines log-backup behavior and point-in-time restore capability.
+> - `compatibility_level` controls optimizer and language-surface behavior for the database.
+> - `is_read_committed_snapshot_on` shows whether read committed uses row versioning instead of shared locks.
+> - `is_cdc_enabled` confirms whether Change Data Capture is enabled.
+> - `log_reuse_wait_desc` explains why the transaction log cannot currently truncate reusable VLFs.
+> - `create_date` helps identify recently created databases, tempdb recreation, or lab residue.
+>
+> *This query inventories every database on the instance and surfaces the recovery, compatibility, snapshot-isolation, CDC, and transaction-log reuse state that drive backup, restore, and concurrency behavior.*
+>
 ```sql
 SELECT
     database_id,
@@ -166,16 +166,16 @@ This subsection answers how large databases and files are, where growth pressure
 
 #### Database sizes by data file, log file, and total footprint
 
-[!info]-
-This query aggregates `sys.master_files` at the database level.
-
-- `data_size_mb` sums all row-data files (`type = 0`).
-- `log_size_mb` sums all transaction log files (`type = 1`).
-- `total_size_mb` is the combined allocated size, not used space.
-- This is an allocation view, not a logical row-count or used-space view. It tells you how much storage SQL Server currently owns on disk.
-
-*This query summarizes the allocated data-file and log-file footprint of every database so you can identify where storage pressure will show up first.*
-
+> [!info]-
+> This query aggregates `sys.master_files` at the database level.
+>
+> - `data_size_mb` sums all row-data files (`type = 0`).
+> - `log_size_mb` sums all transaction log files (`type = 1`).
+> - `total_size_mb` is the combined allocated size, not used space.
+> - This is an allocation view, not a logical row-count or used-space view. It tells you how much storage SQL Server currently owns on disk.
+>
+> *This query summarizes the allocated data-file and log-file footprint of every database so you can identify where storage pressure will show up first.*
+>
 ```sql
 SELECT
     d.name AS database_name,
@@ -207,17 +207,17 @@ ORDER BY total_size_mb DESC;
 
 #### TempDB file layout and growth settings
 
-[!info]-
-This query reads `tempdb.sys.database_files`, which is the current registered file layout for tempdb.
-
-- `file_id` identifies each file within tempdb.
-- `type_desc` distinguishes data files from the log file.
-- `size_mb` converts SQL Server's 8 KB page count into megabytes.
-- `growth` and `is_percent_growth` show whether autogrowth is fixed-size or percentage-based.
-- The main thing to look for is equal-size data files with fixed-size growth increments.
-
-*This query verifies tempdb file count, file sizes, and autogrowth behavior so you can spot misaligned or percentage-growth tempdb layouts immediately.*
-
+> [!info]-
+> This query reads `tempdb.sys.database_files`, which is the current registered file layout for tempdb.
+>
+> - `file_id` identifies each file within tempdb.
+> - `type_desc` distinguishes data files from the log file.
+> - `size_mb` converts SQL Server's 8 KB page count into megabytes.
+> - `growth` and `is_percent_growth` show whether autogrowth is fixed-size or percentage-based.
+> - The main thing to look for is equal-size data files with fixed-size growth increments.
+>
+> *This query verifies tempdb file count, file sizes, and autogrowth behavior so you can spot misaligned or percentage-growth tempdb layouts immediately.*
+>
 ```sql
 SELECT
     file_id,
@@ -266,16 +266,16 @@ This subsection surfaces live user connectivity and the current request picture 
 
 #### User sessions currently connected to the instance
 
-[!info]-
-This query uses `sys.dm_exec_sessions` to inventory current user sessions.
-
-- The first result set is the total count of user sessions.
-- The second result set shows the ten most recent user sessions and identifies the login, host, client program, session status, and default database.
-- `is_user_process = 1` filters out SQL Server internal system sessions.
-- `program_name` is often the fastest way to distinguish SSMS, `sqlcmd`, application pools, JDBC clients, and ETL tools.
-
-*This query shows how many user sessions exist right now and which clients created them.*
-
+> [!info]-
+> This query uses `sys.dm_exec_sessions` to inventory current user sessions.
+>
+> - The first result set is the total count of user sessions.
+> - The second result set shows the ten most recent user sessions and identifies the login, host, client program, session status, and default database.
+> - `is_user_process = 1` filters out SQL Server internal system sessions.
+> - `program_name` is often the fastest way to distinguish SSMS, `sqlcmd`, application pools, JDBC clients, and ETL tools.
+>
+> *This query shows how many user sessions exist right now and which clients created them.*
+>
 ```sql
 SELECT COUNT(*) AS user_session_count
 FROM sys.dm_exec_sessions
@@ -316,21 +316,21 @@ ORDER BY login_time DESC;
 
 #### Production request triage with blocking, waits, and current statement text
 
-[!info]-
-This query joins the two core live-workload DMVs:
-
-- `sys.dm_exec_requests` provides one row per currently executing request.
-- `sys.dm_exec_sessions` adds login, host, and client-application identity.
-- `DB_NAME(r.database_id)` resolves the target database.
-- `wait_type`, `wait_time`, `cpu_time`, and `total_elapsed_time` describe what the request is currently waiting on and how long it has been active.
-- `logical_reads`, `reads`, and `writes` show the request's current I/O footprint.
-- `blocking_session_id` links a blocked request to its blocker.
-- `sys.dm_exec_sql_text(r.sql_handle)` returns the batch text, and the statement offsets extract the exact currently running statement rather than the whole batch.
-
-This is the production version of a live-request observer query. It is appropriate for blocking, waiting, and "what is running right now" triage because it includes enough identity and resource fields to be actionable.
-
-*This query surfaces live user requests with the exact current statement, wait, timing, I/O footprint, and blocking relationship needed for production triage.*
-
+> [!info]-
+> This query joins the two core live-workload DMVs:
+>
+> - `sys.dm_exec_requests` provides one row per currently executing request.
+> - `sys.dm_exec_sessions` adds login, host, and client-application identity.
+> - `DB_NAME(r.database_id)` resolves the target database.
+> - `wait_type`, `wait_time`, `cpu_time`, and `total_elapsed_time` describe what the request is currently waiting on and how long it has been active.
+> - `logical_reads`, `reads`, and `writes` show the request's current I/O footprint.
+> - `blocking_session_id` links a blocked request to its blocker.
+> - `sys.dm_exec_sql_text(r.sql_handle)` returns the batch text, and the statement offsets extract the exact currently running statement rather than the whole batch.
+>
+> This is the production version of a live-request observer query. It is appropriate for blocking, waiting, and "what is running right now" triage because it includes enough identity and resource fields to be actionable.
+>
+> *This query surfaces live user requests with the exact current statement, wait, timing, I/O footprint, and blocking relationship needed for production triage.*
+>
 ```sql
 SELECT
     r.session_id,
@@ -390,18 +390,18 @@ This subsection uses cumulative waits to answer what the instance has spent time
 
 #### Top cumulative waits since startup
 
-[!info]-
-This query reads `sys.dm_os_wait_stats` and filters out the usual idle or housekeeping waits that are not useful for first-response triage.
-
-- `wait_time_ms` is the total wait time accumulated for that wait type since the last reset.
-- `signal_wait_time_ms` is the CPU-runnable portion of the wait after the resource became available.
-- `waiting_tasks_count` is the number of tasks that experienced that wait.
-- `pct_of_total_waits` is the wait type's share of the filtered total, not of all waits in the instance.
-
-Wait analysis is cumulative. It must always be read in the context of server uptime and recent maintenance or demo activity.
-
-*This query ranks the most important cumulative waits on the instance so you can distinguish background noise from actual contention classes.*
-
+> [!info]-
+> This query reads `sys.dm_os_wait_stats` and filters out the usual idle or housekeeping waits that are not useful for first-response triage.
+>
+> - `wait_time_ms` is the total wait time accumulated for that wait type since the last reset.
+> - `signal_wait_time_ms` is the CPU-runnable portion of the wait after the resource became available.
+> - `waiting_tasks_count` is the number of tasks that experienced that wait.
+> - `pct_of_total_waits` is the wait type's share of the filtered total, not of all waits in the instance.
+>
+> Wait analysis is cumulative. It must always be read in the context of server uptime and recent maintenance or demo activity.
+>
+> *This query ranks the most important cumulative waits on the instance so you can distinguish background noise from actual contention classes.*
+>
 ```sql
 WITH waits AS
 (
@@ -469,17 +469,17 @@ This subsection answers whether `msdb` contains real backup and restore history 
 
 #### Recent full backup history with compressed size
 
-[!info]-
-This query reads `msdb.dbo.backupset`, which is the canonical backup history table for SQL Server.
-
-- `type = 'D'` means full database backup.
-- `backup_size_mb` is the logical uncompressed size written by the backup operation.
-- `compressed_backup_size_mb` is the actual physical size written to media when compression was used.
-- `is_copy_only` shows whether the backup participated in the normal backup chain.
-- `recovery_model` records the database recovery model at backup time.
-
-*This query proves that recent full backups exist and shows whether they were compressed and copy-only.*
-
+> [!info]-
+> This query reads `msdb.dbo.backupset`, which is the canonical backup history table for SQL Server.
+>
+> - `type = 'D'` means full database backup.
+> - `backup_size_mb` is the logical uncompressed size written by the backup operation.
+> - `compressed_backup_size_mb` is the actual physical size written to media when compression was used.
+> - `is_copy_only` shows whether the backup participated in the normal backup chain.
+> - `recovery_model` records the database recovery model at backup time.
+>
+> *This query proves that recent full backups exist and shows whether they were compressed and copy-only.*
+>
 ```sql
 SELECT TOP (5)
     database_name,
@@ -536,16 +536,16 @@ This subsection answers whether the transaction log is close to filling and whet
 
 #### Current transaction log allocation and usage
 
-[!info]-
-This query reads `sys.dm_db_log_space_usage`, which reports current transaction log usage for databases in the instance.
-
-- `total_log_size_mb` is the current allocated log file size.
-- `used_log_space_mb` is the portion currently in use.
-- `used_log_space_percent` is the same ratio expressed as a percentage.
-- `log_since_last_backup_mb` shows how much log has been generated since the last log backup.
-
-*This query shows whether a database is close to filling its log and whether log generation has outpaced recent backups.*
-
+> [!info]-
+> This query reads `sys.dm_db_log_space_usage`, which reports current transaction log usage for databases in the instance.
+>
+> - `total_log_size_mb` is the current allocated log file size.
+> - `used_log_space_mb` is the portion currently in use.
+> - `used_log_space_percent` is the same ratio expressed as a percentage.
+> - `log_since_last_backup_mb` shows how much log has been generated since the last log backup.
+>
+> *This query shows whether a database is close to filling its log and whether log generation has outpaced recent backups.*
+>
 ```sql
 SELECT
     DB_NAME(database_id) AS database_name,

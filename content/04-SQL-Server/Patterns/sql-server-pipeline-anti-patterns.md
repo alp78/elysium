@@ -38,15 +38,15 @@ Before diagnosing anti-patterns in the abstract, verify the basic protections th
 
 #### Count user tables by core pipeline schema
 
-[!info]-
-This query counts user tables in the four most relevant schemas for pipeline design.
-
-- `sys.tables` returns user tables.
-- `sys.schemas` maps tables to schemas.
-- Restricting to `bronze`, `silver`, `gold`, and `dbo` shows whether the environment is organized by layer or whether everything is collapsing into the default schema.
-
-*This query counts user tables by schema so the reader can immediately see whether layer isolation exists or whether `dbo` is absorbing most of the workload.*
-
+> [!info]-
+> This query counts user tables in the four most relevant schemas for pipeline design.
+>
+> - `sys.tables` returns user tables.
+> - `sys.schemas` maps tables to schemas.
+> - Restricting to `bronze`, `silver`, `gold`, and `dbo` shows whether the environment is organized by layer or whether everything is collapsing into the default schema.
+>
+> *This query counts user tables by schema so the reader can immediately see whether layer isolation exists or whether `dbo` is absorbing most of the workload.*
+>
 ```sql
 SELECT s.name AS schema_name,
        COUNT(*) AS table_count
@@ -71,15 +71,15 @@ _`stoxx` does have explicit bronze, silver, and gold schemas, which is the corre
 
 #### Inspect which bronze tables currently carry `_index` and `_ingested_at`
 
-[!info]-
-This query inspects whether bronze tables expose the minimum metadata fields needed to trace batch origin and freshness.
-
-- `INFORMATION_SCHEMA.COLUMNS` is used because the goal is schema readability, not low-level storage metadata.
-- Filtering to `_index` and `_ingested_at` surfaces whether bronze tables can be scoped by business slice and traced by load time.
-- `STRING_AGG` condenses the metadata presence into one row per table.
-
-*This query shows which bronze tables already include the key operational metadata columns `_index` and `_ingested_at`.*
-
+> [!info]-
+> This query inspects whether bronze tables expose the minimum metadata fields needed to trace batch origin and freshness.
+>
+> - `INFORMATION_SCHEMA.COLUMNS` is used because the goal is schema readability, not low-level storage metadata.
+> - Filtering to `_index` and `_ingested_at` surfaces whether bronze tables can be scoped by business slice and traced by load time.
+> - `STRING_AGG` condenses the metadata presence into one row per table.
+>
+> *This query shows which bronze tables already include the key operational metadata columns `_index` and `_ingested_at`.*
+>
 ```sql
 SELECT TABLE_SCHEMA,
        TABLE_NAME,
@@ -109,14 +109,14 @@ _This is a healthy sign. The core bronze tables already carry load-time metadata
 
 #### Inspect the filtered unique index on `silver.index_dim`
 
-[!info]-
-This query inspects the index set on the live dimension table and checks whether the current-row uniqueness rule is enforced correctly.
-
-- `is_unique` tells you whether duplicates are blocked.
-- `filter_definition` is the key field: SCD2 protection depends on the unique index applying only to active rows.
-
-*This query verifies whether the live dimension table has the filtered unique index that prevents duplicate current rows.*
-
+> [!info]-
+> This query inspects the index set on the live dimension table and checks whether the current-row uniqueness rule is enforced correctly.
+>
+> - `is_unique` tells you whether duplicates are blocked.
+> - `filter_definition` is the key field: SCD2 protection depends on the unique index applying only to active rows.
+>
+> *This query verifies whether the live dimension table has the filtered unique index that prevents duplicate current rows.*
+>
 ```sql
 SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
        OBJECT_NAME(i.object_id) AS table_name,
@@ -170,17 +170,17 @@ Use a stage table, validate row count and business keys there, then publish. The
 
 ### Multi-step loads with no explicit transaction
 
-[!danger]
-`DELETE` followed by `INSERT` without an explicit transaction is a partial-state anti-pattern. If the process dies after the delete, the target is empty or incomplete.
-
-[!success]
-Wrap multi-step refresh logic in one transaction so the target only moves from one valid state to the next valid state.
-
-[!info]-
-This pair of snippets contrasts the unsafe pattern with the safe transactional version.
-
-*These snippets show why a multi-step load must be wrapped in one explicit transaction.*
-
+> [!danger]
+> `DELETE` followed by `INSERT` without an explicit transaction is a partial-state anti-pattern. If the process dies after the delete, the target is empty or incomplete.
+>
+> [!success]
+> Wrap multi-step refresh logic in one transaction so the target only moves from one valid state to the next valid state.
+>
+> [!info]-
+> This pair of snippets contrasts the unsafe pattern with the safe transactional version.
+>
+> *These snippets show why a multi-step load must be wrapped in one explicit transaction.*
+>
 ```sql
 DELETE FROM silver.signals_daily
 WHERE _index = @key;

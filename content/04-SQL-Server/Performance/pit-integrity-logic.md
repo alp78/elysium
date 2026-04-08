@@ -79,18 +79,18 @@ The first PIT question is always: what kind of time surface are you querying? In
 
 ### Inspect whether the live reference table is truly historical
 
-[!info]-
-This query checks whether `silver.index_dim` already behaves like a real effective-dated history table.
-
-- `COUNT(*)` returns the total number of rows.
-- `COUNT(DISTINCT CONCAT(_index, '|', symbol))` counts the real business keys for this table shape: the same symbol can legitimately belong to more than one index, so `_index` must be part of the key.
-- `open_ended_rows` counts rows whose `valid_to` is still `NULL`.
-- `current_rows` counts rows whose `is_current = 1`.
-
-If the table were already historical, you would normally expect a mix of closed and open rows over time. If every row is open-ended and current, the table carries valid-time columns structurally but is still a current-state surface in practice.
-
-*Check whether the live index dimension already contains historical versions or only current rows.*
-
+> [!info]-
+> This query checks whether `silver.index_dim` already behaves like a real effective-dated history table.
+>
+> - `COUNT(*)` returns the total number of rows.
+> - `COUNT(DISTINCT CONCAT(_index, '|', symbol))` counts the real business keys for this table shape: the same symbol can legitimately belong to more than one index, so `_index` must be part of the key.
+> - `open_ended_rows` counts rows whose `valid_to` is still `NULL`.
+> - `current_rows` counts rows whose `is_current = 1`.
+>
+> If the table were already historical, you would normally expect a mix of closed and open rows over time. If every row is open-ended and current, the table carries valid-time columns structurally but is still a current-state surface in practice.
+>
+> *Check whether the live index dimension already contains historical versions or only current rows.*
+>
 ```sql
 SELECT
     COUNT(*) AS total_rows,
@@ -114,16 +114,16 @@ _`silver.index_dim` is structurally ready for valid-time modeling, but the live 
 
 ### Inspect the current valid-time shape
 
-[!info]-
-This query shows actual rows from `silver.index_dim` so the shape above is not just an aggregate claim.
-
-- `_index` and `symbol` together identify the business entity in this table.
-- `valid_from` is populated.
-- `valid_to` is still `NULL` for all sampled rows.
-- `is_current = 1` confirms these are active rows, not historical versions.
-
-*Inspect current rows from the effective-dated reference table.*
-
+> [!info]-
+> This query shows actual rows from `silver.index_dim` so the shape above is not just an aggregate claim.
+>
+> - `_index` and `symbol` together identify the business entity in this table.
+> - `valid_from` is populated.
+> - `valid_to` is still `NULL` for all sampled rows.
+> - `is_current = 1` confirms these are active rows, not historical versions.
+>
+> *Inspect current rows from the effective-dated reference table.*
+>
 ```sql
 SELECT TOP (15)
     _index,
@@ -163,16 +163,16 @@ _The live rows confirm the aggregate picture: `valid_from` is present, but the t
 
 ### Pull a published PIT snapshot directly from the daily score table
 
-[!info]-
-`gold.scores_daily` is already a PIT-friendly surface because the business answer is published at the daily snapshot grain.
-
-- `score_date` is the publication date of the snapshot.
-- `index_weight` is the published constituent weight for that date.
-- `composite_score` and `composite_rank` are the scores as they existed on that snapshot date.
-- Ordering by `index_weight DESC` shows the dominant constituents for that day.
-
-*Retrieve the latest published daily constituent snapshot for `euro_stoxx_50`.*
-
+> [!info]-
+> `gold.scores_daily` is already a PIT-friendly surface because the business answer is published at the daily snapshot grain.
+>
+> - `score_date` is the publication date of the snapshot.
+> - `index_weight` is the published constituent weight for that date.
+> - `composite_score` and `composite_rank` are the scores as they existed on that snapshot date.
+> - Ordering by `index_weight DESC` shows the dominant constituents for that day.
+>
+> *Retrieve the latest published daily constituent snapshot for `euro_stoxx_50`.*
+>
 ```sql
 SELECT TOP (10)
     score_date,
@@ -209,15 +209,15 @@ _This is a clean PIT query because the date grain is explicit in the fact table 
 
 ### Track one constituent across published snapshots
 
-[!info]-
-This query follows `ASML.AS` across the four published `euro_stoxx_50` snapshot dates currently present in `gold.scores_daily`.
-
-- `index_weight` shows the constituent's published weight at each snapshot.
-- `composite_score` and `composite_rank` show that the scoring surface can change even when the symbol remains a member.
-- Ordering by `score_date DESC` gives a direct PIT history for one business key.
-
-*Track one constituent across all published snapshot dates currently loaded into the gold layer.*
-
+> [!info]-
+> This query follows `ASML.AS` across the four published `euro_stoxx_50` snapshot dates currently present in `gold.scores_daily`.
+>
+> - `index_weight` shows the constituent's published weight at each snapshot.
+> - `composite_score` and `composite_rank` show that the scoring surface can change even when the symbol remains a member.
+> - Ordering by `score_date DESC` gives a direct PIT history for one business key.
+>
+> *Track one constituent across all published snapshot dates currently loaded into the gold layer.*
+>
 ```sql
 SELECT
     score_date,
@@ -244,32 +244,32 @@ _This is what a trustworthy PIT history looks like on a snapshot fact table: the
 
 Snapshot facts answer "what was published on date X?" Valid-time rows answer "what was true for the business date?" Bi-temporal modeling answers the harder audit question: "what did the system know at publication time, before later corrections arrived?"
 
-[!warning]
-If a later correction can change a previously published weight, score, or classification, a plain snapshot fact is not enough to reproduce the original decision path.
-
-[!success]
-Store transaction-time history separately from business-validity dates. In SQL Server, system-versioned temporal tables are the cleanest built-in way to retain the earlier row version automatically.
-
+> [!warning]
+> If a later correction can change a previously published weight, score, or classification, a plain snapshot fact is not enough to reproduce the original decision path.
+>
+> [!success]
+> Store transaction-time history separately from business-validity dates. In SQL Server, system-versioned temporal tables are the cleanest built-in way to retain the earlier row version automatically.
+>
 ### Disposable system-versioned demo
 
 > [!example]
 > The following demo uses a disposable table in `dbo` so the note can show real `FOR SYSTEM_TIME` output without mutating production tables. It demonstrates a correction to one published weight for `ASML.AS`.
 
-[!warning]
-These commands create and update demo objects in `stoxx`. They are safe for a lab or documentation workflow, but they are still DDL and DML. Do not run them blindly in shared environments without agreeing on naming, retention, and cleanup.
-
-[!success]
-Use a dedicated demo table when teaching temporal behavior. Keep production temporal tables focused on real audited entities, not documentation experiments.
-
-[!info]-
-This cleanup batch removes any previous copy of the demo table.
-
-- Temporal tables cannot be dropped while `SYSTEM_VERSIONING = ON`.
-- The script first turns system versioning off if the table exists.
-- It then drops the history table and current table in the correct order.
-
-*Remove any previous copy of the disposable temporal demo.*
-
+> [!warning]
+> These commands create and update demo objects in `stoxx`. They are safe for a lab or documentation workflow, but they are still DDL and DML. Do not run them blindly in shared environments without agreeing on naming, retention, and cleanup.
+>
+> [!success]
+> Use a dedicated demo table when teaching temporal behavior. Keep production temporal tables focused on real audited entities, not documentation experiments.
+>
+> [!info]-
+> This cleanup batch removes any previous copy of the demo table.
+>
+> - Temporal tables cannot be dropped while `SYSTEM_VERSIONING = ON`.
+> - The script first turns system versioning off if the table exists.
+> - It then drops the history table and current table in the correct order.
+>
+> *Remove any previous copy of the disposable temporal demo.*
+>
 ```sql
 IF OBJECT_ID('dbo.demo_pit_temporal', 'U') IS NOT NULL
 BEGIN
@@ -279,15 +279,15 @@ BEGIN
 END;
 ```
 
-[!info]-
-This batch creates the system-versioned current table and its history table.
-
-- `sys_start` and `sys_end` are generated by SQL Server.
-- `PERIOD FOR SYSTEM_TIME` registers them as the transaction-time period.
-- `SYSTEM_VERSIONING = ON` tells SQL Server to keep prior row versions automatically in `dbo.demo_pit_temporal_history`.
-
-*Create a disposable system-versioned temporal table for the bi-temporal demonstration.*
-
+> [!info]-
+> This batch creates the system-versioned current table and its history table.
+>
+> - `sys_start` and `sys_end` are generated by SQL Server.
+> - `PERIOD FOR SYSTEM_TIME` registers them as the transaction-time period.
+> - `SYSTEM_VERSIONING = ON` tells SQL Server to keep prior row versions automatically in `dbo.demo_pit_temporal_history`.
+>
+> *Create a disposable system-versioned temporal table for the bi-temporal demonstration.*
+>
 ```sql
 CREATE TABLE dbo.demo_pit_temporal
 (
@@ -304,16 +304,16 @@ CREATE TABLE dbo.demo_pit_temporal
 WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.demo_pit_temporal_history));
 ```
 
-[!info]-
-This batch creates a before-and-after history trail for the same business-valid row.
-
-- The `INSERT` writes the original published weight.
-- `WAITFOR DELAY '00:00:01'` guarantees a visible gap between versions.
-- The `UPDATE` simulates a later correction.
-- Because the table is system-versioned, SQL Server moves the old version to the history table automatically.
-
-*Insert the original row version, then simulate a later correction.*
-
+> [!info]-
+> This batch creates a before-and-after history trail for the same business-valid row.
+>
+> - The `INSERT` writes the original published weight.
+> - `WAITFOR DELAY '00:00:01'` guarantees a visible gap between versions.
+> - The `UPDATE` simulates a later correction.
+> - Because the table is system-versioned, SQL Server moves the old version to the history table automatically.
+>
+> *Insert the original row version, then simulate a later correction.*
+>
 ```sql
 INSERT INTO dbo.demo_pit_temporal (_index, symbol, weight_pct, valid_from, valid_to)
 VALUES ('euro_stoxx_50', 'ASML.AS', 0.0911568723, '2026-03-04', '9999-12-31');
@@ -328,14 +328,14 @@ WHERE _index = 'euro_stoxx_50'
 
 ### Verify that SQL Server registered the table as temporal
 
-[!info]-
-This query inspects the table metadata in `sys.tables`.
-
-- `temporal_type_desc` shows whether the table is the current temporal table or the history table.
-- `history_table_name` resolves the linked history table for the current table.
-
-*Confirm that the demo table is system-versioned and linked to its history table.*
-
+> [!info]-
+> This query inspects the table metadata in `sys.tables`.
+>
+> - `temporal_type_desc` shows whether the table is the current temporal table or the history table.
+> - `history_table_name` resolves the linked history table for the current table.
+>
+> *Confirm that the demo table is system-versioned and linked to its history table.*
+>
 ```sql
 SELECT
     t.name AS table_name,
@@ -361,15 +361,15 @@ _SQL Server registered the current table and its history table correctly. At thi
 
 ### Read both row versions with `FOR SYSTEM_TIME ALL`
 
-[!info]-
-`FOR SYSTEM_TIME ALL` returns both the current row and the historical row versions.
-
-- `weight_pct` stayed on the same business-valid interval.
-- `sys_start` and `sys_end` record when each version was current in the database.
-- The older row ends exactly when the corrected row begins.
-
-*Read the full transaction-time history for the corrected demo row.*
-
+> [!info]-
+> `FOR SYSTEM_TIME ALL` returns both the current row and the historical row versions.
+>
+> - `weight_pct` stayed on the same business-valid interval.
+> - `sys_start` and `sys_end` record when each version was current in the database.
+> - The older row ends exactly when the corrected row begins.
+>
+> *Read the full transaction-time history for the corrected demo row.*
+>
 ```sql
 SELECT
     _index,
@@ -399,15 +399,15 @@ _The valid-time meaning of the row did not change: it still applies from `2026-0
 
 ### Ask what the system knew before the correction
 
-[!info]-
-This query derives an `AS OF` timestamp just before the correction became current.
-
-- `MAX(sys_end)` from the history table finds when the original version stopped being current.
-- `DATEADD(NANOSECOND, -100, ...)` moves the point-in-time probe just before that transition.
-- `FOR SYSTEM_TIME AS OF` then reconstructs what the system knew at that precise transaction-time instant.
-
-*Reconstruct the row as it existed immediately before the later correction.*
-
+> [!info]-
+> This query derives an `AS OF` timestamp just before the correction became current.
+>
+> - `MAX(sys_end)` from the history table finds when the original version stopped being current.
+> - `DATEADD(NANOSECOND, -100, ...)` moves the point-in-time probe just before that transition.
+> - `FOR SYSTEM_TIME AS OF` then reconstructs what the system knew at that precise transaction-time instant.
+>
+> *Reconstruct the row as it existed immediately before the later correction.*
+>
 ```sql
 DECLARE @as_of_before_update datetime2(7);
 
@@ -439,24 +439,24 @@ Weight totals are not advisory in index pipelines. They are a publication gate.
 
 The live `gold.scores_daily` table stores `index_weight` as `FLOAT`, which is common in exploratory or scoring-oriented surfaces, but not ideal for final auditable weight control. For validation, cast to `DECIMAL`, compute the deviation explicitly, and gate the output with a tolerance that is strict enough for the business rule.
 
-[!warning]
-Never compare `SUM(index_weight) = 1.0` directly on `FLOAT` data and call the result "exact". Binary floating-point is not a publication-grade proof of weight closure.
-
-[!success]
-Cast to `DECIMAL`, compute the deviation from `1.000000000000`, and make the pass or fail decision explicit in the output that the pipeline reviews.
-
+> [!warning]
+> Never compare `SUM(index_weight) = 1.0` directly on `FLOAT` data and call the result "exact". Binary floating-point is not a publication-grade proof of weight closure.
+>
+> [!success]
+> Cast to `DECIMAL`, compute the deviation from `1.000000000000`, and make the pass or fail decision explicit in the output that the pipeline reviews.
+>
 ### Validate weight closure across every loaded snapshot
 
-[!info]-
-This query validates all currently loaded weight snapshots in `gold.scores_daily`.
-
-- `SUM(CAST(index_weight AS decimal(20,12)))` converts the float weights to a fixed-point validation surface before summing.
-- `deviation` is the absolute distance from exactly `1.000000000000`.
-- `weight_check` turns the numeric deviation into an explicit operational outcome.
-- The result set is ordered by date and index so failures appear in context, not as isolated anomalies.
-
-*Validate weight closure for every currently loaded daily snapshot.*
-
+> [!info]-
+> This query validates all currently loaded weight snapshots in `gold.scores_daily`.
+>
+> - `SUM(CAST(index_weight AS decimal(20,12)))` converts the float weights to a fixed-point validation surface before summing.
+> - `deviation` is the absolute distance from exactly `1.000000000000`.
+> - `weight_check` turns the numeric deviation into an explicit operational outcome.
+> - The result set is ordered by date and index so failures appear in context, not as isolated anomalies.
+>
+> *Validate weight closure for every currently loaded daily snapshot.*
+>
 ```sql
 SELECT
     score_date,
@@ -517,16 +517,16 @@ PIT joins are expensive when the query shape does not respect the data grain. In
 
 ### Align quarterly rows to a daily snapshot with `OUTER APPLY`
 
-[!info]-
-This query performs a true as-of join.
-
-- The driving table is `gold.scores_daily` for one daily publication date.
-- `OUTER APPLY` runs a correlated lookup into `silver.signals_quarterly`.
-- `TOP (1) ... ORDER BY q.as_of_date DESC` returns the latest quarter on or before the daily score date for the same symbol and index.
-- `matched_quarter_end` proves which quarterly record was selected.
-
-*Join each daily score row to the latest quarterly row known on or before the same daily date.*
-
+> [!info]-
+> This query performs a true as-of join.
+>
+> - The driving table is `gold.scores_daily` for one daily publication date.
+> - `OUTER APPLY` runs a correlated lookup into `silver.signals_quarterly`.
+> - `TOP (1) ... ORDER BY q.as_of_date DESC` returns the latest quarter on or before the daily score date for the same symbol and index.
+> - `matched_quarter_end` proves which quarterly record was selected.
+>
+> *Join each daily score row to the latest quarterly row known on or before the same daily date.*
+>
 ```sql
 SELECT TOP (10)
     d.symbol,
@@ -572,15 +572,15 @@ _This is the correct temporal join shape for a daily-to-quarterly PIT alignment.
 
 ### Check alignment coverage across all loaded `euro_stoxx_50` daily snapshots
 
-[!info]-
-This query turns the join above into an integrity check.
-
-- `daily_rows` counts the number of daily rows for each snapshot date.
-- `missing_quarterly_match_rows` counts daily rows that failed to find a quarterly record on or before the daily date.
-- `oldest_quarter_used` and `newest_quarter_used` show the spread of quarterly records selected for that day.
-
-*Verify that every loaded daily row can find a quarterly row without look-ahead.*
-
+> [!info]-
+> This query turns the join above into an integrity check.
+>
+> - `daily_rows` counts the number of daily rows for each snapshot date.
+> - `missing_quarterly_match_rows` counts daily rows that failed to find a quarterly record on or before the daily date.
+> - `oldest_quarter_used` and `newest_quarter_used` show the spread of quarterly records selected for that day.
+>
+> *Verify that every loaded daily row can find a quarterly row without look-ahead.*
+>
 ```sql
 WITH aligned AS (
     SELECT
@@ -627,15 +627,15 @@ _All currently loaded `euro_stoxx_50` daily rows have a valid quarterly predeces
 
 ### Inspect the actual index surface on the PIT join tables
 
-[!info]-
-This query inspects the real indexes on the three live tables that drive the PIT join pattern.
-
-- `gold.scores_daily` should support exact daily key lookups.
-- `silver.signals_quarterly` should support `(_index, symbol, as_of_date)` seeks for the `TOP (1)` as-of pattern.
-- `silver.index_dim` currently has a current-state uniqueness index, not a historical valid-time index.
-
-*Inspect the live access paths on the PIT-relevant tables.*
-
+> [!info]-
+> This query inspects the real indexes on the three live tables that drive the PIT join pattern.
+>
+> - `gold.scores_daily` should support exact daily key lookups.
+> - `silver.signals_quarterly` should support `(_index, symbol, as_of_date)` seeks for the `TOP (1)` as-of pattern.
+> - `silver.index_dim` currently has a current-state uniqueness index, not a historical valid-time index.
+>
+> *Inspect the live access paths on the PIT-relevant tables.*
+>
 ```sql
 SET QUOTED_IDENTIFIER ON;
 
@@ -707,15 +707,15 @@ Reconciliation queries are not optional reporting extras. They are the checks th
 
 ### Compare shared snapshot dates across gold surfaces
 
-[!info]-
-This query reconciles constituent counts between two independent gold-layer surfaces on the dates they both publish.
-
-- `gold.scores_daily` provides the per-constituent snapshot.
-- `gold.index_performance` provides the aggregated daily index surface with a `stocks_count`.
-- `count_diff` must be `0` on shared dates if both surfaces describe the same constituent set for that day.
-
-*Cross-check shared dates between the constituent snapshot table and the aggregated index-performance table.*
-
+> [!info]-
+> This query reconciles constituent counts between two independent gold-layer surfaces on the dates they both publish.
+>
+> - `gold.scores_daily` provides the per-constituent snapshot.
+> - `gold.index_performance` provides the aggregated daily index surface with a `stocks_count`.
+> - `count_diff` must be `0` on shared dates if both surfaces describe the same constituent set for that day.
+>
+> *Cross-check shared dates between the constituent snapshot table and the aggregated index-performance table.*
+>
 ```sql
 WITH snapshot_counts AS (
     SELECT

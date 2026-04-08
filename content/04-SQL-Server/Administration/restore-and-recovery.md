@@ -85,22 +85,22 @@ This subsection uses a real disposable restore that was executed successfully on
 
 #### Restore the backup to a new database using `WITH MOVE`
 
-[!warning]
-The `MOVE` clause must use the logical file names from the backup, not guessed file names. If you reuse the original file paths or skip `MOVE` when restoring side by side, the restore will fail or target the wrong files.
-
-[!success]
-Always run `RESTORE FILELISTONLY` first and copy the logical names exactly into the `MOVE` clauses.
-
-[!info]-
-This restore command does four essential things:
-
-- restores from the known `.bak` file
-- creates a new database name instead of overwriting an existing one
-- remaps the original logical files to new physical file paths
-- uses `RECOVERY` because this is a one-step full restore, not part of a longer chain
-
-*This command performs a side-by-side full restore to a new database name so the backup can be validated safely.*
-
+> [!warning]
+> The `MOVE` clause must use the logical file names from the backup, not guessed file names. If you reuse the original file paths or skip `MOVE` when restoring side by side, the restore will fail or target the wrong files.
+>
+> [!success]
+> Always run `RESTORE FILELISTONLY` first and copy the logical names exactly into the `MOVE` clauses.
+>
+> [!info]-
+> This restore command does four essential things:
+>
+> - restores from the known `.bak` file
+> - creates a new database name instead of overwriting an existing one
+> - remaps the original logical files to new physical file paths
+> - uses `RECOVERY` because this is a one-step full restore, not part of a longer chain
+>
+> *This command performs a side-by-side full restore to a new database name so the backup can be validated safely.*
+>
 ```sql
 RESTORE DATABASE admin_restore_demo_check
 FROM DISK = '/var/opt/mssql/backup/admin_restore_demo_full.bak'
@@ -132,16 +132,16 @@ ORDER BY id;
 
 #### Confirm the restore in `msdb`
 
-[!info]-
-This query reads `msdb.dbo.restorehistory`, which is SQL Server's restore audit trail.
-
-- `destination_database_name` identifies the restore target.
-- `backup_set_id` links back to the source backup in `msdb.dbo.backupset`.
-- `replace` shows whether `WITH REPLACE` was used.
-- `recovery` shows whether the restore left the database recovered and online.
-
-*This query proves that SQL Server recorded the restore operation in `msdb`, not just that a validation query happened to work afterward.*
-
+> [!info]-
+> This query reads `msdb.dbo.restorehistory`, which is SQL Server's restore audit trail.
+>
+> - `destination_database_name` identifies the restore target.
+> - `backup_set_id` links back to the source backup in `msdb.dbo.backupset`.
+> - `replace` shows whether `WITH REPLACE` was used.
+> - `recovery` shows whether the restore left the database recovered and online.
+>
+> *This query proves that SQL Server recorded the restore operation in `msdb`, not just that a validation query happened to work afterward.*
+>
 ```sql
 SELECT TOP (5)
     restore_date,
@@ -178,23 +178,23 @@ Point-in-time recovery is a chain-replay procedure, not a single restore command
 
 #### Full point-in-time restore sequence
 
-[!warning]
-This sequence is only valid when an unbroken log chain exists. If a log backup is missing, or if the database was switched to SIMPLE recovery during the interval, the point-in-time target may be unattainable.
-
-[!success]
-Script the whole restore sequence in advance and execute it step by step. The most common PITR error is not backup corruption; it is using `RECOVERY` too early and terminating the chain.
-
-[!info]-
-This is the standard SQL Server PITR pattern:
-
-- take a tail-log backup if the source database is still accessible
-- restore the full backup with `NORECOVERY`
-- restore the latest differential, if one is part of the strategy, with `NORECOVERY`
-- restore each required log backup in sequence with `NORECOVERY`
-- restore the final log with `STOPAT` and `RECOVERY`
-
-*This command sequence restores a database to a specific point in time by replaying the backup chain in order.*
-
+> [!warning]
+> This sequence is only valid when an unbroken log chain exists. If a log backup is missing, or if the database was switched to SIMPLE recovery during the interval, the point-in-time target may be unattainable.
+>
+> [!success]
+> Script the whole restore sequence in advance and execute it step by step. The most common PITR error is not backup corruption; it is using `RECOVERY` too early and terminating the chain.
+>
+> [!info]-
+> This is the standard SQL Server PITR pattern:
+>
+> - take a tail-log backup if the source database is still accessible
+> - restore the full backup with `NORECOVERY`
+> - restore the latest differential, if one is part of the strategy, with `NORECOVERY`
+> - restore each required log backup in sequence with `NORECOVERY`
+> - restore the final log with `STOPAT` and `RECOVERY`
+>
+> *This command sequence restores a database to a specific point in time by replaying the backup chain in order.*
+>
 ```sql
 BACKUP LOG stoxx
 TO DISK = '/var/opt/mssql/backup/stoxx_tail.trn'
@@ -236,14 +236,14 @@ Not every recovery event is a manual restore. Crash recovery after a restart als
 
 #### Check whether a database is currently in recovery
 
-[!info]-
-This query reads `sys.dm_exec_requests` for commands related to recovery.
-
-- `percent_complete` is often useful during REDO, but less reliable during UNDO.
-- `estimated_completion_time` is approximate and should not be treated as a guarantee.
-
-*This query shows whether SQL Server is currently performing crash recovery or an explicit restore recovery operation.*
-
+> [!info]-
+> This query reads `sys.dm_exec_requests` for commands related to recovery.
+>
+> - `percent_complete` is often useful during REDO, but less reliable during UNDO.
+> - `estimated_completion_time` is approximate and should not be treated as a guarantee.
+>
+> *This query shows whether SQL Server is currently performing crash recovery or an explicit restore recovery operation.*
+>
 ```sql
 SELECT
     database_id,

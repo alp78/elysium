@@ -82,27 +82,27 @@ Stable identifiers such as DAG name, task name, service name, or query label can
 | Airflow `run_id` | No | Task logs, orchestration metadata, or session-scoped metadata | Embedding it in query text creates one unique statement per run. |
 | Exact execution timestamp | No | Logs or external monitoring | High-cardinality tag that destroys plan reuse value. |
 
-[!warning]
-Do not put a unique `run_id` or timestamp in every production query text unless you have explicitly decided that losing plan reuse is acceptable.
-
-[!success]
-Keep the SQL text stable. Put durable identifiers such as DAG or task labels in `OPTION (LABEL = ...)`, and keep volatile run-specific metadata in the orchestration layer or session-scoped metadata.
-
+> [!warning]
+> Do not put a unique `run_id` or timestamp in every production query text unless you have explicitly decided that losing plan reuse is acceptable.
+>
+> [!success]
+> Keep the SQL text stable. Put durable identifiers such as DAG or task labels in `OPTION (LABEL = ...)`, and keep volatile run-specific metadata in the orchestration layer or session-scoped metadata.
+>
 ### Comment headers survive in the plan cache
 
 SQL comment headers are still useful when you need the literal submitted text in the live plan cache or in external query-sample tooling.
 
 #### Execute a comment-tagged batch
 
-[!info]-
-This query is a live demonstration of comment-based tagging.
-
-- The comment prefix contains a DAG name, task name, and run identifier.
-- The SQL text itself is otherwise a simple selective count query on `silver.eurostoxx50_ohlcv`.
-- The output count is not the point; the point is that SQL Server stores the full submitted batch text in the plan cache, including the comment.
-
-*Run a tagged batch whose SQL comment header identifies the DAG, task, and run.*
-
+> [!info]-
+> This query is a live demonstration of comment-based tagging.
+>
+> - The comment prefix contains a DAG name, task name, and run identifier.
+> - The SQL text itself is otherwise a simple selective count query on `silver.eurostoxx50_ohlcv`.
+> - The output count is not the point; the point is that SQL Server stores the full submitted batch text in the plan cache, including the comment.
+>
+> *Run a tagged batch whose SQL comment header identifies the DAG, task, and run.*
+>
 ```sql
 /* dag=daily_pipeline task=load_silver run=manual__2026-04-08T16:15:00 */
 SELECT COUNT(*) AS tagged_row_count
@@ -118,14 +118,14 @@ _The query returned `1347` rows. The more important outcome is that the exact ba
 
 #### Read the full tagged text from the plan cache
 
-[!info]-
-`sys.dm_exec_sql_text` returns the batch text associated with a cached plan handle.
-
-- The `LIKE '/* dag=daily_pipeline%'` predicate is intentionally strict so the query finds only comment-prefixed batches that start with the DAG tag.
-- This is a volatile capture path: it depends on the plan still being in cache.
-
-*Find the exact tagged batch text in the live plan cache.*
-
+> [!info]-
+> `sys.dm_exec_sql_text` returns the batch text associated with a cached plan handle.
+>
+> - The `LIKE '/* dag=daily_pipeline%'` predicate is intentionally strict so the query finds only comment-prefixed batches that start with the DAG tag.
+> - This is a volatile capture path: it depends on the plan still being in cache.
+>
+> *Find the exact tagged batch text in the live plan cache.*
+>
 ```sql
 SELECT TOP (5)
     text
@@ -149,15 +149,15 @@ The same comment-tagged query above does not survive into Query Store in the sam
 
 #### Inspect the Query Store text for the tagged query
 
-[!info]-
-This query looks up the previous statement by the result alias `tagged_row_count`.
-
-- The stored text in Query Store is the important part of the output.
-- Notice that Query Store parameterized the predicate and dropped the comment header entirely.
-- This is why searching Query Store by raw comment prefix is unreliable.
-
-*Inspect how Query Store stored the earlier comment-tagged query.*
-
+> [!info]-
+> This query looks up the previous statement by the result alias `tagged_row_count`.
+>
+> - The stored text in Query Store is the important part of the output.
+> - Notice that Query Store parameterized the predicate and dropped the comment header entirely.
+> - This is why searching Query Store by raw comment prefix is unreliable.
+>
+> *Inspect how Query Store stored the earlier comment-tagged query.*
+>
 ```sql
 SELECT TOP (5)
     q.query_id,
@@ -191,15 +191,15 @@ If you need a durable, SQL-native identifier that survives into Query Store text
 
 #### Execute a labeled query
 
-[!info]-
-This query uses a stable label instead of a comment prefix.
-
-- The label identifies the pipeline operation, not the individual run.
-- The SQL text stays stable across executions as long as the label stays stable.
-- This preserves plan reuse while giving Query Store a durable marker.
-
-*Run a stable labeled query that Query Store can retain verbatim.*
-
+> [!info]-
+> This query uses a stable label instead of a comment prefix.
+>
+> - The label identifies the pipeline operation, not the individual run.
+> - The SQL text stays stable across executions as long as the label stays stable.
+> - This preserves plan reuse while giving Query Store a durable marker.
+>
+> *Run a stable labeled query that Query Store can retain verbatim.*
+>
 ```sql
 SELECT COUNT(*) AS labeled_row_count
 FROM silver.eurostoxx50_ohlcv
@@ -215,14 +215,14 @@ _The row count is the same `1347`, but the identity mechanism is better suited t
 
 #### Read the labeled query from Query Store
 
-[!info]-
-This query proves that the label survived into Query Store text.
-
-- The `LIKE 'SELECT COUNT(*) AS labeled_row_count%'` predicate is strict enough to isolate the real labeled statement.
-- Unlike the comment example, the Query Store text keeps the `OPTION (LABEL = ...)` clause.
-
-*Find the labeled query text exactly as stored by Query Store.*
-
+> [!info]-
+> This query proves that the label survived into Query Store text.
+>
+> - The `LIKE 'SELECT COUNT(*) AS labeled_row_count%'` predicate is strict enough to isolate the real labeled statement.
+> - Unlike the comment example, the Query Store text keeps the `OPTION (LABEL = ...)` clause.
+>
+> *Find the labeled query text exactly as stored by Query Store.*
+>
 ```sql
 SELECT TOP (5)
     q.query_id,
@@ -263,26 +263,26 @@ For SQL Server-side observability, `Application Name` is usually more valuable t
 | ADO.NET | `Server=localhost,1434;Initial Catalog=stoxx;User ID=pipeline_svc;Password=...;Encrypt=True;TrustServerCertificate=True;Application Name=pipeline_loader;Min Pool Size=2;Max Pool Size=20;` |
 | SQLAlchemy / pyodbc | `mssql+pyodbc://pipeline_svc:***@localhost,1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes&Application Name=pipeline_loader` |
 
-[!warning]
-Do not rely on default client names in production. `SQLCMD`, `Microsoft SQL Server Management Studio`, and generic driver names are too coarse for service-level monitoring.
-
-[!success]
-Set a stable `Application Name` per service or per worker type, not per individual run. That gives you usable `program_name` grouping without fragmenting the connection identity space.
-
+> [!warning]
+> Do not rely on default client names in production. `SQLCMD`, `Microsoft SQL Server Management Studio`, and generic driver names are too coarse for service-level monitoring.
+>
+> [!success]
+> Set a stable `Application Name` per service or per worker type, not per individual run. That gives you usable `program_name` grouping without fragmenting the connection identity space.
+>
 ### Monitor sessions by application name
 
 #### Group user sessions by `program_name`
 
-[!info]-
-This query groups `sys.dm_exec_sessions` by application and login identity.
-
-- `program_name` is the client application name supplied by the connection string.
-- `total_sessions` counts all user sessions in that group.
-- `sleeping_sessions` counts sessions that are connected but not actively running a request.
-- `active_sessions` counts sessions whose status is not `sleeping`.
-
-*Group user sessions by application name and login to measure current connection footprint.*
-
+> [!info]-
+> This query groups `sys.dm_exec_sessions` by application and login identity.
+>
+> - `program_name` is the client application name supplied by the connection string.
+> - `total_sessions` counts all user sessions in that group.
+> - `sleeping_sessions` counts sessions that are connected but not actively running a request.
+> - `active_sessions` counts sessions whose status is not `sleeping`.
+>
+> *Group user sessions by application name and login to measure current connection footprint.*
+>
 ```sql
 SELECT
     program_name,
@@ -314,14 +314,14 @@ _This is the exact operational payoff of setting `Application Name`. `pipeline_l
 
 #### Find long-sleeping user sessions
 
-[!info]-
-This query looks for user sessions that have been sleeping for more than one hour.
-
-- `last_request_end_time` is the key field: it shows when the last request on the session completed.
-- Sleeping sessions are not automatically a problem, but long-sleeping sessions deserve inspection because they often reflect abandoned clients or oversized pools.
-
-*Find user sessions that have been idle for more than one hour.*
-
+> [!info]-
+> This query looks for user sessions that have been sleeping for more than one hour.
+>
+> - `last_request_end_time` is the key field: it shows when the last request on the session completed.
+> - Sleeping sessions are not automatically a problem, but long-sleeping sessions deserve inspection because they often reflect abandoned clients or oversized pools.
+>
+> *Find user sessions that have been idle for more than one hour.*
+>
 ```sql
 SELECT
     session_id,
@@ -366,12 +366,12 @@ Schema changes should be a release concern, not a normal per-run pipeline behavi
 | DDL application | Release pipeline | Controlled blast radius and auditability |
 | Runtime schema check | DAG startup task | Fast failure when environments drift |
 
-[!warning]
-Do not apply schema migrations automatically on every Airflow DAG run unless the environment is intentionally small, serialized, and you have accepted DDL-at-runtime as a design choice.
-
-[!success]
-Use runtime DAGs to verify schema version, not to own production DDL. Keep actual schema changes in a dedicated deployment workflow.
-
+> [!warning]
+> Do not apply schema migrations automatically on every Airflow DAG run unless the environment is intentionally small, serialized, and you have accepted DDL-at-runtime as a design choice.
+>
+> [!success]
+> Use runtime DAGs to verify schema version, not to own production DDL. Keep actual schema changes in a dedicated deployment workflow.
+>
 ### Migration tool choices
 
 #### Compare the main migration styles
@@ -396,15 +396,15 @@ Use runtime DAGs to verify schema version, not to own production DDL. Keep actua
 
 #### Validate migration syntax in CI with `sqlcmd`
 
-[!info]-
-This example validates migration syntax without executing the statements.
-
-- `SET PARSEONLY ON` asks SQL Server to parse and compile the T-SQL without running it.
-- The loop validates every migration file in the folder.
-- This belongs in CI, not in the production runtime DAG.
-
-*Validate migration syntax in CI before any deployment workflow can apply the scripts.*
-
+> [!info]-
+> This example validates migration syntax without executing the statements.
+>
+> - `SET PARSEONLY ON` asks SQL Server to parse and compile the T-SQL without running it.
+> - The loop validates every migration file in the folder.
+> - This belongs in CI, not in the production runtime DAG.
+>
+> *Validate migration syntax in CI before any deployment workflow can apply the scripts.*
+>
 ```yaml
 # .github/workflows/validate-migrations.yml
 - name: Validate SQL migrations
@@ -438,22 +438,22 @@ Datadog, OpenTelemetry collectors, or internal database-monitoring agents all be
 
 #### Grant the monitoring login only the read surface it needs
 
-[!warning]
-Do not make the monitoring login `sysadmin`. Monitoring agents need visibility, not control.
-
-[!success]
-Grant only the server and database read permissions required by the specific DMVs and metadata views you intend to query.
-
-[!info]-
-This is a minimum viable SQL Server monitoring login pattern.
-
-- `VIEW SERVER STATE` is the key server-level permission for most performance DMVs.
-- `VIEW ANY DEFINITION` supports metadata inspection.
-- `CONNECT ANY DATABASE` allows the login to enumerate databases.
-- `db_datareader` is granted per monitored database when the agent needs regular table-level reads for deeper inspection.
-
-*Create a monitoring login with the minimum read surface needed for SQL Server performance telemetry.*
-
+> [!warning]
+> Do not make the monitoring login `sysadmin`. Monitoring agents need visibility, not control.
+>
+> [!success]
+> Grant only the server and database read permissions required by the specific DMVs and metadata views you intend to query.
+>
+> [!info]-
+> This is a minimum viable SQL Server monitoring login pattern.
+>
+> - `VIEW SERVER STATE` is the key server-level permission for most performance DMVs.
+> - `VIEW ANY DEFINITION` supports metadata inspection.
+> - `CONNECT ANY DATABASE` allows the login to enumerate databases.
+> - `db_datareader` is granted per monitored database when the agent needs regular table-level reads for deeper inspection.
+>
+> *Create a monitoring login with the minimum read surface needed for SQL Server performance telemetry.*
+>
 ```sql
 CREATE LOGIN dd_agent WITH PASSWORD = 'DD_AGENT_PASSWORD';
 CREATE USER dd_agent FOR LOGIN dd_agent;

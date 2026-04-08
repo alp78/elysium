@@ -78,14 +78,14 @@ Backup strategy depends on the database recovery model. A FULL backup command wo
 
 #### Current recovery-model signal for the primary workload database
 
-[!info]-
-This query reads the database-level recovery configuration from `sys.databases`.
-
-- `recovery_model_desc` tells you which backup types are meaningful operationally.
-- `log_reuse_wait_desc` tells you whether the log is currently waiting on a backup or blocked by something else.
-
-*This query confirms whether the database is even eligible for a log-backup strategy and point-in-time recovery.*
-
+> [!info]-
+> This query reads the database-level recovery configuration from `sys.databases`.
+>
+> - `recovery_model_desc` tells you which backup types are meaningful operationally.
+> - `log_reuse_wait_desc` tells you whether the log is currently waiting on a backup or blocked by something else.
+>
+> *This query confirms whether the database is even eligible for a log-backup strategy and point-in-time recovery.*
+>
 ```sql
 SELECT
     name,
@@ -121,17 +121,17 @@ This subsection shows the actual backup metadata recorded by SQL Server in the c
 
 #### Recent backup history from `msdb.dbo.backupset`
 
-[!info]-
-This query reads the main backup history table in `msdb`.
-
-- `type = 'D'` means full database backup.
-- `backup_size_mb` is the logical backup size.
-- `compressed_backup_size_mb` is the physical size written to the backup file when compression is used.
-- `is_copy_only` shows whether the backup participates in the normal backup chain.
-- `recovery_model` records the database recovery model at backup time.
-
-*This query proves that a full backup was recorded and shows whether compression and copy-only semantics were involved.*
-
+> [!info]-
+> This query reads the main backup history table in `msdb`.
+>
+> - `type = 'D'` means full database backup.
+> - `backup_size_mb` is the logical backup size.
+> - `compressed_backup_size_mb` is the physical size written to the backup file when compression is used.
+> - `is_copy_only` shows whether the backup participates in the normal backup chain.
+> - `recovery_model` records the database recovery model at backup time.
+>
+> *This query proves that a full backup was recorded and shows whether compression and copy-only semantics were involved.*
+>
 ```sql
 SELECT TOP (5)
     database_name,
@@ -187,15 +187,15 @@ Backup history is not enough. You also need commands that confirm the file is re
 
 #### Verify the backup file without restoring it
 
-[!info]-
-`RESTORE VERIFYONLY` validates that SQL Server can read the backup set and that the backup structure is internally consistent.
-
-- It does not restore data.
-- With `CHECKSUM`, SQL Server also validates the backup checksums if they exist.
-- It does not replace a real test restore.
-
-*This command checks whether the backup file is structurally valid and readable without performing a restore.*
-
+> [!info]-
+> `RESTORE VERIFYONLY` validates that SQL Server can read the backup set and that the backup structure is internally consistent.
+>
+> - It does not restore data.
+> - With `CHECKSUM`, SQL Server also validates the backup checksums if they exist.
+> - It does not replace a real test restore.
+>
+> *This command checks whether the backup file is structurally valid and readable without performing a restore.*
+>
 ```sql
 RESTORE VERIFYONLY
 FROM DISK = '/var/opt/mssql/backup/admin_restore_demo_full.bak'
@@ -215,19 +215,19 @@ WITH CHECKSUM;
 
 #### Inspect the backup-set header metadata
 
-[!info]-
-`RESTORE HEADERONLY` returns one row per backup set on the media. The full row is wide, so the fields below focus on the columns that matter most first:
-
-- `BackupType` identifies the backup-set kind numerically.
-- `Compressed` shows whether compression was used.
-- `Position` identifies the backup-set number on the media.
-- `DatabaseName` identifies the source database.
-- `RecoveryModel` records the recovery model at backup time.
-- `BackupTypeDescription` is the human-readable backup type.
-- `CompressedBackupSize` is the actual number of bytes written to media after compression.
-
-*This command shows what kind of backup is stored in the file and which source database and recovery model it belongs to.*
-
+> [!info]-
+> `RESTORE HEADERONLY` returns one row per backup set on the media. The full row is wide, so the fields below focus on the columns that matter most first:
+>
+> - `BackupType` identifies the backup-set kind numerically.
+> - `Compressed` shows whether compression was used.
+> - `Position` identifies the backup-set number on the media.
+> - `DatabaseName` identifies the source database.
+> - `RecoveryModel` records the recovery model at backup time.
+> - `BackupTypeDescription` is the human-readable backup type.
+> - `CompressedBackupSize` is the actual number of bytes written to media after compression.
+>
+> *This command shows what kind of backup is stored in the file and which source database and recovery model it belongs to.*
+>
 ```sql
 RESTORE HEADERONLY
 FROM DISK = '/var/opt/mssql/backup/admin_restore_demo_full.bak';
@@ -250,16 +250,16 @@ FROM DISK = '/var/opt/mssql/backup/admin_restore_demo_full.bak';
 
 #### Inspect the logical files stored in the backup
 
-[!info]-
-`RESTORE FILELISTONLY` returns one row per file inside the backup.
-
-- `LogicalName` is the name you must reference in `WITH MOVE` clauses during side-by-side restore.
-- `PhysicalName` is the original file path on the source instance.
-- `Type` identifies whether the file is a data file (`D`) or log file (`L`).
-- `FileGroupName` identifies the owning filegroup for data files.
-
-*This command lists the data and log files stored inside the backup so you can build the correct `WITH MOVE` restore command.*
-
+> [!info]-
+> `RESTORE FILELISTONLY` returns one row per file inside the backup.
+>
+> - `LogicalName` is the name you must reference in `WITH MOVE` clauses during side-by-side restore.
+> - `PhysicalName` is the original file path on the source instance.
+> - `Type` identifies whether the file is a data file (`D`) or log file (`L`).
+> - `FileGroupName` identifies the owning filegroup for data files.
+>
+> *This command lists the data and log files stored inside the backup so you can build the correct `WITH MOVE` restore command.*
+>
 ```sql
 RESTORE FILELISTONLY
 FROM DISK = '/var/opt/mssql/backup/admin_restore_demo_full.bak';
@@ -289,11 +289,11 @@ These are the commands that actually implement the strategy. The safest pattern 
 
 #### Take a conventional full backup
 
-[!success]
-Use a conventional full backup as the baseline for every restore design. Add `CHECKSUM` unless you have a tested reason not to, and add `COMPRESSION` unless you have a tested storage or CPU reason not to.
-
-*This command creates the baseline full backup that later differential and log restores depend on.*
-
+> [!success]
+> Use a conventional full backup as the baseline for every restore design. Add `CHECKSUM` unless you have a tested reason not to, and add `COMPRESSION` unless you have a tested storage or CPU reason not to.
+>
+> *This command creates the baseline full backup that later differential and log restores depend on.*
+>
 ```sql
 BACKUP DATABASE stoxx
 TO DISK = '/var/opt/mssql/backup/stoxx_full.bak'
@@ -312,14 +312,14 @@ WITH DIFFERENTIAL, COMPRESSION, CHECKSUM, STATS = 10;
 
 #### Take a transaction log backup
 
-[!warning]
-This command only makes sense when the database is in `FULL` or `BULK_LOGGED` recovery model and a real log-chain design exists. A database left in `FULL` recovery model without a log-backup cadence will eventually grow its log until writes fail.
-
-[!success]
-If the database needs point-in-time recovery, pair `FULL` recovery model with a log-backup job. Treat recovery model and log-backup schedule as one design decision, not two separate tasks.
-
-*This command backs up the transaction log since the previous log backup and advances the log chain.*
-
+> [!warning]
+> This command only makes sense when the database is in `FULL` or `BULK_LOGGED` recovery model and a real log-chain design exists. A database left in `FULL` recovery model without a log-backup cadence will eventually grow its log until writes fail.
+>
+> [!success]
+> If the database needs point-in-time recovery, pair `FULL` recovery model with a log-backup job. Treat recovery model and log-backup schedule as one design decision, not two separate tasks.
+>
+> *This command backs up the transaction log since the previous log backup and advances the log chain.*
+>
 ```sql
 BACKUP LOG stoxx
 TO DISK = '/var/opt/mssql/backup/stoxx_log.trn'

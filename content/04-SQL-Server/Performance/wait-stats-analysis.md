@@ -30,17 +30,17 @@ Before diving into wait families, start with one health row that establishes the
 
 ### Quick health snapshot — sys.dm_os_sys_info and sys.dm_os_performance_counters
 
-[!info]-
-This query combines host facts, memory state, uptime, buffer-pool health, and current activity.
-
-- `logical_cpus`, `physical_memory_mb`, and `committed_memory_mb` come from `sys.dm_os_sys_info`.
-- `uptime_minutes` is critical context for all cumulative DMVs.
-- `page_life_expectancy_sec` is the buffer-pool residency signal.
-- `buffer_cache_hit_ratio_pct` is calculated correctly from the ratio and base counters, not from the raw ratio counter alone.
-- `user_sessions` and `active_requests` show how much live activity exists while you are troubleshooting.
-
-*Capture the current health baseline before interpreting cumulative waits.*
-
+> [!info]-
+> This query combines host facts, memory state, uptime, buffer-pool health, and current activity.
+>
+> - `logical_cpus`, `physical_memory_mb`, and `committed_memory_mb` come from `sys.dm_os_sys_info`.
+> - `uptime_minutes` is critical context for all cumulative DMVs.
+> - `page_life_expectancy_sec` is the buffer-pool residency signal.
+> - `buffer_cache_hit_ratio_pct` is calculated correctly from the ratio and base counters, not from the raw ratio counter alone.
+> - `user_sessions` and `active_requests` show how much live activity exists while you are troubleshooting.
+>
+> *Capture the current health baseline before interpreting cumulative waits.*
+>
 ```sql
 WITH bchr AS (
     SELECT
@@ -89,17 +89,17 @@ _The instance is not showing broad memory distress right now. `PLE = 22165` and 
 
 ### sys.dm_os_wait_stats — top waits query with benign exclusions
 
-[!info]-
-This is the core production wait query for the note.
-
-- The exclusion list removes background queue, idle, and housekeeping waits that do not explain user-facing slowness.
-- `wait_sec` is total elapsed wait time for the family since startup.
-- `resource_wait_sec` is the non-CPU part of the wait.
-- `signal_wait_sec` is scheduler delay after the resource became available.
-- `waiting_tasks_count` distinguishes a few long waits from many short waits.
-
-*Return the top actionable waits on the current instance.*
-
+> [!info]-
+> This is the core production wait query for the note.
+>
+> - The exclusion list removes background queue, idle, and housekeeping waits that do not explain user-facing slowness.
+> - `wait_sec` is total elapsed wait time for the family since startup.
+> - `resource_wait_sec` is the non-CPU part of the wait.
+> - `signal_wait_sec` is scheduler delay after the resource became available.
+> - `waiting_tasks_count` distinguishes a few long waits from many short waits.
+>
+> *Return the top actionable waits on the current instance.*
+>
 ```sql
 WITH waits AS (
     SELECT
@@ -174,15 +174,15 @@ _The current wait picture is not storage-led. The strongest actionable families 
 
 ### signal_wait_ms vs resource_wait_ms — CPU pressure indicator
 
-[!info]-
-This aggregate view answers a different question from the top-waits query.
-
-- `signal_wait_pct` is the share of actionable wait time spent waiting for CPU after the resource was granted.
-- `resource_wait_pct` is the share spent actually blocked on resources.
-- A high signal percentage points toward scheduler pressure; a low signal percentage means the problem is mostly the underlying resource families themselves.
-
-*Quantify how much of the current actionable wait profile is CPU scheduling pressure versus resource blocking.*
-
+> [!info]-
+> This aggregate view answers a different question from the top-waits query.
+>
+> - `signal_wait_pct` is the share of actionable wait time spent waiting for CPU after the resource was granted.
+> - `resource_wait_pct` is the share spent actually blocked on resources.
+> - A high signal percentage points toward scheduler pressure; a low signal percentage means the problem is mostly the underlying resource families themselves.
+>
+> *Quantify how much of the current actionable wait profile is CPU scheduling pressure versus resource blocking.*
+>
 ```sql
 WITH waits AS (
     SELECT
@@ -257,16 +257,16 @@ On a short-uptime or admin-heavy instance, plan-cache top-N lists are often nois
 
 ### Persisted heavy business queries from Query Store
 
-[!info]-
-This query surfaces persisted business-table queries from Query Store instead of relying on the volatile plan cache.
-
-- `weighted_avg_duration_ms` is a weighted average across Query Store runtime rows, using execution count as the weight.
-- `weighted_avg_logical_reads` shows average buffer-pool work per execution.
-- `executions` tells you how often the pattern ran across the retained Query Store intervals.
-- The filter keeps the focus on statements touching `silver` or `gold` tables and excludes demo-heavy Query Store rows.
-
-*Find persisted business-query patterns that consume meaningful time or logical reads.*
-
+> [!info]-
+> This query surfaces persisted business-table queries from Query Store instead of relying on the volatile plan cache.
+>
+> - `weighted_avg_duration_ms` is a weighted average across Query Store runtime rows, using execution count as the weight.
+> - `weighted_avg_logical_reads` shows average buffer-pool work per execution.
+> - `executions` tells you how often the pattern ran across the retained Query Store intervals.
+> - The filter keeps the focus on statements touching `silver` or `gold` tables and excludes demo-heavy Query Store rows.
+>
+> *Find persisted business-query patterns that consume meaningful time or logical reads.*
+>
 ```sql
 SELECT TOP (10)
     LEFT(REPLACE(REPLACE(qt.query_sql_text, CHAR(13), ' '), CHAR(10), ' '), 160) AS query_text,
@@ -321,17 +321,17 @@ If waits suggest storage pressure, the next step is to verify file-level latency
 
 ### sys.dm_io_virtual_file_stats — per-database file I/O query
 
-[!info]-
-This query reads cumulative file I/O stats across the instance.
-
-- `avg_read_latency_ms` and `avg_write_latency_ms` are averages since startup.
-- `total_read_mb` and `total_write_mb` show the volume of traffic each file has handled.
-- Sorting by cumulative stall puts the hottest files first.
-
-Because the instance uptime is still short, these file latencies are useful for the current window.
-
-*Check which files are seeing the highest cumulative I/O stall and what their average latencies look like.*
-
+> [!info]-
+> This query reads cumulative file I/O stats across the instance.
+>
+> - `avg_read_latency_ms` and `avg_write_latency_ms` are averages since startup.
+> - `total_read_mb` and `total_write_mb` show the volume of traffic each file has handled.
+> - Sorting by cumulative stall puts the hottest files first.
+>
+> Because the instance uptime is still short, these file latencies are useful for the current window.
+>
+> *Check which files are seeing the highest cumulative I/O stall and what their average latencies look like.*
+>
 ```sql
 SELECT TOP (10)
     DB_NAME(fs.database_id) AS database_name,
@@ -378,15 +378,15 @@ TempDB waits are not only about raw disk speed. They are also about whether conc
 
 ### TempDB per-file I/O distribution — check for uneven load
 
-[!info]-
-This query checks whether TempDB activity is reasonably distributed across the data files.
-
-- `num_of_writes` and `write_mb` show write distribution.
-- `avg_write_stall_ms` shows whether one file is becoming materially slower than others.
-- Uneven write counts can signal file-size imbalance or other allocation skew.
-
-*Check whether TempDB I/O is balanced across the current data files.*
-
+> [!info]-
+> This query checks whether TempDB activity is reasonably distributed across the data files.
+>
+> - `num_of_writes` and `write_mb` show write distribution.
+> - `avg_write_stall_ms` shows whether one file is becoming materially slower than others.
+> - Uneven write counts can signal file-size imbalance or other allocation skew.
+>
+> *Check whether TempDB I/O is balanced across the current data files.*
+>
 ```sql
 SELECT
     f.name AS file_name,
@@ -429,16 +429,16 @@ Wait families tell you what hurts. Query Store helps answer whether a changed pl
 
 ### Query Store regression candidates
 
-[!info]-
-This query looks for Query Store statements with more than one persisted plan and compares the best and worst weighted average durations.
-
-- `plan_count > 1` is the minimum sign that plan variability exists.
-- `best_avg_ms` and `worst_avg_ms` show the spread between persisted plans.
-- `regression_factor` is the ratio of worst to best average duration.
-- The sample text is intentionally truncated; the handoff for full plan work is [[query-store-regressions-and-plan-forcing]].
-
-*Find persisted Query Store statements whose alternative plans differ materially in average duration.*
-
+> [!info]-
+> This query looks for Query Store statements with more than one persisted plan and compares the best and worst weighted average durations.
+>
+> - `plan_count > 1` is the minimum sign that plan variability exists.
+> - `best_avg_ms` and `worst_avg_ms` show the spread between persisted plans.
+> - `regression_factor` is the ratio of worst to best average duration.
+> - The sample text is intentionally truncated; the handoff for full plan work is [[query-store-regressions-and-plan-forcing]].
+>
+> *Find persisted Query Store statements whose alternative plans differ materially in average duration.*
+>
 ```sql
 WITH recent_plans AS (
     SELECT

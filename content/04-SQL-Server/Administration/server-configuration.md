@@ -47,18 +47,18 @@ This subsection focuses on the settings that most directly affect memory pressur
 
 #### Current configuration values for the settings that matter first
 
-[!info]-
-This query reads `sys.configurations`, the instance-wide catalog for `sp_configure` settings.
-
-- `value` is the configured value stored in metadata.
-- `value_in_use` is the effective running value. For dynamic settings, it usually matches `value` immediately after `RECONFIGURE`. For restart-required settings, it may differ until the instance restarts.
-- `is_dynamic = 1` means the change can take effect without an engine restart.
-- `is_advanced = 1` means the setting is hidden until `show advanced options` is enabled.
-
-The current filter intentionally selects only the settings that most often need review on a new or inherited production instance.
-
-*This query shows the effective values of the instance settings that usually need explicit production decisions rather than product defaults.*
-
+> [!info]-
+> This query reads `sys.configurations`, the instance-wide catalog for `sp_configure` settings.
+>
+> - `value` is the configured value stored in metadata.
+> - `value_in_use` is the effective running value. For dynamic settings, it usually matches `value` immediately after `RECONFIGURE`. For restart-required settings, it may differ until the instance restarts.
+> - `is_dynamic = 1` means the change can take effect without an engine restart.
+> - `is_advanced = 1` means the setting is hidden until `show advanced options` is enabled.
+>
+> The current filter intentionally selects only the settings that most often need review on a new or inherited production instance.
+>
+> *This query shows the effective values of the instance settings that usually need explicit production decisions rather than product defaults.*
+>
 ```sql
 SELECT
     name,
@@ -113,18 +113,18 @@ Configuration values are not meaningful without the host context they run in. Th
 
 #### CPU count and current committed versus target memory
 
-[!info]-
-This query reads `sys.dm_os_sys_info`.
-
-- `cpu_count` is the number of visible logical CPUs.
-- `scheduler_count` is the number of visible SQLOS schedulers.
-- `committed_mb` is the memory SQL Server currently has committed.
-- `committed_target_mb` and `visible_target_mb` represent the current target memory the engine believes it can use.
-
-These values are the context for `max degree of parallelism` and `max server memory`. Without them, a configuration value has no operational scale.
-
-*This query shows the CPU footprint and the memory target SQL Server is currently aiming for on this host.*
-
+> [!info]-
+> This query reads `sys.dm_os_sys_info`.
+>
+> - `cpu_count` is the number of visible logical CPUs.
+> - `scheduler_count` is the number of visible SQLOS schedulers.
+> - `committed_mb` is the memory SQL Server currently has committed.
+> - `committed_target_mb` and `visible_target_mb` represent the current target memory the engine believes it can use.
+>
+> These values are the context for `max degree of parallelism` and `max server memory`. Without them, a configuration value has no operational scale.
+>
+> *This query shows the CPU footprint and the memory target SQL Server is currently aiming for on this host.*
+>
 ```sql
 SELECT
     sqlserver_start_time,
@@ -155,23 +155,23 @@ The current baseline calls for a small number of concrete changes before this in
 
 #### Set a memory cap, backup compression, and ad hoc plan protection
 
-[!warning]
-Do not copy these values blindly between servers. `max server memory (MB)` must be sized against the real host memory, other resident processes, and HA tooling. A bad memory cap can starve either SQL Server or the operating system.
-
-[!success]
-Use these commands as a pattern, then adjust the numeric memory value for the actual server. On this host, a cap in the high teens of GB would be a more realistic starting point than leaving the engine uncapped.
-
-[!info]-
-This batch enables advanced options, then changes three settings that are usually safe production improvements on SQL Server estates:
-
-- `max server memory (MB)` sets an explicit memory ceiling.
-- `backup compression default` makes compression the default behavior for full, differential, and log backups unless a backup command overrides it.
-- `optimize for ad hoc workloads` reduces plan-cache waste by storing a stub on first execution of one-off ad hoc batches.
-
-All three settings are dynamic and take effect after `RECONFIGURE`.
-
-*This batch applies the most common first-round production configuration corrections for memory governance, backup storage efficiency, and ad hoc plan-cache hygiene.*
-
+> [!warning]
+> Do not copy these values blindly between servers. `max server memory (MB)` must be sized against the real host memory, other resident processes, and HA tooling. A bad memory cap can starve either SQL Server or the operating system.
+>
+> [!success]
+> Use these commands as a pattern, then adjust the numeric memory value for the actual server. On this host, a cap in the high teens of GB would be a more realistic starting point than leaving the engine uncapped.
+>
+> [!info]-
+> This batch enables advanced options, then changes three settings that are usually safe production improvements on SQL Server estates:
+>
+> - `max server memory (MB)` sets an explicit memory ceiling.
+> - `backup compression default` makes compression the default behavior for full, differential, and log backups unless a backup command overrides it.
+> - `optimize for ad hoc workloads` reduces plan-cache waste by storing a stub on first execution of one-off ad hoc batches.
+>
+> All three settings are dynamic and take effect after `RECONFIGURE`.
+>
+> *This batch applies the most common first-round production configuration corrections for memory governance, backup storage efficiency, and ad hoc plan-cache hygiene.*
+>
 ```sql
 EXEC sp_configure 'show advanced options', 1;
 RECONFIGURE;
@@ -184,22 +184,22 @@ RECONFIGURE;
 
 #### Set parallelism defaults deliberately
 
-[!warning]
-Do not treat `MAXDOP = 8` and `cost threshold for parallelism = 50` as universal truth. They are common starting points, not magical constants.
-
-[!success]
-Use them as a starting baseline, then validate with wait stats, CPU pressure, and actual plan behavior. If the server has a different NUMA layout or workload class, tune from evidence rather than dogma.
-
-[!info]-
-This batch sets the two instance-level parallelism defaults that are most often left at unsafe product defaults:
-
-- `max degree of parallelism` limits how many schedulers a single parallel plan can use.
-- `cost threshold for parallelism` controls how expensive a query must appear before the optimizer even considers a parallel plan.
-
-The shipped default of `5` for cost threshold is usually too low on modern hardware.
-
-*This batch sets an explicit starting baseline for SQL Server parallelism instead of relying on the product defaults.*
-
+> [!warning]
+> Do not treat `MAXDOP = 8` and `cost threshold for parallelism = 50` as universal truth. They are common starting points, not magical constants.
+>
+> [!success]
+> Use them as a starting baseline, then validate with wait stats, CPU pressure, and actual plan behavior. If the server has a different NUMA layout or workload class, tune from evidence rather than dogma.
+>
+> [!info]-
+> This batch sets the two instance-level parallelism defaults that are most often left at unsafe product defaults:
+>
+> - `max degree of parallelism` limits how many schedulers a single parallel plan can use.
+> - `cost threshold for parallelism` controls how expensive a query must appear before the optimizer even considers a parallel plan.
+>
+> The shipped default of `5` for cost threshold is usually too low on modern hardware.
+>
+> *This batch sets an explicit starting baseline for SQL Server parallelism instead of relying on the product defaults.*
+>
 ```sql
 EXEC sp_configure 'show advanced options', 1;
 RECONFIGURE;
@@ -221,16 +221,16 @@ This subsection verifies the database-level defaults that matter most for backup
 
 #### Current recovery model, compatibility level, RCSI, and log-reuse state for `stoxx`
 
-[!info]-
-This query pulls the key database-level flags from `sys.databases` for the main workload database.
-
-- `recovery_model_desc` drives the backup chain and PITR capability.
-- `compatibility_level` controls optimizer behavior and T-SQL compatibility surface.
-- `is_read_committed_snapshot_on` shows whether read committed uses row versioning.
-- `log_reuse_wait_desc` tells you why the log cannot currently reuse inactive virtual log files.
-
-*This query checks the production-relevant database defaults for the primary workload database instead of assuming the instance baseline is enough.*
-
+> [!info]-
+> This query pulls the key database-level flags from `sys.databases` for the main workload database.
+>
+> - `recovery_model_desc` drives the backup chain and PITR capability.
+> - `compatibility_level` controls optimizer behavior and T-SQL compatibility surface.
+> - `is_read_committed_snapshot_on` shows whether read committed uses row versioning.
+> - `log_reuse_wait_desc` tells you why the log cannot currently reuse inactive virtual log files.
+>
+> *This query checks the production-relevant database defaults for the primary workload database instead of assuming the instance baseline is enough.*
+>
 ```sql
 SELECT
     name,
@@ -257,23 +257,23 @@ WHERE name = 'stoxx';
 
 #### Enable Read Committed Snapshot Isolation
 
-[!warning]
-Enabling RCSI is a database-wide behavioral change. It requires exclusive access to the database during the `ALTER DATABASE` statement, and it shifts read consistency to TempDB-backed row versioning.
-
-[!success]
-Use RCSI when the workload suffers from ordinary reader-writer blocking and the application expects statement-level committed reads rather than dirty reads. Monitor version-store growth in TempDB afterward.
-
-[!info]-
-`READ_COMMITTED_SNAPSHOT ON` changes the meaning of the default read committed isolation level for that database:
-
-- readers stop taking shared locks for ordinary reads
-- writers continue taking exclusive locks
-- readers see the last committed row version as of statement start
-
-This is one of the highest-leverage concurrency settings available for OLTP and mixed reporting workloads.
-
-*This command enables statement-level row-versioned read committed semantics for the database.*
-
+> [!warning]
+> Enabling RCSI is a database-wide behavioral change. It requires exclusive access to the database during the `ALTER DATABASE` statement, and it shifts read consistency to TempDB-backed row versioning.
+>
+> [!success]
+> Use RCSI when the workload suffers from ordinary reader-writer blocking and the application expects statement-level committed reads rather than dirty reads. Monitor version-store growth in TempDB afterward.
+>
+> [!info]-
+> `READ_COMMITTED_SNAPSHOT ON` changes the meaning of the default read committed isolation level for that database:
+>
+> - readers stop taking shared locks for ordinary reads
+> - writers continue taking exclusive locks
+> - readers see the last committed row version as of statement start
+>
+> This is one of the highest-leverage concurrency settings available for OLTP and mixed reporting workloads.
+>
+> *This command enables statement-level row-versioned read committed semantics for the database.*
+>
 ```sql
 ALTER DATABASE stoxx
 SET READ_COMMITTED_SNAPSHOT ON;
@@ -285,14 +285,14 @@ Heap prevention is not a cosmetic preference. Permanent silver and gold tables s
 
 #### Check for heap tables in `silver` and `gold`
 
-[!info]-
-This query looks for user tables in `silver` and `gold` that do not have a clustered index (`index_id = 1`).
-
-- If it returns rows, those tables are heaps.
-- If it returns no rows, the schema already satisfies the clustered-index guardrail for those layers.
-
-*This query checks whether any permanent `silver` or `gold` tables are currently deployed as heaps.*
-
+> [!info]-
+> This query looks for user tables in `silver` and `gold` that do not have a clustered index (`index_id = 1`).
+>
+> - If it returns rows, those tables are heaps.
+> - If it returns no rows, the schema already satisfies the clustered-index guardrail for those layers.
+>
+> *This query checks whether any permanent `silver` or `gold` tables are currently deployed as heaps.*
+>
 ```sql
 SELECT
     OBJECT_SCHEMA_NAME(t.object_id, DB_ID()) AS schema_name,
@@ -329,15 +329,15 @@ This subsection verifies the number of TempDB files, their size parity, and thei
 
 #### Current TempDB data-file and log-file layout
 
-[!info]-
-This query reads `tempdb.sys.database_files`.
-
-- Data-file count and size parity matter because proportional fill distributes allocations based on free space.
-- Equal file sizes and equal fixed autogrowth increments are the standard baseline.
-- Percentage growth is undesirable for TempDB because growth events become larger over time.
-
-*This query verifies whether TempDB is laid out with equal-sized data files and fixed-size growth increments.*
-
+> [!info]-
+> This query reads `tempdb.sys.database_files`.
+>
+> - Data-file count and size parity matter because proportional fill distributes allocations based on free space.
+> - Equal file sizes and equal fixed autogrowth increments are the standard baseline.
+> - Percentage growth is undesirable for TempDB because growth events become larger over time.
+>
+> *This query verifies whether TempDB is laid out with equal-sized data files and fixed-size growth increments.*
+>
 ```sql
 SELECT
     file_id,
@@ -374,14 +374,14 @@ ORDER BY file_id;
 
 #### Add TempDB files when the layout is undersized
 
-[!warning]
-Do not keep adding TempDB files just because "more must be better." Add files only when the current layout is actually undersized or contention evidence justifies it.
-
-[!success]
-When more files are warranted, keep all TempDB data files the same size and the same fixed autogrowth increment.
-
-*This command pattern adds one additional TempDB data file with the same size and growth behavior as the existing data files.*
-
+> [!warning]
+> Do not keep adding TempDB files just because "more must be better." Add files only when the current layout is actually undersized or contention evidence justifies it.
+>
+> [!success]
+> When more files are warranted, keep all TempDB data files the same size and the same fixed autogrowth increment.
+>
+> *This command pattern adds one additional TempDB data file with the same size and growth behavior as the existing data files.*
+>
 ```sql
 ALTER DATABASE tempdb ADD FILE
 (
@@ -404,21 +404,21 @@ These commands must be run on the Linux host that runs SQL Server, not from SSMS
 
 #### Verify Linux memory and I/O settings on the SQL Server host
 
-[!warning]
-These are host-level commands. They do not run inside SQL Server and they should not be tested blindly on unrelated Linux machines.
-
-[!success]
-Run them only on the SQL Server host and treat them as verification commands first. Change values only when you understand the current host baseline and the platform standard for that fleet.
-
-[!info]-
-These commands check the three Linux host settings that most often matter for SQL Server behavior on Linux:
-
-- `vm.swappiness` controls how aggressively the kernel prefers swap activity
-- Transparent Huge Pages can introduce latency spikes
-- the block-device scheduler affects how SSD-backed storage requests are ordered
-
-*These commands verify the Linux host settings that most often matter to SQL Server latency and memory behavior on Linux.*
-
+> [!warning]
+> These are host-level commands. They do not run inside SQL Server and they should not be tested blindly on unrelated Linux machines.
+>
+> [!success]
+> Run them only on the SQL Server host and treat them as verification commands first. Change values only when you understand the current host baseline and the platform standard for that fleet.
+>
+> [!info]-
+> These commands check the three Linux host settings that most often matter for SQL Server behavior on Linux:
+>
+> - `vm.swappiness` controls how aggressively the kernel prefers swap activity
+> - Transparent Huge Pages can introduce latency spikes
+> - the block-device scheduler affects how SSD-backed storage requests are ordered
+>
+> *These commands verify the Linux host settings that most often matter to SQL Server latency and memory behavior on Linux.*
+>
 ```bash
 cat /proc/sys/vm/swappiness
 cat /sys/kernel/mm/transparent_hugepage/enabled
@@ -427,14 +427,14 @@ cat /sys/block/sdb/queue/scheduler
 
 #### Configure the Linux host baseline when needed
 
-[!warning]
-These changes affect the Linux host globally, not only SQL Server. They should be applied through the host configuration standard for the environment, not as ad hoc shell changes that drift from configuration management.
-
-[!success]
-Persist them through the host's normal configuration-management path so the settings survive reboot and remain auditable.
-
-*This command set shows the common Linux-host pattern for reducing swap aggressiveness, disabling THP, and using the `none` scheduler on SSD-backed devices.*
-
+> [!warning]
+> These changes affect the Linux host globally, not only SQL Server. They should be applied through the host configuration standard for the environment, not as ad hoc shell changes that drift from configuration management.
+>
+> [!success]
+> Persist them through the host's normal configuration-management path so the settings survive reboot and remain auditable.
+>
+> *This command set shows the common Linux-host pattern for reducing swap aggressiveness, disabling THP, and using the `none` scheduler on SSD-backed devices.*
+>
 ```bash
 sudo sysctl vm.swappiness=1
 echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled

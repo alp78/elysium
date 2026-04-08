@@ -74,17 +74,17 @@ This subsection captures the engine baseline in one row, then checks the per-dat
 
 The first query below is the audit anchor. It pulls version and patch metadata from `SERVERPROPERTY`, uptime and hardware-visible memory state from `sys.dm_os_sys_info`, and the instance-level configuration values that most strongly shape CPU and memory behavior.
 
-[!info]-
-This query combines three categories of information into one output row.
-
-- `SERVERPROPERTY('ProductVersion')`, `SERVERPROPERTY('Edition')`, and `SERVERPROPERTY('ProductLevel')` identify the engine build, edition, and patch branch. These affect available features and supported tuning advice.
-- `DATEDIFF(DAY, sqlserver_start_time, GETDATE())` measures how old the in-memory DMV history is. Wait stats, query stats, index-usage stats, and many counters are only meaningful in the context of uptime.
-- `cpu_count`, `physical_memory_kb`, `committed_kb`, and `committed_target_kb` come from `sys.dm_os_sys_info` and show the host-visible CPU count and SQL Server memory posture.
-- The scalar subqueries against `sys.configurations` retrieve the currently active values for `MAXDOP`, cost threshold, `max server memory`, and `optimize for ad hoc workloads`.
-- The result is intentionally one row so the audit can begin with a compact baseline snapshot that is easy to compare across environments.
-
-*Capture the SQL Server build, uptime, CPU and memory posture, and the core configuration values that govern parallelism, memory growth, and ad hoc plan caching.*
-
+> [!info]-
+> This query combines three categories of information into one output row.
+>
+> - `SERVERPROPERTY('ProductVersion')`, `SERVERPROPERTY('Edition')`, and `SERVERPROPERTY('ProductLevel')` identify the engine build, edition, and patch branch. These affect available features and supported tuning advice.
+> - `DATEDIFF(DAY, sqlserver_start_time, GETDATE())` measures how old the in-memory DMV history is. Wait stats, query stats, index-usage stats, and many counters are only meaningful in the context of uptime.
+> - `cpu_count`, `physical_memory_kb`, `committed_kb`, and `committed_target_kb` come from `sys.dm_os_sys_info` and show the host-visible CPU count and SQL Server memory posture.
+> - The scalar subqueries against `sys.configurations` retrieve the currently active values for `MAXDOP`, cost threshold, `max server memory`, and `optimize for ad hoc workloads`.
+> - The result is intentionally one row so the audit can begin with a compact baseline snapshot that is easy to compare across environments.
+>
+> *Capture the SQL Server build, uptime, CPU and memory posture, and the core configuration values that govern parallelism, memory growth, and ad hoc plan caching.*
+>
 ```sql
 SELECT
     SERVERPROPERTY('ProductVersion') AS version,
@@ -108,12 +108,12 @@ FROM sys.dm_os_sys_info;
 
 _This instance is running SQL Server 2022 on a fresh uptime boundary: `uptime_days = 0`. That immediately reduces the confidence of every cumulative DMV below. The configuration row also exposes three production issues before any workload analysis starts: `maxdop = 0` on a 16-logical-CPU host, `cost threshold for parallelism = 5`, and `max server memory (MB)` left at the effectively-unlimited default. `optimize for ad hoc workloads = 0` becomes relevant again in Phase 9, where ad hoc plans dominate cache memory._
 
-[!warning]
-The low uptime means Phases 3, 5, 6, 8, and 9 do not yet represent a full business cycle.
-
-[!success]
-Use the current outputs as point-in-time evidence, and repeat the cumulative phases after a representative workload window before making lasting configuration changes.
-
+> [!warning]
+> The low uptime means Phases 3, 5, 6, 8, and 9 do not yet represent a full business cycle.
+>
+> [!success]
+> Use the current outputs as point-in-time evidence, and repeat the cumulative phases after a representative workload window before making lasting configuration changes.
+>
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
 | `uptime_days` | `0` | &#10060; | DMV and cumulative counter history started today. | Waits, cached-query rankings, and missing-index evidence are limited-history signals only. |
@@ -128,17 +128,17 @@ Use the current outputs as point-in-time evidence, and repeat the cumulative pha
 
 The next query inspects `sys.databases`, which is where recovery model, compatibility level, RCSI, auto-shrink, and auto-stats settings are exposed for every database on the instance.
 
-[!info]-
-This query is a production inventory query, not a lab shortcut.
-
-- `state_desc` tells you whether the database is actually online and queryable.
-- `recovery_model_desc` matters for log reuse and backup-chain expectations.
-- `compatibility_level` determines optimizer behavior and whether modern IQP features are even available.
-- `is_read_committed_snapshot_on` indicates whether default `READ COMMITTED` readers use row-versioning instead of shared locks.
-- `is_auto_shrink_on`, `is_auto_create_stats_on`, and `is_auto_update_stats_on` surface database-level defaults that can quietly degrade performance if they are wrong.
-
-*Inventory database state, recovery model, compatibility level, RCSI, and auto-statistics defaults across the instance.*
-
+> [!info]-
+> This query is a production inventory query, not a lab shortcut.
+>
+> - `state_desc` tells you whether the database is actually online and queryable.
+> - `recovery_model_desc` matters for log reuse and backup-chain expectations.
+> - `compatibility_level` determines optimizer behavior and whether modern IQP features are even available.
+> - `is_read_committed_snapshot_on` indicates whether default `READ COMMITTED` readers use row-versioning instead of shared locks.
+> - `is_auto_shrink_on`, `is_auto_create_stats_on`, and `is_auto_update_stats_on` surface database-level defaults that can quietly degrade performance if they are wrong.
+>
+> *Inventory database state, recovery model, compatibility level, RCSI, and auto-statistics defaults across the instance.*
+>
 ```sql
 SELECT
     name,
@@ -185,16 +185,16 @@ These queries answer three different questions: who owns the buffer pool, whethe
 
 #### Measure buffer-pool ownership by database
 
-[!info]-
-`sys.dm_os_buffer_descriptors` exposes one row per data page currently cached in the buffer pool.
-
-- `database_id` is translated with `DB_NAME` so the result is readable without a join.
-- `COUNT(*) * 8 / 1024` converts cached pages into megabytes because SQL Server pages are 8 KB each.
-- Grouping by database shows whether one database is dominating the cache and pushing other workloads out of RAM.
-- The `NULL` database row represents pages that are not associated with a user database in the normal way, such as free buffers or internal allocations.
-
-*Measure how much of the buffer pool is currently occupied by each database.*
-
+> [!info]-
+> `sys.dm_os_buffer_descriptors` exposes one row per data page currently cached in the buffer pool.
+>
+> - `database_id` is translated with `DB_NAME` so the result is readable without a join.
+> - `COUNT(*) * 8 / 1024` converts cached pages into megabytes because SQL Server pages are 8 KB each.
+> - Grouping by database shows whether one database is dominating the cache and pushing other workloads out of RAM.
+> - The `NULL` database row represents pages that are not associated with a user database in the normal way, such as free buffers or internal allocations.
+>
+> *Measure how much of the buffer pool is currently occupied by each database.*
+>
 ```sql
 SELECT
     DB_NAME(database_id) AS db_name,
@@ -227,15 +227,15 @@ _`stoxx` owns most of the useful cache, which is expected on a single-user-datab
 
 #### Check Page Life Expectancy by buffer node
 
-[!info]-
-`sys.dm_os_performance_counters` exposes both the aggregate `Buffer Manager` PLE and per-node `Buffer Node` PLE.
-
-- `counter_name = 'Page life expectancy'` filters to the exact metric.
-- `object_name LIKE '%Buffer%'` returns both the aggregate object and any per-node counters.
-- Comparing node-level values is important on NUMA systems because a healthy aggregate can hide one starved node.
-
-*Check how long pages remain in memory at both the aggregate and per-node level.*
-
+> [!info]-
+> `sys.dm_os_performance_counters` exposes both the aggregate `Buffer Manager` PLE and per-node `Buffer Node` PLE.
+>
+> - `counter_name = 'Page life expectancy'` filters to the exact metric.
+> - `object_name LIKE '%Buffer%'` returns both the aggregate object and any per-node counters.
+> - Comparing node-level values is important on NUMA systems because a healthy aggregate can hide one starved node.
+>
+> *Check how long pages remain in memory at both the aggregate and per-node level.*
+>
 ```sql
 SELECT
     object_name,
@@ -264,16 +264,16 @@ _This is a healthy point-in-time PLE result. `18007` seconds is roughly five hou
 
 #### Check pending memory grants
 
-[!info]-
-`sys.dm_exec_query_memory_grants` shows queries that requested workspace memory for sorts, hashes, and similar operators.
-
-- `grant_time IS NULL` filters to requests that are still waiting rather than already granted.
-- `requested_memory_kb` and `granted_memory_kb` are converted to megabytes for operational readability.
-- `wait_time_ms / 1000.0` exposes how long the request has already been waiting.
-- Zero rows is a meaningful healthy state.
-
-*Check whether any query is currently waiting for a memory grant rather than executing.*
-
+> [!info]-
+> `sys.dm_exec_query_memory_grants` shows queries that requested workspace memory for sorts, hashes, and similar operators.
+>
+> - `grant_time IS NULL` filters to requests that are still waiting rather than already granted.
+> - `requested_memory_kb` and `granted_memory_kb` are converted to megabytes for operational readability.
+> - `wait_time_ms / 1000.0` exposes how long the request has already been waiting.
+> - Zero rows is a meaningful healthy state.
+>
+> *Check whether any query is currently waiting for a memory grant rather than executing.*
+>
 ```sql
 SELECT
     session_id,
@@ -308,23 +308,23 @@ Wait stats are instance-level evidence about where SQL Server has spent time wai
 
 #### Capture the top cumulative waits
 
-[!warning]
-Wait statistics are cumulative since startup, and this instance restarted on `2026-04-08`. Short uptime and recent admin activity can dominate the top rows.
-
-[!success]
-Use the top waits to choose where to investigate next, not as a standalone verdict. If uptime is short, repeat this phase after a full workload window or compare deltas between snapshots instead of lifetime totals.
-
-[!info]-
-This query reads `sys.dm_os_wait_stats` and removes the most common benign background waits so the output is dominated by actionable waits.
-
-- `wait_time_ms / 1000.0` and `signal_wait_time_ms / 1000.0` convert the cumulative wait totals into seconds.
-- `waiting_tasks_count` shows how many tasks have contributed to each wait type.
-- `pct` expresses each wait type as a percentage of the remaining wait-time total after filtering.
-- The explicit exclusion list removes common idle/background waits that would otherwise crowd out real workload signals.
-- `signal_sec` is especially important. High signal wait relative to total wait implies runnable tasks are waiting on CPU scheduling rather than on external resources.
-
-*Rank the most significant cumulative waits after excluding common idle and housekeeping waits.*
-
+> [!warning]
+> Wait statistics are cumulative since startup, and this instance restarted on `2026-04-08`. Short uptime and recent admin activity can dominate the top rows.
+>
+> [!success]
+> Use the top waits to choose where to investigate next, not as a standalone verdict. If uptime is short, repeat this phase after a full workload window or compare deltas between snapshots instead of lifetime totals.
+>
+> [!info]-
+> This query reads `sys.dm_os_wait_stats` and removes the most common benign background waits so the output is dominated by actionable waits.
+>
+> - `wait_time_ms / 1000.0` and `signal_wait_time_ms / 1000.0` convert the cumulative wait totals into seconds.
+> - `waiting_tasks_count` shows how many tasks have contributed to each wait type.
+> - `pct` expresses each wait type as a percentage of the remaining wait-time total after filtering.
+> - The explicit exclusion list removes common idle/background waits that would otherwise crowd out real workload signals.
+> - `signal_sec` is especially important. High signal wait relative to total wait implies runnable tasks are waiting on CPU scheduling rather than on external resources.
+>
+> *Rank the most significant cumulative waits after excluding common idle and housekeeping waits.*
+>
 ```sql
 WITH waits AS (
     SELECT
@@ -392,17 +392,17 @@ I/O latency determines how expensive physical reads and writes are when the buff
 
 #### Measure average read and write stall by file
 
-[!info]-
-`sys.dm_io_virtual_file_stats(NULL, NULL)` returns cumulative I/O counters for every file on the instance.
-
-- Joining `sys.master_files` adds file names, logical database mapping, and file type.
-- `avg_read_ms` divides cumulative read stall by read count.
-- `avg_write_ms` divides cumulative write stall by write count.
-- `size_on_disk_bytes` is converted to MB so file size can be read without mental conversion.
-- These are lifetime averages since startup, so they are excellent for identifying obviously bad storage but weaker for short spike analysis.
-
-*Measure cumulative average read and write latency per database file.*
-
+> [!info]-
+> `sys.dm_io_virtual_file_stats(NULL, NULL)` returns cumulative I/O counters for every file on the instance.
+>
+> - Joining `sys.master_files` adds file names, logical database mapping, and file type.
+> - `avg_read_ms` divides cumulative read stall by read count.
+> - `avg_write_ms` divides cumulative write stall by write count.
+> - `size_on_disk_bytes` is converted to MB so file size can be read without mental conversion.
+> - These are lifetime averages since startup, so they are excellent for identifying obviously bad storage but weaker for short spike analysis.
+>
+> *Measure cumulative average read and write latency per database file.*
+>
 ```sql
 SELECT TOP (10)
     DB_NAME(fs.database_id) AS db_name,
@@ -452,23 +452,23 @@ This phase ranks cached statements by cumulative CPU and logical reads. It is us
 
 #### Rank cached statements by cumulative CPU and logical reads
 
-[!warning]
-This instance has `uptime_days = 0`, so the ranking below is not representative of a normal production business cycle.
-
-[!success]
-Use this output to understand what happened since the restart, then validate long-lived hotspots with Query Store and application-level workload context before tuning.
-
-[!info]-
-This query reads `sys.dm_exec_query_stats`, which stores cumulative execution metrics per cached statement.
-
-- `execution_count` shows how many times the cached statement has executed.
-- `total_worker_time` and `total_elapsed_time` are converted from microseconds to milliseconds.
-- `total_logical_reads` is converted from 8 KB pages to MB for easier scale reasoning.
-- `avg_cpu_ms` and `avg_logical_read_mb` divide the cumulative totals by `execution_count` so a one-off heavy statement is not confused with a chronic medium-cost statement.
-- `sys.dm_exec_sql_text` provides the statement text, and `sys.dm_exec_plan_attributes` fills in the database context reliably.
-
-*Rank cached statements by cumulative CPU time, with logical-read and execution-count context.*
-
+> [!warning]
+> This instance has `uptime_days = 0`, so the ranking below is not representative of a normal production business cycle.
+>
+> [!success]
+> Use this output to understand what happened since the restart, then validate long-lived hotspots with Query Store and application-level workload context before tuning.
+>
+> [!info]-
+> This query reads `sys.dm_exec_query_stats`, which stores cumulative execution metrics per cached statement.
+>
+> - `execution_count` shows how many times the cached statement has executed.
+> - `total_worker_time` and `total_elapsed_time` are converted from microseconds to milliseconds.
+> - `total_logical_reads` is converted from 8 KB pages to MB for easier scale reasoning.
+> - `avg_cpu_ms` and `avg_logical_read_mb` divide the cumulative totals by `execution_count` so a one-off heavy statement is not confused with a chronic medium-cost statement.
+> - `sys.dm_exec_sql_text` provides the statement text, and `sys.dm_exec_plan_attributes` fills in the database context reliably.
+>
+> *Rank cached statements by cumulative CPU time, with logical-read and execution-count context.*
+>
 ```sql
 SELECT TOP (5)
     qs.execution_count,
@@ -516,16 +516,16 @@ Index health is not just fragmentation. The point of this phase is to determine 
 
 #### Check fragmentation on materially sized indexes
 
-[!info]-
-This query uses `sys.dm_db_index_physical_stats` in `LIMITED` mode to find materially sized clustered and nonclustered indexes.
-
-- `avg_fragmentation_in_percent` is the logical fragmentation metric most commonly used for B-tree maintenance decisions.
-- `page_count` is critical context because high fragmentation on a tiny index rarely matters.
-- Joining `sys.indexes` adds the human-readable index name and type.
-- The filter `OBJECT_NAME(ips.object_id) NOT LIKE 'demo_%'` keeps the result focused on real tables in this environment.
-
-*Find the most fragmented clustered and nonclustered indexes that are large enough to matter operationally.*
-
+> [!info]-
+> This query uses `sys.dm_db_index_physical_stats` in `LIMITED` mode to find materially sized clustered and nonclustered indexes.
+>
+> - `avg_fragmentation_in_percent` is the logical fragmentation metric most commonly used for B-tree maintenance decisions.
+> - `page_count` is critical context because high fragmentation on a tiny index rarely matters.
+> - Joining `sys.indexes` adds the human-readable index name and type.
+> - The filter `OBJECT_NAME(ips.object_id) NOT LIKE 'demo_%'` keeps the result focused on real tables in this environment.
+>
+> *Find the most fragmented clustered and nonclustered indexes that are large enough to matter operationally.*
+>
 ```sql
 SELECT TOP (10)
     OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id) AS table_name,
@@ -574,17 +574,17 @@ _The only nontrivial fragmentation is on the `symbol_date` nonclustered indexes 
 
 #### Measure current `tempdb` space usage
 
-[!info]-
-`sys.dm_db_file_space_usage` returns page counts for major `tempdb` consumers.
-
-- `user_object_reserved_page_count` covers user-created temporary objects such as `#temp` tables.
-- `internal_object_reserved_page_count` covers engine worktables, hash/sort spill structures, and similar internal use.
-- `version_store_reserved_page_count` measures row-versioning use from snapshot-based features.
-- `unallocated_extent_page_count` shows currently free space.
-- Multiplying by 8 KB and dividing by 1024 converts the page counts to MB.
-
-*Measure the current `tempdb` footprint of user objects, internal objects, version store, and free space.*
-
+> [!info]-
+> `sys.dm_db_file_space_usage` returns page counts for major `tempdb` consumers.
+>
+> - `user_object_reserved_page_count` covers user-created temporary objects such as `#temp` tables.
+> - `internal_object_reserved_page_count` covers engine worktables, hash/sort spill structures, and similar internal use.
+> - `version_store_reserved_page_count` measures row-versioning use from snapshot-based features.
+> - `unallocated_extent_page_count` shows currently free space.
+> - Multiplying by 8 KB and dividing by 1024 converts the page counts to MB.
+>
+> *Measure the current `tempdb` footprint of user objects, internal objects, version store, and free space.*
+>
 ```sql
 USE tempdb;
 SELECT
@@ -611,15 +611,15 @@ _`tempdb` is quiet right now. User objects and internal objects together consume
 
 #### Review `tempdb` file layout and growth behavior
 
-[!info]-
-`tempdb.sys.database_files` shows the current file layout visible inside `tempdb`.
-
-- `size * 8 / 1024` converts current file size from pages to MB.
-- `growth * 8 / 1024` converts fixed-growth increments to MB when `is_percent_growth = 0`.
-- The important operational questions are whether data files are equally sized and whether growth is fixed rather than percentage-based.
-
-*Review `tempdb` file count, file-size symmetry, and growth settings.*
-
+> [!info]-
+> `tempdb.sys.database_files` shows the current file layout visible inside `tempdb`.
+>
+> - `size * 8 / 1024` converts current file size from pages to MB.
+> - `growth * 8 / 1024` converts fixed-growth increments to MB when `is_percent_growth = 0`.
+> - The important operational questions are whether data files are equally sized and whether growth is fixed rather than percentage-based.
+>
+> *Review `tempdb` file count, file-size symmetry, and growth settings.*
+>
 ```sql
 SELECT
     name,
@@ -660,18 +660,18 @@ Concurrency issues can look like CPU problems, I/O problems, or generic slowness
 
 #### Check for active user blocking right now
 
-[!info]-
-This is the production-facing live-request query, not a minimal DMV snippet.
-
-- `sys.dm_exec_requests` provides the live request state.
-- `sys.dm_exec_sessions` adds login, host, and program identity.
-- `sys.dm_exec_sql_text` extracts the currently running statement text.
-- Statement offsets are used so the output shows the active statement, not the entire batch.
-- Filtering to `s.is_user_process = 1` removes background engine sessions.
-- Zero rows is meaningful: it means no other user request was executing at capture time.
-
-*Inspect currently active user requests, including waits, blocking session IDs, and the exact running statement.*
-
+> [!info]-
+> This is the production-facing live-request query, not a minimal DMV snippet.
+>
+> - `sys.dm_exec_requests` provides the live request state.
+> - `sys.dm_exec_sessions` adds login, host, and program identity.
+> - `sys.dm_exec_sql_text` extracts the currently running statement text.
+> - Statement offsets are used so the output shows the active statement, not the entire batch.
+> - Filtering to `s.is_user_process = 1` removes background engine sessions.
+> - Zero rows is meaningful: it means no other user request was executing at capture time.
+>
+> *Inspect currently active user requests, including waits, blocking session IDs, and the exact running statement.*
+>
 ```sql
 SELECT
     r.session_id,
@@ -724,21 +724,21 @@ _There was no active user blocking at capture time. That is the correct result t
 
 #### Check the deadlock counter carefully
 
-[!warning]
-`Number of Deadlocks/sec` is a performance counter, not a deadlock graph. A single snapshot can tell you that deadlock activity exists, but it does not tell you which objects or statements were involved.
-
-[!success]
-If this counter is non-zero or trending upward, collect deadlock graphs from `system_health` or a dedicated Extended Events session before recommending a fix.
-
-[!info]-
-This query reads the `_Total` deadlock counter from `sys.dm_os_performance_counters`.
-
-- It is useful as a coarse triage signal.
-- It is not a substitute for deadlock graphs.
-- The operational value is binary at first: zero means no current counter evidence, while a non-zero value means deeper deadlock collection is justified.
-
-*Check whether SQL Server is currently exposing a non-zero deadlock counter for the instance.*
-
+> [!warning]
+> `Number of Deadlocks/sec` is a performance counter, not a deadlock graph. A single snapshot can tell you that deadlock activity exists, but it does not tell you which objects or statements were involved.
+>
+> [!success]
+> If this counter is non-zero or trending upward, collect deadlock graphs from `system_health` or a dedicated Extended Events session before recommending a fix.
+>
+> [!info]-
+> This query reads the `_Total` deadlock counter from `sys.dm_os_performance_counters`.
+>
+> - It is useful as a coarse triage signal.
+> - It is not a substitute for deadlock graphs.
+> - The operational value is binary at first: zero means no current counter evidence, while a non-zero value means deeper deadlock collection is justified.
+>
+> *Check whether SQL Server is currently exposing a non-zero deadlock counter for the instance.*
+>
 ```sql
 SELECT
     object_name,
@@ -770,17 +770,17 @@ The optimizer depends on current statistics and a healthy plan cache. This phase
 
 #### Find user tables with the stalest statistics
 
-[!info]-
-`sys.dm_db_stats_properties` exposes the operational state of each statistics object.
-
-- `last_updated` is the last refresh timestamp for that statistics object.
-- `rows` is the cardinality used as the base for the current statistics object.
-- `modification_counter` is the change count SQL Server tracks for the leading column of the statistic.
-- `pct_modified` expresses the modification counter relative to `rows`, which makes small-table anomalies easy to spot.
-- The filter excludes demo tables so the output focuses on real user objects in this environment.
-
-*Rank user-table statistics objects by how many leading-column modifications have accumulated since the last update.*
-
+> [!info]-
+> `sys.dm_db_stats_properties` exposes the operational state of each statistics object.
+>
+> - `last_updated` is the last refresh timestamp for that statistics object.
+> - `rows` is the cardinality used as the base for the current statistics object.
+> - `modification_counter` is the change count SQL Server tracks for the leading column of the statistic.
+> - `pct_modified` expresses the modification counter relative to `rows`, which makes small-table anomalies easy to spot.
+> - The filter excludes demo tables so the output focuses on real user objects in this environment.
+>
+> *Rank user-table statistics objects by how many leading-column modifications have accumulated since the last update.*
+>
 ```sql
 SELECT TOP (10)
     OBJECT_SCHEMA_NAME(s.object_id) + '.' + OBJECT_NAME(s.object_id) AS table_name,
@@ -813,16 +813,16 @@ _This is an actionable finding. `dbo.gold_daily_summary` has statistics with mod
 
 #### Review plan-cache composition by plan type
 
-[!info]-
-`sys.dm_exec_cached_plans` shows what kinds of plans are occupying the cache.
-
-- `objtype` becomes `plan_type` so the output is readable.
-- `plan_count` shows how many cache entries exist per type.
-- `cache_mb` converts `size_in_bytes` to MB.
-- `total_use_count` and `avg_use_count` show whether the cache is full of reused plans or mostly one-off artifacts.
-
-*Measure how plan-cache memory is distributed across ad hoc, prepared, view, and stored-procedure plans.*
-
+> [!info]-
+> `sys.dm_exec_cached_plans` shows what kinds of plans are occupying the cache.
+>
+> - `objtype` becomes `plan_type` so the output is readable.
+> - `plan_count` shows how many cache entries exist per type.
+> - `cache_mb` converts `size_in_bytes` to MB.
+> - `total_use_count` and `avg_use_count` show whether the cache is full of reused plans or mostly one-off artifacts.
+>
+> *Measure how plan-cache memory is distributed across ad hoc, prepared, view, and stored-procedure plans.*
+>
 ```sql
 WITH plans AS (
     SELECT
@@ -862,15 +862,15 @@ _The plan cache is dominated by ad hoc plans at `55.90 MB`, which is notable bec
 
 #### Quantify single-use ad hoc plan waste
 
-[!info]-
-This query narrows `sys.dm_exec_cached_plans` to the most suspicious cache pattern: `Adhoc` plans with `usecounts = 1`.
-
-- `single_use_plan_count` shows how many ad hoc plans have never been reused.
-- `single_use_cache_mb` measures how much cache memory those one-time plans occupy.
-- This output is especially valuable when `optimize for ad hoc workloads` is off.
-
-*Measure how much plan-cache memory is currently occupied by single-use ad hoc plans.*
-
+> [!info]-
+> This query narrows `sys.dm_exec_cached_plans` to the most suspicious cache pattern: `Adhoc` plans with `usecounts = 1`.
+>
+> - `single_use_plan_count` shows how many ad hoc plans have never been reused.
+> - `single_use_cache_mb` measures how much cache memory those one-time plans occupy.
+> - This output is especially valuable when `optimize for ad hoc workloads` is off.
+>
+> *Measure how much plan-cache memory is currently occupied by single-use ad hoc plans.*
+>
 ```sql
 SELECT
     objtype AS plan_type,
@@ -902,16 +902,16 @@ The point of this phase is to catch file-growth settings and log reuse blockers 
 
 #### Review file sizes and growth increments
 
-[!info]-
-`sys.master_files` exposes file-level metadata for all databases.
-
-- `size` is converted from pages to MB.
-- `max_size_mb` preserves `UNLIMITED` explicitly when `max_size = -1`.
-- `growth_increment` renders either a fixed MB value or a percentage string depending on `is_percent_growth`.
-- `database_id <> 2` excludes `tempdb` here because Phase 7 already covers it with a more accurate current-layout query.
-
-*Review current file sizes, maximum sizes, and autogrowth style for non-tempdb databases.*
-
+> [!info]-
+> `sys.master_files` exposes file-level metadata for all databases.
+>
+> - `size` is converted from pages to MB.
+> - `max_size_mb` preserves `UNLIMITED` explicitly when `max_size = -1`.
+> - `growth_increment` renders either a fixed MB value or a percentage string depending on `is_percent_growth`.
+> - `database_id <> 2` excludes `tempdb` here because Phase 7 already covers it with a more accurate current-layout query.
+>
+> *Review current file sizes, maximum sizes, and autogrowth style for non-tempdb databases.*
+>
 ```sql
 SELECT TOP (10)
     DB_NAME(database_id) AS database_name,
@@ -954,15 +954,15 @@ _The user database is configured sensibly: `stoxx` data and log both grow in fix
 
 #### Check log reuse wait reasons
 
-[!info]-
-`sys.databases.log_reuse_wait_desc` explains why each database log cannot currently reuse inactive VLFs.
-
-- The value is instantaneous, not historical.
-- The same value can be perfectly normal or a serious problem depending on how long it persists.
-- The audit question is whether the value makes sense for the database role and current activity.
-
-*Check why each database log can or cannot currently reuse inactive log space.*
-
+> [!info]-
+> `sys.databases.log_reuse_wait_desc` explains why each database log cannot currently reuse inactive VLFs.
+>
+> - The value is instantaneous, not historical.
+> - The same value can be perfectly normal or a serious problem depending on how long it persists.
+> - The audit question is whether the value makes sense for the database role and current activity.
+>
+> *Check why each database log can or cannot currently reuse inactive log space.*
+>
 ```sql
 SELECT
     name,
@@ -997,16 +997,16 @@ Performance audits frequently expose security drift at the same time: overly bro
 
 #### Review current sysadmin membership
 
-[!info]-
-This query joins `sys.server_principals` to `sys.server_role_members` and the `sysadmin` server role.
-
-- `login_name` identifies the principal with sysadmin rights.
-- `type_desc` distinguishes SQL logins, Windows logins, and Windows groups.
-- `is_disabled` tells you whether the login is enabled right now.
-- The audit goal is not merely enumeration; it is to decide whether each principal should still have that level of privilege.
-
-*List all principals that currently belong to the `sysadmin` server role.*
-
+> [!info]-
+> This query joins `sys.server_principals` to `sys.server_role_members` and the `sysadmin` server role.
+>
+> - `login_name` identifies the principal with sysadmin rights.
+> - `type_desc` distinguishes SQL logins, Windows logins, and Windows groups.
+> - `is_disabled` tells you whether the login is enabled right now.
+> - The audit goal is not merely enumeration; it is to decide whether each principal should still have that level of privilege.
+>
+> *List all principals that currently belong to the `sysadmin` server role.*
+>
 ```sql
 SELECT
     p.name AS login_name,
@@ -1039,14 +1039,14 @@ _This is a real hardening concern. `sa` is enabled, `BUILTIN\Administrators` is 
 
 #### Check whether `guest` has `CONNECT` in the current database
 
-[!info]-
-The `guest` user exists in user databases by default, but the important security question is whether it has `CONNECT`.
-
-- The `EXISTS` expression checks `sys.database_permissions` for a granted or grant-with-grant-option `CONNECT` permission on `guest`.
-- Returning `0` is the desired result for most production user databases.
-
-*Check whether the `guest` principal currently has `CONNECT` permission in `stoxx`.*
-
+> [!info]-
+> The `guest` user exists in user databases by default, but the important security question is whether it has `CONNECT`.
+>
+> - The `EXISTS` expression checks `sys.database_permissions` for a granted or grant-with-grant-option `CONNECT` permission on `guest`.
+> - Returning `0` is the desired result for most production user databases.
+>
+> *Check whether the `guest` principal currently has `CONNECT` permission in `stoxx`.*
+>
 ```sql
 SELECT
     CASE
