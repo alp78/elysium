@@ -9,305 +9,490 @@ tags:
   - medallion
   - security
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
-description: "How to organize SQL Server databases and schemas for multi-layer data architectures — schema-per-layer, schema-per-domain, separate databases, naming conventions, and security."
+description: "Production guidance for organizing SQL Server databases and schemas in layered data systems, grounded in the live stoxx schema layout and focused on permissions, ownership, and operational boundaries."
 parent: "[[domain-pipeline-patterns]]"
 links:
   - "[[sql-server-loading-patterns]]"
   - "[[sql-server-change-tracking]]"
   - "[[sql-server-incremental-transforms]]"
   - "[[sql-server-pipeline-anti-patterns]]"
-  - "[[bronze-layer-loading]]"
-  - "[[silver-transforms]]"
-  - "[[gold-transforms]]"
+  - "[[pipeline-integration-and-devex]]"
 created: 2026-03-29
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
 # SQL Server Schema Layering — Organizing Databases for Data Pipelines
 
-> [!quote]
-> "There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies."
->
-> — **Tony Hoare**, 1980 ACM Turing Award lecture
+Schema design is not cosmetic in SQL Server. It decides:
 
-This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). For how dbt maps its own schema configuration to these patterns, see [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models).
+- how clearly readers can tell raw, transformed, and published data apart
+- whether permissions can be granted once at the schema level or must be managed table by table
+- whether operational boundaries stay obvious as the pipeline grows
+- whether the database accumulates `dbo` sprawl that becomes impossible to secure cleanly
 
----
+For most SQL Server pipeline systems, the best default is still simple: one database, one schema per layer, and schema-level permissions. The main reason to deviate is an operational requirement, not aesthetics.
 
-## Schema-per-Layer (Standard Approach)
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Starting a SQL Server data platform"] --> B{"Do the layers share the same<br/>backup, security, and compute boundary?"}
+    B --> Y1([YES])
+    B --> N1([NO])
+    Y1 --> C["Use one database with<br/>bronze / silver / gold schemas"]
+    N1 --> D{"Is the split driven by true operational isolation,<br/>not by team preference alone?"}
+    D --> Y2([YES])
+    D --> N2([NO])
+    Y2 --> E["Use separate databases per layer<br/>or per regulated boundary"]
+    N2 --> F["Stay in one database and keep<br/>schema boundaries explicit"]
+    C --> G{"Do multiple domain teams own data products<br/>independently?"}
+    E --> G
+    F --> G
+    G --> Y3([YES])
+    G --> N3([NO])
+    Y3 --> H["Add domain-oriented schemas or naming<br/>without hiding the layer boundary"]
+    N3 --> I["Keep the model simple and avoid schema proliferation"]
 
-A **schema** in SQL Server is a named container (namespace) within a database that groups tables, views, stored procedures, and other objects under a common owner. It provides logical organization and is the primary unit for permission management — you can `GRANT SELECT ON SCHEMA::gold` instead of granting on each table individually. Every object in a database belongs to exactly one schema; the default is `dbo` (database owner).
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    class Y1,Y2,Y3 yesNode;
+    class N1,N2,N3 noNode;
+```
 
-The most common pattern for single-database pipelines is **schema-per-layer**: each medallion layer gets its own schema, keeping raw, cleaned, and presentation data separated within one database.
+## Live Baseline
 
-### CREATE SCHEMA — one schema per medallion layer
+The current `stoxx` database already shows why schema layering matters. It has a real `bronze / silver / gold` backbone, but it also has a large `dbo` surface carrying demos, support tables, and mixed-purpose objects.
 
-> [!info] Schema-per-Layer Setup
->
-> Creates three schemas in a single database. All tables in a layer share the same schema, making permissions and queries straightforward.
+### Current schema footprint in `stoxx`
 
-The `EXEC('CREATE SCHEMA ...')` wrapper is necessary because SQL Server requires `CREATE SCHEMA` to be the **first statement in a batch** — it cannot appear inside an `IF` block directly. Wrapping it in dynamic SQL (`EXEC()`) satisfies this requirement while allowing the idempotent `IF NOT EXISTS` check.
+[!info]-
+This query summarizes the live schema layout.
+
+- `schema_owner` shows who owns the schema.
+- `table_count` shows how many tables live in that schema.
+- `total_rows` gives rough workload scale per schema.
+- `demo_table_count` highlights how much of a schema is documentation or lab residue rather than production data.
+- `explicit_schema_permission_rows` counts schema-level permission rows in `sys.database_permissions`.
+
+*Inspect the live schema distribution before choosing a layering strategy.*
 
 ```sql
--- One schema per pipeline layer — the simplest and most common approach
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bronze')
+SELECT
+    s.name AS schema_name,
+    USER_NAME(s.principal_id) AS schema_owner,
+    COUNT(DISTINCT t.object_id) AS table_count,
+    COALESCE(SUM(CASE WHEN p.index_id IN (0,1) THEN p.rows END), 0) AS total_rows,
+    SUM(CASE WHEN t.name LIKE 'demo[_]%' THEN 1 ELSE 0 END) AS demo_table_count,
+    SUM(CASE WHEN dp.class = 3 THEN 1 ELSE 0 END) AS explicit_schema_permission_rows
+FROM sys.schemas AS s
+LEFT JOIN sys.tables AS t
+  ON s.schema_id = t.schema_id
+LEFT JOIN sys.partitions AS p
+  ON t.object_id = p.object_id
+LEFT JOIN sys.database_permissions AS dp
+  ON dp.class = 3
+ AND dp.major_id = s.schema_id
+WHERE s.name IN ('dbo','bronze','silver','gold')
+GROUP BY s.name, s.principal_id
+ORDER BY CASE s.name
+    WHEN 'bronze' THEN 1
+    WHEN 'silver' THEN 2
+    WHEN 'gold' THEN 3
+    WHEN 'dbo' THEN 4
+    ELSE 5
+END;
+```
+
+| schema_name | schema_owner | table_count | total_rows | demo_table_count | explicit_schema_permission_rows |
+|---|---|---:|---:|---:|---:|
+| `bronze` | `dbo` | 12 | 30307 | 0 | 0 |
+| `silver` | `dbo` | 7 | 224102 | 0 | 0 |
+| `gold` | `dbo` | 3 | 6162 | 0 | 0 |
+| `dbo` | `dbo` | 19 | 1703099 | 14 | 0 |
+
+_This is a good live example of a mostly-correct layered design with one clear weakness. `bronze`, `silver`, and `gold` exist and already carry the real medallion flow. But `dbo` is still the largest schema by row count and contains `14` demo tables. In a production system, that is a governance smell: `dbo` should not become the place where unrelated operational, demo, and fallback objects accumulate indefinitely._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `bronze / silver / gold` all present | &#9989; | Layer boundary exists explicitly. | Good foundation for security and operational clarity. |
+| `dbo.table_count` high | &#10060; in a production warehouse | Mixed-purpose objects are accumulating outside the layer model. | Harder security model and weaker discoverability. |
+| `demo_table_count > 0` in `dbo` | Depends | Demo and lab residue live in the default schema. | Acceptable for a dev sandbox, not ideal as a long-term production pattern. |
+| `explicit_schema_permission_rows = 0` | Depends | No explicit schema-level grants currently exist. | The model is ready for schema-based security, but it is not using it yet. |
+
+### Representative table layout by schema
+
+[!info]-
+This query shows how the live tables actually map onto the layers.
+
+- `bronze` contains small raw landings and lookup tables.
+- `silver` contains the large cleaned OHLCV tables.
+- `gold` contains compact published analytics tables.
+
+This is the strongest practical argument for schema-per-layer: the business meaning of the object is visible in the fully qualified name before you even open the definition.
+
+*Inspect representative table placement across the live schemas.*
+
+```sql
+WITH row_counts AS (
+    SELECT
+        s.name AS schema_name,
+        t.name AS table_name,
+        SUM(p.rows) AS row_count
+    FROM sys.tables AS t
+    JOIN sys.schemas AS s
+      ON t.schema_id = s.schema_id
+    JOIN sys.partitions AS p
+      ON t.object_id = p.object_id
+     AND p.index_id IN (0,1)
+    WHERE s.name IN ('bronze','silver','gold','dbo')
+    GROUP BY s.name, t.name
+)
+SELECT TOP (20)
+    schema_name,
+    table_name,
+    row_count
+FROM row_counts
+ORDER BY CASE schema_name
+    WHEN 'bronze' THEN 1
+    WHEN 'silver' THEN 2
+    WHEN 'gold' THEN 3
+    WHEN 'dbo' THEN 4
+    ELSE 5
+END,
+row_count DESC,
+table_name;
+```
+
+| schema_name | table_name | row_count |
+|---|---|---:|
+| `bronze` | `trading_calendar` | 29335 |
+| `bronze` | `dim_country` | 212 |
+| `bronze` | `index_dim` | 169 |
+| `bronze` | `signals_daily` | 169 |
+| `bronze` | `signals_quarterly` | 169 |
+| `bronze` | `eurostoxx50_ohlcv` | 50 |
+| `bronze` | `stoxxasia50_ohlcv` | 50 |
+| `bronze` | `stoxxusa50_ohlcv` | 50 |
+| `bronze` | `pulse` | 40 |
+| `bronze` | `pulse_tickers` | 40 |
+| `bronze` | `oil20_ohlcv` | 19 |
+| `bronze` | `dim_index` | 4 |
+| `silver` | `eurostoxx50_ohlcv` | 67155 |
+| `silver` | `stoxxusa50_ohlcv` | 66000 |
+| `silver` | `stoxxasia50_ohlcv` | 64875 |
+| `silver` | `oil20_ohlcv` | 25080 |
+| `silver` | `signals_daily` | 635 |
+| `silver` | `signals_quarterly` | 188 |
+| `silver` | `index_dim` | 169 |
+| `gold` | `index_performance` | 5351 |
+
+_The live row counts align with the intended layer semantics. `bronze` is small and source-shaped, `silver` carries the larger cleaned history, and `gold` is compact and presentation-oriented. That is exactly the pattern schema-per-layer is supposed to make obvious._
+
+## Schema-per-Layer (Default Recommendation)
+
+For a single SQL Server database serving one pipeline system, schema-per-layer should be the default until a real operational boundary forces something else.
+
+### Create one schema per layer
+
+> [!example]
+> Use this when the platform is one database with clear medallion-style stages and shared recovery, compute, and security boundaries.
+
+[!info]-
+This DDL creates the three layer schemas idempotently.
+
+- `CREATE SCHEMA` must be the first statement in its batch.
+- The `EXEC('CREATE SCHEMA ...')` wrapper is used so the existence check stays idempotent.
+- The schema name becomes the namespace boundary for both querying and security.
+
+*Create the standard medallion schemas in one database.*
+
+```sql
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'bronze')
     EXEC('CREATE SCHEMA bronze');
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'silver')
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'silver')
     EXEC('CREATE SCHEMA silver');
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'gold')
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gold')
     EXEC('CREATE SCHEMA gold');
 GO
 ```
 
-- **When to use:** single-database pipelines, small-to-medium scale, most teams
-- **Query style:** `SELECT * FROM silver.signals_daily` — clean and obvious which layer you're reading
-- **No prefixes needed:** the schema replaces `bronze_`, `stg_`, or `raw_` table name prefixes
+Why this is still the best default:
 
-### GRANT SELECT ON SCHEMA — layer-level permissions
-
-> [!tip] Schema-Level Permissions
->
-> Grant at the schema level, not the table level. New tables automatically inherit the permission — no extra DDL when you add a table.
-
-```sql
--- Dashboard users read gold only — can't see raw data in bronze
-GRANT SELECT ON SCHEMA::gold TO [dashboard_reader];
-
--- ETL service account writes to all layers
-GRANT INSERT, UPDATE, DELETE ON SCHEMA::bronze TO [etl_service];
-GRANT INSERT, UPDATE, DELETE ON SCHEMA::silver TO [etl_service];
-GRANT INSERT, UPDATE, DELETE ON SCHEMA::gold   TO [etl_service];
-```
-
----
+- query intent is obvious: `silver.signals_daily` tells the reader more than `dbo.signals_daily`
+- schema-level grants are simple and durable
+- layer-wide review and cleanup become possible without parsing table prefixes
+- moving later from schema-per-layer to a more elaborate variant is easier than cleaning up years of `dbo` sprawl
 
 ## Separate Databases per Layer
 
-Each layer gets its own database. Adds operational isolation at the cost of query complexity.
+Use separate databases only when the split is driven by a real operational boundary: different recovery model, different admin domain, different compliance boundary, or different restore lifecycle.
 
-### Three-Part Naming — cross-database queries
+[!warning]
+Do not split layers into separate databases just because the names look tidy. Cross-database querying, deployment, testing, and ownership become more complex immediately.
 
-> [!info] Separate Database Layout
->
-> Different databases allow different recovery models, backup schedules, and disk configurations per layer. Queries use three-part naming: `database.schema.table`.
+[!success]
+Use separate databases when you genuinely need different backup-chain behavior, restore isolation, or tenant/security boundaries that a single database cannot express cleanly.
+
+### Example: different recovery models per layer
+
+> [!example]
+> This pattern is appropriate only when the layers truly have different restore expectations.
+
+[!info]-
+These commands express the main operational reason for separate databases: different recovery policies.
+
+- `SIMPLE` is appropriate for re-loadable layers where point-in-time recovery is not required.
+- `FULL` is appropriate when the layer must be recoverable to any point in time and the log-backup chain is part of the operational contract.
+
+*Set different recovery models when the layers truly have different restore obligations.*
 
 ```sql
--- Bronze: SIMPLE recovery (no point-in-time needed, data is re-fetchable)
 ALTER DATABASE bronze_db SET RECOVERY SIMPLE;
-
--- Silver: FULL recovery (history must be recoverable to any point)
 ALTER DATABASE silver_db SET RECOVERY FULL;
-
--- Gold: SIMPLE recovery (rebuiltable from silver at any time)
-ALTER DATABASE gold_db SET RECOVERY SIMPLE;
+ALTER DATABASE gold_db   SET RECOVERY SIMPLE;
 ```
 
-- **Cross-database query:** `SELECT * FROM silver_db.dbo.signals_daily` — verbose but explicit
-- **When to use:** different backup strategies per layer, different disk tiers (SSD for gold, HDD for bronze), compliance isolation
-- **Trade-off:** operational isolation vs three-part naming everywhere, no cross-database transactions without **MSDTC** (Microsoft Distributed Transaction Coordinator — a Windows service that coordinates transactions spanning multiple resource managers, such as two SQL Server databases or a database and a message queue)
+When to choose this:
 
-> [!warning] Cross-Database Ownership Chaining
->
-> **Ownership chaining** is SQL Server's mechanism for skipping permission checks when a chain of objects (e.g., a view that references a table) share the same owner — the engine checks permission on the first object and trusts that the same owner's downstream objects are safe. By default, this chaining does **not** cross database boundaries. Enabling `DB_CHAINING` or setting a database as `TRUSTWORTHY` (which tells SQL Server to trust the database's internal objects for cross-database access) opens a security hole: any `db_owner` in the trusted database can access objects in other databases without explicit grants. Use certificates instead — never enable `DB_CHAINING` server-wide.
+- `bronze` is re-fetchable and does not need point-in-time recovery
+- `silver` is historized and operationally valuable enough to justify `FULL`
+- `gold` is fully rebuildable and does not justify a separate log-backup chain
 
-> [!success] Grant explicit cross-database permissions or use certificates instead of `DB_CHAINING`
->
-> Grant the service login `CONNECT` and the required data permissions on each database individually, or use a database certificate to sign the cross-database module. This avoids the server-wide security hole of enabling `DB_CHAINING`. Note: `TRUSTWORTHY` is automatically reset to `OFF` when a database is attached or restored — a security safeguard that prevents malicious code from persisting when databases move between instances.
+When not to choose it:
 
-> [!tip] Leverage same-owner chaining within a single database
->
-> If all schemas in a medallion stack (`bronze`, `silver`, `gold`) are owned by the same database principal, ownership chaining works automatically within that database. A stored procedure in `gold` that reads from `silver` which reads from `bronze` can be secured by granting `EXECUTE` on the procedure alone — users never need direct `SELECT` on the underlying tables. This is simpler and safer than cross-database chaining.
+- all layers live on the same host and same team with the same restore playbook
+- the split exists only to imitate a lakehouse folder pattern
+- the team is not prepared to manage cross-database deployment and security explicitly
 
----
+## Schema-per-Domain
 
-## Schema-per-Domain (Data Mesh Style)
+Domain schemas are useful when teams genuinely own their data products end to end. They are not a substitute for layer boundaries; they are an ownership overlay.
 
-**Data Mesh** is an organizational architecture (introduced by Zhamak Dehghani) where domain teams own their data end-to-end — from ingestion through transformation to serving — rather than a centralized data engineering team managing everything. In SQL Server, this translates to organizing schemas by business domain rather than pipeline layer, so each domain team owns its schemas and controls its own bronze-through-gold lifecycle.
+### Example: domain-owned schemas
 
-### CREATE SCHEMA per Domain — organizational alignment
+> [!example]
+> Use this when different teams own their own data products and deployment lifecycle.
 
-> [!info] Domain Schemas
->
-> Aligns database organization with team ownership. Each domain manages its own bronze-through-gold lifecycle.
+[!info]-
+`AUTHORIZATION` sets the schema owner.
+
+- The schema owner becomes the principal responsible for object ownership inside that schema.
+- This is the cleanest SQL Server-native way to align schema boundaries with organizational boundaries.
+
+*Create domain-owned schemas when ownership, not just transformation stage, is the main boundary.*
 
 ```sql
-CREATE SCHEMA finance AUTHORIZATION finance_owner;     -- finance team owns these tables
-CREATE SCHEMA operations AUTHORIZATION ops_owner;      -- operations team
-CREATE SCHEMA marketing AUTHORIZATION mktg_owner;      -- marketing team
+CREATE SCHEMA finance AUTHORIZATION finance_owner;
+CREATE SCHEMA operations AUTHORIZATION ops_owner;
+CREATE SCHEMA research AUTHORIZATION research_owner;
 GO
 ```
 
-The `AUTHORIZATION` clause assigns schema ownership to a specific database principal. The owner can create, alter, and drop objects within their schema without additional grants — mirroring the data mesh principle of localized ownership.
+Production rule:
 
-- **Combined with layers:** `finance.bronze_trades`, `finance.silver_trades`, `finance.gold_trades`
-- **Or use sub-schemas:** SQL Server doesn't support nested schemas, so use naming conventions: `finance_bronze`, `finance_silver`, `finance_gold`
-- **When to use:** multiple teams with domain-driven ownership, data mesh architectures
-- **Trade-off:** organizational alignment vs cross-domain query complexity (no `SELECT * FROM silver.*` across all domains)
+- if you adopt domain schemas, keep the layer meaning visible in the object name or schema naming convention
+- avoid hiding the layer entirely inside a domain-only namespace unless the team has a strong internal modeling discipline
 
----
+Good patterns:
 
-## Schema-per-Source (Staging Pattern)
+- `finance.bronze_trades`, `finance.silver_trades`, `finance.gold_positions`
+- `finance_bronze`, `finance_silver`, `finance_gold` when ownership clarity matters more than compact naming
 
-One schema per external data source. Useful when many sources land at different times with different formats.
+## Schema-per-Source for Staging
 
-### Staging Schemas — source isolation
+This is a staging-only pattern. It is useful when multiple upstream systems land with different refresh schedules, data quality quirks, or file formats.
 
-> [!info] Source-Specific Staging
->
-> Each source gets its own staging schema. Data flows from source-specific staging into a unified bronze layer.
+### Example: source-scoped staging schemas
+
+> [!example]
+> Use source-scoped staging only for the source-facing edge of the pipeline, not for the whole warehouse model.
+
+[!info]-
+Each source gets its own isolated landing namespace.
+
+- the schema boundary isolates source-specific column names and ingestion quirks
+- the downstream contract is still to normalize into a common `bronze` surface
+
+*Create dedicated staging schemas when many upstream sources land independently.*
 
 ```sql
-CREATE SCHEMA stg_yfinance;     -- JSON from yfinance API
-CREATE SCHEMA stg_bloomberg;    -- CSV from Bloomberg terminal
-CREATE SCHEMA stg_manual;       -- Excel uploads from analysts
+CREATE SCHEMA stg_yfinance;
+CREATE SCHEMA stg_bloomberg;
+CREATE SCHEMA stg_manual;
 GO
 ```
 
-- **Flow:** `stg_yfinance.*` → `bronze.*` → `silver.*` → `gold.*`
-- **When to use:** many external sources with different refresh schedules, different data formats
-- **Benefit:** isolates source-specific quirks (column names, data types) from the rest of the pipeline
+Recommended flow:
 
----
+- `stg_*` for source-specific landings
+- `bronze.*` for normalized raw persistence
+- `silver.*` for cleaned and deduplicated business-ready tables
+- `gold.*` for published analytics or serving tables
 
-## Naming Conventions
+## Naming and Metadata Rules
 
-Consistent naming across all layers prevents confusion and makes automation easier.
+Schema design fails when the naming inside the schema is inconsistent.
 
-### Table and Column Naming Standards
+Recommended defaults:
 
-> [!tip] Pick One Convention and Enforce It
->
-> The choice between singular/plural and snake_case/PascalCase matters less than consistency. Document the choice and enforce it in code review.
+- keep table names business-oriented, not tool-oriented
+- use schema names to express the layer instead of prefixes like `raw_` or `stg_` on every table
+- keep metadata columns explicit and consistent: `_ingested_at`, `_source_file`, `_batch_id`, `_index`
+- prefer predictable index names: `PK_`, `UX_`, `IX_`
 
-- **Tables:** singular preferred in dimensional modeling (`dim_stock`, `fact_trade`) — plural (`stocks`, `trades`) is also fine if consistent
-- **Columns:** `snake_case` everywhere — `current_price`, `signal_date`, `market_cap`
-- **Metadata columns:** prefix with underscore — `_ingested_at`, `_source_file`, `_index`
-- **Index naming:** `IX_{table}_{columns}` for non-clustered, `UX_` for unique, `PK_` for primary key
-- **Reserved words:** bracket in DDL — `[open]`, `[close]`, `[index]`, `[date]`
+[!warning]
+Do not name schemas after tools such as `airflow`, `dbt`, or `spark`. Tool names change. Data meaning should not.
 
-### Reserved Word Handling — bracketed identifiers in DDL
+[!success]
+Name schemas after the data boundary they represent: stage, layer, domain, or regulated boundary.
 
-> [!warning] SQL Server Reserved Words
->
-> OHLCV data uses `open` and `close` as column names — both are reserved words. Always bracket them in DDL and queries, or use prefixes like `open_price`, `close_price`.
+### Reserved words in table design
 
-> [!success] Always bracket reserved words with `[` `]` in DDL and queries
->
-> Use `[open]` and `[close]` everywhere they appear — in `CREATE TABLE`, `SELECT`, `INSERT`, and `MERGE` statements. Alternatively, rename them to `open_price` and `close_price` at the schema layer to avoid bracketing entirely.
+> [!example]
+> Financial OHLCV models often use reserved words such as `open`, `close`, or `date`. SQL Server can handle them, but the quoting discipline must be consistent.
+
+[!info]-
+This DDL shows how to define a layer table that keeps familiar financial names while remaining syntactically valid.
+
+- `[open]` and `[close]` are bracketed because they collide with reserved words
+- the schema name carries the layer, so the table name itself can stay business-oriented
+
+*Define a layer table that keeps familiar financial column names safely.*
 
 ```sql
--- Bracketing reserved words in CREATE TABLE
-CREATE TABLE bronze.ohlcv (
-    symbol      VARCHAR(20)  NOT NULL,
-    date        DATE         NOT NULL,    -- reserved word
-    [open]      FLOAT,                    -- reserved word — brackets required
-    high        FLOAT,
-    low         FLOAT,
-    [close]     FLOAT,                    -- reserved word — brackets required
-    volume      BIGINT
+CREATE TABLE bronze.ohlcv
+(
+    symbol      varchar(20) NOT NULL,
+    [date]      date        NOT NULL,
+    [open]      float       NULL,
+    high        float       NULL,
+    low         float       NULL,
+    [close]     float       NULL,
+    volume      bigint      NULL,
+    _ingested_at datetime2  NOT NULL DEFAULT SYSUTCDATETIME()
 );
 ```
 
----
-
 ## Cross-Schema Security
 
-Schema-level permissions are the primary advantage of organizing tables into schemas. Instead of granting `SELECT` on each table individually (and remembering to re-grant every time you add a table), you grant once at the schema level and all current and future objects in that schema inherit the permission.
+The live `stoxx` database is structurally ready for schema-level security, but it is not using it yet.
 
-### Role-Based Access — one login per service, schema-level grants
+### Current schema security surface
 
-A **database role** is a named group of permissions that can be assigned to one or more database users — similar to an IAM role in cloud platforms. You define the role once, assign permissions to it, then add users to the role. When permissions change, you update the role, not every individual user.
+[!info]-
+This query inspects explicit schema-level permission rows.
 
-> [!info] Security Model
->
-> One SQL login per service (ETL, dashboard, analyst), each mapped to a database role. Roles get schema-level grants — never grant directly to logins.
+- `class_desc = SCHEMA` indicates the permission is attached to a schema object, not a table or database.
+- `permission_name` tells you which action was granted or denied.
+- `state_desc` tells you whether it was `GRANT`, `DENY`, or a grant with grant option.
+
+*Inspect explicit schema-level permissions in the current database.*
 
 ```sql
--- Create roles
-CREATE ROLE etl_bronze_role;
-CREATE ROLE etl_silver_role;
+SELECT
+    dp.class_desc,
+    s.name AS schema_name,
+    dp.permission_name,
+    dp.state_desc,
+    USER_NAME(dp.grantee_principal_id) AS grantee_name
+FROM sys.database_permissions AS dp
+JOIN sys.schemas AS s
+  ON dp.major_id = s.schema_id
+WHERE dp.class = 3
+ORDER BY s.name, grantee_name, dp.permission_name;
+```
+
+This query currently returns no rows.
+
+_There are no explicit schema-level grants or denies in `stoxx` right now. That does not mean the database is insecure, but it does mean the schema design is not yet being used as a first-class security boundary. In a production pipeline database, that is usually a missed opportunity._
+
+### Recommended security pattern
+
+> [!example]
+> Use one database role per service type or reader group, and grant at the schema level.
+
+[!info]-
+This pattern makes permissions durable as tables are added.
+
+- the role owns the permission model
+- new tables inherit the schema boundary automatically
+- `DENY` can enforce hard separation where needed
+
+*Grant layer access through roles, not table-by-table grants to individual users.*
+
+```sql
+CREATE ROLE etl_writer;
 CREATE ROLE dashboard_reader;
-CREATE ROLE analyst_reader;
 
--- Bronze ETL: write bronze, read nothing else
-GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::bronze TO etl_bronze_role;
-DENY SELECT ON SCHEMA::silver TO etl_bronze_role;
-DENY SELECT ON SCHEMA::gold   TO etl_bronze_role;
-
--- Dashboard: read gold only
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::bronze TO etl_writer;
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::silver TO etl_writer;
 GRANT SELECT ON SCHEMA::gold TO dashboard_reader;
+
 DENY SELECT ON SCHEMA::bronze TO dashboard_reader;
 DENY SELECT ON SCHEMA::silver TO dashboard_reader;
 ```
 
-> [!info] How DENY Overrides GRANT
->
-> SQL Server's permission precedence: `DENY` always wins over `GRANT`, regardless of how the permissions are assigned. Even if `dashboard_reader` is also a member of another role that grants `SELECT` on `bronze`, the explicit `DENY SELECT ON SCHEMA::bronze` still blocks access. This makes DENY the strongest tool for enforcing layer isolation — a user cannot accidentally gain access through role membership inheritance. Exception: members of `sysadmin` and object owners bypass DENY entirely. Also, a table-level DENY does **not** override a column-level GRANT (a documented inconsistency that Microsoft plans to remove in a future release).
+[!warning]
+Do not rely on `dbo` as a catch-all security boundary. If business tables, support tables, and demos all live there, the permission story becomes vague immediately.
 
-> [!tip] Schema-Level vs Table-Level Permissions
->
-> Always prefer schema-level. When you add a new table to the `gold` schema, `dashboard_reader` can immediately query it — no extra `GRANT` needed. Table-level grants require maintenance on every DDL change.
+[!success]
+Keep `dbo` nearly empty in production-facing warehouses: utility objects only, or ideally nothing user-facing at all.
 
----
+## Decision Guide
 
-## Which Schema Strategy — Scenario-Based Decision
-
-> [!tip] Schema strategy decision
->
-> Most teams should start with schema-per-layer. Only move to separate databases or domain schemas when a specific operational need demands it.
-
-**Single team, single pipeline, single database (most common):**
-→ Schema-per-layer (`bronze`, `silver`, `gold`). Simple, clear permissions, no cross-database complexity. This is what the Medallion-Project uses.
-
-**Different backup/recovery needs per layer:**
-→ Separate databases. Bronze on `SIMPLE` recovery (re-fetchable), silver on `FULL` (history must be point-in-time recoverable), gold on `SIMPLE` (rebuildable from silver).
-
-**Multiple teams with independent pipelines:**
-→ Schema-per-domain (`finance`, `operations`, `marketing`). Each team owns their schemas end-to-end. Combine with layer naming conventions: `finance.bronze_trades`.
-
-**Many external sources with different refresh schedules:**
-→ Schema-per-source for staging (`stg_yfinance`, `stg_bloomberg`), then a unified `bronze` schema. The staging schemas isolate source-specific quirks.
-
-**Starting a new project and unsure:**
-→ Schema-per-layer. You can always add source-specific staging schemas later. Moving from `dbo` to proper schemas is painful; moving from schema-per-layer to domain schemas is straightforward.
-
----
+| Scenario | Best pattern | Why |
+|---|---|---|
+| Single SQL Server database, one data platform team | Schema-per-layer | Simplest, clearest, best security-to-complexity ratio |
+| Different recovery or restore requirements per layer | Separate databases per layer | Recovery policy is a real operational boundary |
+| Independent domain teams own end-to-end data products | Domain schemas plus visible layer naming | Ownership matters, but layer semantics must stay visible |
+| Many upstream sources with different quirks | Source-scoped staging plus unified medallion schemas | Isolate ingestion noise without polluting the serving model |
+| Early-stage project with uncertainty | Start with schema-per-layer | Easiest to evolve without cleanup debt |
 
 ## Anti-Patterns
 
-Common schema organization mistakes that create security holes, naming confusion, or debugging nightmares.
+| Anti-pattern | Why it hurts |
+|---|---|
+| Everything in `dbo` | No meaningful security or semantic boundary |
+| Schemas named after tools | Schema meaning changes when the tooling changes |
+| Prefixes instead of schemas | Harder permissions model and weaker discoverability |
+| Domain-only schemas with no visible layer semantics | Readers cannot tell raw from curated data quickly |
+| Table-level grants everywhere | Permission maintenance becomes brittle and repetitive |
 
-### Everything in dbo — no isolation, no permissions, no clarity
+## Current Recommendation for `stoxx`
 
-The default `dbo` schema is where tables land when you don't specify a schema. Mixing raw, cleaned, and presentation tables in `dbo` makes it impossible to set layer-specific permissions and forces you to rely on naming prefixes (`raw_`, `stg_`, `dim_`) to distinguish layers.
+The live database already has the right backbone:
 
-### Schemas Named After Tools — confusing ownership
+- keep `bronze`, `silver`, and `gold` as the primary production schemas
+- stop letting `dbo` grow as a mixed-purpose default landing area
+- move long-lived production-facing `dbo` objects into the right layer schema
+- keep demos disposable and clearly separated from production-facing objects
+- start using schema-level roles if this environment becomes more than a single-admin sandbox
 
-Naming schemas after the tool that writes to them (`airflow`, `dbt`, `spark`) conflates the writer with the data. When you switch from Airflow to Prefect, the schema name becomes misleading. Name schemas after what the data **is**, not what tool produced it.
+## Related
 
-### Inconsistent Naming Across Layers
+- [[sql-server-loading-patterns]]
+- [[sql-server-incremental-transforms]]
+- [[sql-server-change-tracking]]
+- [[sql-server-pipeline-anti-patterns]]
+- [[pipeline-integration-and-devex]]
 
-If bronze uses plural (`stocks`, `signals`) and silver uses singular (`stock`, `signal`), every query requires checking which convention applies. Pick one convention in your first DDL and carry it through all layers.
+## References
 
-### No Metadata Columns in Bronze
-
-Without `_ingested_at` and `_source_file` in bronze tables, you cannot debug data freshness issues, trace bad data back to its source file, or determine when a row arrived. These columns cost almost nothing to store and save hours of debugging.
-
----
-
-## Medallion-Project Reference
-
-> [!guide]- Medallion-Project: bronze/silver/gold schema layout
->
-> The financial index pipeline uses schema-per-layer in a single database:
-> - `bronze.index_dim`, `bronze.signals_daily`, `bronze.{ohlcv}` — raw data
-> - `silver.index_dim` (SCD2), `silver.signals_daily`, `silver.{ohlcv}` — cleaned, deduplicated
-> - `gold.scores_daily`, `gold.scores_quarterly`, `gold.index_performance` — pre-computed analytics
->
-> All tables include `_ingested_at DATETIME2 DEFAULT SYSUTCDATETIME()` as a metadata column.
-> See [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full DDL.
+- [CREATE SCHEMA (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/create-schema-transact-sql?view=sql-server-ver17)
+- [GRANT Schema Permissions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=sql-server-ver17)
+- [ALTER SCHEMA (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-schema-transact-sql?view=sql-server-ver17)

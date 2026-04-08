@@ -9,7 +9,7 @@ links:
   - "[[merge-and-upsert]]"
   - "[[date-and-time-functions]]"
   - "[[execution-plans]]"
-  - "[[query-plan-analysis]]"
+  - "[[query-store-regressions-and-plan-forcing]]"
   - "[[wait-stats-analysis]]"
   - "[[index-maintenance]]"
   - "[[performance-audit-playbook]]"
@@ -622,7 +622,7 @@ _The current instance reports `CONVENTIONAL`. On this Linux host, that is expect
 ## Related
 
 - [[wait-stats-analysis]]
-- [[query-plan-analysis]]
+- [[query-store-regressions-and-plan-forcing]]
 - [[execution-plans]]
 - [[index-maintenance]]
 - [[performance-audit-playbook]]

@@ -2296,7 +2296,7 @@ sudo systemctl restart mssql-server
 - [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — Wait type diagnosis
 - [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — Memory pressure diagnosis
 - [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — Reading execution plans
-- [query-plan-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) — Query Store and plan forcing
+- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-store-regressions-and-plan-forcing) — Query Store and plan forcing
 - [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — Deadlock deep dive
 - [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — Blocking chain analysis
 - [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — Fragmentation management

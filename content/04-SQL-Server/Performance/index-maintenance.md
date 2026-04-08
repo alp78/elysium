@@ -9,7 +9,7 @@ links:
   - "[[merge-and-upsert]]"
   - "[[date-and-time-functions]]"
   - "[[execution-plans]]"
-  - "[[query-plan-analysis]]"
+  - "[[query-store-regressions-and-plan-forcing]]"
   - "[[wait-stats-analysis]]"
   - "[[memory-and-buffer-pool]]"
   - "[[performance-audit-playbook]]"
@@ -1650,7 +1650,7 @@ For automation, prefer a battle-tested maintenance solution such as **Ola Hallen
 ## Related
 
 - [[execution-plans]]
-- [[query-plan-analysis]]
+- [[query-store-regressions-and-plan-forcing]]
 - [[wait-stats-analysis]]
 - [[memory-and-buffer-pool]]
 - [[performance-audit-playbook]]

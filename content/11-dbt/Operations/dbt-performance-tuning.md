@@ -457,7 +457,7 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 
 ## Related
 
-- [query-plan-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis)
+- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-store-regressions-and-plan-forcing)
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization)
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
 - [dbt-troubleshooting](https://alp78.github.io/elysium/11-dbt/Operations/dbt-troubleshooting)

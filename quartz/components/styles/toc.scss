@@ -5,7 +5,7 @@
   flex-direction: column;
   overflow-y: hidden;
   min-height: 1.4rem;
-  flex: 0 0.5 auto;
+  flex: 1 1 0;
   &:has(button.toc-header.collapsed) {
     flex: 0 1 1.4rem;
   }
@@ -39,11 +39,13 @@ button.toc-header {
 }
 
 ul.toc-content.overflow {
+  flex: 1 1 auto;
   list-style: none;
   position: relative;
   margin: 0.5rem 0;
   padding: 0;
-  max-height: calc(100% - 2rem);
+  min-height: 0;
+  max-height: none;
   overscroll-behavior: contain;
   list-style: none;
 

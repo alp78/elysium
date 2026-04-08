@@ -16,7 +16,7 @@ mindmap
     (MERGE and upsert)
     (date and time functions)
     (execution plans)
-    (query plan analysis)
+    (Query Store regressions and plan forcing)
     (wait stats analysis)
     (memory and buffer pool)
     (index maintenance)
@@ -56,13 +56,12 @@ mindmap
 > - [[execution-plans#Parameter Sniffing|Parameter sniffing]]
 > - [[execution-plans#Batch Mode Execution|Batch mode execution]]
 
-> [!abstract]- [[query-plan-analysis]]
+> [!abstract]- [[query-store-regressions-and-plan-forcing]]
 >
-> - [[query-plan-analysis#How to Read an Execution Plan|Reading an execution plan]]
-> - [[query-plan-analysis#Capturing Plans from the Pipeline (Without SSMS)|Capturing plans programmatically]]
-> - [[query-plan-analysis#Cardinality Estimation — Detecting Bad Row Count Guesses|Cardinality estimation]]
-> - [[query-plan-analysis#Parameter Sniffing|Parameter sniffing]]
-> - [[query-plan-analysis#Query Store Setup and Regression Detection|Query Store regression detection]]
+> - [[query-store-regressions-and-plan-forcing#Query Store Baseline|Query Store baseline]]
+> - [[query-store-regressions-and-plan-forcing#Plan Regression Candidates|Regression candidates]]
+> - [[query-store-regressions-and-plan-forcing#Controlled Force-Plan Workflow|Force-plan workflow]]
+> - [[query-store-regressions-and-plan-forcing#Operational Guidance|Operational guidance]]
 
 > [!abstract]- [[wait-stats-analysis]]
 >
@@ -74,35 +73,38 @@ mindmap
 
 > [!abstract]- [[memory-and-buffer-pool]]
 >
-> - [[memory-and-buffer-pool#Memory Sizing Rule|Memory sizing rule]]
-> - [[memory-and-buffer-pool#Page Life Expectancy (PLE)|Page life expectancy]]
-> - [[memory-and-buffer-pool#Memory Clerks — Where Memory Is Being Used|Memory clerks]]
-> - [[memory-and-buffer-pool#Pending Memory Grants|Pending memory grants]]
-> - [[memory-and-buffer-pool#Memory Pressure Diagnosis Flow|Memory pressure diagnosis]]
+> - [[memory-and-buffer-pool#Reproducible Baseline|Reproducible baseline]]
+> - [[memory-and-buffer-pool#Buffer Pool Health|Buffer pool health]]
+> - [[memory-and-buffer-pool#Memory Consumers|Memory consumers]]
+> - [[memory-and-buffer-pool#Memory Grants|Memory grants]]
+> - [[memory-and-buffer-pool#Configuration and Intervention Commands|Configuration and intervention commands]]
 
 > [!abstract]- [[index-maintenance]]
 >
-> - [[index-maintenance#Fragmentation Detection|Fragmentation detection]]
+> - [[index-maintenance#Reproducible Baseline|Reproducible baseline]]
+> - [[index-maintenance#Fragmentation Detection and Remediation|Fragmentation detection and remediation]]
 > - [[index-maintenance#REORGANIZE — Online, Lightweight|REORGANIZE]]
 > - [[index-maintenance#REBUILD — Heavier, More Thorough|REBUILD]]
-> - [[index-maintenance#Automated Maintenance Script|Automated maintenance script]]
-> - [[index-maintenance#Pipeline Maintenance Schedule|Pipeline maintenance schedule]]
+> - [[index-maintenance#Statistics After Maintenance|Statistics after maintenance]]
 > - [[index-maintenance#Index Discovery|Index discovery queries]]
+> - [[index-maintenance#Production Maintenance Cadence|Production maintenance cadence]]
 
 > [!abstract]- [[performance-audit-playbook]]
 >
-> - [[performance-audit-playbook#Phase 1: Instance Overview|Instance overview]]
-> - [[performance-audit-playbook#Phase 2: Memory Pressure|Memory pressure]]
-> - [[performance-audit-playbook#Phase 3: Wait Statistics|Wait statistics]]
-> - [[performance-audit-playbook#Phase 5: Expensive Queries|Expensive queries]]
-> - [[performance-audit-playbook#Phase 6: Index Health|Index health]]
-> - [[performance-audit-playbook#DBCC and Trace Flag Reference|DBCC and trace flags]]
+> - [[performance-audit-playbook#Phase 1 | Instance Baseline|Instance baseline]]
+> - [[performance-audit-playbook#Phase 2 | Memory and Buffer Pool|Memory and buffer pool]]
+> - [[performance-audit-playbook#Phase 3 | Wait Statistics|Wait statistics]]
+> - [[performance-audit-playbook#Phase 5 | Expensive Cached Statements|Expensive cached statements]]
+> - [[performance-audit-playbook#Phase 6 | Index Health|Index health]]
+> - [[performance-audit-playbook#Phase 10 | Database Files and Log Reuse|Database files and log reuse]]
 
 > [!abstract]- [[pipeline-integration-and-devex]]
 >
-> - [[pipeline-integration-and-devex#Query Tagging for Airflow Correlation|Query tagging for Airflow]]
-> - [[pipeline-integration-and-devex#Connection Pool Management|Connection pool management]]
-> - [[pipeline-integration-and-devex#Datadog SQL Server Agent — Full Configuration|Datadog agent configuration]]
+> - [[pipeline-integration-and-devex#Query Identity and Correlation|Query identity and correlation]]
+> - [[pipeline-integration-and-devex#Query Store Normalizes Text More Aggressively|Query Store normalization]]
+> - [[pipeline-integration-and-devex#Connection Identity and Pooling|Connection identity and pooling]]
+> - [[pipeline-integration-and-devex#Schema Change Workflow|Schema change workflow]]
+> - [[pipeline-integration-and-devex#Monitoring Integration|Monitoring integration]]
 
 > [!abstract]- [[pit-integrity-logic]]
 >

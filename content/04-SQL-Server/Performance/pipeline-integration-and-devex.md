@@ -1,265 +1,409 @@
 ---
 title: "Pipeline Integration and Developer Experience"
 tags: [pipeline, python, sql, airflow, sql-server, tsql]
-aliases: [pipeline integration, SQL comment tagging, Airflow SQL correlation, schema migrations, Flyway SQL Server, Liquibase SQL Server, connection pool management, developer experience]
-description: "Developer experience patterns for SQL Server pipeline integration: tagging queries with Airflow context for monitoring correlation, schema migration management (Flyway/Python runner), and connection pool management for pymssql and ADO.NET."
+aliases: [pipeline integration, SQL query tagging, Airflow SQL correlation, schema migrations, connection pool management, developer experience]
+description: "Production-focused patterns for integrating SQL Server into data pipelines: stable query identity, Query Store correlation, application naming, connection monitoring, migration workflow, and monitoring integration."
 parent: "[[domain-query-craft]]"
 links:
-  - "[[sargable-queries]]"
-  - "[[merge-and-upsert]]"
-  - "[[date-and-time-functions]]"
   - "[[execution-plans]]"
-  - "[[query-plan-analysis]]"
+  - "[[query-store-regressions-and-plan-forcing]]"
   - "[[wait-stats-analysis]]"
   - "[[memory-and-buffer-pool]]"
-  - "[[index-maintenance]]"
   - "[[performance-audit-playbook]]"
   - "[[pit-integrity-logic]]"
 created: 2026-03-22
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
 # Pipeline Integration and Developer Experience
 
-> [!quote]
-> "Without observability into what your queries are doing, you are flying blind. Tag everything, measure everything, correlate everything."
->
-> — **Charity Majors**, *Observability Engineering* (2022)
+This page covers the operational seam between SQL Server and the pipeline layer. The hard problems here are not SQL syntax. They are identity, correlation, connection discipline, and safe release flow:
 
-Three recurring friction points when integrating SQL Server into a data engineering pipeline: correlating SQL performance metrics with specific Airflow DAG runs, managing schema changes without breaking production, and controlling connection counts to avoid memory exhaustion on the database VM.
+- how to tell which pipeline component sent a query
+- how to correlate slow queries with orchestration metadata
+- how to keep connection counts predictable
+- how to move schema changes through CI/CD without turning every DAG run into a DDL event
 
----
+The note uses live `stoxx` outputs where SQL Server can demonstrate the behavior directly. The main correction from the earlier draft is important: SQL comment headers survive in the plan cache, but Query Store normalizes query text more aggressively. For durable Query Store correlation, stable labels work better than volatile comment headers.
 
-## Query Tagging for Airflow Correlation
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Need pipeline observability"] --> B{"Do you need<br/>durable SQL-side correlation?"}
+    B --> Y1([YES])
+    B --> N1([NO])
+    Y1 --> C["Use stable query labels,<br/>Application Name, and Query Store time windows"]
+    N1 --> D["Plan-cache text or query-sample tools<br/>may be enough"]
+    C --> E{"Does metadata change<br/>every run?"}
+    E --> Y2([YES])
+    E --> N2([NO])
+    Y2 --> F["Keep volatile run IDs out of query text;<br/>store them in orchestration logs or session metadata"]
+    N2 --> G["Stable DAG or task identity<br/>can live in query text safely"]
+    F --> H{"Too many sessions<br/>or leaked connections?"}
+    G --> H
+    H --> Y3([YES])
+    H --> N3([NO])
+    Y3 --> I["Bound pools, set Application Name,<br/>and monitor sys.dm_exec_sessions"]
+    N3 --> J["Keep release workflow separate<br/>from runtime pipeline execution"]
 
-When a DAG run causes a CPU or IO spike, the spike is visible in monitoring tools but its cause is not. You see a latency spike in Datadog at 09:05 UTC and three DAGs could have been running at that time. The two primary mechanisms for correlating SQL Server activity back to the orchestration layer are: (1) SQL comment header tagging, which embeds Airflow metadata directly in the query string and surfaces it in DMVs and the Query Store; and (2) Query Store time-window queries, which search for queries executed during a specific DAG run interval without requiring a Datadog subscription.
-
-### Python | pymssql | query comment tagging
-
-SQL comment headers are the simplest mechanism for correlating SQL Server activity with the orchestration system that triggered it. A comment prepended to a query string is stored verbatim in `sys.dm_exec_sql_text` — a dynamic management function (DMF) that maps a `sql_handle` (an MD5 hash of the batch text, stored in the SQL Manager cache `SQLMGR`) to its full query text — and in the Query Store's `sys.query_store_query_text.query_sql_text` column. Both storage locations preserve the comment for the lifetime of the corresponding cache entry or Query Store retention window, making it possible to filter monitoring queries by DAG name or task ID without any schema changes or additional instrumentation.
-
-> [!info] sql_handle Lifecycle
->
-> A `sql_handle` is transient: it remains valid only while at least one execution plan referencing it stays in the plan cache. Memory pressure, `DBCC FREEPROCCACHE`, or an `ALTER DATABASE` call will evict plans and drop the corresponding rows from `sys.dm_exec_query_stats`. The Query Store provides durable storage that survives both cache flushes and SQL Server restarts — use Query Store queries for post-incident correlation when the plan cache has already been cleared.
-
-#### SQL comment header tagging — Airflow DAG, task, run metadata in queries
-
-Prepend a structured comment to every SQL string before execution. The f-string interpolation embeds the current Airflow context variables — `dag_id`, `task_id`, `run_id` — into the comment. SQL Server stores this string as part of the batch text verbatim.
-
-```python
-dag_context = f"/* dag={dag_id} task={task_id} run={run_id} */"
-cursor.execute(f"{dag_context} MERGE INTO silver.stock_dim ...")
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    class Y1,Y2,Y3 yesNode;
+    class N1,N2,N3 noNode;
 ```
 
-These comments appear in:
+## Query Identity and Correlation
 
-- `sys.dm_exec_sql_text` (query text) — visible in all DMV-based monitoring
-- Query Store (if enabled) — persists across restarts
-- Datadog SQL query metrics — enables filtering and grouping
+The first design decision is what metadata belongs in SQL text and what metadata should stay outside it. Not all observability tags are equal.
 
-### Datadog | SQL Server | pipeline query monitoring
+### Stable versus volatile identifiers
 
-Datadog's Database Monitoring (DBM) feature for SQL Server integrates with the ODBC connector to continuously sample `sys.dm_exec_query_stats` and `sys.dm_exec_requests`, publishing query performance metrics to the Datadog platform. The `custom_queries` block in the agent configuration executes arbitrary DMV queries on a configurable collection interval and publishes the result columns as named time-series metrics. This is how DAG-tagged queries surface in Datadog dashboards without additional pipeline instrumentation.
+Stable identifiers such as DAG name, task name, service name, or query label can be safe correlation keys. Volatile identifiers such as Airflow `run_id`, execution timestamp, or random task instance IDs are different: if you embed them directly into the SQL text, you create a different ad hoc statement every run, which hurts plan reuse and inflates plan-cache churn.
 
-#### Datadog dbm custom_queries — surface DAG-tagged SQL queries
+#### Recommended metadata placement
 
-The `custom_queries` block runs the provided T-SQL on each collection cycle and maps result columns to Datadog metric names. The `WHERE t.text LIKE '%/* dag=%'` filter restricts the DMV scan to queries containing the Airflow comment header, so the metric reflects only pipeline-generated queries. `CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle)` retrieves the full query text for each cached plan.
+| Metadata | Put it in query text? | Better location | Reason |
+|---|---|---|---|
+| DAG name | Yes, if stable | `OPTION (LABEL=...)` or stable comment | Good durable correlation key. |
+| Task name | Yes, if stable | `OPTION (LABEL=...)` or stable comment | Useful to separate hot spots inside one DAG. |
+| Service identity | No need | `Application Name` in the connection string | SQL Server already exposes it in `program_name`. |
+| Airflow `run_id` | No | Task logs, orchestration metadata, or session-scoped metadata | Embedding it in query text creates one unique statement per run. |
+| Exact execution timestamp | No | Logs or external monitoring | High-cardinality tag that destroys plan reuse value. |
 
-```yaml
-# datadog-agent sql_server.d/conf.yaml
-instances:
-  - host: 127.0.0.1,1433
-    username: datadog
-    password: ...
-    query_metrics:
-      enabled: true
-    query_activity:
-      enabled: true
-    custom_queries:
-      - query: |
-          SELECT TOP 10
-            SUBSTRING(t.text, 1, 200) AS query_text,
-            qs.total_elapsed_time / qs.execution_count / 1000 AS avg_ms,
-            qs.execution_count,
-            qs.total_logical_reads / qs.execution_count AS avg_reads
-          FROM sys.dm_exec_query_stats qs
-          CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) t
-          WHERE t.text LIKE '%/* dag=%'
-          ORDER BY qs.total_elapsed_time DESC
-        columns:
-          - name: query_text
-            type: source
-          - name: avg_ms
-            type: gauge
-          - name: execution_count
-            type: monotonic_count
-          - name: avg_reads
-            type: gauge
-        tags:
-          - 'service:analytics-pipeline'
-```
+[!warning]
+Do not put a unique `run_id` or timestamp in every production query text unless you have explicitly decided that losing plan reuse is acceptable.
 
-#### Datadog correlation dashboard — CPU, I/O, and DAG timeline overlay
+[!success]
+Keep the SQL text stable. Put durable identifiers such as DAG or task labels in `OPTION (LABEL = ...)`, and keep volatile run-specific metadata in the orchestration layer or session-scoped metadata.
 
-Create a dashboard with two graphs:
+### Comment headers survive in the plan cache
 
-1. **SQL Server CPU/IO metrics** (from the SQL Server integration) — `sqlserver.cpu_percent`, `sqlserver.io.stall_ms`
-2. **Airflow DAG run timeline** (from the Airflow integration or a custom metric) — `airflow.dag_run.duration`
+SQL comment headers are still useful when you need the literal submitted text in the live plan cache or in external query-sample tooling.
 
-Overlay with markers for DAG run start/end times. This lets you visually correlate "CPU spiked at 09:05" with "the `daily_pipeline` DAG started at 09:04."
+#### Execute a comment-tagged batch
 
-### SQL Server | Query Store | pipeline query correlation
+[!info]-
+This query is a live demonstration of comment-based tagging.
 
-The Query Store is an internal per-database feature that acts as a flight recorder for query plans and runtime statistics. It persists query text, execution plans, and aggregate runtime statistics to system tables inside the user database itself — not in `tempdb`. Unlike `sys.dm_exec_query_stats`, whose rows are dropped whenever a plan is evicted from the plan cache (due to memory pressure, `DBCC FREEPROCCACHE`, or restart), Query Store data survives SQL Server restarts and cache flushes, making it the right tool for post-incident pipeline correlation.
+- The comment prefix contains a DAG name, task name, and run identifier.
+- The SQL text itself is otherwise a simple selective count query on `silver.eurostoxx50_ohlcv`.
+- The output count is not the point; the point is that SQL Server stores the full submitted batch text in the plan cache, including the comment.
 
-> [!info] Query Store Default Enablement by Version
->
-> - **SQL Server 2016, 2017, 2019:** Query Store is **not enabled by default**. Enable per database: `ALTER DATABASE [db_name] SET QUERY_STORE = ON`.
-> - **SQL Server 2022:** Query Store is **enabled by default** in `READ_WRITE` mode for all new databases.
->
-> Default `MAX_STORAGE_SIZE_MB` is 100 MB on SQL Server 2016/2017 and **1,000 MB** starting with SQL Server 2019. `QUERY_CAPTURE_MODE` defaults to `ALL` in 2016/2017 and to `AUTO` in 2019+. In `AUTO` mode, infrequent or low-cost queries are filtered out — expensive pipeline queries will still be captured; brief ad hoc queries may not.
-
-> [!warning] Query Store Silent Read-Only Transition
->
-> When Query Store reaches its storage quota (`MAX_STORAGE_SIZE_MB`), it automatically switches from `READ_WRITE` to `READ_ONLY` mode and silently stops recording new query data. Diagnose with: `SELECT actual_state_desc, desired_state_desc, current_storage_size_mb, max_storage_size_mb, readonly_reason FROM sys.database_query_store_options`. A `readonly_reason` of `65536` means the quota was exceeded.
-
-> [!success] Prevent Quota-Triggered Read-Only Mode
->
-> Set `MAX_STORAGE_SIZE_MB` explicitly: `ALTER DATABASE [db_name] SET QUERY_STORE (MAX_STORAGE_SIZE_MB = 2048)`. Add a Datadog custom query on `sys.database_query_store_options` that alerts when `current_storage_size_mb` exceeds 80% of `max_storage_size_mb`.
-
-#### sys.query_store_query_text — correlate pipeline queries without Datadog
-
-This query finds the most expensive queries executed during a specific time window — for example, the 30-minute window when a DAG ran. It joins `sys.query_store_runtime_stats` (per-interval aggregated execution metrics) to `sys.query_store_plan` (execution plan metadata) and `sys.query_store_query_text` (the stored query text). The `WHERE` clause on `last_execution_time` filters to the DAG run window; `ORDER BY avg_duration DESC` surfaces the slowest queries first. `avg_duration` is reported in microseconds — divide by 1,000 for milliseconds.
+*Run a tagged batch whose SQL comment header identifies the DAG, task, and run.*
 
 ```sql
-SELECT TOP 10
-    qsqt.query_sql_text,
-    qsp.last_execution_time,
-    qsrs.avg_duration / 1000 AS avg_ms,
-    qsrs.avg_logical_io_reads,
-    qsrs.count_executions
-FROM sys.query_store_runtime_stats qsrs
-JOIN sys.query_store_plan qsp ON qsrs.plan_id = qsp.plan_id
-JOIN sys.query_store_query qsq ON qsp.query_id = qsq.query_id
-JOIN sys.query_store_query_text qsqt ON qsq.query_text_id = qsqt.query_text_id
-WHERE qsrs.last_execution_time BETWEEN '2026-03-10 09:00:00' AND '2026-03-10 09:30:00'
-ORDER BY qsrs.avg_duration DESC;
+/* dag=daily_pipeline task=load_silver run=manual__2026-04-08T16:15:00 */
+SELECT COUNT(*) AS tagged_row_count
+FROM silver.eurostoxx50_ohlcv
+WHERE symbol = 'ASML.AS';
 ```
 
----
+| tagged_row_count |
+|---:|
+| 1347 |
 
-## CI/CD for Schema Changes
+_The query returned `1347` rows. The more important outcome is that the exact batch text, including the comment header, is now visible in the plan cache._
 
-Ad-hoc schema changes applied directly through SSMS or one-off scripts have no version control, no audit trail, and no rollback path. When a change is applied on staging but missed on production, or when an emergency fix needs to be reversed, there is no systematic way to determine what state the database is currently in relative to the codebase.
+#### Read the full tagged text from the plan cache
 
-Schema migration tools solve this by maintaining a version tracking table inside the database. Every migration script is recorded in this table (by filename, version, checksum, and timestamp) when first applied. On subsequent runs the tool compares the tracking table to the available scripts and executes only the pending ones — always in sequential order, never re-applying what has already run.
+[!info]-
+`sys.dm_exec_sql_text` returns the batch text associated with a cached plan handle.
 
-### Migration tools | schema versioning | tool comparison
+- The `LIKE '/* dag=daily_pipeline%'` predicate is intentionally strict so the query finds only comment-prefixed batches that start with the DAG tag.
+- This is a volatile capture path: it depends on the plan still being in cache.
 
-The four approaches differ primarily in how "version state" is modeled: migration-based tools track which scripts have been run; state-based tools compare desired schema to current schema and generate a diff. The choice affects rollback strategy and CI/CD complexity.
+*Find the exact tagged batch text in the live plan cache.*
 
-#### Flyway, Liquibase, sqlcmd, dacpac — schema migration tool comparison
+```sql
+SELECT TOP (5)
+    text
+FROM sys.dm_exec_cached_plans AS cp
+CROSS APPLY sys.dm_exec_sql_text(cp.plan_handle)
+WHERE text LIKE '/* dag=daily_pipeline%'
+ORDER BY usecounts DESC;
+```
 
-| Tool | Type | SQL Server Support | How It Works |
+| text |
+|---|
+| `/* dag=daily_pipeline task=load_silver run=manual__2026-04-08T16:15:00 */ SELECT COUNT(*) AS tagged_row_count FROM silver.eurostoxx50_ohlcv WHERE symbol = 'ASML.AS';` |
+
+_The comment header survives intact in the plan cache. This is why comment tagging works well with live DMV-based correlation and external query-sample tools that read batch text directly._
+
+## Query Store Normalizes Text More Aggressively
+
+The same comment-tagged query above does not survive into Query Store in the same literal form. Query Store stores a normalized query text shape that is better for plan tracking, but worse for naive comment-based correlation.
+
+### Comment tags are not a durable Query Store key
+
+#### Inspect the Query Store text for the tagged query
+
+[!info]-
+This query looks up the previous statement by the result alias `tagged_row_count`.
+
+- The stored text in Query Store is the important part of the output.
+- Notice that Query Store parameterized the predicate and dropped the comment header entirely.
+- This is why searching Query Store by raw comment prefix is unreliable.
+
+*Inspect how Query Store stored the earlier comment-tagged query.*
+
+```sql
+SELECT TOP (5)
+    q.query_id,
+    qt.query_sql_text,
+    q.last_execution_time,
+    q.avg_compile_duration,
+    q.count_compiles
+FROM sys.query_store_query_text AS qt
+JOIN sys.query_store_query AS q ON qt.query_text_id = q.query_text_id
+WHERE qt.query_sql_text LIKE '%tagged_row_count%'
+  AND qt.query_sql_text NOT LIKE '%sys.query_store_query_text%'
+ORDER BY q.last_execution_time DESC;
+```
+
+| query_id | query_sql_text | last_execution_time | avg_compile_duration | count_compiles |
+|---:|---|---|---:|---:|
+| 3166 | `(@1 varchar(8000))SELECT COUNT(*) [tagged_row_count] FROM [silver].[eurostoxx50_ohlcv] WHERE [symbol]=@1` | `2026-04-08 14:19:47.5970000 +00:00` | 477.0 | 1 |
+
+_The comment header is gone, and the literal predicate became a parameterized shape. This is not a bug; it is a reminder that Query Store stores a normalized form of the query text. If you need a durable SQL-side identifier inside Query Store, comments are not the right primary key._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `query_id` | Stable numeric identifier | Depends | Logical query identity inside Query Store. | Use it for forcing, hints, and regression tracking. |
+| `query_sql_text` | Parameterized shape | Depends | Query Store normalized the statement text. | Good for plan tracking, but poor for exact comment matching. |
+| `last_execution_time` | Recent timestamp | Depends | Last time Query Store saw the query execute. | Useful for time-window correlation. |
+| `count_compiles` | Low | Depends | Query has compiled only a few times. | Normal for one-off tests; evaluate differently on hot paths. |
+
+### Query labels survive into Query Store
+
+If you need a durable, SQL-native identifier that survives into Query Store text, a stable `OPTION (LABEL = ...)` value is much more reliable than a volatile comment header.
+
+#### Execute a labeled query
+
+[!info]-
+This query uses a stable label instead of a comment prefix.
+
+- The label identifies the pipeline operation, not the individual run.
+- The SQL text stays stable across executions as long as the label stays stable.
+- This preserves plan reuse while giving Query Store a durable marker.
+
+*Run a stable labeled query that Query Store can retain verbatim.*
+
+```sql
+SELECT COUNT(*) AS labeled_row_count
+FROM silver.eurostoxx50_ohlcv
+WHERE symbol = 'ASML.AS'
+OPTION (LABEL = 'pipeline_daily_load_silver');
+```
+
+| labeled_row_count |
+|---:|
+| 1347 |
+
+_The row count is the same `1347`, but the identity mechanism is better suited to Query Store than a volatile comment header._
+
+#### Read the labeled query from Query Store
+
+[!info]-
+This query proves that the label survived into Query Store text.
+
+- The `LIKE 'SELECT COUNT(*) AS labeled_row_count%'` predicate is strict enough to isolate the real labeled statement.
+- Unlike the comment example, the Query Store text keeps the `OPTION (LABEL = ...)` clause.
+
+*Find the labeled query text exactly as stored by Query Store.*
+
+```sql
+SELECT TOP (5)
+    q.query_id,
+    qt.query_sql_text,
+    q.last_execution_time,
+    q.avg_compile_duration,
+    q.count_compiles
+FROM sys.query_store_query_text AS qt
+JOIN sys.query_store_query AS q ON qt.query_text_id = q.query_text_id
+WHERE qt.query_sql_text LIKE 'SELECT COUNT(*) AS labeled_row_count%'
+ORDER BY q.last_execution_time DESC;
+```
+
+| query_id | query_sql_text | last_execution_time | avg_compile_duration | count_compiles |
+|---:|---|---|---:|---:|
+| 3178 | `SELECT COUNT(*) AS labeled_row_count FROM silver.eurostoxx50_ohlcv WHERE symbol = 'ASML.AS' OPTION (LABEL = 'pipeline_daily_load_silver')` | `2026-04-08 14:21:18.8230000 +00:00` | 460.0 | 1 |
+
+_This is the durable-correlation pattern to prefer inside Query Store. The label is preserved, the statement shape is stable, and the query remains easy to find later without relying on a high-cardinality comment prefix._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `query_sql_text` | Stable labeled text | &#9989; | Query Store preserved the label verbatim. | Good durable search key for pipeline SQL. |
+| `last_execution_time` | Recent | Depends | Query executed recently. | Use to align with DAG windows. |
+| `avg_compile_duration` | Small one-off compile | Depends | Query compiled successfully. | Low operational concern here; included mainly as proof of capture. |
+
+## Connection Identity and Pooling
+
+Every pipeline service should identify itself consistently at the connection level. SQL Server already gives you a native place for that identity: `program_name`, which comes from the client `Application Name`.
+
+### Set `Application Name` deliberately
+
+For SQL Server-side observability, `Application Name` is usually more valuable than trying to infer the client from raw login activity. It lets you monitor session counts and sleeping connections per service without parsing SQL text.
+
+#### Connection string examples
+
+| Client | Example |
+|---|---|
+| ADO.NET | `Server=localhost,1434;Initial Catalog=stoxx;User ID=pipeline_svc;Password=...;Encrypt=True;TrustServerCertificate=True;Application Name=pipeline_loader;Min Pool Size=2;Max Pool Size=20;` |
+| SQLAlchemy / pyodbc | `mssql+pyodbc://pipeline_svc:***@localhost,1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes&Application Name=pipeline_loader` |
+
+[!warning]
+Do not rely on default client names in production. `SQLCMD`, `Microsoft SQL Server Management Studio`, and generic driver names are too coarse for service-level monitoring.
+
+[!success]
+Set a stable `Application Name` per service or per worker type, not per individual run. That gives you usable `program_name` grouping without fragmenting the connection identity space.
+
+### Monitor sessions by application name
+
+#### Group user sessions by `program_name`
+
+[!info]-
+This query groups `sys.dm_exec_sessions` by application and login identity.
+
+- `program_name` is the client application name supplied by the connection string.
+- `total_sessions` counts all user sessions in that group.
+- `sleeping_sessions` counts sessions that are connected but not actively running a request.
+- `active_sessions` counts sessions whose status is not `sleeping`.
+
+*Group user sessions by application name and login to measure current connection footprint.*
+
+```sql
+SELECT
+    program_name,
+    login_name,
+    COUNT(*) AS total_sessions,
+    SUM(CASE WHEN status = 'sleeping' THEN 1 ELSE 0 END) AS sleeping_sessions,
+    SUM(CASE WHEN status <> 'sleeping' THEN 1 ELSE 0 END) AS active_sessions
+FROM sys.dm_exec_sessions
+WHERE is_user_process = 1
+GROUP BY program_name, login_name
+ORDER BY total_sessions DESC, program_name;
+```
+
+| program_name | login_name | total_sessions | sleeping_sessions | active_sessions |
+|---|---|---:|---:|---:|
+| `pipeline_loader_demo` | `sa` | 1 | 1 | 0 |
+| `SQL Server Management Studio` | `sa` | 1 | 1 | 0 |
+| `SQLCMD` | `sa` | 1 | 0 | 1 |
+| `SQLServerCEIP` | `NT AUTHORITY\SYSTEM` | 1 | 1 | 0 |
+
+_This is the exact operational payoff of setting `Application Name`. `pipeline_loader_demo` is visible as its own session group immediately, independent of the login name. That makes service-level connection counting and leak detection much easier than trying to infer intent from query text alone._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `program_name` | Custom service name | &#9989; | Application identity is explicit. | Easy grouping and alerting by service. |
+| `program_name` | Generic client name | &#10060; for production services | Identity is too coarse. | Harder to separate pipeline traffic from admin traffic. |
+| `sleeping_sessions` | High and growing | &#10060; | Many idle connections remain open. | Possible pool oversizing, leaks, or slow task cleanup. |
+| `active_sessions` | Close to pool ceiling | Depends | Many sessions are actively in use. | Validate against expected concurrency and worker count. |
+
+#### Find long-sleeping user sessions
+
+[!info]-
+This query looks for user sessions that have been sleeping for more than one hour.
+
+- `last_request_end_time` is the key field: it shows when the last request on the session completed.
+- Sleeping sessions are not automatically a problem, but long-sleeping sessions deserve inspection because they often reflect abandoned clients or oversized pools.
+
+*Find user sessions that have been idle for more than one hour.*
+
+```sql
+SELECT
+    session_id,
+    login_name,
+    program_name,
+    status,
+    last_request_end_time
+FROM sys.dm_exec_sessions
+WHERE is_user_process = 1
+  AND status = 'sleeping'
+  AND last_request_end_time < DATEADD(HOUR, -1, GETDATE())
+ORDER BY last_request_end_time;
+```
+
+| session_id | login_name | program_name | status | last_request_end_time |
+|---:|---|---|---|---|
+| 73 | `sa` | `SQL Server Management Studio` | `sleeping` | `2026-04-08 08:43:07.397` |
+
+_This is a real idle-session example. It is not a pipeline leak; it is an old SSMS session. That is exactly why this query should be reviewed manually before any action is taken. A long-sleeping session is a clue, not a kill command._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `status` | `sleeping` | Depends | Session is connected but not running a request. | Often normal; evaluate age and owner. |
+| `last_request_end_time` | Very old | &#10060; only after review | Session has been idle for a long time. | Candidate for manual investigation. |
+| `program_name` | Known admin tool | Depends | Session belongs to a human or admin utility. | Usually review with the operator before acting. |
+| `program_name` | Pipeline service | Depends | Session belongs to an application component. | Check pool settings and task cleanup behavior. |
+
+## Schema Change Workflow
+
+Schema changes should be a release concern, not a normal per-run pipeline behavior. The safest production model is:
+
+1. CI validates migration scripts.
+2. CD applies migrations once per release window.
+3. Runtime DAGs verify the expected schema version and fail fast if the database is behind.
+
+### Recommended ownership model
+
+| Responsibility | Best owner | Why |
+|---|---|---|
+| Script authoring | Application or data engineering repo | Version control, review, rollback context |
+| Syntax validation | CI | Catch errors before deployment |
+| DDL application | Release pipeline | Controlled blast radius and auditability |
+| Runtime schema check | DAG startup task | Fast failure when environments drift |
+
+[!warning]
+Do not apply schema migrations automatically on every Airflow DAG run unless the environment is intentionally small, serialized, and you have accepted DDL-at-runtime as a design choice.
+
+[!success]
+Use runtime DAGs to verify schema version, not to own production DDL. Keep actual schema changes in a dedicated deployment workflow.
+
+### Migration tool choices
+
+#### Compare the main migration styles
+
+| Approach | Type | Best use case | Main tradeoff |
 |---|---|---|---|
-| Flyway | Migration-based | Excellent | Sequential numbered SQL scripts: V001__create_bronze.sql, V002__add_index.sql |
-| Liquibase | Changelog-based | Good | XML/YAML/SQL changelogs with preconditions and rollback blocks |
-| sqlcmd scripts | Manual | Native | Folder of .sql files run in order, with a version table |
-| dacpac / sqlpackage | State-based | Native (MS) | Compare desired state vs current, generate diff script |
+| Flyway | Migration-based | Teams already comfortable with numbered SQL migrations | Extra tool, but very mature workflow |
+| Liquibase | Changelog-based | Complex preconditions and richer deployment policy | More abstraction and maintenance overhead |
+| Plain `sqlcmd` scripts + version table | Migration-based | Small teams that want native SQL Server tooling only | More house-keeping logic to maintain yourself |
+| DACPAC / `sqlpackage` | State-based | Centralized schema ownership and state diff workflows | Diff-driven model can be harder to reason about for data migrations |
 
-Recommended approach for the data pipeline (simple, no extra tools):
+#### Keep scripts idempotent and append-only
 
-```text
-pipeline/
-└── migrations/
-    ├── V001__initial_schema.sql
-    ├── V002__add_ohlcv_indexes.sql
-    ├── V003__create_gold_views.sql
-    ├── V004__add_pulse_tables.sql
-    └── V005__scd_type2_stock_dim.sql
-```
+| Rule | Why it matters |
+|---|---|
+| Guard DDL with existence checks | Reruns and partially applied environments are real. |
+| Never edit an already-applied migration | The database has already recorded that version. |
+| Keep large data backfills batched | Avoid giant transaction logs and rollback pain. |
+| Record checksums | Detect drift between files and applied versions. |
 
-### Python | pymssql | migration runner
+### CI validation pattern
 
-A lightweight Python migration runner replaces a dedicated migration tool when the stack is already Python-heavy and the infrastructure overhead of Flyway or Liquibase is not warranted. The runner creates a `dbo.schema_migrations` tracking table if it does not already exist, queries it to determine which versions have been applied, and executes remaining scripts in filename-sorted order.
+#### Validate migration syntax in CI with `sqlcmd`
 
-#### pymssql migration runner — sequential SQL scripts with version table
+[!info]-
+This example validates migration syntax without executing the statements.
 
-The version key is extracted from the filename prefix (the portion before `__`, e.g., `V001` from `V001__initial_schema.sql`) and used as the primary key in the tracking table. After each script executes successfully, the runner inserts a row and commits, so a script that fails mid-execution leaves the database in a known partial state that can be inspected before retrying.
+- `SET PARSEONLY ON` asks SQL Server to parse and compile the T-SQL without running it.
+- The loop validates every migration file in the folder.
+- This belongs in CI, not in the production runtime DAG.
 
-```python
-import pymssql
-import os
-import glob
-
-def run_migrations(conn_params: dict):
-    conn = pymssql.connect(**conn_params)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'schema_migrations')
-        CREATE TABLE dbo.schema_migrations (
-            version VARCHAR(100) PRIMARY KEY,
-            applied_at DATETIME2 DEFAULT GETUTCDATE(),
-            checksum VARCHAR(64)
-        )
-    """)
-
-    cursor.execute("SELECT version FROM dbo.schema_migrations")
-    applied = {row[0] for row in cursor.fetchall()}
-
-    migration_files = sorted(glob.glob("pipeline/migrations/V*.sql"))
-    for f in migration_files:
-        version = os.path.basename(f).split("__")[0]  # e.g., "V001"
-        if version in applied:
-            continue
-
-        print(f"Applying migration: {os.path.basename(f)}")
-        with open(f) as sql_file:
-            sql = sql_file.read()
-
-        cursor.execute(sql)
-        cursor.execute(
-            "INSERT INTO dbo.schema_migrations (version) VALUES (%s)",
-            (version,)
-        )
-        conn.commit()
-        print(f"  ✓ {version} applied")
-
-    conn.close()
-```
-
-#### PythonOperator run_migrations — Airflow DAG migration task
-
-Placing the migration runner as the first task in the DAG ensures that every pipeline run verifies schema state before any data loading begins. The DAG fails at the migration task if a pending migration cannot be applied cleanly, preventing downstream tasks from running against an unexpected schema.
-
-```python
-run_migrations_task = PythonOperator(
-    task_id='run_schema_migrations',
-    python_callable=run_migrations,
-    op_kwargs={'conn_params': SQL_CONN_PARAMS},
-)
-run_migrations_task >> load_bronze >> transform_silver >> compute_gold
-```
-
-### SQL | migration | idempotency rules
-
-An idempotent migration script produces the same result whether it runs against a fresh database or one that already has the change applied. Idempotency is required because migration history can be lost, the same script may target multiple environments in different states, and partial failures can leave a database in an unknown intermediate state.
-
-#### IF NOT EXISTS, IF COL_LENGTH — rules for idempotent migrations
-
-- Always guard DDL with existence checks: use `IF NOT EXISTS` for new objects, `IF COL_LENGTH('table', 'column') IS NULL` before adding a column
-- Never modify a migration script that has already been applied — create a new versioned script instead
-- For large data migrations: run in batches, not a single transaction
-- Test migrations on a restored backup before running on production
-- Include both UP and DOWN logic as comments (even if rollback is not automated)
-
-### GitHub Actions | sqlcmd | migration validation in CI
-
-CI syntax validation catches errors before any script reaches a staging or production database. `sqlcmd`'s `SET PARSEONLY ON` mode instructs SQL Server to parse the T-SQL statement without executing it, detecting syntax errors and unresolved object references at compile time. This step runs against a throwaway `tempdb` on a SQL Server container in the CI environment.
-
-#### GitHub Actions — migration validation in CI with sqlcmd
+*Validate migration syntax in CI before any deployment workflow can apply the scripts.*
 
 ```yaml
 # .github/workflows/validate-migrations.yml
@@ -272,171 +416,43 @@ CI syntax validation catches errors before any script reaches a staging or produ
     done
 ```
 
----
+## Monitoring Integration
 
-## Connection Pool Management
+Datadog, OpenTelemetry collectors, or internal database-monitoring agents all benefit from the same discipline:
 
-Each SQL Server connection consumes approximately 2 MB of server memory (TDS protocol buffers, session metadata, and working memory). On a 16 GB VM where SQL Server is configured to use 8 GB — leaving 8 GB for the OS and other processes — 400 uncontrolled connections would exhaust all available OS memory. Connection pool management bounds this count by reusing physical connections across logical operations rather than opening a new TCP connection for every query.
+- stable SQL identity for query correlation
+- explicit `Application Name`
+- a low-cardinality metric strategy
+- alerting on symptoms that matter to pipelines rather than on every raw DMV value
 
-### Python | pymssql / SQLAlchemy | connection pooling
+### Minimal SQL-side signals worth exporting
 
-pymssql opens a new raw TCP connection to SQL Server on every `pymssql.connect()` call using the TDS (Tabular Data Stream) protocol. There is no built-in connection pool — the library delegates lifecycle management entirely to the calling application. Opening connections without closing them leaks both OS socket descriptors and SQL Server session objects, which accumulate until the server exhausts its worker thread pool.
+| Signal | Why it matters for pipelines |
+|---|---|
+| Query duration and logical reads | Detect expensive ETL statements and regressions |
+| Blocking count | Pipelines often create short bursts of blocking during bulk operations or merges |
+| Connection count by `program_name` | Detect pool explosions and leaked workers |
+| Wait families (`PAGEIOLATCH`, `WRITELOG`, `LCK_M`) | Distinguish I/O, log, and locking pain quickly |
 
-#### pymssql connection pooling — one connection per task, sqlalchemy pool
+### Minimum permission model for a monitoring login
 
-For the Airflow pipeline: open one connection per task function, execute all queries within that connection, and close when done. Do not open a new connection per query — each `pymssql.connect()` is a TCP handshake plus SQL Server login negotiation.
+#### Grant the monitoring login only the read surface it needs
 
-For high-throughput use cases (web services, concurrent workers): use `sqlalchemy` with `create_engine(..., pool_size=5, max_overflow=2)`. SQLAlchemy's connection pool recycles physical connections across logical `with engine.connect()` blocks, keeping the physical connection count bounded.
+[!warning]
+Do not make the monitoring login `sysadmin`. Monitoring agents need visibility, not control.
 
-### C# | ADO.NET | connection pool configuration
+[!success]
+Grant only the server and database read permissions required by the specific DMVs and metadata views you intend to query.
 
-ADO.NET implements connection pooling entirely client-side, transparent to the application. The pool is maintained per exact connection string: two strings that differ only in whitespace or keyword ordering are treated as distinct strings and each creates a separate pool. The default `Max Pool Size` is **100 connections** per pool. At `Min Pool Size = 0` (the default), idle connections are returned to the OS when the application is idle; a positive `Min Pool Size` keeps a floor of live connections open, reducing latency on the first request after a quiet period.
+[!info]-
+This is a minimum viable SQL Server monitoring login pattern.
 
-> [!warning] Pool Fragmentation with Windows Authentication
->
-> When using Integrated Security (Windows Authentication), ADO.NET creates one connection pool per Windows identity. In multi-user scenarios this produces many separate pools — each with up to 100 connections — consuming far more server connections than expected. Use SQL Server Authentication with a dedicated service account for pipeline workloads to keep the pool count predictable and bounded.
+- `VIEW SERVER STATE` is the key server-level permission for most performance DMVs.
+- `VIEW ANY DEFINITION` supports metadata inspection.
+- `CONNECT ANY DATABASE` allows the login to enumerate databases.
+- `db_datareader` is granted per monitored database when the agent needs regular table-level reads for deeper inspection.
 
-> [!success] Predictable Connection Counts for Pipeline Services
->
-> Use a dedicated SQL Server login (`dashboard_svc`, `pipeline_svc`) with explicit `Min Pool Size` and `Max Pool Size` in the connection string. One connection string → one pool → bounded connection count. Monitor actual connection counts via `sys.dm_exec_sessions` (see next section).
-
-#### ADO.NET Min/Max Pool Size — C# connection pooling configuration
-
-The connection string below sets a minimum of 2 warm connections (kept open even when the application is idle) and a hard ceiling of 20. When all 20 connections are checked out and the application requests another, ADO.NET waits up to `Connection Timeout` seconds (default 15) before throwing an `InvalidOperationException`.
-
-```csharp
-"Server=127.0.0.1,1435;Database=analytics_db;User Id=dashboard_svc;Password=...;
- Min Pool Size=2;Max Pool Size=20;Connection Timeout=15;"
-```
-
-### SQL Server | DMV | connection monitoring
-
-`sys.dm_exec_sessions` is a server-scoped dynamic management view that returns one row per active connection, including both user sessions and internal SQL Server background processes. The `is_user_process = 1` filter restricts results to application-created connections, excluding the engine's own workers. The `status` column distinguishes connections actively executing SQL (`running`) from those waiting for a new command from the client (`sleeping`).
-
-#### sys.dm_exec_sessions program_name — monitor connection count by application
-
-The first query groups sessions by `program_name` (the application name set in the connection string, e.g., `SSMS`, `pymssql`, or a custom value via `Application Name=pipeline`) and `login_name`, counting total, idle, and active connections per group. Use this to verify that pool bounds are being respected and to detect leaks where idle connections accumulate over time.
-
-The second query identifies sessions that have been sleeping for more than one hour — a common symptom of a crashed Airflow task that exited without calling `conn.close()`.
-
-```sql
-SELECT
-    program_name,
-    login_name,
-    COUNT(*) AS connections,
-    SUM(CASE WHEN status = 'sleeping' THEN 1 ELSE 0 END) AS idle,
-    SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) AS active
-FROM sys.dm_exec_sessions
-WHERE is_user_process = 1
-GROUP BY program_name, login_name
-ORDER BY connections DESC;
-
--- Identify sessions sleeping for more than 1 hour
-SELECT session_id, login_name, program_name, last_request_end_time
-FROM sys.dm_exec_sessions
-WHERE is_user_process = 1
-  AND status = 'sleeping'
-  AND last_request_end_time < DATEADD(HOUR, -1, GETDATE());
-```
-
-> [!warning] Never Automate Session Kills
->
-> Automatically killing sleeping sessions can terminate legitimate long-running transactions mid-write, causing data corruption or extended rollback times. Always identify the session and understand why it's sleeping before killing it manually with `KILL <session_id>`.
-
-> [!success] Safe Pattern — Manual Review Before Kill
->
-> Use the identification query to inspect `login_name`, `program_name`, and `last_request_end_time` before acting. If the session belongs to an Airflow task that crashed without closing its connection, coordinate with the pipeline team and close the connection at the application level first. Only use `KILL <session_id>` after confirming the session is truly orphaned and holds no active transaction.
-
----
-
-## Datadog SQL Server Agent — Full Configuration
-
-The complete Datadog agent configuration for the example SQL Server instance, with deep monitoring enabled and custom queries for pipeline-critical metrics.
-
-### Datadog | SQL Server | agent configuration file
-
-The `dbm: true` flag enables Database Monitoring, which unlocks query samples, wait event collection, and execution plan capture. The three `custom_queries` blocks track Page Life Expectancy (buffer pool health), cumulative wait times by category (IO, lock, log), and the current count of blocked processes — the three metrics most directly affected by heavy pipeline workloads.
-
-#### Datadog sqlserver.d conf.yaml — full DBM configuration with custom queries
-
-```yaml
-# /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml
-init_config:
-
-instances:
-  - host: localhost,1433
-    username: dd_agent
-    password: <DD_AGENT_PASSWORD>
-    connector: odbc
-    driver: ODBC Driver 18 for SQL Server
-    TrustServerCertificate: 'yes'
-    database: analytics_db
-
-    # Enable deep monitoring
-    dbm: true
-    query_metrics:
-      enabled: true
-    query_samples:
-      enabled: true
-    query_activity:
-      enabled: true
-
-    # Custom queries for pipeline monitoring
-    custom_queries:
-      - query: >
-          SELECT
-            cntr_value AS page_life_expectancy
-          FROM sys.dm_os_performance_counters
-          WHERE counter_name = 'Page life expectancy'
-            AND object_name LIKE '%Buffer Manager%'
-        columns:
-          - name: sqlserver.buffer.page_life_expectancy
-            type: gauge
-        tags:
-          - db:analytics_db
-          - env:production
-
-      - query: >
-          SELECT
-            SUM(CASE WHEN wait_type LIKE 'PAGEIOLATCH%' THEN wait_time_ms ELSE 0 END) AS io_waits_ms,
-            SUM(CASE WHEN wait_type LIKE 'LCK_M%' THEN wait_time_ms ELSE 0 END) AS lock_waits_ms,
-            SUM(CASE WHEN wait_type = 'WRITELOG' THEN wait_time_ms ELSE 0 END) AS log_waits_ms
-          FROM sys.dm_os_wait_stats
-        columns:
-          - name: sqlserver.waits.io_ms
-            type: monotonic_count
-          - name: sqlserver.waits.lock_ms
-            type: monotonic_count
-          - name: sqlserver.waits.log_ms
-            type: monotonic_count
-        min_collection_interval: 30
-
-      - query: >
-          SELECT COUNT(*) AS blocked_count
-          FROM sys.dm_exec_requests
-          WHERE blocking_session_id > 0
-        columns:
-          - name: sqlserver.blocked_processes
-            type: gauge
-        min_collection_interval: 15
-```
-
-### Datadog | SQL Server | alert thresholds and permissions
-
-Alert thresholds for the four pipeline-critical metrics, and the minimum SQL Server permissions required by the Datadog agent login.
-
-#### Datadog sqlserver.buffer, sqlserver.waits — alert thresholds
-
-| Metric | Warning | Alert | Action |
-|---|---|---|---|
-| `sqlserver.buffer.page_life_expectancy` | < 600 | < 300 | [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — check buffer pool, add RAM |
-| `sqlserver.waits.io_ms` (rate) | > 500ms/s | > 1000ms/s | [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — check PAGEIOLATCH, add indexes |
-| `sqlserver.waits.lock_ms` (rate) | > 100ms/s | > 500ms/s | [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — check for blocking chains |
-| `sqlserver.blocked_processes` | > 0 | > 5 | [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — find head blocker |
-
-#### CREATE LOGIN datadog — Datadog monitoring with minimum permissions
-
-The Datadog agent requires `VIEW SERVER STATE` to read DMVs, `VIEW ANY DEFINITION` to inspect object metadata, `CONNECT ANY DATABASE` to enumerate all databases, and `db_datareader` role membership on each monitored database to support deep monitoring query sampling.
+*Create a monitoring login with the minimum read surface needed for SQL Server performance telemetry.*
 
 ```sql
 CREATE LOGIN dd_agent WITH PASSWORD = 'DD_AGENT_PASSWORD';
@@ -445,16 +461,23 @@ CREATE USER dd_agent FOR LOGIN dd_agent;
 GRANT VIEW SERVER STATE TO dd_agent;
 GRANT VIEW ANY DEFINITION TO dd_agent;
 GRANT CONNECT ANY DATABASE TO dd_agent;
-EXEC sp_addrolemember 'db_datareader', 'dd_agent';  -- on each database to monitor
+EXEC sp_addrolemember 'db_datareader', 'dd_agent';
 ```
 
----
+## Related
 
-### Related
+### Companion notes
 
-- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — using Query Store to find the most expensive queries during a specific DAG run window
-- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — Phase 5 (expensive queries) using the same DMVs as the Datadog custom query
-- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — wait types generated by pipeline queries: PAGEIOLATCH, WRITELOG, LCK_M
-- [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) — Airflow `max_active_runs=1` as the primary pipeline serialization defense
-- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — understanding why a sleeping connection might be holding locks
-- [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert) — transaction management patterns that affect connection lifecycle
+- [[execution-plans]]
+- [[query-store-regressions-and-plan-forcing]]
+- [[wait-stats-analysis]]
+- [[memory-and-buffer-pool]]
+- [[performance-audit-playbook]]
+- [[pit-integrity-logic]]
+
+### Official references
+
+- [sys.dm_exec_sql_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sql-text-transact-sql)
+- [sys.query_store_query_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-query-text-transact-sql)
+- [sys.dm_exec_sessions](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sessions-transact-sql)
+- [Query hints and `OPTION (LABEL = ...)`](https://learn.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql-query)

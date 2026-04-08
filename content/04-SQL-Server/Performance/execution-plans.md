@@ -8,7 +8,7 @@ links:
   - "[[sargable-queries]]"
   - "[[merge-and-upsert]]"
   - "[[date-and-time-functions]]"
-  - "[[query-plan-analysis]]"
+  - "[[query-store-regressions-and-plan-forcing]]"
   - "[[wait-stats-analysis]]"
   - "[[memory-and-buffer-pool]]"
   - "[[index-maintenance]]"

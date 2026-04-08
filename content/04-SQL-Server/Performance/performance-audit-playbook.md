@@ -2,1333 +2,1116 @@
 title: "Performance Audit Playbook"
 tags: [performance, sql, sql-server, tsql]
 aliases: [SQL Server audit, performance audit, health check, DBA audit, instance audit]
-description: "Step-by-step SQL Server performance audit playbook covering 11 phases: instance overview, memory pressure, wait statistics, IO performance, expensive queries, index health, TempDB, blocking and deadlocks, statistics and plan quality, database sizes, and security. Includes all diagnostic queries and a post-pipeline health check script."
+description: "Production-first SQL Server performance audit playbook with live stoxx outputs for baseline configuration, memory, waits, I/O, query cache, index health, TempDB, blocking, statistics, file growth, and security."
 parent: "[[domain-query-craft]]"
 links:
   - "[[sargable-queries]]"
   - "[[merge-and-upsert]]"
   - "[[date-and-time-functions]]"
   - "[[execution-plans]]"
-  - "[[query-plan-analysis]]"
+  - "[[query-store-regressions-and-plan-forcing]]"
   - "[[wait-stats-analysis]]"
   - "[[memory-and-buffer-pool]]"
   - "[[index-maintenance]]"
   - "[[pipeline-integration-and-devex]]"
   - "[[pit-integrity-logic]]"
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-08
 status: complete
 ---
 
 # Performance Audit Playbook
 
-> [!quote]
-> "Measurement is the first step that leads to control and eventually to improvement. If you can't measure something, you can't understand it. If you can't understand it, you can't control it."
->
-> — **H. James Harrington**
+This page is a production audit sequence, not a bag of disconnected DMV snippets. The goal is to move from instance context to workload signals, then to physical design, concurrency, capacity, and security. The queries are written in a production-facing form and the outputs below are real results from the current `stoxx` instance.
 
-A step-by-step methodology for auditing any SQL Server instance from scratch. Each phase includes the diagnostic queries, how to interpret the output, what "good" and "bad" look like, and what to do when you find problems. Run through the phases in order — earlier phases often explain findings in later ones.
+Run the phases in order. The first phase sets the confidence boundary for every later phase, especially when the instance has recently restarted and DMV history is short.
 
----
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Start audit"] --> B["Phase 1<br/>Baseline and confidence"]
+    B --> C{"Uptime and config<br/>support strong conclusions?"}
+    C --> Y1([YES])
+    C --> N1([NO])
+    Y1 --> D["Trust cumulative DMVs more"]
+    N1 --> E["Add limited-history disclaimer<br/>and favor point-in-time checks"]
+    D --> F["Memory and waits"]
+    E --> F
+    F --> G{"Pressure or instability<br/>visible?"}
+    G --> Y2([YES])
+    G --> N2([NO])
+    Y2 --> H["Correlate with I/O, queries,<br/>indexes, TempDB, and blocking"]
+    N2 --> I["Validate files, stats,<br/>security, and growth settings"]
+    H --> J["Compile report"]
+    I --> J
 
-## Phase 1: Instance Overview
-
-**Purpose:** Understand what you're working with before diving into diagnostics. Version determines available features, uptime determines how much data the DMVs have accumulated, and configuration reveals common misconfigurations.
-
-### Key Terms — DMV, MAXDOP, Cost Threshold
-- **DMV (Dynamic Management View):** System views that expose internal SQL Server state — memory usage, query stats, wait times. DMV data resets on restart, so short uptime means limited historical data.
-- **MAXDOP (Max Degree of Parallelism):** How many CPU cores a single query can use. Default 0 = unlimited = all cores.
-- **Cost Threshold for Parallelism:** The estimated query cost (in arbitrary units) above which SQL Server considers parallel execution. Default 5 is Microsoft's documented starting point, not a recommendation — on modern servers it is widely considered too low. Too low → excessive `CXPACKET`/`CXCONSUMER` waits, many plans running in parallel unnecessarily. Too high → `SOS_SCHEDULER_YIELD` dominates, CPU-heavy queries can't exploit parallelism. Raise incrementally (Microsoft example: 20) and observe a full business cycle before adjusting again.
-
-### Version and Edition
-
-SQL Server version determines which DMVs, features, and fixes are available. Running an old version without cumulative updates (CUs) means running with known bugs, security vulnerabilities, and performance regressions that Microsoft has already fixed. Before interpreting any diagnostic output, confirm the version — some DMV columns, behaviors, and optimizer features differ between SQL Server 2016, 2019, and 2022.
-
-```sql
-SELECT @@VERSION;
-SELECT SERVERPROPERTY('ProductVersion') AS Version,
-       SERVERPROPERTY('Edition') AS Edition,
-       SERVERPROPERTY('ProductLevel') AS PatchLevel;
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    class Y1,Y2 yesNode;
+    class N1,N2 noNode;
 ```
 
-#### @@VERSION, SERVERPROPERTY — version and patch level check
-- **Good:** Latest CU (Cumulative Update) installed, edition matches workload needs
-- **Bad:** Running RTM with no patches, Enterprise features needed but running Standard
-- **Action:** If more than 2 CUs behind, recommend patching in the next maintenance window
+## Phase 1 | Instance Baseline
 
-> [!info] Edition Limits
->
-> Standard edition: 128 GB RAM max, 24 cores. Express edition: 1.4 GB RAM, 1 socket. Ensure the edition matches workload requirements before tuning anything else.
+This phase establishes what can be trusted. Version determines available behavior and fixes. Uptime determines how much history DMVs and cumulative counters contain. Core configuration determines whether later symptoms come from workload problems, bad defaults, or both.
 
-### Uptime
+### Instance and database context
 
-All DMV-based diagnostics (wait stats, query stats, index usage stats, buffer pool data) accumulate from the last restart. A server that restarted this morning has only hours of wait data — the top wait type might be an anomaly from the startup process, not the steady-state workload. Uptime sets the confidence level for everything that follows.
+This subsection captures the engine baseline in one row, then checks the per-database defaults that most often distort a production audit.
+
+#### Capture the instance baseline
+
+The first query below is the audit anchor. It pulls version and patch metadata from `SERVERPROPERTY`, uptime and hardware-visible memory state from `sys.dm_os_sys_info`, and the instance-level configuration values that most strongly shape CPU and memory behavior.
+
+[!info]-
+This query combines three categories of information into one output row.
+
+- `SERVERPROPERTY('ProductVersion')`, `SERVERPROPERTY('Edition')`, and `SERVERPROPERTY('ProductLevel')` identify the engine build, edition, and patch branch. These affect available features and supported tuning advice.
+- `DATEDIFF(DAY, sqlserver_start_time, GETDATE())` measures how old the in-memory DMV history is. Wait stats, query stats, index-usage stats, and many counters are only meaningful in the context of uptime.
+- `cpu_count`, `physical_memory_kb`, `committed_kb`, and `committed_target_kb` come from `sys.dm_os_sys_info` and show the host-visible CPU count and SQL Server memory posture.
+- The scalar subqueries against `sys.configurations` retrieve the currently active values for `MAXDOP`, cost threshold, `max server memory`, and `optimize for ad hoc workloads`.
+- The result is intentionally one row so the audit can begin with a compact baseline snapshot that is easy to compare across environments.
+
+*Capture the SQL Server build, uptime, CPU and memory posture, and the core configuration values that govern parallelism, memory growth, and ad hoc plan caching.*
 
 ```sql
-SELECT sqlserver_start_time,
-       DATEDIFF(DAY, sqlserver_start_time, GETDATE()) AS uptime_days
+SELECT
+    SERVERPROPERTY('ProductVersion') AS version,
+    SERVERPROPERTY('Edition') AS edition,
+    SERVERPROPERTY('ProductLevel') AS patch_level,
+    DATEDIFF(DAY, sqlserver_start_time, GETDATE()) AS uptime_days,
+    cpu_count AS logical_cpus,
+    physical_memory_kb / 1024 AS physical_memory_mb,
+    committed_kb / 1024 AS committed_mb,
+    committed_target_kb / 1024 AS target_mb,
+    (SELECT value_in_use FROM sys.configurations WHERE name = 'max degree of parallelism') AS maxdop,
+    (SELECT value_in_use FROM sys.configurations WHERE name = 'cost threshold for parallelism') AS cost_threshold_for_parallelism,
+    (SELECT value_in_use FROM sys.configurations WHERE name = 'max server memory (MB)') AS max_server_memory_mb,
+    (SELECT value_in_use FROM sys.configurations WHERE name = 'optimize for ad hoc workloads') AS optimize_for_ad_hoc_workloads
 FROM sys.dm_os_sys_info;
 ```
 
-#### sys.dm_os_sys_info sqlserver_start_time — uptime interpretation
-- **Good:** Uptime > 7 days — DMVs have representative data
-- **Bad:** Uptime < 1 day — all DMV-based findings need a disclaimer ("based on limited data since last restart")
-- **Action:** If recently restarted, ask why. Frequent restarts are a red flag (memory leaks, patching without planning, crashes).
+| version | edition | patch_level | uptime_days | logical_cpus | physical_memory_mb | committed_mb | target_mb | maxdop | cost_threshold_for_parallelism | max_server_memory_mb | optimize_for_ad_hoc_workloads |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `16.0.4236.2` | `Developer Edition (64-bit)` | `RTM` | 0 | 16 | 24732 | 5418 | 22824 | 0 | 5 | 2147483647 | 0 |
 
-### Hardware
+_This instance is running SQL Server 2022 on a fresh uptime boundary: `uptime_days = 0`. That immediately reduces the confidence of every cumulative DMV below. The configuration row also exposes three production issues before any workload analysis starts: `maxdop = 0` on a 16-logical-CPU host, `cost threshold for parallelism = 5`, and `max server memory (MB)` left at the effectively-unlimited default. `optimize for ad hoc workloads = 0` becomes relevant again in Phase 9, where ad hoc plans dominate cache memory._
 
-Physical hardware sets the ceiling for all performance. The number of logical CPUs determines the parallelism ceiling; physical memory determines how much data fits in the buffer pool. The key metric here is `committed_mb` vs `target_mb`: `target_mb` is what SQL Server wants to use (its configured max memory), while `committed_mb` is what the OS has actually granted. A persistent gap means the OS is under pressure and is not delivering the memory SQL Server expects.
+[!warning]
+The low uptime means Phases 3, 5, 6, 8, and 9 do not yet represent a full business cycle.
 
-```sql
-SELECT cpu_count AS logical_cpus,
-       hyperthread_ratio,
-       physical_memory_kb / 1024 AS physical_memory_mb,
-       committed_kb / 1024 AS committed_mb,
-       committed_target_kb / 1024 AS target_mb,
-       max_workers_count
-FROM sys.dm_os_sys_info;
-```
+[!success]
+Use the current outputs as point-in-time evidence, and repeat the cumulative phases after a representative workload window before making lasting configuration changes.
 
-#### sys.dm_os_sys_info — hardware: CPUs, memory committed vs target
-- **Good:** `committed_mb` ≈ `target_mb` (SQL Server has enough memory to use what it's configured for)
-- **Bad:** `committed_mb` significantly below `target_mb` (OS is under memory pressure and can't give SQL Server what it wants)
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `uptime_days` | `0` | &#10060; | DMV and cumulative counter history started today. | Waits, cached-query rankings, and missing-index evidence are limited-history signals only. |
+| `uptime_days` | `>= 7` | &#9989; | The instance has at least one week of history. | Cumulative DMVs are usually much more representative. |
+| `maxdop` | `0` | &#10060; on larger servers | A single query can use all available schedulers, subject to optimizer choice. | Can amplify parallel overhead and distort wait patterns. |
+| `cost_threshold_for_parallelism` | `5` | &#10060; on modern production systems | Very cheap statements can qualify for parallel plans. | Common source of unnecessary `CX*` waits and worker pressure. |
+| `max_server_memory_mb` | `2147483647` | &#10060; | SQL Server is effectively uncapped. | The OS becomes the back-pressure mechanism instead of the configuration. |
+| `optimize_for_ad_hoc_workloads` | `0` | Depends | First execution of an ad hoc statement stores a full plan. | Usually acceptable on well-parameterized workloads, but wasteful on ad hoc-heavy ones. |
+| `committed_mb` vs `target_mb` | `5418` vs `22824` | &#9989; right now | SQL Server has room to grow under current workload. | The immediate issue is configuration hygiene, not current internal memory starvation. |
 
-### Key Instance Settings
+#### Review database inventory and risky defaults
 
-SQL Server ships with several defaults that are appropriate for a development installation but harmful in production. These six settings have the highest impact and are the most commonly misconfigured. `sys.configurations` returns both the configured value (what was set) and `value_in_use` (what SQL Server is actually running with) — these can differ if a setting was changed but the instance has not been restarted or `RECONFIGURE` was not run.
+The next query inspects `sys.databases`, which is where recovery model, compatibility level, RCSI, auto-shrink, and auto-stats settings are exposed for every database on the instance.
 
-```sql
-SELECT name, value_in_use
-FROM sys.configurations
-WHERE name IN (
-    'max degree of parallelism', 'cost threshold for parallelism',
-    'max server memory (MB)', 'min server memory (MB)',
-    'optimize for ad hoc workloads', 'max worker threads'
-)
-ORDER BY name;
-```
+[!info]-
+This query is a production inventory query, not a lab shortcut.
 
-#### sp_configure — recommended values for max memory, MAXDOP, cost threshold
+- `state_desc` tells you whether the database is actually online and queryable.
+- `recovery_model_desc` matters for log reuse and backup-chain expectations.
+- `compatibility_level` determines optimizer behavior and whether modern IQP features are even available.
+- `is_read_committed_snapshot_on` indicates whether default `READ COMMITTED` readers use row-versioning instead of shared locks.
+- `is_auto_shrink_on`, `is_auto_create_stats_on`, and `is_auto_update_stats_on` surface database-level defaults that can quietly degrade performance if they are wrong.
 
-| Setting | Default | Red flag | Recommended |
-|---------|---------|----------|-------------|
-| `max server memory (MB)` | 2147483647 (2 TB) | Left at default — SQL Server will consume all available RAM and starve the OS | Total RAM minus 1–4 GB (for OS + agents) |
-| `max degree of parallelism` | 0 (all cores) | 0 on a server with > 8 cores — single queries hog all CPUs | Single NUMA ≤ 8 cores: number of logical processors. Single NUMA > 8 cores: 8. Multi-NUMA: 8 per NUMA node or fewer. |
-| `cost threshold for parallelism` | 5 | 5 is too low — tiny queries go parallel unnecessarily | 25–50 for OLTP, 10–25 for mixed workloads |
-| `optimize for ad hoc workloads` | 0 (off) | Off — every unique query gets a full plan cached, bloating plan cache | 1 (on) — only caches full plan on second execution |
-
-> [!info] SQL Server 2019/2022 — MAXDOP and Parallelism Intelligence
->
-> **SQL Server 2019:** Setup automatically calculates and applies the recommended MAXDOP value based on core count. Instances upgraded from older versions may still have MAXDOP = 0 and need manual adjustment.
->
-> **SQL Server 2022:** Introduces **DOP Feedback** (part of Intelligent Query Processing). For repeating queries, the engine monitors elapsed time and waits, then automatically adjusts the degree of parallelism across executions — raising DOP if the query benefits from it, lowering it if parallel overhead hurts. Requires database compatibility level 160 and Query Store enabled. No configuration needed; the engine self-tunes within the MAXDOP ceiling.
->
-> **Per-database MAXDOP (all modern versions):** `sp_configure` sets the instance-wide ceiling, but MAXDOP can be overridden per-database with `ALTER DATABASE SCOPED CONFIGURATION SET MAXDOP = N`. In Availability Groups, primary and secondary read workloads can be differentiated: `ALTER DATABASE SCOPED CONFIGURATION FOR SECONDARY SET MAXDOP = 4` allows the secondary to use more parallelism for read queries while the primary stays conservative for OLTP writes. Check `sys.database_scoped_configurations` to audit per-database overrides.
-
-#### sp_configure + RECONFIGURE — fix max memory, MAXDOP, cost threshold
+*Inventory database state, recovery model, compatibility level, RCSI, and auto-statistics defaults across the instance.*
 
 ```sql
--- Fix max memory (example: 2 GB VM, reserve 1 GB for OS)
-EXEC sp_configure 'max server memory (MB)', 768;
-RECONFIGURE;
-
--- Fix MAXDOP (example: 4 cores)
-EXEC sp_configure 'max degree of parallelism', 2;
-RECONFIGURE;
-
--- Fix cost threshold
-EXEC sp_configure 'cost threshold for parallelism', 30;
-RECONFIGURE;
-
--- Enable optimize for ad hoc
-EXEC sp_configure 'optimize for ad hoc workloads', 1;
-RECONFIGURE;
-```
-
-### Database Inventory
-
-A survey of all databases on the instance exposes database-level settings that can silently degrade performance or safety. Recovery model determines what restore options are available and whether the transaction log grows unboundedly. RCSI (Read Committed Snapshot Isolation) controls whether readers take shared locks. Auto-shrink is the single most damaging default setting that is sometimes accidentally left enabled after a migration or restore.
-
-```sql
-SELECT name, state_desc, recovery_model_desc,
-       compatibility_level,
-       is_read_committed_snapshot_on AS RCSI,
-       is_auto_shrink_on AS auto_shrink,
-       is_auto_create_stats_on AS auto_stats,
-       is_auto_update_stats_on AS auto_update_stats
+SELECT
+    name,
+    state_desc,
+    recovery_model_desc,
+    compatibility_level,
+    is_read_committed_snapshot_on AS rcsi,
+    is_auto_shrink_on AS auto_shrink,
+    is_auto_create_stats_on AS auto_stats,
+    is_auto_update_stats_on AS auto_update_stats
 FROM sys.databases
 ORDER BY name;
 ```
 
-#### sys.databases — red flags: auto_shrink, auto_stats, RCSI disabled
+| name | state_desc | recovery_model_desc | compatibility_level | rcsi | auto_shrink | auto_stats | auto_update_stats |
+|---|---|---|---:|---:|---:|---:|---:|
+| `master` | `ONLINE` | `SIMPLE` | 160 | 0 | 0 | 1 | 1 |
+| `model` | `ONLINE` | `FULL` | 160 | 0 | 0 | 1 | 1 |
+| `msdb` | `ONLINE` | `SIMPLE` | 160 | 0 | 0 | 1 | 1 |
+| `stoxx` | `ONLINE` | `FULL` | 160 | 0 | 0 | 1 | 1 |
+| `tempdb` | `ONLINE` | `SIMPLE` | 160 | 0 | 0 | 1 | 1 |
 
-> [!warning] auto_shrink = ON is Critical
->
-> Auto-shrink causes massive fragmentation and CPU spikes. It shrinks the file, then the next insert grows it again, endlessly. Disable immediately: `ALTER DATABASE [db] SET AUTO_SHRINK OFF;`
+_The database-level defaults are mostly healthy: all databases are online, `compatibility_level = 160`, `auto_shrink = 0`, and automatic statistics are enabled. The operational questions are narrower. `stoxx` is in `FULL` recovery model, so later log-reuse findings must be evaluated in that context. `rcsi = 0` is not automatically wrong, but on mixed read/write workloads it usually deserves an explicit decision rather than being left implicit._
 
-> [!success] Disable auto_shrink immediately and set fixed-size file growth
->
-> `ALTER DATABASE [db] SET AUTO_SHRINK OFF;` — then pre-size the data file to its expected steady-state and set growth to a fixed value (e.g., 256 MB) so autogrow events are infrequent and predictable.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `state_desc` | `ONLINE` | &#9989; | Database is available for normal access. | Baseline healthy state. |
+| `state_desc` | Anything else | &#10060; | Restore, recovery, offline, suspect, or transitional state. | Performance findings may be secondary to a more serious availability problem. |
+| `compatibility_level` | `160` | &#9989; | SQL Server 2022 database compatibility level. | Modern optimizer and IQP features can be used. |
+| `rcsi` | `0` | Depends | Default read-committed behavior still uses locking, not row-versioning. | On busy OLTP systems, reader/writer blocking deserves special attention. |
+| `rcsi` | `1` | Depends | `READ COMMITTED` uses row versions. | Reduces reader/writer blocking, but increases `tempdb` version-store use. |
+| `auto_shrink` | `0` | &#9989; | Auto-shrink is disabled. | Avoids shrink/regrow churn and fragmentation. |
+| `auto_shrink` | `1` | &#10060; | Database can shrink itself automatically. | Strong operational anti-pattern; usually disable immediately. |
+| `auto_stats` / `auto_update_stats` | `1` | &#9989; | Automatic statistics creation and refresh are enabled. | Sensible default for most workloads. |
+| `recovery_model_desc` | `FULL` | Depends | Full recovery chain expected. | Log reuse must be interpreted with backup and restore policy in mind. |
 
-- `auto_stats = 0` or `auto_update_stats = 0` — SQL Server can't optimize queries without current statistics. Enable: `ALTER DATABASE [db] SET AUTO_CREATE_STATISTICS ON; ALTER DATABASE [db] SET AUTO_UPDATE_STATISTICS ON;`
-- `RCSI = 0` on an OLTP database — readers block writers. Consider enabling for mixed read/write workloads.
-- `recovery_model = FULL` but no log backups — the transaction log will grow forever until the disk fills up.
+## Phase 2 | Memory and Buffer Pool
 
----
+This phase checks whether the instance is actually under memory pressure, how the buffer pool is distributed, and whether any query is currently waiting for a memory grant. For deeper clerk-level analysis and process-memory detail, use [[memory-and-buffer-pool]] after this phase.
 
-## Phase 2: Memory Pressure
+### Working-set and memory-pressure checks
 
-**Purpose:** Determine if SQL Server has enough memory. Memory pressure is the most common performance problem — when data doesn't fit in the buffer pool, every query must read from disk (1000x slower).
+These queries answer three different questions: who owns the buffer pool, whether page churn is high, and whether any query is blocked waiting for workspace memory.
 
-### Key Terms — Buffer Pool, PLE, Cache Hit Ratio
-- **Buffer pool:** SQL Server's main data cache — holds data pages in RAM so they don't need to be read from disk every time.
-- **Page Life Expectancy (PLE):** Average time (in seconds) a data page stays in the buffer pool before being evicted. Higher = better. If pages are evicted quickly, queries must re-read them from disk.
-- **Buffer cache hit ratio:** Percentage of page reads satisfied from the buffer pool (RAM) vs. disk. Should be > 99%.
+#### Measure buffer-pool ownership by database
 
-### Buffer Pool by Database
+[!info]-
+`sys.dm_os_buffer_descriptors` exposes one row per data page currently cached in the buffer pool.
 
-When the total buffer pool is smaller than the combined working set of all databases, SQL Server must continuously evict pages from one database to make room for another. Knowing which database consumes the most buffer pool reveals where the contention originates. A single database with a large analytical workload (full scans) can flush the entire buffer pool and degrade every other database on the instance.
+- `database_id` is translated with `DB_NAME` so the result is readable without a join.
+- `COUNT(*) * 8 / 1024` converts cached pages into megabytes because SQL Server pages are 8 KB each.
+- Grouping by database shows whether one database is dominating the cache and pushing other workloads out of RAM.
+- The `NULL` database row represents pages that are not associated with a user database in the normal way, such as free buffers or internal allocations.
+
+*Measure how much of the buffer pool is currently occupied by each database.*
 
 ```sql
-SELECT DB_NAME(database_id) AS db,
-       COUNT(*) * 8 / 1024 AS buffer_pool_mb
+SELECT
+    DB_NAME(database_id) AS db_name,
+    COUNT(*) * 8 / 1024 AS buffer_pool_mb
 FROM sys.dm_os_buffer_descriptors
 GROUP BY database_id
 ORDER BY buffer_pool_mb DESC;
 ```
 
-**Interpretation:** Shows how much of the buffer pool each database occupies. If one database dominates and others get almost nothing, those other databases will have slow queries (every read goes to disk).
+| db_name | buffer_pool_mb |
+|---|---:|
+| `stoxx` | 689 |
+| `tempdb` | 197 |
+| `NULL` | 24 |
+| `model_msdb` | 4 |
+| `msdb` | 4 |
+| `model_replicatedmaster` | 3 |
+| `master` | 2 |
+| `model` | 0 |
 
-### Page Life Expectancy (PLE)
+_`stoxx` owns most of the useful cache, which is expected on a single-user-database instance. `tempdb` at `197 MB` is noticeable but not alarming. Nothing in this distribution suggests a multi-database cache fight. The more important point is scale: the instance is using well under 1 GB of data cache on a host that exposes far more memory, so the current buffer-pool shape does not indicate pressure by itself._
 
-PLE measures how long the average data page survives in the buffer pool before SQL Server evicts it to make room for a new page. A healthy server with sufficient memory holds pages for thousands of seconds; an underpowered server with constant eviction pressure shows PLEs in the hundreds. Watch for PLE drops: a sudden steep decline while no queries are running usually indicates an index rebuild or a large table scan flushing hot pages out of the cache.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `db_name` | User database dominates | Depends | Most cache belongs to the main workload database. | Usually normal on single-tenant instances. |
+| `db_name` | `tempdb` unusually large | Depends | Temp objects, spills, or version-store activity are consuming cache. | Correlate with Phase 7 before calling it a problem. |
+| `db_name` | `NULL` small | &#9989; | Minor internal or unassigned buffer usage. | Normal. |
+| `buffer_pool_mb` | Concentrated in one DB with healthy PLE | &#9989; | Working set is stable in memory. | Not a standalone concern. |
+| `buffer_pool_mb` | One DB dominates while others thrash | &#10060; context-dependent | One workload may be flushing others from cache. | Validate with low PLE, scans, and I/O waits before acting. |
 
-> [!info] PLE on Multi-NUMA Systems
->
-> On servers with multiple NUMA nodes (typically systems with 2+ physical CPU sockets), SQL Server maintains a separate buffer pool per NUMA node and reports a PLE for each. The counter `object_name LIKE '%Buffer Manager%'` returns the aggregate; the per-node counters appear as `Buffer Node`. A server with two NUMA nodes where one node shows PLE 50 and the other shows PLE 2000 has a NUMA imbalance — cross-NUMA memory access is slow. In this case, the aggregate PLE is misleading.
+#### Check Page Life Expectancy by buffer node
+
+[!info]-
+`sys.dm_os_performance_counters` exposes both the aggregate `Buffer Manager` PLE and per-node `Buffer Node` PLE.
+
+- `counter_name = 'Page life expectancy'` filters to the exact metric.
+- `object_name LIKE '%Buffer%'` returns both the aggregate object and any per-node counters.
+- Comparing node-level values is important on NUMA systems because a healthy aggregate can hide one starved node.
+
+*Check how long pages remain in memory at both the aggregate and per-node level.*
 
 ```sql
-SELECT cntr_value AS PLE_seconds
+SELECT
+    object_name,
+    counter_name,
+    instance_name,
+    cntr_value AS ple_seconds
 FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Page life expectancy'
-  AND object_name LIKE '%Buffer Manager%';
+  AND object_name LIKE '%Buffer%'
+ORDER BY object_name, instance_name;
 ```
 
-#### Page Life Expectancy — healthy vs critical thresholds
+| object_name | counter_name | instance_name | ple_seconds |
+|---|---|---|---:|
+| `SQLServer:Buffer Manager` | `Page life expectancy` |  | 18007 |
+| `SQLServer:Buffer Node` | `Page life expectancy` | `000` | 18007 |
 
-> [!info] Interpreting PLE — Community Formula vs Official Guidance
->
-> Microsoft's official documentation does not prescribe a fixed numeric PLE threshold. Official guidance: "A higher, growing value is best. A sudden dip indicates significant churn of data in and out of the buffer pool."
->
-> The formula behind the 300-second rule: **300 seconds × (buffer pool GB ÷ 4)**. On a 4 GB buffer pool (the era when the rule was coined), 300s is the baseline. On a 100 GB buffer pool, the expected baseline is 7,500 seconds — and any PLE below that warrants investigation even if it is well above 300. The absolute number is less important than stability and trend.
->
-> Two root causes for low PLE have different fixes: (1) under-provisioned memory where the working data set doesn't fit — add RAM or cap `max server memory` correctly; (2) non-optimized queries doing large scans that flush hot pages out of cache — add covering indexes (Phase 6). The second is more common and should be investigated first.
+_This is a healthy point-in-time PLE result. `18007` seconds is roughly five hours, which means cached pages are not churning out quickly. The matching aggregate and node-level values also show there is no visible NUMA imbalance in this environment. On this host, low PLE is not the bottleneck to chase first._
 
-| PLE | Status |
-|-----|--------|
-| > 1000 seconds | Healthy — pages stay in memory a long time |
-| 300–1000 seconds | Acceptable for busy servers |
-| < 300 seconds | Possible memory pressure — pages being evicted frequently, queries hitting disk |
-| Volatile / drops suddenly | A large scan (table scan or index rebuild) is flushing the buffer pool |
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `ple_seconds` | High and stable | &#9989; | Pages remain in memory for a long time. | Memory pressure is unlikely right now. |
+| `ple_seconds` | Persistently low | &#10060; | Pages are being evicted quickly. | Correlate with scans, I/O, grants, and memory cap before concluding root cause. |
+| `instance_name` | Aggregate and node values similar | &#9989; | No obvious node skew. | NUMA-local pressure is not visible. |
+| `instance_name` | One node much lower than others | &#10060; | One buffer node is under disproportionate churn. | Investigate NUMA locality, scheduler skew, and workload placement. |
 
-#### Low PLE remediation — increase memory or add indexes
-1. Increase `max server memory` if the OS has headroom
-2. Find queries doing table scans (Phase 5) and add indexes
-3. Check if index rebuilds are running during peak hours — schedule them off-peak
+#### Check pending memory grants
 
-### Buffer Cache Hit Ratio
+[!info]-
+`sys.dm_exec_query_memory_grants` shows queries that requested workspace memory for sorts, hashes, and similar operators.
 
-The buffer cache hit ratio is a cumulative average: the percentage of all page reads since startup that were served from RAM rather than disk. A value near 100% is expected and healthy — cold starts or large one-off scans will temporarily pull it down. Because it is cumulative, a single large table scan early in the server's life can permanently depress the ratio even if the last 24 hours were perfectly healthy. Use PLE (above) as the more sensitive real-time signal; use the hit ratio as a long-term trend indicator.
+- `grant_time IS NULL` filters to requests that are still waiting rather than already granted.
+- `requested_memory_kb` and `granted_memory_kb` are converted to megabytes for operational readability.
+- `wait_time_ms / 1000.0` exposes how long the request has already been waiting.
+- Zero rows is a meaningful healthy state.
 
-```sql
-SELECT cntr_value AS hit_ratio
-FROM sys.dm_os_performance_counters
-WHERE counter_name = 'Buffer cache hit ratio'
-  AND object_name LIKE '%Buffer Manager%';
-```
-
-#### Buffer cache hit ratio — interpretation thresholds
-- **> 99%:** Excellent — nearly all reads come from RAM
-- **95–99%:** Acceptable — some disk reads, usually on first access
-- **< 95%:** Problem — significant disk IO, performance is degraded
-- **< 90%:** Critical — the database is larger than the buffer pool, most queries hit disk
-
-### Memory Clerks (What Is Using Memory)
-
-SQL Server divides its memory among internal consumers called memory clerks — each clerk manages a specific category of allocation. When total memory usage is high or growing unexpectedly, the clerks table pinpoints whether the pressure comes from the buffer pool (data cache), plan cache, memory grants, or something else. Each clerk type points to a different remediation path.
+*Check whether any query is currently waiting for a memory grant rather than executing.*
 
 ```sql
-SELECT TOP 10 type AS clerk_type,
-       pages_kb / 1024 AS memory_mb
-FROM sys.dm_os_memory_clerks
-ORDER BY pages_kb DESC;
-```
-
-#### sys.dm_os_memory_clerks — common clerks and what they mean
-
-| Clerk | What it is | Concern |
-|-------|-----------|---------|
-| `MEMORYCLERK_SQLBUFFERPOOL` | Buffer pool (data cache) | Should be the largest by far |
-| `CACHESTORE_SQLCP` | Plan cache (compiled query plans) | If > 20% of buffer pool, enable "optimize for ad hoc" |
-| `MEMORYCLERK_SQLQUERYEXEC` | Memory grants (sorting, hashing) | If large, queries are doing big sorts — add indexes |
-| `MEMORYCLERK_SQLCLR` | CLR objects | Should be small unless using CLR assemblies |
-| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for blocking |
-
-### Pending Memory Grants
-
-Before executing operations that require large amounts of working memory (sorts, hash joins, bulk inserts), SQL Server must request a memory grant — a pre-allocation of a fixed amount from the query workspace memory pool. If the pool is exhausted, the request queues until another query releases its grant. A row in this query with `grant_time IS NULL` means the query is suspended and has not yet started executing.
-
-```sql
-SELECT session_id, requested_memory_kb / 1024 AS requested_mb,
-       granted_memory_kb / 1024 AS granted_mb,
-       wait_time_ms / 1000 AS wait_sec
+SELECT
+    session_id,
+    requested_memory_kb / 1024 AS requested_mb,
+    granted_memory_kb / 1024 AS granted_mb,
+    wait_time_ms / 1000.0 AS wait_sec
 FROM sys.dm_exec_query_memory_grants
 WHERE grant_time IS NULL;
 ```
 
-**Interpretation:** If rows appear, queries are **waiting for memory before they can execute**. This is a direct performance hit — queries are sitting idle waiting for RAM.
-- **Good:** 0 rows (no one is waiting)
-- **Bad:** Any rows — means memory is oversubscribed
-- **Action:** Increase `max server memory`, reduce MAXDOP (parallel queries request more memory), or fix the queries requesting excessive memory grants (usually missing indexes causing large sorts)
+```text
+session_id|requested_mb|granted_mb|wait_sec
+----------|------------|----------|--------
 
----
+(0 rows affected)
+```
 
-## Phase 3: Wait Statistics
+_No query is currently queued for memory. That is the desired result. It means there is no visible `RESOURCE_SEMAPHORE` style grant backlog at capture time. On a pressured system, even a few waiting rows matter because grant starvation can stall otherwise efficient queries._
 
-**Purpose:** This is the **single most important diagnostic**. Wait stats tell you exactly what SQL Server spends its time waiting on. Instead of guessing, you read what the engine itself is reporting as its bottleneck.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| Result set | No rows | &#9989; | No query is waiting for a memory grant right now. | Memory grants are not a live bottleneck. |
+| `requested_mb` | Large and growing | &#10060; if paired with waits | Query wants a large workspace memory allocation. | Investigate joins, sorts, estimates, DOP, and stats quality. |
+| `granted_mb` | `0` with waiting row | &#10060; | Grant not yet issued. | Query is blocked before execution can proceed. |
+| `wait_sec` | Increasing | &#10060; | The queue is not draining quickly. | Correlate with `RESOURCE_SEMAPHORE`, memory cap, and expensive parallel plans. |
 
-### Key Terms — SQLOS, Task States, Wait Categories
+## Phase 3 | Wait Statistics
 
-- **SQLOS (SQL Server Operating System):** The internal scheduling layer embedded inside SQL Server. At startup, SQLOS creates one scheduler per logical CPU and allocates a pool of worker threads to each scheduler. All queries and background tasks run on those workers — the OS does not schedule SQL Server queries directly.
-- **Cooperative scheduling:** Unlike the OS, SQLOS does not preempt tasks by force. Instead, every worker voluntarily yields the CPU after approximately 4 milliseconds. When a worker yields, it emits a `SOS_SCHEDULER_YIELD` wait. High `SOS_SCHEDULER_YIELD` counts indicate CPU saturation — the workers are yielding because they are competing for a limited number of scheduler slots.
-- **Task states:** Every task in SQL Server transitions through three states:
-  - **RUNNING** — the task is actively executing on a CPU core right now.
-  - **RUNNABLE** — the task is ready to run but waiting for a free scheduler slot. This is a *signal wait* — accumulated in `signal_wait_time_ms`.
-  - **SUSPENDED** — the task is waiting for a resource other than CPU (a lock, a page from disk, a log write). This is a *resource wait*.
-- **Wait categories — three types, only one is a bottleneck signal:**
-  - **Resource waits** — a thread needs something held or busy: a lock, a data page, a log flush. These reflect real bottlenecks and are the main target of wait analysis.
-  - **Queue waits** — a thread is idle, waiting for work to arrive (e.g., Lazy Writer, Deadlock Monitor, Log Writer). These are benign background waits; the Top Waits query below filters them out.
-  - **External waits** — a thread is waiting for something outside SQL Server: a linked server call, an extended stored procedure. Not always a SQL Server problem.
+Wait stats are instance-level evidence about where SQL Server has spent time waiting for resources. They do not identify the root cause by themselves. Use them to choose the next branch of investigation, then confirm with the phase that matches the dominant wait family.
 
-See [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) for the full filtered wait stats query and the complete wait type interpretation table.
+### Top cumulative waits
 
-### Top Waits Query
+#### Capture the top cumulative waits
 
-The `sys.dm_os_wait_stats` DMV accumulates wait statistics since the last restart (or since the last explicit reset with `DBCC SQLPERF`). The raw view includes many benign background waits (idle loops, service broker housekeeping, etc.) that would otherwise dominate the results. The query below filters these out, computing each type's percentage of the total remaining wait time to surface only the waits that reflect real workload pressure.
+[!warning]
+Wait statistics are cumulative since startup, and this instance restarted on `2026-04-08`. Short uptime and recent admin activity can dominate the top rows.
+
+[!success]
+Use the top waits to choose where to investigate next, not as a standalone verdict. If uptime is short, repeat this phase after a full workload window or compare deltas between snapshots instead of lifetime totals.
+
+[!info]-
+This query reads `sys.dm_os_wait_stats` and removes the most common benign background waits so the output is dominated by actionable waits.
+
+- `wait_time_ms / 1000.0` and `signal_wait_time_ms / 1000.0` convert the cumulative wait totals into seconds.
+- `waiting_tasks_count` shows how many tasks have contributed to each wait type.
+- `pct` expresses each wait type as a percentage of the remaining wait-time total after filtering.
+- The explicit exclusion list removes common idle/background waits that would otherwise crowd out real workload signals.
+- `signal_sec` is especially important. High signal wait relative to total wait implies runnable tasks are waiting on CPU scheduling rather than on external resources.
+
+*Rank the most significant cumulative waits after excluding common idle and housekeeping waits.*
 
 ```sql
 WITH waits AS (
-    SELECT wait_type,
-           wait_time_ms / 1000.0 AS wait_sec,
-           signal_wait_time_ms / 1000.0 AS signal_sec,
-           waiting_tasks_count AS count,
-           100.0 * wait_time_ms / SUM(wait_time_ms) OVER () AS pct
+    SELECT
+        wait_type,
+        wait_time_ms / 1000.0 AS wait_sec,
+        signal_wait_time_ms / 1000.0 AS signal_sec,
+        waiting_tasks_count AS waiting_count,
+        100.0 * wait_time_ms / SUM(wait_time_ms) OVER () AS pct
     FROM sys.dm_os_wait_stats
     WHERE wait_type NOT IN (
-        'SLEEP_TASK','LAZYWRITER_SLEEP','WAITFOR','BROKER_RECEIVE_WAITFOR',
-        'BROKER_EVENTHANDLER','CLR_AUTO_EVENT','CLR_MANUAL_EVENT',
-        'DISPATCHER_QUEUE_SEMAPHORE','XE_DISPATCHER_WAIT','DIRTY_PAGE_POLL',
-        'HADR_FILESTREAM_IOMGR_IOCOMPLETION','SP_SERVER_DIAGNOSTICS_SLEEP',
-        'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP','QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP',
-        'SQLTRACE_INCREMENTAL_FLUSH_SLEEP','CHECKPOINT_QUEUE',
-        'FT_IFTS_SCHEDULER_IDLE_WAIT','XE_TIMER_EVENT','LOGMGR_QUEUE',
-        'REQUEST_FOR_DEADLOCK_SEARCH','RESOURCE_QUEUE',
-        'SERVER_IDLE_CHECK','SQLTRACE_BUFFER_FLUSH','WAIT_XTP_OFFLINE_CKPT_NEW_LOG',
-        'BROKER_TO_FLUSH','BROKER_TASK_STOP','DBMIRRORING_CMD',
-        'PREEMPTIVE_OS_PIPEOPS','PREEMPTIVE_XE_GETTARGETSTATE',
-        'ONDEMAND_TASK_QUEUE'
+        'SLEEP_TASK', 'LAZYWRITER_SLEEP', 'WAITFOR', 'BROKER_RECEIVE_WAITFOR',
+        'BROKER_EVENTHANDLER', 'CLR_AUTO_EVENT', 'CLR_MANUAL_EVENT',
+        'DISPATCHER_QUEUE_SEMAPHORE', 'XE_DISPATCHER_WAIT', 'DIRTY_PAGE_POLL',
+        'HADR_FILESTREAM_IOMGR_IOCOMPLETION', 'SP_SERVER_DIAGNOSTICS_SLEEP',
+        'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP', 'QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP',
+        'QDS_ASYNC_QUEUE', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP', 'CHECKPOINT_QUEUE',
+        'FT_IFTS_SCHEDULER_IDLE_WAIT', 'XE_TIMER_EVENT', 'LOGMGR_QUEUE',
+        'REQUEST_FOR_DEADLOCK_SEARCH', 'RESOURCE_QUEUE', 'SERVER_IDLE_CHECK',
+        'SQLTRACE_BUFFER_FLUSH', 'WAIT_XTP_OFFLINE_CKPT_NEW_LOG', 'BROKER_TO_FLUSH',
+        'BROKER_TASK_STOP', 'DBMIRRORING_CMD', 'PREEMPTIVE_OS_PIPEOPS',
+        'PREEMPTIVE_XE_GETTARGETSTATE', 'ONDEMAND_TASK_QUEUE',
+        'SOS_WORK_DISPATCHER', 'PWAIT_EXTENSIBILITY_CLEANUP_TASK'
     )
-    AND waiting_tasks_count > 0
+      AND waiting_tasks_count > 0
 )
-SELECT TOP 10 wait_type,
-       CAST(wait_sec AS DECIMAL(12,1)) AS wait_sec,
-       CAST(signal_sec AS DECIMAL(12,1)) AS signal_sec,
-       count,
-       CAST(pct AS DECIMAL(5,1)) AS pct
+SELECT TOP (10)
+    wait_type,
+    CAST(wait_sec AS decimal(18,1)) AS wait_sec,
+    CAST(signal_sec AS decimal(18,1)) AS signal_sec,
+    waiting_count,
+    CAST(pct AS decimal(10,2)) AS pct
 FROM waits
 ORDER BY wait_sec DESC;
 ```
 
-### Wait Type Decision Table
+| wait_type | wait_sec | signal_sec | waiting_count | pct |
+|---|---:|---:|---:|---:|
+| `LCK_M_IX` | 92.0 | 0.0 | 3 | 17.97 |
+| `CXPACKET` | 90.3 | 6.8 | 165388 | 17.63 |
+| `LCK_M_SCH_S` | 89.4 | 0.0 | 2 | 17.46 |
+| `CXSYNC_PORT` | 59.0 | 0.1 | 1235 | 11.52 |
+| `LCK_M_U` | 56.7 | 0.0 | 12 | 11.06 |
+| `LATCH_EX` | 31.0 | 2.0 | 48077 | 6.05 |
+| `LCK_M_X` | 22.3 | 0.0 | 73 | 4.35 |
+| `RESERVED_MEMORY_ALLOCATION_EXT` | 20.3 | 0.0 | 1526727 | 3.96 |
+| `PREEMPTIVE_OS_FLUSHFILEBUFFERS` | 9.1 | 0.0 | 14696 | 1.77 |
+| `CXCONSUMER` | 8.1 | 0.2 | 2580 | 1.58 |
 
-| Top wait type | What it means | Root cause | Remediation |
-|---------------|--------------|------------|-------------|
-| **PAGEIOLATCH_SH / PAGEIOLATCH_EX** | Queries waiting for data pages to be read from disk | Not enough memory (pages evicted) or missing indexes (table scans) | Add RAM, add covering indexes, move to SSD |
-| **CXPACKET / CXCONSUMER** | Parallel query threads waiting for each other | MAXDOP too high, or one thread scanning a skewed partition | Lower MAXDOP, increase cost threshold, update statistics |
-| **LCK_M_S / LCK_M_X / LCK_M_IX** | Queries waiting to acquire locks (blocked by another session) | Long-running transactions, missing RCSI, table scans taking locks | Enable RCSI, shorten transactions, add indexes to reduce scan locks |
-| **LCK_M_U** | Waiting to acquire update locks — SQL Server takes an update lock before escalating to exclusive | Poorly optimized `UPDATE` / `DELETE` / `MERGE` statements scanning without proper indexes; often co-occurs with `PAGEIOLATCH` | Add covering indexes to eliminate row-by-row lookups; move large modifications to batch processing |
-| **WRITELOG** | Waiting for transaction log writes to complete | Log file on slow disk, or very high transaction rate | Move log to faster disk (separate SSD), reduce transaction frequency |
-| **SOS_SCHEDULER_YIELD** | Query ran out of its CPU quantum and must yield | CPU saturation — the server doesn't have enough CPU power | Find expensive queries (Phase 5), add indexes, scale up CPU |
-| **ASYNC_NETWORK_IO** | SQL Server is waiting for the client to consume results | The application is fetching results slowly (not a SQL problem) | Fix the app — fetch results faster, use pagination, reduce result set size |
-| **RESOURCE_SEMAPHORE** | Queries waiting for memory grants | Too many concurrent queries requesting large sorts/hashes | Increase memory, lower MAXDOP, add indexes to avoid sorts |
-| **LATCH_EX / LATCH_SH** | Internal page latch contention (not user-level locks) | TempDB contention (single file), hot page inserts | Add TempDB files (1 per CPU core, max 8), use OPTIMIZE_FOR_SEQUENTIAL_KEY |
-| **IO_COMPLETION** | Waiting for non-data IO operations (e.g., sorting to tempdb) | TempDB on slow disk, large sort spills | Move TempDB to SSD, add memory, fix queries that spill to disk |
+_The raw ranking is dominated by recent blocking and parallelism, not by a long-lived production pattern. The `LCK_M_*` waits are consistent with the blocking demos and maintenance work already run on this fresh instance. `CXPACKET`, `CXSYNC_PORT`, and `CXCONSUMER` also fit the baseline configuration from Phase 1: `MAXDOP = 0` and `cost threshold for parallelism = 5` encourage parallel plans too easily. The low signal component within `CXPACKET` means this is more about parallel coordination overhead than pure CPU starvation. If this same pattern survives a full business cycle, the next audit branch is parallelism tuning plus blocking analysis, not storage._
 
-#### Wait stats output — good vs bad examples
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `wait_type` | `LCK_M_*` | Depends | Lock waits. The exact suffix indicates lock mode. | Correlate with Phase 8 and identify the head blocker before tuning anything else. |
+| `wait_type` | `CXPACKET`, `CXCONSUMER`, `CXSYNC_PORT` | Depends | Parallel exchange and synchronization waits. | Validate with `MAXDOP`, cost threshold, skew, and actual parallel query plans. |
+| `wait_type` | `PAGEIOLATCH_*` | &#10060; if sustained | Data-page I/O waits. | Jump to Phase 4 and buffer-pool checks. |
+| `signal_sec` | Small fraction of `wait_sec` | &#9989; relative to CPU | Most wait time is resource wait, not scheduler wait. | CPU starvation is not the primary interpretation of this snapshot. |
+| `signal_sec` | More than about 25% of total wait | &#10060; | Runnable tasks are spending a high share of time waiting to get CPU. | Investigate CPU pressure, runnable queues, and aggressive parallelism. |
+| `pct` | One family dominates | Depends | A small number of waits consume most cumulative time. | Use that family to choose the next investigative phase. |
 
-```
--- Good (low absolute numbers, WRITELOG on a small server is normal):
-wait_type           wait_sec  signal_sec  count    pct
-WRITELOG            12.3      0.1         5842     35.2
-PAGEIOLATCH_SH      8.1       0.0         412      23.1
-SOS_SCHEDULER_YIELD 5.2       5.2         18430    14.9
+## Phase 4 | I/O Performance
 
--- Bad (severe problems):
-wait_type           wait_sec    signal_sec  count     pct
-LCK_M_S             84521.3     0.2         3842      62.1
-PAGEIOLATCH_SH      28410.0     0.1         142583    20.9
-RESOURCE_SEMAPHORE   9841.2     0.0         284       7.2
--- Lock waits at 62% = severe blocking. Enable RCSI, increase memory, find blocking queries.
-```
+I/O latency determines how expensive physical reads and writes are when the buffer pool cannot absorb the workload. The goal in this phase is not just to find slow files, but to separate storage latency from query-shape problems such as scans, spills, or unnecessary writes.
 
-### Resetting Wait Stats (After Fixing Issues)
+### File-level latency
 
-Because wait stats are cumulative since the last restart, pre-fix data mixes with post-fix data and makes it impossible to measure improvement. After implementing a change (adding an index, enabling RCSI, increasing memory), reset the counters so the next collection reflects only the post-fix workload.
+#### Measure average read and write stall by file
 
-```sql
-DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
-```
+[!info]-
+`sys.dm_io_virtual_file_stats(NULL, NULL)` returns cumulative I/O counters for every file on the instance.
 
-Then re-run after a representative period (e.g., a full business day) to see if the fixes helped.
+- Joining `sys.master_files` adds file names, logical database mapping, and file type.
+- `avg_read_ms` divides cumulative read stall by read count.
+- `avg_write_ms` divides cumulative write stall by write count.
+- `size_on_disk_bytes` is converted to MB so file size can be read without mental conversion.
+- These are lifetime averages since startup, so they are excellent for identifying obviously bad storage but weaker for short spike analysis.
 
----
-
-## Phase 4: IO Performance
-
-**Purpose:** Determine if the storage subsystem is a bottleneck. Slow disk is often the root cause behind PAGEIOLATCH waits.
-
-### Key Terms — Data Files, Log Files, IO Stall
-- **Data file (.mdf/.ndf):** Stores the actual database pages (tables, indexes)
-- **Log file (.ldf):** Sequential write-ahead log — every transaction is written here first
-- **IO stall:** Time (in ms) that SQL Server spent waiting for IO operations to complete
-
-### IO Latency by File
-
-`sys.dm_io_virtual_file_stats` reports cumulative IO stall time (time spent waiting for IO operations) and total operation counts for every database file since the last restart. Dividing stall time by operation count gives average latency per operation. The query orders by total stall time (read + write combined) so the files that are the biggest IO bottleneck appear first. Comparing data file latency against log file latency often reveals whether the problem is on the storage for data pages or for the transaction log.
+*Measure cumulative average read and write latency per database file.*
 
 ```sql
-SELECT DB_NAME(fs.database_id) AS db,
-       f.type_desc AS file_type,
-       f.physical_name,
-       fs.num_of_reads,
-       fs.num_of_writes,
-       CASE WHEN fs.num_of_reads > 0
-            THEN fs.io_stall_read_ms / fs.num_of_reads END AS avg_read_ms,
-       CASE WHEN fs.num_of_writes > 0
-            THEN fs.io_stall_write_ms / fs.num_of_writes END AS avg_write_ms,
-       fs.size_on_disk_bytes / 1024 / 1024 AS size_mb
-FROM sys.dm_io_virtual_file_stats(NULL, NULL) fs
-JOIN sys.master_files f
-    ON fs.database_id = f.database_id AND fs.file_id = f.file_id
+SELECT TOP (10)
+    DB_NAME(fs.database_id) AS db_name,
+    f.type_desc AS file_type,
+    f.physical_name,
+    fs.num_of_reads,
+    fs.num_of_writes,
+    CAST(CASE WHEN fs.num_of_reads > 0 THEN fs.io_stall_read_ms * 1.0 / fs.num_of_reads END AS decimal(18,2)) AS avg_read_ms,
+    CAST(CASE WHEN fs.num_of_writes > 0 THEN fs.io_stall_write_ms * 1.0 / fs.num_of_writes END AS decimal(18,2)) AS avg_write_ms,
+    CAST(fs.size_on_disk_bytes / 1024.0 / 1024.0 AS decimal(18,2)) AS size_mb
+FROM sys.dm_io_virtual_file_stats(NULL, NULL) AS fs
+JOIN sys.master_files AS f
+  ON fs.database_id = f.database_id
+ AND fs.file_id = f.file_id
 ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 ```
 
-### IO Latency Thresholds
+| db_name | file_type | physical_name | num_of_reads | num_of_writes | avg_read_ms | avg_write_ms | size_mb |
+|---|---|---|---:|---:|---:|---:|---:|
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb2.ndf` | 842 | 9358 | 1.10 | 3.69 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb7.ndf` | 798 | 8395 | 1.13 | 3.17 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb4.ndf` | 841 | 8382 | 1.08 | 2.91 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb8.ndf` | 843 | 9223 | 1.09 | 2.37 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb.mdf` | 829 | 9280 | 0.93 | 2.21 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb3.ndf` | 1032 | 9996 | 0.93 | 1.92 | 328.00 |
+| `stoxx` | `LOG` | `/var/opt/mssql/data/stoxx_log.ldf` | 1722 | 96764 | 0.36 | 0.20 | 968.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb6.ndf` | 809 | 8393 | 1.12 | 2.03 | 328.00 |
+| `tempdb` | `ROWS` | `/var/opt/mssql/data/tempdb5.ndf` | 812 | 8397 | 1.12 | 1.95 | 328.00 |
+| `stoxx` | `ROWS` | `/var/opt/mssql/data/stoxx.mdf` | 1689 | 9387 | 0.26 | 1.01 | 712.00 |
 
-| Metric | Good | Acceptable | Problem | Critical |
-|--------|------|-----------|---------|----------|
-| avg read ms (data files) | < 5 ms | 5–10 ms | 10–20 ms | > 20 ms |
-| avg write ms (data files) | < 5 ms | 5–10 ms | 10–20 ms | > 20 ms |
-| avg write ms (log files) | < 2 ms | 2–5 ms | 5–10 ms | > 10 ms |
+_The storage profile is healthy. `tempdb` data files show the highest cumulative write latency, but they are still only in the low single-digit millisecond range. `stoxx` data-file reads and writes are both fast, and the log file is excellent at `0.20 ms` average writes. There is no storage-latency evidence here that would justify blaming disk for current performance findings._
 
-> [!warning] Log Files Are More Sensitive
->
-> Every transaction must wait for the log write to complete before returning success. A 10ms log write latency means every INSERT/UPDATE/DELETE takes at least 10ms regardless of how fast the query itself runs.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `avg_read_ms` | Low single-digit ms | &#9989; | Physical reads are returning quickly. | Storage is unlikely to be the current bottleneck. |
+| `avg_read_ms` | Sustained double-digit or worse | &#10060; | Reads are slow. | Correlate with `PAGEIOLATCH_*`, scans, and storage architecture. |
+| `avg_write_ms` | Low single-digit ms | &#9989; | Writes are healthy. | Good sign for data and log throughput. |
+| `avg_write_ms` | High on log file | &#10060; | Commit latency may be storage-bound. | Investigate log disk, synchronous replicas, or flush behavior. |
+| `file_type` | `LOG` | Depends | Sequential write-heavy file. | Judge it mainly by write latency, not read latency. |
+| `file_type` | `ROWS` | Depends | Data file handling mixed reads and writes. | Correlate with query shape and cache behavior. |
 
-> [!success] Place the log file on a dedicated SSD and separate it from data files
->
-> Move the `.ldf` file to its own disk (or its own GCP persistent disk) separate from `.mdf`. Log writes are sequential — a dedicated SSD delivers sub-2ms latency. Also batch multiple INSERTs into one transaction to reduce the number of log flushes per pipeline run.
+## Phase 5 | Expensive Cached Statements
 
-#### High IO latency remediation — SSD, separate data/log, add indexes
-- Move to SSD if on spinning disk (biggest single improvement possible)
-- Separate data and log files onto different disks (prevents read/write contention)
-- If on GCP: increase disk tier (pd-standard → pd-ssd → pd-balanced)
-- Check if the VM itself is IO-throttled (cloud VMs have IOPS limits per disk size)
+This phase ranks cached statements by cumulative CPU and logical reads. It is useful for triage, but it is not a substitute for workload history. `sys.dm_exec_query_stats` only covers statements that are in cache and resets when plans leave cache or the instance restarts.
 
----
+### Cache-based triage
 
-## Phase 5: Expensive Queries
+#### Rank cached statements by cumulative CPU and logical reads
 
-**Purpose:** Find the queries consuming the most resources. Even on a perfectly configured server, a single bad query can dominate CPU, memory, and IO.
+[!warning]
+This instance has `uptime_days = 0`, so the ranking below is not representative of a normal production business cycle.
 
-**Prioritization formula:** `Impact = avg_reads × execution_count`. Fix the queries with the highest impact first — a query doing 100K reads that runs 10,000 times is worse than a query doing 10M reads that runs once.
+[!success]
+Use this output to understand what happened since the restart, then validate long-lived hotspots with Query Store and application-level workload context before tuning.
 
-### Top Queries by CPU
+[!info]-
+This query reads `sys.dm_exec_query_stats`, which stores cumulative execution metrics per cached statement.
 
-`sys.dm_exec_query_stats` accumulates execution metrics per query plan in the plan cache. Because the cache resets on restart (and individual plans evict when unused), these results represent the workload since the last restart or plan eviction — not the last 24 hours. Sort by `total_worker_time` (cumulative CPU across all executions) to find the query that, in aggregate, has consumed the most CPU. High total with low execution count = one expensive query; high total with high execution count = a cheap query that runs thousands of times per hour.
+- `execution_count` shows how many times the cached statement has executed.
+- `total_worker_time` and `total_elapsed_time` are converted from microseconds to milliseconds.
+- `total_logical_reads` is converted from 8 KB pages to MB for easier scale reasoning.
+- `avg_cpu_ms` and `avg_logical_read_mb` divide the cumulative totals by `execution_count` so a one-off heavy statement is not confused with a chronic medium-cost statement.
+- `sys.dm_exec_sql_text` provides the statement text, and `sys.dm_exec_plan_attributes` fills in the database context reliably.
+
+*Rank cached statements by cumulative CPU time, with logical-read and execution-count context.*
 
 ```sql
-SELECT TOP 10
-    qs.total_worker_time / 1000 AS total_cpu_ms,
+SELECT TOP (5)
     qs.execution_count,
-    qs.total_worker_time / qs.execution_count / 1000 AS avg_cpu_ms,
-    qs.total_logical_reads / qs.execution_count AS avg_reads,
-    qs.total_elapsed_time / qs.execution_count / 1000 AS avg_duration_ms,
-    SUBSTRING(st.text, (qs.statement_start_offset/2)+1,
-        ((CASE qs.statement_end_offset WHEN -1 THEN DATALENGTH(st.text)
-          ELSE qs.statement_end_offset END - qs.statement_start_offset)/2)+1) AS query_text
-FROM sys.dm_exec_query_stats qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
+    CAST(qs.total_worker_time / 1000.0 AS decimal(18,2)) AS total_cpu_ms,
+    CAST(qs.total_worker_time / NULLIF(qs.execution_count, 0) / 1000.0 AS decimal(18,2)) AS avg_cpu_ms,
+    CAST(qs.total_logical_reads * 8.0 / 1024 AS decimal(18,2)) AS total_logical_read_mb,
+    CAST(qs.total_logical_reads * 8.0 / 1024 / NULLIF(qs.execution_count, 0) AS decimal(18,2)) AS avg_logical_read_mb,
+    CAST(qs.total_elapsed_time / 1000.0 AS decimal(18,2)) AS total_elapsed_ms,
+    COALESCE(DB_NAME(CONVERT(int, pa.value)), DB_NAME(st.dbid)) AS database_name,
+    LEFT(REPLACE(REPLACE(LTRIM(st.text), CHAR(13), ' '), CHAR(10), ' '), 140) AS query_text
+FROM sys.dm_exec_query_stats AS qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) AS st
+OUTER APPLY (
+    SELECT TOP (1) value
+    FROM sys.dm_exec_plan_attributes(qs.plan_handle)
+    WHERE attribute = 'dbid'
+) AS pa
 ORDER BY qs.total_worker_time DESC;
 ```
 
-### Top Queries by Logical Reads (IO Pressure)
+| execution_count | total_cpu_ms | avg_cpu_ms | total_logical_read_mb | avg_logical_read_mb | total_elapsed_ms | database_name | query_text |
+|---:|---:|---:|---:|---:|---:|---|---|
+| 1 | 121593.26 | 121593.26 | 23900.75 | 23900.75 | 8668.30 | `stoxx` | `USE stoxx; SET NOCOUNT ON; INSERT INTO dbo.demo_idxmaint_rowstore (row_guid, batch_no, source_id, symbol, [date], [close], volume) SELECT TO` |
+| 1 | 87324.78 | 87324.78 | 21610.52 | 21610.52 | 6167.01 | `stoxx` | `USE stoxx; SET NOCOUNT ON; DROP TABLE IF EXISTS dbo.demo_idxmaint_usage; CREATE TABLE dbo.demo_idxmaint_usage (     id int IDENTITY(1,1) NOT` |
+| 1 | 56828.62 | 56828.62 | 1460.41 | 1460.41 | 4228.69 | `stoxx` | `USE stoxx; SET NOCOUNT ON; DROP TABLE IF EXISTS dbo.demo_idxmaint_splits; CREATE TABLE dbo.demo_idxmaint_splits (     row_guid uniqueidentif` |
+| 1 | 3281.72 | 3281.72 | 25172.57 | 25172.57 | 2510.26 | `stoxx` | `USE stoxx; SET NOCOUNT ON; DROP TABLE IF EXISTS dbo.demo_idxmaint_rowstore; CREATE TABLE dbo.demo_idxmaint_rowstore (     row_guid uniqueide` |
+| 1 | 3246.86 | 3246.86 | 25003.22 | 25003.22 | 2951.91 | `stoxx` | `USE stoxx; SET NOCOUNT ON; DROP TABLE IF EXISTS dbo.demo_idxmaint_rowstore; CREATE TABLE dbo.demo_idxmaint_rowstore (     row_guid uniqueide` |
 
-Logical reads count page accesses from the buffer pool — each time a query requests a data page, whether it was in memory or read from disk. A query with 500,000 logical reads per execution is scanning a large fraction of the table on every call, regardless of whether the table fits in RAM. Sorting by total logical reads surfaces the queries putting the most pressure on the buffer pool and storage subsystem.
+_This ranking is real but not workload-representative. Every top row is a one-off administrative or demo statement executed after the restart, and each one has `execution_count = 1`. The correct interpretation is not "these are the application's worst queries"; it is "the current cache history is dominated by recent maintenance-style work." In a genuine production audit window, this phase should surface repeated business queries or recurring ETL statements, not setup DDL._
 
-```sql
-SELECT TOP 10
-    qs.total_logical_reads,
-    qs.execution_count,
-    qs.total_logical_reads / qs.execution_count AS avg_reads,
-    qs.total_worker_time / qs.execution_count / 1000 AS avg_cpu_ms,
-    SUBSTRING(st.text, (qs.statement_start_offset/2)+1,
-        ((CASE qs.statement_end_offset WHEN -1 THEN DATALENGTH(st.text)
-          ELSE qs.statement_end_offset END - qs.statement_start_offset)/2)+1) AS query_text
-FROM sys.dm_exec_query_stats qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
-ORDER BY qs.total_logical_reads DESC;
-```
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `1` with very high totals | Depends | One-off expensive statement. | Different tuning priority from a fast statement executed millions of times. |
+| `execution_count` | High | Depends | Repeated statement. | Even moderate per-execution cost can become a major workload tax. |
+| `total_cpu_ms` | High | Depends | Statement consumed significant cumulative CPU since entering cache. | Good shortlist for deeper plan analysis. |
+| `avg_cpu_ms` | High | Depends | Each execution is intrinsically expensive. | Look for plan shape, cardinality, or data-access issues. |
+| `total_logical_read_mb` | High | Depends | Statement touched many cached pages cumulatively. | Often points to scans, wide lookups, or large intermediate work. |
+| `avg_logical_read_mb` | High | Depends | Each execution reads a lot of data. | Strong candidate for index, predicate, or aggregation tuning. |
 
-### Top Queries by Execution Count (Most Frequent)
+## Phase 6 | Index Health
 
-A query that runs 100,000 times per hour and takes only 1ms is often overlooked when sorting by total CPU, but it generates enormous cumulative pressure on locks, the plan cache, and network. High-frequency queries are also the highest-ROI target for optimization: a 0.1ms improvement on a query running 100K times/hour saves nearly 3 hours of CPU daily.
+Index health is not just fragmentation. The point of this phase is to determine whether physically meaningful indexes are degraded enough to matter and whether the data-access layer is likely to benefit from maintenance or design changes. For the full maintenance playbook, use [[index-maintenance]].
 
-```sql
-SELECT TOP 10
-    qs.execution_count,
-    qs.total_worker_time / qs.execution_count / 1000 AS avg_cpu_ms,
-    qs.total_logical_reads / qs.execution_count AS avg_reads,
-    SUBSTRING(st.text, (qs.statement_start_offset/2)+1,
-        ((CASE qs.statement_end_offset WHEN -1 THEN DATALENGTH(st.text)
-          ELSE qs.statement_end_offset END - qs.statement_start_offset)/2)+1) AS query_text
-FROM sys.dm_exec_query_stats qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
-ORDER BY qs.execution_count DESC;
-```
+### Actionable physical-design signals
 
-### What to Do with a Bad Query
+#### Check fragmentation on materially sized indexes
 
-The three queries above identify the offending query text and its aggregate cost, but they do not explain why it is expensive. The execution plan is the next step — it shows the exact operators SQL Server used, how many rows it estimated vs. actually processed, and where it spent its time. Add the plan handle join to retrieve the plan XML, then open it in SSMS for graphical analysis.
+[!info]-
+This query uses `sys.dm_db_index_physical_stats` in `LIMITED` mode to find materially sized clustered and nonclustered indexes.
 
-1. **Get the [execution plan](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans):** Add `CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp` and inspect `qp.query_plan` in SSMS (click the XML to see the graphical plan)
-2. **Look for:** Table Scans, Clustered Index Scans (yellow = warnings), thick arrows (many rows flowing), Sort operators (expensive)
-3. **Common fixes:**
-   - Table scan → add a covering index on the WHERE/JOIN columns
-   - Key Lookup → add included columns to the existing index
-   - Sort → add the ORDER BY columns to the index
-   - Implicit conversion warning → fix the data types to match (see [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries))
+- `avg_fragmentation_in_percent` is the logical fragmentation metric most commonly used for B-tree maintenance decisions.
+- `page_count` is critical context because high fragmentation on a tiny index rarely matters.
+- Joining `sys.indexes` adds the human-readable index name and type.
+- The filter `OBJECT_NAME(ips.object_id) NOT LIKE 'demo_%'` keeps the result focused on real tables in this environment.
 
----
-
-## Phase 6: Index Health
-
-**Purpose:** Indexes are the primary mechanism for avoiding expensive table scans. Missing indexes force full scans; unused indexes waste write overhead and disk space; fragmented indexes cause extra IO.
-
-### Missing Indexes (DMV-Based Recommendations)
-
-SQL Server's query optimizer tracks every query execution and records when it estimates that an index would have significantly improved a query's cost. These observations accumulate in the `sys.dm_db_missing_index_*` DMVs, ranked by an improvement score that combines the estimated cost savings with the number of executions. The score is not a percentage — it is an arbitrary internal unit; use it only for relative ranking, not absolute comparison across instances or restarts.
+*Find the most fragmented clustered and nonclustered indexes that are large enough to matter operationally.*
 
 ```sql
-SELECT TOP 20
-    ROUND(gs.avg_total_user_cost * gs.avg_user_impact *
-          (gs.user_seeks + gs.user_scans), 0) AS improvement_score,
-    DB_NAME(d.database_id) AS db,
-    d.statement AS [table],
-    d.equality_columns,
-    d.inequality_columns,
-    d.included_columns,
-    gs.user_seeks,
-    gs.user_scans
-FROM sys.dm_db_missing_index_groups g
-JOIN sys.dm_db_missing_index_group_stats gs ON g.index_group_handle = gs.group_handle
-JOIN sys.dm_db_missing_index_details d ON g.index_handle = d.index_handle
-ORDER BY improvement_score DESC;
-```
-
-#### sys.dm_db_missing_index_details — interpret equality, inequality, include columns
-- `equality_columns` = columns used in `WHERE col = value` (these go in the index key)
-- `inequality_columns` = columns used in `WHERE col > value` or `ORDER BY` (these go after equality columns)
-- `included_columns` = columns selected but not filtered on (add as `INCLUDE`)
-
-> [!tip] Don't Blindly Create Every Missing Index
->
-> Look for overlaps — if two recommendations differ only in included columns, merge them into one index. Too many indexes slows down writes.
-
-### Unused Indexes
-
-Every index imposes a maintenance cost: each INSERT, UPDATE, or DELETE must update all indexes on the affected table, not just the clustered index. An index that is never used for reads is pure overhead — it slows writes, consumes disk space, and the optimizer must consider it during query planning. This query identifies non-unique, non-primary-key indexes with zero read operations since the last restart. The `user_updates` column shows how much write overhead they are generating.
-
-```sql
-SELECT OBJECT_SCHEMA_NAME(i.object_id) + '.' + OBJECT_NAME(i.object_id) AS [table],
-       i.name AS index_name,
-       i.type_desc,
-       us.user_seeks, us.user_scans, us.user_lookups,
-       us.user_updates,
-       ps.used_page_count * 8 / 1024 AS index_size_mb
-FROM sys.indexes i
-JOIN sys.dm_db_index_usage_stats us
-    ON i.object_id = us.object_id AND i.index_id = us.index_id
-JOIN sys.dm_db_partition_stats ps
-    ON i.object_id = ps.object_id AND i.index_id = ps.index_id
-WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
-  AND us.database_id = DB_ID()
-  AND i.type_desc <> 'HEAP'
-  AND i.is_primary_key = 0
-  AND i.is_unique = 0
-  AND us.user_seeks + us.user_scans + us.user_lookups = 0
-ORDER BY us.user_updates DESC;
-```
-
-> [!warning] Verify Uptime Before Dropping
->
-> Only Drop After Verifying Uptime > 7 Days.
-> If the server restarted yesterday, the index might be used by a weekly job that hasn't run yet. An index with `user_updates = 48000` and `user_seeks = 0` is a good drop candidate: `DROP INDEX IX_scores_old ON gold.scores;`
-
-> [!success] Disable the index first, run a full business cycle, then drop if no complaints
->
-> `ALTER INDEX IX_scores_old ON gold.scores DISABLE;` stops the write maintenance cost while keeping the index structure intact. After a month-end cycle passes without query errors, then `DROP INDEX IX_scores_old ON gold.scores;`.
-
-### Index Fragmentation
-
-Index fragmentation occurs when the logical order of index pages diverges from their physical order on disk. Every INSERT, UPDATE, or DELETE can cause page splits — SQL Server allocates a new page and moves half the data to maintain sorted order, leaving both pages half-full. Fragmentation degrades sequential scan performance (the OS must issue more random reads) and wastes space. The query uses `'LIMITED'` sampling mode, which reads only the index header pages and runs significantly faster than `'DETAILED'` (which reads all leaf pages).
-
-```sql
-SELECT OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id) AS [table],
-       i.name AS index_name,
-       ips.avg_fragmentation_in_percent AS frag_pct,
-       ips.page_count,
-       ips.record_count
-FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
-JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
-WHERE ips.page_count > 128
-  AND ips.avg_fragmentation_in_percent > 10
+SELECT TOP (10)
+    OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id) AS table_name,
+    i.name AS index_name,
+    i.type_desc,
+    CAST(ips.avg_fragmentation_in_percent AS decimal(18,2)) AS avg_fragmentation_in_percent,
+    ips.page_count
+FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') AS ips
+JOIN sys.indexes AS i
+  ON ips.object_id = i.object_id
+ AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+  AND i.type_desc IN ('CLUSTERED', 'NONCLUSTERED')
+  AND ips.page_count >= 200
+  AND OBJECT_NAME(ips.object_id) NOT LIKE 'demo_%'
 ORDER BY ips.avg_fragmentation_in_percent DESC;
 ```
 
-#### Fragmentation action thresholds — reorganize vs rebuild
+| table_name | index_name | type_desc | avg_fragmentation_in_percent | page_count |
+|---|---|---|---:|---:|
+| `silver.stoxxusa50_ohlcv` | `IX_silver_stoxxusa50_ohlcv_symbol_date` | `NONCLUSTERED` | 46.23 | 212 |
+| `silver.stoxxasia50_ohlcv` | `IX_silver_stoxxasia50_ohlcv_symbol_date` | `NONCLUSTERED` | 41.81 | 232 |
+| `silver.eurostoxx50_ohlcv` | `IX_silver_eurostoxx50_ohlcv_symbol_date` | `NONCLUSTERED` | 40.59 | 239 |
+| `silver.stoxxusa50_ohlcv` | `PK__stoxxusa__3213E83FC84E3F24` | `CLUSTERED` | 1.50 | 734 |
+| `silver.stoxxasia50_ohlcv` | `PK__stoxxasi__3213E83F66A8DE5E` | `CLUSTERED` | 0.54 | 738 |
+| `silver.eurostoxx50_ohlcv` | `PK__eurostox__3213E83FDF67D274` | `CLUSTERED` | 0.52 | 766 |
+| `silver.oil20_ohlcv` | `PK__oil20_oh__3213E83F544EB286` | `CLUSTERED` | 0.36 | 279 |
 
-Microsoft's official documentation recommends 5% as the lower threshold for action and 30% as the boundary between reorganize and rebuild. In practice, most DBAs use 10% as the lower bound to avoid maintenance overhead on lightly fragmented indexes.
+_The only nontrivial fragmentation is on the `symbol_date` nonclustered indexes for the `silver` OHLCV tables, where logical fragmentation is around `40-46%`. Even there, page counts are only about `212-239`, which keeps the urgency low. The clustered primary keys are healthy. This is a good example of why page count matters: not every percentage headline justifies immediate maintenance._
 
-| Fragmentation | Action | Command |
-|---------------|--------|---------|
-| < 5% | No action needed | — |
-| 5–30% | Reorganize (online, interruptible, no new copy) | `ALTER INDEX [name] ON [table] REORGANIZE;` |
-| > 30% | Rebuild (creates a new copy, removes all fragmentation) | `ALTER INDEX [name] ON [table] REBUILD WITH (ONLINE=ON, SORT_IN_TEMPDB=ON);` |
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `avg_fragmentation_in_percent` | `< 10` | &#9989; | Low logical fragmentation. | Usually leave it alone. |
+| `avg_fragmentation_in_percent` | `10-30` | Depends | Moderate fragmentation. | Context-dependent; often monitor or reorganize if the index is large and busy. |
+| `avg_fragmentation_in_percent` | `> 30` | Depends | High logical fragmentation. | Consider maintenance only if page count and workload justify it. |
+| `page_count` | `< 1000` | Depends | Small to modest index. | High fragmentation may still have little practical impact. |
+| `page_count` | High | Depends | Larger physical structure. | Fragmentation and density matter more. |
+| `type_desc` | `NONCLUSTERED` | Depends | Secondary access path. | Often the first place where fragmentation becomes visible. |
+| `type_desc` | `CLUSTERED` | Depends | Table’s primary B-tree structure. | High fragmentation here affects the base row order and many access paths. |
 
-`ONLINE=ON` requires Enterprise/Developer Edition. `SORT_IN_TEMPDB=ON` offloads sort operations during the rebuild from the data filegroup to TempDB, which can improve rebuild speed when TempDB is on a separate, fast disk. Starting with SQL Server 2019, online index rebuilds are **resumable** — they can be paused and resumed, allowing log truncation mid-rebuild.
+## Phase 7 | TempDB Health
 
-> [!info] SSDs Change the Calculus
->
-> Fragmentation matters less on SSDs than spinning disks because random reads are fast. On SSD, you can raise the rebuild threshold to 50% or higher. The main benefit of defragmenting on SSD is reclaiming wasted space, not improving read performance.
+`tempdb` pressure shows up as space growth, version-store accumulation, spills, or allocation contention. This phase verifies current space consumption and whether the file layout follows the equal-size, fixed-growth pattern that avoids needless churn.
 
----
+### Space and layout
 
-## Phase 7: TempDB Health
+#### Measure current `tempdb` space usage
 
-**Purpose:** TempDB is shared by all databases — sorting, hashing, temp tables, RCSI version store, and spills all go here. A misconfigured TempDB causes contention that affects every query.
+[!info]-
+`sys.dm_db_file_space_usage` returns page counts for major `tempdb` consumers.
 
-### Key Terms — Version Store, Spills, Allocation Contention
-- **Version store:** When RCSI is enabled, SQL Server stores old row versions in TempDB so readers can see a snapshot without taking locks. If TempDB fills up, RCSI stops working.
-- **Spill:** When a sort or hash operation runs out of its memory grant, it "spills" to TempDB — writing temp data to disk. Spills are slow.
-- **PFS/GAM/SGAM contention:** Allocation pages at the front of each TempDB file. With only one file, all threads compete for the same allocation pages. Fix: multiple files of equal size.
+- `user_object_reserved_page_count` covers user-created temporary objects such as `#temp` tables.
+- `internal_object_reserved_page_count` covers engine worktables, hash/sort spill structures, and similar internal use.
+- `version_store_reserved_page_count` measures row-versioning use from snapshot-based features.
+- `unallocated_extent_page_count` shows currently free space.
+- Multiplying by 8 KB and dividing by 1024 converts the page counts to MB.
 
-### TempDB Space Usage
-
-TempDB space is divided into four categories: user objects (explicit `#temp` tables and table variables created by queries), internal objects (SQL Server's own work areas — sort spills, hash spills, index build buffers), the version store (row version snapshots maintained by RCSI), and unallocated free space. Understanding which category is consuming space determines the correct remediation.
+*Measure the current `tempdb` footprint of user objects, internal objects, version store, and free space.*
 
 ```sql
-SELECT SUM(user_object_reserved_page_count) * 8 / 1024 AS user_objects_mb,
-       SUM(internal_object_reserved_page_count) * 8 / 1024 AS internal_objects_mb,
-       SUM(version_store_reserved_page_count) * 8 / 1024 AS version_store_mb,
-       SUM(unallocated_extent_page_count) * 8 / 1024 AS free_mb
+USE tempdb;
+SELECT
+    SUM(user_object_reserved_page_count) * 8 / 1024.0 AS user_objects_mb,
+    SUM(internal_object_reserved_page_count) * 8 / 1024.0 AS internal_objects_mb,
+    SUM(version_store_reserved_page_count) * 8 / 1024.0 AS version_store_mb,
+    SUM(unallocated_extent_page_count) * 8 / 1024.0 AS free_space_mb
 FROM sys.dm_db_file_space_usage;
 ```
 
-#### TempDB red flags — version store growth, spills, contention
-- `version_store_mb` very large → a long-running transaction is preventing version cleanup. Find it: `SELECT * FROM sys.dm_tran_active_snapshot_database_transactions ORDER BY elapsed_time_seconds DESC;`
-- `internal_objects_mb` very large → queries are spilling to disk — find them in Phase 5 and add indexes
-- `free_mb` near zero → TempDB is about to run out of space — add a file or grow the existing ones
+| user_objects_mb | internal_objects_mb | version_store_mb | free_space_mb |
+|---:|---:|---:|---:|
+| 1.500000 | 1.187500 | 0.000000 | 2618.125000 |
 
-### TempDB File Configuration
+_`tempdb` is quiet right now. User objects and internal objects together consume less than `3 MB`, version store is `0 MB`, and more than `2.6 GB` is free. There is no space-pressure signal here, and there is no evidence of snapshot-version buildup at capture time._
 
-With a single TempDB data file, all allocations funnel through the same PFS/GAM/SGAM allocation pages — under heavy concurrent load, this creates a latch bottleneck where threads queue to update the allocation bitmaps. Adding multiple equally-sized data files distributes this contention: SQL Server uses proportional fill to spread writes across all files. The recommended configuration is one data file per CPU core, up to a maximum of eight.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `user_objects_mb` | Low | &#9989; | Temporary user objects are small right now. | No visible user-temp pressure. |
+| `internal_objects_mb` | Low | &#9989; | Sort/hash spill structures are minimal right now. | No immediate spill-driven pressure signal. |
+| `version_store_mb` | `0` | &#9989; | No meaningful row-version accumulation. | RCSI/SI or online operations are not consuming version space right now. |
+| `version_store_mb` | Growing persistently | &#10060; | Version store is accumulating. | Investigate long snapshot readers, RCSI, and cleanup lag. |
+| `free_space_mb` | High relative to file size | &#9989; | Files have headroom. | Current operations should not trigger immediate autogrowth. |
+
+#### Review `tempdb` file layout and growth behavior
+
+[!info]-
+`tempdb.sys.database_files` shows the current file layout visible inside `tempdb`.
+
+- `size * 8 / 1024` converts current file size from pages to MB.
+- `growth * 8 / 1024` converts fixed-growth increments to MB when `is_percent_growth = 0`.
+- The important operational questions are whether data files are equally sized and whether growth is fixed rather than percentage-based.
+
+*Review `tempdb` file count, file-size symmetry, and growth settings.*
 
 ```sql
-SELECT name, physical_name,
-       size * 8 / 1024 AS size_mb,
-       growth, is_percent_growth
-FROM sys.master_files
-WHERE database_id = 2;
+SELECT
+    name,
+    size * 8 / 1024 AS size_mb,
+    growth * 8 / 1024 AS growth_mb,
+    is_percent_growth
+FROM tempdb.sys.database_files
+ORDER BY file_id;
 ```
 
-#### TempDB file layout — multiple files, equal size, fixed growth
-- **Good:** Multiple files (1 per CPU core, max 8), all the same size, fixed growth (e.g., 64 MB)
-- **Bad:** Single file, percentage growth, or files of different sizes
+| name | size_mb | growth_mb | is_percent_growth |
+|---|---:|---:|---:|
+| `tempdev` | 328 | 64 | 0 |
+| `templog` | 72 | 64 | 0 |
+| `tempdev2` | 328 | 64 | 0 |
+| `tempdev3` | 328 | 64 | 0 |
+| `tempdev4` | 328 | 64 | 0 |
+| `tempdev5` | 328 | 64 | 0 |
+| `tempdev6` | 328 | 64 | 0 |
+| `tempdev7` | 328 | 64 | 0 |
+| `tempdev8` | 328 | 64 | 0 |
 
-> [!info] SQL Server 2016+ — Trace Flags T1117 and T1118 No Longer Needed
->
-> Before SQL Server 2016, TempDB required two startup trace flags for correct behavior:
-> - **T1117** — force all data files in a filegroup to grow simultaneously (so proportional fill stays balanced)
-> - **T1118** — use uniform extent allocation instead of mixed-page allocation (reduces GAM/SGAM contention)
->
-> Since SQL Server 2016, both behaviors are **the built-in default** for TempDB. `AUTOGROW_ALL_FILES` is permanently enabled for the TempDB PRIMARY filegroup. These trace flags are no longer required and have no effect if set. Additionally, SQL Server 2016+ setup automatically creates `min(logical processors, 8)` TempDB data files — check `sys.master_files` immediately after installation to confirm.
->
-> **If `PAGELATCH` contention persists after setting 8 files:** increase in multiples of 4 (to 12, 16, …) up to the logical processor count. Most workloads are resolved by 8.
+_This is a clean `tempdb` layout. The data files are equally sized, there are eight of them, and growth is a fixed `64 MB` rather than a percentage. That does not prove the file count is perfect for every workload, but it does eliminate the most common `tempdb` configuration mistakes from the audit._
 
-#### ALTER DATABASE tempdb ADD FILE — add one file per vCPU
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| Data file sizes | Equal | &#9989; | Files can participate evenly. | Good baseline for reducing allocation skew. |
+| Data file sizes | Unequal | &#10060; | One or more files may receive disproportionate activity. | Rebalance before diagnosing deeper `tempdb` contention. |
+| `is_percent_growth` | `0` | &#9989; | Growth uses a fixed increment. | Predictable expansion behavior. |
+| `is_percent_growth` | `1` | &#10060; | Growth is percentage-based. | Later growth events become increasingly large and unpredictable. |
+| `growth_mb` | Moderate fixed increment | &#9989; | Growth step is operationally controlled. | Better than tiny frequent autogrowth events. |
+
+## Phase 8 | Blocking and Deadlocks
+
+Concurrency issues can look like CPU problems, I/O problems, or generic slowness. This phase checks for a live blocking chain first, then uses the deadlock counter only as a coarse triage signal.
+
+### Current concurrency state
+
+#### Check for active user blocking right now
+
+[!info]-
+This is the production-facing live-request query, not a minimal DMV snippet.
+
+- `sys.dm_exec_requests` provides the live request state.
+- `sys.dm_exec_sessions` adds login, host, and program identity.
+- `sys.dm_exec_sql_text` extracts the currently running statement text.
+- Statement offsets are used so the output shows the active statement, not the entire batch.
+- Filtering to `s.is_user_process = 1` removes background engine sessions.
+- Zero rows is meaningful: it means no other user request was executing at capture time.
+
+*Inspect currently active user requests, including waits, blocking session IDs, and the exact running statement.*
 
 ```sql
-ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev2', FILENAME = '/var/opt/mssql/data/tempdb2.ndf', SIZE = 64MB, FILEGROWTH = 64MB);
-ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev3', FILENAME = '/var/opt/mssql/data/tempdb3.ndf', SIZE = 64MB, FILEGROWTH = 64MB);
-ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev4', FILENAME = '/var/opt/mssql/data/tempdb4.ndf', SIZE = 64MB, FILEGROWTH = 64MB);
+SELECT
+    r.session_id,
+    DB_NAME(r.database_id) AS database_name,
+    s.login_name,
+    s.host_name,
+    s.program_name,
+    r.status,
+    r.command,
+    r.wait_type,
+    r.wait_time AS wait_time_ms,
+    r.cpu_time AS cpu_time_ms,
+    r.total_elapsed_time AS elapsed_time_ms,
+    r.logical_reads,
+    r.reads,
+    r.writes,
+    r.blocking_session_id,
+    LEFT(REPLACE(REPLACE(LTRIM(SUBSTRING(
+        st.text,
+        (r.statement_start_offset / 2) + 1,
+        CASE
+            WHEN r.statement_end_offset = -1 THEN (DATALENGTH(st.text) - r.statement_start_offset) / 2 + 1
+            ELSE (r.statement_end_offset - r.statement_start_offset) / 2 + 1
+        END
+    )), CHAR(13), ' '), CHAR(10), ' '), 160) AS running_statement
+FROM sys.dm_exec_requests AS r
+JOIN sys.dm_exec_sessions AS s
+  ON r.session_id = s.session_id
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS st
+WHERE r.session_id <> @@SPID
+  AND s.is_user_process = 1
+ORDER BY r.total_elapsed_time DESC, r.session_id;
 ```
 
-> [!tip] Why Equal-Sized Files Matter
->
-> SQL Server uses proportional fill — it writes to the file with the most free space. If files are different sizes, one file gets all the writes and contention returns. All TempDB data files must be the same size.
+```text
+session_id|database_name|login_name|host_name|program_name|status|command|wait_type|wait_time_ms|cpu_time_ms|elapsed_time_ms|logical_reads|reads|writes|blocking_session_id|running_statement
+----------|-------------|----------|---------|------------|------|-------|---------|------------|-----------|---------------|-------------|-----|------|-------------------|-----------------
 
-### PAGELATCH Contention Diagnosis (SQL Server 2019+)
-
-When Phase 3 shows `PAGELATCH_EX` or `PAGELATCH_SH` as top waits and the server runs SQL Server 2019 or later, you can identify exactly which TempDB allocation pages are hot. `sys.dm_os_waiting_tasks` captures waiting tasks and their packed resource descriptions; `sys.fn_PageResCracker` decodes the resource description into database, file, and page identifiers; `sys.dm_db_page_info` then resolves the page ID to a human-readable page type. This pinpoints whether the contention is on PFS, GAM, or SGAM pages — which determines the fix.
-
-```sql
-SELECT wt.session_id,
-       wt.wait_type,
-       wt.wait_duration_ms,
-       wt.resource_description,
-       pi.page_type_desc
-FROM sys.dm_os_waiting_tasks wt
-CROSS APPLY sys.fn_PageResCracker(wt.resource_description) prc
-CROSS APPLY sys.dm_db_page_info(prc.db_id, prc.file_id, prc.page_id, 'LIMITED') pi
-WHERE wt.wait_type LIKE 'PAGELATCH%'
-  AND wt.database_id = 2;  -- TempDB = database_id 2
+(0 rows affected)
 ```
 
-#### page_type_desc — interpreting the hot page type
+_There was no active user blocking at capture time. That is the correct result to see in a calm system. It does not prove blocking never happens, but it does mean the current point-in-time performance state is not explained by a live blocking chain._
 
-| page_type_desc | What it means | Fix |
-|----------------|--------------|-----|
-| `PFS` (Page Free Space) | Allocation bitmap hit — the most common TempDB contention pattern | Add more equally-sized TempDB data files (1 per CPU core, max 8) |
-| `GAM` / `SGAM` | Global allocation map contention | Same fix: add TempDB data files |
-| Any type, `database_id ≠ 2` | PAGELATCH contention outside TempDB — hot leaf page from sequential inserts | Use `OPTIMIZE_FOR_SEQUENTIAL_KEY = ON` on the index (SQL Server 2019+), or switch the clustered key away from a sequential value |
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| Result set | No rows | &#9989; | No other user request is active right now. | No live blocking or long-running user request is visible. |
+| `status` | `suspended` with `blocking_session_id > 0` | &#10060; | Request is waiting on another session. | Find and resolve the head blocker first. |
+| `wait_type` | `LCK_M_*` | &#10060; when paired with wait time | Lock wait is active right now. | Blocking is a live problem, not just a historical one. |
+| `running_statement` | Long DDL or open transaction batch | Depends | Potential head-blocker workload. | Validate change windows and transaction scope. |
 
-> [!info] PAGELATCH vs PAGEIOLATCH
->
-> `PAGELATCH` waits are in-memory latch contention — threads competing to read or modify a page that is already in the buffer pool. Duration is typically microseconds to low milliseconds. `PAGEIOLATCH` waits are for pages not yet in the buffer pool — the IO has been issued and the thread is waiting for the disk to return the data. Duration reflects storage latency (ideally < 5 ms for data, < 1 ms for log). The two look similar but point to completely different bottlenecks.
+#### Check the deadlock counter carefully
 
-> [!info] SQL Server 2019/2022 — TempDB Engine Improvements
->
-> **Memory-Optimized TempDB Metadata (SQL Server 2019+):** Stores TempDB internal system tables (allocation bitmaps, object catalog) in non-durable memory-optimized (In-Memory OLTP) tables. This eliminates the system page latch contention at the engine level rather than distributing it across files. Enable with: `ALTER SERVER CONFIGURATION SET MEMORY_OPTIMIZED TEMPDB_METADATA = ON` (requires restart). Caveat: a single transaction cannot span memory-optimized tables across databases — this can break certain monitoring scripts that join TempDB system tables with other databases.
->
-> **SQL Server 2022 — System Page Latch Concurrency Enhancements:** Structural engine change that allows concurrent GAM and SGAM page updates, reducing the serialization bottleneck even with a single TempDB data file. No configuration required — activates automatically on SQL Server 2022. Reduces but does not eliminate the need for multiple TempDB files under extreme allocation load.
+[!warning]
+`Number of Deadlocks/sec` is a performance counter, not a deadlock graph. A single snapshot can tell you that deadlock activity exists, but it does not tell you which objects or statements were involved.
 
----
+[!success]
+If this counter is non-zero or trending upward, collect deadlock graphs from `system_health` or a dedicated Extended Events session before recommending a fix.
 
-## Phase 8: Blocking and Deadlocks
+[!info]-
+This query reads the `_Total` deadlock counter from `sys.dm_os_performance_counters`.
 
-**Purpose:** Identify current blocking chains and historical deadlock frequency. Blocking reduces concurrency; deadlocks kill transactions.
+- It is useful as a coarse triage signal.
+- It is not a substitute for deadlock graphs.
+- The operational value is binary at first: zero means no current counter evidence, while a non-zero value means deeper deadlock collection is justified.
 
-> [!info] Full Deadlock Coverage
->
-> For comprehensive deadlock detection, Extended Events setup, prevention patterns, and retry logic, see [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention).
-
-### Current Blocking Chains
-
-A blocking chain forms when session A holds a lock that session B is waiting for. If B in turn holds a lock that C needs, all three form a chain — with A as the head blocker. Killing any non-head session only releases it temporarily; the chain rebuilds at the next execution. Identifying and resolving the head blocker is the only durable fix.
+*Check whether SQL Server is currently exposing a non-zero deadlock counter for the instance.*
 
 ```sql
-SELECT r.session_id AS blocked,
-       r.blocking_session_id AS blocker,
-       r.wait_type,
-       r.wait_time / 1000 AS wait_sec,
-       SUBSTRING(st.text, 1, 200) AS blocked_query
-FROM sys.dm_exec_requests r
-CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
-WHERE r.blocking_session_id > 0;
-```
-
-#### sys.dm_exec_requests blocking_session_id — interpretation
-- **0 rows:** No blocking right now — good
-- **Rows with wait_sec < 5:** Transient blocking — normal under load
-- **Rows with wait_sec > 30:** Significant blocking — a long-running transaction is holding locks
-- **Chains (blocker A blocks B, B blocks C):** One session cascading to many — find the head blocker
-
-#### sys.dm_exec_sessions + dm_exec_sql_text — find what head blocker is running
-
-```sql
-SELECT s.session_id, s.login_name, s.program_name,
-       s.last_request_start_time,
-       SUBSTRING(st.text, 1, 200) AS blocker_query
-FROM sys.dm_exec_sessions s
-CROSS APPLY sys.dm_exec_sql_text(s.most_recent_sql_handle) st
-WHERE s.session_id = <blocker_session_id>;
-```
-
-#### Blocking common causes — open transactions, long pipelines, index rebuilds
-- **Open transaction from SSMS:** User ran BEGIN TRAN and forgot to COMMIT. Solution: COMMIT/ROLLBACK, or `KILL <session_id>`
-- **Long-running pipeline step:** Pipeline holding locks for minutes. Solution: break into smaller transactions, enable RCSI
-- **Index rebuild running:** Online rebuild holds schema locks briefly. Solution: schedule rebuilds off-peak
-
-### Deadlock Count
-
-A deadlock occurs when two sessions each hold a lock the other needs and neither can proceed. SQL Server detects deadlocks automatically via its deadlock monitor (runs every 5 seconds) and kills the session with the least accumulated CPU cost — the "deadlock victim." The killed transaction rolls back and the error is returned to the application. This counter reports cumulative deadlocks since the last restart; the counter name says "/sec" but `cntr_value` is a running total, not a rate.
-
-```sql
-SELECT cntr_value AS deadlocks_total
+SELECT
+    object_name,
+    counter_name,
+    instance_name,
+    cntr_value
 FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Number of Deadlocks/sec'
   AND instance_name = '_Total';
 ```
 
-#### Deadlock count interpretation — dm_os_performance_counters
-- **0:** No deadlocks since restart — ideal
-- **< 10:** Rare deadlocks — implement retry logic and monitor
-- **> 100:** Frequent deadlocks — structural problem, investigate access order patterns
+| object_name | counter_name | instance_name | cntr_value |
+|---|---|---|---:|
+| `SQLServer:Locks` | `Number of Deadlocks/sec` | `_Total` | 1 |
 
-### Lock Escalation
+_The counter is non-zero, so deadlock analysis is justified. That is all this query can prove safely. It does not show recurrence, business impact, or the deadlock graph itself. The correct next step is Extended Events, not immediate tuning speculation._
 
-When a single statement accumulates more than 5,000 row or page locks, SQL Server automatically promotes them to a single coarser lock at the table level — this is lock escalation. The goal is to reduce lock manager memory pressure, but the side effect is that the table lock blocks all other sessions trying to access any row in that table. The performance counter reports cumulative escalations since restart; watch for a rising value alongside high `LCK_M_*` wait types from Phase 3.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `cntr_value` | `0` | &#9989; | No deadlock counter evidence in the current snapshot. | No immediate deadlock follow-up from this counter alone. |
+| `cntr_value` | `> 0` | &#10060; | Deadlock activity has been observed by the counter. | Collect real deadlock graphs before recommending a fix. |
+| `instance_name` | `_Total` | Depends | Aggregate instance counter. | Good for quick triage, not root-cause analysis. |
 
-```sql
-SELECT cntr_value AS lock_escalations
-FROM sys.dm_os_performance_counters
-WHERE counter_name = 'Lock Escalations/sec'
-  AND instance_name = '_Total';
-```
+## Phase 9 | Statistics and Plan Cache
 
-**Key term:** Lock escalation occurs when SQL Server converts many fine-grained row locks into a single table lock. This reduces lock manager memory but blocks all other sessions trying to access the table.
+The optimizer depends on current statistics and a healthy plan cache. This phase checks for stale statistics on real user tables, then measures whether ad hoc plan caching is consuming disproportionate memory.
 
-**When it's a problem:** If you see both high lock escalations AND high `LCK_M_*` waits in Phase 3, escalation is causing blocking. Fix: break large UPDATE/DELETE operations into smaller batches (e.g., process 5000 rows at a time instead of 500K).
+### Optimization inputs and cache hygiene
 
----
+#### Find user tables with the stalest statistics
 
-## Phase 9: Statistics and Plan Quality
+[!info]-
+`sys.dm_db_stats_properties` exposes the operational state of each statistics object.
 
-**Purpose:** SQL Server's query optimizer creates execution plans based on statistics. If statistics are stale, the optimizer makes bad plans, and queries run orders of magnitude slower than they should.
+- `last_updated` is the last refresh timestamp for that statistics object.
+- `rows` is the cardinality used as the base for the current statistics object.
+- `modification_counter` is the change count SQL Server tracks for the leading column of the statistic.
+- `pct_modified` expresses the modification counter relative to `rows`, which makes small-table anomalies easy to spot.
+- The filter excludes demo tables so the output focuses on real user objects in this environment.
 
-### Stale Statistics
-
-Statistics are histograms that SQL Server's query optimizer reads to estimate how many rows a filter will return. When data changes significantly, the stored histogram no longer reflects the actual distribution — the optimizer's estimates become wrong, and the execution plan it chooses may be orders of magnitude less efficient than one built from accurate data.
-
-SQL Server auto-updates statistics when the modification counter for a statistic's leading column crosses an auto-update threshold. The threshold formula depends on version and compatibility level:
-
-- **Pre-SQL Server 2016 (or compat level < 130):** `500 + 20% of rows`. For a table with 10M rows, 2M changes required — statistics can become severely stale on large tables.
-- **SQL Server 2016+ with compat level ≥ 130:** Dynamic threshold = `SQRT(1000 × rows)`. For a 10M-row table, this is `SQRT(10B) ≈ 100,000 changes` — much lower, meaning statistics update more frequently. This was previously only available via trace flag T2371.
-
-The `modification_counter` column in `sys.dm_db_stats_properties` reports changes since the last statistics update. Dividing by `rows` gives the percentage modified.
+*Rank user-table statistics objects by how many leading-column modifications have accumulated since the last update.*
 
 ```sql
-SELECT TOP 20
-    OBJECT_SCHEMA_NAME(s.object_id) + '.' + OBJECT_NAME(s.object_id) AS [table],
+SELECT TOP (10)
+    OBJECT_SCHEMA_NAME(s.object_id) + '.' + OBJECT_NAME(s.object_id) AS table_name,
     s.name AS stat_name,
     sp.last_updated,
     sp.rows,
-    sp.modification_counter AS mods_since_update,
-    CAST(100.0 * sp.modification_counter / NULLIF(sp.rows, 0) AS DECIMAL(5,1)) AS pct_modified
-FROM sys.stats s
-CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) sp
+    sp.modification_counter,
+    CAST(100.0 * sp.modification_counter / NULLIF(sp.rows, 0) AS decimal(10,2)) AS pct_modified
+FROM sys.stats AS s
+CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) AS sp
 WHERE OBJECTPROPERTY(s.object_id, 'IsUserTable') = 1
-  AND sp.modification_counter > 500
+  AND sp.modification_counter > 0
+  AND OBJECT_NAME(s.object_id) NOT LIKE 'demo_%'
 ORDER BY sp.modification_counter DESC;
 ```
 
-#### sys.stats + dm_db_stats_properties — stale statistics interpretation
-- `pct_modified > 20%` — statistics are likely stale under the legacy threshold (compat level < 130). Under the dynamic threshold (2016+ / compat level ≥ 130), even 1–2% modification can trigger an update on very large tables — check `last_updated` to confirm.
-- `last_updated` is weeks/months old on a frequently modified table — auto update stats may be disabled, or the table is below the trigger threshold
+| table_name | stat_name | last_updated | rows | modification_counter | pct_modified |
+|---|---|---|---:|---:|---:|
+| `dbo.gold_daily_summary` | `IX_gold_daily_date` | `2026-03-29 20:36:12.4333333` | 506 | 14674 | 2900.00 |
+| `dbo.gold_daily_summary` | `_WA_Sys_00000003_69FBBC1F` | `2026-03-29 21:33:37.2400000` | 506 | 8602 | 1700.00 |
 
-> [!info] SQL Server 2019+ — Diagnosing Statistics Refresh Blocking
->
-> SQL Server 2019 added the `WAIT_ON_SYNC_STATISTICS_REFRESH` wait type, which accumulates when queries are blocked waiting for a synchronous statistics update to complete. The same sessions appear in `sys.dm_exec_requests` with `command = 'SELECT (STATMAN)'`. If these waits appear frequently, consider enabling `AUTO_UPDATE_STATISTICS_ASYNC ON` so statistics refresh in the background without blocking the query.
->
-> SQL Server 2022 adds `ASYNC_STATS_UPDATE_WAIT_AT_LOW_PRIORITY` (a database-scoped configuration) which places the schema stability lock request for stats updates in a low-priority queue, further reducing blocking on actively-queried tables.
+_This is an actionable finding. `dbo.gold_daily_summary` has statistics with modification counters far larger than the current row count, which means the statistics are badly out of date for the current data shape. On a table this small, the percentage values are extreme because a small denominator magnifies the ratio, but that does not weaken the conclusion. These statistics deserve refresh before blaming the optimizer for poor plan choices on this table._
 
-#### UPDATE STATISTICS WITH FULLSCAN — refresh stale statistics
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `last_updated` | Old relative to write activity | &#10060; | Statistics have not been refreshed recently. | Candidate for manual update or improved stats maintenance. |
+| `modification_counter` | High | Depends | Many leading-column changes since last update. | Statistics may no longer describe the data distribution well. |
+| `pct_modified` | Very high | &#10060; | Change volume is large relative to the statistics row base. | Strong signal that estimates may drift badly. |
+| `rows` | Small | Depends | Small denominator. | Percentage can look extreme quickly, but still indicates stale stats when modifications are large. |
+
+#### Review plan-cache composition by plan type
+
+[!info]-
+`sys.dm_exec_cached_plans` shows what kinds of plans are occupying the cache.
+
+- `objtype` becomes `plan_type` so the output is readable.
+- `plan_count` shows how many cache entries exist per type.
+- `cache_mb` converts `size_in_bytes` to MB.
+- `total_use_count` and `avg_use_count` show whether the cache is full of reused plans or mostly one-off artifacts.
+
+*Measure how plan-cache memory is distributed across ad hoc, prepared, view, and stored-procedure plans.*
 
 ```sql
--- Update statistics for a specific table (FULLSCAN = 100% row sample, most accurate)
-UPDATE STATISTICS silver.signals_daily WITH FULLSCAN;
-
--- Update all statistics in the database (heavier, run off-peak)
-EXEC sp_updatestats;
+WITH plans AS (
+    SELECT
+        objtype AS plan_type,
+        COUNT(*) AS plan_count,
+        SUM(size_in_bytes) / 1048576.0 AS cache_mb,
+        SUM(usecounts) AS total_use_count,
+        AVG(CONVERT(float, usecounts)) AS avg_use_count
+    FROM sys.dm_exec_cached_plans
+    GROUP BY objtype
+)
+SELECT
+    plan_type,
+    plan_count,
+    CAST(cache_mb AS decimal(18,2)) AS cache_mb,
+    total_use_count,
+    CAST(avg_use_count AS decimal(18,2)) AS avg_use_count
+FROM plans
+ORDER BY cache_mb DESC;
 ```
 
-### Plan Cache Analysis
+| plan_type | plan_count | cache_mb | total_use_count | avg_use_count |
+|---|---:|---:|---:|---:|
+| `Adhoc` | 340 | 55.90 | 2898 | 8.52 |
+| `View` | 249 | 38.01 | 2305 | 9.26 |
+| `Prepared` | 50 | 21.13 | 377 | 7.54 |
+| `Proc` | 6 | 0.54 | 42 | 7.00 |
 
-Every compiled query plan is stored in the plan cache so subsequent executions reuse the compiled plan instead of paying the compilation cost again. On OLTP systems that use a lot of ad-hoc SQL (non-parameterized queries), each unique query text generates a separate plan entry that is used exactly once — consuming memory for a plan that will never run again. This wastes memory that the buffer pool could otherwise use for data pages.
+_The plan cache is dominated by ad hoc plans at `55.90 MB`, which is notable because Phase 1 already showed `optimize for ad hoc workloads = 0`. The average use count is not terrible, but the mix still says this instance leans heavily on ad hoc and view-based cached plans rather than on stored procedures. That is not automatically wrong, but it makes the single-use ad hoc check below more important._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `plan_type` | `Adhoc` dominates | Depends | Ad hoc statements occupy most cache memory. | Often a sign to review parameterization and ad hoc plan reuse. |
+| `plan_type` | `Proc` dominates | Depends | Stored procedures own most cache memory. | Often expected in proc-heavy systems. |
+| `cache_mb` | High on low-reuse plan types | &#10060; | Memory is tied up in plans with limited reuse value. | Consider `optimize for ad hoc workloads`, parameterization, or cache hygiene investigation. |
+| `avg_use_count` | Low | &#10060; if cache_mb is high | Plans are not being reused much. | Plan cache may be acting more like a compilation staging area than a reuse asset. |
+
+#### Quantify single-use ad hoc plan waste
+
+[!info]-
+This query narrows `sys.dm_exec_cached_plans` to the most suspicious cache pattern: `Adhoc` plans with `usecounts = 1`.
+
+- `single_use_plan_count` shows how many ad hoc plans have never been reused.
+- `single_use_cache_mb` measures how much cache memory those one-time plans occupy.
+- This output is especially valuable when `optimize for ad hoc workloads` is off.
+
+*Measure how much plan-cache memory is currently occupied by single-use ad hoc plans.*
 
 ```sql
-SELECT objtype,
-       COUNT(*) AS plan_count,
-       SUM(CAST(size_in_bytes AS BIGINT)) / 1024 / 1024 AS total_mb,
-       AVG(usecounts) AS avg_use_count
+SELECT
+    objtype AS plan_type,
+    COUNT(*) AS single_use_plan_count,
+    CAST(SUM(CAST(size_in_bytes AS bigint)) / 1048576.0 AS decimal(18,2)) AS single_use_cache_mb
 FROM sys.dm_exec_cached_plans
-GROUP BY objtype
-ORDER BY total_mb DESC;
+WHERE usecounts = 1
+  AND objtype = 'Adhoc'
+GROUP BY objtype;
 ```
 
-#### sys.dm_exec_cached_plans objtype — plan cache composition
+| plan_type | single_use_plan_count | single_use_cache_mb |
+|---|---:|---:|
+| `Adhoc` | 318 | 53.12 |
 
-| objtype | What it is | Concern |
-|---------|-----------|---------|
-| `Adhoc` | Individual SQL statements | If count is high (>10K) with avg_use_count ≈ 1, plan cache is bloated with single-use plans. Enable "optimize for ad hoc workloads." |
-| `Prepared` | Parameterized queries (sp_executesql) | Good — plans are reusable |
-| `Proc` | Stored procedures | Good — plans are reusable |
+_This is a real plan-cache hygiene issue. `318` single-use ad hoc plans consume `53.12 MB`, which is almost the entire ad hoc cache footprint from the previous query. On a larger production instance this pattern scales badly because memory is spent storing full plans that never earn reuse. The immediate recommendation is not to clear cache; it is to improve parameterization discipline and evaluate `optimize for ad hoc workloads`._
 
-> [!warning] Plan Cache DMVs Have a Blind Spot
->
-> `sys.dm_exec_cached_plans` and `sys.dm_exec_query_stats` only reflect plans currently in the cache. Plans evicted by memory pressure, manually flushed with `DBCC FREEPROCCACHE`, or simply never cached (one-time queries) are invisible. This means a query can be the worst performer in production yet not appear in any plan cache DMV. **Query Store** (SQL Server 2016+, enabled by default in 2022) fills this gap — it persists query performance history across cache evictions and restarts, making it the authoritative source for identifying historically bad queries.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `single_use_plan_count` | High | &#10060; if paired with memory use | Many ad hoc plans were compiled once and never reused. | Wasted cache space and extra compilation overhead. |
+| `single_use_cache_mb` | High | &#10060; | Meaningful memory is tied up in one-time plans. | Review ad hoc workload shape and cache strategy. |
+| `plan_type` | `Adhoc` | Depends | Literal or dynamically generated statements. | Often benefits from better parameterization patterns. |
 
-#### sp_configure 'optimize for ad hoc workloads' — fix plan cache bloat
+## Phase 10 | Database Files and Log Reuse
+
+The point of this phase is to catch file-growth settings and log reuse blockers before they become outages. File growth should be predictable. Log reuse reasons should make operational sense for the recovery model and workload.
+
+### Capacity and recovery signals
+
+#### Review file sizes and growth increments
+
+[!info]-
+`sys.master_files` exposes file-level metadata for all databases.
+
+- `size` is converted from pages to MB.
+- `max_size_mb` preserves `UNLIMITED` explicitly when `max_size = -1`.
+- `growth_increment` renders either a fixed MB value or a percentage string depending on `is_percent_growth`.
+- `database_id <> 2` excludes `tempdb` here because Phase 7 already covers it with a more accurate current-layout query.
+
+*Review current file sizes, maximum sizes, and autogrowth style for non-tempdb databases.*
 
 ```sql
-EXEC sp_configure 'optimize for ad hoc workloads', 1;
-RECONFIGURE;
+SELECT TOP (10)
+    DB_NAME(database_id) AS database_name,
+    name AS logical_name,
+    type_desc,
+    CAST(size * 8.0 / 1024 AS decimal(18,2)) AS size_mb,
+    CASE
+        WHEN max_size = -1 THEN 'UNLIMITED'
+        ELSE CONVERT(varchar(50), CAST(max_size * 8.0 / 1024 AS decimal(18,2)))
+    END AS max_size_mb,
+    CASE
+        WHEN is_percent_growth = 1 THEN CONCAT(growth, '%')
+        ELSE CONCAT(CAST(growth * 8.0 / 1024 AS decimal(18,2)), ' MB')
+    END AS growth_increment,
+    is_percent_growth
+FROM sys.master_files
+WHERE database_id <> 2
+ORDER BY size DESC;
 ```
 
-### Implicit Conversions (Plan-Affecting)
+| database_name | logical_name | type_desc | size_mb | max_size_mb | growth_increment | is_percent_growth |
+|---|---|---|---:|---|---|---:|
+| `stoxx` | `stoxx_log` | `LOG` | 968.00 | `2097152.00` | `64.00 MB` | 0 |
+| `stoxx` | `stoxx` | `ROWS` | 712.00 | `UNLIMITED` | `64.00 MB` | 0 |
+| `msdb` | `MSDBData` | `ROWS` | 15.31 | `UNLIMITED` | `10%` | 1 |
+| `model` | `modellog` | `LOG` | 8.00 | `UNLIMITED` | `64.00 MB` | 0 |
+| `model` | `modeldev` | `ROWS` | 8.00 | `UNLIMITED` | `64.00 MB` | 0 |
+| `master` | `master` | `ROWS` | 4.69 | `UNLIMITED` | `10%` | 1 |
+| `master` | `mastlog` | `LOG` | 2.00 | `UNLIMITED` | `10%` | 1 |
+| `msdb` | `MSDBLog` | `LOG` | 1.25 | `2097152.00` | `10%` | 1 |
 
-An implicit conversion occurs when a query compares two values of different data types and SQL Server must silently convert one of them to make the comparison work. When the conversion is applied to the column side of the expression (rather than the parameter), SQL Server cannot use the column's index — it must scan every row, apply the conversion, and then evaluate the filter. The `PlanAffectingConvert` warning in the XML execution plan is how SQL Server signals this condition; this query surfaces the highest-impact offenders from the plan cache.
+_The user database is configured sensibly: `stoxx` data and log both grow in fixed `64 MB` increments. The weaker pattern is on system databases, where `master` and `msdb` still use percentage growth. Those files are small now, but percentage growth is still less predictable operationally and is worth normalizing in hardened environments._
 
-```sql
-SELECT TOP 10
-    qs.total_logical_reads,
-    qs.execution_count,
-    SUBSTRING(st.text, 1, 200) AS query_text
-FROM sys.dm_exec_query_stats qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
-CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp
-WHERE qp.query_plan.exist('//Warnings/PlanAffectingConvert') = 1
-ORDER BY qs.total_logical_reads DESC;
-```
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `growth_increment` | Fixed MB | &#9989; | Growth occurs in predictable chunks. | Easier capacity planning and less volatile growth behavior. |
+| `growth_increment` | Percentage | &#10060; in most production cases | Growth size increases as the file grows. | Harder to predict and can create very large future autogrowth events. |
+| `max_size_mb` | `UNLIMITED` | Depends | No explicit ceiling is enforced. | Fine only if monitoring and capacity discipline are strong. |
+| `type_desc` | `LOG` | Depends | Log file. | Judge in context of recovery model and log reuse reasons. |
 
-**Why it matters:** An implicit conversion on a WHERE clause column prevents SQL Server from using an index seek. Instead, it scans the entire index and converts every single row. A query that should take 1ms takes 10 seconds.
+#### Check log reuse wait reasons
 
-#### Implicit conversion culprits — nvarchar vs varchar, pyodbc defaults
-- Application sends `nvarchar` parameter but column is `varchar` → SQL Server converts every row in the column to nvarchar
-- Python/ODBC sends all strings as `nvarchar` by default
-- Comparing `int` column with `varchar` parameter
+[!info]-
+`sys.databases.log_reuse_wait_desc` explains why each database log cannot currently reuse inactive VLFs.
 
-See [sargable-queries > Implicit Conversions — The Silent Killer](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries#implicit-conversions--the-silent-killer) for the Python fix.
+- The value is instantaneous, not historical.
+- The same value can be perfectly normal or a serious problem depending on how long it persists.
+- The audit question is whether the value makes sense for the database role and current activity.
 
-### Parameter Sensitive Plan Optimization (SQL Server 2022)
-
-Parameter sniffing is the behavior where SQL Server compiles an execution plan using the parameter values present at first execution and then reuses that plan for all subsequent executions — even when those later executions use parameter values with completely different data distributions. A plan optimized for `@customer_id = 1` (10 rows) will be catastrophically wrong when reused for `@customer_id = 99` (1 million rows), because the optimizer chose a nested-loop join that scales linearly with row count.
-
-SQL Server 2022 introduces **Parameter Sensitive Plan (PSP) Optimization** — a feature that automatically detects non-uniform data distributions for parameterized statements and generates multiple distinct execution plans (one per selectivity range) for the same query. The correct plan variant is selected at runtime based on the actual parameter value.
-
-PSP Optimization requires:
-- SQL Server 2022 (or Azure SQL Database / Managed Instance)
-- Database compatibility level 160
-- Feature is on by default at compat level 160; no configuration needed
+*Check why each database log can or cannot currently reuse inactive log space.*
 
 ```sql
--- Check if PSP Optimization is active on the database
-SELECT name,
-       compatibility_level,
-       is_query_store_on
+SELECT
+    name,
+    recovery_model_desc,
+    log_reuse_wait_desc
 FROM sys.databases
-WHERE name = DB_NAME();
-
--- Disable at database level if causing issues (rare)
-ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SENSITIVE_PLAN_OPTIMIZATION = OFF;
-
--- Disable at query level
-SELECT * FROM dbo.orders WHERE customer_id = @cid
-OPTION (USE HINT('DISABLE_PARAMETER_SENSITIVE_PLAN'));
-```
-
-#### PSP Optimization — when to check it
-
-| Symptom | Meaning | Action |
-|---------|---------|--------|
-| Query with `@param` runs fast sometimes, slow other times | Classic parameter sniffing | Upgrade to compat 160, PSP Optimization activates automatically |
-| High plan cache count for the same query | PSP generating too many variants | Check Query Store for dispatcher plans; consider `DISABLE_PARAMETER_SENSITIVE_PLAN` hint |
-| PSP not helping despite compat 160 | Parameter sniffing disabled (trace flag 4136, DISABLE_PARAMETER_SNIFFING hint, or `PARAMETER_SNIFFING = OFF`) | PSP automatically deactivates when sniffing is disabled; re-enable sniffing or use manual OPTIMIZE FOR hints |
-
-> [!info] Query Store Required for Full Visibility
->
-> PSP Optimization stores multiple plan variants in the plan cache. Query Store (on by default for new databases in SQL Server 2022) is the only way to see the plan history per parameter range, identify which variant is chosen at runtime, and force a specific variant if the automatic choice is wrong. Without Query Store, plan behavior for PSP-optimized queries is a black box.
-
-### SQL Server 2022 Intelligent Query Processing — Feature Overview
-
-PSP Optimization is one of several self-tuning features in the **Intelligent Query Processing (IQP)** suite introduced or extended in SQL Server 2022. All require Query Store in read-write mode; most also require compatibility level 160.
-
-| IQP Feature | What it does | Requirement |
-|-------------|-------------|-------------|
-| **Parameter Sensitive Plan (PSP) Optimization** | Caches multiple plan variants per parameterized query — one per selectivity range. Selects the best variant at runtime. | compat 160 |
-| **Cardinality Estimation (CE) Feedback** | Detects systematic CE model assumption errors (correlation, containment) for repeating queries and auto-corrects them. Corrections are persisted as Query Store hints so they survive plan cache eviction. | compat 160, QS read-write |
-| **DOP Feedback** | Monitors elapsed time and waits for repeating parallel queries; automatically lowers or raises DOP to reduce overhead. Reverts if performance regresses. | compat 160, QS read-write |
-| **Memory Grant Feedback — Percentile + Persistence** | Uses the percentile of recent memory grants (not just the last execution) to smooth out oscillating workloads. Persists the feedback to Query Store so it survives instance restarts. | QS enabled |
-| **Optimized Plan Forcing** | Pre-caches expensive compilation steps for forced Query Store plans so that forced-plan recompilations are significantly cheaper. | QS enabled |
-
-Before running a performance audit on a SQL Server 2022 instance, confirm that Query Store is enabled and set to `READ_WRITE` mode on all critical databases — without it, half the IQP features are inactive.
-
-```sql
--- Check Query Store state across all user databases
-SELECT name,
-       compatibility_level,
-       is_query_store_on,
-       query_store_state_desc
-FROM sys.databases
-WHERE name NOT IN ('master','tempdb','model','msdb')
 ORDER BY name;
 ```
 
----
+| name | recovery_model_desc | log_reuse_wait_desc |
+|---|---|---|
+| `master` | `SIMPLE` | `NOTHING` |
+| `model` | `FULL` | `NOTHING` |
+| `msdb` | `SIMPLE` | `NOTHING` |
+| `stoxx` | `FULL` | `ACTIVE_TRANSACTION` |
+| `tempdb` | `SIMPLE` | `ACTIVE_TRANSACTION` |
 
-## Phase 10: Database Sizes and Growth
+_`stoxx` is the only production-relevant row here. In `FULL` recovery model, `ACTIVE_TRANSACTION` means log truncation is currently blocked by an open transaction, not by a missing backup. That can be harmless if it is brief, but if it persists and the log keeps growing, the next step is to identify the long transaction before blaming backups or storage. `tempdb` showing `ACTIVE_TRANSACTION` is normal more often than it is alarming because internal work can keep transactions active transiently._
 
-**Purpose:** Understand how much disk space each database occupies, how fast it is growing, and whether autogrowth settings are safe. Unbounded log growth is one of the most common causes of production outages — a disk-full event stops all database writes immediately. This phase also identifies recovery model mismatches where a database in FULL recovery has no log backup schedule, causing the transaction log to grow until the disk is exhausted.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `log_reuse_wait_desc` | `NOTHING` | &#9989; | No current blocker to log reuse. | Healthy steady state. |
+| `log_reuse_wait_desc` | `ACTIVE_TRANSACTION` | Depends | An open transaction is preventing truncation. | Investigate only if persistent or paired with log growth pressure. |
+| `log_reuse_wait_desc` | `LOG_BACKUP` | &#10060; in `FULL` | Log cannot truncate until backup occurs. | Backup discipline problem. |
+| `recovery_model_desc` | `FULL` | Depends | Full recovery chain expected. | Log reuse must be interpreted with backup and restore policy in mind. |
 
-### File Sizes and Free Space
+## Phase 11 | Security Quick Check
 
-This query iterates across every database on the instance and reports the current allocated size, used space, free space, and autogrowth setting for each file. The `sp_MSforeachdb` procedure runs the inner query in the context of each database in turn, including system databases. Focus on: files approaching zero free space (autogrow is imminent), log files much larger than data files (log not being truncated), and any file with percentage-based autogrowth.
+Performance audits frequently expose security drift at the same time: overly broad sysadmin membership, enabled `sa`, or guest access patterns that should be explicit decisions. This phase is intentionally short and focused on fast, high-signal checks.
 
-```sql
-EXEC sp_MSforeachdb '
-USE [?];
-SELECT DB_NAME() AS db,
-       f.name AS logical_name,
-       f.type_desc,
-       f.physical_name,
-       f.size * 8 / 1024 AS size_mb,
-       FILEPROPERTY(f.name, ''SpaceUsed'') * 8 / 1024 AS used_mb,
-       (f.size - FILEPROPERTY(f.name, ''SpaceUsed'')) * 8 / 1024 AS free_mb,
-       CASE WHEN f.is_percent_growth = 1
-            THEN CAST(f.growth AS VARCHAR) + ''%''
-            ELSE CAST(f.growth * 8 / 1024 AS VARCHAR) + '' MB'' END AS growth_setting
-FROM sys.database_files f;
-';
-```
+### Privilege surface
 
-#### Database file growth red flags — percentage growth, low free space
-- **Percentage growth:** A 10% growth on a 100 GB file = 10 GB allocation. Each growth event freezes the database while SQL Server zeros the new space. Use fixed growth (64–256 MB).
-- **Free space near 0:** The file will autogrow soon — on a busy system this causes a pause.
-- **Log file much larger than data file:** Log isn't being backed up (FULL recovery) or has grown due to a large transaction.
+#### Review current sysadmin membership
 
-### Log Reuse Wait Reasons
+[!info]-
+This query joins `sys.server_principals` to `sys.server_role_members` and the `sysadmin` server role.
 
-The transaction log grows continuously — SQL Server only reclaims space when it can overwrite earlier log records, a process called log truncation. In SIMPLE recovery, truncation happens automatically at every checkpoint. In FULL recovery, truncation only occurs after a log backup, because the unprocessed log records are needed to restore to a point in time. The `log_reuse_wait_desc` column shows exactly what is blocking truncation when the log is growing unexpectedly.
+- `login_name` identifies the principal with sysadmin rights.
+- `type_desc` distinguishes SQL logins, Windows logins, and Windows groups.
+- `is_disabled` tells you whether the login is enabled right now.
+- The audit goal is not merely enumeration; it is to decide whether each principal should still have that level of privilege.
 
-```sql
-SELECT name, log_reuse_wait_desc
-FROM sys.databases
-WHERE log_reuse_wait_desc <> 'NOTHING';
-```
-
-| Wait reason | Meaning | Action |
-|-------------|---------|--------|
-| `NOTHING` | Log space can be reused — healthy | No action |
-| `LOG_BACKUP` | In FULL recovery but no log backups taken | Take a log backup immediately, or switch to SIMPLE if you don't need point-in-time recovery |
-| `ACTIVE_TRANSACTION` | A long-running transaction is preventing log truncation | Find and resolve the transaction |
-| `REPLICATION` | Log reader hasn't processed these records yet | Check replication agent |
-| `DATABASE_MIRRORING` | Mirror hasn't acknowledged these records | Check mirror health |
-
-> [!warning] LOG_BACKUP Without Backups
->
-> LOG_BACKUP with No Backup Schedule is an Emergency.
-> The log will grow until the disk fills up and the database stops accepting writes. If the disk is nearly full, this is a P1 incident.
-
-> [!success] Take an immediate log backup, then schedule regular log backups or switch to SIMPLE recovery
->
-> Run `BACKUP LOG [db] TO DISK = N'/backup/db_log.bak';` to truncate the log now. Then either set up a SQL Agent job to back up the log every 15–60 minutes, or — if point-in-time recovery is not needed — `ALTER DATABASE [db] SET RECOVERY SIMPLE;` to allow automatic log truncation.
-
----
-
-## Phase 11: Security Quick Check
-
-**Purpose:** Identify obvious security risks. Not a full security audit, but catches the most common misconfigurations.
-
-### Sysadmin Members
-
-The `sysadmin` server role is the highest privilege level on a SQL Server instance — members have unrestricted access to every database, every object, and every server configuration. A login with `sysadmin` can read any table, drop any database, and change any setting without restriction. Production instances should have the minimum number of sysadmin members necessary: typically the SQL Server service account and named DBA accounts only.
+*List all principals that currently belong to the `sysadmin` server role.*
 
 ```sql
-SELECT sp.name AS login, sp.type_desc, sp.is_disabled
-FROM sys.server_role_members rm
-JOIN sys.server_principals sp ON rm.member_principal_id = sp.principal_id
-JOIN sys.server_principals rp ON rm.role_principal_id = rp.principal_id
-WHERE rp.name = 'sysadmin';
-```
-
-#### sys.server_principals — security check: sa enabled, sysadmin logins
-- `sa` account enabled — should be disabled or renamed in production
-- Application logins with sysadmin — applications should use the least privilege needed (e.g., `db_datareader`, `db_datawriter`)
-- Unknown logins — ask who these belong to
-
-### Guest Access
-
-The `guest` user is a built-in database principal that exists in every database. When `guest` has the `CONNECT` permission, any authenticated Windows or SQL login can access the database — even without an explicit user mapping. This is intentional for `master`, `tempdb`, and `msdb`, where guest access is required for normal SQL Server operation. On user databases, it is almost always a misconfiguration.
-
-```sql
-SELECT d.name AS db
-FROM sys.databases d
-WHERE EXISTS (
-    SELECT 1 FROM sys.database_permissions dp
-    JOIN sys.database_principals p ON dp.grantee_principal_id = p.principal_id
-    WHERE p.name = 'guest' AND dp.permission_name = 'CONNECT'
-    AND dp.state = 'G'
-)
-AND d.name NOT IN ('master', 'tempdb', 'msdb');
-```
-
-**If any rows return:** Guest access means any authenticated login can connect to these databases — even if they don't have explicit permission. Revoke: `USE [db]; REVOKE CONNECT FROM guest;`
-
----
-
-## Phase 12: Compile the Report
-
-**Purpose:** Translate the raw diagnostic data from Phases 1–11 into a structured, prioritized report that non-technical stakeholders can act on. A good audit report separates findings by impact and urgency, proposes a concrete remediation sequence, and provides enough evidence (query output, thresholds, comparisons) that the DBA executing the fixes does not need to re-run the diagnostics. The report is the deliverable — everything else is methodology.
-
-### Report Template
-
-The report has two parts: an executive summary for stakeholders (overall health, top 3 actions) and a findings table for the DBA (every finding with its category, status, evidence, and a specific recommended action with a priority). Use the status colors consistently: RED = immediate action required, YELLOW = action recommended within a week, GREEN = no issue, monitor. Do not include findings from every phase — only phases where something actionable was found.
-
-```
-SQL Server Performance Audit
-Instance: <hostname>\<instance>
-Date: <date>
-Auditor: <name>
-Uptime: <days> days (DMV data quality: high/medium/low)
-
-EXECUTIVE SUMMARY
-- Overall health: GREEN / YELLOW / RED
-- Top 3 findings requiring immediate action
-- Estimated performance improvement from recommended changes
-
-FINDINGS
-
-| # | Category | Status | Finding | Impact | Recommendation | Priority |
-|---|----------|--------|---------|--------|----------------|----------|
-| 1 | Config   | RED    | max memory at default (2 TB) | SQL Server consuming all RAM, OS unstable | Set to <X> MB | P1 - Immediate |
-| 2 | Waits    | RED    | LCK_M_S at 62% of total waits | Severe blocking, users experiencing timeouts | Enable RCSI | P1 - Immediate |
-| 3 | Index    | YELLOW | 5 missing indexes (score > 100K) | Table scans on frequently queried tables | Create top 3 indexes | P2 - This week |
-| 4 | IO       | GREEN  | avg read 3ms, avg write 2ms | No IO bottleneck | No action | — |
-| 5 | TempDB   | YELLOW | Single file, 4 cores | Potential allocation contention under load | Add 3 more files | P2 - This week |
-
-APPENDIX
-- Full wait stats output
-- Top 20 queries by CPU
-- Missing index recommendations with CREATE INDEX statements
-- Stale statistics list
-```
-
-### Priority Definitions
-
-Every finding in the report is assigned a priority that determines its remediation timeline. Avoid the temptation to assign everything P1 — stakeholders will deprioritize the report if everything is marked urgent. Reserve P1 for conditions that are actively causing user-facing degradation or data risk right now.
-
-| Priority | Meaning | Timeline |
-|----------|---------|----------|
-| **P1 — Immediate** | Active performance degradation or data risk | Fix today or within 24 hours |
-| **P2 — This week** | Significant improvement opportunity | Schedule within 5 business days |
-| **P3 — Next maintenance** | Minor optimization or housekeeping | Next scheduled maintenance window |
-| **P4 — Monitor** | Not a problem yet but could become one | Add to monitoring, revisit in 30 days |
-
-### Red Flags Checklist
-
-A fast pre-flight scan: if any of these conditions are true, they are almost certainly P1 or P2 findings regardless of what the other phases show. Run this checklist at the start of every audit engagement to triage quickly before diving into the detailed phases.
-
-- [ ] `auto_shrink = ON` on any database
-- [ ] `max server memory` at default (2,147,483,647 MB)
-- [ ] `MAXDOP = 0` on a server with > 8 cores
-- [ ] `cost threshold for parallelism = 5` (default)
-- [ ] No backups, or last backup > 24 hours old
-- [ ] `sa` account enabled with weak password
-- [ ] Statistics older than 30 days on active tables
-- [ ] Single TempDB file on multi-core system
-- [ ] FULL recovery model with no log backup schedule
-- [ ] Auto-growth set to percentage (not fixed MB)
-- [ ] Guest access enabled on user databases
-
----
-
-## Post-Pipeline Health Check Script
-
-A condensed diagnostic script designed to run in under 60 seconds after each daily pipeline execution. Unlike a full audit (Phases 1–12), this script is not exhaustive — it targets the six most time-sensitive signals that a pipeline run could disturb: long-running queries left behind, blocking chains, top wait types, per-file IO latency, stale statistics from high row-churn tables, and buffer pool memory health. Run it as a post-step in the pipeline job to catch regressions before the next business day begins.
-
-### Diagnostic Script — Active Queries, Blocking, Waits, IO, Statistics, Memory
-
-```sql
-PRINT '=== 1. Active Long Queries ==='
-SELECT session_id, total_elapsed_time/1000 AS sec, command,
-       SUBSTRING(st.text, 1, 100) AS query
-FROM sys.dm_exec_requests r
-CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
-WHERE is_user_process = 1 AND total_elapsed_time > 60000;
-
-PRINT '=== 2. Blocking Chains ==='
-SELECT r.session_id AS blocked, r.blocking_session_id AS blocker,
-       r.wait_type, r.wait_time/1000 AS wait_sec
-FROM sys.dm_exec_requests r WHERE r.blocking_session_id > 0;
-
-PRINT '=== 3. Top 5 Waits Since Last Clear ==='
-SELECT TOP 5 wait_type, wait_time_ms/1000 AS wait_sec,
-       waiting_tasks_count AS count
-FROM sys.dm_os_wait_stats
-WHERE wait_type NOT IN ('SLEEP_TASK','LAZYWRITER_SLEEP','WAITFOR',
-      'BROKER_RECEIVE_WAITFOR','BROKER_EVENTHANDLER','CLR_AUTO_EVENT',
-      'DISPATCHER_QUEUE_SEMAPHORE','XE_DISPATCHER_WAIT','DIRTY_PAGE_POLL',
-      'HADR_FILESTREAM_IOMGR_IOCOMPLETION','SP_SERVER_DIAGNOSTICS_SLEEP',
-      'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP','QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP',
-      'SQLTRACE_INCREMENTAL_FLUSH_SLEEP','CHECKPOINT_QUEUE','FT_IFTS_SCHEDULER_IDLE_WAIT')
-ORDER BY wait_time_ms DESC;
-
-PRINT '=== 4. IO Latency by File ==='
-SELECT DB_NAME(fs.database_id) AS db, f.type_desc,
-       fs.io_stall_read_ms / NULLIF(fs.num_of_reads,0) AS avg_read_ms,
-       fs.io_stall_write_ms / NULLIF(fs.num_of_writes,0) AS avg_write_ms
-FROM sys.dm_io_virtual_file_stats(NULL,NULL) fs
-JOIN sys.master_files f ON fs.database_id=f.database_id AND fs.file_id=f.file_id
-WHERE fs.num_of_reads + fs.num_of_writes > 100
-ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
-
-PRINT '=== 5. Stale Statistics ==='
-SELECT TOP 10
-    OBJECT_SCHEMA_NAME(s.object_id)+'.'+OBJECT_NAME(s.object_id) AS tbl,
-    s.name AS stat, sp.modification_counter AS mods, sp.last_updated
-FROM sys.stats s
-CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) sp
-WHERE sp.modification_counter > 500 AND OBJECTPROPERTY(s.object_id,'IsUserTable')=1
-ORDER BY sp.modification_counter DESC;
-
-PRINT '=== 6. Buffer Pool Memory ==='
 SELECT
-    physical_memory_kb/1024 AS physical_mb,
-    committed_kb/1024 AS committed_mb,
-    committed_target_kb/1024 AS target_mb,
-    (SELECT cntr_value FROM sys.dm_os_performance_counters
-     WHERE counter_name='Page life expectancy'
-       AND object_name LIKE '%Buffer Manager%') AS PLE_sec
-FROM sys.dm_os_sys_info;
+    p.name AS login_name,
+    p.type_desc,
+    p.is_disabled
+FROM sys.server_principals AS p
+JOIN sys.server_role_members AS rm
+  ON p.principal_id = rm.member_principal_id
+JOIN sys.server_principals AS r
+  ON rm.role_principal_id = r.principal_id
+WHERE r.name = 'sysadmin'
+ORDER BY p.name;
 ```
 
-### Execution — Running the Script from the Pipeline
+| login_name | type_desc | is_disabled |
+|---|---|---:|
+| `BUILTIN\Administrators` | `WINDOWS_GROUP` | 0 |
+| `NT AUTHORITY\NETWORK SERVICE` | `WINDOWS_LOGIN` | 0 |
+| `sa` | `SQL_LOGIN` | 0 |
 
-Linux (bash on VM):
+_This is a real hardening concern. `sa` is enabled, `BUILTIN\Administrators` is sysadmin, and `NT AUTHORITY\NETWORK SERVICE` also has sysadmin rights. A production performance audit should not stop at pure query tuning when the privilege surface is this broad, because operational risk and unauthorized change risk are both elevated._
 
-```bash
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "EsgDev2026Pass1" -C -d analytics_db -i post_pipeline_health.sql
-```
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `type_desc` | `SQL_LOGIN` | Depends | SQL-authenticated login. | `sa` or other SQL logins at sysadmin level deserve explicit review. |
+| `type_desc` | `WINDOWS_GROUP` | Depends | Group-based privilege. | Broad group membership can expand sysadmin access beyond what operators intend. |
+| `type_desc` | `WINDOWS_LOGIN` | Depends | Individual Windows principal. | Service identities at sysadmin level should be justified explicitly. |
+| `is_disabled` | `0` | &#10060; for unneeded privileged principals | Principal is enabled right now. | It can authenticate immediately with sysadmin rights. |
+| `is_disabled` | `1` | &#9989; if privilege is retained only temporarily | Principal is disabled. | Lower immediate exposure, though membership should still be justified. |
 
-PowerShell (via IAP tunnel):
+#### Check whether `guest` has `CONNECT` in the current database
 
-```powershell
-# Assumes tunnel is open on localhost:1433
-sqlcmd -S localhost,1433 -U sa -P "EsgDev2026Pass1" -C -d analytics_db -i post_pipeline_health.sql
+[!info]-
+The `guest` user exists in user databases by default, but the important security question is whether it has `CONNECT`.
 
-# Or with Invoke-Sqlcmd
-Invoke-Sqlcmd -ServerInstance "localhost,1433" -Username "sa" -Password "EsgDev2026Pass1" `
-  -TrustServerCertificate -Database "analytics_db" -InputFile "post_pipeline_health.sql"
-```
+- The `EXISTS` expression checks `sys.database_permissions` for a granted or grant-with-grant-option `CONNECT` permission on `guest`.
+- Returning `0` is the desired result for most production user databases.
 
----
-
-## DBCC and Trace Flag Reference
-
-DBCC (Database Console Commands) are SQL Server's built-in maintenance and diagnostic commands. They operate at the storage engine level — below the query engine — and expose functionality that standard T-SQL DDL/DML cannot reach: physical page integrity checks, space reclamation, low-level page inspection, and trace flag control. During a performance audit, these commands are used to act on specific findings from earlier phases (fragmentation, space pressure, log file bloat) and to configure engine-level behaviors that affect the entire instance.
-
-### DBCC SHRINKDATABASE — reclaim space after one-time data deletion
-
-`DBCC SHRINKDATABASE` reduces the physical size of database files by moving allocated pages toward the front of the file and releasing the tail end back to the OS. The second argument is the target percentage of free space to leave in the file after shrinking. `DBCC SHRINKFILE` operates on a single file by name or ID, and its `EMPTYFILE` option moves all pages to other files in the same filegroup — useful before removing a data file from a filegroup.
-
-> [!danger] Shrink Causes Massive Index Fragmentation
->
-> DBCC SHRINKDATABASE causes massive index fragmentation. After shrinking, every index must be rebuilt — which grows the file again. Only shrink when reclaiming space from a one-time event (large data deletion, log backup catch-up). Never schedule regular shrinks.
-
-> [!success] After any shrink, immediately rebuild all indexes to restore performance
->
-> Run `ALTER INDEX ALL ON table REBUILD WITH (ONLINE = ON);` for every table in the shrunk database. Better still, avoid shrinking — pre-size files at deployment and only shrink as a one-time recovery action, never on a schedule.
+*Check whether the `guest` principal currently has `CONNECT` permission in `stoxx`.*
 
 ```sql
--- Shrink database (reclaim free space)
-DBCC SHRINKDATABASE ('FinanceDB', 10);    -- 10% free space target
-
--- Shrink a specific file
-DBCC SHRINKFILE ('FinanceDB_log', 256);   -- shrink log to 256 MB
-DBCC SHRINKFILE ('FinanceDB', 10240);     -- shrink data file to 10 GB
-DBCC SHRINKFILE ('FinanceDB', EMPTYFILE); -- move all data out (for file removal)
-
--- After shrink: always rebuild indexes to fix fragmentation
-ALTER INDEX ALL ON dbo.trades REBUILD;
+SELECT
+    CASE
+        WHEN EXISTS (
+            SELECT 1
+            FROM sys.database_permissions AS dp
+            JOIN sys.database_principals AS pr
+              ON dp.grantee_principal_id = pr.principal_id
+            WHERE pr.name = 'guest'
+              AND dp.permission_name = 'CONNECT'
+              AND dp.state IN ('G', 'W')
+        ) THEN 1 ELSE 0
+    END AS guest_connect_granted;
 ```
 
-### Trace Flags Reference — common flags and version defaults
+| guest_connect_granted |
+|---:|
+| 0 |
 
-Trace flags modify SQL Server's behavior at the engine level — they enable or disable specific behaviors, expose diagnostic output, or activate features that are off by default. Flags set with `-1` apply globally to all sessions; without `-1`, they apply only to the current session. On SQL Server 2016 and later with compatibility level 130+, many previously useful trace flags became the default behavior — enabling them on modern instances has no effect and is unnecessary.
+_This is the correct result for a normal application database. `guest` exists, but it is not allowed to connect implicitly. That removes one common database-level hardening concern from the report._
 
-> [!info] Most Trace Flags Are Obsolete in SQL Server 2016+
->
-> Most of these trace flags are obsolete in SQL Server 2016+ because their behavior became the default. T1117 (uniform extent allocation) and T1118 (mixed extent removal) are default since 2016. T2371 (dynamic statistics threshold) is default since 2016. Check your version before enabling.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `guest_connect_granted` | `0` | &#9989; | `guest` does not have `CONNECT`. | Normal hardened state for a user database. |
+| `guest_connect_granted` | `1` | &#10060; | `guest` can connect implicitly. | Review immediately unless the database has a specific documented need. |
 
-```sql
--- Enable trace flag globally
-DBCC TRACEON (3226, -1);      -- -1 = global; no -1 = current session only
+## Phase 12 | Compile the Report
 
--- Disable trace flag
-DBCC TRACEOFF (3226, -1);
+The audit is only useful if it ends in a prioritized report. Each finding should state what was observed, how strong the evidence is, and what the next action should be. Separate confirmed problems from limited-history observations.
 
--- Check active trace flags
-DBCC TRACESTATUS (-1);        -- -1 = all global; omit for session flags
-```
+### Current-instance summary
 
-| Flag | Behavior | Notes |
-|------|----------|-------|
-| T1117 | Uniform auto-grow for ALL files in filegroup | Default since 2016 |
-| T1118 | Force uniform extent allocations (eliminate SGAM contention) | Default since 2016 |
-| T1204 | Deadlock information in error log (less verbose) | Older format |
-| T1222 | Deadlock information in error log (verbose XML) | Preferred over T1204 |
-| T2371 | Lower auto-update statistics threshold to `sqrt(1000 * rows)` | Default since 2016 |
-| T3226 | Suppress successful backup messages in error log | Still useful on all versions |
-| T4199 | Enable all query optimizer fixes for current compat level | Recommended for most workloads |
-| T7412 | Lightweight query execution statistics profiling | Enables live query stats |
-| T8048 | Partition memory objects to per-CPU | For high-NUMA, high-concurrency servers |
-| T9481 | Force legacy cardinality estimator (pre-SQL 2014) | Use when CE 120+ causes regressions |
+| Area | Finding | Evidence | Priority | Next action |
+|---|---|---|---|---|
+| Baseline | Core defaults are not production-tuned. | `MAXDOP = 0`, cost threshold `= 5`, `max server memory = 2147483647`, `optimize for ad hoc workloads = 0`. | High | Set explicit memory cap, review `MAXDOP`, and raise cost threshold after a representative workload cycle. |
+| Confidence boundary | DMV history is very short. | `uptime_days = 0`. | High | Re-run cumulative phases after a full business cycle before making long-term workload conclusions. |
+| Memory | No live memory pressure is visible. | PLE `= 18007`; no pending memory grants. | Informational | Do not treat memory as the primary bottleneck right now. |
+| Waits | Current waits are dominated by blocking and parallelism. | `LCK_M_*`, `CXPACKET`, `CXSYNC_PORT`, `CXCONSUMER`. | Medium | Validate after longer uptime; then tune blocking and parallelism if the pattern persists. |
+| I/O | Storage latency is healthy. | Data and log files are low single-digit ms or better. | Informational | Do not blame storage first. |
+| Indexes | Moderate nonclustered fragmentation exists on small-to-modest indexes. | `40-46%` fragmentation on `212-239` page indexes. | Low | Address during normal maintenance, not as an emergency. |
+| Statistics | Real stale statistics exist on `dbo.gold_daily_summary`. | `modification_counter` far exceeds `rows`; `pct_modified` is extreme. | High | Refresh the relevant statistics and check affected plans. |
+| Plan cache | Single-use ad hoc plans waste meaningful cache memory. | `318` plans using `53.12 MB`. | Medium | Review parameterization patterns and enable `optimize for ad hoc workloads` if appropriate. |
+| TempDB | Layout is healthy and current usage is low. | Eight equal data files, fixed `64 MB` growth, low current consumption. | Informational | Keep current layout; revisit only if contention appears. |
+| Blocking | No live user blocking was visible at capture time. | `sys.dm_exec_requests` returned no active user rows. | Informational | Monitor live when users report slowness. |
+| Deadlocks | A deadlock signal exists but is not yet explained. | `Number of Deadlocks/sec = 1`. | Medium | Pull actual deadlock graphs from Extended Events before recommending a fix. |
+| File growth | User database growth is sane; system databases still use percentage growth. | `stoxx` grows by fixed `64 MB`; `master` and `msdb` use `10%`. | Medium | Normalize system-database growth increments to fixed MB values. |
+| Security | Privilege surface is too broad. | `sa` enabled; `BUILTIN\Administrators` and `NETWORK SERVICE` are sysadmin. | High | Review and reduce sysadmin membership. |
 
-### DBCC PAGE — low-level page inspection for forensics
+## Related
 
-Low-level page inspection for forensics — rarely needed in daily operations but invaluable when diagnosing corruption or understanding storage internals.
+This playbook is the entry point. Use the focused notes below when one phase becomes the main diagnostic branch.
 
-```sql
--- DBCC PAGE (database_id, file_id, page_id, print_option)
--- print_option: 0=header only, 1=header+rows, 2=header+buffer, 3=header+full row data
-DBCC TRACEON (3604);   -- redirect output to client (required before DBCC PAGE)
-DBCC PAGE ('FinanceDB', 1, 305, 3);
-DBCC TRACEOFF (3604);
-```
+### Deep-dive notes
 
-### DMV Quick-Reference — Dynamic Management Views at a glance
+- [[memory-and-buffer-pool]]
+- [[wait-stats-analysis]]
+- [[execution-plans]]
+- [[query-store-regressions-and-plan-forcing]]
+- [[index-maintenance]]
 
-The DMVs (Dynamic Management Views) are SQL Server's internal telemetry. They expose real-time data about sessions, queries, waits, memory, indexes, and I/O. All reset on restart unless noted.
+### Official references
 
-| DMV | Purpose |
-|-----|---------|
-| `sys.dm_exec_requests` | Currently executing requests |
-| `sys.dm_exec_sessions` | All connected sessions |
-| `sys.dm_exec_sql_text` | SQL text for a sql_handle |
-| `sys.dm_exec_query_plan` | XML execution plan for a plan_handle |
-| `sys.dm_exec_cached_plans` | Plan cache entries |
-| `sys.dm_os_wait_stats` | Cumulative wait statistics |
-| `sys.dm_os_buffer_descriptors` | Buffer pool pages by database |
-| `sys.dm_os_memory_clerks` | Memory consumers |
-| `sys.dm_os_performance_counters` | PLE, batch requests/sec, etc. |
-| `sys.dm_os_volume_stats` | Disk free space |
-| `sys.dm_io_virtual_file_stats` | I/O per database file |
-| `sys.dm_db_index_physical_stats` | Index fragmentation |
-| `sys.dm_db_index_usage_stats` | Index seeks/scans/lookups/updates |
-| `sys.dm_db_partition_stats` | Row counts and page counts |
-| `sys.dm_db_missing_index_details` | Missing index suggestions |
-| `sys.dm_tran_locks` | Current lock holders and waiters |
-| `sys.dm_tran_active_transactions` | Open transactions |
-| `sys.dm_db_session_space_usage` | TempDB usage per session |
-| `sys.dm_exec_procedure_stats` | Stored proc execution stats |
-| `sys.dm_exec_query_stats` | Query-level execution stats |
-
-### Related
-
-- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — full wait type catalog and interpretation
-- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — reading plans to diagnose the queries found in Phase 5
-- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index creation, maintenance, and strategy
-- [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — Phase 8 deep-dive
-- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — buffer pool, log, and TempDB internals
-- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) — fixing implicit conversions found in Phase 9
+- [sys.dm_os_wait_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-wait-stats-transact-sql?view=sql-server-ver17)
+- [sys.dm_exec_query_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-query-stats-transact-sql?view=sql-server-ver17)
+- [sys.dm_io_virtual_file_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-io-virtual-file-stats-transact-sql?view=sql-server-ver17)
+- [sys.dm_db_file_space_usage](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-file-space-usage-transact-sql?view=sql-server-ver17)
+- [sys.dm_db_stats_properties](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-stats-properties-transact-sql?view=sql-server-ver17)
+- [sys.dm_exec_cached_plans](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-cached-plans-transact-sql?view=sql-server-ver17)

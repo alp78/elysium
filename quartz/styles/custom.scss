@@ -483,6 +483,10 @@ button.darkmode {
   justify-content: center !important;
 }
 
+.mermaid svg[aria-roledescription="gitGraph"] .branchLabel text {
+  fill: #000000 !important;
+}
+
 .mermaid .mindmap-node text {
   font-size: 12px !important;
 }
