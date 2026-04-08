@@ -271,9 +271,11 @@ Three engineers push commits to main over a morning. A fourth engineer, working 
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -293,9 +295,11 @@ gitGraph
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -400,9 +404,11 @@ An engineer has been on `main` all morning reviewing code. They start a new feat
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -419,9 +425,11 @@ gitGraph
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -622,9 +630,11 @@ git show feature/esg-refactor:models/finance/index_calculation.sql
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -876,9 +886,11 @@ git log --oneline feature/refactor-index-pipeline ^main
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1155,9 +1167,11 @@ When you are on a local feature branch and run `git rebase main`, Git rewrites y
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1178,9 +1192,11 @@ gitGraph
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1204,9 +1220,11 @@ E′, F′, G′ are **new commits** — same code diff, but different SHA hashe
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1227,9 +1245,11 @@ gitGraph
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1368,9 +1388,11 @@ An engineer runs `git checkout v2.3.1` to investigate a production tag. They fin
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph
@@ -1700,9 +1722,11 @@ Cherry-pick applies the diff of a single commit to a different base. If the cont
 %%{init: {'theme': 'dark', 'themeVariables': {
   'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
   'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000',
+  'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000',
+  'gitBranchLabel4': '#000000', 'gitBranchLabel5': '#000000',
+  'gitBranchLabel6': '#000000', 'gitBranchLabel7': '#000000',
+  'commitLabelColor': '#ffffff', 'commitLabelBackground': '#292e42',
   'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
 }}}%%
 gitGraph

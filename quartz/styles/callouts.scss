@@ -112,6 +112,10 @@
     --callout-icon: var(--callout-icon-example);
   }
 
+  &[data-callout="guide"] {
+    --callout-icon: var(--callout-icon-example);
+  }
+
   &[data-callout="quote"] {
     --color: var(--secondary);
     --border: var(--lightgray);

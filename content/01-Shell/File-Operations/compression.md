@@ -7,7 +7,7 @@ tags: [shell]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."
-parent: "[[domain-file-operations]]"
+parent: "[[domain-data-and-files]]"
 links:
   - "[[navigation-and-listing]]"
   - "[[reading-file-contents]]"

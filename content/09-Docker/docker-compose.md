@@ -5,6 +5,7 @@ aliases: [Docker Compose, docker compose, docker-compose, compose, multi-contain
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
 parent: "[[domain-containers-and-orchestration]]"
 links:
+  - "[[image-management]]"
   - "[[container-lifecycle]]"
 created: 2026-03-22
 updated: 2026-03-22

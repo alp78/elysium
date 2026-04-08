@@ -47,21 +47,36 @@ Internally, every execution plan is a tree of physical operators serialized as X
 flowchart TD
     A["Query is slow"] --> B["Get actual execution plan<br/>Ctrl+M or SET STATISTICS XML ON"]
     B --> C{"Estimated vs actual<br/>rows differ > 10x?"}
-    C -->|Yes| D["Cardinality Estimation issue<br/>UPDATE STATISTICS<br/>Create multi-column stats<br/>CE Feedback (SS 2022)"]
-    C -->|No| E{"Check per-query<br/>wait stats"}
+    C --> Y1([YES])
+    Y1 --> D["Cardinality Estimation issue<br/>UPDATE STATISTICS<br/>Create multi-column stats<br/>CE Feedback (SS 2022)"]
+    C --> N1([NO])
+    N1 --> E{"Check per-query<br/>wait stats"}
     E --> F{"PAGEIOLATCH?"}
-    F -->|Yes| G["I/O bottleneck<br/>Add indexes<br/>Increase RAM"]
-    F -->|No| H{"LCK_M waits?"}
-    H -->|Yes| I["Lock contention<br/>Enable RCSI<br/>Shorten transactions"]
-    H -->|No| J{"High-cost<br/>operator?"}
-    J -->|Yes| K{"Which operator?"}
+    F --> Y2([YES])
+    Y2 --> G["I/O bottleneck<br/>Add indexes<br/>Increase RAM"]
+    F --> N2([NO])
+    N2 --> H{"LCK_M waits?"}
+    H --> Y3([YES])
+    Y3 --> I["Lock contention<br/>Enable RCSI<br/>Shorten transactions"]
+    H --> N3([NO])
+    N3 --> J{"High-cost<br/>operator?"}
+    J --> Y4([YES])
+    Y4 --> K{"Which operator?"}
     K --> L["Table or index scan<br/>Add index or rewrite predicate<br/>to be SARGable"]
     K --> M["Key Lookup<br/>Add INCLUDE columns<br/>to the nonclustered index"]
     K --> N["Sort with spill<br/>Use memory grant feedback<br/>Add a pre-sorted index"]
     K --> O["Hash Match spill<br/>Increase memory grant<br/>Reduce input rows"]
-    J -->|No| P{"Parameter sniffing?<br/>High variance ratio"}
-    P -->|Yes| Q["OPTIMIZE FOR UNKNOWN<br/>RECOMPILE<br/>PSP (SS 2022)"]
-    P -->|No| R["Check implicit conversions<br/>Fix type mismatches<br/>Fix client parameter types"]
+    J --> N4([NO])
+    N4 --> P{"Parameter sniffing?<br/>High variance ratio"}
+    P --> Y5([YES])
+    Y5 --> Q["OPTIMIZE FOR UNKNOWN<br/>RECOMPILE<br/>PSP (SS 2022)"]
+    P --> N5([NO])
+    N5 --> R["Check implicit conversions<br/>Fix type mismatches<br/>Fix client parameter types"]
+
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    class Y1,Y2,Y3,Y4,Y5 yesNode;
+    class N1,N2,N3,N4,N5 noNode;
 ```
 
 ---
@@ -109,6 +124,20 @@ GO
 | sql_server_version | current_database | compatibility_level | is_query_store_on | is_read_committed_snapshot_on |
 |---|---|---:|---:|---:|
 | Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236.2 (X64), Developer Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) | `stoxx` | 160 | 1 | 0 |
+
+_This setup row is the first gate for the entire note. It confirms the session is in `stoxx`, the engine is SQL Server 2022, Query Store is already on, and `READ_COMMITTED_SNAPSHOT` is still off at capture time. That combination means the Query Store and IQP sections are expected to work, while the later RCSI section is still demonstrating a change that has not yet been applied._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `current_database` | `stoxx` | ✅ | The session is connected to the intended lab database. | Later outputs belong to the same database as the note text. |
+| `current_database` | Anything else | ❌ | The session is running in the wrong database context. | Almost every later query becomes misleading until `USE stoxx;` is rerun. |
+| `compatibility_level` | `160` | ✅ | SQL Server 2022 optimizer behavior is active. | PSP, CE Feedback, DOP Feedback, and the expected SQL Server 2022 plan behavior are available. |
+| `compatibility_level` | `150` | Depends | SQL Server 2019 optimizer behavior is active. | Batch mode on rowstore can still work, but several SQL Server 2022-only sections no longer match the note. |
+| `compatibility_level` | `140` or lower | ❌ | Older optimizer behavior is active. | Modern IQP features in this page are unavailable or behave differently. |
+| `is_query_store_on` | `1` | ✅ | Query Store is enabled. | Query Store plan and runtime-stat queries can return persisted rows. |
+| `is_query_store_on` | `0` | ❌ | Query Store is disabled. | Query Store sections will be empty or incomplete until it is enabled. |
+| `is_read_committed_snapshot_on` | `0` | Depends | Read committed still uses locking semantics. | Good if you want to demonstrate the pre-RCSI state; readers should still expect reader-writer blocking to be possible. |
+| `is_read_committed_snapshot_on` | `1` | ✅ | Read committed uses row-versioned snapshot scans. | The later RCSI enablement command becomes a verification step rather than a state change. |
 
 #### Enable the capture features used later in this page
 
@@ -196,8 +225,6 @@ WHERE symbol = 'ASML.AS'
 GO 3
 ```
 
-*Observed output captured on 2026-04-08. Each execution returned 20 rows; first 5 rows from one execution are shown below.*
-
 | symbol | date | close | volume |
 |---|---|---:|---:|
 | ASML.AS | 2025-04-01 | 619.7 | 678551 |
@@ -206,47 +233,244 @@ GO 3
 | ASML.AS | 2025-04-04 | 564.1 | 1994082 |
 | ASML.AS | 2025-04-07 | 550.0 | 2619138 |
 
+_This rowset is only a reproducibility check. It proves the tagged demo query is valid in `stoxx`, returns real April 2025 `ASML.AS` data, and therefore has something concrete to seed into both the plan cache and Query Store. By itself, this output is not performance evidence yet._
+
 #### Find the session id for in-flight plan capture
 
-The `sys.dm_exec_query_statistics_xml` example later in the page needs the `session_id` of a currently running query from another SSMS window.
+The `sys.dm_exec_query_statistics_xml` example later in the page needs the `session_id` of a currently running or waiting user query from another SSMS window.
 
-*Run this in a second SSMS window while another query is still executing to identify the session you want to inspect.*
+*Use the example below to generate active blocking and capture a live `session_id` together with wait and blocker context.*
+
+> [!example]- Reproduce a live blocked request in 3 SSMS windows
+>
+> This is a lab-only workflow. It creates a disposable demo table, keeps one transaction open long enough to hold a lock, and intentionally blocks a second query so `sys.dm_exec_requests` returns a meaningful live user-session result.
+>
+> **Step 1. Run once in any window to create the demo table**
+>
+> ```sql
+> USE stoxx;
+> GO
+>
+> IF OBJECT_ID('dbo.dm_exec_requests_demo', 'U') IS NOT NULL
+>     DROP TABLE dbo.dm_exec_requests_demo;
+> GO
+>
+> CREATE TABLE dbo.dm_exec_requests_demo
+> (
+>     id int NOT NULL PRIMARY KEY,
+>     payload char(200) NOT NULL DEFAULT REPLICATE('X', 200)
+> );
+> GO
+>
+> INSERT INTO dbo.dm_exec_requests_demo (id)
+> VALUES (1);
+> GO
+> ```
+>
+> **Step 2. Window 1: open a transaction and keep the lock alive**
+>
+> ```sql
+> USE stoxx;
+> GO
+>
+> BEGIN TRAN;
+>
+> UPDATE dbo.dm_exec_requests_demo
+> SET payload = payload
+> WHERE id = 1;
+>
+> WAITFOR DELAY '00:01:00';
+>
+> ROLLBACK;
+> GO
+> ```
+>
+> **Alternative blocker pattern for Window 1: leave the blocker idle**
+>
+> ```sql
+> USE stoxx;
+> GO
+>
+> BEGIN TRAN;
+>
+> UPDATE dbo.dm_exec_requests_demo
+> SET payload = payload
+> WHERE id = 1;
+>
+> -- Do not COMMIT or ROLLBACK yet.
+> -- Leave the session idle with the transaction still open.
+> ```
+>
+> This variant is closer to what often happens in production. The blocking session may no longer appear in `sys.dm_exec_requests` because it has no active request, but it can still hold locks. In that case the observer query shows only the blocked victims, and `blocking_session_id` points to a session that must be inspected elsewhere.
+>
+> **Step 3. Window 2: run the victim query while Window 1 is still waiting**
+>
+> ```sql
+> USE stoxx;
+> GO
+>
+> SELECT payload
+> FROM dbo.dm_exec_requests_demo WITH (UPDLOCK, HOLDLOCK)
+> WHERE id = 1;
+> GO
+> ```
+>
+> **Step 4. Window 3: observe the live requests**
+>
+> ```sql
+> SELECT
+>     r.session_id,
+>     DB_NAME(r.database_id) AS database_name,
+>     s.login_name,
+>     s.host_name,
+>     s.program_name,
+>     r.status,
+>     r.command,
+>     r.wait_type,
+>     r.wait_time AS wait_time_ms,
+>     r.cpu_time AS cpu_time_ms,
+>     r.total_elapsed_time AS elapsed_time_ms,
+>     r.logical_reads,
+>     r.reads,
+>     r.writes,
+>     r.blocking_session_id,
+>     LEFT(REPLACE(REPLACE(LTRIM(SUBSTRING(
+>         st.text,
+>         (r.statement_start_offset / 2) + 1,
+>         CASE
+>             WHEN r.statement_end_offset = -1 THEN (DATALENGTH(st.text) - r.statement_start_offset) / 2 + 1
+>             ELSE (r.statement_end_offset - r.statement_start_offset) / 2 + 1
+>         END
+>     )), CHAR(13), ' '), CHAR(10), ' '), 160) AS running_statement
+> FROM sys.dm_exec_requests AS r
+> JOIN sys.dm_exec_sessions AS s
+>     ON r.session_id = s.session_id
+> CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS st
+> WHERE r.session_id <> @@SPID
+>   AND s.is_user_process = 1
+> ORDER BY r.total_elapsed_time DESC, r.session_id;
+> ```
+>
+> **Step 5. Run cleanup in any window after the demo**
+>
+> ```sql
+> USE stoxx;
+> GO
+>
+> IF @@TRANCOUNT > 0
+>     ROLLBACK;
+> GO
+>
+> DROP TABLE IF EXISTS dbo.dm_exec_requests_demo;
+> GO
+> ```
+>
 
 > [!info]-
 >
-> This query lists active requests so you can capture an in-flight actual plan from another session.
+> This production-focused query surfaces live user requests with enough context to identify who is running them, what they are waiting on, how long they have been active, how much work they have already done, and which exact statement is currently in flight.
 >
-> - `FROM sys.dm_exec_requests` reads the dynamic management view that tracks requests currently executing or waiting on the server.
-> - `session_id`, `status`, `command`, `wait_type`, and `blocking_session_id` are the key columns you need to identify the target request and understand whether it is running, waiting, or blocked.
-> - `WHERE session_id <> @@SPID` excludes the session currently running this lookup query, so you do not accidentally inspect the wrong session.
-> - `ORDER BY session_id` makes the output stable and easy to scan when multiple requests are active.
-> - The `session_id` value returned here is the number you later assign to `@session_id` in the `sys.dm_exec_query_statistics_xml` example.
+> - `FROM sys.dm_exec_requests AS r` reads the dynamic management view that tracks requests currently executing or waiting on the server.
+> - `JOIN sys.dm_exec_sessions AS s ON r.session_id = s.session_id` lets the query distinguish user sessions from internal engine sessions.
+> - `CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS st` attaches the SQL text for the batch behind the live request.
+> - `DB_NAME(r.database_id)`, `s.login_name`, `s.host_name`, and `s.program_name` identify the workload origin so you can tell whether the request came from an application, a job, SSMS, or an ad hoc tool.
+> - `status`, `command`, `wait_type`, `wait_time`, `cpu_time`, `total_elapsed_time`, `logical_reads`, `reads`, `writes`, and `blocking_session_id` expose the live execution state, current wait reason, elapsed duration, resource usage, and blocking chain.
+> - The `SUBSTRING` expression uses `statement_start_offset` and `statement_end_offset` to extract the current statement inside the batch instead of returning the entire batch text. The surrounding `LTRIM`, `REPLACE`, and `LEFT(..., 160)` calls make that statement readable in a compact troubleshooting output.
+> - `WHERE r.session_id <> @@SPID` excludes the session currently running this lookup query, so you do not accidentally inspect the wrong session.
+> - `AND s.is_user_process = 1` removes engine background tasks such as `TASK MANAGER`, `LAZY WRITER`, and redo workers, leaving only real client sessions.
+> - `ORDER BY r.total_elapsed_time DESC, r.session_id` pushes the longest-lived requests to the top, which is usually a better production default than pure session order.
+> - The `session_id` value returned here is still the number you later assign to `@session_id` in the `sys.dm_exec_query_statistics_xml` example, but now the same query is also useful as a real production triage view.
 
 ```sql
 SELECT
-    session_id,
-    status,
-    command,
-    wait_type,
-    blocking_session_id
-FROM sys.dm_exec_requests
-WHERE session_id <> @@SPID
-ORDER BY session_id;
+    r.session_id,
+    DB_NAME(r.database_id) AS database_name,
+    s.login_name,
+    s.host_name,
+    s.program_name,
+    r.status,
+    r.command,
+    r.wait_type,
+    r.wait_time AS wait_time_ms,
+    r.cpu_time AS cpu_time_ms,
+    r.total_elapsed_time AS elapsed_time_ms,
+    r.logical_reads,
+    r.reads,
+    r.writes,
+    r.blocking_session_id,
+    LEFT(REPLACE(REPLACE(LTRIM(SUBSTRING(
+        st.text,
+        (r.statement_start_offset / 2) + 1,
+        CASE
+            WHEN r.statement_end_offset = -1 THEN (DATALENGTH(st.text) - r.statement_start_offset) / 2 + 1
+            ELSE (r.statement_end_offset - r.statement_start_offset) / 2 + 1
+        END
+    )), CHAR(13), ' '), CHAR(10), ' '), 160) AS running_statement
+FROM sys.dm_exec_requests AS r
+JOIN sys.dm_exec_sessions AS s
+    ON r.session_id = s.session_id
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS st
+WHERE r.session_id <> @@SPID
+  AND s.is_user_process = 1
+ORDER BY r.total_elapsed_time DESC, r.session_id;
 ```
 
-*Observed output captured on 2026-04-08. The server had 43 active request rows at that moment; first 5 are shown below.*
+| session_id | database_name | login_name | host_name | program_name | status | command | wait_type | wait_time_ms | cpu_time_ms | elapsed_time_ms | logical_reads | reads | writes | blocking_session_id | running_statement |
+|---|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 53 | stoxx | sa | ELYSIUM | Microsoft SQL Server Management Studio - Query | suspended | UPDATE | LCK_M_IX | 21737 | 0 | 21737 | 0 | 0 | 0 | 56 | `UPDATE [dbo].[dm_exec_requests_demo] SET [payload] = [payload] WHERE [id]=@1` |
+| 62 | stoxx | sa | ELYSIUM | Microsoft SQL Server Management Studio - Query | suspended | SELECT | LCK_M_SCH_S | 11584 | 0 | 11584 | 0 | 0 | 0 | 56 | `SELECT payload FROM dbo.dm_exec_requests_demo WITH (UPDLOCK, HOLDLOCK) WHERE id = 1` |
 
-| session_id | status | command | wait_type | blocking_session_id |
-|---|---|---|---|---:|
-| 1 | sleeping | TASK MANAGER |  | 0 |
-| 2 | sleeping | TASK MANAGER |  | 0 |
-| 3 | sleeping | TASK MANAGER |  | 0 |
-| 4 | sleeping | TASK MANAGER |  | 0 |
-| 5 | sleeping | TASK MANAGER |  | 0 |
+_Both visible requests are victims, not the root blocker. Session `53` is an `UPDATE` waiting on `LCK_M_IX`, and session `62` is a `SELECT` waiting on `LCK_M_SCH_S`; both point to `blocking_session_id = 56`. Session `56` does not appear in `sys.dm_exec_requests` because that DMV only shows currently active requests, and a sleeping session with an open transaction can still hold incompatible locks without having a current request row. The timing columns show that both victims have been stalled for seconds, while `cpu_time_ms = 0`, `logical_reads = 0`, `reads = 0`, and `writes = 0` make it clear that the current bottleneck is lock waiting, not CPU work or I/O. `running_statement` shows exactly which statements are blocked, which lets you distinguish a blocked writer from a blocked reader before tracing the root blocker in session and lock DMVs._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `database_name` | Expected target database such as `stoxx` | ✅ | The request is running where you expect it to run. | Focus the investigation on that database's objects, indexes, and workload. |
+| `database_name` | Unexpected database such as `master`, `tempdb`, or another user DB | ❌ | The request is not running in the database you assumed. | Re-scope the investigation before tuning the wrong database. |
+| `login_name` | Expected service or application login | ✅ | The session identity matches the workload you are investigating. | Helps separate application traffic from ad hoc or administrative activity. |
+| `login_name` | `sa` or an unexpected privileged login | Depends | The request is being executed under a broad administrative identity. | Check whether this is an emergency change, administrative action, or unsafe production practice. |
+| `host_name` | Expected application host, jump box, or job runner | ✅ | The request came from a known origin. | Useful for routing the issue to the right team or node. |
+| `host_name` | Unknown workstation or unexpected server | ❌ | The request origin is not what you expected. | Investigate ad hoc activity, rogue tooling, or a misrouted workload. |
+| `program_name` | Expected application, agent, or client tool | ✅ | The client program matches the workload path you are tracing. | Helps separate application traffic from SSMS, ETL, or scripts. |
+| `program_name` | `SQLCMD`, `Microsoft SQL Server Management Studio`, or other ad hoc tool in production | Depends | The request is coming from a manual or script-driven client, not necessarily from the application tier. | Check whether the issue is operational, not application-driven. |
+| `status` | `running` | ✅ | The request is currently executing on a worker. | Best candidate when you want to capture an actively consuming statement. |
+| `status` | `runnable` | Depends | The request is ready to run but waiting for scheduler time. | Look for CPU pressure or scheduler contention. |
+| `status` | `suspended` | Depends | The request is waiting on a resource. | Use `wait_type` and `blocking_session_id` to determine whether the wait is benign or actionable. |
+| `status` | `sleeping` | ❌ | The session is idle and not actively executing a request. | Not useful for in-flight plan capture or live request triage. |
+| `command` | `SELECT` | ✅ | A read query is the active statement. | Investigate plan shape, blocking, row goals, and read volume. |
+| `command` | `UPDATE` | Depends | A write statement is active or waiting. | Consider lock acquisition, transaction scope, and whether the write itself is the blocker or another victim. |
+| `command` | `INSERT`, `UPDATE`, or `DELETE` | Depends | A write statement is active. | Consider locking impact, transaction length, log pressure, and index maintenance cost. |
+| `command` | `WAITFOR` | Depends | The session is intentionally paused but the batch is still active. | Acceptable only when deliberate; otherwise it can indicate an agent loop, delay logic, or a held transaction. |
+| `command` | Backup, restore, DBCC, or maintenance command | Depends | Administrative work is active. | Do not treat it like normal OLTP traffic; coordinate with operations first. |
+| `wait_type` | Blank / `NULL` | Depends | No current wait is exposed for the request. | Often means the request is actively running or has just transitioned between waits. |
+| `wait_type` | `WAITFOR` | ✅ | The request is sleeping inside a `WAITFOR` statement. | Acceptable only when deliberate; otherwise investigate why the session is intentionally delayed. |
+| `wait_type` | `LCK_M_IX` | ❌ | The request is waiting to acquire an intent exclusive lock. | Usually indicates write-side blocking before SQL Server can proceed to finer-grained exclusive locking. |
+| `wait_type` | `LCK_M_SCH_S` | ❌ | The request is waiting for a schema stability lock. | Often points to blocking from DDL, recompilation-sensitive activity, or a session holding an incompatible schema-level lock. |
+| `wait_type` | `LCK_M_*` such as `LCK_M_U` | ❌ | The request is waiting on a lock. | Follow the blocker before tuning the victim query. |
+| `wait_type` | `PAGEIOLATCH_*` | ❌ | The request is waiting for data pages to be read into memory. | Investigate storage latency, missing indexes, and cache residency. |
+| `wait_type` | `CXPACKET` or `CXCONSUMER` | Depends | The request is participating in a parallel plan. | Check whether parallelism is helping or masking skew and grant issues. |
+| `wait_type` | `ASYNC_NETWORK_IO` | Depends | SQL Server is waiting for the client to consume rows. | The bottleneck may be client-side rather than query-side. |
+| `wait_time_ms` | `0-1000` | ✅ | The current wait is short. | Usually not enough by itself to justify urgent action. |
+| `wait_time_ms` | `1000-10000` | Depends | The request has been waiting for seconds, not milliseconds. | Worth watching, especially on hot paths or high-frequency queries. |
+| `wait_time_ms` | `>10000` | ❌ | The current wait is long-lived. | Escalate blocking, I/O, or scheduler investigation based on `wait_type`. |
+| `cpu_time_ms` | Near `0` while `wait_type` shows a resource wait | ✅ | The request is mostly waiting, not burning CPU. | Focus on the wait reason rather than CPU tuning first. |
+| `cpu_time_ms` | Close to `elapsed_time_ms` | ❌ | The request is spending most of its lifetime on CPU. | Investigate plan inefficiency, row volume, scalar work, or poor parallelism choices. |
+| `elapsed_time_ms` | Low and stable | ✅ | The request is recent or transient. | A short-lived issue may be acceptable if it is not frequent. |
+| `elapsed_time_ms` | Continuously growing | ❌ | The request is staying alive for a long time. | Prioritize it if it is blocking others or consuming resources. |
+| `logical_reads` | `0-100` for point lookups or blocked waits | ✅ | The request has touched few buffer-pool pages so far. | Not a sign of read amplification by itself. |
+| `logical_reads` | Large and rapidly increasing | ❌ | The request is scanning or repeatedly touching many pages. | Investigate index design, predicate shape, and row estimates. |
+| `reads` | `0` while the request is blocked | ✅ | The session is not performing physical I/O during the wait. | Confirms the current bottleneck is not disk access. |
+| `reads` | Nonzero and growing with `PAGEIOLATCH_*` waits | ❌ | Physical page reads are occurring. | Correlate with I/O waits and storage/cache conditions. |
+| `writes` | `0` for a blocked reader | ✅ | The victim is not generating write I/O. | Supports the interpretation that it is waiting on a lock rather than changing data. |
+| `writes` | Nonzero on a write-heavy request | Depends | The request is dirtying pages. | Consider transaction log pressure and downstream blocking impact. |
+| `blocking_session_id` | `0` or `NULL` | ✅ | The request is not currently blocked, or a blocker is not identified. | Look elsewhere for the bottleneck. |
+| `blocking_session_id` | Positive session id | ❌ | Another session is the blocker. | Trace the blocker first; if that session does not appear in `sys.dm_exec_requests`, it may be sleeping with an open transaction and must be investigated through session and lock metadata. |
+| `blocking_session_id` | `-2`, `-3`, `-4`, or `-5` | ❌ | SQL Server is indicating a nonstandard blocker case rather than a normal user session. | Investigate distributed transactions, recovery, or latch ownership details before drawing conclusions. |
+| `running_statement` | Precise current statement text | ✅ | The query isolates the exact statement currently executing inside the batch. | You can tune or trace the right statement instead of guessing from the full batch. |
+| `running_statement` | Truncated or unexpectedly generic text | Depends | The current statement is long, dynamic, or parameterized. | Pull the full batch text or the full plan XML if you need more context. |
 
 #### Optional cleanup after you finish collecting outputs
 
-The setup above is useful while collecting demo plans, but you may want to restore the lighter default capture settings afterward.
+Return the capture settings to lighter defaults after collecting the required plans.
 
 *Return Query Store and last-plan capture to their usual lab defaults after you finish the walkthrough.*
 
@@ -382,14 +606,34 @@ WHERE st.text LIKE '%execution-plans-demo%'
 ORDER BY qs.last_execution_time DESC;
 ```
 
-*Observed output captured on 2026-04-08 for the tagged `silver.eurostoxx50_ohlcv` demo statement.*
-
 | execution_count | avg_reads | avg_cpu_ms |
 |---:|---:|---:|
 | 2 | 86 | 0 |
+
+<!-- output separator -->
+
 | query_plan_hash | root_op | operators | indexes |
 |---|---|---|---|
 | `0x0B9E9C3019B25F40` | Nested Loops | Nested Loops -> Index Seek -> Clustered Index Seek | `IX_silver_eurostoxx50_ohlcv_symbol_date`, `PK__eurostox__3213E83FDF67D274` |
+
+_The first table is cache-level aggregate telemetry from `sys.dm_exec_query_stats`. It says the cached statement had executed twice, averaged 86 logical reads per execution, and consumed less than 1 ms of average worker time once rounded to milliseconds. Because SQL Server and Query Store both express these counters as aggregated plan metrics, the right reading is “cheap and stable so far,” not “guaranteed fast forever.” The second table is the XML-plan summary: the same statement shape is identified by one `query_plan_hash`, and the operator chain shows a nonclustered seek on `(symbol, date)` followed by clustered lookups for the non-covered columns `close` and `volume`._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `1` | Depends | Only one execution contributed to the cache row. | Enough to inspect plan shape, but too little history for trend analysis. |
+| `execution_count` | `2-10` | Depends | Light execution history. | Still a small sample; avoid broad conclusions until the query has executed more times. |
+| `execution_count` | `>10` | ✅ | Repeated plan reuse is happening. | Average metrics become more representative of normal behavior. |
+| `avg_reads` | `0-10` | ✅ | Extremely selective access, usually a point lookup or tiny seek. | Usually not an I/O concern unless executed at very high frequency. |
+| `avg_reads` | `10-100` | ✅ | Modest buffer-pool work per execution. | Common and often acceptable for selective transactional queries. |
+| `avg_reads` | `100-1000` | Depends | Moderate memory traffic per execution. | Acceptable for wider predicates, but worth checking on hot paths. |
+| `avg_reads` | `>1000` | ❌ | Heavy page access per execution. | Investigate scans, key lookups, or missing indexes. |
+| `avg_cpu_ms` | `<1 ms` | ✅ | CPU cost is trivial or rounded below 1 ms. | CPU is not the pressure point for this statement in the captured sample. |
+| `avg_cpu_ms` | `1-10 ms` | ✅ | Low CPU consumption. | Usually acceptable unless the statement runs constantly. |
+| `avg_cpu_ms` | `10-50 ms` | Depends | Moderate CPU usage. | Fine for some workloads, but monitor if frequency is high. |
+| `avg_cpu_ms` | `>50 ms` | ❌ | CPU cost is materially noticeable. | Investigate expensive expressions, joins, sorts, or poor row estimates. |
+| `root_op` | `Nested Loops` | ✅ | Loop join chosen for relatively selective probing. | A good sign when outer-row counts are low. |
+| `operators` | `Index Seek -> Clustered Index Seek` | Depends | The plan is selective but not fully covered. | Fine for small result sets; can degrade as qualifying rows grow because each row triggers lookups. |
+| `query_plan_hash` | Same hash across cache, Query Store, and last-plan sections | ✅ | Multiple telemetry sources are pointing at the same physical plan. | Cross-section comparisons in the note are valid. |
 
 > [!tip] Click the XML result in SSMS to open the graphical plan viewer.
 
@@ -432,8 +676,6 @@ WHERE symbol = 'ASML.AS'
 SET STATISTICS XML OFF;
 ```
 
-*Observed output captured on 2026-04-08. The query returned 20 rows; first 5 rows are shown below.*
-
 | symbol | date | close | volume |
 |---|---|---:|---:|
 | ASML.AS | 2025-04-01 | 619.7 | 678551 |
@@ -441,11 +683,24 @@ SET STATISTICS XML OFF;
 | ASML.AS | 2025-04-03 | 578.7 | 1145270 |
 | ASML.AS | 2025-04-04 | 564.1 | 1994082 |
 | ASML.AS | 2025-04-07 | 550.0 | 2619138 |
+
+<!-- output separator -->
+
 | query_plan_hash | root_op | operators | root_actual_rows | seek_logical_reads | key_lookup_logical_reads |
 |---|---|---|---:|---:|---:|
 | `0x0B9E9C3019B25F40` | Nested Loops | Nested Loops -> Index Seek -> Clustered Index Seek | 20 | 2 | 44 |
 
-The result set includes an XML column containing the full actual plan with runtime statistics.
+_The first table is the business rowset, and the second table is the actual-plan summary derived from the XML result set produced by `SET STATISTICS XML ON`. The important point is not just that 20 ASML rows were returned, but that the actual plan shows where the work happened: only 2 logical reads on the seek itself, versus 44 logical reads on the clustered key lookups. That is the textbook signature of a selective access path that still pays extra work for non-covered columns._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `root_actual_rows` | Exact match to returned row count | ✅ | The plan summary is aligned with the visible query result. | You can safely tie the operator work to the business rowset. |
+| `root_actual_rows` | Much higher than expected | ❌ | More rows flowed through the plan than the reader may assume from the preview. | Recheck filters, row goals, or hidden branches in the plan. |
+| `seek_logical_reads` | `0-10` | ✅ | The access method itself is cheap. | The index key is selective and doing its job. |
+| `seek_logical_reads` | `>100` | ❌ | Even the seek phase is touching many pages. | Predicate selectivity or index design may be poor. |
+| `key_lookup_logical_reads` | Lower than seek reads | ✅ | Lookup overhead is minor. | The plan is close to being efficient enough already. |
+| `key_lookup_logical_reads` | Similar to or higher than seek reads | Depends | Lookup overhead is material. | Consider a covering index if this query is important or frequent. |
+| `operators` | `Index Seek -> Clustered Index Seek` | Depends | Good selectivity, but the index does not cover all requested columns. | Fine for small row counts; risky if row count grows. |
 
 #### sys.query_store_plan — retrieve persisted plans from Query Store
 
@@ -478,11 +733,31 @@ WHERE qsqt.query_sql_text LIKE '%silver.eurostoxx50_ohlcv%'
 ORDER BY qsp.last_execution_time DESC;
 ```
 
-*Observed output captured on 2026-04-08. Query Store returned 7 matching rows; the most recent persisted plan for the demo statement is shown below.*
-
 | query_sql_text | avg_ms | avg_logical_io_reads | query_plan_hash | root_op | operators | indexes |
 |---|---:|---:|---|---|---|---|
 | `SELECT symbol, [date], [close], volume FROM silver.eurostoxx50_ohlcv WHERE symbol = 'ASML.AS' AND [date] >= '2025-04-01' AND [date] < '2025-05-01'` | 0.217 | 86 | `0x0B9E9C3019B25F40` | Nested Loops | Nested Loops -> Index Seek -> Clustered Index Seek | `IX_silver_eurostoxx50_ohlcv_symbol_date`, `PK__eurostox__3213E83FDF67D274` |
+
+_This row is the durable Query Store version of the same query shape seen in the volatile plan cache. Microsoft documents `avg_duration` as microseconds and `avg_logical_io_reads` as 8 KB pages, so after the conversion in this query the output says: this plan averaged `0.217 ms` per execution and about `86` logical page reads, or roughly `688 KB` of buffer-pool page access per execution. That is a fast query. The `query_plan_hash` matching the cache section matters because it proves Query Store and the plan cache were describing the same physical plan, not two different plans that only happened to query the same table._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `avg_ms` | `<1 ms` | ✅ | Usually trivial elapsed time for one Query Store runtime-stats row. | The query is not a tuning priority unless it runs extremely often. |
+| `avg_ms` | `1-10 ms` | ✅ | Generally healthy for short lookup-style work. | Usually acceptable unless the statement is on a hot path. |
+| `avg_ms` | `10-50 ms` | Depends | Still often acceptable, but no longer negligible. | Review frequency and business criticality before ignoring it. |
+| `avg_ms` | `50-200 ms` | Depends | Noticeable latency. | Worth checking if the statement executes frequently. |
+| `avg_ms` | `200-1000 ms` | ❌ | Materially expensive for most interactive workloads. | Investigate plan quality, row estimates, and indexing. |
+| `avg_ms` | `>1000 ms` | ❌ | Clear tuning target unless the query is intentionally batch/reporting work. | Expect deeper plan analysis. |
+| `avg_logical_io_reads` | `0-10` | ✅ | Tiny page-touch footprint. | Typical of very selective point lookups. |
+| `avg_logical_io_reads` | `10-100` | ✅ | Modest logical I/O footprint. | Common and usually acceptable for selective seeks. |
+| `avg_logical_io_reads` | `100-1000` | Depends | Moderate buffer-pool work. | Fine for medium-range queries, but watch hot-path frequency. |
+| `avg_logical_io_reads` | `>1000` | ❌ | Large page-touch footprint per execution. | Investigate scans, lookups, or wider-than-expected predicates. |
+| `avg_logical_io_reads` | `86` in this capture | ✅ | About `86 x 8 KB = 688 KB` of logical page access. | Not alarming on its own. The query is fast and the I/O footprint is still modest. |
+| `root_op` | `Nested Loops` | ✅ | Query Store preserved the same join strategy as the cache capture. | The plan is still a seek-plus-lookup plan, not a regression to a scan-heavy shape. |
+| `query_plan_hash` | Same hash as the cache and last-actual-plan sections | ✅ | Same physical plan across telemetry sources. | Cross-source comparisons in the note are trustworthy. |
+
+> [!tip] One Query Store row is one plan in one aggregation interval
+>
+> `avg_ms` and `avg_logical_io_reads` do not represent the query for all time. They represent one Query Store runtime-stats row for one plan in one interval. If the same query has multiple plans or multiple intervals, you must aggregate or compare those rows explicitly before making historical claims.
 
 ### Lightweight query profiling
 
@@ -508,11 +783,11 @@ SELECT *
 FROM sys.dm_exec_query_statistics_xml(@session_id);
 ```
 
-*Live output not embedded yet. This DMV only returns a plan while another request is still executing in a different session, so this section must be captured against a deliberately in-flight query rather than from a single idle session.*
+*No embedded row here, because this DMV only returns a result while a different session is still executing.*
 
 > [!tip] Finding the session_id
 >
-> Use `SELECT session_id, status, command, wait_type FROM sys.dm_exec_requests WHERE status = 'running'` to identify in-flight sessions.
+> Reuse the production `sys.dm_exec_requests` query and pick the `session_id` for the live user request you want to inspect.
 
 #### LAST_QUERY_PLAN_STATS — persist last actual plan stats
 
@@ -541,14 +816,27 @@ WHERE st.text LIKE '%execution-plans-demo%'
 ORDER BY qs.last_execution_time DESC;
 ```
 
-*Observed output captured on 2026-04-08 for the tagged demo statement.*
-
 | execution_count | last_ms |
 |---:|---:|
 | 2 | 0 |
+
+<!-- output separator -->
+
 | query_plan_hash | root_op | operators | indexes |
 |---|---|---|---|
 | `0x0B9E9C3019B25F40` | Nested Loops | Nested Loops -> Index Seek -> Clustered Index Seek | `IX_silver_eurostoxx50_ohlcv_symbol_date`, `PK__eurostox__3213E83FDF67D274` |
+
+_This DMV gives you the last known actual plan after execution has already finished. The first table tells you the cached statement had been executed twice and that the most recent elapsed time rounded down below 1 ms. The second table matters more: it proves the preserved last actual plan was still the same seek-plus-key-lookup shape seen in the plan cache and Query Store. In practice, this DMV is most useful when the query is already gone by the time you start troubleshooting._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `1` | Depends | You only have one completed execution in the cache row. | Fine for confirming the last plan, weak for trend analysis. |
+| `execution_count` | `>1` | ✅ | The statement has reused the same cached entry. | Useful for comparing “last execution” against broader averages elsewhere. |
+| `last_ms` | `<1 ms` | ✅ | The last completed execution was trivial once rounded to milliseconds. | The query is not currently a latency concern. |
+| `last_ms` | `1-10 ms` | ✅ | Low elapsed time for the most recent execution. | Usually healthy for a selective lookup. |
+| `last_ms` | `10-100 ms` | Depends | The last execution is no longer negligible. | Compare against cache averages to see whether this was a one-off. |
+| `last_ms` | `>100 ms` | ❌ | The latest execution was noticeably slow. | Inspect actual rows, waits, and parameter values. |
+| `query_plan_hash` | Same as other sections | ✅ | The last actual plan matches the other captured sources. | The note is showing one stable plan, not conflicting telemetry. |
 
 > [!warning] Permissions Change in SQL Server 2022
 >
@@ -641,8 +929,6 @@ WHERE qs.sql_handle = @sql_handle
 ORDER BY subtree_cost DESC;
 ```
 
-*Observed output captured on 2026-04-08. First 5 operators from the ranked output are shown below.*
-
 | operator_name | subtree_cost | estimated_rows | io_cost | cpu_cost |
 |---|---:|---:|---:|---:|
 | Sort | 0.0313798 | 135 | 0.0112613 | 0.00159444 |
@@ -650,6 +936,16 @@ ORDER BY subtree_cost DESC;
 | Filter | 0.0185106 | 135 | 0 | 0.00132 |
 | Nested Loops | 0.0171906 | 1500 | 0 | 0.00627 |
 | Nested Loops | 0.00942047 | 1500 | 0 | 0.00627 |
+
+_These numbers come from the optimizer's cost model, not from measured runtime. In this capture, `Sort` has the highest `subtree_cost`, which means SQL Server estimated that ordering work would dominate the plan branch more than the join or scalar computation. That does not prove the sort was the real runtime bottleneck. It only tells you where the optimizer believed the most combined I/O-plus-CPU work would be, which is why you should confirm it against actual rows and `STATISTICS IO/TIME`._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `subtree_cost` | Highest row in the result set | ✅ | Highest estimated branch cost in the plan. | Start your cost-focused inspection here. |
+| `estimated_rows` | Close to actual rows later in the note | ✅ | The optimizer's row model is behaving reasonably. | Cost ranking is more trustworthy. |
+| `estimated_rows` | Far from actual rows | ❌ | Cost ranking is being driven by bad assumptions. | Fix statistics or cardinality issues before trusting the cost order. |
+| `io_cost` greater than `cpu_cost` | Depends | SQL Server expects page access to dominate. | Investigate selectivity, scans, and indexing first. |
+| `cpu_cost` greater than `io_cost` | Depends | SQL Server expects computation to dominate. | Investigate sorts, hashes, and expressions first. |
 
 #### EstimateIO vs EstimateCPU — cost breakdown per operator
 
@@ -707,8 +1003,6 @@ SET STATISTICS TIME OFF;
 SET STATISTICS IO OFF;
 ```
 
-*Observed output captured on 2026-04-08 for the demo query.*
-
 | metric | value |
 |---|---|
 | row_count | 20 |
@@ -719,7 +1013,19 @@ SET STATISTICS IO OFF;
 | CPU_ms | 1 |
 | elapsed_ms | 0 |
 
-`logical reads` is the number of 8 KB pages read from the buffer pool (memory). `physical reads` is pages fetched from disk — a value of 0 means all pages were cached. `Scan count` is the number of times the table or index was accessed. When elapsed time significantly exceeds CPU time, the query was waiting on something (I/O, locks, network) rather than computing.
+_This is statement-level runtime evidence rather than plan estimates. The query returned 20 rows, touched 70 logical 8 KB pages, performed no physical reads, used 1 ms of CPU, and rounded down to 0 ms elapsed time in the captured message output. No physical reads means the needed pages were already in memory for this execution, so storage latency was not part of the observed cost. `70` logical reads is about `560 KB` of page access, which is still modest._
+
+| Metric | Value or range | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `row_count` | Matches expected result size | ✅ | The statement returned the rows you expected. | Good baseline before comparing plan metrics. |
+| `logical_reads` | `0-10` | ✅ | Tiny page-touch footprint. | Usually a point lookup or very selective seek. |
+| `logical_reads` | `10-100` | ✅ | Modest buffer-pool work. | Common and often acceptable for selective queries. |
+| `logical_reads` | `100-1000` | Depends | Moderate page-touch volume. | Check frequency and whether lookups are inflating reads. |
+| `logical_reads` | `>1000` | ❌ | Heavy page access per execution. | Investigate scans, broad predicates, or non-covering indexes. |
+| `physical_reads` | `0` | ✅ | All needed pages came from memory. | Storage is not the pressure point for this execution. |
+| `physical_reads` | `>0` | Depends | Some pages had to be read from storage. | Could be normal for a cold cache or a sign of memory pressure. |
+| `CPU_ms` | `<1-5 ms` | ✅ | Low CPU cost. | CPU is not the main issue here. |
+| `elapsed_ms` much larger than `CPU_ms` | ❌ | The statement spent time waiting rather than burning CPU. | Investigate blocking, I/O waits, or client consumption. |
 
 ---
 
@@ -803,11 +1109,16 @@ WHERE qsrs.avg_duration > 1000000
 ORDER BY qsrs.avg_duration DESC;
 ```
 
-*Observed output captured on 2026-04-08. Query Store returned no rows for this filter because no runtime-stats aggregate in `stoxx` had an average duration above 1 second at capture time.*
-
 | rows_returned | note |
 |---:|---|
 | 0 | No Query Store runtime-stat row matched `avg_duration > 1000000` on 2026-04-08. |
+
+_This zero-row result is informative, not a failure. Query Store did have runtime rows, but none of them had an average duration above one second for the captured intervals. In other words, the filter is stricter than the current lab workload. If you want this section to produce examples, lower the threshold or run a deliberately slower query._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `rows_returned` | `0` | Depends | The query ran successfully, but no row met the filter. | Either the workload is healthy, the interval is quiet, or the threshold is too high. |
+| `rows_returned` | `>0` | ✅ | At least one Query Store runtime row crossed the threshold. | The returned statements are valid tuning candidates. |
 
 #### XML plan EstimateRows vs ActualRows — extract estimated vs actual per operator
 
@@ -854,8 +1165,6 @@ WHERE qs.sql_handle = @sql_handle
 ORDER BY runtime.value('@ActualRows', 'int') DESC;
 ```
 
-*Observed output captured on 2026-04-08. The query returned 78 rows; first 5 are shown below. In this capture the `actual_rows` columns were null because the query reads cached Showplan XML, not guaranteed last-actual-plan XML.*
-
 | operator_name | estimated_rows | actual_rows | actual_to_estimated_ratio |
 |---|---:|---:|---|
 | Sort | 1 |  |  |
@@ -863,6 +1172,15 @@ ORDER BY runtime.value('@ActualRows', 'int') DESC;
 | Nested Loops | 1504 |  |  |
 | Concatenation | 1504 |  |  |
 | Table-valued function | 504 |  |  |
+
+_The important signal here is the absence of `actual_rows`, not the operator names themselves. This query shredded cached plan XML that did not include runtime counters, so SQL Server could still expose `EstimateRows` but not the actual per-operator row counts. That is why the ratio column is blank. The operational lesson is simple: cached plan XML is often enough for shape analysis, but not always enough for actual-vs-estimated row analysis._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `actual_rows` | Numeric value present | ✅ | Runtime row counters were captured. | You can compare actual vs estimated rows directly. |
+| `actual_rows` | Blank / `NULL` | ❌ | Runtime counters were not present in the XML source. | This output cannot prove cardinality accuracy. Use an actual-plan source instead. |
+| `actual_to_estimated_ratio` | Close to `1x` | ✅ | Estimate quality is good. | The optimizer had a reasonable row-count model. |
+| `actual_to_estimated_ratio` | `>10x` or `<0.1x` | ❌ | Large estimation error. | Expect poorer join choices or memory grants. |
 
 ### Causes and fixes
 
@@ -897,6 +1215,14 @@ SELECT name, compatibility_level FROM sys.databases WHERE name = 'stoxx';
 | name | compatibility_level |
 |---|---:|
 | stoxx | 160 |
+
+_This output confirms the database-level optimizer generation for `stoxx`. `160` means SQL Server 2022 behavior, which is why the SQL Server 2022 IQP features in this note are expected to appear. Compatibility level is not just a syntax flag. It changes which optimizer behaviors SQL Server may use for new compilations._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `compatibility_level` | `160` | ✅ | SQL Server 2022 behavior. | The note's PSP, CE Feedback, and newest IQP sections match the database setting. |
+| `compatibility_level` | `150` | Depends | SQL Server 2019 behavior. | Some newer SQL Server 2022 sections will no longer match observed behavior. |
+| `compatibility_level` | `140` or lower | ❌ | Older optimizer behavior. | Modern sections in this note become partially inapplicable. |
 | Compatibility level | CE model |
 |---|---|
 | 70 | Legacy CE (pre-2014) |
@@ -931,8 +1257,6 @@ WHERE _index = 'euro_stoxx_50'
 OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 ```
 
-*Observed output captured on 2026-04-08. The statement returned 199 rows. Selected columns from the first 5 rows are shown below.*
-
 | id | _index | symbol | signal_date | current_price | target_median_price | upside_potential |
 |---:|---|---|---|---:|---:|---:|
 | 1 | euro_stoxx_50 | ASML.AS | 2026-03-04 | 1199.8 | 1450 | 0.2085 |
@@ -940,6 +1264,8 @@ OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 | 3 | euro_stoxx_50 | RMS.PA | 2026-03-04 | 1930 | 2355 | 0.2202 |
 | 4 | euro_stoxx_50 | OR.PA | 2026-03-04 | 374.3 | 410 | 0.0954 |
 | 5 | euro_stoxx_50 | SAP.DE | 2026-03-04 | 167.38 | 255 | 0.5235 |
+
+_This grid only confirms that the hinted query returned the expected `euro_stoxx_50` rows. The point of the hint is not the row data but the compiled plan behind it, so the real comparison is whether row estimates, join choices, or memory grants change when you run the same statement with and without the legacy CE hint._
 
 ### CE Feedback (SQL Server 2022)
 
@@ -1048,11 +1374,11 @@ WHERE st.text LIKE '%execution-plans-demo%'
 ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 ```
 
-*Observed output captured on 2026-04-08. The cached plan XML for the tagged demo statement did not contain any `<WaitStats>` nodes at capture time.*
-
 | rows_returned | note |
 |---:|---|
 | 0 | No per-query wait rows were returned from cached plan XML for the tagged demo query. |
+
+_A zero-row result here does not mean the query never waited; it means the matched cached plan XML did not contain embedded per-query wait nodes. This often happens on very fast statements or when the plan source is not an actual-plan capture that recorded waits._
 
 ### Interpreting wait types
 
@@ -1129,8 +1455,6 @@ WHERE qp.query_plan.exist('//Warnings/PlanAffectingConvert') = 1
 ORDER BY qs.total_logical_reads DESC;
 ```
 
-*Observed output captured on 2026-04-08. The query returned 20 plans with `PlanAffectingConvert`; first 5 rows are shown below.*
-
 | query_text | execution_count | avg_reads |
 |---|---:|---:|
 | `SET NOCOUNT ON; SELECT TOP 1 CAST(qp.query_plan AS nvarchar(max)) AS query_plan, qs.execution_count, CAST(qs.total_logical_reads / NULLIF(qs.execution_count,0) AS bigint) AS avg_reads, CAST(qs.total_worker_time / NULLIF(qs.execution_count,0 ...` | 1 | 13787 |
@@ -1138,6 +1462,15 @@ ORDER BY qs.total_logical_reads DESC;
 | `(@_msparam_0 nvarchar(4000),@_msparam_1 nvarchar(4000),@_msparam_2 nvarchar(4000))SELECT clmns.column_id AS [ID], clmns.name AS [Name], ISNULL(dc.Name, N'') AS [DefaultConstraintName], clmns.is_nullable AS [Nullable], CAST(ISNULL(cik.index_ ...` | 2 | 919 |
 | `DECLARE @msticks bigint, @mstickstime datetime, @LastHour datetime SELECT @mstickstime = GETDATE(), @msticks = ms_ticks from sys.dm_os_sys_info SELECT @LastHour = DATEADD(HOUR, -1, @mstickstime); ...` | 3 | 481 |
 | `SELECT TOP 20 qsqt.query_sql_text, qsp.query_plan, qsrs.avg_rowcount AS actual_avg_rows, qsrs.avg_logical_io_reads, qsrs.count_executions, qsrs.avg_duration / 1000 AS avg_ms FROM sys.query_store_runtime_stats qsrs JO ...` | 1 | 1395 |
+
+_This output is useful mostly as a caution about scope. The XML warning filter is broad enough to surface internal and diagnostic statements, not just your application queries. The `avg_reads` values are also large in the first rows, which means these warning-bearing statements touched many pages on average. That does not automatically mean the conversion warning caused all of the cost, but it does tell you these are expensive enough rows to justify inspection once you narrow the text filter to your real workload._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `1` | Depends | Only one execution contributed to the row. | Enough to inspect the statement, weak for trend analysis. |
+| `execution_count` | `>10` | ✅ | Repeated executions are amplifying the effect of the conversion issue. | Fixing one bad conversion can pay off many times. |
+| `avg_reads` | `481` to `1395` | Depends | Moderate to high logical I/O in this sample. | Worth inspecting if these are application queries rather than tooling queries. |
+| `avg_reads` | `>10000` | ❌ | Very heavy page-touch footprint. | If the query is real workload SQL, the conversion warning deserves urgent review. |
 
 #### pyodbc setencoding — fix implicit NVARCHAR→VARCHAR conversion
 
@@ -1193,12 +1526,21 @@ WHERE qs.execution_count > 10
 ORDER BY variance_ratio DESC;
 ```
 
-*Observed output captured on 2026-04-08. Two cached statements met this heuristic variance filter.*
-
 | execution_count | avg_cpu_ms | min_cpu_ms | max_cpu_ms | variance_ratio | query_text |
 |---:|---:|---:|---:|---:|---|
 | 29 | 0 | 0 | 1 | 36.8 | `(@planId bigint, @queryId bigint, @replicaGroupId bigint, @startTime datetimeoffset, @APRC_SUM_SQUARE_CPU_SCALE int, @accountAbortedFlag bit,@sumCountExecutions bigint OUTPUT,@sumCountAborted bigint O` |
 | 29 | 0 | 0 | 1 | 36.2 | `(@planId bigint, @queryId bigint, @replicaGroupId bigint, @startTime datetimeoffset, @APRC_SUM_SQUARE_CPU_SCALE int, @accountAbortedFlag bit,@sumCountExecutions bigint OUTPUT,@sumCountAborted bigint O` |
+
+_This output is a heuristic shortlist, not a verdict. A `variance_ratio` above `30x` means the worst observed CPU time was more than thirty times the best observed CPU time for the same cached statement, which is exactly the kind of spread that makes parameter sensitivity plausible. But the sample rows here are internal Query Store procedures, not business SQL, so the correct conclusion is “the heuristic works” rather than “these two rows prove your application has parameter sniffing.”_
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `<=10` | Depends | Very little history. | Variance can be noise, which is why the query excludes these rows. |
+| `execution_count` | `>10` | ✅ | Enough executions to make variance more meaningful. | Better candidate set for investigation. |
+| `variance_ratio` | `<3x` | ✅ | Low CPU spread across executions. | Usually not a strong parameter-sensitivity signal. |
+| `variance_ratio` | `3x-10x` | Depends | Noticeable variability. | Worth watching if the query is business-critical. |
+| `variance_ratio` | `>10x` | ❌ | Strong variability. | Good candidate for plan inspection, parameter review, or PSP analysis. |
+| `query_text` | Internal system or tooling SQL | Depends | The heuristic found a variable statement, but not your app workload. | Narrow the text filter before drawing application conclusions. |
 
 ### Traditional mitigations
 
@@ -1239,10 +1581,6 @@ WHERE _index = @idx
 OPTION (RECOMPILE);
 ```
 
-*Observed output captured on 2026-04-08. This block returned two result sets. The tables below show selected columns from the first 5 rows of each result set.*
-
-*First result set: `silver.signals_daily` with `OPTIMIZE FOR UNKNOWN` (50 rows total).*
-
 | id | _index | symbol | signal_date | current_price | target_median_price | upside_potential |
 |---:|---|---|---|---:|---:|---:|
 | 3002 | euro_stoxx_50 | ASML.AS | 2026-04-08 | 1113.8 | 1450 | 0.3018 |
@@ -1251,7 +1589,7 @@ OPTION (RECOMPILE);
 | 3005 | euro_stoxx_50 | OR.PA | 2026-04-08 | 350.8 | 407.5 | 0.1616 |
 | 3006 | euro_stoxx_50 | SAP.DE | 2026-04-08 | 145.22 | 228 | 0.57 |
 
-*Second result set: `gold.scores_daily` with `OPTION (RECOMPILE)` (199 rows total).*
+<!-- output separator -->
 
 | id | _index | symbol | score_date | sector | composite_score | composite_rank | current_price |
 |---:|---|---|---|---|---:|---:|---:|
@@ -1260,6 +1598,8 @@ OPTION (RECOMPILE);
 | 151 | euro_stoxx_50 | ADS.DE | 2026-03-04 | Consumer Cyclical | 0.0315 | 24 | 141.8 |
 | 152 | euro_stoxx_50 | ADYEN.AS | 2026-03-04 | Technology | 0.0494 | 23 | 957.6 |
 | 153 | euro_stoxx_50 | AI.PA | 2026-03-04 | Basic Materials | 0.0972 | 22 | 172.36 |
+
+_These two tables are only rowset previews. The first table is the statement compiled with `OPTIMIZE FOR UNKNOWN`; the second is the statement compiled with `OPTION (RECOMPILE)`. Neither table proves anything about plan quality on its own. Their role is to show that both statements executed successfully against real `stoxx` data. The actual lesson is the compilation policy behind them: `OPTIMIZE FOR UNKNOWN` asks for a generic reusable plan, while `RECOMPILE` asks SQL Server to build a fresh plan for the current parameter value each time._
 
 > [!tip] When to Use RECOMPILE
 >
@@ -1325,8 +1665,6 @@ WHERE _index = @index
 OPTION (USE HINT('DISABLE_PARAMETER_SENSITIVE_PLAN'));
 ```
 
-*Observed output captured on 2026-04-08. Selected columns from the first 5 rows are shown below.*
-
 | id | _index | symbol | signal_date | current_price | target_median_price | upside_potential |
 |---:|---|---|---|---:|---:|---:|
 | 1 | euro_stoxx_50 | ASML.AS | 2026-03-04 | 1199.8 | 1450 | 0.2085 |
@@ -1334,6 +1672,8 @@ OPTION (USE HINT('DISABLE_PARAMETER_SENSITIVE_PLAN'));
 | 3 | euro_stoxx_50 | RMS.PA | 2026-03-04 | 1930 | 2355 | 0.2202 |
 | 4 | euro_stoxx_50 | OR.PA | 2026-03-04 | 374.3 | 410 | 0.0954 |
 | 5 | euro_stoxx_50 | SAP.DE | 2026-03-04 | 167.38 | 255 | 0.5235 |
+
+_This rowset again only proves that the statement ran and returned the intended `euro_stoxx_50` rows. The meaning of `DISABLE_PARAMETER_SENSITIVE_PLAN` is not in the row values. It is in the plan-cache behavior: after applying the hint, the statement should stop participating in PSP multi-variant plan selection even if PSP remains enabled at the database level._
 
 > [!warning] PSP Interactions
 >
@@ -1379,8 +1719,6 @@ WHERE st.text LIKE '%gold.%'
 ORDER BY qs.total_worker_time DESC;
 ```
 
-*Observed output captured on 2026-04-08. The query returned 9 cached statements. At capture time, the highest-CPU cached statement whose text matched `gold.` was the demo DDL batch that copied `gold` tables into `dbo.demo_*`. First 5 rows are shown below.*
-
 | execution_count | total_cpu_ms | query_text |
 |---:|---:|---|
 | 1 | 381 | `DROP TABLE IF EXISTS dbo.demo_signals_daily; SELECT * INTO dbo.demo_signals_daily FROM silver.signals_daily; DROP TABLE IF EXISTS dbo.demo_eurostoxx50_ohlcv; SELECT * INTO dbo.demo_eurostoxx50_ohlcv F` |
@@ -1388,6 +1726,14 @@ ORDER BY qs.total_worker_time DESC;
 | 1 | 12 | `DROP TABLE IF EXISTS dbo.demo_signals_daily; SELECT * INTO dbo.demo_signals_daily FROM silver.signals_daily; DROP TABLE IF EXISTS dbo.demo_eurostoxx50_ohlcv; SELECT * INTO dbo.demo_eurostoxx50_ohlcv F` |
 | 1 | 9 | `DROP TABLE IF EXISTS dbo.demo_signals_daily; SELECT * INTO dbo.demo_signals_daily FROM silver.signals_daily; DROP TABLE IF EXISTS dbo.demo_eurostoxx50_ohlcv; SELECT * INTO dbo.demo_eurostoxx50_ohlcv F` |
 | 1 | 2 | `DROP TABLE IF EXISTS dbo.demo_signals_daily; SELECT * INTO dbo.demo_signals_daily FROM silver.signals_daily; DROP TABLE IF EXISTS dbo.demo_eurostoxx50_ohlcv; SELECT * INTO dbo.demo_eurostoxx50_ohlcv F` |
+
+_This output is useful mainly as a gotcha. The text filter is broad enough to surface demo DDL that references `gold` tables, not just analytical SELECT statements. The sample rows therefore tell you more about the weakness of the text filter than about batch mode itself. `total_cpu_ms` is total accumulated CPU time since compilation, not average per execution, and `execution_count = 1` on every displayed row means each row is currently just a single-use cached statement._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `execution_count` | `1` | Depends | Only one execution contributed to the CPU total. | The row is a weak candidate for trend analysis. |
+| `execution_count` | `>1` | ✅ | Repeated cached use. | Better candidate set for identifying true high-CPU analytical queries. |
+| `total_cpu_ms` | High but tied to DDL text | Depends | CPU was consumed, but maybe by setup commands rather than analytics. | Tighten the text filter before drawing batch-mode conclusions. |
 
 #### ENABLE_BATCH_MODE_ON_ROWSTORE hint — force batch mode execution
 
@@ -1421,11 +1767,16 @@ WHERE score_date = @date
 OPTION (USE HINT('ENABLE_BATCH_MODE_ON_ROWSTORE'));
 ```
 
-*Observed output captured on 2026-04-08. SQL Server returned the following error for this statement in this environment.*
-
 | status | message |
 |---|---|
 | error | `'ENABLE_BATCH_MODE_ON_ROWSTORE' is not a valid hint.` |
+
+_This means the hint was not accepted by the current engine or syntax combination, so the statement did not produce a batch-mode demo plan here. Treat that as real environment evidence rather than as a documentation typo: not every hint that appears in blog posts or older builds will be valid on the target instance._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `status` | `error` | ❌ | SQL Server rejected the statement or hint. | The example did not produce a batch-mode plan and needs an alternate method. |
+| `status` | `success` or row output | ✅ | The statement executed. | You can then inspect the returned plan for `ActualExecutionMode`. |
 
 ---
 
@@ -1644,6 +1995,8 @@ ORDER BY p.rows DESC;
 |---|---:|
 | dbo.demo_pulse_tickers | 40 |
 
+_This means only one populated heap was found in the current database snapshot: `dbo.demo_pulse_tickers`, with about 40 rows. Because the row count is tiny, the immediate cost is small, but it is still a useful reminder that `index_id = 0` identifies heap storage and that larger heaps would usually be early clustered-index candidates._
+
 #### ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON — enable RCSI
 
 > [!danger] Database-wide concurrency change that needs exclusive access
@@ -1670,13 +2023,16 @@ FROM sys.databases WHERE name = 'stoxx';
 ALTER DATABASE stoxx SET READ_COMMITTED_SNAPSHOT ON;
 ```
 
-*Observed output captured on 2026-04-08 for the read-only status check before any RCSI change was applied.*
-
 | name | is_read_committed_snapshot_on |
 |---|---|
 | stoxx | 0 |
 
-After enabling, `SELECT` queries no longer take shared locks, so they never block `INSERT`/`UPDATE`/`DELETE` and vice versa.
+_This is the prechange state check. `name = stoxx` confirms you are inspecting the intended database, and `is_read_committed_snapshot_on = 0` means row-versioned read committed isolation was still off when the output was captured. In that state, normal read-committed readers still use shared locks and can participate in reader-writer blocking._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_read_committed_snapshot_on` | `0` | Depends | RCSI is off. | Good if you are demonstrating the default locking behavior before a change. |
+| `is_read_committed_snapshot_on` | `1` | ✅ | RCSI is on. | Read committed readers use row versions instead of shared locks. |
 
 #### sp_estimate_data_compression_savings — check compression savings
 
@@ -1710,14 +2066,21 @@ ALTER INDEX ALL ON gold.index_performance
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 ```
 
-*Observed output captured on 2026-04-08 for the estimation procedure only. The `ALTER INDEX ... REBUILD` maintenance step was intentionally not executed during this capture pass.*
-
 | object_name | schema_name | index_id | partition_number | size_with_current_compression_setting(KB) | size_with_requested_compression_setting(KB) | sample_size_with_current_compression_setting(KB) | sample_size_with_requested_compression_setting(KB) |
 |---|---|---:|---:|---:|---:|---:|---:|
 | index_performance | gold | 1 | 1 | 672 | 384 | 728 | 416 |
 | index_performance | gold | 2 | 1 | 200 | 120 | 232 | 144 |
 
-Page compression typically saves 60-80% space on time-series financial data, meaning more data fits in the buffer pool without increasing RAM.
+_This procedure estimates compression savings without changing the index. PAGE compression would likely shrink `gold.index_performance` materially: for `index_id = 1`, estimated size drops from `672 KB` to `384 KB`, and for `index_id = 2`, from `200 KB` to `120 KB`. That is a meaningful percentage reduction, but the decision still depends on whether the CPU overhead of compressed access is acceptable for this workload._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `index_id` | `0` | Depends | Heap. | Compression behavior and maintenance patterns differ from indexed storage. |
+| `index_id` | `1` | ✅ | Clustered index. | This is usually the most important row because it covers the table's base storage. |
+| `index_id` | `>1` | Depends | Nonclustered index. | Savings matter, but usually after the clustered structure. |
+| `partition_number` | `1` | ✅ | First partition, or the only partition on a nonpartitioned object. | The estimate is easy to interpret because no partition spread is involved. |
+| `size_with_requested_compression_setting(KB)` lower than current size | ✅ | Compression is likely to save space. | Consider whether the saved memory and I/O justify the CPU tradeoff. |
+| `size_with_requested_compression_setting(KB)` higher than current size | ❌ | Compression would make the object larger. | Do not enable compression for that structure without a very specific reason. |
 
 #### sp_updatestats, UPDATE STATISTICS WITH FULLSCAN — refresh after bulk loads
 

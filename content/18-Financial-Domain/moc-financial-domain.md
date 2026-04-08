@@ -14,31 +14,31 @@ Financial industry knowledge for data engineers — from sector encyclopedias
 through quantitative analysis to regulatory compliance and the ISS-STOXX
 glossary.
 
-> [!guide]- Financial Encyclopedia
+> [!guide]+ Financial Encyclopedia
 >
 > [[domain-financial-encyclopedia]]
 >
 > Sector-by-sector encyclopedia of financial industry concepts — banking, capital markets, corporate finance, ESG, insurance, payments, and more.
 
-> [!guide]- Market Analysis
+> [!guide]+ Market Analysis
 >
 > [[domain-market-analysis]]
 >
 > Quantitative market analysis — breadth indicators, technical signals, risk metrics, liquidity measures, valuation ratios, and index maintenance operations.
 
-> [!guide]- Metrics and Scoring
+> [!guide]+ Metrics and Scoring
 >
 > [[domain-metrics-and-scoring]]
 >
 > Scoring methodologies, daily and quarterly signal generation, factor profiles, chart metrics, index snapshots, and data source refresh schedules.
 
-> [!guide]- Regulatory
+> [!guide]+ Regulatory
 >
 > [[domain-regulatory]]
 >
 > Financial benchmark regulation — IOSCO principles, EU BMR administrator obligations, and SFDR sustainability disclosure data requirements.
 
-> [!guide]- ISS-STOXX Glossary
+> [!guide]+ ISS-STOXX Glossary
 >
 > [[domain-iss-stoxx-glossary]]
 >

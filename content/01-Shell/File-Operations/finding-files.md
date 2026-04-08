@@ -2,7 +2,7 @@
 tags: [shell]
 aliases: [find, fd, locate, file search, find command, xargs, parallel]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and GNU parallel, and PowerShell equivalents."
-parent: "[[domain-file-operations]]"
+parent: "[[domain-data-and-files]]"
 links:
   - "[[navigation-and-listing]]"
   - "[[reading-file-contents]]"

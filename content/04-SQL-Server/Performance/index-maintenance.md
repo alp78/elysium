@@ -2,7 +2,7 @@
 title: "Index Maintenance"
 tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren, resumable index rebuild, dm_db_index_physical_stats, missing index suggestions, unused indexes]
-description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, scan modes (LIMITED/SAMPLED/DETAILED), resumable operations, automated maintenance scripts, fill factor guidance, index discovery DMVs, and a recommended maintenance schedule for data pipeline workloads."
+description: "Production-oriented guide to SQL Server index maintenance: page density, fragmentation detection, REORGANIZE vs REBUILD, resumable operations, fill factor, statistics refresh, and index discovery DMVs. Includes reproducible stoxx outputs."
 parent: "[[domain-query-craft]]"
 links:
   - "[[sargable-queries]]"
@@ -16,37 +16,140 @@ links:
   - "[[pipeline-integration-and-devex]]"
   - "[[pit-integrity-logic]]"
 created: 2026-03-22
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
 # Index Maintenance
 
-> [!quote]
-> "TempDB is like SQL Server's public toilet."
->
-> — **Brent Ozar**, brentozar.com
+Index maintenance is a production decision process, not a weekly rebuild ritual. Microsoft now emphasizes **page density** alongside fragmentation: a large scan-heavy rowstore index with low page density can waste memory and I/O even when fragmentation alone does not look extreme, while a tiny index with 40% fragmentation is often operational noise. The correct action depends on index size, access pattern, density, fragmentation, statistics freshness, and whether the operation must remain online.
 
-SQL Server stores index data in a B-tree structure — a balanced tree where the root and intermediate levels contain pointers that guide lookups, and the leaf level holds the actual data rows (clustered) or row locators (nonclustered). Each level is composed of 8 KB data pages, which are the fundamental unit of I/O in SQL Server.
+This page uses the `stoxx` database for read-only discovery queries and disposable `dbo.demo_idxmaint_*` tables for state-changing demonstrations. The production-facing queries are written in a form suitable for real troubleshooting; the demo objects exist so the effects of `REORGANIZE`, `REBUILD`, resumable operations, fill factor, statistics refresh, and index-discovery DMVs can be shown with real output.
 
-Index fragmentation occurs when the physical order of these data pages on disk diverges from the logical order of the B-tree. As rows are inserted, updated, or deleted, SQL Server may need to perform a page split — when a page is full and a new row must be inserted in logical order, SQL Server allocates a new page and moves roughly half the rows from the full page to the new one. The new page is typically not physically adjacent to the original, creating fragmentation. Over time, repeated page splits leave pages partially filled and scattered across the data file. Fragmented indexes cause SQL Server to read more pages than necessary for range scans, increasing I/O and elevating `PAGEIOLATCH_SH` waits — the [wait type](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) that signals a thread is waiting for a data page to be read from disk into the buffer pool.
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Candidate rowstore index"] --> B{"Large enough to matter?<br/>page_count >= 1000"}
+    B --> Y1([YES])
+    B --> N1([NO])
+    N1 --> S1["Usually skip routine defragmentation"]
+    Y1 --> C{"Scan-sensitive workload or<br/>low page density?"}
+    C --> Y2([YES])
+    C --> N2([NO])
+    N2 --> S2["Do nothing"]
+    Y2 --> D{"Need fill factor reset,<br/>compression change, or<br/>avg_fragmentation_in_percent > 30?"}
+    D --> Y3([YES])
+    D --> N3([NO])
+    Y3 --> R["REBUILD<br/>Prefer ONLINE when supported<br/>Consider RESUMABLE for long operations"]
+    N3 --> O["REORGANIZE<br/>Online leaf-level compaction"]
+    O --> E{"Large data change since<br/>the last statistics refresh?"}
+    E --> Y4([YES])
+    E --> N4([NO])
+    Y4 --> U["UPDATE STATISTICS"]
+    N4 --> Z["Done"]
+    R --> Z
+
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,stroke-width:2px,color:#c0caf5,font-weight:bold;
+    class Y1,Y2,Y3,Y4 yesNode;
+    class N1,N2,N3,N4 noNode;
+```
+
+## Reproducible Baseline
+
+### Confirm database context and statistics defaults
+
+*Confirm that the session is in `stoxx`, that SQL Server 2022 compatibility level `160` is active, and that automatic statistics maintenance is enabled before using the later DMVs.*
+
+```sql
+USE stoxx;
+GO
+
+SELECT
+    DB_NAME() AS current_database,
+    d.compatibility_level,
+    d.is_auto_create_stats_on,
+    d.is_auto_update_stats_on,
+    d.is_query_store_on
+FROM sys.databases AS d
+WHERE d.database_id = DB_ID();
+GO
+```
+
+| current_database | compatibility_level | is_auto_create_stats_on | is_auto_update_stats_on | is_query_store_on |
+|---|---:|---:|---:|---:|
+| `stoxx` | 160 | 1 | 1 | 1 |
+
+_The baseline matches the rest of the note. The session is in `stoxx`, SQL Server 2022 optimizer behavior is active, automatic statistics creation and update are enabled, and Query Store is already on. If any of these values differ in production, the maintenance workflow still applies, but the surrounding diagnostics and optimizer behaviors can change materially._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `current_database` | `stoxx` | &#9989; | The session is scoped to the intended database. | Later DMV output belongs to the same database as the note. |
+| `current_database` | Anything else | &#10060; | The session is running in the wrong database. | Every later object lookup and DMV filter can become misleading. |
+| `compatibility_level` | `160` | &#9989; | SQL Server 2022 optimizer behavior is active. | The page's guidance for PSP, CE, and stats behavior matches the engine level. |
+| `compatibility_level` | `< 160` | Depends | Older optimizer behavior is active. | Maintenance logic still applies, but plan selection and IQP features may differ. |
+| `is_auto_create_stats_on` | `1` | &#9989; | SQL Server can create single-column auto stats. | Predicate columns without manual stats are less likely to compile blindly. |
+| `is_auto_create_stats_on` | `0` | &#10060; | Auto-created statistics are disabled. | Cardinality-estimation risk increases, especially after schema changes. |
+| `is_auto_update_stats_on` | `1` | &#9989; | SQL Server can refresh stale stats automatically. | Manual stats maintenance can stay targeted instead of compensating for disabled auto-update. |
+| `is_auto_update_stats_on` | `0` | &#10060; | Automatic statistics refresh is disabled. | Post-load and post-maintenance manual stats refresh becomes mandatory. |
+| `is_query_store_on` | `1` | &#9989; | Query Store is available. | Plan regressions can be verified before and after maintenance. |
+| `is_query_store_on` | `0` | Depends | Query Store is disabled. | Index maintenance still works, but plan-history validation is weaker. |
+
+### Check SQL Server uptime before using usage and missing-index DMVs
+
+*Verify engine uptime before trusting `sys.dm_db_index_usage_stats` or missing-index DMVs, because both are reset by restart and do not represent long-term business cycles on a freshly restarted instance.*
+
+```sql
+SELECT sqlserver_start_time
+FROM sys.dm_os_sys_info;
+```
+
+| sqlserver_start_time |
+|---|
+| 2026-04-08 08:42:34.510 |
+
+_This instance restarted on `2026-04-08 08:42:34.510`. Any usage or missing-index evidence later in this page reflects activity only since that time. That is enough for a targeted lab demonstration, but it is not enough to justify dropping production indexes or promoting every missing-index suggestion to DDL._
+
+| Column | Value or Pattern | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `sqlserver_start_time` | Older than a full business cycle | &#9989; | Usage counters have had time to accumulate representative workload data. | Drop and missing-index decisions are more trustworthy. |
+| `sqlserver_start_time` | Recent restart | &#10060; | Usage counters and missing-index DMVs are still young. | Treat the later discovery sections as directional evidence, not final proof. |
 
 ## Why Fragmentation Matters
 
-Fragmentation primarily degrades performance for queries that perform large sequential scans — point lookups (singleton seeks) are largely unaffected because they traverse the B-tree directly to a single page.
-
-- **Range scans** — queries with `WHERE date BETWEEN`, `ORDER BY`, or window functions read pages sequentially. SQL Server uses a read-ahead mechanism that pre-fetches up to 64 contiguous pages at a time (512 KB). When pages are out-of-order, read-ahead becomes less effective, forcing smaller, random I/O operations instead of large sequential reads.
-- **Partial pages** — a 50% full page holds half as much data, so range scans read twice as many pages to retrieve the same number of rows. This is measured by the `avg_page_space_used_in_percent` column in `sys.dm_db_index_physical_stats`.
-- **Buffer pool pressure** — more pages read means more [buffer pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) consumption, evicting useful cached pages and increasing `PAGEIOLATCH_SH` waits.
-- **Small indexes** — indexes under 1,000 pages (roughly 8 MB) have negligible fragmentation impact regardless of the percentage. SQL Server allocates small indexes on mixed extents (shared with other objects), so their pages are inherently non-contiguous. Skip them in maintenance scripts.
+- **Logical fragmentation** is the percentage of out-of-order leaf pages in a rowstore B-tree. It matters mainly for range scans and ordered reads, not for single-row seeks.
+- **Page density** is the percentage of leaf-page space that is actually used. Low density means more pages must be read to return the same number of rows, which raises I/O and buffer-pool pressure even when fragmentation is moderate.
+- **Index size matters.** A 40% fragmented 4-page index is rarely worth touching. A 40% fragmented 50,000-page reporting index usually is.
+- **Maintenance is not only about fragmentation.** `REBUILD` resets fill factor and refreshes index statistics; `REORGANIZE` compacts leaf pages online but does not update statistics.
+- **Discovery must be paired with workload evidence.** `sys.dm_db_index_usage_stats` tells you whether an index is read, and `sys.dm_db_index_operational_stats` tells you what it costs to maintain. Use both before changing fill factor or dropping an index.
 
 ## Fragmentation Detection and Remediation
 
-The primary tool for measuring index fragmentation is the dynamic management function `sys.dm_db_index_physical_stats`. It returns fragmentation statistics for indexes and heaps, including the percentage of out-of-order pages (logical fragmentation) and how full each page is (page density). The function accepts parameters for database, object, index, partition, and scan mode — passing `NULL` for any parameter returns data for all values of that parameter.
+### `sys.dm_db_index_physical_stats` — inspect one real table
 
-### sys.dm_db_index_physical_stats — check fragmentation for a table
-
-This query returns fragmentation metrics for every index on a specific table. The `'SAMPLED'` scan mode reads a 1% sample of leaf pages, providing both fragmentation order and page density at moderate cost. Key columns in the result: `avg_fragmentation_in_percent` measures logical fragmentation (the percentage of out-of-order pages in the leaf level), and `avg_page_space_used_in_percent` measures page density (how full each page is — low values indicate wasted space from page splits). Use `'LIMITED'` instead if you only need fragmentation percentage and want the fastest possible scan.
+> [!info]-
+>
+> This query returns physical-maintenance metrics for every index on `silver.eurostoxx50_ohlcv`.
+>
+> - `sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'silver.eurostoxx50_ohlcv'), NULL, NULL, 'SAMPLED')` asks SQL Server to inspect every index on the target table in the current database.
+> - `DB_ID()` scopes the DMV call to the current database and `OBJECT_ID(...)` scopes it to one table.
+> - `'SAMPLED'` is a deliberate choice. It returns both fragmentation and page-density metrics at far lower cost than `DETAILED`, and unlike `LIMITED`, it can populate `avg_page_space_used_in_percent`.
+> - Joining to `sys.indexes` converts `index_id` values into human-readable names and types.
+> - `avg_fragmentation_in_percent` shows leaf-level logical fragmentation.
+> - `page_count` shows index size in 8 KB pages. This is critical because percentage thresholds without size thresholds cause bad maintenance decisions.
+> - `avg_page_space_used_in_percent` shows page density. Low values mean wasted leaf space, often from page splits or fill-factor choices.
+> - `fragment_count` shows how many physically separate fragments SQL Server found at the leaf level.
 
 ```sql
 SELECT
@@ -56,399 +159,1200 @@ SELECT
     ips.page_count,
     ips.avg_page_space_used_in_percent,
     ips.fragment_count
-FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID('dbo.market_data'), NULL, NULL, 'SAMPLED') ips
-JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
+FROM sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'silver.eurostoxx50_ohlcv'),
+    NULL,
+    NULL,
+    'SAMPLED'
+) AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+ORDER BY ips.page_count DESC, i.index_id;
 ```
 
-### Fragmentation thresholds — reorganize vs rebuild decision guide
+| index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count |
+|---|---|---:|---:|---:|---:|
+| `PK__eurostox__3213E83FDF67D274` | `CLUSTERED` | 0.52219321148825071 | 766 | 99.709698542129971 | 33 |
+| `IX_silver_eurostoxx50_ohlcv_symbol_date` | `NONCLUSTERED` | 40.585774058577407 | 239 | 80.092599456387447 | 111 |
 
-The conventional thresholds below originate from Microsoft's documentation and are widely adopted as a starting point. They are guidelines, not absolute rules — the right thresholds depend on workload patterns. Fragmentation only matters for queries that perform large sequential scans; OLTP workloads dominated by single-row seeks may see no benefit from defragmentation at any percentage.
+_The two indexes on the same table tell two different maintenance stories. The clustered primary key is healthy: negligible fragmentation, near-perfect page density, and a moderate page count. The nonclustered `(symbol, [date])` index is fragmented and relatively sparse at the leaf level, but it is still only `239` pages, roughly `1.9 MB`. That makes it a useful diagnostic example, but not an automatic rebuild candidate for a routine production job. The page-count column is what prevents percentage-driven over-maintenance._
 
-> [!info] Rebuild vs Reorganize Decision
+| Column | Value or Range | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `type_desc` | `CLUSTERED`, `NONCLUSTERED` | Depends | Rowstore B-tree structures. | Normal fragmentation and page-density rules apply. |
+| `type_desc` | `HEAP` | Depends | No clustered index exists. | Fragmentation is interpreted differently; heap forwarding records become relevant. |
+| `avg_fragmentation_in_percent` | `< 5` | &#9989; | Usually noise for rowstore maintenance. | Most production jobs should do nothing. |
+| `avg_fragmentation_in_percent` | `5 - 30` | Depends | Moderate logical fragmentation. | `REORGANIZE` is often the first option if the index is large enough and scan-sensitive. |
+| `avg_fragmentation_in_percent` | `> 30` | Depends | High logical fragmentation. | `REBUILD` becomes the usual candidate, but only if size and workload justify it. |
+| `page_count` | `< 1000` | &#10060; | Small index. | Routine fragmentation maintenance is often wasted work even when percentages look high. |
+| `page_count` | `>= 1000` | &#9989; | Large enough to matter. | Fragmentation and density should now be read as operational signals. |
+| `avg_page_space_used_in_percent` | `>= 90` | &#9989; | Dense leaf pages. | Space waste is low; density is not the problem. |
+| `avg_page_space_used_in_percent` | `80 - 90` | Depends | Noticeable free space exists. | Inspect workload and fill factor before changing anything. |
+| `avg_page_space_used_in_percent` | `< 80` | &#10060; | Many pages are under-filled. | Buffer-pool and I/O waste can justify maintenance even when fragmentation alone is ambiguous. |
+| `fragment_count` | Low relative to `page_count` | &#9989; | Fewer contiguous fragments. | Range scans are less likely to suffer from scattered page order. |
+| `fragment_count` | High relative to `page_count` | &#10060; | Many fragments exist at the leaf level. | Logical read-ahead becomes less efficient for scans. |
+
+### Decision thresholds — use them as starting points, not as blind rules
+
+The classic rowstore thresholds remain useful as a **starting point**:
+
+| Condition | Usual action | Why |
+|---|---|---|
+| `page_count < 1000` | Skip routine defragmentation | Small indexes rarely justify maintenance cost. |
+| `page_count >= 1000` and `avg_fragmentation_in_percent < 5` | Do nothing | Fragmentation is usually noise. |
+| `page_count >= 1000` and `avg_fragmentation_in_percent` between `5` and `30` | `REORGANIZE` | Online, lighter-weight leaf compaction. |
+| `page_count >= 1000` and `avg_fragmentation_in_percent > 30` | `REBUILD` | Full rewrite is usually more effective. |
+| Any size with materially low `avg_page_space_used_in_percent` on a scan-sensitive index | Inspect more closely | Low page density can be the real performance problem. |
+| Need to change fill factor, compression, or rowgroup layout | `REBUILD` | `REORGANIZE` cannot reset these properties. |
+
+These are rowstore heuristics, not hard SQL Server laws. Columnstore maintenance is driven by rowgroup state and deleted-row pressure, not B-tree page order.
+
+### Database-wide fragmentation candidates
+
+> [!info]-
 >
-> Below 5% fragmentation — do nothing (noise level). Between 5% and 30% — `ALTER INDEX REORGANIZE` (online, no lock, interruptible). Above 30% — `ALTER INDEX REBUILD` (can be done `ONLINE = ON` in Enterprise/Developer edition). Always skip indexes with fewer than 1,000 pages regardless of fragmentation percentage.
+> This query is the production-grade discovery pattern: it scans all rowstore indexes in the current database, surfaces size, fragmentation, and density, and excludes heaps and the disposable demo tables.
+>
+> - `@MinPageCount` is surfaced as a variable because this threshold is workload-specific.
+> - The captured output uses `200` pages so `stoxx` returns meaningful rows; routine production action lists usually start closer to `1000`.
+> - `LIMITED` is used here because the goal is a broad first-pass inventory. Density is shown only when it is available.
+> - The query excludes `dbo.demo_idxmaint_%` so the inventory reflects actual database objects rather than the note's lab objects.
 
-| Fragmentation Level | Action |
-|--------------------|--------|
-| < 5% | Do nothing |
-| 5–30% | REORGANIZE (online, lightweight) |
-| > 30% | REBUILD (offline or online, thorough) |
-| page_count < 1000 | Skip entirely — too small to matter |
+```sql
+DECLARE @MinPageCount bigint = 200;
+DECLARE @MinFragmentation float = 5.0;
 
-### sys.dm_db_index_physical_stats — fragmentation across all indexes
+SELECT TOP (20)
+    OBJECT_SCHEMA_NAME(ips.object_id) + N'.' + OBJECT_NAME(ips.object_id) AS table_name,
+    i.name AS index_name,
+    i.type_desc,
+    ips.avg_fragmentation_in_percent,
+    ips.page_count,
+    ips.avg_page_space_used_in_percent
+FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+  AND i.type_desc IN ('CLUSTERED', 'NONCLUSTERED')
+  AND ips.page_count >= @MinPageCount
+  AND ips.avg_fragmentation_in_percent >= @MinFragmentation
+  AND OBJECT_NAME(ips.object_id) NOT LIKE N'demo_idxmaint[_]%'
+ORDER BY ips.avg_fragmentation_in_percent DESC, ips.page_count DESC;
+```
 
-Passing `NULL` for the object ID parameter returns fragmentation data for every index in the current database. The `WHERE` clause filters out indexes below 100 pages (too small to benefit from maintenance) and below 5% fragmentation (within the noise threshold).
+| table_name | index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent |
+|---|---|---|---:|---:|---:|
+| `silver.stoxxusa50_ohlcv` | `IX_silver_stoxxusa50_ohlcv_symbol_date` | `NONCLUSTERED` | 46.226415094339622 | 212 | `NULL` |
+| `silver.stoxxasia50_ohlcv` | `IX_silver_stoxxasia50_ohlcv_symbol_date` | `NONCLUSTERED` | 41.810344827586206 | 232 | `NULL` |
+| `silver.eurostoxx50_ohlcv` | `IX_silver_eurostoxx50_ohlcv_symbol_date` | `NONCLUSTERED` | 40.585774058577407 | 239 | `NULL` |
+
+_All three candidates are real nonclustered indexes in `stoxx`, and all three are clearly fragmented. The production decision is still not "rebuild all three" because each remains well below the normal large-index threshold. This is the core discipline of index maintenance: use the DMV to rank candidates, then apply size and workload judgment before changing anything._
+
+| Column | Value or Range | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `avg_fragmentation_in_percent` | High percentage on small page counts | Depends | The index is physically disordered, but still small. | Useful for inspection, not necessarily for action. |
+| `page_count` | `200 - 239` | Depends | Small-to-moderate objects in this database. | Worth noting, but still below a typical routine-maintenance threshold. |
+| `avg_page_space_used_in_percent` | `NULL` in `LIMITED` mode | &#9989; | `LIMITED` does not inspect leaf-page density. | This is expected; run `SAMPLED` or `DETAILED` if density is needed. |
+
+### Scan modes — `LIMITED` vs `SAMPLED` vs `DETAILED`
+
+> [!info]-
+>
+> This query runs `sys.dm_db_index_physical_stats` three times against the same index so the practical differences between scan modes are visible.
+>
+> - `LIMITED` is the cheapest and uses only non-leaf pages, so density is unavailable.
+> - `SAMPLED` reads a sample of leaf pages and can populate density.
+> - `DETAILED` reads the full leaf level and returns exact values.
+> - Small indexes can produce the same numeric result in `SAMPLED` and `DETAILED`, which is exactly what happens here.
 
 ```sql
 SELECT
-    OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id) AS table_name,
+    scan_mode,
+    avg_fragmentation_in_percent,
+    page_count,
+    avg_page_space_used_in_percent,
+    fragment_count
+FROM
+(
+    SELECT
+        'LIMITED' AS scan_mode,
+        ips.avg_fragmentation_in_percent,
+        ips.page_count,
+        ips.avg_page_space_used_in_percent,
+        ips.fragment_count
+    FROM sys.dm_db_index_physical_stats
+    (
+        DB_ID(),
+        OBJECT_ID(N'silver.eurostoxx50_ohlcv'),
+        INDEXPROPERTY(OBJECT_ID(N'silver.eurostoxx50_ohlcv'), N'IX_silver_eurostoxx50_ohlcv_symbol_date', N'IndexID'),
+        NULL,
+        'LIMITED'
+    ) AS ips
+
+    UNION ALL
+
+    SELECT
+        'SAMPLED',
+        ips.avg_fragmentation_in_percent,
+        ips.page_count,
+        ips.avg_page_space_used_in_percent,
+        ips.fragment_count
+    FROM sys.dm_db_index_physical_stats
+    (
+        DB_ID(),
+        OBJECT_ID(N'silver.eurostoxx50_ohlcv'),
+        INDEXPROPERTY(OBJECT_ID(N'silver.eurostoxx50_ohlcv'), N'IX_silver_eurostoxx50_ohlcv_symbol_date', N'IndexID'),
+        NULL,
+        'SAMPLED'
+    ) AS ips
+
+    UNION ALL
+
+    SELECT
+        'DETAILED',
+        ips.avg_fragmentation_in_percent,
+        ips.page_count,
+        ips.avg_page_space_used_in_percent,
+        ips.fragment_count
+    FROM sys.dm_db_index_physical_stats
+    (
+        DB_ID(),
+        OBJECT_ID(N'silver.eurostoxx50_ohlcv'),
+        INDEXPROPERTY(OBJECT_ID(N'silver.eurostoxx50_ohlcv'), N'IX_silver_eurostoxx50_ohlcv_symbol_date', N'IndexID'),
+        NULL,
+        'DETAILED'
+    ) AS ips
+) AS x
+ORDER BY CASE scan_mode WHEN 'LIMITED' THEN 1 WHEN 'SAMPLED' THEN 2 ELSE 3 END;
+```
+
+| scan_mode | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count |
+|---|---:|---:|---:|---:|
+| `LIMITED` | 40.585774058577407 | 239 | `NULL` | 111 |
+| `SAMPLED` | 40.585774058577407 | 239 | 80.092599456387447 | 111 |
+| `DETAILED` | 40.585774058577407 | 239 | 80.092599456387447 | 111 |
+
+_This output shows the operational trade-off precisely. `LIMITED` is enough for a cheap first-pass fragmentation inventory, but it cannot answer the page-density question because `avg_page_space_used_in_percent` is `NULL`. On this small index, `SAMPLED` and `DETAILED` converge to the same numbers, so `SAMPLED` is the better default when density matters._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `scan_mode` | `LIMITED` | &#9989; for inventory | Fastest mode. | Use for broad monitoring when density is not required. |
+| `scan_mode` | `SAMPLED` | &#9989; for targeted review | Returns approximate density and fragmentation. | Usually the best compromise before a maintenance decision. |
+| `scan_mode` | `DETAILED` | Depends | Exact leaf-level inspection. | Reserve for specific large indexes when the extra I/O is justified. |
+| `avg_page_space_used_in_percent` | `NULL` in `LIMITED` | &#9989; | Expected behavior. | Do not misread this as missing data or a broken query. |
+
+## REORGANIZE — Online, Leaf-Level Compaction
+
+`ALTER INDEX ... REORGANIZE` is the lighter-weight rowstore maintenance option. It reorders and compacts leaf pages online, preserves progress if interrupted, and is usually the first choice for moderately fragmented large rowstore indexes when blocking is unacceptable.
+
+> [!warning]
+>
+> `REORGANIZE` is online, but it is not free.
+>
+> - It still generates log activity and consumes I/O.
+> - It does **not** update statistics.
+> - It does not reset fill factor or compression settings.
+> - It can fail or be ineffective when `ALLOW_PAGE_LOCKS = OFF`.
+
+> [!success]
+>
+> Use `REORGANIZE` when all of the following are true:
+>
+> - the index is rowstore
+> - the object is large enough that fragmentation matters
+> - scan behavior or density justify maintenance
+> - online access is required
+> - fill factor, compression, and rowgroup layout do not need to change
+
+*Reorganize a specific rowstore index without rebuilding the entire B-tree or resetting fill factor.*
+
+```sql
+ALTER INDEX IX_silver_eurostoxx50_ohlcv_symbol_date
+ON silver.eurostoxx50_ohlcv
+REORGANIZE;
+```
+
+> [!example]
+> The next setup batch creates a disposable rowstore table whose clustered key is a random GUID and whose nonclustered `(symbol, [date], batch_no)` index is intentionally fragmented. Use it to observe `REORGANIZE` and `REBUILD` without changing real production tables.
+
+*Create the disposable rowstore demo object and seed it with enough randomized insert activity to generate visible fragmentation and low page density.*
+
+```sql
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.demo_idxmaint_rowstore;
+GO
+
+CREATE TABLE dbo.demo_idxmaint_rowstore
+(
+    row_guid uniqueidentifier NOT NULL,
+    batch_no tinyint NOT NULL,
+    source_id int NOT NULL,
+    symbol varchar(20) NOT NULL,
+    [date] date NOT NULL,
+    [close] float NOT NULL,
+    volume bigint NOT NULL,
+    filler char(200) NOT NULL
+);
+GO
+
+;WITH initial_batches AS
+(
+    SELECT batch_no
+    FROM (VALUES (1),(2),(3),(4),(5)) AS v(batch_no)
+)
+INSERT INTO dbo.demo_idxmaint_rowstore
+(
+    row_guid,
+    batch_no,
+    source_id,
+    symbol,
+    [date],
+    [close],
+    volume,
+    filler
+)
+SELECT
+    NEWID(),
+    b.batch_no,
+    s.id,
+    s.symbol,
+    s.[date],
+    s.[close],
+    s.volume,
+    REPLICATE(CHAR(64 + b.batch_no), 200)
+FROM silver.eurostoxx50_ohlcv AS s
+CROSS JOIN initial_batches AS b;
+GO
+
+CREATE CLUSTERED INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore (row_guid)
+WITH (FILLFACTOR = 100);
+
+CREATE NONCLUSTERED INDEX IX_demo_idxmaint_symbol_date
+ON dbo.demo_idxmaint_rowstore (symbol, [date], batch_no)
+INCLUDE ([close], volume)
+WITH (FILLFACTOR = 100);
+GO
+
+;WITH later_batches AS
+(
+    SELECT batch_no
+    FROM (VALUES (6),(7),(8),(9),(10)) AS v(batch_no)
+)
+INSERT INTO dbo.demo_idxmaint_rowstore
+(
+    row_guid,
+    batch_no,
+    source_id,
+    symbol,
+    [date],
+    [close],
+    volume,
+    filler
+)
+SELECT
+    NEWID(),
+    b.batch_no,
+    s.id,
+    s.symbol,
+    s.[date],
+    s.[close],
+    s.volume,
+    REPLICATE(CHAR(64 + b.batch_no), 200)
+FROM silver.eurostoxx50_ohlcv AS s
+CROSS JOIN later_batches AS b
+ORDER BY NEWID();
+GO
+```
+
+*Inspect the rowstore demo object before maintenance to capture fragmentation, density, and fill factor for both indexes.*
+
+```sql
+SELECT
     i.name AS index_name,
+    i.type_desc,
     ips.avg_fragmentation_in_percent,
     ips.page_count,
-    ips.index_type_desc
-FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
-JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
-WHERE ips.page_count > 100
-  AND ips.avg_fragmentation_in_percent > 5
-ORDER BY ips.avg_fragmentation_in_percent DESC;
+    ips.avg_page_space_used_in_percent,
+    ips.fragment_count,
+    i.fill_factor
+FROM sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_rowstore'),
+    NULL,
+    NULL,
+    'SAMPLED'
+) AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+ORDER BY i.index_id;
 ```
 
-### Scan modes — LIMITED vs SAMPLED vs DETAILED
+| index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count | fill_factor |
+|---|---|---:|---:|---:|---:|---:|
+| `CIX_demo_idxmaint_row_guid` | `CLUSTERED` | 86.441399009389528 | 32909 | 65.474128984432923 | 28644 | 100 |
+| `IX_demo_idxmaint_symbol_date` | `NONCLUSTERED` | 99.282371294851785 | 6410 | 67.384037558685449 | 6410 | 100 |
 
-The last parameter of `sys.dm_db_index_physical_stats` controls the scan mode, which determines how much of the index is read to compute statistics. Choosing the right mode balances accuracy against the I/O cost of the scan itself.
+_This is a deliberately bad rowstore state. The clustered index is badly scattered and only about two-thirds full. The nonclustered index is even worse: almost one fragment per page and similarly low density. This is no longer small-index noise; both indexes are large enough that maintenance can materially change scan cost and space usage._
 
-| Mode | What it reads | Speed | Accuracy | `avg_page_space_used_in_percent` |
-|------|--------------|-------|----------|----------------------------------|
-| `LIMITED` | Parent-level (non-leaf) pages only | Fastest | Approximate | NULL (not available) |
-| `SAMPLED` | 1% random sample of all leaf pages | Moderate | Estimated — if index has < 10,000 pages, `DETAILED` is used automatically | Approximate |
-| `DETAILED` | Every leaf page in the index | Slowest | Exact | Exact |
+| Column | Value or Range | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `avg_fragmentation_in_percent` | `> 30` on large page counts | &#10060; | Severe logical fragmentation. | `REBUILD` is usually the final fix; `REORGANIZE` may still be useful for a targeted online pass. |
+| `avg_page_space_used_in_percent` | `~65 - 67` | &#10060; | Under-filled pages dominate the leaf level. | Range scans will read many more pages than necessary. |
+| `page_count` | `6410 - 32909` | &#9989; as evidence | Large enough to matter. | Maintenance effects should be measurable. |
+| `fill_factor` | `100` | Depends | Pages were built full. | Random inserts can now cause aggressive splits and sparse pages. |
 
-> [!warning] LIMITED Does Not Return Page Density
+*Reorganize only the nonclustered demo index to show what a targeted online operation fixes and what it leaves untouched.*
+
+```sql
+ALTER INDEX IX_demo_idxmaint_symbol_date
+ON dbo.demo_idxmaint_rowstore
+REORGANIZE;
+```
+
+*Re-run the same physical-stats query after `REORGANIZE` to measure the exact change on the targeted index.*
+
+```sql
+SELECT
+    i.name AS index_name,
+    i.type_desc,
+    ips.avg_fragmentation_in_percent,
+    ips.page_count,
+    ips.avg_page_space_used_in_percent,
+    ips.fragment_count,
+    i.fill_factor
+FROM sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_rowstore'),
+    NULL,
+    NULL,
+    'SAMPLED'
+) AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+ORDER BY i.index_id;
+```
+
+| index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count | fill_factor |
+|---|---|---:|---:|---:|---:|---:|
+| `CIX_demo_idxmaint_row_guid` | `CLUSTERED` | 86.441399009389528 | 32909 | 65.474128984432923 | 28644 | 100 |
+| `IX_demo_idxmaint_symbol_date` | `NONCLUSTERED` | 0.78071182548794493 | 4355 | 99.192302940449721 | 206 | 100 |
+
+_`REORGANIZE` fixed exactly one thing: the targeted nonclustered index. Fragmentation fell from `99.28%` to `0.78%`, page density rose from `67.38%` to `99.19%`, and page count dropped from `6410` to `4355`. The clustered index did not change at all. This is the key operational property of targeted maintenance: it repairs only the structure you actually touched._
+
+## REBUILD — Full Rewrite, New Fill Factor, Fresh Index Statistics
+
+`ALTER INDEX ... REBUILD` drops and recreates the target index. It is the heavier but more thorough option: it can reset fill factor, apply compression options, and refresh index statistics. It is the usual choice when fragmentation is severe, density is poor, or storage/layout settings must change.
+
+> [!warning]
 >
-> `LIMITED` mode cannot report `avg_page_space_used_in_percent` (page density) because it only reads non-leaf pages. If you need to assess wasted space from partial pages — not just fragmentation order — use `SAMPLED` or `DETAILED`.
-
-> [!success] Use `LIMITED` for routine monitoring and `SAMPLED` or `DETAILED` only before targeted maintenance
+> `REBUILD` is not universally online.
 >
-> Schedule regular fragmentation checks with `LIMITED` to keep the DMV query fast. Switch to `SAMPLED` for a quick page density estimate, or `DETAILED` for specific indexes you are about to REBUILD where precise data justifies the extra I/O.
+> - `ONLINE = ON` is the preferred production pattern when the edition and index type support it.
+> - Some combinations fail, especially with `ALTER INDEX ALL`, XML indexes, spatial indexes, and some resumable scenarios.
+> - Offline rebuilds take `Sch-M` locks and block access.
 
-### REORGANIZE — Online, Lightweight
-
-`ALTER INDEX REORGANIZE` defragments the leaf level of an index by physically reordering leaf pages to match their logical (left-to-right) order. It also compacts pages to reclaim partially-used space up to the current fill factor setting. REORGANIZE is always an online operation — it acquires only short-duration Intent-Shared (IS) locks, so the table remains fully accessible for reads and writes throughout.
-
-REORGANIZE is interruptible: if you cancel the operation or it is interrupted (e.g., by a failover), all progress made up to that point is preserved in the database. This makes it safe to run during production hours — you can start and stop it multiple times until it completes.
-
-**Best for:** 5–30% fragmentation, during production hours when locking is unacceptable.
-
-#### Reorganize a specific rowstore index
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data REORGANIZE;
-```
-
-#### Reorganize all indexes on a table
-
-```sql
-ALTER INDEX ALL ON dbo.market_data REORGANIZE;
-```
-
-#### Reorganize a columnstore index
-
-For columnstore indexes, REORGANIZE compresses closed delta rowgroups into compressed columnstore segments and physically removes rows marked as deleted (when 10% or more of a rowgroup's rows are deleted). Without `COMPRESS_ALL_ROW_GROUPS = ON`, only closed delta rowgroups are compressed — open rowgroups are left untouched. Use this flag after bulk loads to ensure all data enters compressed storage.
-
-```sql
-ALTER INDEX CCI_archive ON dbo.market_data_archive REORGANIZE
-WITH (COMPRESS_ALL_ROW_GROUPS = ON);
-```
-
-> [!info] REORGANIZE Does Not Update Statistics
+> [!success]
 >
-> Unlike REBUILD, REORGANIZE does not automatically update statistics. If the data distribution changed significantly (e.g., after a large batch load), run `UPDATE STATISTICS` separately after REORGANIZE to keep the query optimizer's cardinality estimates accurate.
+> Use `REBUILD` when at least one of these is true:
+>
+> - fragmentation is high on a large rowstore index
+> - page density is materially low
+> - fill factor needs to change
+> - compression needs to change
+> - a more complete rewrite is worth the additional cost and logging
 
-### REBUILD — Heavier, More Thorough
-
-REBUILD drops and recreates the entire index from scratch. It fully eliminates fragmentation, resets fill factor, and automatically updates statistics.
-
-**Best for:** > 30% fragmentation, or when fill factor needs to be adjusted, or when data was compressed and needs re-compression.
-
-#### Rebuild a specific index — offline (default)
-
-Without options, REBUILD runs offline — it acquires a Schema Modification (Sch-M) lock that blocks all reads and writes for the duration. The index is dropped and recreated from scratch, resetting fragmentation to near 0% and automatically updating statistics with a full scan. Note: even after REBUILD, fragmentation may not be exactly 0% — SQL Server assigns index chunks to different CPU cores during a parallel rebuild, and when the pieces are merged, small boundary fragmentation can occur. Use `MAXDOP = 1` to eliminate this, at the expense of longer rebuild time.
+*Rebuild a specific production index with the online option when the engine and index type support it.*
 
 ```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data REBUILD;
-```
-
-#### Rebuild a specific index — online
-
-With `ONLINE = ON`, the table remains accessible during the rebuild. SQL Server maintains both the old and new versions of the index simultaneously, applying DML changes to both. This requires more TempDB space and takes longer than offline REBUILD, but avoids blocking production queries. Online REBUILD requires Enterprise or Developer edition.
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data REBUILD
+ALTER INDEX IX_silver_eurostoxx50_ohlcv_symbol_date
+ON silver.eurostoxx50_ohlcv
+REBUILD
 WITH (ONLINE = ON);
 ```
 
-#### Rebuild with full options
-
-The `FILLFACTOR` option controls how full each leaf page is packed during the rebuild (1–100%). `SORT_IN_TEMPDB = ON` offloads sort work to TempDB, reducing I/O contention on the main data file. `DATA_COMPRESSION` applies row-level (`ROW`) or page-level (`PAGE`) compression — PAGE compression uses dictionary and prefix encoding for higher savings (see [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression)). `MAXDOP` limits the degree of parallelism — a higher value shortens rebuild duration at the expense of more CPU.
+*Rebuild a specific index with explicit maintenance options such as fill factor, `SORT_IN_TEMPDB`, and `MAXDOP`.*
 
 ```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data REBUILD
+ALTER INDEX IX_silver_eurostoxx50_ohlcv_symbol_date
+ON silver.eurostoxx50_ohlcv
+REBUILD
 WITH (
     ONLINE = ON,
     FILLFACTOR = 90,
     SORT_IN_TEMPDB = ON,
-    DATA_COMPRESSION = PAGE,
     MAXDOP = 2
 );
 ```
 
-#### Rebuild all indexes on a table
+*Rebuild only the clustered demo index and lower its fill factor to `90` so the effect on the target index and the untouched sibling index is visible.*
 
 ```sql
-ALTER INDEX ALL ON dbo.market_data REBUILD WITH (ONLINE = ON);
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+REBUILD
+WITH (
+    ONLINE = ON,
+    FILLFACTOR = 90,
+    SORT_IN_TEMPDB = ON,
+    MAXDOP = 2
+);
 ```
 
-#### Rebuild a columnstore index
-
-Rebuilding a columnstore index re-reads all data from the original columnstore and delta store, compresses it into new rowgroups with optimal encoding, and physically removes rows that were marked as deleted (ghost records from `DELETE` operations).
+*Measure the rowstore demo object again after rebuilding only the clustered index.*
 
 ```sql
-ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
-```
-
-> [!warning] REBUILD OFFLINE Blocks All Access
->
-> Without `ONLINE = ON`, REBUILD acquires a Schema Modification (Sch-M) lock that blocks all reads and writes for the duration. On a large table this can take minutes to hours. `ONLINE = ON` requires Enterprise or Developer edition — Standard edition only supports offline REBUILD.
-
-> [!success] Always use `WITH (ONLINE = ON)` for production REBUILDs
->
-> `ALTER INDEX IX_name ON table REBUILD WITH (ONLINE = ON);` keeps the table fully accessible during the rebuild. Schedule offline REBUILDs only in a dedicated maintenance window when no reads or writes are expected.
-
-### Resumable Index Operations
-
-Starting with SQL Server 2017 (for `ALTER INDEX REBUILD`) and SQL Server 2019 (for `CREATE INDEX`), online index operations can be made resumable with the `RESUMABLE = ON` option. A resumable rebuild can be paused, resumed, or aborted — if the operation is interrupted by a failover, disk space shortage, or manual pause, it picks up from where it stopped rather than restarting from scratch.
-
-This is particularly valuable for large tables where a REBUILD may take hours. You can fit the operation into multiple short maintenance windows instead of requiring one continuous block.
-
-#### Rebuild with resumable enabled
-
-The `MAX_DURATION` parameter specifies how many minutes the operation runs before automatically pausing. Once paused, reissue the same `ALTER INDEX REBUILD` command to resume.
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data REBUILD
-WITH (ONLINE = ON, RESUMABLE = ON, MAX_DURATION = 60);
-```
-
-#### Pause and resume a running rebuild
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data PAUSE;
-```
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data RESUME;
-```
-
-#### Abort a resumable rebuild
-
-Aborting discards the in-progress rebuild work and returns to the original index. The original index remains fully intact and usable throughout.
-
-```sql
-ALTER INDEX IX_ohlcv_symbol_date ON dbo.market_data ABORT;
-```
-
-> [!warning] Paused Resumable Rebuilds Still Consume Resources
->
-> While a resumable rebuild is paused, both the original index and the partially-built new index coexist on disk, consuming additional storage. Every DML operation must update both copies. Do not leave a resumable rebuild paused indefinitely — either resume and complete it, or abort it.
-
-> [!success] Abort paused rebuilds you don't intend to finish
->
-> If you pause a resumable rebuild and decide not to continue, run `ALTER INDEX ... ABORT` to reclaim the extra disk space and eliminate the DML overhead of maintaining two index copies.
-
-> [!info] ELEVATE_ONLINE and ELEVATE_RESUMABLE Database Options
->
-> SQL Server 2019+ provides database-scoped configurations `ELEVATE_ONLINE` and `ELEVATE_RESUMABLE` that automatically promote index DDL to online or resumable execution. Setting `ELEVATE_ONLINE = WHEN_SUPPORTED` prevents accidental offline rebuilds that block table access. Set via `ALTER DATABASE SCOPED CONFIGURATION SET ELEVATE_ONLINE = WHEN_SUPPORTED;`.
-
-### Fill Factor Guidance
-
-Fill factor controls how full SQL Server packs leaf pages during a REBUILD (1–100%). A fill factor of 90 means each page is packed to 90% capacity, leaving 10% free space for future inserts. The free space reduces page splits by giving new rows room to be inserted in logical order without forcing a split.
-
-Fill factor only takes effect during an index REBUILD (or CREATE INDEX) — it does not affect ongoing DML operations. Between rebuilds, pages can fill to 100% as new rows arrive. The server-wide default fill factor is 0, which is equivalent to 100% (fully packed pages). You can check the current default with `SELECT value FROM sys.configurations WHERE name = 'fill factor (%)';`.
-
-| Workload | Fill Factor | Rationale |
-|----------|------------|-----------|
-| Read-only reporting tables | 100% (or 0) | No inserts — pack tightly for fewer pages and smaller index |
-| Random INSERT workload (OLTP) | 80–85% | Leave room on every page to absorb random inserts and prevent page splits |
-| Sequential INSERT (time-series) | 90–95% | Mostly appends at the end — minimal mid-page splits |
-| The market data fact table | 90% | Daily bulk loads with MERGE, mostly sequential by (symbol, date) |
-
-> [!info] PAD_INDEX Extends Fill Factor to Intermediate Levels
->
-> By default, fill factor applies only to leaf-level pages. The `PAD_INDEX = ON` option extends the same fill factor percentage to intermediate (non-leaf) levels of the B-tree. This is rarely needed — intermediate pages hold only key values and page pointers, not full data rows, so they split far less frequently than leaf pages.
-
-> [!tip] Monitor Page Splits to Tune Fill Factor
->
-> Use `sys.dm_db_index_operational_stats` to check the `leaf_allocation_count` column — high values indicate frequent page splits. If an index with fill factor 90 still shows heavy splits, lower it to 80–85%. If splits are near zero, raise it to 95–100% to reclaim the wasted space.
-
-### Automated Maintenance Script
-
-This script uses a cursor to iterate over all indexes in the current database that exceed the fragmentation and page count thresholds, then applies REORGANIZE or REBUILD depending on the fragmentation level. The cursor approach is a simplified illustration — it processes indexes one at a time, prints each generated DDL statement for audit purposes, then executes it. Indexes below 100 pages or below 5% fragmentation are skipped. Heap indexes (where `i.name IS NULL`) are excluded.
-
-Schedule this script weekly during a low-usage window (e.g., Sunday 02:00 UTC) via SQL Server Agent.
-
-```sql
-DECLARE @TableName NVARCHAR(256), @IndexName NVARCHAR(256), @Frag FLOAT, @Pages BIGINT;
-DECLARE @SQL NVARCHAR(MAX);
-
-DECLARE idx_cursor CURSOR FOR
 SELECT
-    OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id),
-    i.name,
+    i.name AS index_name,
+    i.type_desc,
     ips.avg_fragmentation_in_percent,
-    ips.page_count
-FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
-JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
-WHERE ips.page_count > 100
-  AND ips.avg_fragmentation_in_percent > 5
-  AND i.name IS NOT NULL;
-
-OPEN idx_cursor;
-FETCH NEXT FROM idx_cursor INTO @TableName, @IndexName, @Frag, @Pages;
-
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    IF @Frag > 30
-        SET @SQL = 'ALTER INDEX [' + @IndexName + '] ON ' + @TableName + ' REBUILD WITH (ONLINE = ON);';
-    ELSE
-        SET @SQL = 'ALTER INDEX [' + @IndexName + '] ON ' + @TableName + ' REORGANIZE;';
-
-    PRINT @SQL;
-    EXEC sp_executesql @SQL;
-    FETCH NEXT FROM idx_cursor INTO @TableName, @IndexName, @Frag, @Pages;
-END;
-
-CLOSE idx_cursor;
-DEALLOCATE idx_cursor;
+    ips.page_count,
+    ips.avg_page_space_used_in_percent,
+    ips.fragment_count,
+    i.fill_factor
+FROM sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_rowstore'),
+    NULL,
+    NULL,
+    'SAMPLED'
+) AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+ORDER BY i.index_id;
 ```
 
-> [!tip] Use Ola Hallengren's IndexOptimize in Production
->
-> For production environments, [Ola Hallengren's IndexOptimize](https://ola.hallengren.com/sql-server-index-and-statistics-maintenance.html) is the industry standard for index and statistics maintenance. It handles edge cases the script above does not — columnstore indexes, partitioned tables, `ONLINE` availability detection per edition, LOB column restrictions, detailed logging, and email notifications. It integrates with SQL Server Agent and supports a `@FragmentationLow`, `@FragmentationMedium`, `@FragmentationHigh` parameter model for threshold-based decisions. The script above is a learning illustration; use Hallengren's solution for real workloads.
+| index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count | fill_factor |
+|---|---|---:|---:|---:|---:|---:|
+| `CIX_demo_idxmaint_row_guid` | `CLUSTERED` | 0.050031269543464665 | 23985 | 90.639473684210529 | 333 | 90 |
+| `IX_demo_idxmaint_symbol_date` | `NONCLUSTERED` | 99.158485273492275 | 6417 | 67.31051396095873 | 6417 | 100 |
 
-> [!tip] Microsoft's Adaptive Index Defrag
->
-> Microsoft's [Adaptive Index Defrag](https://github.com/Microsoft/tigertoolbox/tree/master/AdaptiveIndexDefrag) script from the Tiger Toolbox is another open-source alternative. It automatically chooses between REORGANIZE and REBUILD based on fragmentation level and also handles statistics updates with a linear threshold.
+_The clustered index is now healthy: fragmentation is almost zero and page density closely matches the requested fill factor of `90`. The nonclustered index remains heavily fragmented and sparse. That is the operational lesson: rebuilding one index does not automatically solve maintenance debt on its siblings. Scope matters._
 
-### Statistics After Maintenance
-
-SQL Server's query optimizer uses statistics objects — histograms and density vectors — to estimate how many rows a query will return (cardinality estimation). Inaccurate statistics lead the optimizer to choose suboptimal plans: too few estimated rows may trigger nested loop joins on large tables; too many may cause unnecessary hash joins or table scans. [Cardinality estimation](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) depends on accurate, up-to-date statistics.
-
-SQL Server auto-updates statistics when roughly 20% of rows have changed (with a lower threshold of `SQRT(1000 * table_rows)` on tables over 25,000 rows when trace flag 2371 is active — enabled by default starting with SQL Server 2016 under compatibility level 130+). However, auto-update is triggered lazily (on the next query compilation that uses the stale stats), so after a large bulk load the first query may get a bad plan before auto-update fires.
-
-#### Update statistics for a specific table with full scan
-
-`WITH FULLSCAN` reads every row in the table to build the histogram, producing the most accurate statistics. Use this after bulk loads where data distribution changes significantly.
+*Rebuild every index on the rowstore demo table to show the difference between a targeted rebuild and a table-wide rebuild.*
 
 ```sql
-UPDATE STATISTICS dbo.market_data WITH FULLSCAN;
+ALTER INDEX ALL
+ON dbo.demo_idxmaint_rowstore
+REBUILD
+WITH (
+    ONLINE = ON,
+    MAXDOP = 2
+);
 ```
 
-#### Update all statistics in the database
+*Measure the rowstore demo table after `ALTER INDEX ALL ... REBUILD` to confirm that both indexes are now healthy.*
 
-`sp_updatestats` updates only statistics that are stale (where `modification_counter > 0`). It uses the auto-sampling rate, not a full scan.
+```sql
+SELECT
+    i.name AS index_name,
+    i.type_desc,
+    ips.avg_fragmentation_in_percent,
+    ips.page_count,
+    ips.avg_page_space_used_in_percent,
+    ips.fragment_count,
+    i.fill_factor
+FROM sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_rowstore'),
+    NULL,
+    NULL,
+    'SAMPLED'
+) AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id
+   AND ips.index_id = i.index_id
+WHERE ips.index_id > 0
+ORDER BY i.index_id;
+```
+
+| index_name | type_desc | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent | fragment_count | fill_factor |
+|---|---|---:|---:|---:|---:|---:|
+| `CIX_demo_idxmaint_row_guid` | `CLUSTERED` | 0.03752501667778519 | 23984 | 90.636434395848781 | 216 | 90 |
+| `IX_demo_idxmaint_symbol_date` | `NONCLUSTERED` | 0.13556258472661548 | 4426 | 99.475290338522356 | 77 | 100 |
+
+_After the table-wide rebuild, both indexes are healthy. The clustered index retained the lower fill factor and the nonclustered index was rewritten into a dense, low-fragmentation structure. This is the point where a `REBUILD` meaningfully resets the storage layout rather than merely compacting leaf pages._
+
+## Columnstore Maintenance
+
+Columnstore maintenance is a different problem. The relevant questions are not B-tree page order and leaf-page density; they are **rowgroup state**, **deleted-row pressure**, and whether delta rowgroups have been compressed into columnstore segments.
+
+> [!warning]
+>
+> Do not apply rowstore fragmentation heuristics directly to columnstore indexes.
+>
+> - Columnstore maintenance is driven by `state_desc`, `deleted_rows`, and rowgroup transitions.
+> - `REORGANIZE` can compress open or closed delta rowgroups and merge rowgroups.
+> - `REBUILD` rewrites the entire columnstore and removes deleted-row burden more aggressively.
+
+> [!success]
+>
+> Use `REORGANIZE WITH (COMPRESS_ALL_ROW_GROUPS = ON)` when you want to compress delta rowgroups online. Use `REBUILD` when deleted rows, rowgroup quality, or storage layout justify a full rewrite.
+
+> [!example]
+> The next setup batch creates a disposable columnstore table, deletes part of one batch to create deleted-row pressure, and inserts a small later batch to leave an open delta rowgroup.
+
+*Create the disposable columnstore demo object and seed it with rowgroup states that make `REORGANIZE` and `REBUILD` observable.*
+
+```sql
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.demo_idxmaint_columnstore;
+GO
+
+CREATE TABLE dbo.demo_idxmaint_columnstore
+(
+    demo_id bigint IDENTITY(1,1) NOT NULL,
+    batch_no tinyint NOT NULL,
+    source_id int NOT NULL,
+    symbol varchar(20) NOT NULL,
+    [date] date NOT NULL,
+    [close] float NOT NULL,
+    volume bigint NOT NULL
+);
+GO
+
+INSERT INTO dbo.demo_idxmaint_columnstore (batch_no, source_id, symbol, [date], [close], volume)
+SELECT 1, id, symbol, [date], [close], volume
+FROM silver.eurostoxx50_ohlcv;
+
+INSERT INTO dbo.demo_idxmaint_columnstore (batch_no, source_id, symbol, [date], [close], volume)
+SELECT 2, id, symbol, [date], [close], volume
+FROM silver.eurostoxx50_ohlcv;
+GO
+
+CREATE CLUSTERED COLUMNSTORE INDEX CCI_demo_idxmaint_columnstore
+ON dbo.demo_idxmaint_columnstore;
+GO
+
+DELETE FROM dbo.demo_idxmaint_columnstore
+WHERE batch_no = 1
+  AND source_id % 7 = 0;
+
+INSERT INTO dbo.demo_idxmaint_columnstore (batch_no, source_id, symbol, [date], [close], volume)
+SELECT TOP (5000)
+    3,
+    id,
+    symbol,
+    DATEADD(DAY, 1, [date]),
+    [close],
+    volume
+FROM silver.eurostoxx50_ohlcv
+ORDER BY id;
+GO
+```
+
+*Inspect the demo columnstore rowgroups before maintenance to capture compressed, deleted, and open-rowgroup states.*
+
+```sql
+SELECT
+    state_desc,
+    COUNT(*) AS rowgroup_count,
+    SUM(total_rows) AS total_rows,
+    SUM(deleted_rows) AS deleted_rows,
+    SUM(size_in_bytes) AS size_in_bytes
+FROM sys.dm_db_column_store_row_group_physical_stats
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_columnstore')
+GROUP BY state_desc
+ORDER BY state_desc;
+```
+
+| state_desc | rowgroup_count | total_rows | deleted_rows | size_in_bytes |
+|---|---:|---:|---:|---:|
+| `COMPRESSED` | 1 | 134310 | 9594 | 2006368 |
+| `OPEN` | 1 | 5000 | 0 | 294912 |
+
+_This is a classic columnstore maintenance target. One compressed rowgroup already contains `9,594` deleted rows, and one `OPEN` delta rowgroup still holds `5,000` rows in rowstore format. `REORGANIZE WITH (COMPRESS_ALL_ROW_GROUPS = ON)` is the right first step when the goal is to compress pending rowgroups online._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `state_desc` | `OPEN` | &#10060; if persistent | Delta rowgroup still accepting rows. | Data is not yet compressed into columnstore format. |
+| `state_desc` | `CLOSED` | Depends | Delta rowgroup is full and waiting for compression. | Tuple mover or `REORGANIZE` can compress it. |
+| `state_desc` | `COMPRESSED` | &#9989; | Data is stored in columnstore format. | This is the preferred steady state. |
+| `state_desc` | `TOMBSTONE` | Depends | Old rowgroup metadata remains after transitions. | Expected after some `REORGANIZE` and merge activity. |
+| `deleted_rows` | High relative to `total_rows` | &#10060; | Many rows in compressed rowgroups are logically deleted. | Storage efficiency and scan cost degrade; `REBUILD` may be justified. |
+
+*Reorganize the columnstore demo object and force compression of all eligible rowgroups.*
+
+```sql
+ALTER INDEX CCI_demo_idxmaint_columnstore
+ON dbo.demo_idxmaint_columnstore
+REORGANIZE
+WITH (COMPRESS_ALL_ROW_GROUPS = ON);
+```
+
+*Re-check the columnstore rowgroup state after `REORGANIZE` to confirm what changed.*
+
+```sql
+SELECT
+    state_desc,
+    COUNT(*) AS rowgroup_count,
+    SUM(total_rows) AS total_rows,
+    SUM(deleted_rows) AS deleted_rows,
+    SUM(size_in_bytes) AS size_in_bytes
+FROM sys.dm_db_column_store_row_group_physical_stats
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_columnstore')
+GROUP BY state_desc
+ORDER BY state_desc;
+```
+
+| state_desc | rowgroup_count | total_rows | deleted_rows | size_in_bytes |
+|---|---:|---:|---:|---:|
+| `COMPRESSED` | 2 | 139310 | 9594 | 2072600 |
+| `TOMBSTONE` | 1 | 5000 | 0 | 294912 |
+
+_`REORGANIZE` did exactly what it should do here: the open delta rowgroup was forced into compressed storage, and the old rowgroup metadata became `TOMBSTONE`. The deleted-row burden in the original compressed rowgroup still exists, which is why `REORGANIZE` is often a first improvement rather than the final one._
+
+*Rebuild the columnstore demo index when a full rewrite is justified.*
+
+```sql
+ALTER INDEX CCI_demo_idxmaint_columnstore
+ON dbo.demo_idxmaint_columnstore
+REBUILD;
+```
+
+*Inspect the columnstore rowgroups after `REBUILD` to confirm that deleted-row pressure and rowgroup layout were fully rewritten.*
+
+```sql
+SELECT
+    state_desc,
+    COUNT(*) AS rowgroup_count,
+    SUM(total_rows) AS total_rows,
+    SUM(deleted_rows) AS deleted_rows,
+    SUM(size_in_bytes) AS size_in_bytes
+FROM sys.dm_db_column_store_row_group_physical_stats
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_columnstore')
+GROUP BY state_desc
+ORDER BY state_desc;
+```
+
+| state_desc | rowgroup_count | total_rows | deleted_rows | size_in_bytes |
+|---|---:|---:|---:|---:|
+| `COMPRESSED` | 1 | 129716 | 0 | 1941544 |
+
+_The rebuild produced the cleanest possible columnstore state in this demo: one fully compressed rowgroup with no deleted-row burden. That is the main reason `REBUILD` remains the heavy but definitive maintenance option for columnstore structures._
+
+## Resumable Index Operations
+
+Resumable rebuilds exist for cases where an online rebuild is correct but the operation cannot be given one uninterrupted maintenance window. They are especially useful for large indexes on busy systems, but they come with operational cost while paused because both index versions coexist.
+
+> [!warning]
+>
+> Resumable rebuilds require care.
+>
+> - `RESUMABLE = ON` is used with online rebuilds.
+> - Paused operations continue consuming space.
+> - DML against the table continues to maintain the old and new index structures.
+> - `SORT_IN_TEMPDB = ON` is not supported with resumable rebuilds.
+
+> [!success]
+>
+> Use resumable rebuilds when the right answer is still `REBUILD`, but the maintenance window is shorter than the rebuild duration. Pause, resume, and abort should all be part of the operational plan before the command is issued.
+
+*Start a resumable online rebuild against the rowstore demo object.*
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+REBUILD
+WITH (
+    ONLINE = ON,
+    RESUMABLE = ON,
+    MAXDOP = 1
+);
+```
+
+*Pause the resumable rebuild so `sys.index_resumable_operations` exposes a live row.*
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+PAUSE;
+```
+
+*Inspect the resumable-operation DMV to see the paused rebuild state and completion percentage.*
+
+```sql
+SELECT
+    name,
+    state_desc,
+    percent_complete,
+    page_count,
+    last_pause_time
+FROM sys.index_resumable_operations
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore');
+```
+
+| name | state_desc | percent_complete | page_count | last_pause_time |
+|---|---|---:|---:|---|
+| `CIX_demo_idxmaint_row_guid` | `PAUSED` | 61.197081378899561 | 18185 | 2026-04-08 11:54:41.233 |
+
+_This is a real paused resumable rebuild. The operation had completed about `61.20%` of the rewrite, had already materialized `18,185` pages of the new structure, and remained paused at `2026-04-08 11:54:41.233`. That is not a harmless bookmark; it is a live operational state with storage and DML overhead._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `state_desc` | `PAUSED` | &#10060; if forgotten | Operation stopped intentionally or by policy. | Extra storage and maintenance overhead continue until `RESUME` or `ABORT`. |
+| `state_desc` | `RUNNING` | Depends | Rebuild is actively progressing. | Monitor duration, blocking behavior, and resource use. |
+| `state_desc` | `ABORTED` | Depends | Partial work was discarded. | The original index remains in place. |
+| `percent_complete` | Rising | &#9989; | Operation is progressing. | Resume is working as intended. |
+| `percent_complete` | Stalled for long periods | &#10060; | Rebuild is not making progress. | Investigate blocking, resource pressure, or pause state. |
+| `page_count` | Growing while paused | Depends | New index structure is occupying space. | Storage pressure can become material on large tables. |
+
+*Resume a paused resumable rebuild.*
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+RESUME;
+```
+
+*Verify that the resumable-operation DMV is empty after the rebuild completes.*
+
+```sql
+SELECT
+    name,
+    state_desc,
+    percent_complete,
+    page_count,
+    last_pause_time
+FROM sys.index_resumable_operations
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore');
+```
+
+| name | state_desc | percent_complete | page_count | last_pause_time |
+|---|---|---:|---:|---|
+
+_No rows remain, which means there is no active or paused resumable operation for this object. That is the correct terminal state after a successful resume and completion._
+
+*Start and pause a new resumable rebuild so `ABORT` can be demonstrated against a live paused operation.*
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+REBUILD
+WITH (
+    ONLINE = ON,
+    RESUMABLE = ON,
+    MAXDOP = 1
+);
+```
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+PAUSE;
+```
+
+*Confirm that the second resumable rebuild is paused before aborting it.*
+
+```sql
+SELECT
+    name,
+    state_desc,
+    percent_complete,
+    page_count,
+    last_pause_time
+FROM sys.index_resumable_operations
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore');
+```
+
+| name | state_desc | percent_complete | page_count | last_pause_time |
+|---|---|---:|---:|---|
+| `CIX_demo_idxmaint_row_guid` | `PAUSED` | 49.183977365795549 | 16638 | 2026-04-08 11:55:08.913 |
+
+_The second paused rebuild is a live abort target. It is about `49.18%` complete, has already materialized `16,638` pages of the replacement structure, and is still consuming space and maintenance overhead until it is resumed or aborted._
+
+*Abort a paused resumable rebuild when the work should be discarded instead of finished.*
+
+```sql
+ALTER INDEX CIX_demo_idxmaint_row_guid
+ON dbo.demo_idxmaint_rowstore
+ABORT;
+```
+
+*Verify that aborting removed the paused operation from the DMV.*
+
+```sql
+SELECT
+    name,
+    state_desc,
+    percent_complete,
+    page_count,
+    last_pause_time
+FROM sys.index_resumable_operations
+WHERE object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore');
+```
+
+| name | state_desc | percent_complete | page_count | last_pause_time |
+|---|---|---:|---:|---|
+
+_No rows remain after `ABORT`, which confirms that the paused resumable operation was discarded and the extra in-progress structure is no longer being tracked._
+
+## Fill Factor Guidance
+
+Fill factor is not a universal tuning knob. It is a targeted response to page-split pressure on specific write-heavy rowstore indexes. The default and best value for many indexes remains `100` or `0` (which also means fully packed pages).
+
+*Check the current server-wide default fill factor before changing index-level settings.*
+
+```sql
+SELECT value_in_use AS fill_factor_percent
+FROM sys.configurations
+WHERE name = 'fill factor (%)';
+```
+
+| fill_factor_percent |
+|---:|
+| 0 |
+
+_The server default is `0`, which SQL Server interprets as fully packed pages. That is the correct default for many workloads. Lower fill factor should be applied only when there is measured page-split pressure on a specific index and the additional space overhead is justified._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `fill_factor_percent` | `0` or `100` | &#9989; by default | Fully packed pages at build or rebuild time. | Best for read-mostly or append-heavy indexes with little mid-page split pressure. |
+| `fill_factor_percent` | `90 - 95` | Depends | Leaves modest free space on leaf pages. | Useful for moderately write-heavy indexes. |
+| `fill_factor_percent` | `80 - 89` | Depends | Leaves substantial free space. | Consider only when random insert or update pressure is demonstrably high. |
+| `fill_factor_percent` | Very low values | &#10060; unless proven | Wastes space aggressively. | Buffer-pool and I/O cost can outweigh any split reduction. |
+
+> [!example]
+> The next demo measures page-split evidence directly with `sys.dm_db_index_operational_stats`, which is the right companion DMV when fill factor is under discussion.
+
+*Create a random-insert rowstore table and inspect its page-split evidence after sustained GUID-based insert activity.*
+
+```sql
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.demo_idxmaint_splits;
+GO
+
+CREATE TABLE dbo.demo_idxmaint_splits
+(
+    row_guid uniqueidentifier NOT NULL,
+    payload char(200) NOT NULL
+);
+GO
+
+;WITH n AS
+(
+    SELECT TOP (50000) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects AS a
+    CROSS JOIN sys.all_objects AS b
+)
+INSERT INTO dbo.demo_idxmaint_splits (row_guid, payload)
+SELECT NEWID(), REPLICATE('X', 200)
+FROM n;
+GO
+
+CREATE CLUSTERED INDEX CIX_demo_idxmaint_splits
+ON dbo.demo_idxmaint_splits (row_guid)
+WITH (FILLFACTOR = 100);
+GO
+
+;WITH n AS
+(
+    SELECT TOP (50000) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects AS a
+    CROSS JOIN sys.all_objects AS b
+)
+INSERT INTO dbo.demo_idxmaint_splits (row_guid, payload)
+SELECT NEWID(), REPLICATE('Y', 200)
+FROM n;
+GO
+```
+
+*Measure page-split and density evidence for the GUID-based clustered index by combining operational and physical stats.*
+
+```sql
+SELECT
+    i.name AS index_name,
+    i.fill_factor,
+    ios.leaf_allocation_count,
+    ios.leaf_page_merge_count,
+    ios.range_scan_count,
+    ios.singleton_lookup_count,
+    ips.avg_fragmentation_in_percent,
+    ips.page_count,
+    ips.avg_page_space_used_in_percent
+FROM sys.indexes AS i
+CROSS APPLY sys.dm_db_index_operational_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_splits'),
+    i.index_id,
+    NULL
+) AS ios
+CROSS APPLY sys.dm_db_index_physical_stats
+(
+    DB_ID(),
+    OBJECT_ID(N'dbo.demo_idxmaint_splits'),
+    i.index_id,
+    NULL,
+    'SAMPLED'
+) AS ips
+WHERE i.object_id = OBJECT_ID(N'dbo.demo_idxmaint_splits')
+  AND i.index_id > 0;
+```
+
+| index_name | fill_factor | leaf_allocation_count | leaf_page_merge_count | range_scan_count | singleton_lookup_count | avg_fragmentation_in_percent | page_count | avg_page_space_used_in_percent |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `CIX_demo_idxmaint_splits` | 100 | 1460 | 0 | 0 | 0 | 6.5975820379965455 | 2895 | 95.99729429206819 |
+
+_This is the kind of evidence that justifies a fill-factor discussion. The GUID-based clustered index was built full (`100`) and then accumulated `1,460` leaf allocations during later random inserts. Fragmentation is only about `6.60%`, but operationally the index has clearly been splitting under insert pressure. That is why fill-factor decisions should be driven by operational stats and write pattern, not by fragmentation percentage alone._
+
+| Column | Value or Pattern | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `leaf_allocation_count` | High and rising | &#10060; for random-write indexes | SQL Server is allocating new leaf pages during DML. | Strong signal of split pressure or ongoing page growth. |
+| `leaf_page_merge_count` | High | Depends | SQL Server is merging leaf pages. | Useful context when density and deletion patterns are changing. |
+| `fill_factor` | `100` with high `leaf_allocation_count` | Depends | Pages start full and later split under writes. | Lower fill factor may be worth testing for this index. |
+| `avg_page_space_used_in_percent` | Still high | Depends | Current density is acceptable despite split activity. | Lower fill factor should be justified by workload benefit, not applied automatically. |
+
+## Statistics After Maintenance
+
+Statistics and index maintenance intersect constantly. `REBUILD` refreshes index statistics automatically; `REORGANIZE` does not. After large data changes or after `REORGANIZE`, manual statistics maintenance can matter more than the defragmentation itself.
+
+> [!warning]
+>
+> Updating statistics is not free.
+>
+> - `FULLSCAN` reads all rows and can be expensive on large tables.
+> - Statistics updates can trigger recompiles.
+> - `sp_updatestats` uses default sampling and updates only statistics with modifications.
+
+> [!success]
+>
+> Use `UPDATE STATISTICS ... WITH FULLSCAN` selectively after large loads, major data distribution changes, or `REORGANIZE` on plan-sensitive tables. Use `sp_updatestats` as a broad maintenance sweep when default sampling is acceptable.
+
+> [!example]
+> The next sequence uses the rowstore demo table to show how `modification_counter` changes before and after a manual full-scan refresh.
+
+*Add another batch of randomized rows to the rowstore demo object so its statistics become stale again.*
+
+```sql
+INSERT INTO dbo.demo_idxmaint_rowstore
+(
+    row_guid,
+    batch_no,
+    source_id,
+    symbol,
+    [date],
+    [close],
+    volume,
+    filler
+)
+SELECT TOP (25000)
+    NEWID(),
+    11,
+    id,
+    symbol,
+    [date],
+    [close],
+    volume,
+    REPLICATE('Z', 200)
+FROM silver.eurostoxx50_ohlcv
+ORDER BY NEWID();
+```
+
+*Inspect index-backed statistics on the demo rowstore table before a manual refresh so `last_updated`, `rows`, and `modification_counter` can be compared afterwards.*
+
+```sql
+SELECT
+    'BEFORE' AS sample_point,
+    s.name AS stat_name,
+    sp.last_updated,
+    sp.rows,
+    sp.rows_sampled,
+    sp.modification_counter,
+    sp.persisted_sample_percent
+FROM sys.stats AS s
+CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) AS sp
+WHERE s.object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore')
+  AND s.auto_created = 0
+ORDER BY s.stats_id;
+```
+
+| sample_point | stat_name | last_updated | rows | rows_sampled | modification_counter | persisted_sample_percent |
+|---|---|---|---:|---:|---:|---:|
+| `BEFORE` | `CIX_demo_idxmaint_row_guid` | 2026-04-08 11:54:53.5600000 | 671550 | 50566 | 25000 | 0.0 |
+| `BEFORE` | `IX_demo_idxmaint_symbol_date` | 2026-04-08 11:52:42.6300000 | 671550 | 671550 | 25000 | 0.0 |
+
+_Both index-backed statistics are stale before the manual refresh, but for different reasons. The clustered-index statistics sampled only `50,566` rows last time and now show `25,000` modifications since that update. The nonclustered statistics were last sampled from the full table, but they show the same `25,000` post-update changes and an older timestamp. `last_updated`, `rows_sampled`, and `modification_counter` must be read together; none is sufficient on its own._
+
+| Column | Value or Pattern | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `last_updated` | Recent and workload-aligned | &#9989; | Statistics are current. | Cardinality estimates are less likely to drift. |
+| `last_updated` | Old relative to recent large loads | &#10060; | Stats may no longer reflect current data distribution. | Plan quality can degrade. |
+| `rows` | High | Depends | The statistic covers a large population. | Sampling decisions matter more. |
+| `rows_sampled` | Close to `rows` | &#9989; | Statistics were built from most or all rows. | Histogram quality is usually stronger. |
+| `rows_sampled` | Much lower than `rows` | Depends | Statistics were sampled rather than fully scanned. | Usually acceptable, but plan-sensitive workloads may need `FULLSCAN`. |
+| `modification_counter` | `0` | &#9989; | No changes since the last update. | No immediate manual refresh need. |
+| `modification_counter` | Materially above zero on a hot table | Depends | Rows changed since the last refresh. | Manual review is warranted, especially after `REORGANIZE` or large loads. |
+| `persisted_sample_percent` | `0.0` | Depends | No persisted custom sample rate. | Future updates use the default sampling behavior unless overridden. |
+
+*Refresh all statistics on the rowstore demo table with a full scan.*
+
+```sql
+UPDATE STATISTICS dbo.demo_idxmaint_rowstore
+WITH FULLSCAN;
+```
+
+*Inspect the same statistics again after `UPDATE STATISTICS ... WITH FULLSCAN` to confirm the refresh.*
+
+```sql
+SELECT
+    'AFTER' AS sample_point,
+    s.name AS stat_name,
+    sp.last_updated,
+    sp.rows,
+    sp.rows_sampled,
+    sp.modification_counter,
+    sp.persisted_sample_percent
+FROM sys.stats AS s
+CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) AS sp
+WHERE s.object_id = OBJECT_ID(N'dbo.demo_idxmaint_rowstore')
+  AND s.auto_created = 0
+ORDER BY s.stats_id;
+```
+
+| sample_point | stat_name | last_updated | rows | rows_sampled | modification_counter | persisted_sample_percent |
+|---|---|---|---:|---:|---:|---:|
+| `AFTER` | `CIX_demo_idxmaint_row_guid` | 2026-04-08 11:56:04.4800000 | 696550 | 696550 | 0 | 0.0 |
+| `AFTER` | `IX_demo_idxmaint_symbol_date` | 2026-04-08 11:56:04.6066667 | 696550 | 696550 | 0 | 0.0 |
+
+_The post-refresh state is what `FULLSCAN` should produce. Both statistics objects now show the current row count, `rows_sampled` matches `rows`, and `modification_counter` has reset to `0`. That means both objects were rebuilt from the full table and now describe the current data shape accurately._
+
+*Run a broad database sweep that updates only statistics SQL Server considers changed enough to refresh.*
 
 ```sql
 EXEC sp_updatestats;
 ```
 
-#### View statistics staleness for all tables
-
-The `modification_counter` column from `sys.dm_db_stats_properties` tracks how many row modifications have occurred since the last statistics update. A `pct_modified` above 20% is a strong signal that the statistics are stale and should be updated manually.
+*Find the statistics objects in the current database that currently have the highest modification counts.*
 
 ```sql
-SELECT
-    OBJECT_SCHEMA_NAME(s.object_id) + '.' + OBJECT_NAME(s.object_id) AS table_name,
+SELECT TOP (20)
+    OBJECT_SCHEMA_NAME(s.object_id) + N'.' + OBJECT_NAME(s.object_id) AS table_name,
     s.name AS stat_name,
     sp.last_updated,
     sp.rows,
     sp.modification_counter,
-    CAST(100.0 * sp.modification_counter / NULLIF(sp.rows, 0) AS DECIMAL(5,1)) AS pct_modified
-FROM sys.stats s
-CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) sp
+    CAST(100.0 * sp.modification_counter / NULLIF(sp.rows, 0) AS decimal(10,2)) AS pct_modified,
+    sp.persisted_sample_percent
+FROM sys.stats AS s
+CROSS APPLY sys.dm_db_stats_properties(s.object_id, s.stats_id) AS sp
 WHERE OBJECTPROPERTY(s.object_id, 'IsUserTable') = 1
   AND sp.modification_counter > 0
-ORDER BY sp.modification_counter DESC;
+ORDER BY sp.modification_counter DESC, table_name, stat_name;
 ```
 
-> [!info] REBUILD Automatically Updates Statistics
->
-> An index REBUILD automatically updates statistics with a full scan (equivalent to `UPDATE STATISTICS ... WITH FULLSCAN`). REORGANIZE does not update statistics. After REORGANIZE on a table that received significant data changes, always run `UPDATE STATISTICS` separately to keep cardinality estimates accurate.
+| table_name | stat_name | last_updated | rows | modification_counter | pct_modified | persisted_sample_percent |
+|---|---|---|---:|---:|---:|---:|
+| `dbo.gold_daily_summary` | `IX_gold_daily_date` | 2026-03-29 20:36:12.4333333 | 506 | 14674 | 2900.00 | 0.0 |
+| `dbo.gold_daily_summary` | `_WA_Sys_00000003_69FBBC1F` | 2026-03-29 21:33:37.2400000 | 506 | 8602 | 1700.00 | 0.0 |
+| `dbo.demo_idxmaint_splits` | `CIX_demo_idxmaint_splits` | 2026-04-08 11:59:23.2200000 | 50000 | 50000 | 100.00 | 0.0 |
+| `dbo.demo_idxmaint_columnstore` | `_WA_Sys_00000002_4589517F` | 2026-04-08 11:54:07.7033333 | 134310 | 14594 | 10.87 | 0.0 |
 
-### Index Anti-Patterns
+_This database-wide view is how stale-statistics risk should be ranked in production. `dbo.gold_daily_summary` stands out immediately: very small row counts with modification counts many times larger than the base row count mean those statistics have been invalidated repeatedly since the last refresh. The columnstore auto statistic is much less extreme at `10.87%`, but still worth attention if plan quality on that object matters._
 
-Common index maintenance mistakes, their consequences, and the correct approach.
-
-| Mistake | Why It's Bad | Fix |
-|---------|-------------|-----|
-| **Never rebuilding** | Fragmentation grows → range scans read more pages → queries slow down | Weekly maintenance: REORGANIZE at 5–30%, REBUILD at >30% |
-| **Rebuilding tiny indexes** | Indexes under 1,000 pages (~8 MB) have negligible fragmentation impact — wasting maintenance time and I/O | Skip indexes with `page_count < 1000` in maintenance scripts |
-| **Over-indexing staging tables** | Staging tables are truncated and bulk-loaded — indexes slow down the load with per-row maintenance overhead | Drop indexes before bulk load, recreate after |
-| **Ignoring partitioned indexes** | Each partition fragments independently and may need separate maintenance | Use `REBUILD PARTITION = N` to target hot partitions only (see [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)) |
-| **Not updating statistics after large loads** | Stale statistics → bad cardinality estimates → suboptimal query plans (table scans, wrong join types) | `UPDATE STATISTICS table WITH FULLSCAN` after bulk loads |
-| **REBUILD OFFLINE during business hours** | Sch-M lock blocks all reads and writes for the duration | Always use `WITH (ONLINE = ON)` in production, or schedule off-hours |
-| **SHRINK then REBUILD** | `DBCC SHRINKFILE` moves pages to fill gaps, re-fragmenting indexes that were just rebuilt | Always run SHRINK before REBUILD if both are needed — never shrink after |
-
-## Pipeline Maintenance Schedule
-
-The maintenance cadence below is tuned for a data pipeline that runs 3x daily, loading market data and derived signals into a medallion-layer SQL Server database.
-
-| Frequency | Action | Scope |
-|-----------|--------|-------|
-| After each pipeline run (3x daily) | `UPDATE STATISTICS ... WITH FULLSCAN` | Tables that received bulk loads |
-| Weekly (Sunday 02:00 UTC) | REORGANIZE / REBUILD based on fragmentation | All indexes via automated maintenance script |
-| Monthly | Review unused index DMV, review missing index DMV | Database-wide index audit |
-
-### Update statistics after each pipeline run
-
-```sql
-UPDATE STATISTICS dbo.market_data;
-UPDATE STATISTICS silver.signals_daily;
-UPDATE STATISTICS silver.signals_quarterly;
-```
-
-### Recommended index layout for medallion data model
-
-The indexes below support the primary access patterns: pipeline MERGE operations key on `(symbol, date)`, dashboards aggregate across symbols and date ranges, and dimension lookups filter by active tickers and index membership.
-
-#### dbo.market_data — main fact table
-
-The clustered index on `(symbol, date)` aligns with the MERGE key. The nonclustered columnstore index (NCCI) provides compressed columnar storage for dashboard aggregation queries that scan wide ranges of rows.
-
-```sql
-CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_ohlcv_dashboard
-ON dbo.market_data (symbol, date, [open], high, low, [close], volume, _index);
-```
-
-#### dbo.daily_metrics — derived signals
-
-Key columns `(_index, date DESC)` support lookups by stock index with most-recent-first ordering. The `INCLUDE` columns cover the dashboard's SELECT list, enabling index-only scans without key lookups.
-
-```sql
-CREATE NONCLUSTERED INDEX IX_daily_index_date
-ON dbo.daily_metrics (_index, date DESC)
-INCLUDE (symbol, close, momentum_score, relative_value_score, sentiment_score);
-```
-
-#### dbo.quarterly_metrics — quarterly fundamentals
-
-```sql
-CREATE NONCLUSTERED INDEX IX_quarterly_index
-ON dbo.quarterly_metrics (_index)
-INCLUDE (symbol, pe_ratio, pb_ratio, dividend_yield, quality_score, governance_score);
-```
-
-#### dbo.instrument_tickers — dimension table
-
-A filtered index on `WHERE active = 1` indexes only the active tickers, keeping the index small and fast. Since the dimension table is small and rarely updated, maintenance overhead is negligible.
-
-```sql
-CREATE NONCLUSTERED INDEX IX_tickers_active_index
-ON dbo.instrument_tickers (_index, symbol)
-WHERE active = 1;
-```
+| Column | Value or Range | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `pct_modified` | Very high on small tables | &#10060; | Statistics are badly out of sync with current data. | Manual refresh is usually justified. |
+| `pct_modified` | Moderate on very large tables | Depends | Some change has accumulated. | Evaluate against workload sensitivity and plan stability. |
+| `stat_name` starting `_WA_Sys_` | Auto-created statistics | Depends | SQL Server created these for individual columns. | They matter operationally; do not ignore them because they are auto-generated. |
 
 ## Index Discovery
 
-Before creating new indexes or deciding which to drop, you need a complete picture of what already exists, how each index is used, and what the optimizer wishes it had. The DMVs in this section provide that visibility.
+### Index metadata — keys, included columns, and index properties
 
-### Index Metadata — all indexes with key and included columns
+> [!example]
+> The next setup batch creates a disposable table with one clustered primary key, one useful composite nonclustered index, and one extra write-heavy nonclustered index so the discovery queries can show both healthy and questionable patterns.
 
-This query joins `sys.indexes`, `sys.index_columns`, and `sys.columns` to produce a complete inventory of every index on a table, showing the key columns (used for seeks and ordering) separately from included columns (carried in the leaf for covering queries, not part of the B-tree key). The `CASE` expression inside `STRING_AGG` splits the two column lists — SQL Server does not support the `FILTER (WHERE ...)` aggregate syntax used in PostgreSQL.
+*Create the disposable usage-analysis table and generate enough reads and writes for `sys.dm_db_index_usage_stats` to be meaningful.*
+
+```sql
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.demo_idxmaint_usage;
+GO
+
+CREATE TABLE dbo.demo_idxmaint_usage
+(
+    id int IDENTITY(1,1) NOT NULL,
+    symbol varchar(20) NOT NULL,
+    trade_date date NOT NULL,
+    category varchar(20) NOT NULL,
+    metric_value decimal(18,4) NOT NULL,
+    batch_no tinyint NOT NULL,
+    CONSTRAINT PK_demo_idxmaint_usage PRIMARY KEY CLUSTERED (id)
+);
+GO
+
+CREATE NONCLUSTERED INDEX IX_demo_idxmaint_usage_symbol_date
+ON dbo.demo_idxmaint_usage (symbol, trade_date)
+INCLUDE (metric_value);
+
+CREATE NONCLUSTERED INDEX IX_demo_idxmaint_usage_category
+ON dbo.demo_idxmaint_usage (category)
+INCLUDE (metric_value, batch_no);
+GO
+
+INSERT INTO dbo.demo_idxmaint_usage (symbol, trade_date, category, metric_value, batch_no)
+SELECT TOP (50000)
+    o.symbol,
+    o.[date],
+    CASE WHEN s.signal IS NULL THEN 'base' ELSE 'signal' END,
+    CAST(o.[close] AS decimal(18,4)),
+    1
+FROM silver.eurostoxx50_ohlcv AS o
+LEFT JOIN silver.signals_daily AS s
+    ON s.symbol = o.symbol
+   AND s.[date] = o.[date]
+ORDER BY o.id;
+GO
+
+DECLARE @usage_probe bigint;
+
+SELECT @usage_probe = COUNT(*)
+FROM dbo.demo_idxmaint_usage
+WHERE symbol = 'ASML.AS'
+  AND trade_date >= '2025-01-01'
+  AND trade_date < '2025-03-01';
+
+SELECT @usage_probe = COUNT(*)
+FROM dbo.demo_idxmaint_usage
+WHERE symbol = 'ADS.DE'
+  AND trade_date >= '2024-10-01'
+  AND trade_date < '2024-12-01';
+
+UPDATE TOP (10000) dbo.demo_idxmaint_usage
+SET metric_value = metric_value + 1.0;
+GO
+```
+
+*List every index on the usage-analysis table, including key columns, included columns, uniqueness flags, locking properties, and filter metadata.*
 
 ```sql
 SELECT
     i.index_id,
-    i.name              AS index_name,
+    i.name AS index_name,
     i.type_desc,
     i.is_unique,
     i.is_primary_key,
@@ -460,37 +1364,60 @@ SELECT
     i.has_filter,
     i.filter_definition,
     STRING_AGG(CASE WHEN ic.is_included_column = 0 THEN c.name END, ', ')
-        WITHIN GROUP (ORDER BY ic.key_ordinal)  AS key_columns,
+        WITHIN GROUP (ORDER BY ic.key_ordinal) AS key_columns,
     STRING_AGG(CASE WHEN ic.is_included_column = 1 THEN c.name END, ', ')
-        WITHIN GROUP (ORDER BY ic.key_ordinal)  AS included_columns
-FROM sys.indexes i
-JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-JOIN sys.columns c        ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-WHERE i.object_id = OBJECT_ID('dbo.trades')
-GROUP BY i.index_id, i.name, i.type_desc, i.is_unique, i.is_primary_key,
-         i.is_unique_constraint, i.fill_factor, i.is_disabled,
-         i.allow_page_locks, i.allow_row_locks, i.has_filter, i.filter_definition
+        WITHIN GROUP (ORDER BY ic.key_ordinal) AS included_columns
+FROM sys.indexes AS i
+JOIN sys.index_columns AS ic
+    ON i.object_id = ic.object_id
+   AND i.index_id = ic.index_id
+JOIN sys.columns AS c
+    ON ic.object_id = c.object_id
+   AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID(N'dbo.demo_idxmaint_usage')
+GROUP BY
+    i.index_id,
+    i.name,
+    i.type_desc,
+    i.is_unique,
+    i.is_primary_key,
+    i.is_unique_constraint,
+    i.fill_factor,
+    i.is_disabled,
+    i.allow_page_locks,
+    i.allow_row_locks,
+    i.has_filter,
+    i.filter_definition
 ORDER BY i.index_id;
 ```
 
-### Index Usage Stats — seeks, scans, lookups, and updates since last restart
+| index_id | index_name | type_desc | is_unique | is_primary_key | is_unique_constraint | fill_factor | is_disabled | allow_page_locks | allow_row_locks | has_filter | filter_definition | key_columns | included_columns |
+|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|
+| 1 | `PK_demo_idxmaint_usage` | `CLUSTERED` | 1 | 1 | 0 | 0 | 0 | 1 | 1 | 0 | `NULL` | `id` | `NULL` |
+| 2 | `IX_demo_idxmaint_usage_symbol_date` | `NONCLUSTERED` | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | `NULL` | `symbol, trade_date` | `metric_value` |
+| 3 | `IX_demo_idxmaint_usage_category` | `NONCLUSTERED` | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | `NULL` | `category` | `metric_value, batch_no` |
 
-`sys.dm_db_index_usage_stats` tracks cumulative read and write operations per index since the last SQL Server restart or the last time the index was rebuilt. Understanding the four operation types is essential for evaluating index value:
+_This output is the structural inventory you need before any drop or create decision. The table has one clustered primary key, one composite nonclustered index aligned with the test predicates, and one extra nonclustered index on `category`. At this stage nothing is good or bad yet; the goal is simply to know exactly what exists and how each index is shaped._
 
-| Counter | Meaning | Example |
-|---------|---------|---------|
-| `user_seeks` | B-tree traversal to a specific key value or range — the most efficient read pattern | `WHERE symbol = 'AAPL' AND date = '2026-01-15'` using a covering index |
-| `user_scans` | Full leaf-level scan of the entire index — expensive on large indexes | `SELECT * FROM market_data` with no useful WHERE predicate |
-| `user_lookups` | Key lookup (bookmark lookup) from a nonclustered index back to the clustered index to fetch columns not covered by the nonclustered index | Nonclustered index satisfies the WHERE clause but the SELECT list includes columns not in the index |
-| `user_updates` | Write operations (INSERT, UPDATE, DELETE) that must maintain the index — every DML touching an indexed column increments this | A daily bulk MERGE updates 50,000 rows → each nonclustered index on the table gets 50,000 update operations |
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `type_desc` | `CLUSTERED` | Depends | Table order is defined by this index. | Dropping or rebuilding it has the widest impact. |
+| `type_desc` | `NONCLUSTERED` | Depends | Secondary access path. | Evaluate against read benefit and write cost. |
+| `is_unique` | `1` | Depends | Duplicate keys are disallowed. | Constraint semantics may matter as much as performance. |
+| `is_primary_key` | `1` | &#9989; structurally | Index enforces the primary key. | Never treat it as a casual unused-index candidate. |
+| `allow_page_locks` | `1` | &#9989; for most rowstore cases | Page locking is allowed. | `REORGANIZE` and normal lock escalation behavior can function. |
+| `allow_page_locks` | `0` | &#10060; for maintenance flexibility | Page locking is disabled. | Some maintenance operations become less effective or fail. |
+| `has_filter` | `1` | Depends | Index covers only filtered rows. | Missing-index and usage interpretation must account for filter semantics. |
 
-An index with high `user_updates` but zero reads is pure overhead — it costs write performance without serving any queries.
+### Index usage stats — reads versus write cost
+
+*Inspect how often each index on the usage-analysis table has been read or maintained since the last engine restart.*
 
 ```sql
 SELECT
-    OBJECT_SCHEMA_NAME(ius.object_id)   AS schema_name,
-    OBJECT_NAME(ius.object_id)          AS table_name,
-    i.name                              AS index_name,
+    OBJECT_SCHEMA_NAME(ius.object_id) AS schema_name,
+    OBJECT_NAME(ius.object_id) AS table_name,
+    i.name AS index_name,
     i.type_desc,
     ius.user_seeks,
     ius.user_scans,
@@ -500,111 +1427,244 @@ SELECT
     ius.last_user_seek,
     ius.last_user_scan,
     ius.last_user_update
-FROM sys.dm_db_index_usage_stats ius
-JOIN sys.indexes i ON ius.object_id = i.object_id AND ius.index_id = i.index_id
+FROM sys.dm_db_index_usage_stats AS ius
+JOIN sys.indexes AS i
+    ON ius.object_id = i.object_id
+   AND ius.index_id = i.index_id
 WHERE ius.database_id = DB_ID()
-ORDER BY total_reads DESC;
+  AND ius.object_id = OBJECT_ID(N'dbo.demo_idxmaint_usage')
+ORDER BY total_reads DESC, i.index_id;
 ```
 
-> [!warning] Usage Stats Reset on Restart, Offline, and Detach
->
-> These stats reset on SQL Server restart, database offline, or database detach. In older builds (SQL Server 2012 prior to SP2 CU12, SQL Server 2014 prior to SP2), stats also cleared on index rebuild. If the server was recently restarted, the data is not representative — wait at least one full business cycle (1 week) before making drop decisions. Also note that usage stats on an Availability Group primary do not reflect queries running on readable secondaries — indexes used only on secondaries will appear unused on the primary.
+| schema_name | table_name | index_name | type_desc | user_seeks | user_scans | user_lookups | user_updates | total_reads | last_user_seek | last_user_scan | last_user_update |
+|---|---|---|---|---:|---:|---:|---:|---:|---|---|---|
+| `dbo` | `demo_idxmaint_usage` | `IX_demo_idxmaint_usage_symbol_date` | `NONCLUSTERED` | 2 | 0 | 0 | 2 | 2 | 2026-04-08 11:57:36.540 | `NULL` | 2026-04-08 11:57:36.550 |
+| `dbo` | `demo_idxmaint_usage` | `PK_demo_idxmaint_usage` | `CLUSTERED` | 1 | 0 | 0 | 2 | 1 | 2026-04-08 11:57:36.550 | `NULL` | 2026-04-08 11:57:36.550 |
+| `dbo` | `demo_idxmaint_usage` | `IX_demo_idxmaint_usage_category` | `NONCLUSTERED` | 0 | 0 | 0 | 2 | 0 | `NULL` | `NULL` | 2026-04-08 11:57:36.550 |
 
-> [!success] Check `sys.dm_os_sys_info.sqlserver_start_time` before making drop decisions
->
-> Run `SELECT sqlserver_start_time FROM sys.dm_os_sys_info;` to verify uptime. If the server restarted within the last 7 days, defer any index drop decision until a full business cycle of usage data has accumulated.
+_The evidence is clear even on a short uptime window. The `(symbol, trade_date)` index has served the intended seeks and paid only the same two write-maintenance events as the other indexes. The `category` index has done no reads at all and still absorbed the write cost. That makes it the exact kind of candidate that should move to a deeper unused-index review._
 
-### Unused Indexes — indexes with zero reads but ongoing write cost
+| Column | Value or Pattern | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `user_seeks` | High relative to updates | &#9989; | Index is serving selective predicates efficiently. | Strong evidence that the index is useful. |
+| `user_scans` | High | Depends | Index is being scanned rather than sought. | Could still be useful for reporting, but investigate selectivity and design. |
+| `user_lookups` | High | Depends | Nonclustered seek is followed by clustered lookups. | Covering changes may be worth evaluating. |
+| `user_updates` | High with zero reads | &#10060; | Index costs write maintenance without serving reads. | Candidate for disable-and-observe or drop review. |
+| `last_user_seek` / `last_user_scan` | `NULL` | &#10060; if reads are expected | No observed read of that type since uptime. | Validate across a full business cycle before acting. |
 
-This query identifies indexes that have never been used for a seek, scan, or lookup — but are still being updated on every INSERT, UPDATE, or DELETE. These are pure overhead: they consume disk space, slow down writes, and generate unnecessary I/O during maintenance. The query excludes heaps, primary keys, and unique constraints (which serve integrity enforcement even if never directly sought).
+### Unused indexes — zero reads with ongoing write cost
+
+*Filter the usage DMV down to nonclustered indexes that have not served a single read but are still being maintained by writes.*
 
 ```sql
 SELECT
-    OBJECT_SCHEMA_NAME(ius.object_id)   AS schema_name,
-    OBJECT_NAME(ius.object_id)          AS table_name,
-    i.name                              AS index_name,
-    ius.user_seeks, ius.user_scans, ius.user_lookups,
-    ius.user_updates                    AS writes_maintaining_index
-FROM sys.dm_db_index_usage_stats ius
-JOIN sys.indexes i ON ius.object_id = i.object_id AND ius.index_id = i.index_id
+    OBJECT_SCHEMA_NAME(ius.object_id) AS schema_name,
+    OBJECT_NAME(ius.object_id) AS table_name,
+    i.name AS index_name,
+    ius.user_seeks + ius.user_scans + ius.user_lookups AS total_reads,
+    ius.user_seeks,
+    ius.user_scans,
+    ius.user_updates
+FROM sys.dm_db_index_usage_stats AS ius
+JOIN sys.indexes AS i
+    ON ius.object_id = i.object_id
+   AND ius.index_id = i.index_id
 WHERE ius.database_id = DB_ID()
-  AND ius.user_seeks = 0
-  AND ius.user_scans = 0
-  AND ius.user_lookups = 0
-  AND i.type_desc <> 'HEAP'
+  AND ius.object_id = OBJECT_ID(N'dbo.demo_idxmaint_usage')
+  AND i.index_id > 1
   AND i.is_primary_key = 0
-  AND i.is_unique = 0
-ORDER BY ius.user_updates DESC;
+  AND i.is_unique_constraint = 0
+  AND ius.user_seeks + ius.user_scans + ius.user_lookups = 0
+  AND ius.user_updates > 0
+ORDER BY ius.user_updates DESC, i.name;
 ```
 
-> [!warning] Verify Full Business Cycle Before Dropping
+| schema_name | table_name | index_name | total_reads | user_seeks | user_scans | user_updates |
+|---|---|---|---:|---:|---:|---:|
+| `dbo` | `demo_idxmaint_usage` | `IX_demo_idxmaint_usage_category` | 0 | 0 | 0 | 2 |
+
+_This is the textbook "pure write overhead" pattern: no seeks, no scans, no lookups, and still two maintenance events. The production caveat remains essential, though. Because this instance restarted recently, the right action is not "drop immediately"; it is "validate across a full workload cycle, then disable before dropping."_
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `total_reads = 0` and `user_updates > 0` | Present | &#10060; as steady state | Index costs writes and serves no observed reads. | Strong candidate for review. |
+| `total_reads = 0` shortly after restart | Present | Depends | Counters may simply be young. | Delay destructive action until uptime is representative. |
+
+### Missing-index suggestions — useful hints, not DDL instructions
+
+> [!warning]
 >
-> An unused index still costs write performance — every INSERT/UPDATE/DELETE must maintain it. But verify the stats cover a full business cycle. An index used only during month-end reporting shows zero usage for 29 days.
-
-> [!success] Wait for at least one full business cycle, then disable before dropping
+> Missing-index DMVs are heuristic and volatile.
 >
-> Before dropping, `ALTER INDEX IX_name ON table DISABLE;` to stop maintaining it without removing it. Run through a full month-end cycle. If no query complaints arise, then `DROP INDEX`. Disabling is reversible; dropping is not.
+> - They reset on restart.
+> - They are capped at `600` rows.
+> - They do not encode filtered-index logic, uniqueness, or full overlap analysis.
+> - Column order inside equality predicates still requires human judgment.
 
-### Missing Index Suggestions — SQL Server's recommended indexes ranked by impact
-
-When the query optimizer compiles a plan and identifies that a potentially useful index does not exist, it records the suggestion in the `sys.dm_db_missing_index_*` DMVs. The `improvement_measure` formula below combines three factors: `avg_total_user_cost` (average cost of queries that would benefit), `avg_user_impact` (estimated percentage cost reduction if the index existed, 0–100), and the total number of seeks and scans that would have used it. A higher score means greater cumulative benefit across all queries.
-
-> [!warning] Never Blindly Create All Suggestions
+> [!success]
 >
-> Missing index suggestions are per-query, not per-workload. They may recommend overlapping indexes (differing only in included columns), indexes that benefit one query but add write overhead to many others, or indexes on low-selectivity columns that the optimizer would not actually seek on. The feature also has a known limitation: it does not generate suggestions for queries that receive a trivial plan optimization (simple queries the optimizer can plan without cost-based search). Like usage stats, missing index DMVs reset on SQL Server restart. Always review suggestions holistically — never create all of them.
+> Use missing-index DMVs as triage signals. Validate every suggestion against existing indexes, workload frequency, write cost, and query shape before creating anything.
 
-> [!success] Review suggestions for overlaps, then create only those with high `improvement_measure` scores
->
-> Sort by `improvement_measure` and focus on the top 3–5. Check whether two suggestions differ only in `included_columns` — if so, merge them into one covering index. Test each new index on a non-production copy before applying to production.
+> [!example]
+> The next setup batch creates a table with no useful secondary index, then runs a selective workload against it so the missing-index DMVs have something real to report.
+
+*Create the disposable missing-index demo object with only a clustered primary key.*
 
 ```sql
-SELECT TOP 20
-    mid.database_id,
-    DB_NAME(mid.database_id)                AS database_name,
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.demo_idxmaint_missing;
+GO
+
+CREATE TABLE dbo.demo_idxmaint_missing
+(
+    id int IDENTITY(1,1) NOT NULL,
+    symbol varchar(20) NOT NULL,
+    trade_date date NOT NULL,
+    close_price decimal(18,4) NOT NULL,
+    volume bigint NOT NULL,
+    batch_no tinyint NOT NULL,
+    filler char(200) NOT NULL,
+    CONSTRAINT PK_demo_idxmaint_missing PRIMARY KEY CLUSTERED (id)
+);
+GO
+
+INSERT INTO dbo.demo_idxmaint_missing
+(
+    symbol,
+    trade_date,
+    close_price,
+    volume,
+    batch_no,
+    filler
+)
+SELECT TOP (50000)
+    symbol,
+    [date],
+    CAST([close] AS decimal(18,4)),
+    volume,
+    1,
+    REPLICATE('Q', 200)
+FROM silver.eurostoxx50_ohlcv
+ORDER BY id;
+GO
+```
+
+*Run a selective workload repeatedly without returning large visible rowsets so the missing-index DMVs record a real optimization request.*
+
+```sql
+SET NOCOUNT ON;
+
+DECLARE @i int = 0;
+DECLARE @c bigint;
+
+WHILE @i < 10
+BEGIN
+    SELECT @c = COUNT_BIG(*)
+    FROM
+    (
+        SELECT TOP (200)
+            symbol,
+            trade_date,
+            close_price,
+            volume
+        FROM dbo.demo_idxmaint_missing
+        WHERE symbol = 'ASML.AS'
+          AND trade_date >= '2024-01-01'
+          AND volume >= 1000
+        ORDER BY trade_date DESC, volume DESC
+    ) AS q;
+
+    SET @i += 1;
+END;
+```
+
+*Query the missing-index DMVs for the seeded demo table and rank the suggestion by the common `improvement_measure` heuristic.*
+
+```sql
+SELECT
+    DB_NAME(mid.database_id) AS database_name,
     OBJECT_SCHEMA_NAME(mid.object_id, mid.database_id) AS schema_name,
-    OBJECT_NAME(mid.object_id, mid.database_id)        AS table_name,
-    migs.avg_total_user_cost *
-        migs.avg_user_impact *
-        (migs.user_seeks + migs.user_scans)             AS improvement_measure,
-    migs.unique_compiles,
+    OBJECT_NAME(mid.object_id, mid.database_id) AS table_name,
+    CAST(migs.avg_total_user_cost * migs.avg_user_impact * (migs.user_seeks + migs.user_scans) AS decimal(18,2)) AS improvement_measure,
     migs.user_seeks,
     migs.user_scans,
-    migs.avg_total_user_cost                            AS avg_cost_without_index,
+    migs.avg_total_user_cost,
     migs.avg_user_impact,
     mid.equality_columns,
     mid.inequality_columns,
-    mid.included_columns,
-    'CREATE INDEX IX_' + OBJECT_NAME(mid.object_id, mid.database_id)
-        + '_' + REPLACE(ISNULL(mid.equality_columns,''), ', ', '_')
-        + ' ON ' + mid.statement
-        + ' (' + ISNULL(mid.equality_columns, '')
-        + CASE WHEN mid.inequality_columns IS NOT NULL
-               THEN CASE WHEN mid.equality_columns IS NOT NULL THEN ', ' ELSE '' END
-                    + mid.inequality_columns ELSE '' END + ')'
-        + CASE WHEN mid.included_columns IS NOT NULL
-               THEN ' INCLUDE (' + mid.included_columns + ')' ELSE '' END
-        AS create_statement
-FROM sys.dm_db_missing_index_details mid
-JOIN sys.dm_db_missing_index_groups mig  ON mid.index_handle = mig.index_handle
-JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.group_handle
+    mid.included_columns
+FROM sys.dm_db_missing_index_group_stats AS migs
+JOIN sys.dm_db_missing_index_groups AS mig
+    ON migs.group_handle = mig.index_group_handle
+JOIN sys.dm_db_missing_index_details AS mid
+    ON mig.index_handle = mid.index_handle
 WHERE mid.database_id = DB_ID()
+  AND mid.object_id = OBJECT_ID(N'dbo.demo_idxmaint_missing')
 ORDER BY improvement_measure DESC;
 ```
 
+| database_name | schema_name | table_name | improvement_measure | user_seeks | user_scans | avg_total_user_cost | avg_user_impact | equality_columns | inequality_columns | included_columns |
+|---|---|---|---:|---:|---:|---:|---:|---|---|---|
+| `stoxx` | `dbo` | `demo_idxmaint_missing` | 9005.85 | 10 | 0 | 9.1550754905625542 | 98.370000000000005 | `[symbol]` | `[trade_date], [volume]` | `[close_price]` |
+
+_This is a strong missing-index signal, not a final `CREATE INDEX` statement. The optimizer observed a repeated selective workload, estimated a large average benefit (`98.37%`), and wants equality support on `symbol`, inequality support on `trade_date` and `volume`, plus `close_price` as a covering column. The next step is to compare this against existing designs, not to create it blindly._
+
+| Column | Value or Pattern | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `improvement_measure` | High | &#9989; as a triage signal | Aggregate heuristic combining cost, impact, and use count. | Good for ranking, not for automatic DDL. |
+| `user_seeks` | High | &#9989; | The optimizer has seen this missing pattern repeatedly in seek-style workloads. | Suggestion is more credible. |
+| `user_scans` | High | Depends | Workload is scan-heavy without the desired index. | Could justify a different key order or covering design. |
+| `avg_user_impact` | Near `100` | Depends | Optimizer believes the suggested index could remove most of the cost. | Worth deeper review, but still heuristic. |
+| `equality_columns` | Present | &#9989; | Candidate leading key columns. | Usually ordered first by selectivity in the final index. |
+| `inequality_columns` | Present | Depends | Range or non-equality predicates are involved. | Usually follow equality columns in the final key. |
+| `included_columns` | Present | Depends | Candidate covering columns. | Reduce lookups if the final design is otherwise justified. |
+
+## Production Maintenance Cadence
+
+There is no universal schedule, but the following pattern is defensible for a SQL Server data platform with recurring loads and mixed reporting queries:
+
+| Frequency | Action | Scope |
+|---|---|---|
+| After large loads or major data-distribution changes | Targeted `UPDATE STATISTICS` | Tables whose plans are sensitive to row estimates |
+| Weekly or biweekly | Review large rowstore indexes by size, density, and fragmentation | Scan-heavy fact and reporting indexes |
+| As needed | `REORGANIZE` or `REBUILD` based on evidence | Only indexes whose size and workload justify it |
+| Monthly | Review unused-index and missing-index DMVs after adequate uptime | Database-wide |
+| As needed | Revisit fill factor | Only for indexes with measured split pressure |
+
+For automation, prefer a battle-tested maintenance solution such as **Ola Hallengren's IndexOptimize** or **Microsoft's Adaptive Index Defrag** over a hand-rolled cursor script as the primary production mechanism.
+
+## Index Anti-Patterns
+
+| Mistake | Why It Is Bad | Correct Approach |
+|---|---|---|
+| Rebuilding every index over `30%` fragmentation | Ignores page count, page density, and workload shape | Read fragmentation, density, and size together |
+| Treating low page density as irrelevant | Sparse pages waste memory and I/O even when fragmentation looks moderate | Evaluate `avg_page_space_used_in_percent` in `SAMPLED` or `DETAILED` mode |
+| Lowering fill factor globally | Permanent space tax across indexes that do not split enough to justify it | Change fill factor only on indexes with measured split pressure |
+| Using `sys.dm_db_index_usage_stats` alone to justify a drop | Counters reset on restart and do not show maintenance overhead | Pair usage stats with uptime and `sys.dm_db_index_operational_stats` |
+| Creating every missing-index suggestion | Missing-index DMVs are heuristic, overlapping, and volatile | Validate against existing design and real workload cost |
+| Forgetting paused resumable rebuilds | Extra index state stays on disk and continues to affect writes | Resume or abort intentionally |
+| Assuming `ONLINE = ON` always works | Support varies by operation and index type | Validate edition and object-type support before issuing DDL |
+
 ## Related
 
-- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — Choosing the right index type before maintaining it
-- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — High PAGEIOLATCH_SH waits indicate fragmentation or insufficient RAM
-- [query-plan-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) — Fragmented indexes cause more expensive execution plans
-- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — How page splits create fragmentation at the storage level
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — TempDB configuration affects SORT_IN_TEMPDB performance during rebuilds
-- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for index health monitoring
+- [[execution-plans]]
+- [[query-plan-analysis]]
+- [[wait-stats-analysis]]
+- [[memory-and-buffer-pool]]
+- [[performance-audit-playbook]]
+- [[sargable-queries]]
 
 ## References
 
-- [sys.dm_db_index_physical_stats (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql)
-- [Optimize index maintenance to improve query performance (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/reorganize-and-rebuild-indexes)
-- [ALTER INDEX (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-index-transact-sql)
-- [Guidelines for online index operations (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/guidelines-for-online-index-operations)
-- [Ola Hallengren's SQL Server Maintenance Solution](https://ola.hallengren.com/)
-- [Microsoft Tiger Toolbox — Adaptive Index Defrag](https://github.com/Microsoft/tigertoolbox/tree/master/AdaptiveIndexDefrag)
+- Microsoft Learn: [Optimize index maintenance to improve query performance and reduce resource consumption](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/reorganize-and-rebuild-indexes?view=sql-server-ver17)
+- Microsoft Learn: [sys.dm_db_index_physical_stats (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [ALTER INDEX (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-index-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [sys.dm_db_index_usage_stats (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-usage-stats-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [sys.dm_db_index_operational_stats (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-operational-stats-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [sys.dm_db_column_store_row_group_physical_stats (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-column-store-row-group-physical-stats-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [UPDATE STATISTICS (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/update-statistics-transact-sql?view=sql-server-ver17)
+- Microsoft Learn: [sys.dm_db_missing_index_details (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-missing-index-details-transact-sql?view=sql-server-ver17)
+- Ola Hallengren: [Index and Statistics Maintenance](https://ola.hallengren.com/sql-server-index-and-statistics-maintenance.html)
+- Microsoft Tiger Toolbox: [Adaptive Index Defrag](https://github.com/microsoft/tigertoolbox/tree/master/AdaptiveIndexDefrag)

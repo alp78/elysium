@@ -7,7 +7,7 @@ tags: [shell, networking, security, gcp]
 aliases: [ufw, iptables, firewall, GCP firewall, network security, defense in depth, Windows Firewall]
 keywords: [ufw, iptables, firewall, GCP firewall rules, VPC firewall, allow rule, deny rule, default deny, port 1433, SQL Server firewall, IAP firewall, defense in depth, VPC Service Controls, New-NetFirewallRule, Get-NetFirewallRule, network security]
 description: "Configuring Linux ufw, GCP VPC firewall rules, and Windows Firewall for secure database and infrastructure access. Covers the defense-in-depth model: VPC firewall + OS firewall + strong authentication + no public IP."
-parent: "[[domain-network-operations]]"
+parent: "[[domain-system-and-network]]"
 links:
   - "[[viewing-processes]]"
   - "[[system-resources]]"

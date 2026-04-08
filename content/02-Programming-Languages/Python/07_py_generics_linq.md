@@ -413,7 +413,7 @@ pldf.slice(100, 3)
 <div>
 <!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21261</td><td>&quot;ABI.BR&quot;</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21262</td><td>&quot;ABI.BR&quot;</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-#### Pandas — Subset columns with [[columns]] bracket notation
+#### Pandas — Subset columns with double-bracket notation
 
 ```python
 ohlcv[['symbol', 'date', 'close', 'volume']].head(5)

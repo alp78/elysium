@@ -33,3 +33,9 @@ mindmap
 > - [[sfdr-data-requirements#Article Classification (Pipeline Perspective)|Article classification]]
 > - [[sfdr-data-requirements#Principal Adverse Impact (PAI) Indicators|PAI indicators]]
 > - [[sfdr-data-requirements#Data Vendor Mapping to PAI Indicators|Data vendor mapping]]
+
+> [!abstract]- [[esg-circuit-breaker-fired]]
+>
+> - [[esg-circuit-breaker-fired#Trigger Conditions|Trigger conditions]]
+> - [[esg-circuit-breaker-fired#Containment Actions|Containment actions]]
+> - [[esg-circuit-breaker-fired#Recovery Checklist|Recovery checklist]]

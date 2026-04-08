@@ -22,7 +22,7 @@ mindmap
     (engineering)
 ```
 
-> [!guide]- SQL Server
+> [!guide]+ SQL Server
 >
 > [[domain-sql-server]]
 >
@@ -36,7 +36,7 @@ mindmap
     (engineering)
 ```
 
-> [!guide]- BigQuery
+> [!guide]+ BigQuery
 >
 > [[domain-bigquery]]
 >
@@ -50,7 +50,7 @@ mindmap
     (transactions)
 ```
 
-> [!guide]- Firestore
+> [!guide]+ Firestore
 >
 > [[domain-firestore]]
 >

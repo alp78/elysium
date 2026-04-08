@@ -3,6 +3,7 @@ title: "GCP Projects and APIs"
 tags: [api, gcp, gcloud]
 aliases: [GCP projects, GCP APIs, gcloud services, enable API, project listing]
 description: "How to list GCP projects, inspect project metadata, and enable or verify the APIs required for data engineering workloads including BigQuery, Cloud Run, Pub/Sub, and Compute Engine."
+parent: "[[domain-platform-foundations]]"
 links:
   - "[[gcloud-authentication]]"
   - "[[gcloud-configurations]]"

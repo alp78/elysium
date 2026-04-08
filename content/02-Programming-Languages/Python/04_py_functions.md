@@ -996,11 +996,11 @@ Python type hints are optional annotations that enable IDE autocompletion, stati
 
 ### Type annotations
 
-Type annotations declare parameter types, return types, and complex composed types. `Optional[str]` (or `str | None` in 3.10+) indicates nullable values, and `Callable[[int], str]` declares function signatures.
+Type annotations declare parameter types, return types, and complex composed types. `Optional[str]` (or `str | None` in 3.10+) indicates nullable values, and `Callable` type hints describe function signatures.
 
 #### Complex type hints and Optional
 
-Combine types: `list[int]`, `dict[str, Any]`, `str | None`. `Optional[str]` is shorthand for `str | None`. `Callable[[int], str]` declares function signatures. Hints enable IDE autocompletion and static analysis with mypy/pyright — they are not checked at runtime.
+Combine types: `list[int]`, `dict[str, Any]`, `str | None`. `Optional[str]` is shorthand for `str | None`. `Callable` describes the argument and return types of passed functions. Hints enable IDE autocompletion and static analysis with mypy/pyright — they are not checked at runtime.
 
 ```python
 def process(
@@ -1039,7 +1039,7 @@ None
 
 #### Callable type hints
 
-`Callable[[param_types], return_type]` declares a function parameter. `Callable[[int, int], str]` means: takes two ints, returns str. mypy checks that passed functions match the signature.
+Use `Callable` to declare a function parameter with an expected signature. For example, a callable can be defined to take two integers and return a string. mypy checks that passed functions match the signature.
 
 ```python
 def apply_func(func: Callable[[int], int], value: int) -> int:

@@ -14,25 +14,25 @@ Infrastructure as code from HCL syntax to production GCP provisioning —
 19 pages covering language fundamentals, resource configuration, composition
 patterns, and a copy-paste block library. Expand any section to browse contents.
 
-> [!guide]- Language and Workflow
+> [!guide]+ Language and Workflow
 >
 > [[domain-language-and-workflow]]
 >
 > HCL syntax fundamentals, variable and output management, provider configuration, state management, and the core plan/apply/destroy workflow.
 
-> [!guide]- GCP Resources
+> [!guide]+ GCP Resources
 >
 > [[domain-gcp-resources]]
 >
 > Terraform configurations for provisioning GCP infrastructure — networking, compute instances, IAM and secrets, Cloud Run services, and container registry with CI integration.
 
-> [!guide]- Patterns and Reference
+> [!guide]+ Patterns and Reference
 >
 > [[domain-patterns-and-reference]]
 >
 > Reusable Terraform patterns — conditional resources, dependency management, module composition — plus a cheat sheet and troubleshooting guide.
 
-> [!guide]- Block Library
+> [!guide]+ Block Library
 >
 > [[domain-block-library]]
 >

@@ -14,19 +14,19 @@ Monitoring and observability from strategy through implementation — covering
 the observability philosophy, the Datadog platform end-to-end, and GCP-native
 monitoring alternatives. Expand any section to browse page contents.
 
-> [!guide]- Strategy and Foundations
+> [!guide]+ Strategy and Foundations
 >
 > [[domain-strategy-and-foundations]]
 >
 > Observability philosophy, monitoring matrices, alert severity frameworks, and compliance requirements that guide all instrumentation decisions.
 
-> [!guide]- Datadog Platform
+> [!guide]+ Datadog Platform
 >
 > [[domain-datadog-platform]]
 >
 > End-to-end Datadog coverage from agent deployment through dashboards, alerting, APM traces, log management, cost optimization, and troubleshooting.
 
-> [!guide]- GCP-Native Monitoring
+> [!guide]+ GCP-Native Monitoring
 >
 > [[domain-gcp-native-monitoring]]
 >

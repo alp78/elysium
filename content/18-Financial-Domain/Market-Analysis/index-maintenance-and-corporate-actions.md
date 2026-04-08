@@ -10,6 +10,7 @@ description: "Comprehensive guide to financial index maintenance: corporate acti
 parent: "[[domain-market-analysis]]"
 links:
   - "[[breadth-and-sentiment-indicators]]"
+  - "[[corporate-action-missed]]"
   - "[[liquidity-and-flow-metrics]]"
   - "[[risk-and-volatility-metrics]]"
   - "[[technical-indicators]]"
@@ -678,7 +679,7 @@ ORDER BY esg_tilted_weight DESC;
 
 ## ISS & STOXX Glossary Cross-References
 
-For formal definitions of the index construction terms discussed above, see the [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/_index):
+For formal definitions of the index construction terms discussed above, see the [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/Domains/domain-iss-stoxx-glossary):
 
 - [Divisor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor) and [Divisor Adjustment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor%20Adjustment) — formal definition and formula
 - [Free-Float](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float) and [Free-Float Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Factor) — weighting methodology

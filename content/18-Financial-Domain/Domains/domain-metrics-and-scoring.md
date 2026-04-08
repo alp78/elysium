@@ -66,3 +66,9 @@ mindmap
 > - [[data-sources-and-refresh#Pipeline Schedule|Pipeline schedule]]
 > - [[data-sources-and-refresh#Data Flow|Data flow]]
 > - [[data-sources-and-refresh#Refresh Impact on Scoring|Refresh impact on scoring]]
+
+> [!abstract]- [[vendor-file-late-or-missing]]
+>
+> - [[vendor-file-late-or-missing#Detection and Triage|Detection and triage]]
+> - [[vendor-file-late-or-missing#Fallback Rules|Fallback rules]]
+> - [[vendor-file-late-or-missing#Recovery and Reconciliation|Recovery and reconciliation]]

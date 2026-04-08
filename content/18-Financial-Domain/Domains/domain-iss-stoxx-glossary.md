@@ -14,7 +14,6 @@ Comprehensive glossary of ISS-STOXX terminology — index construction, index fa
 ```mermaid
 mindmap
   root["ISS and STOXX glossary"]
-    (glossary landing)
     (index construction)
     (index families)
     (financial metrics)
@@ -28,12 +27,6 @@ mindmap
     (data methodology)
     (regulatory terms)
 ```
-
-> [!abstract]- [[ISS-STOXX/_index|ISS-STOXX]]
->
-> - [[ISS-STOXX/_index#Domains|Domains]]
-> - [[ISS-STOXX/_index#How to Use This Glossary|How to use this glossary]]
-> - [[ISS-STOXX/_index#Related Vault Sections|Related vault sections]]
 
 > [!abstract]- [[index-construction]]
 >
@@ -74,6 +67,13 @@ mindmap
 > - [[esg-ratings#E|ESG risk ratings (E)]]
 > - [[esg-ratings#K|Key performance indicators (K)]]
 
+> [!abstract]- [[esg-terms]]
+>
+> - [[esg-terms#Green Bond Principles|Green Bond Principles]]
+> - [[esg-terms#Use-of-Proceeds|Use-of-Proceeds]]
+> - [[esg-terms#Social Bond Principles|Social Bond Principles]]
+> - [[esg-terms#Sustainability Performance Targets|Sustainability performance targets]]
+
 > [!abstract]- [[esg-frameworks]]
 >
 > - [[esg-frameworks#E|EU taxonomy and regulations (E)]]
@@ -108,8 +108,8 @@ mindmap
 > - [[data-methodology#C|Coverage and collection (C)]]
 > - [[data-methodology#Q|Quality assurance (Q)]]
 
-> [!abstract]- [[ISS-STOXX/regulatory|Regulatory terms]]
+> [!abstract]- [[regulatory|Regulatory terms]]
 >
-> - [[ISS-STOXX/regulatory#E|EU BMR and ESG regulation (E)]]
-> - [[ISS-STOXX/regulatory#P|Paris-aligned benchmarks (P)]]
-> - [[ISS-STOXX/regulatory#T|Taxonomy regulation (T)]]
+> - [[regulatory#E|EU BMR and ESG regulation (E)]]
+> - [[regulatory#P|Paris-aligned benchmarks (P)]]
+> - [[regulatory#T|Taxonomy regulation (T)]]

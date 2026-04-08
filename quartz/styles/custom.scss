@@ -37,7 +37,7 @@ pre code {
   font-weight: 600 !important;
 }
 [saved-theme="dark"] h4 {
-  color: #427e03 !important;
+  color: #028daf !important;
   font-weight: 500 !important;
 }
 [saved-theme="dark"] h5 {
@@ -425,6 +425,12 @@ a.tag-link:hover {
 .backlinks a:hover {
   color: var(--secondary) !important;
   transition: color 0.15s ease;
+}
+
+article a.external {
+  background-color: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 
 article a:hover {

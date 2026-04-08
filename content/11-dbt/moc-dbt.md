@@ -14,25 +14,25 @@ production operations. 22 pages covering dbt fundamentals, the staging →
 intermediate → mart progression, testing, macros, and adapter-specific
 patterns for BigQuery and SQL Server. Expand any section to browse contents.
 
-> [!guide]- Foundations
+> [!guide]+ Foundations
 >
 > [[domain-foundations]]
 >
 > dbt core concepts, project structure conventions, CLI commands, and a quick-reference cheat sheet for day-to-day development.
 
-> [!guide]- Model Design
+> [!guide]+ Model Design
 >
 > [[domain-model-design]]
 >
 > The staging-to-intermediate-to-mart progression, materialisation strategies, and the patterns that shape how dbt models transform raw data into analytics-ready tables.
 
-> [!guide]- Extensions and Quality
+> [!guide]+ Extensions and Quality
 >
 > [[domain-extensions-and-quality]]
 >
 > Macros, Jinja templating, community packages, snapshot-based SCD tracking, the testing framework, and data contracts for enforcing schema guarantees.
 
-> [!guide]- Operations and Adapters
+> [!guide]+ Operations and Adapters
 >
 > [[domain-operations-and-adapters]]
 >

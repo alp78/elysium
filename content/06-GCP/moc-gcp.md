@@ -13,31 +13,31 @@ Google Cloud Platform from authentication to cost optimization — 29 pages
 covering platform setup, compute, data services, security, and operations.
 Expand any section below to browse page contents.
 
-> [!guide]- Platform Foundations
+> [!guide]+ Platform Foundations
 >
 > [[domain-platform-foundations]]
 >
 > GCP platform essentials from gcloud CLI structure and authentication through named configurations, output formatting, and project/API management.
 
-> [!guide]- Compute and Messaging
+> [!guide]+ Compute and Messaging
 >
 > [[domain-compute-and-messaging]]
 >
 > Compute lifecycle from VM operations and SSH access through disk management, Cloud Run workloads, and Pub/Sub messaging patterns.
 
-> [!guide]- Data Services
+> [!guide]+ Data Services
 >
 > [[domain-data-services]]
 >
 > Cloud Storage buckets and object operations through BigQuery dataset management, query optimization, and Firestore real-time NoSQL pipelines.
 
-> [!guide]- Security and Identity
+> [!guide]+ Security and Identity
 >
 > [[domain-security-and-identity]]
 >
 > Service accounts and IAM role bindings through identity patterns, secrets management, and VPC Service Controls.
 
-> [!guide]- Operations and Cost
+> [!guide]+ Operations and Cost
 >
 > [[domain-operations-and-cost]]
 >

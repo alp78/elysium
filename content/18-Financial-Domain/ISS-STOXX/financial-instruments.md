@@ -16,6 +16,7 @@ links:
   - "[[data-methodology]]"
   - "[[esg-frameworks]]"
   - "[[esg-ratings]]"
+  - "[[esg-terms]]"
   - "[[financial-metrics]]"
   - "[[index-construction]]"
   - "[[index-families]]"

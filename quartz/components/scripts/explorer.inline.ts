@@ -19,6 +19,9 @@ type FolderState = {
   collapsed: boolean
 }
 
+const explorerFolderStateStorageKey = "explorerFolderState"
+const explorerScrollTopStorageKey = "explorerScrollTop"
+
 let currentExplorerState: Array<FolderState>
 function toggleExplorer(this: HTMLElement) {
   const nearestExplorer = this.closest(".explorer") as HTMLElement
@@ -76,7 +79,7 @@ function toggleFolder(evt: MouseEvent) {
   }
 
   const stringifiedFileTree = JSON.stringify(currentExplorerState)
-  localStorage.setItem("fileTree", stringifiedFileTree)
+  sessionStorage.setItem(explorerFolderStateStorageKey, stringifiedFileTree)
 }
 
 function createFileNode(currentSlug: FullSlug, node: FileTrieNode): HTMLLIElement {
@@ -169,8 +172,8 @@ async function setupExplorer(currentSlug: FullSlug) {
       mapFn: new Function("return " + (dataFns.mapFn || "undefined"))(),
     }
 
-    // Get folder state from local storage
-    const storageTree = localStorage.getItem("fileTree")
+    // Get folder state from session storage
+    const storageTree = sessionStorage.getItem(explorerFolderStateStorageKey)
     const serializedExplorerState = storageTree && opts.useSavedState ? JSON.parse(storageTree) : []
     const oldIndex = new Map<string, boolean>(
       serializedExplorerState.map((entry: FolderState) => [entry.path, entry.collapsed]),
@@ -221,7 +224,7 @@ async function setupExplorer(currentSlug: FullSlug) {
     explorerUl.insertBefore(fragment, explorerUl.firstChild)
 
     // restore explorer scrollTop position if it exists
-    const scrollTop = sessionStorage.getItem("explorerScrollTop")
+    const scrollTop = sessionStorage.getItem(explorerScrollTopStorageKey)
     if (scrollTop) {
       explorerUl.scrollTop = parseInt(scrollTop)
     } else {
@@ -266,7 +269,7 @@ document.addEventListener("prenav", async () => {
   // save explorer scrollTop position
   const explorer = document.querySelector(".explorer-ul")
   if (!explorer) return
-  sessionStorage.setItem("explorerScrollTop", explorer.scrollTop.toString())
+  sessionStorage.setItem(explorerScrollTopStorageKey, explorer.scrollTop.toString())
 })
 
 document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {

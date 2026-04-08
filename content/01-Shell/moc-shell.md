@@ -26,7 +26,7 @@ mindmap
     (data transfer)
 ```
 
-> [!guide]- Data & Files
+> [!guide]+ Data & Files
 >
 > [[domain-data-and-files]]
 >
@@ -44,7 +44,7 @@ mindmap
     (defensive scripting)
 ```
 
-> [!guide]- Script Engineering
+> [!guide]+ Script Engineering
 >
 > [[domain-script-engineering]]
 >
@@ -65,7 +65,7 @@ mindmap
     (GCP resources)
 ```
 
-> [!guide]- System & Network Operations
+> [!guide]+ System & Network Operations
 >
 > [[domain-system-and-network]]
 >

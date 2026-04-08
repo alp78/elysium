@@ -42,10 +42,3 @@ mindmap
 > - [[gcp-projects-and-apis#Listing and Describing GCP Projects|Listing projects]]
 > - [[gcp-projects-and-apis#Listing and Enabling GCP APIs|Enabling APIs]]
 > - [[gcp-projects-and-apis#Common GCP APIs for Data Engineering|Common APIs for data engineering]]
-
-> [!abstract]- [[gcloud-authentication]]
->
-> - [[gcloud-authentication#How GCP Authentication Works|How GCP authentication works]]
-> - [[gcloud-authentication#Authentication Commands|Authentication commands]]
-> - [[gcloud-authentication#The ADC Credential Search Order|ADC credential search order]]
-> - [[gcloud-authentication#GCP Authentication Gotchas and Edge Cases|Gotchas and edge cases]]

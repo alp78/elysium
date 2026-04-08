@@ -21,7 +21,7 @@ mindmap
     (patterns)
 ```
 
-> [!guide]- Foundations and Patterns
+> [!guide]+ Foundations and Patterns
 >
 > [[domain-foundations-and-patterns]]
 >
@@ -35,7 +35,7 @@ mindmap
     (troubleshooting)
 ```
 
-> [!guide]- Applied Automation
+> [!guide]+ Applied Automation
 >
 > [[domain-applied-automation]]
 >

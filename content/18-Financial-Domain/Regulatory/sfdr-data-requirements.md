@@ -7,6 +7,7 @@ status: stable
 updated: 2026-03-23
 parent: "[[domain-regulatory]]"
 links:
+  - "[[esg-circuit-breaker-fired]]"
   - "[[eu-bmr-benchmark-regulation]]"
   - "[[iosco-benchmark-principles]]"
 ---
@@ -53,7 +54,7 @@ links:
 
 ### Data Pipeline for PAI Computation
 
-See  for the full vendor normalization pipeline (when the ESG quality checks fail, follow the [[esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
+See [[data-sources-and-refresh]] for the upstream vendor refresh pipeline (when the ESG quality checks fail, follow the [[esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
 
 ```
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report

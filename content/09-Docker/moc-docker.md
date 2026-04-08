@@ -17,7 +17,7 @@ mindmap
     (image management)
 ```
 
-> [!guide]- Images and Builds
+> [!guide]+ Images and Builds
 >
 > [[domain-images-and-builds]]
 >
@@ -28,10 +28,9 @@ mindmap
   ((Containers and Orchestration))
     (container lifecycle)
     (Docker Compose)
-    (cheat sheet)
 ```
 
-> [!guide]- Containers and Orchestration
+> [!guide]+ Containers and Orchestration
 >
 > [[domain-containers-and-orchestration]]
 >

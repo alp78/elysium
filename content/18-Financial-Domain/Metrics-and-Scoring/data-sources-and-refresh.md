@@ -15,6 +15,7 @@ links:
   - "[[index-snapshot-metrics]]"
   - "[[quarterly-signal-scores]]"
   - "[[scoring-methodology]]"
+  - "[[vendor-file-late-or-missing]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

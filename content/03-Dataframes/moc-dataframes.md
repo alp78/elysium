@@ -21,7 +21,7 @@ mindmap
     (types and interop)
 ```
 
-> [!guide]- Ingest and Explore
+> [!guide]+ Ingest and Explore
 >
 > [[domain-ingest-and-explore]]
 >
@@ -36,7 +36,7 @@ mindmap
     (lazy eval, performance)
 ```
 
-> [!guide]- Transform and Analyze
+> [!guide]+ Transform and Analyze
 >
 > [[domain-transform-and-analyze]]
 >
@@ -50,7 +50,7 @@ mindmap
     (testing, migration)
 ```
 
-> [!guide]- Integrate and Validate
+> [!guide]+ Integrate and Validate
 >
 > [[domain-integrate-and-validate]]
 >

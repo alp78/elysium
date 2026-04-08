@@ -64,3 +64,9 @@ mindmap
 > - [[index-maintenance-and-corporate-actions#Free-Float Methodology|Free-float methodology]]
 > - [[index-maintenance-and-corporate-actions#Weight Capping and Rebalancing|Weight capping and rebalancing]]
 > - [[index-maintenance-and-corporate-actions#Point-in-Time (PIT) Temporal Data: Querying History Without Look-Ahead Bias|Point-in-time temporal data]]
+
+> [!abstract]- [[corporate-action-missed]]
+>
+> - [[corporate-action-missed#Immediate Containment|Immediate containment]]
+> - [[corporate-action-missed#Correction Workflow|Correction workflow]]
+> - [[corporate-action-missed#Publication and Audit Trail|Publication and audit trail]]

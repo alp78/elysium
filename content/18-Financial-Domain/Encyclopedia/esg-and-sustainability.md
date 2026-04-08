@@ -36,7 +36,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 > [!info] ISS & STOXX Glossary
 > For formal methodology definitions of ESG ratings, frameworks, and sustainability
 > terms as used by index providers and ESG data vendors, see the
-> [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/_index) — particularly [ESG Ratings](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings),
+> [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/Domains/domain-iss-stoxx-glossary) — particularly [ESG Ratings](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings),
 > [ESG Frameworks](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks), and [Sustainability Themes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes).
 
 ---

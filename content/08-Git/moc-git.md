@@ -23,7 +23,7 @@ mindmap
     (cheat sheet)
 ```
 
-> [!guide]- Setup and Daily Use
+> [!guide]+ Setup and Daily Use
 >
 > [[domain-setup-and-daily-use]]
 >
@@ -39,7 +39,7 @@ mindmap
     (pull requests, review)
 ```
 
-> [!guide]- Branching and Collaboration
+> [!guide]+ Branching and Collaboration
 >
 > [[domain-branching-and-collaboration]]
 >
@@ -54,7 +54,7 @@ mindmap
     (troubleshooting)
 ```
 
-> [!guide]- Releases and Recovery
+> [!guide]+ Releases and Recovery
 >
 > [[domain-releases-and-recovery]]
 >
