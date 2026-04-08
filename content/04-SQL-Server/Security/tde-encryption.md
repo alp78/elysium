@@ -1,64 +1,44 @@
 ---
-title: "TDE Encryption"
-tags: [security, sql, gcp, sql-server, tsql]
-aliases: [TDE, Transparent Data Encryption, database encryption, at-rest encryption, DEK, Database Encryption Key]
-description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) on SQL Server 2022 Linux with GCP Cloud KMS key protection. Covers the encryption key hierarchy, certificate-based TDE setup, critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks."
+title: "Transparent Data Encryption (TDE)"
+tags: [sql, sql-server, security, tsql]
+aliases: [TDE, database encryption, at-rest encryption, database encryption key, DEK]
+description: "Production guide to SQL Server Transparent Data Encryption on Linux: what TDE protects, certificate-based key hierarchy, live encryption-state checks, certificate backup, and disaster-recovery requirements."
 parent: "[[domain-concurrency-and-security]]"
 links:
   - "[[sql-server-authentication]]"
   - "[[audit-logging]]"
-  - "[[blocking-and-locking]]"
-  - "[[deadlock-detection-and-prevention]]"
-  - "[[race-conditions]]"
 created: 2026-03-22
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
-# Transparent Data Encryption (TDE) with GCP Cloud KMS
+# Transparent Data Encryption (TDE)
 
-> [!quote]
-> "Encryption works. Properly implemented strong crypto systems are one of the few things that you can rely on."
->
-> — **Edward Snowden**, *The Guardian* interview (2013)
+Transparent Data Encryption encrypts SQL Server data and log files at rest. It is designed for disk, snapshot, detached-file, and backup theft scenarios. It does not encrypt client/server traffic, and it does not keep plaintext out of the SQL Server buffer pool once pages are in memory.
 
-Transparent Data Encryption (TDE) encrypts SQL Server database files at rest — protecting `.mdf`, `.ldf`, and `tempdb` files from unauthorized access even if someone obtains the physical disk, a GCS backup file, or a VM disk snapshot.
+For production use, the critical operational truth is simple: **TDE is only as recoverable as its certificate backup chain**. If the certificate and private key are lost, encrypted backups and encrypted database files are no longer restorable on another instance.
 
-## What TDE Does and Does Not Do
+## What TDE Protects
 
-The "transparent" in TDE means that encryption and decryption happen automatically in the SQL Server engine — application code, queries, and connection drivers require no changes. SQL Server decrypts pages when they are read from disk into the **buffer pool** (in-memory cache), and re-encrypts them before flushing modified pages back to disk. The data in the buffer pool is always plaintext.
+TDE protects:
 
-TDE addresses a specific threat model: **unauthorized access to physical storage** — stolen disk drives, GCS backup files copied by an attacker with bucket read access, VM disk snapshots. It is not a substitute for network encryption (TLS) or field-level encryption (Always Encrypted).
+- data files
+- log files
+- database backups
+- `tempdb` once any user database on the instance uses TDE
 
-**What TDE Does**: Encrypts the physical database files (`.mdf` data files, `.ldf` log files, and tempdb) at rest on disk. Decryption happens automatically in the SQL Server buffer pool — applications see no difference. If someone steals a disk snapshot, copies a `.bak` file, or accesses the raw VM disk, the data is unreadable without the encryption key hierarchy.
+TDE does not protect:
 
-**What TDE Does NOT Do**:
-- Does NOT encrypt data in transit (use [TLS](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication#tls-configuration) for that)
-- Does NOT encrypt data in the buffer pool (memory is unencrypted)
-- Does NOT provide column-level encryption (use Always Encrypted for that)
-- Does NOT encrypt filestream or filetable data
+- data in transit between client and server
+- plaintext pages in SQL Server memory
+- application-layer access by already-authorized principals
+- column-level confidentiality from high-privilege DBAs
 
-For managing the KMS key material and related secrets programmatically, see [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) (GCP Secret Manager) and [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) (Python KMS encryption patterns).
+That means TDE should be paired with transport encryption, strong authentication, least privilege, and audit logging. It is one layer of the SQL Server security model, not the whole model.
 
-**Why It Matters for the project**: Compliance requirements (SOC 2, GDPR Article 32 — encryption of personal data at rest), and protection against GCP disk snapshot exposure.
+## Key Hierarchy And Platform Boundary
 
----
-
-## Encryption Key Hierarchy
-
-Understanding the key hierarchy is essential before setting up TDE or attempting disaster recovery. TDE uses a five-layer chain where each key is encrypted by the key above it. Losing any layer without a backup makes the data unrecoverable.
-
-| Key | Type | Scope | Protected by | Purpose |
-|---|---|---|---|---|
-| **Service Master Key (SMK)** | Symmetric (AES) | Instance | Windows/Linux DPAPI (machine + service account credentials) | Root of the chain. Auto-generated at SQL Server install. Never managed manually. |
-| **Database Master Key (DMK)** | Symmetric (AES) | `master` database | SMK (auto) + optional password | Protects the private keys of certificates. The SMK-encrypted copy enables automatic decryption at startup without a password prompt. |
-| **Certificate (`project_tde_cert`)** | Asymmetric (RSA) | `master` database | DMK (private key is encrypted by DMK) | The certificate's **public key** encrypts the DEK for storage; its **private key** decrypts the DEK at startup. |
-| **Database Encryption Key (DEK)** | Symmetric (AES_256) | User database boot record | Certificate public key | Encrypts and decrypts each 8 KB data page at the disk I/O boundary. |
-| **Encrypted files** | — | Disk | DEK | `.mdf`, `.ldf`, and `tempdb` files written to disk. |
-
-**GCP Cloud KMS is not part of the TDE chain itself.** SQL Server on Linux has no official EKM provider for Cloud KMS (see Step 2). KMS is used only to encrypt the certificate backup files stored in GCS — adding a second layer of protection to the exported `.cer` and `.pvk` files.
-
-**DR implication:** If the DMK is lost on the original server, the certificate private key is unreadable. If the certificate private key is lost, the DEK is unreadable. If the DEK is unreadable, the entire database (including all backups) is unrecoverable. This is why Step 4 (certificate backup) is the most critical step.
+On this platform, the practical TDE pattern is certificate-based TDE fully inside SQL Server. Google Cloud KMS is not part of the live SQL Server TDE chain in this environment.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -73,389 +53,419 @@ Understanding the key hierarchy is essential before setting up TDE or attempting
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    subgraph KMS["GCP Cloud KMS"]
-        RING["Key Ring: analytics-keyring<br/>europe-west1"]
-        KEY["Crypto Key: analytics-sql-tde<br/>ENCRYPT_DECRYPT · GOOGLE_SYMMETRIC<br/>Rotation: 90 days · HSM-backed"]
-        RING --> KEY
-    end
-
-    subgraph SQLSRV["SQL Server 2022"]
-        SMK["Service Master Key (SMK)<br/>auto-generated at install"]
-        DMK["Database Master Key (DMK)<br/>protected by SMK"]
-        CERT["Certificate: project_tde_cert<br/>Expiry: 2028-03-10"]
-        DEK["Database Encryption Key (DEK)<br/>AES_256 · protected by certificate"]
-        FILES["Encrypted Files<br/>analytics_db.mdf · mydb_log.ldf · tempdb.mdf"]
-
-        SMK --> DMK --> CERT --> DEK --> FILES
-    end
-
-    KEY <-->|"wraps"| DMK
-
-    style KMS fill:#1a1a2e,stroke:#22d3ee,color:#fff
-    style SQLSRV fill:#1a1a2e,stroke:#7aa2f7,color:#fff
-    style KEY fill:#1a1a2e,stroke:#bb9af7,color:#fff
-    style SMK fill:#1a1a2e,stroke:#9ece6a,color:#fff
-    style DMK fill:#1a1a2e,stroke:#9ece6a,color:#fff
-    style CERT fill:#1a1a2e,stroke:#e0af68,color:#fff
-    style DEK fill:#1a1a2e,stroke:#e0af68,color:#fff
-    style FILES fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+flowchart TD
+    A["Service Master Key<br/>instance root"] --> B["Database Master Key in master"]
+    B --> C["Server certificate in master"]
+    C --> D["Database Encryption Key<br/>inside the user database"]
+    D --> E["Encrypted data/log files"]
+    D --> F["Encrypted backups"]
+    D --> G["Encrypted tempdb"]
+    H["Optional external protection<br/>GCS / Cloud KMS for exported certificate backups"] -. not part of live TDE chain .-> C
 ```
 
----
+### Certificate-based TDE on Linux
 
-## Step 1: Create KMS Keyring and Key in GCP
+The live TDE chain is:
 
-#### gcloud kms keyrings/keys create — Cloud KMS keyring with 90-day rotation
+- **Service Master Key**
+- **Database Master Key** in `master`
+- **server certificate** in `master`
+- **Database Encryption Key** in the user database
+- encrypted files and backups
 
-A **keyring** is a logical container for related encryption keys within a GCP region. Keys cannot be moved between regions or keyrings, so the keyring must be in the same region as the VM (`europe-west1`). The keyring itself has no cryptographic material — it is a namespace for IAM policy inheritance.
+That is the chain SQL Server itself needs at runtime.
 
-A **crypto key** within the keyring holds the actual key material. `--purpose=encryption` creates a symmetric encryption key (ENCRYPT_DECRYPT type, AES_256_GCM algorithm). `--rotation-period=90d` instructs GCP to automatically generate a new primary key version every 90 days; previous versions remain active for decryption but are no longer used for new encryption operations. The SQL Server service account needs `roles/cloudkms.cryptoKeyEncrypterDecrypter` on this specific key to encrypt the certificate backup files in Step 5.
+### EKM boundary on Linux and GCP
 
-```bash
-gcloud kms keyrings create analytics-keyring --location=europe-west1
+SQL Server 2022 on Linux has recent support for specific EKM scenarios such as Azure Key Vault integration, but there is still no official SQL Server EKM provider for GCP Cloud KMS in this environment. For GCP-hosted SQL Server, the practical production pattern is:
 
-# Create the encryption key with 90-day auto-rotation
-gcloud kms keys create analytics-sql-tde \
-  --keyring=analytics-keyring \
-  --location=europe-west1 \
-  --purpose=encryption \
-  --rotation-period=90d \
-  --next-rotation-time=$(date -u -d "+90 days" +%Y-%m-%dT%H:%M:%SZ)
+- use certificate-based TDE inside SQL Server
+- back up the certificate and private key immediately
+- protect the exported backup artifacts externally with GCS and, if required, Cloud KMS
 
-# Verify the key
-gcloud kms keys describe analytics-sql-tde \
-  --keyring=analytics-keyring \
-  --location=europe-west1 \
-  --format="yaml(name, purpose, primary.state, rotationPeriod)"
-# Expected output:
-# name: projects/data-platform-prod/locations/europe-west1/keyRings/analytics-keyring/cryptoKeys/analytics-sql-tde
-# primary:
-#   state: ENABLED
-# purpose: ENCRYPT_DECRYPT
-# rotationPeriod: 7776000s
+The external KMS can protect the exported certificate backup files, but it is not the live runtime encryptor for the TDE database encryption key here.
 
-# Grant the SQL Server SA permission to use the key (for certificate backup encryption)
-gcloud kms keys add-iam-policy-binding analytics-sql-tde \
-  --keyring=analytics-keyring \
-  --location=europe-west1 \
-  --member="serviceAccount:analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com" \
-  --role="roles/cloudkms.cryptoKeyEncrypterDecrypter"
-```
+## Baseline The Current Encryption State
 
----
+Before enabling TDE on a production database, confirm the current state. That prevents accidental assumptions about which databases are already encrypted and who owns them.
 
-## Step 2: EKM vs. Certificate-Based TDE
+### `sys.databases` | current `stoxx` encryption state
 
-EKM (Extensible Key Management) is an interface that allows SQL Server to delegate the root of the encryption hierarchy to an external key management system — replacing the SMK→DMK chain with a directly HSM-backed key. With EKM, the DEK is encrypted by an asymmetric key stored in the external KMS rather than by a certificate in SQL Server. This would allow GCP Cloud KMS to be the authoritative root for TDE, enabling key rotation and access revocation from GCP without touching SQL Server.
+This query confirms the owner and the current TDE flag for `stoxx`.
 
-However, EKM on SQL Server Linux is severely limited:
-- SQL Server 2019 Linux: **no EKM support at all**.
-- SQL Server 2022 Linux: EKM is supported from CU 12+ with **Azure Key Vault only**. Third-party providers (which would be required for GCP Cloud KMS) are not supported on Linux in any version.
+#### `sys.databases` | verify whether `stoxx` is already encrypted
 
-The fallback is certificate-based TDE — the standard approach where SQL Server's own DMK and certificate handle the key hierarchy entirely within SQL Server. GCP Cloud KMS is then used only to protect the certificate backup files in GCS (Step 5), providing external key control at the backup layer rather than the encryption layer.
+This is the first gate before any TDE rollout or DR planning.
 
-> [!warning] No EKM Provider for GCP Cloud KMS on Linux
-> SQL Server 2022 on Linux has **limited EKM (Extensible Key Management)** support. The EKM provider for Azure Key Vault works, but there is no official EKM provider for GCP Cloud KMS on Linux. Use **certificate-based TDE** (fully supported, no EKM required). The KMS key is used separately to encrypt the certificate backup stored in GCS.
-
----
-
-## Step 3: Certificate-Based TDE Setup
-
-#### CREATE MASTER KEY, CERTIFICATE, DATABASE ENCRYPTION KEY — complete TDE setup
-
-TDE setup requires four sequential T-SQL commands, each building on the previous:
-
-1. **`CREATE MASTER KEY`** creates the Database Master Key (DMK) in `master`. The `ENCRYPTION BY PASSWORD` clause creates both a password-encrypted copy and an SMK-encrypted copy of the DMK. The SMK-encrypted copy enables SQL Server to open the DMK automatically at restart without a password. The password copy is the manual override needed during disaster recovery on a different server (where the original SMK is unavailable).
-
-2. **`CREATE CERTIFICATE`** generates an RSA asymmetric key pair in `master`, protected by the DMK. The certificate's private key is encrypted by the DMK; its public key is used to encrypt the DEK in the next step.
-
-3. **`CREATE DATABASE ENCRYPTION KEY`** generates an AES_256 symmetric key (the DEK) in `analytics_db`, encrypted by the certificate's public key. The expected warning — "back up the certificate" — is intentional and must not be ignored.
-
-4. **`ALTER DATABASE analytics_db SET ENCRYPTION ON`** starts the background encryption scan: SQL Server rewrites every existing data page in the database with AES_256 encryption. For large databases this may take hours; the `percent_complete` column in `sys.dm_database_encryption_keys` tracks progress. `tempdb` is automatically encrypted at the same time.
+*Return the current owner and TDE flag for the `stoxx` database.*
 
 ```sql
--- Run as sa (or sysadmin member) on analytics-sql VM
--- ============================================================
+SELECT
+    db.name AS database_name,
+    SUSER_SNAME(owner_sid) AS owner_name,
+    db.is_encrypted
+FROM sys.databases AS db
+WHERE db.name = 'stoxx';
+```
 
--- Step 3a: Create Database Master Key in master database
+| database_name | owner_name | is_encrypted |
+|---|---|---:|
+| `stoxx` | `sa` | 0 |
+
+_`stoxx` is not currently protected by TDE. Any production decision to require at-rest encryption still needs to be implemented, tested, and documented. The database is also owned by `sa`, which is common in labs but not always the preferred long-term operational owner._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_encrypted` | `0` | Depends | TDE is not enabled. | Backups and database files rely on storage controls rather than SQL Server file encryption. |
+| `is_encrypted` | `1` | ✅ when TDE is required | TDE is enabled. | Certificate backup, restore runbooks, and monitoring become mandatory. |
+| `owner_name` | `sa` | Depends | Default superuser owns the database. | Common baseline, but many teams standardize on a named admin owner instead. |
+
+## Disposable TDE Example
+
+The following example uses a disposable database named `codex_tde_demo`. It demonstrates the full certificate-based chain without changing `stoxx`.
+
+### `master` | create the master key and certificate
+
+The certificate and private key are the critical recovery artifacts. The safest rule is to treat certificate backup as part of the enablement sequence, not as a later administrative task.
+
+#### `CREATE MASTER KEY` | establish the master-database root for TDE
+
+This creates the Database Master Key in `master`, which protects the certificate private key.
+
+> [!warning]
+>
+> If `master` does not have a Database Master Key, the certificate private key cannot be protected correctly for TDE. Do not proceed to TDE setup until the key hierarchy is explicit and backed up.
+
+> [!success]
+>
+> Create the Database Master Key in `master`, then create the certificate, then back up the certificate and private key immediately after the DEK is created.
+
+*Create the Database Master Key in `master` for the TDE certificate chain.*
+
+```sql
 USE master;
 GO
 
--- Check if DMK already exists
-SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##';
--- If empty, create it:
-
-CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKeyPass!2026';
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'CodexMasterKeyPass!2026';
 GO
+```
 
--- Verify DMK creation
-SELECT name, algorithm_desc, create_date, modify_date
+#### `sys.symmetric_keys` | verify the Database Master Key
+
+This query confirms the DMK exists and shows its algorithm and key length.
+
+*Return the `master` Database Master Key metadata used in the TDE chain.*
+
+```sql
+SELECT
+    name,
+    algorithm_desc,
+    create_date,
+    key_length
 FROM sys.symmetric_keys
 WHERE name = '##MS_DatabaseMasterKey##';
--- Expected output:
--- name                        algorithm_desc  create_date
--- ##MS_DatabaseMasterKey##    AES_256         2026-03-10 ...
+```
 
--- Step 3b: Create certificate for TDE
-CREATE CERTIFICATE project_tde_cert
-WITH SUBJECT = 'the data pipeline project TDE Certificate',
-EXPIRY_DATE = '2028-03-10';
+| name | algorithm_desc | create_date | key_length |
+|---|---|---|---:|
+| `##MS_DatabaseMasterKey##` | `AES_256` | 2026-04-08 18:12:04.600 | 256 |
+
+_The `master` Database Master Key exists and uses `AES_256`. This is the correct prerequisite state for storing a TDE certificate private key in `master`._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `algorithm_desc` | `AES_256` | ✅ | The DMK is protected with a modern symmetric algorithm. | Expected and suitable for current SQL Server builds. |
+| `key_length` | `256` | ✅ | 256-bit key length. | Strong baseline for the DMK. |
+
+#### `CREATE CERTIFICATE` | create the TDE server certificate
+
+This creates the server certificate that protects the Database Encryption Key.
+
+*Create the server certificate that will encrypt the Database Encryption Key for the disposable TDE example.*
+
+```sql
+USE master;
 GO
 
--- Verify certificate
-SELECT name, subject, start_date, expiry_date, pvt_key_encryption_type_desc
-FROM sys.certificates
-WHERE name = 'project_tde_cert';
--- Expected output:
--- name              subject                  expiry_date          pvt_key_encryption_type_desc
--- project_tde_cert    the data pipeline project TDE Certificate    2028-03-10 00:00:00  ENCRYPTED_BY_MASTER_KEY
+CREATE CERTIFICATE codex_tde_demo_cert
+WITH SUBJECT = 'Codex TDE Demo Certificate',
+EXPIRY_DATE = '2028-12-31';
+GO
+```
 
--- Step 3c: Create Database Encryption Key in the target database
-USE analytics_db;
+#### `sys.certificates` | verify the server certificate
+
+This query confirms the TDE certificate exists and shows how its private key is protected.
+
+*Return the certificate metadata for the TDE encryptor certificate.*
+
+```sql
+SELECT
+    name,
+    subject,
+    start_date,
+    expiry_date,
+    pvt_key_encryption_type_desc
+FROM sys.certificates
+WHERE name = 'codex_tde_demo_cert';
+```
+
+| name | subject | start_date | expiry_date | pvt_key_encryption_type_desc |
+|---|---|---|---|---|
+| `codex_tde_demo_cert` | `Codex TDE Demo Certificate` | 2026-04-08 18:12:04.000 | 2028-12-31 00:00:00.000 | `ENCRYPTED_BY_MASTER_KEY` |
+
+_The certificate exists and its private key is protected by the `master` Database Master Key, which is the expected TDE chain on this platform. The expiry date matters operationally because certificate rotation must happen before it becomes a recovery problem._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `pvt_key_encryption_type_desc` | `ENCRYPTED_BY_MASTER_KEY` | ✅ | The certificate private key is protected by the `master` DMK. | Correct TDE prerequisite state. |
+| `pvt_key_encryption_type_desc` | Other value | ❌ | The private-key protection differs from the expected TDE chain. | Review certificate creation and key management before proceeding. |
+| `expiry_date` | Future date with rotation runway | ✅ | The certificate is still valid operationally. | Rotation can be planned safely. |
+| `expiry_date` | Imminent or past date | ❌ | Rotation pressure exists. | Review certificate strategy and backup validity immediately. |
+
+### User database | create the DEK and enable encryption
+
+TDE becomes active only after the Database Encryption Key exists in the user database and `ALTER DATABASE ... SET ENCRYPTION ON` is executed.
+
+#### `CREATE DATABASE ENCRYPTION KEY` + `ALTER DATABASE ... SET ENCRYPTION ON` | enable TDE on a disposable database
+
+This creates a disposable database, inserts one row, creates the DEK, and enables TDE.
+
+> [!warning]
+>
+> When the DEK is created, SQL Server warns that the certificate has not been backed up yet. Treat that warning as mandatory operational work, not as informational noise.
+
+> [!success]
+>
+> Enable TDE only when the certificate backup step is prepared and the restore runbook is already defined. For production databases, schedule the initial encryption scan and backup-chain validation explicitly.
+
+> [!info]-
+>
+> This batch creates a disposable TDE-enabled database.
+>
+> - `CREATE DATABASE codex_tde_demo` creates the example user database.
+> - The `demo_payload` table and seed row exist only to prove the database contains real data.
+> - `CREATE DATABASE ENCRYPTION KEY ... ENCRYPTION BY SERVER CERTIFICATE` creates the DEK inside the user database and protects it with the certificate created in `master`.
+> - `ALTER DATABASE ... SET ENCRYPTION ON` starts the background encryption process for the database and also causes `tempdb` to be encrypted at the instance level.
+
+*Create a disposable encrypted database, define its DEK, and enable TDE.*
+
+```sql
+USE master;
+GO
+
+CREATE DATABASE codex_tde_demo;
+GO
+
+USE codex_tde_demo;
+GO
+
+CREATE TABLE dbo.demo_payload
+(
+    id int NOT NULL PRIMARY KEY,
+    payload nvarchar(100) NOT NULL
+);
+GO
+
+INSERT INTO dbo.demo_payload (id, payload)
+VALUES (1, N'TDE demo row');
 GO
 
 CREATE DATABASE ENCRYPTION KEY
 WITH ALGORITHM = AES_256
-ENCRYPTION BY SERVER CERTIFICATE project_tde_cert;
-GO
--- Warning is expected: "Please back up the certificate and its private key..."
--- We handle this in Step 4.
-
--- Step 3d: Enable TDE
-ALTER DATABASE analytics_db SET ENCRYPTION ON;
+ENCRYPTION BY SERVER CERTIFICATE codex_tde_demo_cert;
 GO
 
--- Step 3e: Monitor encryption progress
--- For large databases, encryption happens in the background
-SELECT
-    db.name AS database_name,
-    db.is_encrypted,
-    dek.encryption_state,
-    -- encryption_state meanings:
-    -- 0 = No DEK, not encrypted
-    -- 1 = Unencrypted
-    -- 2 = Encryption in progress
-    -- 3 = Encrypted
-    -- 4 = Key change in progress
-    -- 5 = Decryption in progress
-    -- 6 = Protection change in progress
-    CASE dek.encryption_state
-        WHEN 0 THEN 'No DEK present'
-        WHEN 1 THEN 'Unencrypted'
-        WHEN 2 THEN 'Encryption in progress'
-        WHEN 3 THEN 'Encrypted'
-        WHEN 4 THEN 'Key change in progress'
-        WHEN 5 THEN 'Decryption in progress'
-        WHEN 6 THEN 'Protection change in progress'
-    END AS encryption_state_desc,
-    dek.percent_complete,
-    dek.key_algorithm,
-    dek.key_length
-FROM sys.databases db
-LEFT JOIN sys.dm_database_encryption_keys dek
-    ON db.database_id = dek.database_id
-WHERE db.name IN ('analytics_db', 'tempdb')
-ORDER BY db.name;
--- Expected output (after completion):
--- database_name  is_encrypted  encryption_state  encryption_state_desc  percent_complete  key_algorithm  key_length
--- analytics_db           1             3                 Encrypted              0.0               AES            256
--- tempdb         1             3                 Encrypted              0.0               AES            256
--- Note: tempdb is ALWAYS encrypted when ANY database on the instance has TDE enabled.
-```
-
-> [!info] tempdb is Always Encrypted
->
-> When TDE is enabled on any database, tempdb is automatically encrypted. This is expected behavior — tempdb holds intermediate results from your encrypted database's queries.
-
----
-
-## Step 4: CRITICAL — Backup the Certificate and Private Key
-
-> [!warning] Certificate Backup is Mandatory
->
-> Without the certificate and its private key, encrypted database backups are **completely unrestorable** on another SQL Server instance. This is the single most important step in TDE setup. Treat the certificate backup with the same care as the database backup itself.
-
-> [!success] Safe Pattern: Back Up Immediately After TDE Setup
->
-> Run `BACKUP CERTIFICATE project_tde_cert TO FILE ... WITH PRIVATE KEY (...)` immediately after enabling TDE. Copy both files to GCS with KMS encryption (Step 5), then delete local copies. Verify the backup is recoverable by performing a test restore on a non-production instance before relying on it for DR.
-
-#### BACKUP CERTIFICATE TO FILE — export certificate and private key
-
-`BACKUP CERTIFICATE ... TO FILE ... WITH PRIVATE KEY` exports two files:
-
-- **`.cer` file** — the certificate (public key + metadata). Safe to share; contains no secret material.
-- **`.pvk` file** — the certificate's private key, encrypted with the password specified in `ENCRYPTION BY PASSWORD`. This password must be recorded securely (e.g., GCP Secret Manager) — it is required to restore the certificate on a different server.
-
-**Both files are required together.** The `.cer` file alone cannot decrypt the DEK; the `.pvk` file alone is unusable without the `.cer`. The `ENCRYPTION BY PASSWORD` password protects the `.pvk` at rest — without it, even possession of the file does not reveal the private key.
-
-```sql
-BACKUP CERTIFICATE project_tde_cert
-TO FILE = '/var/opt/mssql/backup/project_tde_cert.cer'
-WITH PRIVATE KEY (
-    FILE = '/var/opt/mssql/backup/project_tde_cert_key.pvk',
-    ENCRYPTION BY PASSWORD = 'CertBackupPass!2026'
-);
-GO
-
--- Verify the files were created
--- (Run from bash)
--- ls -la /var/opt/mssql/backup/project_tde_cert*
--- Expected output:
--- -rw------- 1 mssql mssql  1196 Mar 10 10:00 project_tde_cert.cer
--- -rw------- 1 mssql mssql  1764 Mar 10 10:00 project_tde_cert_key.pvk
-```
-
----
-
-## Step 5: Copy Certificate to GCS (Encrypted at Rest by KMS)
-
-#### gsutil cp + gcloud kms encrypt — upload certificate to CMEK-encrypted GCS
-
-`gsutil cp` uploads the certificate files to GCS. At this point they are protected only by Google-managed encryption keys (Google's default). `gsutil rewrite -k` re-encrypts the GCS objects with the Cloud KMS key created in Step 1 — this switches the storage encryption to **CMEK (Customer-Managed Encryption Keys)**, where GCP holds no access to the key material without the Cloud KMS policy allowing it. The result is double protection: the `.pvk` file is encrypted by the backup password (Step 4) AND the GCS object is encrypted by the KMS key — an attacker who breaches the GCS bucket cannot read the private key without also having KMS access. After upload, the local copies on the VM are deleted — a VM disk compromise should not expose the certificate files.
-
-```bash
-gsutil cp /var/opt/mssql/backup/project_tde_cert.cer \
-  gs://analytics-db-backups/certificates/project_tde_cert.cer
-gsutil cp /var/opt/mssql/backup/project_tde_cert_key.pvk \
-  gs://analytics-db-backups/certificates/project_tde_cert_key.pvk
-
-# Encrypt the GCS objects with the KMS key for double protection
-gsutil rewrite -k \
-  -D "projects/data-platform-prod/locations/europe-west1/keyRings/analytics-keyring/cryptoKeys/analytics-sql-tde" \
-  gs://analytics-db-backups/certificates/project_tde_cert.cer
-gsutil rewrite -k \
-  -D "projects/data-platform-prod/locations/europe-west1/keyRings/analytics-keyring/cryptoKeys/analytics-sql-tde" \
-  gs://analytics-db-backups/certificates/project_tde_cert_key.pvk
-
-# Verify encryption
-gsutil stat gs://analytics-db-backups/certificates/project_tde_cert.cer
-# Look for: KMS key: projects/data-platform-prod/locations/europe-west1/keyRings/analytics-keyring/cryptoKeys/analytics-sql-tde
-
-# Remove local copies (the VM shouldn't store unencrypted cert files long-term)
-rm /var/opt/mssql/backup/project_tde_cert.cer
-rm /var/opt/mssql/backup/project_tde_cert_key.pvk
-```
-
----
-
-## Step 6: Restore Certificate on Another Server (Disaster Recovery)
-
-#### CREATE MASTER KEY + CREATE CERTIFICATE FROM FILE — DR restore on new server
-
-On a new server, the original DMK and certificate do not exist. Before SQL Server can open or restore a TDE-encrypted backup, it must reconstitute the certificate chain:
-
-1. Create a new DMK on the new instance (its password can differ from the original — the DMK only needs to exist to protect the restored certificate's private key).
-2. `CREATE CERTIFICATE ... FROM FILE` imports the certificate and decrypts the `.pvk` file using the backup password from Step 4. SQL Server re-encrypts the private key with the new instance's DMK.
-3. With the certificate now available, `RESTORE DATABASE` can access the DEK embedded in the backup file and decrypt pages as they are restored.
-
-If the backup files are in GCS, they must be downloaded first and re-encrypted with the backup password is then used — `gsutil cp` to the VM, then the `CREATE CERTIFICATE FROM FILE` command.
-
-```sql
-
--- 1. Create DMK on new server
-USE master;
-CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'NewServerMasterKey!2026';
-GO
-
--- 2. Restore certificate from backed-up files
--- (First copy .cer and .pvk files from GCS to the new server)
-CREATE CERTIFICATE project_tde_cert
-FROM FILE = '/var/opt/mssql/backup/project_tde_cert.cer'
-WITH PRIVATE KEY (
-    FILE = '/var/opt/mssql/backup/project_tde_cert_key.pvk',
-    DECRYPTION BY PASSWORD = 'CertBackupPass!2026'
-);
-GO
-
--- 3. Now RESTORE DATABASE will work
-RESTORE DATABASE analytics_db FROM DISK = '/var/opt/mssql/backup/mydb_full.bak'
-WITH MOVE 'analytics_db' TO '/var/opt/mssql/data/analytics_db.mdf',
-     MOVE 'mydb_log' TO '/var/opt/mssql/data/mydb_log.ldf',
-     REPLACE;
+ALTER DATABASE codex_tde_demo SET ENCRYPTION ON;
 GO
 ```
 
----
+#### `sys.dm_database_encryption_keys` | verify database encryption state
 
-## TDE Monitoring Query
+This query shows the effective encryption state for the disposable demo database, the real `stoxx` database, and `tempdb`.
 
-#### sys.dm_database_encryption_keys, sys.certificates — TDE status and expiry check
-
-`sys.dm_database_encryption_keys` is a DMV that exposes one row per database that has a DEK. The `encryption_state` column uses integer codes (defined in Step 3 above); the `encryption_state_desc` string column was added in SQL Server 2019 and returns the same values as the `CASE` block. `encryptor_thumbprint` is a binary hash of the certificate's public key — joining to `sys.certificates` via this column resolves the certificate name and expiry date without needing to know the certificate name in advance.
-
-The `days_until_cert_expiry` threshold of 180 days gives enough lead time to: create a new certificate, re-encrypt the DEK under the new certificate (`ALTER DATABASE SET ENCRYPTION ON WITH ENCRYPTION KEY CERTIFICATE new_cert`), back up the new certificate to GCS, and verify the backup before the old certificate expires. Certificate rotation does not re-encrypt all data pages (that is `encryption_state = 6`, Protection Change in Progress — a lightweight operation), unlike initial TDE enablement (`encryption_state = 2`, which requires a full page scan).
+*Return the live encryption state, algorithm, and certificate mapping for the databases relevant to this example.*
 
 ```sql
 SELECT
     db.name,
     db.is_encrypted,
-    c.name AS cert_name,
-    c.expiry_date AS cert_expiry,
-    DATEDIFF(DAY, GETDATE(), c.expiry_date) AS days_until_cert_expiry,
     dek.encryption_state,
+    dek.percent_complete,
     dek.key_algorithm,
-    dek.key_length
-FROM sys.databases db
-JOIN sys.dm_database_encryption_keys dek ON db.database_id = dek.database_id
-JOIN sys.certificates c ON dek.encryptor_thumbprint = c.thumbprint
-WHERE db.name = 'analytics_db';
--- ALERT if days_until_cert_expiry < 180: renew certificate!
+    dek.key_length,
+    c.name AS cert_name,
+    c.expiry_date
+FROM sys.databases AS db
+LEFT JOIN sys.dm_database_encryption_keys AS dek
+    ON db.database_id = dek.database_id
+LEFT JOIN sys.certificates AS c
+    ON dek.encryptor_thumbprint = c.thumbprint
+WHERE db.name IN ('stoxx', 'tempdb', 'codex_tde_demo')
+ORDER BY db.name;
 ```
 
-> [!warning] Certificate Renewal Alert Threshold
+| name | is_encrypted | encryption_state | percent_complete | key_algorithm | key_length | cert_name | expiry_date |
+|---|---:|---:|---:|---|---:|---|---|
+| `codex_tde_demo` | 1 | 3 | 0.0 | `AES` | 256 | `codex_tde_demo_cert` | 2028-12-31 00:00:00.000 |
+| `stoxx` | 0 |  |  |  |  |  |  |
+| `tempdb` | 1 | 3 | 0.0 | `AES` | 256 |  |  |
+
+_The disposable demo database is fully encrypted, `encryption_state = 3` confirms the encryption scan completed, and `tempdb` is also encrypted because one user database on the instance now uses TDE. `stoxx` remains unencrypted, which keeps the production database separate from the example while still proving the engine behavior._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_encrypted` | `1` | ✅ | TDE is enabled for the database. | Data and log files for that database are encrypted at rest. |
+| `is_encrypted` | `0` | Depends | TDE is not enabled. | No SQL Server file-level at-rest encryption for that database. |
+| `encryption_state` | `2` | Depends | Encryption in progress. | Monitor progress before treating the rollout as complete. |
+| `encryption_state` | `3` | ✅ | Fully encrypted. | The database is in the steady encrypted state. |
+| `encryption_state` | `5` | Depends | Decryption in progress. | Someone is disabling TDE or reversing a change. |
+| `encryption_state` | `6` | Depends | Protection change in progress. | Review certificate or protection changes carefully. |
+| `cert_name` | Named certificate on user DB row | ✅ | The DEK maps back to a known certificate. | This is the certificate that must exist for restore scenarios. |
+| `cert_name` | Blank on `tempdb` | ✅ | `tempdb` is encrypted because of instance behavior, not because it has its own certificate mapping here. | Expected when another user database enables TDE. |
+
+#### `COUNT(*)` | verify the disposable database contains readable data
+
+This confirms the database remains accessible through normal query paths after TDE is enabled.
+
+*Verify that the disposable TDE database remains readable after encryption is enabled.*
+
+```sql
+SELECT COUNT(*) AS row_count
+FROM dbo.demo_payload;
+```
+
+| row_count |
+|---:|
+| 1 |
+
+_TDE is transparent to normal query semantics. The row remains readable without any query-side decryption logic because SQL Server decrypts pages as they are read into memory._
+
+## Back Up The Certificate Immediately
+
+Certificate backup is the non-negotiable step in any TDE rollout. Without the certificate and its private key, a TDE-encrypted backup cannot be restored on another instance.
+
+### `BACKUP CERTIFICATE` | export the certificate and private key
+
+This exports the certificate and private key to Linux files so they can be protected outside the instance.
+
+#### `BACKUP CERTIFICATE` | export the certificate and private key to Linux files
+
+This creates the recovery artifacts that make restore and disaster recovery possible.
+
+> [!danger]
 >
-> Alert when `days_until_cert_expiry < 180`. Rotating the TDE certificate requires creating a new certificate, re-encrypting the DEK, and backing up the new certificate to GCS before the old one expires.
+> If the TDE certificate and private key are lost, encrypted backups and detached files can become permanently unrecoverable on another SQL Server instance.
 
-> [!success] Safe Pattern: Certificate Rotation Procedure
+> [!success]
 >
-> Create a new certificate (`CREATE CERTIFICATE project_tde_cert_new WITH SUBJECT = '...' EXPIRY_DATE = '...'`), then re-encrypt the DEK: `ALTER DATABASE analytics_db SET ENCRYPTION ON WITH ENCRYPTION KEY CERTIFICATE project_tde_cert_new`. Back up the new certificate to GCS before the old one expires. Only then drop the old certificate.
+> Back up the certificate and private key immediately after enabling TDE, store them separately from the database backups, and protect the exported files with external controls such as restricted storage and, if required, KMS-protected archival.
 
----
+*Back up the TDE certificate and private key to Linux files for disaster recovery.*
 
-## Backup and Restore with TDE
+```sql
+USE master;
+GO
 
-When TDE is active, `BACKUP DATABASE` automatically includes the DEK in the backup file, wrapped by the certificate. The backup file itself is opaque without the certificate — even a valid SQL Server instance cannot attach or restore the `.bak` file unless it has the matching certificate and private key. This applies to all backup types: Full, Differential, and Log. The certificate dependency flows through the entire backup chain.
+BACKUP CERTIFICATE codex_tde_demo_cert
+TO FILE = '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert.cer'
+WITH PRIVATE KEY (
+    FILE = '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert_key.pvk',
+    ENCRYPTION BY PASSWORD = 'CodexBackupPassword!2026'
+);
+GO
+```
 
-Encrypted database backups carry the DEK inside the backup file, protected by the certificate. The backup itself is usable only on a server that has:
-1. The same certificate (or a copy restored from backup)
-2. The matching private key
+#### `xp_fileexist` | verify the exported certificate files from SQL Server
 
-> [!danger] Backup Chain Dependency
-> Always verify the TDE certificate is safely backed up to GCS **before** taking any database backups. A database backup without a certificate backup is unrestorable on any other server.
+This query verifies that the exported files exist at the expected Linux paths from the SQL Server side.
 
-> [!success] Verification command
-> After Step 5, confirm the certificate files exist in GCS before scheduling database backups: `gsutil ls -l gs://analytics-db-backups/certificates/`
+*Check from SQL Server that the exported certificate and private-key files exist on disk.*
 
-For backup strategy in an [Always On AG environment](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/high-availability-overview#backup-strategy-with-ags), backups should run on the preferred secondary replica.
+```sql
+EXEC xp_fileexist '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert.cer';
+EXEC xp_fileexist '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert_key.pvk';
+```
 
----
+| File Exists | File is Directory | Parent Directory Exists |
+|---:|---:|---:|
+| 1 | 0 | 1 |
 
-## Performance Impact of TDE
+<!-- -->
 
-TDE encryption and decryption occur at the **disk I/O boundary** — when pages are read from disk into the buffer pool (decryption) and when dirty pages are written from the buffer pool to disk (encryption). Pages inside the buffer pool are always plaintext. This means TDE adds overhead only to I/O operations, not to CPU-bound query processing.
+| File Exists | File is Directory | Parent Directory Exists |
+|---:|---:|---:|
+| 1 | 0 | 1 |
 
-Modern GCP instance types (Cascade Lake, Ice Lake, Sapphire Rapids) include **AES-NI** hardware instructions that accelerate AES operations at the CPU level, reducing the per-page encryption overhead to near-zero. The practical overhead is dominated by the additional write I/O caused by re-encrypting modified pages, not by CPU cost.
+_Both exported files exist, neither path points to a directory, and the parent directory is present. That confirms SQL Server wrote the certificate and private-key files to the intended Linux path successfully._
 
-**Instance-wide side effect:** Enabling TDE on any database on the instance forces `tempdb` to be encrypted for all databases. `tempdb` is a shared workspace used for intermediate results, sorts, and spills from every database — even databases without TDE will incur the tempdb encryption overhead. This is an important consideration when adding TDE to a multi-database instance.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `File Exists` | `1` | ✅ | The target file exists. | The export succeeded at the file level. |
+| `File Exists` | `0` | ❌ | The target file does not exist. | The backup path, permissions, or export command must be corrected immediately. |
+| `File is Directory` | `0` | ✅ | The path points to a file. | Expected for certificate and private-key exports. |
+| `File is Directory` | `1` | ❌ | The path resolves to a directory. | The backup target path is wrong. |
+| `Parent Directory Exists` | `1` | ✅ | The containing directory exists. | SQL Server had a valid export location. |
+| `Parent Directory Exists` | `0` | ❌ | The containing directory does not exist. | Export could not succeed reliably until the path is fixed. |
 
-| Metric | Without TDE | With TDE | Impact |
-|---|---|---|---|
-| Bulk INSERT (1M rows) | 12.3 sec | 12.8 sec | +4.1% |
-| Full table scan (10M rows) | 8.7 sec | 9.0 sec | +3.4% |
-| Index seek (point lookup) | 0.3 ms | 0.3 ms | ~0% |
-| Backup (full, 15 GB) | 45 sec | 48 sec | +6.7% |
-| CPU utilization (idle) | 2% | 2% | ~0% |
-| CPU utilization (pipeline load) | 35% | 37% | +2% |
+#### `ls -lh` | verify the exported certificate files from Linux
 
-> [!tip] AES-NI Hardware Acceleration
->
-> The low overhead is because modern CPUs (including GCP's Cascade Lake / Ice Lake) have AES-NI hardware acceleration. The `aes` flag should appear in `/proc/cpuinfo`. Verify: `grep -c aes /proc/cpuinfo` — should return the number of CPU cores.
+This host-side check confirms size and ownership of the exported files.
 
----
+*Inspect the Linux certificate-export directory and verify that the recovery files exist with real sizes.*
 
-### Related
+```bash
+docker exec stoxx-db bash -lc "ls -lh /var/opt/mssql/log/tde-demo"
+```
 
-- [high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/high-availability-overview) — AG backup strategy and how TDE interacts with Always On Availability Groups
-- [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) — Service account hardening, login security, and TLS network encryption
-- [moc-sql-server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server) — SQL Server section index
+```text
+total 8.0K
+-rw-r----- 1 mssql mssql  981 Apr  8 18:12 codex_tde_demo_cert.cer
+-rw-r----- 1 mssql mssql 1.8K Apr  8 18:12 codex_tde_demo_cert_key.pvk
+```
+
+_The certificate and private-key files exist on Linux, are owned by the `mssql` account, and have non-zero sizes. That is the minimum evidence that the export produced real recovery artifacts rather than empty placeholders._
+
+## Restore And Disaster Recovery Pattern
+
+Restoring a TDE-encrypted backup on another instance requires the certificate chain first. The order matters:
+
+1. create the `master` Database Master Key if it does not exist
+2. restore the certificate and private key into `master`
+3. only then restore or attach the encrypted database
+
+### `CREATE CERTIFICATE ... FROM FILE` | import the certificate on the target instance
+
+These are the essential commands for the target instance before restoring an encrypted backup.
+
+*Create the `master` Database Master Key on the target instance and import the certificate before restoring the encrypted database.*
+
+```sql
+USE master;
+GO
+
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'CodexMasterKeyPass!2026';
+GO
+
+CREATE CERTIFICATE codex_tde_demo_cert
+FROM FILE = '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert.cer'
+WITH PRIVATE KEY (
+    FILE = '/var/opt/mssql/log/tde-demo/codex_tde_demo_cert_key.pvk',
+    DECRYPTION BY PASSWORD = 'CodexBackupPassword!2026'
+);
+GO
+```
+
+## Operational Recommendations
+
+- Treat certificate backup as part of TDE enablement, not post-work.
+- Store certificate backups separately from database backups.
+- Remember that `tempdb` becomes encrypted when any user database on the instance uses TDE.
+- Expect some CPU overhead on write-heavy systems because pages are encrypted and decrypted at the I/O boundary.
+- On SQL Server 2019 and later, backup compression for TDE-enabled databases no longer needs the older manual `MAXTRANSFERSIZE > 64 KB` workaround that earlier versions depended on.
+- If you archive exported certificate artifacts to GCS, protect that archive with strict IAM and, if required, Cloud KMS. That external protection hardens the backup artifacts, not the live SQL Server TDE runtime chain.
+
+## Related
+
+- [[sql-server-authentication]]
+- [[audit-logging]]

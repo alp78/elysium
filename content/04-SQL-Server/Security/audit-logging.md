@@ -1,36 +1,37 @@
 ---
 title: "Audit Logging"
-tags: [sql, gcp, sql-server, tsql]
-aliases: [SQL Server Audit, audit logging, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection, compliance logging]
-description: "Step-by-step guide to setting up SQL Server Audit on Linux for compliance and threat detection: server audit target, server and database audit specifications, querying audit logs, detecting brute-force attacks, forwarding to GCP Cloud Logging and BigQuery, and running a quarterly security review."
+tags: [sql, sql-server, security, tsql]
+aliases: [SQL Server Audit, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection]
+description: "Production guide to SQL Server Audit on Linux: file targets, server and database audit specifications, reading .sqlaudit files, failed-login burst detection, and operational forwarding patterns for GCP."
 parent: "[[domain-concurrency-and-security]]"
 links:
   - "[[sql-server-authentication]]"
   - "[[tde-encryption]]"
-  - "[[blocking-and-locking]]"
-  - "[[deadlock-detection-and-prevention]]"
-  - "[[race-conditions]]"
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-08
 status: complete
 ---
 
 # Audit Logging
 
-> [!quote]
-> "The purpose of an audit trail is not to catch wrongdoers — it is to make wrongdoing visible."
->
-> — **Gene Kim**, *The Phoenix Project* (2013)
+SQL Server Audit is the built-in event capture system for security-relevant activity: logins, permission changes, DDL, and optionally DML. On Linux, the practical production target is the audit file target, which writes binary `.sqlaudit` files that can be queried from T-SQL with `sys.fn_get_audit_file` and forwarded externally to a SIEM or log platform.
 
-SQL Server Audit tracks all security-relevant events (login attempts, permission changes, data access) to binary audit files (`.sqlaudit`). Required for regulatory compliance (IOSCO/ESMA for benchmark administrators, GDPR Article 30 data access logs) as outlined in the [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) framework. Events are written to disk and can be forwarded to GCP [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) for centralized monitoring and alerting.
+For production use, treat audit design as a control-plane decision, not just a logging feature. The important questions are:
 
----
+- which events must be captured
+- where the files live
+- what SQL Server should do if the target becomes unavailable
+- how quickly security staff can query and alert on the data
 
-## SQL Server Audit Architecture
+## Audit Architecture
 
-SQL Server Audit is a three-layer DDL system built into the SQL Server instance. The top-level **Server Audit** object (stored in `master`) defines *where* events are written — to a binary file, the Windows Security log, or the Windows Application log (the "target") — and *how* the system behaves if the audit target becomes unavailable. The choice of target matters: the Windows Application log can be read by any authenticated Windows user, whereas the Security log requires special configuration but is far more tamper-resistant. Using a dedicated file target (`.sqlaudit`) on a separate volume is the standard approach in high-throughput environments because you can distribute audit I/O independently from database data files. Multiple Server Audit objects can coexist on the same instance, each with its own target and failure policy.
+SQL Server Audit is a three-layer model:
 
-Audit Specifications are child objects attached to the Server Audit that define *what* events are captured. A **Server Audit Specification** captures server-wide action groups (login events, role membership changes, permission grants); only **one** can exist per Server Audit. A **Database Audit Specification** captures database-level events (DML on specific schemas, DDL changes) for a specific database; only **one** per database per Server Audit is allowed.
+- the **Server Audit** defines the target and failure policy
+- the **Server Audit Specification** defines server-scope event groups such as failed logins or login changes
+- the **Database Audit Specification** defines database-scope events such as `SELECT`, `UPDATE`, or schema changes for a specific database
+
+Only one server audit specification can attach to a given server audit, and only one database audit specification per database can attach to that same audit. That makes the initial scope definition important: a production audit should be designed around stable event categories and retention policy, not around ad hoc troubleshooting.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -46,275 +47,422 @@ Audit Specifications are child objects attached to the Server Audit that define 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    SA["**Server Audit**\nproject_audit\nTO FILE → /var/opt/mssql/audit/"]
-    SSPEC["**Server Audit Specification**\naudit_logins\n(one per Server Audit)"]
-    DSPEC["**Database Audit Specification**\naudit_data_access\n(one per database per audit)"]
-    SA --> SSPEC
-    SA --> DSPEC
-    SSPEC --> G1[FAILED_LOGIN_GROUP]
-    SSPEC --> G2[SUCCESSFUL_LOGIN_GROUP]
-    SSPEC --> G3[DATABASE_PERMISSION_CHANGE_GROUP]
-    SSPEC --> G4[SERVER_ROLE_MEMBER_CHANGE_GROUP]
-    DSPEC --> A1["SELECT ON SCHEMA::gold BY public"]
-    DSPEC --> A2["INSERT / UPDATE ON SCHEMA::silver BY public"]
-    DSPEC --> A3["DELETE ON SCHEMA::bronze BY public"]
-    DSPEC --> A4[SCHEMA_OBJECT_CHANGE_GROUP]
+    A["Server Audit<br/>target + failure policy"] --> B["Server Audit Specification<br/>server-scope action groups"]
+    A --> C["Database Audit Specification<br/>database-scope actions"]
+    B --> D["FAILED_LOGIN_GROUP<br/>SUCCESSFUL_LOGIN_GROUP<br/>SERVER_PRINCIPAL_CHANGE_GROUP"]
+    C --> E["SELECT on gold schema<br/>UPDATE on gold schema<br/>SCHEMA_OBJECT_CHANGE_GROUP"]
+    A --> F[".sqlaudit files"]
+    F --> G["sys.fn_get_audit_file"]
+    F --> H["Cloud Logging / SIEM / BigQuery"]
 ```
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        SQL Server Audit System                       │
-│                                                                      │
-│  Server Audit (project_audit)                                          │
-│  ├── Target: FILE (/var/opt/mssql/audit/)                           │
-│  ├── Max Size: 100 MB per file                                       │
-│  ├── Max Rollover Files: 10 (total ~1 GB)                            │
-│  │                                                                   │
-│  ├── Server Audit Specification (audit_logins)                       │
-│  │   ├── FAILED_LOGIN_GROUP         (failed login attempts)          │
-│  │   ├── SUCCESSFUL_LOGIN_GROUP     (successful logins)              │
-│  │   ├── DATABASE_PERMISSION_CHANGE_GROUP (GRANT/DENY/REVOKE)       │
-│  │   └── SERVER_ROLE_MEMBER_CHANGE_GROUP (role membership changes)   │
-│  │                                                                   │
-│  └── Database Audit Specification (audit_data_access)                │
-│      ├── SELECT ON gold.* BY public    (all reads of gold schema)    │
-│      ├── INSERT ON silver.* BY public  (all writes to silver)        │
-│      └── DELETE ON bronze.* BY public  (all deletes from bronze)     │
-│                                                                      │
-└──────────────────┬───────────────────────────────────────────────────┘
-                   │
-                   ▼
-        /var/opt/mssql/audit/
-        ├── project_audit_*.sqlaudit  (binary audit files)
-                   │
-                   ▼
-        ┌──────────────────────┐
-        │  GCP Ops Agent       │
-        │  (Cloud Logging)     │
-        │                      │
-        │  → Cloud Logging     │
-        │  → BigQuery sink     │
-        │  → Alert policies    │
-        └──────────────────────┘
-```
+## Build And Verify The Audit
 
----
+This section uses a disposable production-shaped example named `codex_audit_demo`. The commands are valid for real environments, but the object names are intentionally isolated so the note does not require changes to the real `stoxx` security surface.
 
-## Step 1: Create Server Audit
+### Linux | create the file target
 
-A Server Audit is an instance-level DDL object stored in `master` that defines the audit target and its operational parameters. It does not define *what* to audit — that is the responsibility of the Audit Specifications created in Steps 2 and 3. The audit is created in a disabled state by default and must be explicitly enabled with `ALTER SERVER AUDIT ... WITH (STATE = ON)`. The `.sqlaudit` binary file format is tamper-resistant: files cannot be opened as plain text and can only be read through `sys.fn_get_audit_file`.
+Audit file targets on Linux require the directory to exist and be writable by the SQL Server service account. If the path is wrong or inaccessible, audit creation or startup fails.
 
-Key parameters: `MAXSIZE` controls when the current file rotates (2 MB minimum, unlimited maximum); `MAX_ROLLOVER_FILES` sets how many files to keep before the oldest is deleted; `QUEUE_DELAY` (default minimum 1,000 ms) controls how long events can sit in the in-memory buffer before being flushed to disk — setting it to `0` forces synchronous writes but blocks threads until each write completes; `ON_FAILURE` controls instance behavior if the audit target is unavailable (`CONTINUE` keeps the instance running unaudited, `SHUTDOWN` halts the instance, `FAIL_OPERATION` rejects only audited operations while allowing non-audited ones).
+#### `xp_create_subdir` | create the audit directory
 
-> [!info] SQL Server 2022 — audit name with spaces
->
-> In SQL Server 2019 and earlier, audit names cannot contain spaces. SQL Server 2022 removes this restriction. The `AUDIT_GUID` parameter is required when using database mirroring or Always On Availability Groups so that the primary and secondary replicas match the same audit object.
+This creates the audit directory from SQL Server before the audit object is defined.
+
+*Create the Linux audit target directory that the server audit will write into.*
 
 ```sql
--- ============================================================
--- Create the audit target (where audit records are written)
--- ============================================================
 USE master;
 GO
 
--- Create server-level audit
-CREATE SERVER AUDIT project_audit
+EXEC xp_create_subdir '/var/opt/mssql/log/audit';
+GO
+```
+
+### Server Audit | target and runtime state
+
+The server audit defines where records are written and how SQL Server reacts if the target cannot be written to. For production, `ON_FAILURE` is the single most important behavioral choice in the definition.
+
+#### `CREATE SERVER AUDIT` | create the file-backed audit target
+
+This is a state-changing DDL operation that creates the top-level audit object and enables it.
+
+> [!warning]
+>
+> `ON_FAILURE = SHUTDOWN` is a compliance-grade setting, not a default-safe setting. If the target becomes unavailable because the volume is full, permissions changed, or the path vanished, SQL Server can halt rather than continue without auditing.
+
+> [!success]
+>
+> Use `ON_FAILURE = CONTINUE` unless a formal control or regulation explicitly requires fail-closed behavior. Pair it with filesystem monitoring, retention controls, and external forwarding so a target outage is detected quickly.
+
+> [!info]-
+>
+> This batch creates the audit target itself.
+>
+> - `TO FILE` chooses the Linux file target rather than a Windows event log target.
+> - `FILEPATH` must already exist and must be writable by the SQL Server service account.
+> - `MAXSIZE = 20 MB` rotates the current file after roughly 20 MB of events.
+> - `MAX_ROLLOVER_FILES = 5` keeps at most five files before the oldest file is removed.
+> - `QUEUE_DELAY = 1000` lets SQL Server buffer events for up to one second before flushing to disk.
+> - `ALTER SERVER AUDIT ... WITH (STATE = ON)` is required because server audits are created disabled.
+
+*Create and enable a file-backed server audit with bounded rollover and a one-second flush delay.*
+
+```sql
+USE master;
+GO
+
+CREATE SERVER AUDIT codex_audit_demo
 TO FILE (
-    FILEPATH = '/var/opt/mssql/audit/',
-    MAXSIZE = 100 MB,
-    MAX_ROLLOVER_FILES = 10,       -- Keep 10 files (1 GB total)
-    RESERVE_DISK_SPACE = OFF       -- Don't pre-allocate
+    FILEPATH = '/var/opt/mssql/log/audit/',
+    MAXSIZE = 20 MB,
+    MAX_ROLLOVER_FILES = 5,
+    RESERVE_DISK_SPACE = OFF
 )
 WITH (
-    QUEUE_DELAY = 1000,            -- 1 second flush delay (balance between performance and freshness)
-    ON_FAILURE = CONTINUE          -- Don't crash SQL Server if audit fails (use SHUTDOWN for strict compliance)
+    QUEUE_DELAY = 1000,
+    ON_FAILURE = CONTINUE
 );
 GO
 
--- Enable the audit
-ALTER SERVER AUDIT project_audit WITH (STATE = ON);
+ALTER SERVER AUDIT codex_audit_demo WITH (STATE = ON);
 GO
-
--- Verify audit is active
-SELECT name, status_desc, audit_file_path, queue_delay, on_failure_desc
-FROM sys.server_audits;
--- Expected output:
--- name          status_desc  audit_file_path               queue_delay  on_failure_desc
--- project_audit   STARTED      /var/opt/mssql/audit/         1000         CONTINUE
 ```
 
-> [!tip] ON_FAILURE = SHUTDOWN
->
-> ON_FAILURE = SHUTDOWN for Strict Compliance.
-> If `ON_FAILURE = CONTINUE`, the database keeps running if audit logging fails (e.g., disk full). If `ON_FAILURE = SHUTDOWN`, SQL Server halts to ensure no unaudited operations occur. Use SHUTDOWN only when regulatory requirements mandate it — a disk-full condition would take your database offline.
+#### `sys.server_file_audits` + `sys.dm_server_audit_status` | verify the audit target
 
----
+This query joins the static file-target metadata to the live runtime DMV so the output shows both the configured properties and the current running state.
 
-## Step 2: Create Server Audit Specification (Login and Permission Events)
-
-A Server Audit Specification is an instance-level child object attached to a Server Audit via `FOR SERVER AUDIT`. It defines which **server-level action groups** are captured. Action groups are predefined named sets of related events — `FAILED_LOGIN_GROUP`, for example, fires for every failed login attempt across all databases on the instance, regardless of application or client IP. Only **one** Server Audit Specification can exist per Server Audit object. Like the Server Audit itself, it is created disabled and must be activated with `WITH (STATE = ON)`.
-
-Server-level specifications can only use action groups — they cannot target individual objects or schemas. Database-level DML auditing requires a Database Audit Specification (Step 3).
+*Return the configured file-target properties and the live runtime state for the server audit.*
 
 ```sql
--- ============================================================
--- Track security events at the server level
--- ============================================================
-CREATE SERVER AUDIT SPECIFICATION audit_logins
-FOR SERVER AUDIT project_audit
-ADD (FAILED_LOGIN_GROUP),                    -- Failed login attempts
-ADD (SUCCESSFUL_LOGIN_GROUP),                -- Successful logins (useful for tracking who connects)
-ADD (DATABASE_PERMISSION_CHANGE_GROUP),      -- GRANT, DENY, REVOKE statements
-ADD (SERVER_ROLE_MEMBER_CHANGE_GROUP),       -- sp_addsrvrolemember, ALTER SERVER ROLE
-ADD (LOGIN_CHANGE_PASSWORD_GROUP),           -- Password changes
-ADD (SERVER_PRINCIPAL_CHANGE_GROUP),         -- CREATE/ALTER/DROP LOGIN
-ADD (DATABASE_PRINCIPAL_CHANGE_GROUP)        -- CREATE/ALTER/DROP USER
+SELECT
+    sf.name,
+    sf.on_failure_desc,
+    sf.is_state_enabled,
+    sf.queue_delay,
+    sf.max_file_size,
+    sf.max_rollover_files,
+    sf.log_file_path,
+    ds.status_desc,
+    ds.audit_file_path,
+    ds.audit_file_size
+FROM sys.server_file_audits AS sf
+LEFT JOIN sys.dm_server_audit_status AS ds
+    ON sf.audit_id = ds.audit_id
+WHERE sf.name = 'codex_audit_demo';
+```
+
+| name | on_failure_desc | is_state_enabled | queue_delay | max_file_size | max_rollover_files | log_file_path | status_desc | audit_file_path | audit_file_size |
+|---|---|---:|---:|---:|---:|---|---|---|---:|
+| `codex_audit_demo` | `CONTINUE` | 1 | 1000 | 20 | 5 | `/var/opt/mssql/log/audit/` | `STARTED` | `/var/opt/mssql/log/audit/codex_audit_demo_BC44E37C-FB5B-4A03-83B0-08608A2E7178_0_134201452714120000.sqlaudit` | 421888 |
+
+_The audit is configured and running correctly. The object is enabled, the runtime status is `STARTED`, the file path resolves to the expected Linux directory, and the current audit file has already accumulated 421,888 bytes, which confirms that real events are being written. With `ON_FAILURE = CONTINUE`, the server would keep processing workload if the audit target failed, so production monitoring must detect file-target failures explicitly._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `on_failure_desc` | `CONTINUE` | ✅ | SQL Server continues workload if the target fails. | Good operational default for most systems, but you must monitor for silent audit loss. |
+| `on_failure_desc` | `FAIL_OPERATION` | Depends | Audited operations fail when the target fails. | Safer than `CONTINUE`, but application errors are possible under target outages. |
+| `on_failure_desc` | `SHUTDOWN` | ❌ unless formally required | SQL Server shuts down if the audit target fails. | Use only when a fail-closed regulatory posture outweighs availability risk. |
+| `is_state_enabled` | `1` | ✅ | The audit object is enabled. | The target can actively receive events. |
+| `is_state_enabled` | `0` | ❌ | The audit object exists but is disabled. | The definition is present, but nothing is being captured. |
+| `status_desc` | `STARTED` | ✅ | The audit runtime is active. | The file target is available and SQL Server is writing to it. |
+| `status_desc` | `STOPPED` | ❌ | The audit is not currently running. | Investigate target errors, manual disablement, or startup failures immediately. |
+| `queue_delay` | `1000` | ✅ | Events can remain buffered for up to one second. | Good compromise between durability freshness and overhead. |
+| `queue_delay` | `0` | Depends | Synchronous flush behavior. | Stronger immediacy, but more latency and write overhead on busy systems. |
+| `audit_file_size` | Growing non-zero value | ✅ | Events are reaching disk. | Confirms actual activity, not just a configured object. |
+| `audit_file_size` | `0` or stagnant unexpectedly | ❌ | No recent events or write failure. | Cross-check audit scope, permissions, and recent workload. |
+
+### Server Audit Specification | server-scope events
+
+Server audit specifications attach server-level action groups such as login success, login failure, and server-principal changes. Use them for identity and control-plane activity, not object-level data access.
+
+#### `CREATE SERVER AUDIT SPECIFICATION` | capture logins and principal changes
+
+This creates the server-scope action-group definition for the audit.
+
+*Attach login and server-principal event groups to the server audit.*
+
+```sql
+CREATE SERVER AUDIT SPECIFICATION codex_audit_server_spec
+FOR SERVER AUDIT codex_audit_demo
+ADD (FAILED_LOGIN_GROUP),
+ADD (SUCCESSFUL_LOGIN_GROUP),
+ADD (SERVER_PRINCIPAL_CHANGE_GROUP)
 WITH (STATE = ON);
 GO
-
--- Verify
-SELECT audit_specification_name, is_state_enabled
-FROM sys.server_audit_specifications;
--- Expected:
--- audit_specification_name  is_state_enabled
--- audit_logins              1
 ```
 
----
+#### `sys.server_audit_specifications` | verify the specification header
 
-## Step 3: Create Database Audit Specification (Data Access Events)
+This query checks that the server audit specification exists and is enabled.
 
-A Database Audit Specification is a per-database child object that defines which **database-level events** are captured for that specific database. Unlike server specifications (which only accept predefined action groups), database specifications also accept individual actions on specific schema objects — for example, `SELECT ON SCHEMA::gold BY public` audits every SELECT executed by any principal against any object in the `gold` schema. Only **one** Database Audit Specification per database can attach to a given Server Audit; to audit the same database against two different targets, create two Server Audit objects and attach one specification to each. The specification must be created within the context of the target database (`USE analytics_db`). Database Audit Specifications cannot be created in `tempdb`.
+*Return the specification header row for the server-scope audit definition.*
 
 ```sql
--- ============================================================
--- Track data access in the analytics database
--- ============================================================
-USE analytics_db;
+SELECT
+    name,
+    is_state_enabled,
+    is_session_context_enabled,
+    create_date,
+    modify_date
+FROM sys.server_audit_specifications
+WHERE name = 'codex_audit_server_spec';
+```
+
+| name | is_state_enabled | is_session_context_enabled | create_date | modify_date |
+|---|---:|---:|---|---|
+| `codex_audit_server_spec` | 1 | 0 | 2026-04-08 18:08:06.207 | 2026-04-08 18:08:06.207 |
+
+_The server audit specification exists and is enabled. `is_session_context_enabled = 0` means no custom session context fields are being injected into audit events, so the event stream contains only the standard audit payload._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_state_enabled` | `1` | ✅ | The specification is enabled. | Matching server-level events will be written to the audit. |
+| `is_state_enabled` | `0` | ❌ | The specification exists but is not active. | No server-scope events are captured until it is enabled. |
+| `is_session_context_enabled` | `0` | ✅ | No session-context key/value payload is included. | Default and acceptable unless the design intentionally uses session context tagging. |
+| `is_session_context_enabled` | `1` | Depends | Session context is written into audit rows. | Useful for application correlation, but audit payload volume increases. |
+
+#### `sys.server_audit_specification_details` | verify the action groups
+
+This query lists the action groups attached to the server audit specification.
+
+*List the server-level action groups that the server audit specification captures.*
+
+```sql
+SELECT
+    sad.audit_action_name,
+    sad.class_desc,
+    sad.audited_result,
+    sad.is_group
+FROM sys.server_audit_specification_details AS sad
+JOIN sys.server_audit_specifications AS sas
+    ON sad.server_specification_id = sas.server_specification_id
+WHERE sas.name = 'codex_audit_server_spec'
+ORDER BY sad.audit_action_name;
+```
+
+| audit_action_name | class_desc | audited_result | is_group |
+|---|---|---|---:|
+| `FAILED_LOGIN_GROUP` | `SERVER` | `SUCCESS AND FAILURE` | 1 |
+| `SERVER_PRINCIPAL_CHANGE_GROUP` | `SERVER` | `SUCCESS AND FAILURE` | 1 |
+| `SUCCESSFUL_LOGIN_GROUP` | `SERVER` | `SUCCESS AND FAILURE` | 1 |
+
+_This specification is built entirely from action groups, not individual object actions. That is the correct shape for server-scope auditing. The three selected groups cover login success, login failure, and instance-level principal changes, which is a strong baseline for authentication and administrative accountability._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `class_desc` | `SERVER` | ✅ | The events belong to the server scope. | Correct for login and server-principal activity. |
+| `class_desc` | Other values here | ❌ | Unexpected scope for this specification. | Recheck the audit design or query target. |
+| `audited_result` | `SUCCESS AND FAILURE` | ✅ | Both successful and failed outcomes are written. | Best default for security review and incident reconstruction. |
+| `audited_result` | `SUCCESS` | Depends | Only successful operations are captured. | Fine for some change-control cases, but failed-login visibility is lost. |
+| `audited_result` | `FAILURE` | Depends | Only failed operations are captured. | Useful for narrow alerting, but incomplete for accountability. |
+| `is_group` | `1` | ✅ | The entry is an action group. | Expected for server audit specifications. |
+| `is_group` | `0` | ❌ | The entry is not an action group. | That would be unexpected in this server-scope design. |
+
+### Database Audit Specification | database-scope events
+
+Database audit specifications capture database-level actions. Use them for business-schema reads and writes that matter to security or compliance, not for broad indiscriminate full-schema auditing unless retention and volume have been planned.
+
+#### `CREATE DATABASE AUDIT SPECIFICATION` | capture schema reads, writes, and DDL
+
+This creates the database-scope definition for `stoxx`.
+
+*Attach schema-level `SELECT`, `UPDATE`, and DDL events in `stoxx` to the server audit.*
+
+```sql
+USE stoxx;
 GO
 
-CREATE DATABASE AUDIT SPECIFICATION audit_data_access
-FOR SERVER AUDIT project_audit
-ADD (SELECT ON SCHEMA::gold BY public),        -- Track all reads of gold schema
-ADD (INSERT ON SCHEMA::silver BY public),       -- Track all writes to silver
-ADD (UPDATE ON SCHEMA::silver BY public),       -- Track all updates to silver
-ADD (DELETE ON SCHEMA::bronze BY public),       -- Track all deletes from bronze (should be rare)
-ADD (EXECUTE ON SCHEMA::dbo BY public),         -- Track stored procedure execution
-ADD (SCHEMA_OBJECT_CHANGE_GROUP)                -- Track DDL changes (CREATE/ALTER/DROP TABLE)
+CREATE DATABASE AUDIT SPECIFICATION codex_audit_db_spec
+FOR SERVER AUDIT codex_audit_demo
+ADD (SELECT ON SCHEMA::gold BY public),
+ADD (UPDATE ON SCHEMA::gold BY public),
+ADD (SCHEMA_OBJECT_CHANGE_GROUP)
 WITH (STATE = ON);
 GO
-
--- Verify
-SELECT audit_specification_name, is_state_enabled
-FROM sys.database_audit_specifications;
--- Expected:
--- audit_specification_name  is_state_enabled
--- audit_data_access         1
 ```
 
----
+#### `sys.database_audit_specifications` | verify the specification header
 
-## Step 4: Query Audit Logs
+This query checks that the database audit specification exists and is enabled in `stoxx`.
 
-`sys.fn_get_audit_file` is a table-valued function that reads binary `.sqlaudit` files and returns one row per audited event. It accepts a wildcard path (e.g., `/var/opt/mssql/audit/*.sqlaudit`) to read across all rotated files simultaneously. All timestamps in the audit file are stored in UTC — always use `GETUTCDATE()`, not `GETDATE()`, for time comparisons. When a `statement` or `additional_information` field exceeds 4,000 characters, the record is split into multiple rows with the same `event_time`, `action_id`, and `session_id`; use `sequence_number` to reassemble them.
-
-**Permission required:** `CONTROL SERVER` on SQL Server 2019 and earlier; the less-privileged `VIEW SERVER SECURITY AUDIT` is sufficient on SQL Server 2022+.
-
-> [!info] action_id codes
->
-> The `action_id` column is a two-to-four-character identifier for each event type:
->
-> | action_id | Event |
-> |---|---|
-> | `LGIS` | Login Succeeded |
-> | `LGIF` | Login Failed |
-> | `LGO` | Logout |
-> | `SL` | SELECT |
-> | `IN` | INSERT |
-> | `UP` | UPDATE |
-> | `DL` | DELETE |
-> | `EX` | EXECUTE |
-> | `CR` | CREATE |
-> | `AL` | ALTER |
-> | `DR` | DROP |
-> | `G` | GRANT |
-> | `D` | DENY |
-> | `R` | REVOKE |
-
-### sys.fn_get_audit_file | recent audit events (last 1 hour)
-
-Returns the 50 most recent events from all `.sqlaudit` files in the audit directory. The `CASE` expression decodes raw `action_id` codes into human-readable labels for ad-hoc investigation. `client_ip` and `application_name` columns were added in SQL Server 2017 — they will be NULL on earlier versions.
+*Return the specification header row for the database-scope audit definition.*
 
 ```sql
--- Read audit records from the audit files
-SELECT TOP 50
+SELECT
+    name,
+    is_state_enabled,
+    is_session_context_enabled,
+    create_date,
+    modify_date
+FROM sys.database_audit_specifications
+WHERE name = 'codex_audit_db_spec';
+```
+
+| name | is_state_enabled | is_session_context_enabled | create_date | modify_date |
+|---|---:|---:|---|---|
+| `codex_audit_db_spec` | 1 | 0 | 2026-04-08 18:08:06.257 | 2026-04-08 18:08:06.257 |
+
+_The database audit specification is active in `stoxx`. Like the server specification, it is not enriching events with session context. The configuration is narrow and intentional: one schema for reads and writes plus one DDL action group._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `is_state_enabled` | `1` | ✅ | The database audit specification is active. | Matching database-scope actions will be written to the audit. |
+| `is_state_enabled` | `0` | ❌ | The definition exists but is disabled. | Schema activity is not being captured. |
+| `is_session_context_enabled` | `0` | ✅ | Standard audit payload only. | Good baseline when the application does not publish custom session tags. |
+| `is_session_context_enabled` | `1` | Depends | Session-context values are included. | Useful for app correlation if the application populates context consistently. |
+
+#### `sys.database_audit_specification_details` | verify the audited actions
+
+This query lists the individual database-scope actions and groups attached to the specification.
+
+*List the database-level actions that the database audit specification captures.*
+
+```sql
+SELECT
+    dad.audit_action_name,
+    dad.class_desc,
+    dad.audited_result,
+    dad.is_group
+FROM sys.database_audit_specification_details AS dad
+JOIN sys.database_audit_specifications AS das
+    ON dad.database_specification_id = das.database_specification_id
+WHERE das.name = 'codex_audit_db_spec'
+ORDER BY dad.audit_action_name;
+```
+
+| audit_action_name | class_desc | audited_result | is_group |
+|---|---|---|---:|
+| `SCHEMA_OBJECT_CHANGE_GROUP` | `DATABASE` | `SUCCESS AND FAILURE` | 1 |
+| `SELECT` | `SCHEMA` | `SUCCESS AND FAILURE` | 0 |
+| `UPDATE` | `SCHEMA` | `SUCCESS AND FAILURE` | 0 |
+
+_The action mix is deliberate. `SCHEMA_OBJECT_CHANGE_GROUP` captures DDL across the database, while the `SELECT` and `UPDATE` rows are object actions scoped to the `gold` schema. `is_group = 0` on `SELECT` and `UPDATE` is correct because they are direct actions, not predefined action groups._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `class_desc` | `DATABASE` | ✅ for `SCHEMA_OBJECT_CHANGE_GROUP` | A database-scope action group. | Good for DDL auditing across the database. |
+| `class_desc` | `SCHEMA` | ✅ for `SELECT` / `UPDATE` | An action bound to a schema-scoped securable. | Good when the audit should follow schema boundaries. |
+| `audited_result` | `SUCCESS AND FAILURE` | ✅ | Both successful and failed attempts are captured. | Better forensic coverage than success-only or failure-only capture. |
+| `is_group` | `1` | ✅ for `SCHEMA_OBJECT_CHANGE_GROUP` | The row is an action group. | Expected for predefined grouped events. |
+| `is_group` | `0` | ✅ for `SELECT` / `UPDATE` | The row is a direct action on a securable. | Expected for schema/object-level DML actions. |
+
+## Read And Triage Audit Files
+
+Once the audit is running, the most important operational skill is reading the file stream back into T-SQL and turning it into a security signal. `sys.fn_get_audit_file` reads one or more `.sqlaudit` files and returns one row per event.
+
+### `sys.fn_get_audit_file` | recent security-relevant events
+
+A raw audit stream can be noisy. This query filters to the event types that most often matter first during triage: failed logins, audited `SELECT` activity, and audit state changes.
+
+#### `sys.fn_get_audit_file` | inspect recent failed logins and audited data access
+
+This query reads the Linux audit files directly and returns only recent security-relevant events.
+
+*Read recent failed-logon, audited `SELECT`, and audit-state events from the `.sqlaudit` files.*
+
+```sql
+SELECT TOP 15
     event_time,
     action_id,
-    CASE action_id
-        WHEN 'LGIS' THEN 'Login Succeeded'
-        WHEN 'LGIF' THEN 'Login Failed'
-        WHEN 'G '   THEN 'GRANT'
-        WHEN 'D '   THEN 'DENY'
-        WHEN 'R '   THEN 'REVOKE'
-        WHEN 'SL'   THEN 'SELECT'
-        WHEN 'IN'   THEN 'INSERT'
-        WHEN 'UP'   THEN 'UPDATE'
-        WHEN 'DL'   THEN 'DELETE'
-        WHEN 'EX'   THEN 'EXECUTE'
-        WHEN 'CR'   THEN 'CREATE'
-        WHEN 'AL'   THEN 'ALTER'
-        WHEN 'DR'   THEN 'DROP'
-        ELSE action_id
-    END AS action_desc,
     succeeded,
     server_principal_name,
     database_name,
     schema_name,
     object_name,
-    statement,
-    client_ip
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE event_time > DATEADD(HOUR, -1, GETUTCDATE())
+    LEFT(statement, 160) AS statement_prefix,
+    client_ip,
+    application_name
+FROM sys.fn_get_audit_file('/var/opt/mssql/log/audit/*.sqlaudit', DEFAULT, DEFAULT)
+WHERE action_id IN ('LGIF', 'SL  ', 'AUSC')
 ORDER BY event_time DESC;
 ```
 
-### sys.fn_get_audit_file | event summary by action (24 hours)
+| event_time | action_id | succeeded | server_principal_name | database_name | schema_name | object_name | statement_prefix | client_ip | application_name |
+|---|---|---:|---|---|---|---|---|---|---|
+| 2026-04-08 18:08:14.4937849 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.4514637 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.4050870 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.3586673 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.3078673 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.2656471 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.2193101 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.1770820 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.1347541 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.0880756 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:14.0416924 | `LGIF` | 0 | `sa` |  |  |  | `Login failed for user 'sa'. Reason: Password did not match that for the login provided. [CLIENT: 172.19.0.1]` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:08:13.9910950 | `SL  ` | 1 | `sa` | `stoxx` | `gold` | `index_performance` | `SELECT TOP 1 * FROM gold.index_performance` | `172.19.0.1` | `SQLCMD` |
+| 2026-04-08 18:07:51.4123871 | `AUSC` | 1 | `sa` |  |  |  |  | `172.19.0.1` | `SQLCMD` |
 
-Groups events by `action_id` over the last 24 hours to identify unusual activity patterns. In a normal analytics workload, `SL` (SELECT) dominates with a high count; unexpected `DR` (DROP) or `AL` (ALTER) events outside a deployment window, or a spike in `LGIF` (Login Failed), warrant immediate investigation.
+_The audit is capturing exactly the kinds of events the note is designed to expose. Eleven failed `sa` logins from one client IP appear as distinct `LGIF` rows, one audited `SELECT` against `gold.index_performance` appears as `SL  `, and one audit state-change event appears as `AUSC`. The important point is not just that rows exist, but that the event stream is attributable by time, principal, client IP, and application._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `action_id` | `LGIF` | ✅ to detect attacks | Login failed. | One of the highest-value security signals in a SQL audit stream. |
+| `action_id` | `LGIS` | Depends | Login succeeded. | Useful for correlation and account-usage review, but often high-volume. |
+| `action_id` | `SL  ` | Depends | Audited `SELECT`. | Valuable for sensitive-schema or compliance access review. |
+| `action_id` | `AUSC` | Depends | Audit state change. | Review immediately; it reflects audit configuration or runtime changes. |
+| `succeeded` | `0` | ✅ for failed-login review | The audited operation failed. | Expected for `LGIF`; repeated rows should be triaged. |
+| `succeeded` | `1` | ✅ for successful access review | The audited operation succeeded. | Good for accountability, especially around sensitive reads and DDL. |
+| `client_ip` | Repeated single IP | Depends | Many events came from one source. | Good for correlation, suspicious when paired with repeated failures. |
+| `application_name` | Expected application | ✅ | The client identified itself consistently. | Helps separate application traffic from admin or scripted access. |
+| `application_name` | Unexpected tool or blank | ❌ | The source is unusual or not tagged well. | Cross-check login, host, and statement text. |
+
+### `sys.fn_get_audit_file` | event summary by action
+
+This summary query collapses the raw event stream into per-action counts and time ranges.
+
+#### `sys.fn_get_audit_file` | summarize the recent audit stream
+
+This query groups recent audit events by `action_id` so the dominant security signals stand out immediately.
+
+*Summarize recent audit activity by action code, count, principal spread, and time range.*
 
 ```sql
--- Summary: events per action in last 24 hours
 SELECT
     action_id,
     COUNT(*) AS event_count,
-    COUNT(DISTINCT server_principal_name) AS distinct_users,
-    MIN(event_time) AS earliest,
-    MAX(event_time) AS latest
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE event_time > DATEADD(DAY, -1, GETUTCDATE())
+    COUNT(DISTINCT server_principal_name) AS distinct_principals,
+    MIN(event_time) AS earliest_event,
+    MAX(event_time) AS latest_event
+FROM sys.fn_get_audit_file('/var/opt/mssql/log/audit/*.sqlaudit', DEFAULT, DEFAULT)
+WHERE event_time > DATEADD(HOUR, -2, GETUTCDATE())
 GROUP BY action_id
-ORDER BY event_count DESC;
--- Expected output (example):
--- action_id  event_count  distinct_users  earliest                    latest
--- SL         12450        3               2026-03-09 10:00:00.000     2026-03-10 09:59:00.000
--- LGIS       287          4               2026-03-09 10:00:00.000     2026-03-10 09:58:00.000
--- EX         156          2               2026-03-09 10:01:00.000     2026-03-10 09:55:00.000
--- IN         89           1               2026-03-09 17:00:00.000     2026-03-10 09:00:00.000
--- LGIF       3            1               2026-03-09 14:22:00.000     2026-03-09 14:22:05.000
+ORDER BY event_count DESC, action_id;
 ```
 
----
+| action_id | event_count | distinct_principals | earliest_event | latest_event |
+|---|---:|---:|---|---|
+| `LGIS` | 108 | 2 | 2026-04-08 18:08:06.2576386 | 2026-04-08 18:19:06.8057742 |
+| `LGIF` | 11 | 1 | 2026-04-08 18:08:14.0416924 | 2026-04-08 18:08:14.4937849 |
+| `AUSC` | 1 | 1 | 2026-04-08 18:07:51.4123871 | 2026-04-08 18:07:51.4123871 |
+| `SL  ` | 1 | 1 | 2026-04-08 18:08:13.9910950 | 2026-04-08 18:08:13.9910950 |
 
-## Step 5: Detect Brute-Force Login Attacks
+_The stream is dominated by successful logins, which is common for a login-heavy lab or automation environment, but the 11 failed-login events are still prominent and easy to isolate. `distinct_principals = 1` for `LGIF` narrows the burst to a single targeted login name rather than broad credential stuffing across many logins._
 
-Failed login events (`action_id = 'LGIF'`) are recorded by `FAILED_LOGIN_GROUP` in the Server Audit Specification. A single failed login typically means a forgotten password; more than 10 failures from the same IP within one hour is a reliable threshold for distinguishing automated scanning from human error. Credential stuffing attacks differ from pure brute force: instead of hammering one account repeatedly, they try many different username/password combinations sourced from prior data breaches. The distinguishing signal is the number of distinct usernames attempted from a single IP.
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `event_count` | Low steady count | ✅ | The event type occurs occasionally. | Usually normal operational background. |
+| `event_count` | Sudden burst | ❌ | Many events of the same type arrived quickly. | Investigate source, principal, and time clustering. |
+| `distinct_principals` | `1` on `LGIF` | Depends | A single login name is being targeted. | Typical password guessing against a known privileged account. |
+| `distinct_principals` | Many on `LGIF` | ❌ | Many usernames were tried. | Stronger indicator of credential stuffing or scripted enumeration. |
+| `earliest_event` / `latest_event` | Tight time window | ❌ for failures | Events are clustered tightly. | Repeated failures over seconds or minutes are usually automation, not user typo. |
 
-### Brute-force detection | 10+ failed logins from same IP in 1 hour
+## Detect Failed-Login Bursts
 
-Groups `LGIF` events by `client_ip` over a one-hour rolling window. The `HAVING COUNT(*) > 10` threshold filters out incidental failures. `attack_duration_seconds` reveals the pace — 47 attempts spread over 46 seconds indicates an automated tool, not a human user typing the wrong password.
+The most operationally useful first alert from SQL Server Audit is repeated failed logins from one IP. This does not prove compromise, but it is a strong signal for brute-force activity, misconfigured secrets, or crashed credential rotation.
+
+### `sys.fn_get_audit_file` | repeated failed logins from one client IP
+
+This query groups failed-login rows by source IP and highlights bursts above a chosen threshold.
+
+#### `sys.fn_get_audit_file` | detect failed-login bursts
+
+This reads failed-login events from the audit files and flags any client IP with more than ten failures in the last two hours.
+
+*Aggregate failed-logon audit events by client IP and isolate suspicious bursts.*
 
 ```sql
--- Alert on brute-force attempts: >10 failed logins from same IP in 1 hour
 SELECT
     client_ip,
     COUNT(*) AS failed_attempts,
@@ -322,239 +470,78 @@ SELECT
     MAX(event_time) AS last_attempt,
     DATEDIFF(SECOND, MIN(event_time), MAX(event_time)) AS attack_duration_seconds,
     COUNT(DISTINCT server_principal_name) AS distinct_logins_tried
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id = 'LGIF'  -- Login Failed
-  AND event_time > DATEADD(HOUR, -1, GETUTCDATE())
+FROM sys.fn_get_audit_file('/var/opt/mssql/log/audit/*.sqlaudit', DEFAULT, DEFAULT)
+WHERE action_id = 'LGIF'
+  AND event_time > DATEADD(HOUR, -2, GETUTCDATE())
 GROUP BY client_ip
 HAVING COUNT(*) > 10
 ORDER BY failed_attempts DESC;
--- Expected output (during attack):
--- client_ip     failed_attempts  first_attempt               attack_duration_seconds  distinct_logins_tried
--- 10.0.2.55     47               2026-03-10 09:30:12.000     46                       5
 ```
 
-### Credential stuffing detection | multiple usernames from same IP
+| client_ip | failed_attempts | first_attempt | last_attempt | attack_duration_seconds | distinct_logins_tried |
+|---|---:|---|---|---:|---:|
+| `172.19.0.1` | 11 | 2026-04-08 18:08:14.0416924 | 2026-04-08 18:08:14.4937849 | 0 | 1 |
 
-Credential stuffing uses lists of username/password pairs harvested from prior breaches to replay against new targets. Unlike brute force (many attempts against one account), stuffing tries many different usernames. `HAVING COUNT(DISTINCT server_principal_name) > 3` flags IPs attempting more than three different login names — a strong indicator of automated credential replay rather than a legitimate user struggling with one password.
+_This is a clear burst. One client IP generated 11 failed logins against one principal in well under a second, which is consistent with scripted retry behavior or a broken secret rather than a human user making mistakes interactively._
 
-```sql
--- Detect credential stuffing: multiple different usernames from same IP
-SELECT
-    client_ip,
-    STRING_AGG(DISTINCT server_principal_name, ', ') AS attempted_logins,
-    COUNT(*) AS total_attempts
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id = 'LGIF'
-  AND event_time > DATEADD(HOUR, -1, GETUTCDATE())
-GROUP BY client_ip
-HAVING COUNT(DISTINCT server_principal_name) > 3  -- Trying more than 3 different usernames = suspicious
-ORDER BY total_attempts DESC;
-```
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `failed_attempts` | `1-3` | Depends | Small number of failures. | Often user error or one-off bad secret. |
+| `failed_attempts` | `4-10` | Depends | Repeated failures. | Review if the source is privileged or frequent. |
+| `failed_attempts` | `> 10` in a short window | ❌ | Burst of failures. | Treat as a security or credential-rotation incident until explained. |
+| `attack_duration_seconds` | Large window | Depends | Failures are spread over time. | Could be intermittent stale credentials. |
+| `attack_duration_seconds` | `0-5` seconds with many failures | ❌ | Highly compressed burst. | Stronger indicator of scripted retries or brute-force behavior. |
+| `distinct_logins_tried` | `1` | Depends | One login name was targeted. | Password guessing against a known account. |
+| `distinct_logins_tried` | `> 1` | ❌ | Multiple login names were tried. | More consistent with credential stuffing or account enumeration. |
 
----
+## Operational Integration
 
-## Step 6: GCP Cloud Logging Integration
+### Linux | audit files on disk
 
-Forward SQL Server error log and audit files to Cloud Logging for centralized monitoring, alerting, and long-term retention.
+Security logging is only useful if the storage path and retention behavior are observable outside SQL Server as well.
 
-```yaml
-# /etc/google-cloud-ops-agent/config.yaml
-# Add these sections to the existing Ops Agent config
+#### `ls -lh` | inspect the Linux audit directory
 
-logging:
-  receivers:
-    sqlserver_errorlog:
-      type: files
-      include_paths:
-        - /var/opt/mssql/log/errorlog
-        - /var/opt/mssql/log/errorlog.*
-      record_log_name: sqlserver_errorlog
-      wildcard_refresh_interval: 60s
-    sqlserver_audit:
-      type: files
-      include_paths:
-        - /var/opt/mssql/audit/*.sqlaudit
-      record_log_name: sqlserver_audit
-      wildcard_refresh_interval: 30s
-  service:
-    pipelines:
-      sql_pipeline:
-        receivers:
-          - sqlserver_errorlog
-          - sqlserver_audit
-```
+This confirms that the audit file exists on disk and shows its current size.
+
+*Inspect the Linux audit directory and verify that the `.sqlaudit` file exists on disk.*
 
 ```bash
-# Restart Ops Agent to apply
-sudo systemctl restart google-cloud-ops-agent
-
-# Verify logs are flowing to Cloud Logging
-gcloud logging read 'resource.type="gce_instance" AND logName:"sqlserver_errorlog"' \
-  --limit=5 \
-  --format="table(timestamp, jsonPayload.message)"
-# Expected: recent SQL Server error log entries
+docker exec stoxx-db bash -lc "ls -lh /var/opt/mssql/log/audit || true"
 ```
 
----
-
-## Step 7: Create Log-Based Alerts and BigQuery Sink
-
-Route audit logs to BigQuery for long-term SQL-based analysis and create a Cloud Monitoring alert policy for failed login spikes. The BigQuery sink generates a new table per day in the target dataset. The sink's service account (auto-generated by GCP) must be granted `roles/bigquery.dataEditor` on the dataset before logs will flow — the sink creation itself does not grant this permission automatically.
-
-```bash
-# Sink audit logs to BigQuery for long-term analysis
-gcloud logging sinks create sql-audit-sink \
-  bigquery.googleapis.com/projects/data-platform-prod/datasets/security_logs \
-  --log-filter='resource.type="gce_instance" AND logName:"sqlserver_audit"'
-
-# Get the sink's service account (needed for BigQuery permissions)
-gcloud logging sinks describe sql-audit-sink --format="value(writerIdentity)"
-# Expected: serviceAccount:p123456789-123456@gcp-sa-logging.iam.gserviceaccount.com
-
-# Grant the sink SA write access to the BigQuery dataset
-bq add-iam-policy-binding \
-  --member="serviceAccount:p123456789-123456@gcp-sa-logging.iam.gserviceaccount.com" \
-  --role="roles/bigquery.dataEditor" \
-  data-platform-prod:security_logs
-
-# Create an alert policy for failed login spikes
-gcloud monitoring policies create \
-  --display-name="SQL Server Failed Logins Spike" \
-  --condition-display-name="Failed logins > 10 in 5 min" \
-  --condition-filter='resource.type="gce_instance" AND metric.type="logging.googleapis.com/user/sqlserver_failed_logins"' \
-  --condition-threshold-value=10 \
-  --condition-threshold-duration=300s \
-  --notification-channels="projects/data-platform-prod/notificationChannels/CHANNEL_ID" \
-  --combiner=OR
+```text
+total 412K
+-rw-r----- 1 mssql mssql 412K Apr  8 18:19 codex_audit_demo_BC44E37C-FB5B-4A03-83B0-08608A2E7178_0_134201452714120000.sqlaudit
 ```
 
----
+_The audit file exists on disk, is owned by the `mssql` service account, and has grown to 412 KB. That matches the T-SQL runtime verification and confirms that the audit is not only configured inside metadata but is producing filesystem artifacts that a shipper or backup policy can act on._
 
-## Step 8: Quarterly Security Review
+### GCP | forward audit files externally
 
-Run this review every quarter (set a recurring calendar reminder):
+A production audit should not rely on local disk alone. Forward the Linux audit directory into a centralized logging system so investigators can search and alert on events even if the VM is later unavailable.
 
-```sql
--- ============================================================
--- QUARTERLY SECURITY REVIEW SCRIPT
--- Run as sysadmin, document results
--- ============================================================
+#### Ops Agent or log shipper | forward `.sqlaudit` files into centralized logging
 
--- 1. Review all SQL logins and their status
-PRINT '=== 1. SQL Server Logins ==='
-SELECT
-    name,
-    type_desc,
-    is_disabled,
-    create_date,
-    modify_date,
-    LOGINPROPERTY(name, 'PasswordLastSetTime') AS password_last_set,
-    LOGINPROPERTY(name, 'DaysUntilExpiration') AS days_until_expiry,
-    LOGINPROPERTY(name, 'IsMustChange') AS must_change_password
-FROM sys.server_principals
-WHERE type IN ('S', 'U', 'G')
-ORDER BY create_date;
+On GCP, the practical pattern is:
 
--- 2. Check for orphaned users (users without matching logins)
-PRINT '=== 2. Orphaned Users ==='
-USE analytics_db;
-SELECT dp.name AS user_name, dp.type_desc, dp.create_date
-FROM sys.database_principals dp
-LEFT JOIN sys.server_principals sp ON dp.sid = sp.sid
-WHERE dp.type IN ('S', 'U')
-  AND sp.sid IS NULL
-  AND dp.name NOT IN ('dbo', 'guest', 'INFORMATION_SCHEMA', 'sys');
--- Expected: empty result set (no orphaned users)
+- store the SQL Server audit locally on a dedicated path
+- ship the files with an agent or collector running on the host
+- retain parsed or archived copies outside the VM
+- build alerts on repeated `LGIF`, audit-stop events, and server-principal changes
 
--- 3. Review server role memberships
-PRINT '=== 3. Server Role Memberships ==='
-SELECT
-    r.name AS role_name,
-    m.name AS member_name,
-    m.type_desc
-FROM sys.server_role_members srm
-JOIN sys.server_principals r ON srm.role_principal_id = r.principal_id
-JOIN sys.server_principals m ON srm.member_principal_id = m.principal_id
-ORDER BY r.name, m.name;
--- Expected: only necessary sysadmin members (ideally just sa, which should be disabled)
+If the external platform cannot parse `.sqlaudit` natively, convert and summarize from SQL Server first, or ship the binary files as evidence while using `sys.fn_get_audit_file`-based jobs to produce structured alert rows.
 
--- 4. Review database-level permissions
-PRINT '=== 4. Database Permissions ==='
-USE analytics_db;
-SELECT
-    dp.name AS principal_name,
-    dp.type_desc,
-    perm.permission_name,
-    perm.state_desc,
-    SCHEMA_NAME(o.schema_id) AS schema_name,
-    o.name AS object_name,
-    o.type_desc AS object_type
-FROM sys.database_permissions perm
-JOIN sys.database_principals dp ON perm.grantee_principal_id = dp.principal_id
-LEFT JOIN sys.objects o ON perm.major_id = o.object_id
-WHERE dp.name NOT IN ('dbo', 'guest', 'public', 'INFORMATION_SCHEMA', 'sys')
-ORDER BY dp.name, schema_name, object_name;
+## Recommendations
 
--- 5. Verify TDE is still active and certificate is valid
-PRINT '=== 5. TDE Status ==='
-SELECT
-    db.name,
-    db.is_encrypted,
-    c.name AS cert_name,
-    c.expiry_date AS cert_expiry
-FROM sys.databases db
-LEFT JOIN sys.dm_database_encryption_keys dek ON db.database_id = dek.database_id
-LEFT JOIN sys.certificates c ON dek.encryptor_thumbprint = c.thumbprint
-WHERE db.name = 'analytics_db';
-```
-
-> [!tip] Set a Quarterly Calendar Reminder
->
-> Security audits are only useful if they're done regularly. Create a recurring calendar event for "SQL Server Quarterly Security Review" with a link to this runbook and a template for documenting findings.
-
----
-
-## Audit File Management
-
-SQL Server audit files (`.sqlaudit`) are binary, append-only records written by the SQL Server process (running as `mssql` on Linux). Files rotate automatically when the current file reaches `MAXSIZE` (100 MB in this configuration). When `MAX_ROLLOVER_FILES` is reached (10 files ≈ 1 GB total), the oldest file is deleted automatically. SQL Server holds an exclusive write lock on the current active file — to delete or archive files manually, stop the audit first with `STATE = OFF`. Any events generated while the audit is stopped are not captured when `ON_FAILURE = CONTINUE`.
-
-### sys.server_audits | check audit status and file path
-
-Confirms the audit is running and shows the active file path. `status_desc` should read `STARTED`; a value of `STOPPED` means events are not being collected. Note: `sys.server_audits` and `sys.dm_server_audit_status` are related but distinct views — the DMV (`sys.dm_server_audit_status`) exposes the current buffer queue depth and I/O statistics, while `sys.server_audits` shows the configuration.
-
-```sql
-SELECT name, audit_file_path, status_desc
-FROM sys.server_audits;
-```
-
-### ls -lh | list audit files on disk
-
-Lists `.sqlaudit` files in the audit directory and their sizes. Files are owned by the `mssql` system account with `660` permissions — only the SQL Server service and members of the `mssql` group can read them directly from disk. The current active file (the one receiving new events) is held open by SQL Server and cannot be deleted while the audit is running.
-
-```bash
-ls -lh /var/opt/mssql/audit/
-# Output:
-# -rw-rw---- 1 mssql mssql 98M Mar 10 09:45 project_audit_20260310.sqlaudit
-# -rw-rw---- 1 mssql mssql 100M Mar 09 00:00 project_audit_20260309.sqlaudit
-```
-
-### ALTER SERVER AUDIT | stop and restart audit for maintenance
-
-Stopping the audit flushes all buffered events from the in-memory `QUEUE_DELAY` queue to the file before closing it. Use this before archiving or deleting old audit files. When the audit is restarted, SQL Server opens a new `.sqlaudit` file. Events generated between `STATE = OFF` and `STATE = ON` are not captured when `ON_FAILURE = CONTINUE`.
-
-```sql
--- Stop temporarily (existing events are flushed to file first)
-ALTER SERVER AUDIT project_audit WITH (STATE = OFF);
-
--- Restart
-ALTER SERVER AUDIT project_audit WITH (STATE = ON);
-```
-
----
+- Audit logins and server-principal changes on every production instance. Those are low-volume, high-value events.
+- Audit data access selectively. Auditing every `SELECT` on every schema can create large volumes very quickly.
+- Put the audit path on storage that is monitored for free space and permission drift.
+- Treat `ON_FAILURE = SHUTDOWN` as a governance decision that must be explicitly justified.
+- Forward audit artifacts off-host. A local-only audit is weaker against host compromise and instance loss.
+- Review `LGIF`, `AUSC`, and principal-change events regularly even if no alert fired.
 
 ## Related
 
-- [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — encryption at rest that complements audit logging for compliance
-- [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) — login hardening, TLS, and firewall rules
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — instance settings including security configurations
-- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — Phase 11 security quick check using sysadmin membership and guest access queries
+- [[sql-server-authentication]]
+- [[tde-encryption]]

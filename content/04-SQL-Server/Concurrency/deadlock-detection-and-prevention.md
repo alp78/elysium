@@ -2,7 +2,7 @@
 title: "Deadlock Detection and Prevention"
 tags: [sql-server, tsql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
-description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."
+description: "Production-focused SQL Server deadlock guide."
 parent: "[[domain-concurrency-and-security]]"
 links:
   - "[[sql-server-authentication]]"
@@ -11,392 +11,441 @@ links:
   - "[[blocking-and-locking]]"
   - "[[race-conditions]]"
 created: 2026-03-22
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
 # Deadlock Detection and Prevention
 
-> [!quote]
-> "The order in which locks are acquired is the single most important factor in deadlock prevention."
->
-> — **Jim Gray**, *Transaction Processing: Concepts and Techniques* (1992)
+SQL Server resolves deadlocks automatically by choosing a victim and rolling back that transaction with error `1205`.
 
-A deadlock occurs when two or more sessions each hold a lock that the other needs, creating a circular wait. Neither session can proceed because each is waiting for the other to release its lock. SQL Server's background **lock monitor thread** continuously checks for deadlocks and resolves them by killing the session with the lowest estimated rollback cost (the "deadlock victim"), which receives error 1205.
+## What Makes A Deadlock Different From Blocking
 
----
+Blocking is linear: one session waits for another to finish. A deadlock is circular: session A needs a lock held by session B, while session B needs a lock held by session A. That cycle cannot resolve without intervention.
 
-## Understanding Deadlocks
-
-A deadlock is the most severe form of lock contention. Unlike regular blocking (where one session simply waits for another to finish), a deadlock creates a cycle that can never resolve on its own — SQL Server must intervene.
-
-### What is a deadlock?
-
-In the simplest case, two sessions each hold a lock that the other needs:
-
-```text
-Session A: holds EXCLUSIVE lock on Table1, waiting for lock on Table2
-Session B: holds EXCLUSIVE lock on Table2, waiting for lock on Table1
-→ Neither can continue → deadlock
+```mermaid
+flowchart LR
+    A[Session 55<br/>holds lock on deadlock_demo_a] --> B[Needs lock on deadlock_demo_b]
+    C[Session 56<br/>holds lock on deadlock_demo_b] --> D[Needs lock on deadlock_demo_a]
+    B --> C
+    D --> A
 ```
 
-The lock monitor thread detects this circular wait and chooses one session as the victim. The victim's transaction is rolled back (releasing all its locks), and the victim receives error 1205. The surviving session proceeds normally — it receives no notification that a deadlock occurred.
+## Production Detection Sequence
 
-```text
-Msg 1205, Level 13, State 51
-Transaction (Process ID XX) was deadlocked on lock resources with another
-process and has been chosen as the deadlock victim. Rerun the transaction.
+```mermaid
+flowchart TD
+    A[Deadlock error 1205 or stalled workload] --> B{Do you already have a deadlock graph?}
+    B --> Y1[YES]
+    B --> N1[NO]
+    Y1 --> C[Identify victim, survivor, and contested objects]
+    N1 --> D[Check system_health and persistent XE capture]
+    D --> E{Was a deadlock captured?}
+    E --> Y2[YES]
+    E --> N2[NO]
+    Y2 --> F[Fix access order, access path, or transaction scope]
+    N2 --> G[Create persistent deadlock XE session]
+
+    classDef yes fill:#1f3b2d,stroke:#73d13d,color:#c0caf5;
+    classDef no fill:#4a1f24,stroke:#db4b4b,color:#c0caf5;
+    class Y1,Y2 yes;
+    class N1,N2 no;
 ```
 
-For Python retry patterns around error 1205, see [08_py_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/Python/08_py_errorhandling); for C# `SqlException` retry wrappers, see [08_cs_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/08_cs_errorhandling).
+## Quick Health Check
 
-> [!tip] Blocking vs Deadlock
+The fastest production check is to count how many deadlock reports are already present in the built-in `system_health` Extended Events session.
+
+> [!info]-
+> This query locates the `system_health` event-file target and counts all captured `xml_deadlock_report` events.
 >
-> **Blocking**: Session A holds a lock, Session B waits. One-way dependency. B eventually proceeds when A commits. This is normal and expected — see [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking).
-> **Deadlock**: Session A waits for B, and B waits for A. Circular dependency. Neither can ever proceed. SQL Server must intervene and kill one.
+> - `system_health` exists by default on modern SQL Server builds and usually captures deadlocks without extra setup.
+> - `deadlock_event_count` is cumulative across the files that still exist on disk, not a rate per second and not a per-database counter.
+> - This tells you whether deadlocks have happened, but not yet which queries or objects were involved.
 
-### Deadlock monitor thread behavior
+```sql
+DECLARE @path nvarchar(4000);
 
-The lock monitor thread runs in the background and performs periodic deadlock searches. The search interval is dynamic:
+SELECT @path = REPLACE(
+    CAST(t.target_data AS xml).value('(EventFileTarget/File/@name)[1]', 'nvarchar(4000)'),
+    '.xel',
+    '*.xel'
+)
+FROM sys.dm_xe_sessions AS s
+JOIN sys.dm_xe_session_targets AS t
+    ON s.address = t.event_session_address
+WHERE s.name = 'system_health'
+  AND t.target_name = 'event_file';
 
-1. **Default interval:** 5 seconds between searches.
-2. **After a deadlock is detected:** The interval drops to as low as **100 milliseconds**, depending on the frequency of deadlocks.
-3. **When deadlocks stop occurring:** The interval gradually increases back to 5 seconds.
-4. **Immediate trigger:** After a deadlock is detected, the very next lock wait triggers a deadlock search immediately rather than waiting for the timer.
+SELECT COUNT(*) AS deadlock_event_count
+FROM sys.fn_xe_file_target_read_file(@path, NULL, NULL, NULL)
+WHERE object_name = 'xml_deadlock_report';
+```
 
-### Deadlock victim selection
+| deadlock_event_count |
+|---:|
+| 2 |
 
-SQL Server selects the victim using these criteria, in order:
+*This instance already has two captured deadlock graphs in `system_health`. That is enough to do real forensic analysis without waiting for the next deadlock.*
 
-1. **Deadlock priority:** The session with the lower `DEADLOCK_PRIORITY` value is killed. Priority ranges from -10 (most likely to be killed) to 10 (least likely). `LOW` maps to -5, `NORMAL` to 0 (default), `HIGH` to 5.
-2. **Rollback cost:** If both sessions have the same priority, the session with the fewest transaction log bytes written (cheapest to roll back) is killed.
-3. **Random:** If priority and cost are equal, the victim is chosen randomly.
+## Recent Deadlocks From `system_health`
+
+The next step is to extract a compact summary of the latest deadlock reports so you can see the victim, the sessions involved, and the contested objects.
+
+> [!info]-
+> This query reads the most recent `xml_deadlock_report` events from `system_health` and extracts a compact deadlock summary.
+>
+> - `utc_time` is when the deadlock event was recorded.
+> - `victim_process_id` is the process id from the deadlock XML, not necessarily the same as the SQL Server `session_id`.
+> - `process1_spid` and `process2_spid` are the SQL Server sessions that were involved.
+> - `resource1_object` and `resource2_object` identify the tables or indexes named in the resource list.
+
+```sql
+DECLARE @path nvarchar(4000);
+
+SELECT @path = REPLACE(
+    CAST(t.target_data AS xml).value('(EventFileTarget/File/@name)[1]', 'nvarchar(4000)'),
+    '.xel',
+    '*.xel'
+)
+FROM sys.dm_xe_sessions AS s
+JOIN sys.dm_xe_session_targets AS t
+    ON s.address = t.event_session_address
+WHERE s.name = 'system_health'
+  AND t.target_name = 'event_file';
+
+;WITH src AS (
+    SELECT TOP (5)
+        CAST(event_data AS xml) AS event_xml,
+        file_name,
+        file_offset
+    FROM sys.fn_xe_file_target_read_file(@path, NULL, NULL, NULL)
+    WHERE object_name = 'xml_deadlock_report'
+    ORDER BY file_name DESC, file_offset DESC
+)
+SELECT
+    event_xml.value('(event/@timestamp)[1]', 'datetime2') AS utc_time,
+    event_xml.value('(event/data/value/deadlock/victim-list/victimProcess/@id)[1]', 'nvarchar(100)') AS victim_process_id,
+    event_xml.value('(event/data/value/deadlock/process-list/process[1]/@spid)[1]', 'int') AS process1_spid,
+    event_xml.value('(event/data/value/deadlock/process-list/process[2]/@spid)[1]', 'int') AS process2_spid,
+    event_xml.value('(event/data/value/deadlock/resource-list/*[1]/@objectname)[1]', 'nvarchar(256)') AS resource1_object,
+    event_xml.value('(event/data/value/deadlock/resource-list/*[2]/@objectname)[1]', 'nvarchar(256)') AS resource2_object
+FROM src
+ORDER BY utc_time DESC;
+```
+
+| utc_time | victim_process_id | process1_spid | process2_spid | resource1_object | resource2_object |
+|---|---|---:|---:|---|---|
+| 2026-04-08 17:40:24.9920000 | processf00070ca8 | 55 | 56 | stoxx.dbo.deadlock_demo_b | stoxx.dbo.deadlock_demo_a |
+| 2026-04-08 11:18:05.8550000 | processf000688c8 | 53 | 56 | stoxx.dbo.dm_exec_requests_demo | stoxx.dbo.dm_exec_requests_demo |
+
+*The newest deadlock is the controlled two-table demo: session `55` and session `56` deadlocked while touching `deadlock_demo_a` and `deadlock_demo_b` in opposite order. The older event shows a separate deadlock on `dm_exec_requests_demo`, which confirms this instance has already seen more than one concurrency pattern.*
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `utc_time` | Recent timestamp | Depends | When the deadlock occurred. | Correlate with deployment windows, job schedules, and app logs. |
+| `victim_process_id` | Non-null process id | Neutral | Deadlock XML process identifier. | Use it to map the victim inside the full graph. |
+| `process1_spid` / `process2_spid` | Positive session ids | Depends | SQL Server sessions involved in the cycle. | These are the sessions to correlate with logs or captured SQL text. |
+| `resource*_object` | Same object on both rows | &#10060; when unexpected | Both sides contended on the same table or index. | Look for conflicting access order or hot-key activity. |
+| `resource*_object` | Different objects | Depends | The cycle crossed tables or indexes. | Ordered object access is often the first fix to test. |
+
+## Latest Deadlock Graph Summary
+
+For root-cause work, you need more than a count. You need the victim, the number of processes in the cycle, and the exact resources each side waited on.
+
+> [!info]-
+> This query extracts the latest deadlock report from `system_health` and summarizes the victim, process count, resource count, and wait resources.
+>
+> - `victim_process_id` identifies the process chosen for rollback.
+> - `process_count` and `resource_count` show how large the graph is.
+> - `process1_waitresource` and `process2_waitresource` reveal the exact key or page each process was waiting for.
+> - In production, this compact summary is often enough to identify a lock-order problem before opening the full XML graph.
+
+```sql
+DECLARE @path nvarchar(4000);
+
+SELECT @path = REPLACE(
+    CAST(t.target_data AS xml).value('(EventFileTarget/File/@name)[1]', 'nvarchar(4000)'),
+    '.xel',
+    '*.xel'
+)
+FROM sys.dm_xe_sessions AS s
+JOIN sys.dm_xe_session_targets AS t
+    ON s.address = t.event_session_address
+WHERE s.name = 'system_health'
+  AND t.target_name = 'event_file';
+
+;WITH src AS (
+    SELECT TOP (1)
+        CAST(event_data AS xml) AS event_xml
+    FROM sys.fn_xe_file_target_read_file(@path, NULL, NULL, NULL)
+    WHERE object_name = 'xml_deadlock_report'
+    ORDER BY file_name DESC, file_offset DESC
+)
+SELECT
+    event_xml.value('(event/@timestamp)[1]', 'datetime2') AS utc_time,
+    event_xml.value('(event/data/value/deadlock/victim-list/victimProcess/@id)[1]', 'nvarchar(100)') AS victim_process_id,
+    event_xml.value('count((event/data/value/deadlock/process-list/process))', 'int') AS process_count,
+    event_xml.value('count((event/data/value/deadlock/resource-list/*))', 'int') AS resource_count,
+    event_xml.value('(event/data/value/deadlock/process-list/process[1]/@spid)[1]', 'int') AS process1_spid,
+    event_xml.value('(event/data/value/deadlock/process-list/process[1]/@waitresource)[1]', 'nvarchar(400)') AS process1_waitresource,
+    event_xml.value('(event/data/value/deadlock/process-list/process[2]/@spid)[1]', 'int') AS process2_spid,
+    event_xml.value('(event/data/value/deadlock/process-list/process[2]/@waitresource)[1]', 'nvarchar(400)') AS process2_waitresource
+FROM src;
+```
+
+| utc_time | victim_process_id | process_count | resource_count | process1_spid | process1_waitresource | process2_spid | process2_waitresource |
+|---|---|---:|---:|---:|---|---:|---|
+| 2026-04-08 17:40:24.9920000 | processf00070ca8 | 2 | 2 | 55 | KEY: 5:72057594062241792 (8194443284a0) | 56 | KEY: 5:72057594062176256 (8194443284a0) |
+
+*This graph is the classic two-process, two-resource deadlock: session `55` waited for a key on `deadlock_demo_b`, session `56` waited for a key on `deadlock_demo_a`, and SQL Server chose process `processf00070ca8` as the victim. The graph is small, which is typical for ordered-access deadlocks.*
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `victim_process_id` | Non-null process id | Depends | Process chosen for rollback. | This is the workload that received error `1205`. |
+| `process_count` | `2` | Neutral | Two sessions participated. | This is the most common deadlock shape. |
+| `process_count` | Greater than `2` | &#10060; | More than two sessions participated. | Look for parallel fan-in, queue consumers, or wider graph complexity. |
+| `resource_count` | `2` | Neutral | Two contested resources appear in the graph. | Often points to opposite-order access across two objects or keys. |
+| `process*_waitresource` | `KEY:` resource | Depends | The wait was on an index key. | Narrow index access can still deadlock if lock order conflicts. |
+| `process*_waitresource` | `PAGE:` or `OBJECT:` resource | &#10060; when frequent | The deadlock involved broader resources. | Look for scans, escalation, or DDL interaction. |
+
+## Recommended Persistent Capture
+
+The built-in `system_health` session is useful, but production environments benefit from a dedicated deadlock capture session with a retention policy you control.
+
+> [!warning]
+> A dedicated Extended Events session changes server metadata and writes more diagnostic files. It is usually safe, but it should still follow change management and storage-retention standards.
+
+> [!success]
+> Use a dedicated deadlock session when deadlocks are important enough to warrant longer retention than the `system_health` rollover files provide.
+
+```sql
+CREATE EVENT SESSION [deadlock_capture_persistent]
+ON SERVER
+ADD EVENT sqlserver.xml_deadlock_report
+ADD TARGET package0.event_file
+(
+    SET filename = '/var/opt/mssql/log/deadlock_capture_persistent'
+);
+GO
+
+ALTER EVENT SESSION [deadlock_capture_persistent]
+ON SERVER
+STATE = START;
+GO
+```
+
+## Reproduce A Deadlock Deliberately
+
+The following demo creates a deterministic two-table deadlock by updating the same two tables in opposite order.
+
+> [!example]-
+> **Setup**
+> ```sql
+> USE stoxx;
+> GO
+>
+> IF OBJECT_ID('dbo.deadlock_demo_a', 'U') IS NOT NULL
+>     DROP TABLE dbo.deadlock_demo_a;
+> IF OBJECT_ID('dbo.deadlock_demo_b', 'U') IS NOT NULL
+>     DROP TABLE dbo.deadlock_demo_b;
+> GO
+>
+> CREATE TABLE dbo.deadlock_demo_a
+> (
+>     id int NOT NULL PRIMARY KEY,
+>     payload int NOT NULL
+> );
+>
+> CREATE TABLE dbo.deadlock_demo_b
+> (
+>     id int NOT NULL PRIMARY KEY,
+>     payload int NOT NULL
+> );
+> GO
+>
+> INSERT INTO dbo.deadlock_demo_a(id, payload) VALUES (1, 10);
+> INSERT INTO dbo.deadlock_demo_b(id, payload) VALUES (1, 20);
+> GO
+> ```
+>
+> **Session 1**
+> ```sql
+> USE stoxx;
+> GO
+>
+> SET DEADLOCK_PRIORITY LOW;
+>
+> BEGIN TRAN;
+>
+> UPDATE dbo.deadlock_demo_a
+> SET payload = payload + 1
+> WHERE id = 1;
+>
+> WAITFOR DELAY '00:00:05';
+>
+> UPDATE dbo.deadlock_demo_b
+> SET payload = payload + 1
+> WHERE id = 1;
+>
+> COMMIT TRAN;
+> GO
+> ```
+>
+> **Session 2**
+> ```sql
+> USE stoxx;
+> GO
+>
+> BEGIN TRAN;
+>
+> UPDATE dbo.deadlock_demo_b
+> SET payload = payload + 1
+> WHERE id = 1;
+>
+> WAITFOR DELAY '00:00:05';
+>
+> UPDATE dbo.deadlock_demo_a
+> SET payload = payload + 1
+> WHERE id = 1;
+>
+> COMMIT TRAN;
+> GO
+> ```
+>
+> **Cleanup**
+> ```sql
+> USE stoxx;
+> GO
+>
+> DROP TABLE IF EXISTS dbo.deadlock_demo_a;
+> DROP TABLE IF EXISTS dbo.deadlock_demo_b;
+> GO
+> ```
+
+## Victim Error And Survivor State
+
+The deadlock victim gets error `1205`. The surviving session completes and commits its changes.
+
+> [!info]-
+> The first table captures the deadlock-victim error returned by Session 1. The second query checks the final row values after the surviving transaction commits.
+
+| source | message_number | message_text |
+|---|---:|---|
+| Session 1 | 1205 | Transaction (Process ID 55) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction. |
+
+*Error `1205` is the normal deadlock-victim signal. SQL Server has already rolled back the victim transaction. The application should not treat this as an unknown failure; it should treat it as a retry candidate after validating idempotency.*
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `message_number` | `1205` | &#10060; | Deadlock victim error. | The transaction was rolled back by SQL Server and may need a retry. |
+| `message_number` | Other runtime error | Depends | Different failure mode. | Use the appropriate error-handling path; do not assume deadlock semantics. |
+
+> [!info]-
+> This query checks the surviving row values after the deadlock. One side committed; the deadlock victim did not.
+
+```sql
+SELECT 'deadlock_demo_a' AS table_name, id, payload FROM dbo.deadlock_demo_a
+UNION ALL
+SELECT 'deadlock_demo_b' AS table_name, id, payload FROM dbo.deadlock_demo_b
+ORDER BY table_name, id;
+```
+
+| table_name | id | payload |
+|---|---:|---:|
+| deadlock_demo_a | 1 | 11 |
+| deadlock_demo_b | 1 | 21 |
+
+*Only the surviving transaction committed. Each table increased by `1`, not by `2`, which is exactly what you expect when one transaction becomes the deadlock victim and rolls back fully.*
+
+## Prevention Priorities
+
+### 1. Enforce A Consistent Access Order
+
+If every transaction touches tables or indexes in the same order, the most common two-object deadlock disappears.
+
+- Bad pattern: one code path updates `OrderHeader` then `OrderLine`, while another updates `OrderLine` then `OrderHeader`.
+- Better pattern: all code paths acquire locks in the same object order and with the same lookup shape.
+
+### 2. Narrow The Access Path
+
+Many deadlocks are really plan problems in disguise. Broad scans, key lookups, and non-SARGable predicates expand the lock footprint and increase the chance of conflicting lock order.
+
+- Add or fix supporting indexes.
+- Remove unnecessary lookups when they widen the locking pattern.
+- Revisit parameter-sensitive plans if the deadlock happens only for some parameter values.
+
+### 3. Keep Transactions Short
+
+The longer a transaction stays open, the larger the window for a cycle to form.
+
+- Do not wait for user input inside a transaction.
+- Do not perform remote calls inside a transaction unless they are unavoidable.
+- Stage data first, then open the transaction only for the final mutation.
+
+### 4. Use Row Versioning For Reader/Writer Deadlocks
+
+`READ COMMITTED SNAPSHOT` and `SNAPSHOT` do not fix writer-versus-writer deadlocks, but they often remove reader-versus-writer cycles caused by shared locks.
+
+- If the deadlock involves only writers, row versioning is not enough.
+- If one side is a long reader and the other is a writer, row versioning can remove that half of the cycle.
+
+### 5. Use `DEADLOCK_PRIORITY` Intentionally
+
+Sometimes the right fix is not "make deadlocks impossible"; it is "make the least important session lose predictably".
+
+> [!success]
+> Lower the deadlock priority for background work such as cache refreshes, ETL backfills, or report warmups when those workloads can safely retry.
 
 ```sql
 SET DEADLOCK_PRIORITY LOW;
+GO
 ```
 
-> [!tip] Use DEADLOCK_PRIORITY in Pipeline Code
+## Retry Policy
+
+Applications should retry `1205` only when the operation is safe to replay.
+
+> [!warning]
+> Deadlock retry logic is correct only for idempotent or safely replayable units of work. Never wrap a non-idempotent side effect in blind retries.
+
+> [!info]-
+> This helper retries only SQL error `1205`, applies a small backoff, and rethrows everything else.
 >
-> Set `DEADLOCK_PRIORITY LOW` on pipeline sessions that have retry logic (e.g., Airflow tasks with automatic retries). Set `DEADLOCK_PRIORITY HIGH` on interactive or latency-sensitive sessions (e.g., API endpoints) that should survive a deadlock. This ensures the retry-capable process is killed first, minimizing user-facing impact.
-
-### Common deadlock scenarios
-
-| Scenario | Example |
-|----------|---------|
-| Two pipeline steps updating the same tables in different order | Step 1 writes silver then gold, step 2 writes gold then silver |
-| Dashboard reads blocking pipeline writes | Reader takes shared lock on index, writer needs exclusive lock, and vice versa on another resource |
-| Concurrent MERGE/UPDATE on overlapping rows | Two processes upsert to the same table with overlapping key ranges |
-| Index maintenance + queries | A query locks data pages while an index rebuild locks index pages, and they cross |
-| Clustered + nonclustered index cross-locking | An UPDATE modifies a column that belongs to both a clustered index key and a nonclustered index; one session locks the clustered page first, another locks the nonclustered page first |
-
----
-
-## Detecting Deadlocks
-
-SQL Server provides multiple tools for detecting deadlocks, from quick cumulative counters to persistent Extended Events capture. The approaches below are ordered from simplest (one-off checks) to most comprehensive (persistent file-backed monitoring). For most production environments, a persistent Extended Events session is the minimum baseline.
-
-### Quick Check — Total Deadlocks Since Last Restart
-
-```sql
-SELECT cntr_value AS deadlock_count
-FROM sys.dm_os_performance_counters
-WHERE counter_name = 'Number of Deadlocks/sec'
-  AND instance_name = '_Total';
-```
-
-### Recent Deadlocks via system_health Session
-
-> [!warning] Ring Buffer Has Limited Capacity
->
-> The `system_health` ring buffer holds only a few MB of events. Under heavy deadlock activity, older reports are silently evicted. If you investigate a deadlock reported hours ago, the graph may already be gone. Set up a persistent Extended Events session (below) for any database that has ever had a production deadlock.
-
-> [!success] Fix — Create a Persistent Extended Events Session
->
-> Create a dedicated `deadlock_monitor` Extended Events session that writes to an `.xel` file on disk (see the session definition below). Set `STARTUP_STATE = ON` so it survives restarts. File-backed sessions retain the full history up to the configured `max_file_size` limit regardless of ring buffer eviction.
-
-SQL Server's built-in `system_health` Extended Events session captures deadlock reports automatically:
-
-```sql
-;WITH deadlocks AS (
-    SELECT
-        xdr.value('@timestamp', 'datetime2') AS deadlock_time,
-        xdr.query('.') AS deadlock_graph
-    FROM (
-        SELECT CAST(target_data AS XML) AS target_data
-        FROM sys.dm_xe_sessions s
-        JOIN sys.dm_xe_session_targets t
-            ON s.address = t.event_session_address
-        WHERE s.name = 'system_health'
-          AND t.target_name = 'ring_buffer'
-    ) AS data
-    CROSS APPLY target_data.nodes(
-        'RingBufferTarget/event[@name="xml_deadlock_report"]'
-    ) AS x(xdr)
-)
-SELECT TOP 10 deadlock_time, deadlock_graph
-FROM deadlocks
-ORDER BY deadlock_time DESC;
-```
-
-### Trace Flags 1204 and 1222 (legacy)
-
-Before Extended Events, trace flags were the primary method for capturing deadlock details. Trace flag **1204** reports deadlock information formatted by each node involved. Trace flag **1222** formats output in an XML-like structure with three sections: the deadlock victim, then processes, then resources. Both write to the SQL Server error log when a deadlock occurs.
-
-> [!warning] Avoid Trace Flags on Workload-Intensive Systems
->
-> Trace flags 1204 and 1222 can introduce performance overhead on high-throughput systems. Microsoft recommends using the `xml_deadlock_report` Extended Event instead — it captures the same information with lower overhead and writes to a file target rather than the error log.
-
-> [!success] Preferred Approach — Use Extended Events
->
-> The `system_health` session captures deadlock graphs by default (no setup needed). For persistent capture with configurable retention, create a dedicated Extended Events session as shown in the [next section](#extended-events-session-for-persistent-capture).
-
-### Current Blocking Chains (Deadlock Precursor)
-
-Blocking chains are a precursor to deadlocks — if two blocking chains form a cycle, a deadlock results. This query shows all currently blocked sessions. If you see the same sessions repeatedly blocking each other in different orders, a deadlock is likely imminent.
-
-```sql
-SELECT
-    r.session_id      AS blocked_session,
-    r.blocking_session_id AS blocking_session,
-    r.wait_type,
-    r.wait_time / 1000 AS wait_seconds,
-    SUBSTRING(st.text, 1, 200) AS blocked_query
-FROM sys.dm_exec_requests r
-CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
-WHERE r.blocking_session_id > 0;
-```
-
----
-
-## Extended Events Session for Persistent Capture
-
-The `system_health` ring buffer has limited capacity. For persistent deadlock capture, create a dedicated Extended Events session that writes to an `.xel` file on disk.
-
-### Create a persistent deadlock capture session
-
-This session captures every `xml_deadlock_report` event to a file. The `max_file_size` controls the maximum size per `.xel` file (10 MB in this example). `STARTUP_STATE = ON` ensures the session starts automatically after an instance restart, so no deadlocks are missed.
-
-```sql
-CREATE EVENT SESSION [deadlock_monitor] ON SERVER
-ADD EVENT sqlserver.xml_deadlock_report
-ADD TARGET package0.event_file (
-    SET filename = N'/var/opt/mssql/log/deadlocks.xel',
-        max_file_size = 10
-)
-WITH (
-    MAX_MEMORY = 4096 KB,
-    STARTUP_STATE = ON
-);
-
-ALTER EVENT SESSION [deadlock_monitor] ON SERVER STATE = START;
-```
-
-> [!tip] Azure SQL Database Uses a Different Event Name
->
-> On Azure SQL Database, the event is `database_xml_deadlock_report` (scoped to the database) rather than `sqlserver.xml_deadlock_report` (scoped to the server instance). Adjust the `ADD EVENT` line when creating a session on Azure SQL Database.
-
-### Querying captured deadlock events
-
-Once the persistent session is running, use `sys.fn_xe_file_target_read_file` to read the captured events from the `.xel` file. The `deadlock_xml` column contains the full deadlock graph in XML format, which shows the involved sessions, the SQL text each was executing, the lock types held and requested, and which session was chosen as the victim.
-
-```sql
-SELECT
-    event_data.value('(event/@timestamp)[1]', 'datetime2') AS deadlock_time,
-    event_data.value(
-        '(event/data[@name="xml_report"]/value)[1]', 'nvarchar(max)'
-    ) AS deadlock_xml
-FROM (
-    SELECT CAST(event_data AS XML) AS event_data
-    FROM sys.fn_xe_file_target_read_file(
-        '/var/opt/mssql/log/deadlocks*.xel', NULL, NULL, NULL
-    )
-) AS data
-ORDER BY deadlock_time DESC;
-```
-
-### Reading the deadlock graph XML
-
-The deadlock XML report contains three top-level nodes:
-
-1. **`victim-list`:** Identifies which process was selected as the deadlock victim (by physical memory address of the task).
-2. **`process-list`:** Each participating session with its full execution context. Key attributes per process:
-   - `spid` — session ID
-   - `isolationlevel` — the transaction isolation level in effect
-   - `logused` — transaction log bytes written (determines rollback cost for victim selection)
-   - `waitresource` — the specific resource the process is waiting for
-   - `waittime` — milliseconds spent waiting
-   - `lastbatchstarted` / `lastbatchcompleted` — timestamps for diagnosing idle sessions holding locks
-   - `inputbuf` — the SQL text being executed
-3. **`resource-list`:** The locked resources (tables, indexes, pages, keys) with the lock modes currently held and requested by each process. Each resource entry shows the `owner` (process holding the lock) and `waiter` (process requesting the lock).
-
-To identify the root cause, follow this sequence: (1) check which tables appear in the `resource-list` to understand the contention surface, (2) compare lock modes held vs requested — S held + X requested indicates a reader-writer conflict, while X held + X requested indicates writer-writer, and (3) read the `inputbuf` in each process node to determine the table access order that created the cycle.
-
-> [!tip] Visualize Deadlock Graphs in SSMS
->
-> Save the XML from the `deadlock_xml` column to a file with a `.xdl` extension, then open it in SQL Server Management Studio. SSMS renders it as a visual graph showing the processes, resources, and the circular wait — far easier to interpret than raw XML.
-
----
-
-## Preventing Deadlocks
-
-Deadlock prevention is about eliminating the conditions that create circular waits. The strategies below are ordered by effectiveness — apply from the top down.
-
-### Prevention strategies
-
-| Strategy | What it does | Impact |
-|----------|-------------|--------|
-| **Enable RCSI** | Readers use row-version snapshots instead of shared locks — eliminates reader/writer deadlocks entirely | **High** — fixes the most common deadlock type |
-| **Consistent access order** | All code accesses tables in the same order (e.g., always silver → gold, never gold → silver) | **High** — breaks the circular dependency that causes writer/writer deadlocks |
-| **Keep transactions short** | Commit as soon as possible — shorter lock duration means smaller deadlock window | **High** — reduces opportunity for overlap |
-| **SET DEADLOCK_PRIORITY** | Mark retry-capable sessions as `LOW` priority so they are killed first | **Medium** — controls which session survives, doesn't prevent the deadlock |
-| **Add covering indexes** | Queries lock fewer pages when they can use an index instead of scanning the table | **Medium** — reduces lock surface area |
-| **Retry on error 1205** | Catch the deadlock error in application code and retry the transaction | **Safety net** — doesn't prevent, but handles gracefully |
-
-> [!info] SQL Server 2022+ / Azure SQL Database — Optimized Locking Reduces Deadlocks
->
-> Optimized locking (TID locking + Lock After Qualification) can avoid certain types of deadlocks because row and page locks are released immediately after modification rather than held until `COMMIT`. With fewer locks held concurrently, the window for circular waits shrinks significantly. Optimized locking is always enabled in Azure SQL Database and available in SQL Server 2022 (16.x) and later. See [blocking-and-locking > Optimized Locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking#sql-server-2022--azure-sql-database--optimized-locking) for the full explanation.
-
-> [!tip] Related pattern: Airflow task retries
->
-> When deadlocks occur during orchestrated pipeline runs, [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) covers configuring Airflow task-level retries with exponential back-off for transient database errors like 1205.
-
-> [!tip] The Single Most Effective Prevention
->
-> Enable [Read Committed Snapshot Isolation (RCSI)](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration). With RCSI, the dashboard (reader) never competes with the pipeline (writer) for locks:
-> ```sql
-> ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
-> ```
-
----
-
-## Application-Level Retry Logic
-
-Deadlocks are transient errors — the same transaction will usually succeed on retry because the other session has completed and released its locks. Every application that writes to SQL Server should include retry logic for error 1205.
-
-### C# | Dapper | centralized deadlock retry helper
+> - Use a bounded retry count.
+> - Keep the retried unit of work small.
+> - Pair the retry with application-level idempotency where required.
 
 ```csharp
-public class DbConnectionFactory
+public static async Task<T> ExecuteWithDeadlockRetryAsync<T>(
+    Func<Task<T>> operation,
+    int maxRetries = 3,
+    int baseDelayMs = 250)
 {
-    private const int DeadlockErrorNumber = 1205;
-    private const int MaxRetries = 3;
-    private readonly string _connectionString;
-
-    public DbConnectionFactory(string connectionString)
-        => _connectionString = connectionString;
-
-    public IDbConnection Create() => new SqlConnection(_connectionString);
-
-    /// <summary>
-    /// Executes a database operation with automatic retry on deadlock (error 1205).
-    /// Uses incremental back-off: 100ms, 200ms, 300ms between retries.
-    /// </summary>
-    public async Task<T> WithDeadlockRetryAsync<T>(
-        Func<IDbConnection, Task<T>> operation)
+    for (var attempt = 1; ; attempt++)
     {
-        for (int attempt = 1; attempt <= MaxRetries; attempt++)
+        try
         {
-            try
-            {
-                using var conn = Create();
-                return await operation(conn);
-            }
-            catch (SqlException ex)
-                when (ex.Number == DeadlockErrorNumber && attempt < MaxRetries)
-            {
-                await Task.Delay(attempt * 100); // 100ms, 200ms back-off
-            }
+            return await operation();
         }
-        // Final attempt — let exceptions propagate
-        using var finalConn = Create();
-        return await operation(finalConn);
+        catch (SqlException ex) when (ex.Number == 1205 && attempt <= maxRetries)
+        {
+            await Task.Delay(baseDelayMs * attempt);
+        }
     }
 }
 ```
 
-This ensures: transparent recovery, incremental back-off, bounded retries (no infinite loops), and fresh connection per retry.
+## Recommendations
 
-> [!warning] Retry Must Re-execute the Entire Transaction
->
-> A deadlock rolls back the entire transaction, not just the last statement. If your retry logic only re-executes the failed statement, the preceding statements in the transaction are lost and the data ends up inconsistent. Always wrap the complete `BEGIN TRAN...COMMIT` sequence inside the retry loop.
-
-> [!success] Safe Pattern — Wrap the Full Transaction in the Retry Loop
->
-> Structure the retry helper so the entire operation (all statements from BEGIN TRAN to COMMIT) is passed as a single delegate or callable. The `WithDeadlockRetryAsync` pattern above demonstrates this correctly: the `operation` lambda receives a fresh connection on each attempt and executes the full transactional unit, not individual statements.
-
----
-
-## Reproducing a Deadlock for Testing
-
-Reproducing deadlocks in a controlled environment is essential for validating retry logic and understanding deadlock graph output. The pattern below creates a classic writer/writer deadlock using opposite access order on two tables.
-
-### Setup — create test tables
-
-Create two tables and insert a single row into each. Open two separate query windows in SSMS — one for Session 1 and one for Session 2.
-
-```sql
-USE analytics_db;
-GO
-CREATE TABLE dbo.deadlock_test_a (id INT PRIMARY KEY, val VARCHAR(50));
-CREATE TABLE dbo.deadlock_test_b (id INT PRIMARY KEY, val VARCHAR(50));
-INSERT INTO dbo.deadlock_test_a VALUES (1, 'init');
-INSERT INTO dbo.deadlock_test_b VALUES (1, 'init');
-GO
-```
-
-### Session 1 — lock table A, then request table B
-
-Run this in the first query window. The `WAITFOR DELAY` holds the exclusive lock on table A open for 2 minutes, giving you time to start Session 2.
-
-```sql
-BEGIN TRAN;
-UPDATE dbo.deadlock_test_a SET val = 'session1' WHERE id = 1;
-WAITFOR DELAY '00:02:00';
-UPDATE dbo.deadlock_test_b SET val = 'session1' WHERE id = 1;
-COMMIT;
-```
-
-### Session 2 — lock table B, then request table A (deadlock)
-
-Run this in the second query window while Session 1 is waiting. The first UPDATE succeeds (acquires X lock on table B). The second UPDATE hangs — waiting for Session 1's X lock on table A. SQL Server detects the circular wait within seconds and kills one session.
-
-```sql
-BEGIN TRAN;
-UPDATE dbo.deadlock_test_b SET val = 'session2' WHERE id = 1;
-UPDATE dbo.deadlock_test_a SET val = 'session2' WHERE id = 1;
-COMMIT;
-```
-
-> [!warning] RCSI Does Not Prevent Writer/Writer Deadlocks
->
-> RCSI eliminates reader/writer deadlocks (because readers use row-version snapshots instead of shared locks), but the writer/writer pattern above works regardless of isolation level. Two sessions both acquiring exclusive locks in different order will deadlock under any isolation level.
-
-> [!success] Safe Pattern — Use a Dedicated Test Database
->
-> Run deadlock reproduction tests in an isolated test database. Never disable RCSI on a production database just to reproduce a reader/writer deadlock.
-
-> [!danger] RCSI Has a Hidden tempdb Cost
->
-> Enabling RCSI stores row versions in `tempdb`. Under heavy write load (bulk inserts, MERGE operations), `tempdb` can grow dramatically and become the new bottleneck. Monitor `tempdb` size and I/O after enabling RCSI — especially during pipeline runs that INSERT/UPDATE millions of rows. If `tempdb` runs out of space, all transactions across all databases on the instance fail.
-
-> [!success] Fix — Size tempdb Appropriately and Monitor Version Store
->
-> Pre-size `tempdb` data files to accommodate expected version store growth before enabling RCSI. Monitor version store size with `SELECT SUM(version_store_reserved_page_count) * 8 / 1024 AS version_store_mb FROM sys.dm_db_file_space_usage` (run in `tempdb`). If the version store grows beyond 1 GB, investigate long-running transactions that are preventing cleanup using `sys.dm_tran_active_snapshot_database_transactions`.
-
-### Cleanup — drop test tables
-
-```sql
-DROP TABLE IF EXISTS dbo.deadlock_test_a;
-DROP TABLE IF EXISTS dbo.deadlock_test_b;
-```
-
----
+- Treat the deadlock graph as the source of truth. Do not guess from waits alone when a graph already exists.
+- Fix access order first when the graph spans multiple tables or indexes.
+- Fix access paths when the graph shows broad scans, hot keys, or unexpected objects.
+- Lower deadlock priority for background work only when retries are cheap and safe.
+- Keep a dedicated deadlock capture session on systems where rollover of `system_health` is not enough.
 
 ## Related
 
-- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — Lock types, compatibility matrix, isolation levels, RCSI, and lock escalation
-- [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) — When concurrent access produces wrong data (not stuck processes)
-- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Where deadlock retry fits in the broader error classification and retry strategy framework
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — RCSI and other server settings that prevent deadlocks
-- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — LCK_M wait types indicate lock contention
+- [[blocking-and-locking]]
+- [[race-conditions]]
+- [[execution-plans]]

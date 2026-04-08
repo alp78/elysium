@@ -1,851 +1,480 @@
 ---
 title: "SQL Server Authentication"
-tags: [sql, gcp, sql-server, tsql]
-aliases: [SQL Server authentication, service account hardening, SQL Server Audit, login hardening, sa disable, dedicated logins, GCP service account, IAM least privilege, TLS SQL Server, network encryption, firewall rules, SQL Server security, LGIF, LGIS, failed login, brute force detection]
-description: "How to harden SQL Server 2022 on GCP: creating a dedicated GCP service account with minimal IAM roles, setting up application-specific SQL logins with least-privilege permissions, enabling TLS 1.2 encryption, configuring GCP firewall rules, setting up SQL Server Audit for login and data access events, and running a quarterly security review."
+tags: [sql, sql-server, security, tsql]
+aliases: [SQL Server authentication, login hardening, SQL login hardening, mixed mode, TLS SQL Server, network encryption, force encryption]
+description: "Production guide to SQL Server authentication and connection hardening on Linux and GCP: login inventory, sysadmin exposure, database principal surface, TLS posture, and perimeter recommendations."
 parent: "[[domain-concurrency-and-security]]"
 links:
-  - "[[tde-encryption]]"
   - "[[audit-logging]]"
-  - "[[blocking-and-locking]]"
-  - "[[deadlock-detection-and-prevention]]"
-  - "[[race-conditions]]"
+  - "[[tde-encryption]]"
 created: 2026-03-22
-updated: 2026-04-04
+updated: 2026-04-08
 status: complete
 ---
 
-# SQL Server Authentication and Security Hardening
+# SQL Server Authentication
 
-> [!quote]
-> "If you spend more on coffee than on IT security, you will be hacked. What's more, you deserve to be hacked."
->
-> — **Richard Clarke**, *Cyber War* (2010)
+Authentication hardening for SQL Server has three distinct layers:
 
-SQL Server security has three distinct identity layers that must each be hardened independently. Vulnerabilities at any layer can expose data even when the other layers are correct.
+- the cloud and VM identity boundary
+- the host and transport-security boundary
+- the SQL Server principal and permission boundary
 
-## Identity Architecture
+Weakness in any one of those layers can undermine the rest. A perfectly permissioned login is still risky if the server accepts unencrypted client traffic, and TLS does not help if privileged instance principals are over-granted.
 
-SQL Server on GCP runs inside three concentric security perimeters that must each be hardened independently. A weakness at any layer bypasses the protection provided by the layers beneath it:
+## Identity Boundaries
 
-- **GCP IAM layer** — governs what the VM *as a GCP principal* is allowed to do in Google Cloud: read/write GCS buckets, write monitoring metrics, call APIs. Every process running on the VM inherits these permissions automatically via the metadata server.
-- **Linux OS layer** — governs what OS-level users can do on the host: run processes, read files, make network connections. The `mssql` system account runs the `sqlservr` process; other OS accounts (Airflow, Datadog agent) interact with the OS independently.
-- **SQL Server layer** — governs what *database principals* (logins and users) can do to SQL Server data: connect to the instance, read tables, execute procedures. This layer is entirely separate from OS user accounts — an OS user does not automatically have a SQL Server login.
+For SQL Server running on Linux in GCP, think about identity and access in concentric layers rather than as one flat security problem.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     GCP IAM Layer                                │
-│                                                                  │
-│  Service Account: analytics-sql-sa@data-platform-prod.iam.gsvc │
-│  Roles:                                                          │
-│    ├── roles/storage.objectAdmin  (GCS backup read/write)        │
-│    ├── roles/monitoring.metricWriter (Datadog / Cloud Monitoring)│
-│    └── (nothing else)                                            │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                     Linux OS Layer                               │
-│                                                                  │
-│  User: mssql (uid=999, runs sqlservr process)                    │
-│  User: airflow (runs DAG tasks via SSH)                          │
-│  User: dd-agent (Datadog monitoring)                             │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                     SQL Server Layer                             │
-│                                                                  │
-│  Login: sa (disabled after setup — emergency use only)           │
-│  Login: pipeline_svc (Python pipeline — bronze/silver/gold)      │
-│  Login: dashboard_svc (Blazor dashboard — read-only)             │
-│  Login: airflow_svc (Airflow health checks and job metadata)     │
-│  Login: datadog_svc (Datadog SQL Server integration)             │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["GCP boundary<br/>service account + firewall + IAP"] --> B["Linux boundary<br/>host process + TLS files + file permissions"]
+    B --> C["SQL Server boundary<br/>logins + users + roles + permissions"]
+    C --> D["Database objects<br/>schemas + views + procedures + data"]
 ```
 
-## Part 1: GCP Service Account Hardening
+The operational rule is simple:
 
-By default, GCP Compute Engine VMs use the default Compute Engine service account with `roles/editor` — an overly broad permission set that violates least privilege. Any process on the VM (backup scripts, monitoring agents, pipeline jobs) inherits the VM's GCP service account permissions.
+- keep the cloud service account narrow
+- make transport encryption explicit
+- keep SQL logins and roles minimal and attributable
 
-#### gcloud iam service-accounts create — dedicated SA for SQL Server VM
+## Baseline The Instance Authentication Posture
 
-`gcloud iam service-accounts create` provisions a new GCP service account identity in the project. A service account is a non-human principal that GCP resources (VMs, Cloud Run services) assume. The display name and description are metadata only — the email address (`<name>@<project>.iam.gserviceaccount.com`) is the stable identifier used in all subsequent IAM bindings.
+Production hardening starts with facts, not intention. Before changing logins or TLS settings, inventory the current authentication mode, principal surface, and privileged role membership.
 
-```bash
-gcloud iam service-accounts create analytics-sql-sa \
-  --display-name="Analytics SQL Server" \
-  --description="Dedicated SA for SQL Server VM — minimal permissions"
+### Engine mode and authentication boundary
 
-# Verify creation
-gcloud iam service-accounts list --filter="email:analytics-sql-sa"
-# Expected output:
-# EMAIL                                                              DISABLED
-# analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com      False
-```
+The engine-level properties show whether the instance is Windows-auth-only or mixed-mode and which SQL Server edition and branch you are securing.
 
-#### gcloud projects add-iam-policy-binding — assign minimum IAM roles
+#### `SERVERPROPERTY` | engine edition and authentication mode
 
-`gcloud projects add-iam-policy-binding` attaches an IAM role to a principal at the project level. Each `add-iam-policy-binding` call grants one role. Two roles are required: `roles/storage.objectAdmin` for reading and writing GCS backup buckets, and `roles/monitoring.metricWriter` for pushing custom metrics to Cloud Monitoring (used by Datadog and the GCP Ops Agent). No other roles are assigned — in particular, no `roles/compute.*` or `roles/editor`, which the default Compute Engine service account holds.
+This query returns the basic instance identity and whether SQL logins are accepted.
 
-```bash
-gcloud projects add-iam-policy-binding data-platform-prod \
-  --member="serviceAccount:analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com" \
-  --role="roles/storage.objectAdmin"
-
-# Cloud Monitoring metric writer (for Datadog and custom metrics)
-gcloud projects add-iam-policy-binding data-platform-prod \
-  --member="serviceAccount:analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com" \
-  --role="roles/monitoring.metricWriter"
-
-# Verify assigned roles
-gcloud projects get-iam-policy data-platform-prod \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com" \
-  --format="table(bindings.role)"
-# Expected output:
-# ROLE
-# roles/monitoring.metricWriter
-# roles/storage.objectAdmin
-```
-
-#### gcloud compute instances set-service-account — remove default SA from VM
-
-`gcloud compute instances set-service-account` replaces the service account associated with a VM. This operation requires the VM to be stopped first — the metadata server (which vends credentials to processes on the VM) is only updated during boot. The `--scopes=cloud-platform` flag grants the service account access to all GCP APIs it holds IAM roles for; without it, OAuth scope restrictions can silently prevent API calls even when the IAM role is correctly assigned.
-
-```bash
-gcloud compute instances stop analytics-sql --zone=europe-west1-b
-
-gcloud compute instances set-service-account analytics-sql --zone=europe-west1-b \
-  --service-account=analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com \
-  --scopes=cloud-platform
-
-gcloud compute instances start analytics-sql --zone=europe-west1-b
-```
-
-#### gcloud auth list — verify service account from inside VM
-
-The GCP metadata server at `http://metadata.google.internal` is an HTTP endpoint available only from within a GCP VM. It vends the active service account identity and short-lived OAuth tokens to all processes running on the VM without requiring stored credentials. Querying it directly confirms which service account is actually active — this is the authoritative check because `gcloud auth list` reflects the gcloud CLI's own authentication context, not necessarily what the VM's metadata server reports.
-
-```bash
-gcloud compute ssh analytics-sql --zone=europe-west1-b --tunnel-through-iap
-
-# Check which service account is active
-curl -s -H "Metadata-Flavor: Google" \
-  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email
-# Expected output:
-# analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com
-
-# Check available scopes
-curl -s -H "Metadata-Flavor: Google" \
-  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/scopes
-# Expected output:
-# https://www.googleapis.com/auth/cloud-platform
-```
-
-## Part 2: SQL Server Login Hardening
-
-SQL Server supports two authentication modes. **Windows Authentication** validates the connecting principal against the Windows/AD identity already present in the OS session — the password is never transmitted; SQL Server trusts the OS-issued token. **SQL Server Authentication (mixed mode)** stores a separate username and salted password hash in the `master` database; the client transmits an encrypted credential at connect time. On a GCP Linux VM with no Windows domain, SQL Server Authentication is the only available mode.
-
-Within SQL Server Authentication, there are two distinct object types that must not be confused:
-
-- A **login** (`sys.server_principals`) is an instance-level principal stored in `master`. It grants the ability to connect to the SQL Server instance. Creating a login does not give access to any database.
-- A **user** (`sys.database_principals`) is a database-level principal stored inside a specific database. It is mapped to a login by SID. The user (and its role memberships) determines what the connection can do inside that database. You must create both and link them explicitly.
-
-Each application receives its own dedicated login rather than sharing credentials. This enforces least privilege (permissions are scoped to what each application actually needs), enables per-application audit trails (login events identify which application performed each action), and limits blast radius if any single credential is compromised.
-
-#### CREATE LOGIN / CREATE USER — dedicated logins per application
-
-> [!info] Create dedicated logins for each application
-> Run the following as `sa` (one last time before disabling it). Each application gets its own login with minimum necessary permissions.
+*Return the engine edition, exact build, and whether the instance accepts only integrated authentication or also SQL logins.*
 
 ```sql
--- 1. Pipeline service account (Python pipeline — full DML on bronze/silver/gold)
-CREATE LOGIN pipeline_svc WITH PASSWORD = 'P!pel1ne$ecure2026', CHECK_POLICY = ON;
-GO
+SELECT
+    @@SERVERNAME AS server_name,
+    CAST(SERVERPROPERTY('Edition') AS nvarchar(128)) AS edition,
+    CAST(SERVERPROPERTY('ProductVersion') AS nvarchar(128)) AS product_version,
+    CAST(SERVERPROPERTY('ProductLevel') AS nvarchar(128)) AS product_level,
+    CAST(SERVERPROPERTY('EngineEdition') AS int) AS engine_edition,
+    CAST(SERVERPROPERTY('IsIntegratedSecurityOnly') AS int) AS is_windows_auth_only;
+```
 
-USE analytics_db;
-CREATE USER pipeline_svc FOR LOGIN pipeline_svc;
+| server_name | edition | product_version | product_level | engine_edition | is_windows_auth_only |
+|---|---|---|---|---:|---:|
+| `9b9b89176e4b` | `Developer Edition (64-bit)` | `16.0.4236.2` | `RTM` | 3 | 0 |
 
--- Grant schema-level permissions
-GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON SCHEMA::bronze TO pipeline_svc;
-GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON SCHEMA::silver TO pipeline_svc;
-GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON SCHEMA::gold TO pipeline_svc;
-GRANT CREATE TABLE TO pipeline_svc;  -- For initial table creation
+_This instance accepts SQL logins because `is_windows_auth_only = 0`. On Linux that is the expected outcome for this environment, but it also means SQL login hygiene matters immediately. `engine_edition = 3` identifies the standard on-premises SQL Server engine family rather than Azure SQL Database._
 
--- Deny access to sensitive system views
-DENY VIEW SERVER STATE TO pipeline_svc;
-GO
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `engine_edition` | `3` | ✅ | Box-product SQL Server engine. | Normal for SQL Server on Linux or Windows Server. |
+| `engine_edition` | `5` | Depends | Azure SQL Database. | Security and authentication behavior differ materially from box SQL Server. |
+| `is_windows_auth_only` | `0` | Depends | Mixed mode or SQL logins allowed. | Required when applications use SQL authentication, but it increases password-management surface. |
+| `is_windows_auth_only` | `1` | ✅ when feasible on Windows | Only integrated authentication is allowed. | Stronger when Windows or Entra-backed auth is available. |
 
--- 2. Dashboard service account (Blazor — read-only on gold + silver)
-CREATE LOGIN dashboard_svc WITH PASSWORD = 'D@shb0ard$ecure2026', CHECK_POLICY = ON;
-GO
+### Instance login inventory
 
-USE analytics_db;
-CREATE USER dashboard_svc FOR LOGIN dashboard_svc;
-GRANT SELECT ON SCHEMA::gold TO dashboard_svc;
-GRANT SELECT ON SCHEMA::silver TO dashboard_svc;
+A secure authentication model needs an explicit inventory of every server principal that can connect, whether it is disabled, and whether SQL logins are using password policy enforcement.
 
--- Explicitly deny writes
-DENY INSERT, UPDATE, DELETE ON SCHEMA::gold TO dashboard_svc;
-DENY INSERT, UPDATE, DELETE ON SCHEMA::silver TO dashboard_svc;
-DENY INSERT, UPDATE, DELETE ON SCHEMA::bronze TO dashboard_svc;
-GO
+#### `sys.server_principals` + `sys.sql_logins` | inventory server logins
 
--- 3. Airflow service account (health checks and job metadata)
-CREATE LOGIN airflow_svc WITH PASSWORD = 'A!rfl0w$ecure2026', CHECK_POLICY = ON;
-GO
+This query returns Windows and SQL server principals and exposes SQL-login password-policy flags where they exist.
 
-USE analytics_db;
-CREATE USER airflow_svc FOR LOGIN airflow_svc;
-GRANT SELECT ON SCHEMA::gold TO airflow_svc;  -- Read scores for validation
-GRANT EXECUTE ON SCHEMA::dbo TO airflow_svc;   -- Run health check stored procs
-GO
+*List login-capable server principals and show which SQL logins use password policy and expiration checks.*
 
--- 4. Datadog monitoring account (read-only system views)
-CREATE LOGIN datadog_svc WITH PASSWORD = 'D@tad0g$ecure2026', CHECK_POLICY = ON;
-GO
+```sql
+SELECT
+    sp.name AS login_name,
+    sp.type_desc,
+    sp.is_disabled,
+    sp.create_date,
+    sl.is_policy_checked,
+    sl.is_expiration_checked,
+    LOGINPROPERTY(sp.name, 'PasswordLastSetTime') AS password_last_set
+FROM sys.server_principals AS sp
+LEFT JOIN sys.sql_logins AS sl
+    ON sp.principal_id = sl.principal_id
+WHERE sp.type IN ('S', 'U', 'G')
+  AND sp.name NOT LIKE '##%'
+ORDER BY sp.name;
+```
 
-USE analytics_db;
-CREATE USER datadog_svc FOR LOGIN datadog_svc;
-GRANT SELECT ON SCHEMA::dbo TO datadog_svc;
+| login_name | type_desc | is_disabled | create_date | is_policy_checked | is_expiration_checked | password_last_set |
+|---|---|---:|---|---:|---:|---|
+| `BUILTIN\Administrators` | `WINDOWS_GROUP` | 0 | 2026-01-22 20:23:42.077 |  |  |  |
+| `NT AUTHORITY\NETWORK SERVICE` | `WINDOWS_LOGIN` | 0 | 2026-03-04 22:09:29.657 |  |  |  |
+| `NT AUTHORITY\SYSTEM` | `WINDOWS_LOGIN` | 0 | 2026-03-04 22:09:29.657 |  |  |  |
+| `sa` | `SQL_LOGIN` | 0 | 2003-04-08 09:10:35.460 | 1 | 0 | 2026-03-04 22:09:29.133 |
 
-USE master;
-GRANT VIEW SERVER STATE TO datadog_svc;     -- DMVs for performance monitoring
-GRANT VIEW DATABASE STATE TO datadog_svc;   -- Database-level DMVs
-GO
+_The login surface is still small, which is good, but it is not yet production-tight. The `sa` login is enabled, password policy enforcement is on, password expiration is off, and three Windows principals remain present at the instance level. On Linux-backed deployments, those Windows principals usually exist because of the container or host security model; the important next step is not to confuse their presence with a safe privilege posture._
 
--- 5. Disable sa login (use dedicated logins from now on)
-ALTER LOGIN sa DISABLE;
-GO
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `type_desc` | `SQL_LOGIN` | Depends | SQL Server-managed username and password. | Common for applications, but requires strict secret management and audit coverage. |
+| `type_desc` | `WINDOWS_LOGIN` | Depends | Mapped Windows principal. | Fine if intentionally used, but verify actual role membership and necessity. |
+| `type_desc` | `WINDOWS_GROUP` | Depends | Group principal can grant broad access indirectly. | Review carefully because group membership often grows outside the DBA workflow. |
+| `is_disabled` | `0` | Depends | The login can authenticate. | Expected for active service principals, risky for dormant administrative accounts. |
+| `is_disabled` | `1` | ✅ for unused privileged logins | The login cannot authenticate. | Good state for retired or emergency-only logins. |
+| `is_policy_checked` | `1` | ✅ for SQL logins | Windows password policy is enforced for the SQL login. | Strong baseline for SQL-authenticated service accounts. |
+| `is_policy_checked` | `0` | ❌ for SQL logins | Password policy is not enforced. | Weakens password-quality controls and should be justified explicitly. |
+| `is_expiration_checked` | `1` | Depends | Password expiration policy is enforced. | Often unsuitable for non-interactive service accounts unless rotation is automated safely. |
+| `is_expiration_checked` | `0` | Depends | Password expiration is not enforced. | Acceptable for service accounts only if an external rotation process exists. |
 
--- Verify all logins
+### Privileged role exposure
+
+The single most dangerous authentication outcome is not merely having many logins. It is having too many principals in `sysadmin`, because `sysadmin` bypasses nearly every other permission boundary.
+
+#### `sys.server_role_members` | inventory `sysadmin`
+
+This query shows which principals currently hold `sysadmin`.
+
+*Return the full current membership of the `sysadmin` fixed server role.*
+
+```sql
+SELECT
+    r.name AS role_name,
+    m.name AS member_name,
+    m.type_desc
+FROM sys.server_role_members AS srm
+JOIN sys.server_principals AS r
+    ON srm.role_principal_id = r.principal_id
+JOIN sys.server_principals AS m
+    ON srm.member_principal_id = m.principal_id
+WHERE r.name = 'sysadmin'
+ORDER BY m.name;
+```
+
+| role_name | member_name | type_desc |
+|---|---|---|
+| `sysadmin` | `BUILTIN\Administrators` | `WINDOWS_GROUP` |
+| `sysadmin` | `NT AUTHORITY\NETWORK SERVICE` | `WINDOWS_LOGIN` |
+| `sysadmin` | `sa` | `SQL_LOGIN` |
+
+_This is broader than a production-safe posture. `sa` in `sysadmin` is inherent, but `BUILTIN\Administrators` and `NT AUTHORITY\NETWORK SERVICE` both need explicit justification. `NETWORK SERVICE` especially deserves review because it represents a host/service identity rather than an interactive DBA identity._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `member_name` | Named emergency or DBA principal only | ✅ | Privileged membership is narrow and intentional. | Easier to review and far safer operationally. |
+| `member_name` | `sa` | Depends | Default SQL superuser. | Keep password strong, audit it heavily, and disable or rename if the operating model permits. |
+| `member_name` | Broad OS group | ❌ unless strictly governed | Many people or processes may inherit SQL Server superuser rights indirectly. | Review immediately; blast radius is large. |
+| `member_name` | Service identity such as `NETWORK SERVICE` | ❌ unless required and documented | A host/service account can administer the entire instance. | Replace with narrower grants whenever possible. |
+
+### Database principal surface in `stoxx`
+
+Instance logins are only half of the story. A login can connect to the instance without being mapped to a user in a specific database. Database principal inventory shows whether access inside `stoxx` is broad, narrow, or still largely unmodeled.
+
+#### `sys.databases` | database owner and encryption state
+
+This query shows who owns `stoxx` and whether the database is encrypted at rest.
+
+*Return the owner and encryption flag for the `stoxx` database.*
+
+```sql
+SELECT
+    db.name AS database_name,
+    SUSER_SNAME(owner_sid) AS owner_name,
+    db.is_encrypted
+FROM sys.databases AS db
+WHERE db.name = 'stoxx';
+```
+
+| database_name | owner_name | is_encrypted |
+|---|---|---:|
+| `stoxx` | `sa` | 0 |
+
+_`stoxx` is still owned by `sa`, and it is not encrypted with TDE. The owner itself is not an authentication method, but database ownership matters because ownership chaining and implicit authority often become harder to reason about when production databases remain owned by a generic superuser login._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `owner_name` | Dedicated admin principal | ✅ | Ownership is explicit and intentional. | Better separation than leaving production databases owned by `sa`. |
+| `owner_name` | `sa` | Depends | Default superuser owns the database. | Common in labs, but many teams standardize on a named admin principal instead. |
+| `is_encrypted` | `0` | Depends | TDE is not enabled. | Acceptable only if the at-rest encryption decision is intentional. |
+| `is_encrypted` | `1` | ✅ when TDE is required | The database is encrypted at rest. | Backup and certificate management become part of the operational surface. |
+
+#### `sys.database_principals` | inventory the database principal surface
+
+This query returns user-defined and role principals inside `stoxx`.
+
+*List non-system database principals in `stoxx` so the actual user surface is visible.*
+
+```sql
 SELECT
     name,
     type_desc,
-    is_disabled,
+    authentication_type_desc,
     create_date,
-    modify_date,
-    LOGINPROPERTY(name, 'PasswordLastSetTime') AS password_last_set
-FROM sys.server_principals
-WHERE type IN ('S', 'U')
-ORDER BY create_date;
+    modify_date
+FROM sys.database_principals
+WHERE principal_id > 4
+  AND type IN ('S', 'U', 'G', 'R')
+ORDER BY name;
 ```
 
-Expected output:
+| name | type_desc | authentication_type_desc | create_date | modify_date |
+|---|---|---|---|---|
+| `db_accessadmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.333 | 2009-04-13 12:59:14.467 |
+| `db_backupoperator` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
+| `db_datareader` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.363 | 2009-04-13 12:59:14.467 |
+| `db_datawriter` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.363 | 2009-04-13 12:59:14.467 |
+| `db_ddladmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
+| `db_denydatareader` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.380 | 2009-04-13 12:59:14.467 |
+| `db_denydatawriter` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.380 | 2009-04-13 12:59:14.467 |
+| `db_owner` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.333 | 2009-04-13 12:59:14.467 |
+| `db_securityadmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
 
-| name | type_desc | is_disabled | create_date |
-|------|-----------|-------------|-------------|
-| sa | SQL_LOGIN | 1 | 2024-01-15 (disabled) |
-| pipeline_svc | SQL_LOGIN | 0 | 2026-03-10 |
-| dashboard_svc | SQL_LOGIN | 0 | 2026-03-10 |
-| airflow_svc | SQL_LOGIN | 0 | 2026-03-10 |
-| datadog_svc | SQL_LOGIN | 0 | 2026-03-10 |
+_There are currently no custom users in `stoxx`; the principal surface is only the built-in fixed database roles. That is better than an uncontrolled sprawl of users, but it also means the application-facing permission model has not yet been explicitly expressed inside the database._
 
-#### pymssql, ADO.NET — update connection strings with dedicated logins
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `type_desc` | `DATABASE_ROLE` | ✅ in this snapshot | Built-in or user-defined role rather than a direct user principal. | The database currently exposes only role scaffolding, not custom users. |
+| `type_desc` | `SQL_USER`, `WINDOWS_USER`, `WINDOWS_GROUP` | Depends | Direct database principals exist. | Review mappings and memberships for least privilege. |
+| `authentication_type_desc` | `NONE` | ✅ for roles | Roles do not authenticate directly. | Expected for fixed database roles. |
+| `authentication_type_desc` | `INSTANCE` | Depends | The user maps to an instance login. | Standard for most non-contained databases. |
+| `authentication_type_desc` | `DATABASE` | Depends | The user authenticates at the database level. | Review contained-database posture and password controls carefully. |
 
-After creating the dedicated logins, each application's connection string must be updated to use its own credential. Connection strings are stored in application-specific config files — the table below maps each application to its config location and the exact field to change. Using `sa` in connection strings after this step is a misconfiguration — `sa` is disabled and any connection attempt using it will fail with login error 18456.
+#### `sys.database_permissions` | verify `guest` has no explicit permissions
 
-| Application | Config Location | Old | New |
-|-------------|----------------|-----|-----|
-| Python Pipeline | `pipeline/.env` | `SA_PASSWORD=...` | `SQL_LOGIN=pipeline_svc; SQL_PASSWORD=...` |
-| Blazor Dashboard | `dashboard/appsettings.json` | `User Id=sa` | `User Id=dashboard_svc` |
-| Airflow DAGs | Airflow Connection `mssql_project` | `login=sa` | `login=airflow_svc` |
-| Datadog Agent | `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` | `username: sa` | `username: datadog_svc` |
+The `guest` user is a common source of accidental exposure if it has been granted direct permissions.
 
-## Part 3: TLS Encryption for Connections
+*Check whether the `guest` user has any explicit permissions inside `stoxx`.*
 
-TLS (Transport Layer Security) encrypts the TCP stream between a client and SQL Server so that credentials and query results cannot be read by network intermediaries. Without TLS, even strong SQL Server passwords are transmitted as recoverable ciphertext over the network. TLS protects **data in transit** only — it is entirely separate from TDE (Transparent Data Encryption), which protects data at rest on disk.
-
-SQL Server on Linux uses the `mssql-conf` utility to configure TLS. Three settings control the encryption posture:
-
-- `network.tlsprotocols` — restricts which TLS versions the server accepts. Setting this to `1.2` disables TLS 1.0 and 1.1, which are cryptographically broken and disabled by PCI DSS and HIPAA mandates.
-- `network.forceencryption` — when set to `1`, the server sets the ENCRYPT flag in its pre-login response. Clients that request an unencrypted session are still forced into encryption by the server. This is server-initiated encryption, which means no client misconfiguration can bypass it.
-- `network.tlscert` / `network.tlskey` — point to the X.509 certificate and private key the server presents to clients during the TLS handshake.
-
-The certificate's `Subject CN` must match the server's FQDN exactly. On Ubuntu 20.04+ (which enforces OpenSSL security level 2 by default), the certificate must use SHA-256 or stronger — certificates signed with SHA-1 or MD5 are silently rejected.
-
-#### TLS Encryption — network path client → IAP tunnel → VM → SQL Server
-
-The diagram below shows the full network path for each client type. Developer connections from SSMS/ADS travel through the IAP tunnel (Google-terminated TLS), then internally to the VM. Cloud Run services (pipeline and dashboard) connect over the Serverless VPC Connector — an internal path that never traverses the public internet. All paths terminate at port 1433 on the SQL Server VM with TLS enforced by `forceencryption = 1`.
-
-```
-┌─────────────────────┐    IAP Tunnel     ┌─────────────────────┐
-│  Developer Laptop   │◄────────────────►│  analytics-sql VM            │
-│  (SSMS / ADS)       │   (port 1433)    │  (no public IP)      │
-└─────────────────────┘                   │                      │
-                                          │  10.0.1.x            │
-┌─────────────────────┐    VPC Internal   │  europe-west1-b      │
-│  Cloud Run          │◄────────────────►│                      │
-│  (Pipeline)         │   Serverless VPC  │  Firewall Rules:     │
-│  10.8.0.x           │   Connector       │  ├── allow-sql-      │
-└─────────────────────┘                   │  │   internal        │
-                                          │  │   (10.0.0.0/8)    │
-┌─────────────────────┐    VPC Internal   │  ├── allow-iap       │
-│  Cloud Run          │◄────────────────►│  │   (35.235.240.0/20)│
-│  (Dashboard)        │   Serverless VPC  │  └── deny-all-       │
-│  10.8.0.x           │   Connector       │      ingress         │
-└─────────────────────┘                   └─────────────────────┘
-
-┌─────────────────────┐    VPC Internal
-│  Airflow VM         │◄────────────────►  (same VPC)
-│  10.0.2.x           │   (port 1433)
-└─────────────────────┘
+```sql
+SELECT
+    perm.state_desc,
+    perm.permission_name
+FROM sys.database_permissions AS perm
+WHERE perm.grantee_principal_id = DATABASE_PRINCIPAL_ID('guest')
+ORDER BY perm.permission_name;
 ```
 
-#### openssl req -x509 — generate TLS certificate for SQL Server
+| state_desc | permission_name |
+|---|---|
 
-`openssl req -x509` generates a self-signed X.509 certificate in a single command (no CA required). The `-nodes` flag skips passphrase encryption on the private key — required because SQL Server's `mssql` process reads the key at startup with no interactive prompt available. The certificate is valid for 1,095 days (3 years); track the expiry date and set a calendar reminder before `days_until_cert_expiry` drops below 180 (see the Quarterly Security Review). File ownership must be set to `mssql:mssql` before SQL Server will load the certificate — if the `mssql` user cannot read either file, the service fails to start.
+_No rows is the desired result here. `guest` has no explicit permissions in `stoxx`, which means unauthenticated guest access has not been widened with direct grants in this database._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| Result set empty | No explicit `guest` permissions | ✅ | `guest` has not been granted database permissions directly. | Good baseline. Keep it that way unless a contained-database design explicitly requires otherwise. |
+| Any returned permission | ❌ | `guest` can perform explicit actions. | Review immediately because it can broaden database access in surprising ways. |
+
+## Transport Encryption And TLS
+
+Authentication hardening is incomplete if clients can still talk to SQL Server over unencrypted transport. SQL logins especially depend on transport security because the credential exchange and session traffic otherwise remain exposed to network interception.
+
+### Connection encryption posture
+
+The first question is not whether TLS has been configured in theory. It is whether current live connections are actually encrypted.
+
+#### `sys.dm_exec_connections` | summarize user-process encryption state
+
+This production query summarizes encryption posture by authentication scheme and transport.
+
+*Summarize live user-process connections by encryption state, authentication scheme, and transport.*
+
+```sql
+SELECT
+    c.encrypt_option,
+    c.auth_scheme,
+    c.net_transport,
+    COUNT(*) AS connection_count
+FROM sys.dm_exec_connections AS c
+JOIN sys.dm_exec_sessions AS s
+    ON c.session_id = s.session_id
+WHERE s.is_user_process = 1
+GROUP BY
+    c.encrypt_option,
+    c.auth_scheme,
+    c.net_transport
+ORDER BY connection_count DESC;
+```
+
+| encrypt_option | auth_scheme | net_transport | connection_count |
+|---|---|---|---:|
+| `TRUE` | `SQL` | `TCP` | 2 |
+| `FALSE` | `NTLM` | `TCP` | 1 |
+
+_Most user-process connections are encrypted SQL-authenticated TCP sessions, which is good. One unencrypted NTLM session still exists in the user-process view, which means the encryption posture is not uniformly enforced across all live sessions._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `encrypt_option` | `TRUE` | ✅ | The current connection is encrypted. | Desired baseline for all remote application and admin sessions. |
+| `encrypt_option` | `FALSE` | ❌ | The current connection is not encrypted. | Investigate client settings, server TLS config, and whether the session is internal only. |
+| `auth_scheme` | `SQL` | Depends | SQL login authentication. | Common on Linux and for application logins; TLS matters even more. |
+| `auth_scheme` | `NTLM` | Depends | Windows or host-integrated auth path. | Still needs encryption when crossing the network. |
+| `net_transport` | `TCP` | ✅ | Standard SQL Server network transport. | Expected for most remote connections. |
+
+#### `sys.dm_exec_connections` | inspect live connection detail
+
+A summary is useful, but production triage needs the individual sessions, login names, host identity, client program, and client network address.
+
+*Return per-session connection detail so unencrypted or unexpected clients can be identified directly.*
+
+```sql
+SELECT
+    c.session_id,
+    s.login_name,
+    s.host_name,
+    s.program_name,
+    c.encrypt_option,
+    c.auth_scheme,
+    c.net_transport,
+    c.client_net_address
+FROM sys.dm_exec_connections AS c
+JOIN sys.dm_exec_sessions AS s
+    ON c.session_id = s.session_id
+ORDER BY c.encrypt_option, c.session_id;
+```
+
+| session_id | login_name | host_name | program_name | encrypt_option | auth_scheme | net_transport | client_net_address |
+|---|---|---|---|---|---|---|---|
+| 53 | `NT AUTHORITY\SYSTEM` | `8482aae8ad0a` | `SQLServerCEIP` | `FALSE` | `NTLM` | `TCP` | `127.0.0.1` |
+| 55 | `sa` | `ELYSIUM` | `SQLCMD` | `TRUE` | `SQL` | `TCP` | `172.19.0.1` |
+| 56 | `sa` | `ELYSIUM` | `SQLCMD` | `TRUE` | `SQL` | `TCP` | `172.19.0.1` |
+| 57 | `sa` | `ELYSIUM` | `SQLCMD` | `TRUE` | `SQL` | `TCP` | `172.19.0.1` |
+| 73 | `sa` | `ELYSIUM` | `SQL Server Management Studio` | `TRUE` | `SQL` | `TCP` | `172.19.0.1` |
+
+_The unencrypted connection is the local `SQLServerCEIP` telemetry process using loopback `127.0.0.1`, not a remote client. That reduces immediate exposure, but it does not change the broader production requirement: remote application and admin sessions should all show `encrypt_option = TRUE`, and the server should be configured so that this is enforced rather than incidental._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `client_net_address` | Loopback such as `127.0.0.1` | Depends | Local host traffic. | Lower interception risk than remote traffic, but still useful to classify separately. |
+| `client_net_address` | Real remote client IP | Depends | Network traffic from another host. | Must be encrypted in production. |
+| `program_name` | Expected admin or application tool | ✅ | The session source is identifiable. | Helps distinguish approved clients from unknown tooling. |
+| `program_name` | Unexpected tool or blank | ❌ | Session source is unclear or unusual. | Investigate login, host, and query activity. |
+
+### Linux TLS configuration baseline
+
+Live connections tell you what is happening now. `mssql-conf` tells you what the server has actually been configured to enforce on Linux.
+
+#### `mssql-conf get` | inspect SQL Server Linux TLS settings
+
+This checks whether SQL Server on Linux has explicit TLS certificate, key, protocol, and force-encryption settings.
+
+*Read the Linux `mssql-conf` TLS settings that control certificate location, protocol version, and forced encryption.*
 
 ```bash
-gcloud compute ssh analytics-sql --zone=europe-west1-b --tunnel-through-iap
-
-# Generate a self-signed certificate (valid for 3 years)
-sudo openssl req -x509 -nodes -newkey rsa:2048 \
-  -keyout /etc/ssl/private/mssql.key \
-  -out /etc/ssl/certs/mssql.pem \
-  -days 1095 \
-  -subj "/CN=analytics-sql.europe-west1-b.c.data-platform-prod.internal"
-
-# Set correct ownership and permissions
-sudo chown mssql:mssql /etc/ssl/private/mssql.key /etc/ssl/certs/mssql.pem
-sudo chmod 400 /etc/ssl/private/mssql.key
-sudo chmod 444 /etc/ssl/certs/mssql.pem
+docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.forceencryption
+docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.tlsprotocols
+docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.tlscert
+docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.tlskey
 ```
 
-#### mssql-conf set network.tlscert/tlskey — force TLS 1.2 on SQL Server
+| setting | value |
+|---|---|
+| `network.forceencryption` | `not set` |
+| `network.tlsprotocols` | `not set` |
+| `network.tlscert` | `not set` |
+| `network.tlskey` | `not set` |
 
-`mssql-conf` is the SQL Server configuration utility for Linux. It writes key-value pairs to `/var/opt/mssql/mssql.conf`, which SQL Server reads on startup. Each `mssql-conf set` call writes one setting; changes take effect only after a service restart. The four network settings below configure the full TLS posture: point to the certificate and key, restrict to TLS 1.2 only, and force server-initiated encryption for all connections.
+_No explicit TLS settings are configured in `mssql.conf`. That means transport encryption is not being enforced from the Linux server configuration itself. The current encrypted remote sessions are therefore not enough to call the transport posture hardened yet._
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `network.forceencryption` | `1` | ✅ | SQL Server forces encrypted connections. | Strongest production posture for remote clients. |
+| `network.forceencryption` | `0` or not set | ❌ | Encryption is not explicitly enforced. | Client misconfiguration can still produce unencrypted sessions. |
+| `network.tlsprotocols` | Explicit `1.2` or approved list | ✅ | The accepted TLS versions are restricted intentionally. | Good production hygiene and clearer compliance posture. |
+| `network.tlsprotocols` | Not set | Depends | Default engine behavior applies. | Less explicit and harder to audit. |
+| `network.tlscert` / `network.tlskey` | Configured paths | ✅ | SQL Server has explicit certificate material configured. | Required for a deliberate server-authenticated TLS posture. |
+| `network.tlscert` / `network.tlskey` | Not set | ❌ | No explicit certificate path is configured. | Review current certificate source and move to an explicit, managed configuration. |
+
+### Force encrypted client traffic
+
+On Linux, explicit TLS hardening is done with `mssql-conf`. This is a production configuration change and should be scheduled with certificate management, service restart planning, and client validation.
+
+#### `mssql-conf set` | configure certificate paths and force encryption
+
+These commands set the certificate path, private-key path, allowed TLS protocol versions, and forced-encryption behavior.
+
+> [!warning]
+>
+> Enabling forced encryption without a valid certificate and matching client trust chain can break application connectivity immediately after restart.
+
+> [!success]
+>
+> Install the certificate and private key first, test client trust with one application path, then enable `network.forceencryption 1` and restart SQL Server in a controlled window.
+
+> [!info]-
+>
+> This is the production hardening sequence for SQL Server on Linux.
+>
+> - `network.tlscert` points SQL Server to the server certificate.
+> - `network.tlskey` points SQL Server to the matching private key.
+> - `network.tlsprotocols 1.2` restricts the accepted protocol set intentionally.
+> - `network.forceencryption 1` tells SQL Server to require encryption for incoming connections.
+> - `systemctl restart mssql-server` is required for the new network settings to take effect.
+
+*Configure the Linux TLS certificate paths, restrict protocols, and force encrypted client traffic.*
 
 ```bash
-sudo /opt/mssql/bin/mssql-conf set network.tlscert /etc/ssl/certs/mssql.pem
-sudo /opt/mssql/bin/mssql-conf set network.tlskey /etc/ssl/private/mssql.key
-
-# Force TLS 1.2 minimum (disable TLS 1.0 and 1.1)
+sudo /opt/mssql/bin/mssql-conf set network.tlscert /var/opt/mssql/tls/server.crt
+sudo /opt/mssql/bin/mssql-conf set network.tlskey /var/opt/mssql/tls/server.key
 sudo /opt/mssql/bin/mssql-conf set network.tlsprotocols 1.2
-
-# Force encryption for ALL connections (clients cannot opt out)
 sudo /opt/mssql/bin/mssql-conf set network.forceencryption 1
-
-# Verify the settings before restart
-sudo cat /var/opt/mssql/mssql.conf
-# Expected to include:
-# [network]
-# tlscert = /etc/ssl/certs/mssql.pem
-# tlskey = /etc/ssl/private/mssql.key
-# tlsprotocols = 1.2
-# forceencryption = 1
-
-# Restart SQL Server to apply
 sudo systemctl restart mssql-server
-
-# Verify TLS is working from the error log
-sudo cat /var/opt/mssql/log/errorlog | grep -i "encrypt|certificate|TLS"
-# Expected lines:
-# ... Successfully loaded certificate [Thumbprint=...]
-# ... Server is listening on ... using encryption
 ```
 
-#### Encrypt=yes;TrustServerCertificate=no — update connection strings for TLS
+#### Client connection strings | require encryption and validate the certificate
 
-With `forceencryption = 1` on the server, all connections are encrypted regardless of what the client requests. However, `TrustServerCertificate=yes` in the connection string disables certificate validation — the client encrypts the channel but does not verify the server's identity, leaving it vulnerable to man-in-the-middle attacks. In a production environment with a CA-signed certificate, set `TrustServerCertificate=False` and distribute the CA cert to client trust stores. For the self-signed certificate used here, `TrustServerCertificate=yes` is required and acceptable because all clients connect over the private GCP VPC — there is no path for a network-level MITM attacker.
+Clients should request encryption explicitly and validate the server certificate rather than bypass trust checks.
 
-```python
-# Python pipeline — pyodbc connection string with TLS
-connection_string = (
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=10.0.1.x,1433;"
-    "DATABASE=analytics_db;"
-    "UID=pipeline_svc;"
-    "PWD=P!pel1ne$ecure2026;"
-    "Encrypt=yes;"
-    "TrustServerCertificate=yes;"  # Required for self-signed certs
-)
+*Use encrypted connection strings that validate the server certificate instead of bypassing TLS trust.*
+
+```text
+Encrypt=yes;TrustServerCertificate=no;
 ```
 
-```json
-// Blazor dashboard — appsettings.json
-{
-  "ConnectionStrings": {
-    "AnalyticsDb": "Server=10.0.1.x,1433;Database=analytics_db;User Id=dashboard_svc;Password=...;Encrypt=True;TrustServerCertificate=True;"
-  }
-}
-```
+## GCP Perimeter Recommendations
 
-#### sys.dm_exec_connections encrypt_option — verify encrypted connections
+The SQL Server layer is only one part of the authentication boundary. On GCP, the VM service account, firewall rules, and administrative access path should be narrow and explicit.
 
-`sys.dm_exec_connections` is a Dynamic Management View (DMV) that exposes one row per active connection to SQL Server. The `encrypt_option` column returns `'TRUE'` if the connection's network stream is TLS-encrypted, or `'FALSE'` if it is not. With `forceencryption = 1` active, every row must show `'TRUE'` — any `'FALSE'` row indicates a client that connected before the encryption setting was enforced or a misconfigured driver.
+### Dedicated GCP service account
 
-```sql
-SELECT
-    session_id,
-    encrypt_option,
-    auth_scheme,
-    client_net_address,
-    program_name,
-    login_name
-FROM sys.dm_exec_connections
-ORDER BY session_id;
--- Expected: encrypt_option = 'TRUE' for ALL rows
+Do not run a production SQL Server VM on the default Compute Engine service account with broad project-level permissions. Use a dedicated service account and grant only the roles that the VM really needs, such as:
 
--- Count encrypted vs unencrypted
-SELECT encrypt_option, COUNT(*) AS connection_count
-FROM sys.dm_exec_connections
-GROUP BY encrypt_option;
--- Expected: only TRUE
-```
+- object access to the backup bucket
+- metric or log publication permissions
+- nothing else unless a workload requires it
 
-## Part 4: GCP Firewall Rules
+### Administrative ingress
 
-GCP firewall rules are stateful, VPC-level packet filters evaluated before traffic reaches the VM. SQL Server listens on TCP port 1433 by default. Without explicit firewall rules, the default VPC policy depends on the project's configuration — it must not be assumed to be restrictive.
+Prefer an administrative path that is attributable and narrow:
 
-Three rules implement a layered deny-by-default posture for the SQL Server VM:
+- use IAP TCP forwarding or another controlled bastion pattern
+- keep SQL Server ports closed to broad source ranges
+- document which admin tools are expected to connect and from where
 
-1. **Allow internal VPC traffic on 1433** (priority 1000) — permits connections from Cloud Run services (pipeline and dashboard) and the Airflow VM, all of which communicate over internal VPC IPs in the `10.0.0.0/8` range.
-2. **Allow IAP tunnel traffic** (priority 900) — permits developer SSMS connections and SSH access via Identity-Aware Proxy. IAP source ranges are fixed at `35.235.240.0/20`; connections pass through Google's infrastructure before reaching the VM, so no public IP is exposed.
-3. **Deny all other ingress on 1433** (priority 2000) — explicit deny for all other source ranges. GCP evaluates rules in priority order (lower number = higher priority), so rules 1 and 2 match first for legitimate traffic; rule 3 catches everything else.
+## Audit Integration
 
-The VM has no external IP assigned, which means direct internet routing to the VM is impossible regardless of firewall rules — the firewall rules provide defense-in-depth for intra-VPC traffic.
+Authentication hardening without audit is incomplete. Login success, login failure, and principal-change events should be captured and reviewed continuously.
 
-```bash
-# Rule 1: Allow SQL Server access from VPC internal networks only
-gcloud compute firewall-rules create allow-sql-internal \
-  --network=analytics-vpc \
-  --direction=INGRESS \
-  --action=ALLOW \
-  --rules=tcp:1433 \
-  --source-ranges=10.0.0.0/8 \
-  --target-tags=sql-server \
-  --description="Allow SQL Server 1433 from VPC internal ranges only" \
-  --priority=1000
+Implementation details and production queries for SQL Server Audit live in [[audit-logging]].
 
-# Rule 2: IAP tunnel access (for developer SSH and SSMS via tunnel)
-gcloud compute firewall-rules describe allow-iap-ingress 2>/dev/null || \
-gcloud compute firewall-rules create allow-iap-ingress \
-  --network=analytics-vpc \
-  --direction=INGRESS \
-  --action=ALLOW \
-  --rules=tcp:22,tcp:1433 \
-  --source-ranges=35.235.240.0/20 \
-  --target-tags=sql-server \
-  --description="Allow IAP tunnel access for SSH and SQL Server" \
-  --priority=900
+## Recommendations
 
-# Rule 3: Deny all other ingress
-gcloud compute firewall-rules create deny-all-ingress-sql \
-  --network=analytics-vpc \
-  --direction=INGRESS \
-  --action=DENY \
-  --rules=tcp:1433 \
-  --source-ranges=0.0.0.0/0 \
-  --target-tags=sql-server \
-  --description="Deny all external SQL Server access" \
-  --priority=2000
+- Keep `sysadmin` membership as small as possible and review it regularly.
+- Replace generic shared SQL logins with dedicated application identities wherever possible.
+- Keep `sa` for break-glass use only, or rename and disable it if the operating model allows that safely.
+- Treat `encrypt_option = TRUE` on a few sessions as a snapshot, not as proof that TLS enforcement is hardened.
+- Make Linux TLS settings explicit in `mssql.conf` instead of relying on incidental defaults.
+- Use database users and role memberships intentionally inside `stoxx`; an empty custom-principal surface is better than sprawl, but it still means the permission model has not been fully expressed yet.
 
-# List all firewall rules for sql-server tag
-gcloud compute firewall-rules list \
-  --filter="targetTags:sql-server" \
-  --format="table(name, direction, priority, sourceRanges, allowed)"
-# Expected output:
-# NAME                    DIRECTION  PRIORITY  SOURCE_RANGES       ALLOWED
-# allow-iap-ingress       INGRESS    900       35.235.240.0/20     tcp:22,tcp:1433
-# allow-sql-internal      INGRESS    1000      10.0.0.0/8          tcp:1433
-# deny-all-ingress-sql    INGRESS    2000      0.0.0.0/0           tcp:1433
+## Related
 
-# Confirm the VM has no external IP
-gcloud compute instances describe analytics-sql --zone=europe-west1-b \
-  --format="get(networkInterfaces[0].accessConfigs)"
-# Expected: empty output (no accessConfigs = no external IP)
-```
-
-## Part 5: SQL Server Audit
-
-SQL Server Audit is the built-in auditing subsystem introduced in SQL Server 2008 and the recommended mechanism for compliance logging from SQL Server 2012 onward. It is built on top of the **Extended Events** (XEvents) engine — a low-overhead, asynchronous event pipeline. Because it is asynchronous, it does not block query execution: audit records are queued and flushed to the target on a background thread (`QUEUE_DELAY` controls the flush interval).
-
-Compared to alternative auditing mechanisms:
-
-| Mechanism | Scope | Status | Key limitation |
-|---|---|---|---|
-| **SQL Server Audit** | Server + database events, structured | Current | sysadmin can tamper; write audit target to separate host for tamper resistance |
-| **SQL Trace / Profiler** | Server-level T-SQL | Deprecated | Synchronous; significant overhead; no fine-grained object ACL |
-| **DDL Triggers** | Schema changes only | Current | Cannot capture DML or login events |
-| **C2 Audit Mode** | Everything | Legacy/deprecated | Logs all events with no filter; massive overhead; not selective |
-| **Login auditing** (Server Properties) | Login/logoff only | Current | Writes to Windows Application log; coarse-grained; no object-level events |
-
-> [!warning] SQL Server Audit does not protect against a compromised DBA
-> Principals in the `sysadmin` role can stop, modify, or disable any audit object. SQL Server Audit is a **detective** control — it creates evidence after the fact — not a preventive one for admin-level actors. For tamper-resistant audit records, configure the file target on a write-once network share or forward records to Cloud Logging (which the SQL Server VM's service account cannot modify) before the local files can be deleted.
-
-> [!success] Tamper-resistant pattern
-> Forward audit records to Cloud Logging via the GCP Ops Agent immediately (see Part 5 below). Once in Cloud Logging, records can only be deleted by a GCP project owner — a separate trust boundary from SQL Server `sysadmin`.
-
-SQL Server Audit uses a **three-object model**. Each object is created and enabled independently:
-
-- **Server Audit** — instance-level object. Defines only the *destination*: a file path, the Windows Security log, or the Windows Application log. Has no opinion about what to capture.
-- **Server Audit Specification** — instance-scoped. Attached to one Server Audit. Captures login events, permission changes, and server-level role changes.
-- **Database Audit Specification** — database-scoped. Attached to one Server Audit. Captures DML actions (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) and DDL changes on specific schemas or objects, by specific principals.
-
-**Version difference — 2019 vs 2022:** Reading audit files via `sys.fn_get_audit_file` requires `CONTROL SERVER` in SQL Server 2019 and earlier (an extremely broad permission). In SQL Server 2022, the narrower `VIEW SERVER SECURITY AUDIT` permission is sufficient, enabling least-privilege audit reader accounts.
-
-#### SQL Server Audit architecture — server audit → specification → log
-
-The diagram below shows how the three audit objects relate. The Server Audit object (`project_audit`) is the root — it owns the file target. Both the Server Audit Specification (login/permission events) and the Database Audit Specification (DML/DDL events) attach to it and write to the same file. The Ops Agent then tails those files and forwards records to Cloud Logging, from which they are sinked to BigQuery for long-term retention and alerting.
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        SQL Server Audit System                       │
-│                                                                      │
-│  Server Audit (project_audit)                                          │
-│  ├── Target: FILE (/var/opt/mssql/audit/)                           │
-│  ├── Max Size: 100 MB per file                                       │
-│  ├── Max Rollover Files: 10 (total ~1 GB)                            │
-│  │                                                                   │
-│  ├── Server Audit Specification (audit_logins)                       │
-│  │   ├── FAILED_LOGIN_GROUP         (failed login attempts)          │
-│  │   ├── SUCCESSFUL_LOGIN_GROUP     (successful logins)              │
-│  │   ├── DATABASE_PERMISSION_CHANGE_GROUP (GRANT/DENY/REVOKE)       │
-│  │   └── SERVER_ROLE_MEMBER_CHANGE_GROUP (role membership changes)   │
-│  │                                                                   │
-│  └── Database Audit Specification (audit_data_access)                │
-│      ├── SELECT ON gold.* BY public    (all reads of gold schema)    │
-│      ├── INSERT ON silver.* BY public  (all writes to silver)        │
-│      └── DELETE ON bronze.* BY public  (all deletes from bronze)     │
-│                                                                      │
-└──────────────────┬───────────────────────────────────────────────────┘
-                   │
-                   ▼
-        /var/opt/mssql/audit/
-        ├── project_audit_*.sqlaudit  (binary audit files)
-                   │
-                   ▼
-        ┌──────────────────────┐
-        │  GCP Ops Agent       │
-        │  (Cloud Logging)     │
-        │                      │
-        │  → Cloud Logging     │
-        │  → BigQuery sink     │
-        │  → Alert policies    │
-        └──────────────────────┘
-```
-
-#### CREATE SERVER AUDIT — file-based audit with max size and rollover
-
-`CREATE SERVER AUDIT` defines the destination and buffering behavior for audit records. The `FILEPATH` is a directory (not a file) — SQL Server names the files automatically using the audit name and a timestamp suffix (`project_audit_*.sqlaudit`). `MAXSIZE = 100 MB` caps each individual file; `MAX_ROLLOVER_FILES = 10` keeps the 10 most recent files before overwriting the oldest, giving approximately 1 GB of on-disk retention. `QUEUE_DELAY = 1000` (milliseconds) means records are flushed to disk within 1 second — not immediately, which is the performance trade-off. `ON_FAILURE = CONTINUE` allows SQL Server to keep running if the audit target becomes unavailable; `ON_FAILURE = SHUTDOWN` would halt the instance for compliance-critical environments where unlogged activity is unacceptable.
-
-```sql
-CREATE SERVER AUDIT project_audit
-TO FILE (
-    FILEPATH = '/var/opt/mssql/audit/',
-    MAXSIZE = 100 MB,
-    MAX_ROLLOVER_FILES = 10,       -- Keep 10 files (1 GB total)
-    RESERVE_DISK_SPACE = OFF
-)
-WITH (
-    QUEUE_DELAY = 1000,            -- 1 second flush delay
-    ON_FAILURE = CONTINUE          -- Don't crash SQL Server if audit fails
-);
-GO
-
--- Enable the audit
-ALTER SERVER AUDIT project_audit WITH (STATE = ON);
-GO
-
--- Verify audit is active
-SELECT name, status_desc, audit_file_path, queue_delay, on_failure_desc
-FROM sys.server_audits;
-```
-
-#### CREATE SERVER AUDIT SPECIFICATION — login and permission events
-
-`CREATE SERVER AUDIT SPECIFICATION` defines which server-level event groups to capture. Each `ADD (...)` clause adds one event group — a named collection of related events. `FAILED_LOGIN_GROUP` captures every failed authentication attempt (action_id `LGIF`); `SUCCESSFUL_LOGIN_GROUP` captures every successful login (`LGIS`). The remaining groups — `DATABASE_PERMISSION_CHANGE_GROUP`, `SERVER_ROLE_MEMBER_CHANGE_GROUP`, `LOGIN_CHANGE_PASSWORD_GROUP`, `SERVER_PRINCIPAL_CHANGE_GROUP`, and `DATABASE_PRINCIPAL_CHANGE_GROUP` — capture all permission and principal lifecycle changes, which together form a complete audit trail of who had access to what and when it changed.
-
-```sql
-FOR SERVER AUDIT project_audit
-ADD (FAILED_LOGIN_GROUP),                    -- Failed login attempts
-ADD (SUCCESSFUL_LOGIN_GROUP),                -- Successful logins
-ADD (DATABASE_PERMISSION_CHANGE_GROUP),      -- GRANT, DENY, REVOKE statements
-ADD (SERVER_ROLE_MEMBER_CHANGE_GROUP),       -- sp_addsrvrolemember, ALTER SERVER ROLE
-ADD (LOGIN_CHANGE_PASSWORD_GROUP),           -- Password changes
-ADD (SERVER_PRINCIPAL_CHANGE_GROUP),         -- CREATE/ALTER/DROP LOGIN
-ADD (DATABASE_PRINCIPAL_CHANGE_GROUP)        -- CREATE/ALTER/DROP USER
-WITH (STATE = ON);
-GO
-```
-
-#### CREATE DATABASE AUDIT SPECIFICATION — data access events
-
-`CREATE DATABASE AUDIT SPECIFICATION` defines which database-level operations to capture. Unlike the Server Audit Specification (which covers instance-wide events), this specification runs in the context of a specific database — it must be created after `USE analytics_db`. The `BY public` clause means all principals are audited, not just specific logins — `public` is a pseudo-role that every database user is implicitly a member of. Capturing only specific schemas (`gold`, `silver`, `bronze`) rather than all objects limits the volume of audit records to the data tiers that matter for compliance.
-
-```sql
-GO
-
-CREATE DATABASE AUDIT SPECIFICATION audit_data_access
-FOR SERVER AUDIT project_audit
-ADD (SELECT ON SCHEMA::gold BY public),        -- Track all reads of gold schema
-ADD (INSERT ON SCHEMA::silver BY public),       -- Track all writes to silver
-ADD (UPDATE ON SCHEMA::silver BY public),       -- Track all updates to silver
-ADD (DELETE ON SCHEMA::bronze BY public),       -- Track all deletes from bronze
-ADD (EXECUTE ON SCHEMA::dbo BY public),         -- Track stored procedure execution
-ADD (SCHEMA_OBJECT_CHANGE_GROUP)                -- Track DDL changes
-WITH (STATE = ON);
-GO
-```
-
-#### sys.fn_get_audit_file — query audit logs
-
-`sys.fn_get_audit_file` is a table-valued function that reads binary `.sqlaudit` files and returns their contents as rows. The wildcard path (`*.sqlaudit`) reads all rolled-over files in sequence, giving a continuous event stream across file boundaries. The `CASE action_id` block translates two-character action codes into human-readable labels — `LGIS` (Login Succeeded), `LGIF` (Login Failed), `SL` (SELECT), `IN` (INSERT), `UP` (UPDATE), `DL` (DELETE), `EX` (EXECUTE), `CR/AL/DR` (CREATE/ALTER/DROP). In SQL Server 2022, reading this function requires `VIEW SERVER SECURITY AUDIT`; in SQL Server 2019 and earlier it requires the much broader `CONTROL SERVER`.
-
-```sql
-SELECT TOP 50
-    event_time,
-    action_id,
-    CASE action_id
-        WHEN 'LGIS' THEN 'Login Succeeded'
-        WHEN 'LGIF' THEN 'Login Failed'
-        WHEN 'G '   THEN 'GRANT'
-        WHEN 'D '   THEN 'DENY'
-        WHEN 'R '   THEN 'REVOKE'
-        WHEN 'SL'   THEN 'SELECT'
-        WHEN 'IN'   THEN 'INSERT'
-        WHEN 'UP'   THEN 'UPDATE'
-        WHEN 'DL'   THEN 'DELETE'
-        WHEN 'EX'   THEN 'EXECUTE'
-        WHEN 'CR'   THEN 'CREATE'
-        WHEN 'AL'   THEN 'ALTER'
-        WHEN 'DR'   THEN 'DROP'
-        ELSE action_id
-    END AS action_desc,
-    succeeded,
-    server_principal_name,
-    database_name,
-    schema_name,
-    object_name,
-    statement,
-    client_ip
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE event_time > DATEADD(HOUR, -1, GETUTCDATE())
-ORDER BY event_time DESC;
-```
-
-#### sys.fn_get_audit_file FAILED_LOGIN_GROUP — detect brute-force attacks
-
-Two distinct attack patterns are detectable from the `LGIF` (Login Failed) events: a **brute-force attack** (many attempts on the same username from one IP) and **credential stuffing** (many different usernames tried from one IP, using a credential list). The threshold of 10 failures per hour is a starting heuristic — legitimate applications may retry on transient errors, so tune the threshold based on observed baseline rates. `DATEDIFF(SECOND, ...)` measures the speed of the attack; a high `failed_attempts` count compressed into a short `attack_duration_seconds` indicates automated tooling.
-
-```sql
-SELECT
-    client_ip,
-    COUNT(*) AS failed_attempts,
-    MIN(event_time) AS first_attempt,
-    MAX(event_time) AS last_attempt,
-    DATEDIFF(SECOND, MIN(event_time), MAX(event_time)) AS attack_duration_seconds,
-    COUNT(DISTINCT server_principal_name) AS distinct_logins_tried
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id = 'LGIF'  -- Login Failed
-  AND event_time > DATEADD(HOUR, -1, GETUTCDATE())
-GROUP BY client_ip
-HAVING COUNT(*) > 10
-ORDER BY failed_attempts DESC;
-
--- Detect credential stuffing: multiple different usernames from same IP
-SELECT
-    client_ip,
-    STRING_AGG(DISTINCT server_principal_name, ', ') AS attempted_logins,
-    COUNT(*) AS total_attempts
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id = 'LGIF'
-  AND event_time > DATEADD(HOUR, -1, GETUTCDATE())
-GROUP BY client_ip
-HAVING COUNT(DISTINCT server_principal_name) > 3
-ORDER BY total_attempts DESC;
-```
-
-#### google-cloud-ops-agent — forward SQL Server audit logs to Cloud Logging
-
-The GCP Ops Agent is a unified logging and metrics collector that runs as a service on the VM. It replaces the older Stackdriver Logging and Monitoring agents. The configuration below defines two receivers — one for the SQL Server error log (plain text, line-by-line) and one for the `.sqlaudit` binary files (treated as opaque binary blobs; Cloud Logging stores them as base64 for downstream decoding). The `wildcard_refresh_interval` controls how often the agent rescans the directory for new rolled-over files.
-
-```yaml
-# /etc/google-cloud-ops-agent/config.yaml
-logging:
-  receivers:
-    sqlserver_errorlog:
-      type: files
-      include_paths:
-        - /var/opt/mssql/log/errorlog
-        - /var/opt/mssql/log/errorlog.*
-      record_log_name: sqlserver_errorlog
-      wildcard_refresh_interval: 60s
-    sqlserver_audit:
-      type: files
-      include_paths:
-        - /var/opt/mssql/audit/*.sqlaudit
-      record_log_name: sqlserver_audit
-      wildcard_refresh_interval: 30s
-  service:
-    pipelines:
-      sql_pipeline:
-        receivers:
-          - sqlserver_errorlog
-          - sqlserver_audit
-```
-
-```bash
-# Restart Ops Agent to apply
-sudo systemctl restart google-cloud-ops-agent
-
-# Verify logs are flowing to Cloud Logging
-gcloud logging read 'resource.type="gce_instance" AND logName:"sqlserver_errorlog"' \
-  --limit=5 \
-  --format="table(timestamp, jsonPayload.message)"
-# Expected: recent SQL Server error log entries
-```
-
-#### gcloud logging sinks create — sink audit logs to BigQuery
-
-A Cloud Logging sink exports matching log entries to an external destination — in this case, a BigQuery dataset — in near-real-time. The sink runs as a GCP-managed service account (not the VM's SA); that service account must be granted `roles/bigquery.dataEditor` on the target dataset before the sink will write successfully. The `--log-filter` restricts the sink to only the `sqlserver_audit` log stream, so the BigQuery dataset does not receive general VM logs. The alerting policy at the end uses a log-based metric — you must first create a log-based metric named `sqlserver_failed_logins` in Cloud Monitoring before this policy can reference it.
-
-```bash
-gcloud logging sinks create sql-audit-sink \
-  bigquery.googleapis.com/projects/data-platform-prod/datasets/security_logs \
-  --log-filter='resource.type="gce_instance" AND logName:"sqlserver_audit"'
-
-# Get the sink's service account (needed for BigQuery permissions)
-gcloud logging sinks describe sql-audit-sink --format="value(writerIdentity)"
-# Expected: serviceAccount:p123456789-123456@gcp-sa-logging.iam.gserviceaccount.com
-
-# Grant the sink SA write access to the BigQuery dataset
-bq add-iam-policy-binding \
-  --member="serviceAccount:p123456789-123456@gcp-sa-logging.iam.gserviceaccount.com" \
-  --role="roles/bigquery.dataEditor" \
-  data-platform-prod:security_logs
-
-# Create an alert policy for failed login spikes
-gcloud monitoring policies create \
-  --display-name="SQL Server Failed Logins Spike" \
-  --condition-display-name="Failed logins > 10 in 5 min" \
-  --condition-filter='resource.type="gce_instance" AND metric.type="logging.googleapis.com/user/sqlserver_failed_logins"' \
-  --condition-threshold-value=10 \
-  --condition-threshold-duration=300s \
-  --notification-channels="projects/data-platform-prod/notificationChannels/CHANNEL_ID" \
-  --combiner=OR
-```
-
-## Quarterly Security Review
-
-Run this comprehensive review every quarter:
-
-> [!info] Quarterly security review script
-> Run this comprehensive review every quarter to verify login status, orphaned users, role memberships, permissions, TDE status, encryption, and audit logs.
-
-```sql
--- 1. Review all SQL logins
-PRINT '=== 1. SQL Server Logins ==='
-SELECT name, type_desc, is_disabled, create_date, modify_date,
-    LOGINPROPERTY(name, 'PasswordLastSetTime') AS password_last_set,
-    LOGINPROPERTY(name, 'DaysUntilExpiration') AS days_until_expiry
-FROM sys.server_principals
-WHERE type IN ('S', 'U', 'G')
-ORDER BY create_date;
-
--- 2. Check for orphaned users (users without matching logins)
-PRINT '=== 2. Orphaned Users ==='
-USE analytics_db;
-SELECT dp.name AS user_name, dp.type_desc, dp.create_date
-FROM sys.database_principals dp
-LEFT JOIN sys.server_principals sp ON dp.sid = sp.sid
-WHERE dp.type IN ('S', 'U')
-  AND sp.sid IS NULL
-  AND dp.name NOT IN ('dbo', 'guest', 'INFORMATION_SCHEMA', 'sys');
--- Expected: empty result set
-
--- 3. Review server role memberships
-PRINT '=== 3. Server Role Memberships ==='
-SELECT r.name AS role_name, m.name AS member_name, m.type_desc
-FROM sys.server_role_members srm
-JOIN sys.server_principals r ON srm.role_principal_id = r.principal_id
-JOIN sys.server_principals m ON srm.member_principal_id = m.principal_id
-ORDER BY r.name, m.name;
--- Expected: only necessary sysadmin members
-
--- 4. Review database-level permissions
-PRINT '=== 4. Database Permissions ==='
-USE analytics_db;
-SELECT dp.name AS principal_name, dp.type_desc,
-    perm.permission_name, perm.state_desc,
-    SCHEMA_NAME(o.schema_id) AS schema_name, o.name AS object_name
-FROM sys.database_permissions perm
-JOIN sys.database_principals dp ON perm.grantee_principal_id = dp.principal_id
-LEFT JOIN sys.objects o ON perm.major_id = o.object_id
-WHERE dp.name NOT IN ('dbo', 'guest', 'public', 'INFORMATION_SCHEMA', 'sys')
-ORDER BY dp.name, schema_name, object_name;
-
--- 5. Verify TDE is still active and certificate is valid
-PRINT '=== 5. TDE Status ==='
-SELECT
-    db.name,
-    db.is_encrypted,
-    c.name AS cert_name,
-    c.expiry_date AS cert_expiry,
-    DATEDIFF(DAY, GETDATE(), c.expiry_date) AS days_until_cert_expiry,
-    dek.encryption_state,
-    dek.key_algorithm,
-    dek.key_length
-FROM sys.databases db
-JOIN sys.dm_database_encryption_keys dek ON db.database_id = dek.database_id
-JOIN sys.certificates c ON dek.encryptor_thumbprint = c.thumbprint
-WHERE db.name = 'analytics_db';
--- ALERT if days_until_cert_expiry < 180: renew certificate!
-
--- 6. Check for unencrypted connections
-PRINT '=== 6. Connection Encryption Status ==='
-SELECT encrypt_option, COUNT(*) AS connections,
-    STRING_AGG(DISTINCT login_name, ', ') AS logins
-FROM sys.dm_exec_connections
-GROUP BY encrypt_option;
--- Expected: only TRUE
-
--- 7. Review recent failed logins (last 90 days)
-PRINT '=== 7. Failed Login Summary (Last 90 Days) ==='
-SELECT client_ip, server_principal_name, COUNT(*) AS failed_count,
-    MIN(event_time) AS first_failure, MAX(event_time) AS last_failure
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id = 'LGIF'
-  AND event_time > DATEADD(DAY, -90, GETUTCDATE())
-GROUP BY client_ip, server_principal_name
-ORDER BY failed_count DESC;
-
--- 8. Review permission changes (last 90 days)
-PRINT '=== 8. Permission Changes (Last 90 Days) ==='
-SELECT
-    event_time,
-    action_id,
-    server_principal_name,
-    object_name,
-    statement
-FROM sys.fn_get_audit_file('/var/opt/mssql/audit/*.sqlaudit', DEFAULT, DEFAULT)
-WHERE action_id IN ('G ', 'D ', 'R ', 'CR', 'AL', 'DR')
-  AND event_time > DATEADD(DAY, -90, GETUTCDATE())
-ORDER BY event_time DESC;
-```
-
-#### Quarterly security review — checklist of audit actions
-
-The queries above each target a specific security control. After running them, use the table below to map each finding to the remediation action.
-
-| Check | Action if Failed |
-|-------|-----------------|
-| sa login is disabled | `ALTER LOGIN sa DISABLE;` |
-| No orphaned users | `DROP USER <orphaned_user>;` |
-| TDE cert expiry > 180 days | Rotate certificate (see [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption)) |
-| Password last set > 90 days | `ALTER LOGIN x WITH PASSWORD = '...' MUST_CHANGE` |
-| Unexpected sysadmin members | `ALTER SERVER ROLE sysadmin DROP MEMBER <login>` |
-| Unencrypted connections found | Verify `forceencryption = 1` in mssql.conf, restart |
-| Failed logins from unknown IPs | Update firewall rules, investigate source |
-
-### Related
-
-- [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — Encryption at rest for database files
-- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — OS-level and SQL Server configuration settings
-- [high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/high-availability-overview) — Certificate-based authentication for AG endpoints
-- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for monitoring connections and sessions
-
-### References
-
-- [SQL Server Security Best Practices (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/security/security-center-for-sql-server-database-engine-and-azure-sql-database)
-- [SQL Server Audit (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/security/auditing/sql-server-audit-database-engine)
-- [GCP IAM Best Practices](https://cloud.google.com/iam/docs/using-iam-securely)
+- [[audit-logging]]
+- [[tde-encryption]]
