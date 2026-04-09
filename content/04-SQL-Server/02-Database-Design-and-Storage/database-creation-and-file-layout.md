@@ -93,7 +93,7 @@ A **page** is the fundamental unit of storage in SQL Server.
 - Tables and indexes are ultimately stored in pages.
 - Reads and writes happen against pages, not arbitrary byte ranges.
 
-**Why this matters:**
+
 When SQL Server reads data from disk into memory, it reads pages. When it modifies stored data, it modifies pages in memory and later flushes them to disk. This is why page density, fragmentation, and I/O behavior matter so much.
 
 **Example:**
@@ -106,7 +106,7 @@ An **extent** is a group of **8 contiguous pages**, for a total of **64 KB**.
 - Size: **64 KB**
 - SQL Server allocates space primarily in extents.
 
-**Why this matters:**
+
 Many file, storage, and formatting recommendations are tied to 64 KB because this is a natural SQL Server allocation boundary.
 
 **Example:**
@@ -159,7 +159,7 @@ The **primary data file** is the single main data file of the database.
 - It belongs to the **PRIMARY** filegroup.
 - It contains core metadata required by the database.
 
-**Why this matters:**
+
 Even in sophisticated filegroup designs, the primary file remains special. You cannot build a database entirely out of secondary files.
 
 ### 2.6 Secondary Data File
@@ -198,7 +198,7 @@ You might create:
 
 The **default filegroup** is where new objects are created if no filegroup is explicitly specified.
 
-**Why this matters:**
+
 If you define multiple filegroups but forget to manage the default filegroup, objects may still land in the wrong location.
 
 **Example:**
@@ -208,7 +208,7 @@ You may create a dedicated application filegroup and set it as default so new ta
 
 The **logical file name** is SQL Server’s internal name for the file.
 
-**Why this matters:**
+
 Administrative commands often refer to logical file names rather than physical paths.
 
 **Example:**
@@ -223,7 +223,7 @@ MODIFY FILE (NAME = MyDatabase_Data01, FILEGROWTH = 1024MB);
 
 The **physical file path** is the operating system path to the file.
 
-**Why this matters:**
+
 The physical path determines:
 - where I/O occurs
 - which storage tier is used
@@ -290,7 +290,7 @@ A staging database may use a strict `MAXSIZE` because it is disposable and shoul
 
 A **Virtual Log File** is an internal subdivision of the transaction log.
 
-**Why VLFs matter:**
+
 The log is physically one or more files, but internally it is divided into VLFs. Excessive VLF counts degrade:
 - startup time
 - crash recovery
@@ -309,7 +309,7 @@ A 500 GB log file grown in tiny increments over months often behaves worse opera
 
 The **recovery model** is a database setting that determines how transactions are logged and what restore options are possible.
 
-**Why this matters:**
+
 The recovery model is a business decision disguised as a technical setting. It determines whether you can do point-in-time recovery and how much data loss you may face after failure.
 
 **Example:**
@@ -326,7 +326,7 @@ It determines:
 - binary vs linguistic comparison behavior
 - character encoding behavior in supported collations
 
-**Why this matters:**
+
 Collation affects correctness, not just aesthetics. Different collations can change join behavior, uniqueness behavior, sort order, and interoperability with external systems.
 
 **Example:**
@@ -336,7 +336,7 @@ If your database collation differs from `tempdb`, string comparisons involving t
 
 The **compatibility level** is a database-scoped setting that controls portions of query processor and language behavior.
 
-**Why this matters:**
+
 It allows a database to run on a newer SQL Server engine while still preserving older optimizer behavior for compatibility and regression control.
 
 **Example:**
@@ -356,14 +356,14 @@ If performance regresses after a compatibility-level change, Query Store helps i
 
 **FILESTREAM** allows large binary objects to be stored in the file system while remaining transactionally consistent with SQL Server.
 
-**Why this matters:**
+
 It is not just “another file type.” It changes backup, restore, storage, and administration patterns.
 
 ### 2.19 MEMORY_OPTIMIZED_DATA
 
 The **MEMORY_OPTIMIZED_DATA** filegroup is required for durable In-Memory OLTP objects.
 
-**Why this matters:**
+
 A database intended to host durable memory-optimized tables must be created with the correct special-purpose filegroup design. This cannot be treated as an afterthought in production architecture.
 
 ---
@@ -1306,21 +1306,21 @@ Monitor at minimum:
 
 Before promoting a newly created database to production, confirm:
 
-- [ ] Workload type is documented
-- [ ] Recovery model is intentional
-- [ ] First full backup plan exists
-- [ ] File placement is intentional
-- [ ] File sizes are pre-sized sensibly
-- [ ] Growth increments are fixed and realistic
-- [ ] `MAXSIZE` strategy is defined
-- [ ] Collation is intentional
-- [ ] Compatibility level is explicit
-- [ ] Query Store is configured
-- [ ] `PAGE_VERIFY CHECKSUM` is enabled
-- [ ] `AUTO_CLOSE` is OFF
-- [ ] `AUTO_SHRINK` is OFF
-- [ ] Ownership is set intentionally
-- [ ] Monitoring and alerting are ready
+- Workload type is documented
+- Recovery model is intentional
+- First full backup plan exists
+- File placement is intentional
+- File sizes are pre-sized sensibly
+- Growth increments are fixed and realistic
+- `MAXSIZE` strategy is defined
+- Collation is intentional
+- Compatibility level is explicit
+- Query Store is configured
+- `PAGE_VERIFY CHECKSUM` is enabled
+- `AUTO_CLOSE` is OFF
+- `AUTO_SHRINK` is OFF
+- Ownership is set intentionally
+- Monitoring and alerting are ready
 
 ---
 
