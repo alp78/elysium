@@ -17,7 +17,7 @@ mindmap
     (compliance, audit)
 ```
 
-> [!abstract]- [[observability-strategy-matrix]]
+> [!abstract]- [[01-observability-strategy-matrix]]
 >
 > - [[observability-strategy-matrix#The Three Pillars Applied to Data Pipelines|Three pillars applied to data pipelines]]
 > - [[observability-strategy-matrix#Master Monitoring Matrix — Per Component|Master monitoring matrix]]
@@ -26,7 +26,7 @@ mindmap
 > - [[observability-strategy-matrix#Datadog vs GCP-Native — When to Use Which|Datadog vs GCP-Native decision guide]]
 > - [[observability-strategy-matrix#Anti-Patterns|Anti-patterns]]
 
-> [!abstract]- [[observability-deep-dive]]
+> [!abstract]- [[01-observability-deep-dive]]
 >
 > - [[observability-deep-dive#The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines|Three pillars for data pipelines]]
 > - [[observability-deep-dive#DataDog for Data Pipeline Observability|Datadog for pipeline observability]]
@@ -35,7 +35,7 @@ mindmap
 > - [[observability-deep-dive#Building a Data Quality Framework|Data quality framework]]
 > - [[observability-deep-dive#Data Profiling and Drift Detection: Shift-Left Quality|Profiling and drift detection]]
 
-> [!abstract]- [[compliance-and-auditability]]
+> [!abstract]- [[02-compliance-and-auditability]]
 >
 > - [[compliance-and-auditability#End-to-End Data Lineage|End-to-end data lineage]]
 > - [[compliance-and-auditability#Corporate Action Processing|Corporate action processing]]

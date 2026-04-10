@@ -16,7 +16,7 @@ mindmap
     (Docker Compose)
 ```
 
-> [!abstract]- [[container-lifecycle]]
+> [!abstract]- [[01-container-lifecycle]]
 >
 > - [[container-lifecycle#Running Containers (`docker run`)|Running containers]]
 > - [[container-lifecycle#Lifecycle Management|Lifecycle management]]
@@ -25,7 +25,7 @@ mindmap
 > - [[container-lifecycle#Inspection and Debugging|Inspection and debugging]]
 > - [[container-lifecycle#Container Debugging Checklist|Debugging checklist]]
 
-> [!abstract]- [[docker-compose]]
+> [!abstract]- [[03-docker-compose]]
 >
 > - [[docker-compose#Compose File Structure|Compose file structure]]
 > - [[docker-compose#Lifecycle Commands|Lifecycle commands]]

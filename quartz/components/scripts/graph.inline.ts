@@ -746,12 +746,9 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         continue
       }
 
-      if (isConnected && depth < 0) {
-        // Connected nodes: show labels only in global graph view
-        nr.label.visible = true
-        nr.label.alpha = Math.min(1, 0.9 * alphaScale)
-        nr.label.scale.set(BASE_LABEL_SCALE)
-        nr.label.style.fontWeight = "400"
+      if (hoveredId !== null) {
+        // When hovering, hide all labels except the hovered node
+        nr.label.visible = false
         continue
       }
 

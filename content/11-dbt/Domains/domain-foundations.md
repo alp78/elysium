@@ -17,7 +17,7 @@ mindmap
     (CLI reference)
 ```
 
-> [!abstract]- [[dbt-core-concepts]]
+> [!abstract]- [[01-dbt-core-concepts]]
 >
 > - [[dbt-core-concepts#What dbt Is (and Is Not)|What dbt is and is not]]
 > - [[dbt-core-concepts#dbt Core vs dbt Cloud|Core vs Cloud]]
@@ -25,7 +25,7 @@ mindmap
 > - [[dbt-core-concepts#The dbt DAG|The DAG]]
 > - [[dbt-core-concepts#dbt Profiles and Targets|Profiles and targets]]
 
-> [!abstract]- [[dbt-project-structure]]
+> [!abstract]- [[02-dbt-project-structure]]
 >
 > - [[dbt-project-structure#dbt Directory Tree|Directory tree]]
 > - [[dbt-project-structure#dbt_project.yml — Fully Annotated|dbt_project.yml annotated]]
@@ -33,7 +33,7 @@ mindmap
 > - [[dbt-project-structure#dbt Config Inheritance: Project to Folder to Model|Config inheritance]]
 > - [[dbt-project-structure#dbt Mapping to Medallion Architecture|Medallion architecture mapping]]
 
-> [!abstract]- [[dbt-cli-reference]]
+> [!abstract]- [[03-dbt-cli-reference]]
 >
 > - [[dbt-cli-reference#Core Commands Overview]]
 > - [[dbt-cli-reference#Selector Syntax|Node selection syntax]]

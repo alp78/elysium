@@ -79,7 +79,7 @@ pre code {
 
 /* ── Code blocks (dark) ──────────────────────────────────────── */
 [saved-theme="dark"] pre {
-  background-color: #13131e !important;
+  background-color: #000000 !important;
   border: 1px solid #29344a !important;
   border-radius: 6px !important;
   padding: 1em !important;
@@ -89,7 +89,7 @@ pre code {
 
 [saved-theme="dark"] :not(pre) > code {
   font-family: var(--codeFont) !important;
-  background-color: #131313 !important;
+  background-color: #000000 !important;
   color: #ffffff !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
@@ -97,7 +97,7 @@ pre code {
 
 /* ── Code blocks (light) — reduced contrast ─────────────────── */
 [saved-theme="light"] pre {
-  background-color: #e8e6ed !important;
+  background-color: #000000 !important;
   border: 1px solid #d0cdd8 !important;
   border-radius: 6px !important;
   padding: 1em !important;
@@ -106,7 +106,7 @@ pre code {
 }
 
 [saved-theme="light"] :not(pre) > code {
-  background-color: #e4e2ea !important;
+  background-color: #000000 !important;
   color: #3b3950 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
@@ -433,6 +433,12 @@ article a.external {
   border-radius: 0 !important;
 }
 
+a.internal {
+  background-color: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
 article a:hover {
   color: #bb9af7 !important;
   transition: color 0.15s ease;
@@ -450,6 +456,31 @@ article a:hover {
   --graph-node-focused: #bb9af7;
   --graph-node-tag: #9ece6a;
   --graph-node-attachment: #ff9e64;
+}
+
+/* ── TOC scrollbar ───────────────────────────────────────────── */
+/*
+ * Root cause: base.scss loads AFTER component CSS (toc.scss) in the bundle.
+ * .desktop-only { display: initial } (0,1,0) overrides .toc { display: flex }
+ * (0,1,0) by cascade order, turning .toc into display: block.  The inner ul
+ * then has no flex height constraint → grows to content size → no scrollbar.
+ * Fix: re-assert display: flex at specificity 0,2,0.
+ */
+.desktop-only.toc {
+  display: flex;
+  flex-direction: column;
+}
+
+/* flex-basis: 0 so the ul starts at 0 and grows to fill, instead of starting
+   at full content height and relying on flex-shrink to bound it. */
+.toc ul.toc-content.overflow {
+  flex: 1 1 0;
+  overflow-y: auto;
+}
+
+/* Cap backlinks so they don't crowd the TOC on heavily-linked pages */
+.sidebar.right .backlinks {
+  max-height: 25vh;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */

@@ -19,7 +19,7 @@ mindmap
     (plan, apply, destroy)
 ```
 
-> [!abstract]- [[hcl-syntax-basics]]
+> [!abstract]- [[01-hcl-syntax-basics]]
 >
 > - [[hcl-syntax-basics#Blocks and Arguments|Blocks and arguments]]
 > - [[hcl-syntax-basics#File Naming and Organization|File naming and organization]]
@@ -27,7 +27,7 @@ mindmap
 > - [[hcl-syntax-basics#Block Types|Block types]]
 > - [[hcl-syntax-basics#Declarative vs Imperative|Declarative vs imperative]]
 
-> [!abstract]- [[terraform-variables-and-outputs]]
+> [!abstract]- [[03-terraform-variables-and-outputs]]
 >
 > - [[terraform-variables-and-outputs#Input Variables — variables.tf|Input variables]]
 > - [[terraform-variables-and-outputs#Setting Variable Values|Setting variable values]]
@@ -35,13 +35,13 @@ mindmap
 > - [[terraform-variables-and-outputs#Output Values — outputs.tf|Output values]]
 > - [[terraform-variables-and-outputs#Querying Outputs|Querying outputs]]
 
-> [!abstract]- [[terraform-providers-and-backend]]
+> [!abstract]- [[02-terraform-providers-and-backend]]
 >
 > - [[terraform-providers-and-backend#Provider and Backend Configuration|Provider and backend configuration]]
 > - [[terraform-providers-and-backend#Why Remote State?|Why remote state]]
 > - [[terraform-providers-and-backend#The terraform Block|The terraform block]]
 
-> [!abstract]- [[terraform-state-management]]
+> [!abstract]- [[04-terraform-state-management]]
 >
 > - [[terraform-state-management#What Is the State File?|What is the state file]]
 > - [[terraform-state-management#Remote State in GCS|Remote state in GCS]]
@@ -50,7 +50,7 @@ mindmap
 > - [[terraform-state-management#Moving Resources in State|Moving resources in state]]
 > - [[terraform-state-management#State Security|State security]]
 
-> [!abstract]- [[terraform-plan-apply-destroy]]
+> [!abstract]- [[05-terraform-plan-apply-destroy]]
 >
 > - [[terraform-plan-apply-destroy#How terraform apply Works|How apply works]]
 > - [[terraform-plan-apply-destroy#Core Commands|Core commands]]

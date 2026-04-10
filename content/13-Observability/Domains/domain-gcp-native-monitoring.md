@@ -18,7 +18,7 @@ mindmap
     (pipeline health, SLA)
 ```
 
-> [!abstract]- [[gcp-cloud-monitoring-deep-dive]]
+> [!abstract]- [[01-gcp-cloud-monitoring-deep-dive]]
 >
 > - [[gcp-cloud-monitoring-deep-dive#Cloud Monitoring Architecture|Architecture]]
 > - [[gcp-cloud-monitoring-deep-dive#Monitoring Every GCP Component Used in Data Engineering|Monitoring every GCP component]]
@@ -27,7 +27,7 @@ mindmap
 > - [[gcp-cloud-monitoring-deep-dive#Alerting Policies|Alerting policies]]
 > - [[gcp-cloud-monitoring-deep-dive#SLIs and SLOs|SLIs and SLOs]]
 
-> [!abstract]- [[gcp-cloud-trace-and-logging]]
+> [!abstract]- [[02-gcp-cloud-trace-and-logging]]
 >
 > - [[gcp-cloud-trace-and-logging#Cloud Logging for Data Engineers|Cloud Logging for data engineers]]
 > - [[gcp-cloud-trace-and-logging#Log-Based Metrics|Log-based metrics]]
@@ -36,7 +36,7 @@ mindmap
 > - [[gcp-cloud-trace-and-logging#End-to-End Observability: Connecting Metrics, Logs, and Traces|Connecting metrics, logs, and traces]]
 > - [[gcp-cloud-trace-and-logging#Cost Comparison: GCP-Native vs Datadog|Cost comparison with Datadog]]
 
-> [!abstract]- [[gcp-data-lineage-and-catalog]]
+> [!abstract]- [[04-gcp-data-lineage-and-catalog]]
 >
 > - [[gcp-data-lineage-and-catalog#GCP Lineage and Catalog Landscape|Lineage and catalog landscape]]
 > - [[gcp-data-lineage-and-catalog#Dataplex — Unified Data Governance|Dataplex unified governance]]
@@ -45,7 +45,7 @@ mindmap
 > - [[gcp-data-lineage-and-catalog#Data Quality with Dataplex|Data quality with Dataplex]]
 > - [[gcp-data-lineage-and-catalog#Impact Analysis — Before You Change Anything|Impact analysis]]
 
-> [!abstract]- [[gcp-pipeline-health-and-sla]]
+> [!abstract]- [[03-gcp-pipeline-health-and-sla]]
 >
 > - [[gcp-pipeline-health-and-sla#Data Freshness Monitoring|Data freshness monitoring]]
 > - [[gcp-pipeline-health-and-sla#Data Quality Checks|Data quality checks]]

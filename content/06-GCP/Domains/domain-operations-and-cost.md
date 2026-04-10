@@ -19,7 +19,7 @@ mindmap
     (total cost of ownership)
 ```
 
-> [!abstract]- [[cloud-logging]]
+> [!abstract]- [[01-cloud-logging]]
 >
 > - [[cloud-logging#Filtering Cloud Logs by Severity|Filtering by severity]]
 > - [[cloud-logging#Combining Log Filters for Incident Response|Incident response filters]]
@@ -27,14 +27,14 @@ mindmap
 > - [[cloud-logging#Cloud Logging Filter Language Reference|Filter language reference]]
 > - [[cloud-logging#Common Cloud Logging Resource Types for Data Engineering|Resource types for data engineering]]
 
-> [!abstract]- [[cloud-monitoring-metrics]]
+> [!abstract]- [[02-cloud-monitoring-metrics]]
 >
 > - [[cloud-monitoring-metrics#Reading Time-Series Metric Data|Reading time-series data]]
 > - [[cloud-monitoring-metrics#Key Cloud Monitoring Metrics for Data Engineers|Key metrics for data engineers]]
 > - [[cloud-monitoring-metrics#Metrics vs Logs — When to Use Each|Metrics vs logs]]
 > - [[cloud-monitoring-metrics#Cloud Monitoring Alerting Policies|Alerting policies]]
 
-> [!abstract]- [[gcp-billing-and-pricing]]
+> [!abstract]- [[01-gcp-billing-and-pricing]]
 >
 > - [[gcp-billing-and-pricing#GCP Billing Fundamentals|Billing fundamentals]]
 > - [[gcp-billing-and-pricing#Pricing for Every GCP Data Engineering Service|Per-service pricing]]
@@ -42,7 +42,7 @@ mindmap
 > - [[gcp-billing-and-pricing#FinOps Checklist|FinOps checklist]]
 > - [[gcp-billing-and-pricing#GCP Free Tiers Quick Reference|Free tiers reference]]
 
-> [!abstract]- [[gcp-cost-monitoring-and-budgets]]
+> [!abstract]- [[02-gcp-cost-monitoring-and-budgets]]
 >
 > - [[gcp-cost-monitoring-and-budgets#Setting Up Billing Export to BigQuery|Billing export setup]]
 > - [[gcp-cost-monitoring-and-budgets#Budget Alerts|Budget alerts]]
@@ -50,7 +50,7 @@ mindmap
 > - [[gcp-cost-monitoring-and-budgets#Cost Optimization Strategies|Optimization strategies]]
 > - [[gcp-cost-monitoring-and-budgets#Cost Dashboard in BigQuery|Cost dashboard]]
 
-> [!abstract]- [[gcp-total-cost-of-ownership]]
+> [!abstract]- [[03-gcp-total-cost-of-ownership]]
 >
 > - [[gcp-total-cost-of-ownership#How to Calculate TCO for a Data Pipeline|TCO calculation method]]
 > - [[gcp-total-cost-of-ownership#Reference Architecture 1: Small Batch Pipeline (~$100–150|Small batch pipeline]]

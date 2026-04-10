@@ -17,16 +17,16 @@ mindmap
     (self-service platform)
 ```
 
-> [!abstract]- [[dataops-principles-and-practices]]
+> [!abstract]- [[01-dataops-principles-and-practices]]
 >
 > - [[dataops-principles-and-practices#The DataOps Manifesto|The DataOps Manifesto]]
 > - [[dataops-principles-and-practices#Statistical Process Control (SPC) for Data|Statistical Process Control]]
 > - [[dataops-principles-and-practices#Three Pillars of DataOps|Three Pillars of DataOps]]
-> - [[dataops-principles-and-practices|CI/CD for data pipelines]]
+> - [[01-dataops-principles-and-practices|CI/CD for data pipelines]]
 > - [[dataops-principles-and-practices#Shift-Left Testing|Shift-left testing]]
 > - [[dataops-principles-and-practices#DORA Metrics for Data|DORA Metrics for Data]]
 
-> [!abstract]- [[dataops-for-indices]]
+> [!abstract]- [[05-dataops-for-indices]]
 >
 > - [[dataops-for-indices#Parallel Backtesting Architecture|Parallel Backtesting Architecture]]
 > - [[dataops-for-indices#Continuous Validation|Continuous Validation]]
@@ -34,7 +34,7 @@ mindmap
 > - [[dataops-for-indices#Methodology-as-Code|Methodology-as-Code]]
 > - [[dataops-for-indices#Incident Response for Calculation Errors|Incident Response]]
 
-> [!abstract]- [[self-service-data-platform]]
+> [!abstract]- [[03-self-service-data-platform]]
 >
 > - [[self-service-data-platform#The Self-Service Spectrum|The Self-Service Spectrum]]
 > - [[self-service-data-platform#Data Catalog Tools|Data Catalog Tools]]

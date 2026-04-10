@@ -19,7 +19,7 @@ mindmap
     (troubleshooting)
 ```
 
-> [!abstract]- [[terraform-conditional-resources]]
+> [!abstract]- [[02-terraform-conditional-resources]]
 >
 > - [[terraform-conditional-resources#count — Conditional Creation|Count conditional creation]]
 > - [[terraform-conditional-resources#for_each — Multiple Instances from a Collection|for_each multiple instances]]
@@ -27,7 +27,7 @@ mindmap
 > - [[terraform-conditional-resources#Ternary Operator Patterns|Ternary operator patterns]]
 > - [[terraform-conditional-resources#Referencing Conditional Resources|Referencing conditional resources]]
 
-> [!abstract]- [[terraform-resource-dependencies]]
+> [!abstract]- [[01-terraform-resource-dependencies]]
 >
 > - [[terraform-resource-dependencies#How the Dependency Graph Works|How the dependency graph works]]
 > - [[terraform-resource-dependencies#Implicit Dependencies — Resource References|Implicit dependencies]]
@@ -35,7 +35,7 @@ mindmap
 > - [[terraform-resource-dependencies#Explicit Dependencies — depends_on|Explicit dependencies]]
 > - [[terraform-resource-dependencies#Circular Dependencies|Circular dependencies]]
 
-> [!abstract]- [[terraform-module-composition]]
+> [!abstract]- [[03-terraform-module-composition]]
 >
 > - [[terraform-module-composition#Module Basics|Module basics]]
 > - [[terraform-module-composition#Module Directory Structure|Module directory structure]]

@@ -16,7 +16,7 @@ mindmap
     (leadership, collaboration)
 ```
 
-> [!abstract]- [[data-team-organization]]
+> [!abstract]- [[02-data-team-organization]]
 >
 > - [[data-team-organization#Team Topology Models|Team Topology Models]]
 > - [[data-team-organization#Role Definitions|Role Definitions]]
@@ -25,7 +25,7 @@ mindmap
 > - [[data-team-organization#On-Call and Incident Management|On-Call and Incident Management]]
 > - [[data-team-organization#Building a Data Team from Scratch|Building a Data Team from Scratch]]
 
-> [!abstract]- [[leadership-and-collaboration]]
+> [!abstract]- [[04-leadership-and-collaboration]]
 >
 > - [[leadership-and-collaboration#The Code Review as a Teaching Tool|Code Review as a Teaching Tool]]
 > - [[leadership-and-collaboration#Technical Design Documents|Technical Design Documents]]

@@ -17,14 +17,14 @@ mindmap
     (troubleshooting)
 ```
 
-> [!abstract]- [[github-actions-ci-cd]]
+> [!abstract]- [[03-github-actions-ci-cd]]
 >
 > - [[github-actions-ci-cd#How GitHub Actions Connects to Git|Git trigger events]]
 > - [[github-actions-ci-cd#Monitoring Workflows with GitHub CLI|Monitoring with GitHub CLI]]
 > - [[github-actions-ci-cd#Secrets Management|Secrets management]]
 > - [[github-actions-ci-cd#Troubleshooting Common Errors|Troubleshooting common errors]]
 
-> [!abstract]- [[github-actions-data-engineering]]
+> [!abstract]- [[04-github-actions-data-engineering]]
 >
 > - [[github-actions-data-engineering#CI for Data Pipelines|CI for data pipelines]]
 > - [[github-actions-data-engineering#Terraform Automation|Terraform automation]]
@@ -33,7 +33,7 @@ mindmap
 > - [[github-actions-data-engineering#Workload Identity Federation (Keyless GCP Auth)|Workload Identity Federation]]
 > - [[github-actions-data-engineering#Troubleshooting|Troubleshooting]]
 
-> [!abstract]- [[github-actions-problems]]
+> [!abstract]- [[05-github-actions-problems]]
 >
 > - [[github-actions-problems#Critical — Production Impact|Critical production impact]]
 > - [[github-actions-problems#High — Team Velocity Killers|Team velocity killers]]

@@ -15,7 +15,7 @@ mindmap
     (image management)
 ```
 
-> [!abstract]- [[image-management]]
+> [!abstract]- [[02-image-management]]
 >
 > - [[image-management#Dockerfile Fundamentals|Dockerfile fundamentals]]
 > - [[image-management#Building Images|Building images]]

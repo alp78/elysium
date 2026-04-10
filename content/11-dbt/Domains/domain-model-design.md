@@ -18,7 +18,7 @@ mindmap
     (materializations)
 ```
 
-> [!abstract]- [[dbt-staging-models]]
+> [!abstract]- [[01-dbt-staging-models]]
 >
 > - [[dbt-staging-models#Staging Model Core Principles|Core principles]]
 > - [[dbt-staging-models#dbt _sources.yml — Full Declaration with Freshness|Source declaration with freshness]]
@@ -26,7 +26,7 @@ mindmap
 > - [[dbt-staging-models#dbt Source Freshness in Practice|Source freshness in practice]]
 > - [[dbt-staging-models#Staging Model Anti-Patterns|Anti-patterns]]
 
-> [!abstract]- [[dbt-intermediate-models]]
+> [!abstract]- [[02-dbt-intermediate-models]]
 >
 > - [[dbt-intermediate-models#Intermediate Model Core Principles|Core principles]]
 > - [[dbt-intermediate-models#Intermediate Materialisation Strategy|Materialisation strategy]]
@@ -34,7 +34,7 @@ mindmap
 > - [[dbt-intermediate-models#int_momentum_scores|Momentum scores model]]
 > - [[dbt-intermediate-models#dbt Ephemeral Models for Intermediate Logic|Ephemeral models]]
 
-> [!abstract]- [[dbt-mart-models]]
+> [!abstract]- [[03-dbt-mart-models]]
 >
 > - [[dbt-mart-models#Mart Model Core Principles|Core principles]]
 > - [[dbt-mart-models#Mart Grain Definition|Grain definition]]
@@ -42,7 +42,7 @@ mindmap
 > - [[dbt-mart-models#fct_composite_scores|Composite scores fact]]
 > - [[dbt-mart-models#_exposures.yml|Exposures]]
 
-> [!abstract]- [[dbt-materializations]]
+> [!abstract]- [[04-dbt-materializations]]
 >
 > - [[dbt-materializations#The Five Materialisation Types|Five materialisation types]]
 > - [[dbt-materializations#Incremental Strategies|Incremental strategies]]

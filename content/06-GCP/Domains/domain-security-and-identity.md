@@ -18,7 +18,7 @@ mindmap
     (VPC Service Controls)
 ```
 
-> [!abstract]- [[service-accounts-and-iam]]
+> [!abstract]- [[01-service-accounts-and-iam]]
 >
 > - [[service-accounts-and-iam#GCP Service Accounts — Machine Identities|Service accounts]]
 > - [[service-accounts-and-iam#IAM Bindings — Granting Roles to Service Accounts|IAM role bindings]]
@@ -26,7 +26,7 @@ mindmap
 > - [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline|Minimum pipeline permissions]]
 > - [[service-accounts-and-iam#Custom IAM Roles for Tighter Control|Custom roles]]
 
-> [!abstract]- [[gcp-identity-and-connection-patterns]]
+> [!abstract]- [[02-gcp-identity-and-connection-patterns]]
 >
 > - [[gcp-identity-and-connection-patterns#The GCP Identity Model|Identity model]]
 > - [[gcp-identity-and-connection-patterns#Authentication Methods — Complete Framework|Authentication methods]]
@@ -34,7 +34,7 @@ mindmap
 > - [[gcp-identity-and-connection-patterns#The Certificate and TLS Landscape|Certificates and TLS]]
 > - [[gcp-identity-and-connection-patterns#Anti-Patterns|Anti-patterns]]
 
-> [!abstract]- [[secrets-management]]
+> [!abstract]- [[03-secrets-management]]
 >
 > - [[secrets-management#GCP Secret Manager|GCP Secret Manager]]
 > - [[secrets-management#Airflow Integration|Airflow integration]]
@@ -42,7 +42,7 @@ mindmap
 > - [[secrets-management#Secret Rotation Procedure|Secret rotation]]
 > - [[secrets-management#Secret Management Anti-Patterns|Anti-patterns]]
 
-> [!abstract]- [[vpc-service-controls]]
+> [!abstract]- [[04-vpc-service-controls]]
 >
 > - [[vpc-service-controls#The Data Exfiltration Threat Model|Data exfiltration threat model]]
 > - [[vpc-service-controls#Setting Up a VPC-SC Perimeter|Setting up a perimeter]]

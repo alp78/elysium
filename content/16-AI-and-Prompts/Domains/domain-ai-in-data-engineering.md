@@ -23,7 +23,7 @@ mindmap
     (AI-assisted workflow)
 ```
 
-> [!abstract]- [[ai-augmented-data-engineering]]
+> [!abstract]- [[01-ai-augmented-data-engineering]]
 >
 > - [[ai-augmented-data-engineering#Where LLMs Fit in Data Engineering|Where LLMs fit in data engineering]]
 > - [[ai-augmented-data-engineering#RAG Architecture: Retrieval-Augmented Generation|RAG architecture]]

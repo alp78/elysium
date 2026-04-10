@@ -19,7 +19,7 @@ mindmap
     (registry, CI)
 ```
 
-> [!abstract]- [[terraform-networking]]
+> [!abstract]- [[01-terraform-networking]]
 >
 > - [[terraform-networking#Networking Concepts|Networking concepts]]
 > - [[terraform-networking#Architecture Overview|Architecture overview]]
@@ -27,7 +27,7 @@ mindmap
 > - [[terraform-networking#Resource: Cloud NAT|Cloud NAT]]
 > - [[terraform-networking#Firewall Rules|Firewall rules]]
 
-> [!abstract]- [[terraform-compute]]
+> [!abstract]- [[02-terraform-compute]]
 >
 > - [[terraform-compute#Architecture Context|Architecture context]]
 > - [[terraform-compute#Resource: Airflow VM|Airflow VM]]
@@ -35,7 +35,7 @@ mindmap
 > - [[terraform-compute#Resource: SQL Server VM|SQL Server VM]]
 > - [[terraform-compute#Allow Stopping for Update|Allow stopping for update]]
 
-> [!abstract]- [[terraform-iam-and-secrets]]
+> [!abstract]- [[03-terraform-iam-and-secrets]]
 >
 > - [[terraform-iam-and-secrets#Core Service Accounts|Core service accounts]]
 > - [[terraform-iam-and-secrets#IAM Bindings|IAM bindings]]
@@ -43,7 +43,7 @@ mindmap
 > - [[terraform-iam-and-secrets#Conditional Datadog Resources|Conditional Datadog resources]]
 > - [[terraform-iam-and-secrets#CI IAM Bindings|CI IAM bindings]]
 
-> [!abstract]- [[terraform-cloud-run]]
+> [!abstract]- [[04-terraform-cloud-run]]
 >
 > - [[terraform-cloud-run#Resource: Dashboard Service|Dashboard service]]
 > - [[terraform-cloud-run#VPC Access — Direct Egress|VPC access and direct egress]]
@@ -51,7 +51,7 @@ mindmap
 > - [[terraform-cloud-run#Service vs Job Comparison|Service vs job comparison]]
 > - [[terraform-cloud-run#Double-Nested Template|Double-nested template]]
 
-> [!abstract]- [[terraform-registry-and-ci]]
+> [!abstract]- [[05-terraform-registry-and-ci]]
 >
 > - [[terraform-registry-and-ci#Artifact Registry — registry.tf|Artifact Registry]]
 > - [[terraform-registry-and-ci#Cleanup Policies|Cleanup policies]]

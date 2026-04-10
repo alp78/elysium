@@ -18,14 +18,14 @@ mindmap
     (troubleshooting)
 ```
 
-> [!abstract]- [[git-tagging-and-releases]]
+> [!abstract]- [[09-git-tagging-and-releases]]
 >
 > - [[git-tagging-and-releases#Lightweight vs Annotated Tags|Lightweight vs annotated tags]]
 > - [[git-tagging-and-releases#Creating Tags|Creating tags]]
 > - [[git-tagging-and-releases#Pushing Tags to GitHub|Pushing tags to GitHub]]
 > - [[git-tagging-and-releases#Semantic Versioning Context|Semantic versioning]]
 
-> [!abstract]- [[git-recovery-and-undo]]
+> [!abstract]- [[11-git-recovery-and-undo]]
 >
 > - [[git-recovery-and-undo#Decision Tree: Which Git Undo to Use|Undo decision tree]]
 > - [[git-recovery-and-undo#Safe: Discard Uncommitted Changes|Discard uncommitted changes]]
@@ -33,7 +33,7 @@ mindmap
 > - [[git-recovery-and-undo#Careful: Reset (Rewrites History)|Reset (rewrite history)]]
 > - [[git-recovery-and-undo#Recover: Reflog — Git's Safety Net|Reflog safety net]]
 
-> [!abstract]- [[git-common-errors]]
+> [!abstract]- [[12-git-common-errors]]
 >
 > - [[git-common-errors#"Failed to push: rejected -- non-fast-forward"|Push rejected non-fast-forward]]
 > - [[git-common-errors#"Detached HEAD"|Detached HEAD]]
@@ -41,7 +41,7 @@ mindmap
 > - [[git-common-errors#"fatal: refusing to merge unrelated histories"|Unrelated histories]]
 > - [[git-common-errors#Quick Reference Table|Quick reference table]]
 
-> [!abstract]- [[git-problems]]
+> [!abstract]- [[13-git-problems]]
 >
 > - [[git-problems#Secrets Committed to Repository|Secrets committed to repo]]
 > - [[git-problems#Force Push to Main|Force push to shared branch]]

@@ -23,7 +23,7 @@ mindmap
     (cross-adapter patterns)
 ```
 
-> [!abstract]- [[dbt-airflow-integration]]
+> [!abstract]- [[01-dbt-airflow-integration]]
 >
 > - [[dbt-airflow-integration#Airflow BashOperator Wrapping dbt run|BashOperator wrapping dbt]]
 > - [[dbt-airflow-integration#Airflow astronomer-cosmos DAG Definition|Cosmos per-model tasks]]
@@ -31,7 +31,7 @@ mindmap
 > - [[dbt-airflow-integration#Full DAG: Extract to dbt Cosmos to dbt test to Publish|Full pipeline DAG]]
 > - [[dbt-airflow-integration#Handling dbt Failures in Airflow|Handling failures]]
 
-> [!abstract]- [[dbt-ci-cd]]
+> [!abstract]- [[05-dbt-ci-cd]]
 >
 > - [[dbt-ci-cd#dbt Slim Build: State-Based Selection|Slim build with state selection]]
 > - [[dbt-ci-cd#Workload Identity Federation (Keyless GCP Auth)|Workload Identity Federation]]
@@ -39,7 +39,7 @@ mindmap
 > - [[dbt-ci-cd#Full dbt CI Workflow: dbt-ci.yml|Full CI workflow]]
 > - [[dbt-ci-cd#Full dbt CD Workflow: dbt-cd.yml|Full CD workflow]]
 
-> [!abstract]- [[dbt-documentation-and-lineage]]
+> [!abstract]- [[02-dbt-documentation-and-lineage]]
 >
 > - [[dbt-documentation-and-lineage#Generating and Serving Docs|Generating and serving docs]]
 > - [[dbt-documentation-and-lineage#Lineage Graph Visualisation|Lineage graph]]
@@ -47,7 +47,7 @@ mindmap
 > - [[dbt-documentation-and-lineage#Data Catalog Integration|Data catalog integration]]
 > - [[dbt-documentation-and-lineage#EU BMR Methodology Traceability|EU BMR traceability]]
 
-> [!abstract]- [[dbt-observability]]
+> [!abstract]- [[03-dbt-observability]]
 >
 > - [[dbt-observability#dbt Artifacts Overview|Artifacts overview]]
 > - [[dbt-observability#Python Script: Push dbt Results to DogStatsD|Push results to DogStatsD]]
@@ -55,7 +55,7 @@ mindmap
 > - [[dbt-observability#Monitoring dbt in Datadog|Datadog monitoring]]
 > - [[dbt-observability#Dashboard Template: Model Durations, Test Failures, Freshness|Dashboard template]]
 
-> [!abstract]- [[dbt-performance-tuning]]
+> [!abstract]- [[04-dbt-performance-tuning]]
 >
 > - [[dbt-performance-tuning#Quick Analysis with Python|Identifying slow models]]
 > - [[dbt-performance-tuning#BigQuery Tuning — Partition Pruning|BigQuery partition pruning]]
@@ -63,7 +63,7 @@ mindmap
 > - [[dbt-performance-tuning#Thread Tuning Per Adapter|Thread tuning per adapter]]
 > - [[dbt-performance-tuning#Model Refactoring: Split Slow Models|Refactoring slow models]]
 
-> [!abstract]- [[dbt-troubleshooting]]
+> [!abstract]- [[06-dbt-troubleshooting]]
 >
 > - [[dbt-troubleshooting#dbt First Responder Commands|First responder commands]]
 > - [[dbt-troubleshooting#Compilation Errors|Compilation errors]]
@@ -72,7 +72,7 @@ mindmap
 > - [[dbt-troubleshooting#Snapshot Corruption|Snapshot corruption]]
 > - [[dbt-troubleshooting#dbt Common Errors Reference Table|Common errors reference table]]
 
-> [!abstract]- [[dbt-bigquery-adapter]]
+> [!abstract]- [[02-dbt-bigquery-adapter]]
 >
 > - [[dbt-bigquery-adapter#BigQuery Adapter Installation]]
 > - [[dbt-bigquery-adapter#Partitioning]]
@@ -80,7 +80,7 @@ mindmap
 > - [[dbt-bigquery-adapter#BigQuery SQL Patterns|BigQuery SQL patterns]]
 > - [[dbt-bigquery-adapter#Cost Control|Cost control]]
 
-> [!abstract]- [[dbt-sqlserver-adapter]]
+> [!abstract]- [[01-dbt-sqlserver-adapter]]
 >
 > - [[dbt-sqlserver-adapter#SQL Server Adapter Installation]]
 > - [[dbt-sqlserver-adapter#Incremental Strategy: delete+insert|Incremental delete+insert]]
@@ -88,7 +88,7 @@ mindmap
 > - [[dbt-sqlserver-adapter#SQL Server Post-Hook Indexes|Post-hook indexes]]
 > - [[dbt-sqlserver-adapter#SQL Server Adapter Known Limitations Summary|Known limitations]]
 
-> [!abstract]- [[dbt-cross-adapter-patterns]]
+> [!abstract]- [[03-dbt-cross-adapter-patterns]]
 >
 > - [[dbt-cross-adapter-patterns#The Cross-Adapter Problem|The cross-adapter problem]]
 > - [[dbt-cross-adapter-patterns#The Dispatch Macro Pattern|Dispatch macro pattern]]

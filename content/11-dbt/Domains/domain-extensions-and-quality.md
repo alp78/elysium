@@ -19,7 +19,7 @@ mindmap
     (data contracts)
 ```
 
-> [!abstract]- [[dbt-macros-and-jinja]]
+> [!abstract]- [[01-dbt-macros-and-jinja]]
 >
 > - [[dbt-macros-and-jinja#Variables and Filters|Variables and filters]]
 > - [[dbt-macros-and-jinja#Writing Custom Macros|Writing custom macros]]
@@ -27,7 +27,7 @@ mindmap
 > - [[dbt-macros-and-jinja#Pre-hook and Post-hook Patterns|Pre-hook and post-hook patterns]]
 > - [[dbt-macros-and-jinja#Jinja and Macro Anti-Patterns|Anti-patterns]]
 
-> [!abstract]- [[dbt-packages]]
+> [!abstract]- [[03-dbt-packages]]
 >
 > - [[dbt-packages#dbt-utils — Most Used Macros in Financial Pipelines|dbt-utils key macros]]
 > - [[dbt-packages#dbt-expectations — key tests for financial data quality|dbt-expectations key tests]]
@@ -35,7 +35,7 @@ mindmap
 > - [[dbt-packages#Writing a Custom Package: dbt-financial-utils|Writing a custom package]]
 > - [[dbt-packages#Version Pinning Strategy|Version pinning strategy]]
 
-> [!abstract]- [[dbt-snapshots-and-scd]]
+> [!abstract]- [[02-dbt-snapshots-and-scd]]
 >
 > - [[dbt-snapshots-and-scd#How dbt Snapshots Work|How snapshots work]]
 > - [[dbt-snapshots-and-scd#Snapshot Strategy: timestamp|Timestamp strategy]]
@@ -43,7 +43,7 @@ mindmap
 > - [[dbt-snapshots-and-scd#Snapshot of ESG Scores for Audit Trail|ESG audit trail]]
 > - [[dbt-snapshots-and-scd#Gotchas and Known Issues|Gotchas and known issues]]
 
-> [!abstract]- [[dbt-testing-framework]]
+> [!abstract]- [[01-dbt-testing-framework]]
 >
 > - [[dbt-testing-framework#dbt Test Categories|Test categories]]
 > - [[dbt-testing-framework#dbt Built-in Generic Tests|Built-in generic tests]]
@@ -51,7 +51,7 @@ mindmap
 > - [[dbt-testing-framework#Custom Generic Tests|Custom generic tests]]
 > - [[dbt-testing-framework#Test Coverage Strategy by Layer|Coverage strategy by layer]]
 
-> [!abstract]- [[dbt-data-contracts-implementation]]
+> [!abstract]- [[02-dbt-data-contracts-implementation]]
 >
 > - [[dbt-data-contracts-implementation#What Is a dbt Data Contract?|What is a data contract]]
 > - [[dbt-data-contracts-implementation#Enabling a dbt Data Contract|Enabling contracts]]

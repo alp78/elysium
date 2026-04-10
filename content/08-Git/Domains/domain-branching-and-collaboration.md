@@ -19,14 +19,14 @@ mindmap
     (pull requests, review)
 ```
 
-> [!abstract]- [[git-branching-and-merging]]
+> [!abstract]- [[03-git-branching-and-merging]]
 >
 > - [[git-branching-and-merging#Creating and Switching Branches|Creating and switching branches]]
 > - [[git-branching-and-merging#Stashing Uncommitted Work|Stashing uncommitted work]]
 > - [[git-branching-and-merging#Merging Strategies|Merging strategies]]
 > - [[git-branching-and-merging#Git Branch Recovery Techniques|Branch recovery techniques]]
 
-> [!abstract]- [[merge-vs-rebase-vs-squash]]
+> [!abstract]- [[04-merge-vs-rebase-vs-squash]]
 >
 > - [[merge-vs-rebase-vs-squash#Merge vs rebase vs squash — comparison table|Comparison table]]
 > - [[merge-vs-rebase-vs-squash#git merge — standard merge with merge commit|Standard merge]]
@@ -34,7 +34,7 @@ mindmap
 > - [[merge-vs-rebase-vs-squash#git merge --squash — collapse branch into single commit|Squash merge]]
 > - [[merge-vs-rebase-vs-squash#Decision guide — which merge strategy by scenario|Decision guide]]
 
-> [!abstract]- [[git-merge-conflicts]]
+> [!abstract]- [[10-git-merge-conflicts]]
 >
 > - [[git-merge-conflicts#What a Merge Conflict Looks Like|What a conflict looks like]]
 > - [[git-merge-conflicts#Step-by-Step Merge Conflict Resolution Process|Step-by-step resolution]]
@@ -42,7 +42,7 @@ mindmap
 > - [[git-merge-conflicts#Rebase Conflict Resolution|Rebase conflict resolution]]
 > - [[git-merge-conflicts#Preventing Merge Conflicts|Preventing conflicts]]
 
-> [!abstract]- [[git-remote-management]]
+> [!abstract]- [[05-git-remote-management]]
 >
 > - [[git-remote-management#Viewing Configured Remotes|Viewing configured remotes]]
 > - [[git-remote-management#Adding a Remote (Fork Workflow)|Adding a remote]]
@@ -50,7 +50,7 @@ mindmap
 > - [[git-remote-management#Pruning: Clean Up Deleted Remote Branches|Pruning stale branches]]
 > - [[git-remote-management#Safe Force-Push After Rebase|Safe force-push]]
 
-> [!abstract]- [[pull-requests-and-code-review]]
+> [!abstract]- [[06-pull-requests-and-code-review]]
 >
 > - [[pull-requests-and-code-review#Creating a PR|Creating a PR]]
 > - [[pull-requests-and-code-review#Reviewing and Merging PRs|Reviewing and merging]]
