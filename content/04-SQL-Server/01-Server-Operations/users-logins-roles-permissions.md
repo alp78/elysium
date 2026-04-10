@@ -2,7 +2,6 @@
 title: "Users, Logins, Roles, and Permissions"
 tags:
   - sql-server
-  - sql-server-2022
   - security
   - authentication
   - authorization
@@ -11,8 +10,6 @@ tags:
   - roles
   - permissions
   - gcp
-  - service-accounts
-  - data-engineering
 aliases:
   - SQL Server users logins roles permissions
   - SQL Server security model
