@@ -20,6 +20,8 @@ import calloutScript from "../../components/scripts/callout.inline"
 // @ts-ignore
 import checkboxScript from "../../components/scripts/checkbox.inline"
 // @ts-ignore
+import recolorEmojiScript from "../../components/scripts/recolor-emoji.inline"
+// @ts-ignore
 import mermaidScript from "../../components/scripts/mermaid.inline"
 import mermaidStyle from "../../components/styles/mermaid.inline.scss"
 import { FilePath, pathToRoot, slugTag, slugifyFilePath } from "../../util/path"
@@ -756,6 +758,13 @@ export const ObsidianFlavoredMarkdown: QuartzTransformerPlugin<Partial<Options>>
           contentType: "inline",
         })
       }
+
+      // Always recolor ✅ → styled ✔︎ (see recolor-emoji.inline.ts).
+      js.push({
+        script: recolorEmojiScript,
+        loadTime: "afterDOMReady",
+        contentType: "inline",
+      })
 
       if (opts.callouts) {
         js.push({

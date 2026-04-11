@@ -24,18 +24,30 @@ status: complete
 
 # Database Creation and File Layout
 
-Creating a database is a design act, not a syntactic one. Every decision encoded in `CREATE DATABASE` — physical layout, collation, recovery model, growth policy, observability — becomes an operational constraint the moment the first byte is written. This note walks through those decisions and illustrates each one against a live reference database, `stoxx_db`, created on the same SQL Server 2022 instance using the full baseline pattern documented later in this note. Every DMV output on this page is captured from that live environment so the reader can execute each query directly on an existing database rather than reading abstract syntax.
+Creating a database is a design act, not a syntactic one. Every decision encoded in `CREATE DATABASE` — physical layout, collation, recovery model, growth policy, observability — becomes an operational constraint the moment the first byte is written. This note walks through those decisions and demonstrates each one against two live reference databases so every DMV output on this page is captured from real state, not fabricated.
 
-> [!info] Live demo environment
+This note answers the production questions that actually matter on day one:
+
+- what a `CREATE DATABASE` statement *implicitly decides* when the operator omits options
+- how file layout, filegroups, autogrowth, and `MAXSIZE` interact under production load
+- which recovery model, collation, compatibility level, and isolation settings are the right defaults and why
+- how a full production baseline template reproduces against a live SQL Server 2022 instance
+- which anti-patterns silently hurt production years after creation
+
+## Reference Databases
+
+> [!abstract] Scope
 >
-> All demonstrations in this note run against two databases on the same SQL Server 2022 CU23 (Developer Edition, Linux container) instance:
->
-> - **`stoxx_db`** — purpose-built for this note using the production baseline pattern: 5 files across 3 filegroups (`PRIMARY`, `FG_Current`, `FG_Archive`), pre-sized, fixed-growth, UTF-8 collation, `FULL` recovery, RCSI + snapshot isolation, Query Store enabled, and an initialized backup chain. This is the "correct" example.
-> - **`stoxx`** — an older working database created with default settings. It is used throughout the note as the "defaults everywhere" counter-example to highlight what the production pattern is protecting against.
+> Every live query in this note runs against two databases on the same SQL Server 2022 CU23 (Developer Edition, Linux container) instance. Both are real, both are queryable, and the side-by-side comparison is the teaching device: `stoxx_db` shows the production baseline pattern, `stoxx` shows what the template is protecting against.
 
-## What “Creating a Database” Actually Means
+| Database | Role in the note | File layout | Recovery | Notable settings |
+|---|---|---|---|---|
+| **`stoxx_db`** | Production baseline, purpose-built for this note | 5 files across 3 filegroups (`PRIMARY`, `FG_Current`, `FG_Archive`), pre-sized, fixed-growth | `FULL` | UTF-8 collation `Latin1_General_100_CI_AS_SC_UTF8`, RCSI + snapshot isolation, Query Store enabled, initialized backup chain |
+| **`stoxx`** | Defaults-everywhere working database used as the counter-example | 1 data file + 1 log file, single `PRIMARY` filegroup, unlimited growth | `FULL` | Legacy collation `SQL_Latin1_General_CP1_CI_AS`, no row versioning, never tuned |
 
-At a superficial level, creating a database means issuing a statement such as the following template:
+## The Design Decisions Behind CREATE DATABASE
+
+At a superficial level, creating a database means issuing a statement such as the following template.
 
 *Template showing the minimal default syntax. Every setting — file layout, sizes, growth, collation, recovery — inherits from the `model` database.*
 
@@ -47,40 +59,14 @@ CREATE DATABASE [MyDatabase];
 Commands completed successfully.
 ```
 
-The statement runs in under a second and returns no rows. That silence is deceptive: every one of the decisions listed below has already been made implicitly, using whatever `model` currently specifies. On a default-model instance this produces a single 8 MB `.mdf`, a 1 MB `.ldf`, 10% autogrowth on the log, and instance-default collation — all of which are usually wrong for production. The stoxx database on this instance was created this way, and its defaults surface in every comparison query later on this page.
+The statement runs in under a second and returns no rows. That silence is deceptive: every one of the decisions listed below has already been made implicitly, using whatever `model` currently specifies. On a default-model instance this produces a single 8 MB `.mdf`, a 1 MB `.ldf`, 10% autogrowth on the log, and instance-default collation — all of which are usually wrong for production. The `stoxx` database on this instance was created this way, and its defaults surface in every comparison query later on this page.
 
-At a professional level, creating a database means defining all of the following:
+At a professional level, creating a database means defining four layers of decisions, each of which is covered in detail in its own H2 section later in the note:
 
-1. **Creation path**
-   - Brand-new empty database
-   - Attached database
-   - Snapshot
-   - Contained database
-
-2. **Physical layout**
-   - Data files
-   - Log files
-   - Filegroups
-   - File locations
-   - Initial sizes
-   - Growth settings
-   - Maximum sizes
-
-3. **Behavioral defaults**
-   - Collation
-   - Recovery model
-   - Compatibility level
-   - Snapshot behavior
-   - Read/write concurrency behavior
-   - Query Store behavior
-
-4. **Operational baseline**
-   - Ownership
-   - Encryption approach
-   - Backup chain initialization
-   - Monitoring expectations
-   - Capacity planning
-   - Growth forecasting
+1. **Creation path** — new empty database, attached database, snapshot, or contained database.
+2. **Physical layout** — data files, log files, filegroups, file locations, initial sizes, growth settings, and maximum sizes.
+3. **Behavioral defaults** — collation, recovery model, compatibility level, snapshot behavior, read/write concurrency, and Query Store.
+4. **Operational baseline** — ownership, encryption, backup-chain initialization, monitoring expectations, capacity planning, and growth forecasting.
 
 > [!warning] Design is permanent
 >
@@ -92,26 +78,21 @@ At a professional level, creating a database means defining all of the following
 
 > [!tip] Right question
 >
-> The correct question is not “How do I create a database?” but “What kind of database am I creating, for what workload, under what recovery and operational constraints?”
+> The correct question is not "How do I create a database?" but "What kind of database am I creating, for what workload, under what recovery and operational constraints?"
 
 ---
 
-## Core Concepts Glossary
+## Storage Primitives and Live Inspection
 
-This section defines the terms that must be understood before making any storage or configuration decision. Every term is followed by a live query against `stoxx_db` (or against both `stoxx_db` and `stoxx` for comparison) so the reader can map the definition directly to what a real SQL Server instance returns. Concepts that have a full dedicated H2 later in the note (recovery model, collation, compatibility level, Query Store, FILESTREAM, MEMORY_OPTIMIZED_DATA) are defined here and their live demonstrations appear in those dedicated sections.
+Before looking at any creation option, the operator has to be fluent in the physical units SQL Server actually uses to store and move data. This section defines each primitive, then immediately demonstrates it against `stoxx_db` (and against `stoxx` for comparison) so the reader can map every term to a live DMV output. Concepts that have a full dedicated H2 later in the note — recovery model, collation, compatibility level, Query Store, FILESTREAM, and `MEMORY_OPTIMIZED_DATA` — are defined briefly here and cross-linked to their dedicated section where the live demonstration lives.
 
-### Page | fundamental 8 KB unit of storage and I/O
+### Pages and extents | 8 KB page and 64 KB allocation primitives
 
-A **page** is the fundamental unit of storage in SQL Server.
+A **page** is the fundamental unit of storage in SQL Server. Every page is exactly **8 KB**, and tables and indexes are ultimately stored in pages. Reads and writes happen against pages, not arbitrary byte ranges. When SQL Server reads data from disk into memory, it reads pages. When it modifies stored data, it modifies pages in memory and later flushes them to disk. This is why page density, fragmentation, and I/O behavior matter so much. A single 8 KB page can hold many rows for a narrow table or just a handful for a wide one, and that ratio drives how many physical reads a scan or seek actually costs.
 
-- Size: **8 KB**
-- Tables and indexes are ultimately stored in pages.
-- Reads and writes happen against pages, not arbitrary byte ranges.
+An **extent** is a group of **8 contiguous pages**, for a total of **64 KB**, and it is the basic space-allocation unit inside a data file. Many file, storage, and formatting recommendations are tied to 64 KB because this is a natural SQL Server allocation boundary — NTFS cluster size is typically set to 64 KB on SQL Server volumes for the same reason. When a table grows and needs more space, SQL Server allocates additional extents rather than one row at a time. On modern versions (2016+), new user objects start in uniform extents immediately, which means the eight pages of an extent all belong to the same object rather than being shared with other small tables.
 
-
-When SQL Server reads data from disk into memory, it reads pages. When it modifies stored data, it modifies pages in memory and later flushes them to disk. This is why page density, fragmentation, and I/O behavior matter so much.
-
-If a query needs a row that lives on a page not already in memory, SQL Server must read that page from disk into the buffer pool. A single 8 KB page can hold many rows for a narrow table or just a handful for a wide one, and that ratio drives how many physical reads a scan or seek actually costs.
+#### Measure page density and fill factor of a real table
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -154,17 +135,7 @@ WHERE index_level = 0;
 | `avg_page_fill_pct` | `70–90%` | &#9989; | Comfortable fill for tables that receive random inserts. | Leaves headroom for in-place updates. |
 | `avg_page_fill_pct` | `< 50%` | &#10060; | Low density. | Indicates over-aggressive fill factor, heavy fragmentation, or rows recently deleted but still ghosted. |
 
-### Extent | group of 8 contiguous pages forming a 64 KB allocation unit
-
-An **extent** is a group of **8 contiguous pages**, for a total of **64 KB**.
-
-- Size: **64 KB**
-- SQL Server allocates space primarily in extents.
-
-
-Many file, storage, and formatting recommendations are tied to 64 KB because this is a natural SQL Server allocation boundary.
-
-When a table grows and needs more space, SQL Server allocates additional extents rather than allocating storage one row at a time. On modern versions (2016+), new user objects start in uniform extents immediately, which means the eight pages of an extent all belong to the same object rather than being shared with other small tables.
+#### Measure extent count and allocation footprint for a rowstore table
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -205,21 +176,13 @@ ORDER BY a.total_pages DESC;
 
 *The 7.70 MB of `silver.eurostoxx50_ohlcv` is divided into exactly 123 extents of 8 pages each plus a small remainder. The 64 KB extent boundary is not an abstraction: it is the unit SQL Server uses when it asks the allocation maps for more space, and it is also the unit recommended for Windows NTFS allocation size on SQL Server volumes (`64K` cluster size). The ratio `page_count / 8` rounded down gives the complete-extent count; residual pages are always less than a full extent.*
 
-### Data file | physical file storing table and index data
+### Data files and the transaction log | .mdf, .ndf, and .ldf roles
 
-A **data file** is a physical file that stores table and index data.
+A **data file** is a physical file that stores table and index data — the user objects, allocation maps, and system catalog pages that make up the database. Every database must have at least one data file, and all data files belong to a filegroup. Two file extensions are conventional (not enforced): `.mdf` for the **primary data file** (exactly one per database, mandatory, owned by the `PRIMARY` filegroup, contains core metadata), and `.ndf` for every **secondary data file** added for capacity, tiering, or partitioning. A small application database might ship with one primary data file only; a large warehouse spreads data across multiple secondary files in user-defined filegroups. `stoxx_db` sits between these extremes: four data files across three filegroups, which exercises every data-file concept the note discusses without becoming unwieldy.
 
-Common file extensions:
-- `.mdf` = primary data file
-- `.ndf` = secondary data file
+A **transaction log file** (`.ldf`) is not just another data file. It records every data change in sequence before the change is considered durable, and it is central to crash recovery, log backups, high availability, and restore operations. An OLTP system with heavy write volume may have modest data growth but intense log pressure — in such a system, log sizing and log storage latency can matter more than raw data-file size. The log is the single most important file to pre-size correctly, and its I/O pattern and growth behavior are completely different from a data file, so placement and sizing must be handled differently.
 
-**Context and implications:**
-- Data files store user objects such as tables and indexes.
-- They also indirectly determine where I/O pressure lands.
-- Data files belong to filegroups.
-- A database must have at least one data file.
-
-A small application database might have one primary data file only. A large warehouse might have multiple secondary data files spread across user-defined filegroups. `stoxx_db` sits between these extremes: four data files across three filegroups, which already exercises every data-file concept the note discusses without being so large that the examples become unwieldy.
+#### List every data file with allocated, used, and free space
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -256,23 +219,7 @@ ORDER BY file_id;
 
 *Four data files are visible: the mandatory `PRIMARY` file (`file_id = 1`), two files in `FG_Current` (`Current_01` and `Current_02`), and one file in `FG_Archive`. The two `FG_Current` files have nearly identical used sizes (15.75 MB and 13.94 MB) even though all data was inserted through `SELECT INTO` without any hint — this is the **proportional fill algorithm** in action. When a filegroup contains multiple files, SQL Server splits new allocations between them proportionally to their free space, which is why pre-sizing sibling files identically and enabling `AUTOGROW_ALL_FILES` matters.*
 
-### Transaction log file | sequential record of all data changes for durability and recovery
-
-A **transaction log file** is a physical file that stores the transaction log.
-
-Common file extension:
-- `.ldf`
-
-**Context and implications:**
-The log is not just “another file.” It is central to durability, crash recovery, high availability, replication patterns, and restore operations.
-
-The log records changes in sequence before they are considered durable. This means:
-- every insert, update, and delete depends on it
-- recovery depends on it
-- log backups depend on it
-- availability technologies depend on it
-
-An OLTP system with heavy write volume may have modest data growth but intense log pressure. In such a system, log sizing and log storage latency can matter more than raw data-file size. The log is therefore the single most important file to pre-size correctly.
+#### Show the log file footprint and log reuse wait
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -327,16 +274,9 @@ WHERE f.type_desc = 'LOG';
 >
 > Place the transaction log on dedicated low-latency storage, size it for peak burst separately from data files, and use fixed-size growth increments. Monitor log reuse waits and VLF counts independently.
 
-### Primary data file | mandatory single .mdf containing database metadata
+#### Return the primary data file and confirm filegroup membership
 
-The **primary data file** is the single main data file of the database.
-
-- Every database has exactly one.
-- It belongs to the **PRIMARY** filegroup.
-- It contains core metadata required by the database.
-
-
-Even in sophisticated filegroup designs, the primary file remains special. You cannot build a database entirely out of secondary files.
+Even in sophisticated filegroup designs, the primary file remains special. Every database has exactly one, it always belongs to the `PRIMARY` filegroup, and it contains the core metadata required by the database. You cannot build a database entirely out of secondary files.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -368,18 +308,9 @@ WHERE f.file_id = 1;
 
 *The primary file always has `file_id = 1` and always belongs to the `PRIMARY` filegroup. In `stoxx_db` it is intentionally small (128 MB) because the production pattern promotes `FG_Current` as the default filegroup (`is_default = 1` in the full file listing above), so user tables do not land in `PRIMARY`. `PRIMARY` only carries the database metadata, system catalog views, and other engine structures. The `is_default = 0` value on this row confirms that no new user object created without an `ON` clause will be placed on the primary file.*
 
-### Secondary data file | additional .ndf files for capacity and tiering
+#### List every secondary data file by filegroup
 
-A **secondary data file** is any data file beyond the primary one.
-
-**Why secondary files exist:**
-- To increase storage capacity
-- To separate data across filegroups
-- To support partitioning strategies
-- To place different data sets on different storage tiers
-- To distribute allocation or I/O pressure in specific scenarios
-
-A warehouse database might place hot partitions in one filegroup on fast SSD storage and cold historical partitions in another filegroup on cheaper storage. `stoxx_db` is structured the same way on a small scale: bronze and silver tables live in `FG_Current` (two sibling files for proportional fill), and the gold layer lives in `FG_Archive` (one file intended for eventual storage-tier migration).
+Secondary data files exist to increase storage capacity, separate data across filegroups, support partitioning strategies, place different data sets on different storage tiers, or distribute allocation pressure in specific scenarios. A warehouse database might place hot partitions in one filegroup on fast SSD and cold historical partitions in another filegroup on cheaper storage. `stoxx_db` is structured the same way on a small scale: bronze and silver tables live in `FG_Current` (two sibling files for proportional fill), and the gold layer lives in `FG_Archive` (one file intended for eventual storage-tier migration).
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -414,24 +345,13 @@ ORDER BY fg.name, f.file_id;
 
 *Three secondary data files back `stoxx_db`: two in `FG_Current` and one in `FG_Archive`. The two `FG_Current` files are intentionally sized identically (256 MB each) because the proportional fill algorithm only distributes data evenly when sibling files are the same size with the same growth settings. Running the same query against `stoxx` returns zero rows — that database was created with the default template and has no secondary files at all. In a warehouse context, the `FG_Archive` file could be moved later to cheaper storage without touching the primary or `FG_Current` files, because filegroup placement is the unit of storage-tier migration.*
 
-### Filegroup | logical container grouping one or more data files
+### Filegroups and default placement | logical containers and `is_default` semantics
 
-A **filegroup** is a logical container for one or more data files.
+A **filegroup** is a logical container for one or more data files. Filegroups are not just administrative labels — they control object placement, partition placement, piecemeal restore strategy, read-only archive design, and backup and restore planning in enterprise environments. A typical layered design uses `PRIMARY` for metadata and small core objects, `FG_Current` for active operational data, and something like `FG_Archive_2024` for older read-only partitions. `stoxx_db` implements exactly this pattern on a smaller scale: three filegroups where `PRIMARY` carries only metadata, `FG_Current` holds bronze and silver tables, and `FG_Archive` carries the gold layer destined for eventual cold storage.
 
-**Why filegroups matter:**
-Filegroups are not just administrative labels. They are used to control:
-- object placement
-- partition placement
-- piecemeal restore strategy
-- read-only archive design
-- backup and restore planning in enterprise environments
+The **default filegroup** is where new objects are created when no filegroup is explicitly specified in a `CREATE TABLE` or `CREATE INDEX` statement. Exactly one filegroup is marked as default at any time, and the flag can be changed post-creation with `ALTER DATABASE ... MODIFY FILEGROUP ... DEFAULT`. If multiple filegroups are defined but the default flag is never managed, objects silently land in `PRIMARY` and pollute the metadata filegroup with user data.
 
-You might create:
-- `PRIMARY` for metadata and small core objects
-- `FG_Current` for active operational data
-- `FG_Archive_2024` for older read-only partitions
-
-`stoxx_db` implements exactly this pattern on a smaller scale: three filegroups where `PRIMARY` carries only metadata, `FG_Current` holds bronze and silver tables, and `FG_Archive` carries the gold layer destined for eventual cold storage.
+#### Enumerate filegroups with default and read-only flags
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -463,14 +383,11 @@ ORDER BY data_space_id;
 
 *Three filegroups exist. `PRIMARY` is present and mandatory but is **not** the default (`is_default = 0`) — that title was explicitly transferred to `FG_Current` via `ALTER DATABASE stoxx_db MODIFY FILEGROUP [FG_Current] DEFAULT` during post-creation configuration. `FG_Archive` is a regular user-defined filegroup, neither default nor yet marked read-only. The same query against `stoxx` returns a single row, `PRIMARY`, because no user filegroups were ever created — which is the main architectural gap of a default-created database.*
 
-### Default filegroup | target for new objects when none is specified
+#### Verify where each user table was physically placed
 
-The **default filegroup** is where new objects are created if no filegroup is explicitly specified.
+The command used on `stoxx_db` after creation to move the default from `PRIMARY` to `FG_Current` was a single silent `ALTER DATABASE` statement:
 
-
-If you define multiple filegroups but forget to manage the default filegroup, objects may still land in the wrong location.
-
-You may create a dedicated application filegroup and set it as default so new tables do not end up in `PRIMARY`. The command used on `stoxx_db` after creation was:
+*Transfer the default filegroup designation from `PRIMARY` to `FG_Current` so subsequent `CREATE TABLE` statements without an `ON` clause land on the active-data filegroup.*
 
 ```sql
 ALTER DATABASE [stoxx_db] MODIFY FILEGROUP [FG_Current] DEFAULT;
@@ -479,6 +396,8 @@ ALTER DATABASE [stoxx_db] MODIFY FILEGROUP [FG_Current] DEFAULT;
 ```text
 The filegroup property 'DEFAULT' has been set.
 ```
+
+The verification query below proves the change stuck by walking every user table and reporting which filegroup it actually landed on.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -517,14 +436,15 @@ ORDER BY [schema], table_name;
 
 *Every bronze and silver table was created via `SELECT * INTO stoxx_db.<schema>.<table>` without any explicit placement hint, and each one landed on `FG_Current` because that filegroup carries the `is_default = 1` flag. The three gold tables were explicitly moved to `FG_Archive` after creation. The takeaway: the default filegroup is the silent contract with every `CREATE TABLE` statement that omits an `ON` clause. Forgetting to configure it means every application object lands in `PRIMARY`, polluting the metadata filegroup with user data.*
 
-### Logical file name | internal identifier used by management commands
+### File identity | logical names and physical paths
 
-The **logical file name** is SQL Server’s internal name for the file.
+The **logical file name** is SQL Server's internal name for a file and is the identifier every `ALTER DATABASE` management command expects. The logical name is stable: renaming the underlying file on disk does not change it, and restoring the database on a different host preserves it even when `FILENAME` is rewritten by the restore. Administrative clarity starts with good logical names — a file called `db_01` tells you nothing about its role on restore day, while `stoxx_db_Current_01` is self-documenting.
 
+The **physical file path** is the OS path to the file. It determines where I/O actually occurs, which storage tier is used, which permissions are required, and how restores, migrations, and failovers behave. On `stoxx_db` every file lives at `/var/opt/mssql/data/` because SQL Server is running inside a Linux container and that is the only mount point exposed to the engine. In a production Windows environment, data, log, TempDB, and backups would each occupy a separate drive letter backed by a different physical volume — the container layout compresses these distinctions but does not change the concept.
 
-Administrative commands often refer to logical file names rather than physical paths. The logical name is stable: renaming the underlying file on disk does not change it, and restoring the database on a different host preserves it even when `FILENAME` is rewritten by the restore.
+#### Change autogrowth by logical file name
 
-This command uses a logical file name to modify a real file in `stoxx_db`. `ALTER DATABASE ... MODIFY FILE` is silent on success, so instead of reading an output message the administrator verifies the change by re-querying `sys.database_files`:
+`ALTER DATABASE ... MODIFY FILE` is silent on success, so instead of reading an output message the administrator verifies the change by re-querying `sys.database_files`.
 
 *Change the autogrowth increment for an existing data file by referencing its logical name, then immediately confirm the new setting.*
 
@@ -542,6 +462,8 @@ WHERE name = 'stoxx_db_Current_01';
 | stoxx_db_Current_01 | 256.00 |
 
 *The growth increment now reads 256 MB. A restart is **not** required — the new value takes effect on the next autogrowth event. Reverting the change back to the baseline 128 MB is done the same way by issuing a second `MODIFY FILE` statement and querying again.*
+
+#### Resolve logical names to physical paths
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -573,18 +495,7 @@ ORDER BY file_id;
 
 *Each row shows the logical name on the left (what `ALTER DATABASE` expects) and the physical path on the right (what the operating system sees). The logical names were chosen at `CREATE DATABASE` time to make their role self-documenting: `stoxx_db_Primary` is the metadata file, `stoxx_db_Current_01/02` are the sibling files of `FG_Current`, `stoxx_db_Archive_01` is the cold-storage file, and `stoxx_db_Log` is the transaction log. Administrative clarity starts with good logical names — a file called `db_01` tells you nothing about its role on restore day.*
 
-### Physical file path | OS path controlling I/O location and permissions
-
-The **physical file path** is the operating system path to the file.
-
-
-The physical path determines:
-- where I/O occurs
-- which storage tier is used
-- which permissions are required
-- how restores, migrations, and failovers behave
-
-On the `stoxx_db` instance every file lives at `/var/opt/mssql/data/` because SQL Server is running inside a Linux container and that is the only mount point exposed to the engine. In a production Windows environment, data, log, TempDB, and backups would each occupy a separate drive letter backed by a different physical volume — the container layout compresses these distinctions but does not change the concept.
+#### Break directory, file name, and extension out of `physical_name`
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -616,50 +527,38 @@ ORDER BY file_id;
 
 *All five files share the same `/var/opt/mssql/data` directory because the container exposes a single volume. The extensions visually reinforce the role of each file: `.mdf` for the primary data file, `.ldf` for the transaction log, and `.ndf` for every secondary data file. These extensions are convention, not enforcement — SQL Server will accept any extension — but following the convention makes file-system inventory and monitoring scripts far easier to write.*
 
-### Autogrowth | automatic file enlargement when allocated space is exhausted
+### Growth, caps, and virtual log files | autogrowth, `MAXSIZE`, and VLF structure
 
-**Autogrowth** is the mechanism by which SQL Server automatically enlarges a file when its currently allocated space is exhausted.
+**Autogrowth** is the mechanism by which SQL Server automatically enlarges a file when its currently allocated space is exhausted. The operational meaning matters more than the definition: when autogrowth fires, SQL Server has run out of allocated space inside the current file, must request more disk space from the operating system, and that growth event can pause or slow user activity. For log files, growth is especially disruptive because new log space must be zero-initialized. Autogrowth is **not** a sizing strategy, not a substitute for capacity planning, and not a sign that configuration is "dynamic and smart" — it is an emergency overflow valve. The default `FILEGROWTH` values by SQL Server version are shown below, and almost all of them are too small for production workloads.
 
-That short definition is not enough. The operational meaning is the important part.
-
-**What autogrowth actually implies:**
-- SQL Server ran out of allocated space inside the current file.
-- Work cannot continue indefinitely unless more space is allocated.
-- SQL Server must request more disk space from the operating system.
-- That growth event can pause or slow user activity.
-- For log files, growth can be especially disruptive because new log space must be zero-initialized.
-
-**What autogrowth is not:**
-- It is not a sizing strategy.
-- It is not a substitute for capacity planning.
-- It is not a sign that configuration is “dynamic and smart.”
-
-**Default `FILEGROWTH` values by SQL Server version:**
-
-| Version | Data File Default | Log File Default |
+| Version | Data file default | Log file default |
 |---|---|---|
 | SQL Server 2016+ | 64 MB | 64 MB |
 | SQL Server 2005–2014 | 1 MB | 10% |
 | Prior to SQL Server 2005 | 10% | 10% |
 
-These defaults are almost always too small for production workloads.
+Autogrowth matters for four reasons: (1) file growth events consume time and I/O, and large growth events can stall writes with wait type `PREEMPTIVE_OS_WRITEFILEGATHER`; (2) frequent autogrowth is a signal that initial sizing is wrong or workload growth is unmanaged; (3) repeated growth can lead to less contiguous allocation at the storage layer; (4) repeated small log growth events create too many VLFs. A log file that starts at 1 GB and grows by 10 MB every few minutes during ETL seems harmless, but after enough growth events the VLF fragmentation silently degrades recovery speed.
 
-**Why autogrowth matters so much:**
-1. **Performance impact**
-   - File growth events consume time and I/O.
-   - Large growth events can stall activity.
-   - During a growth event, sessions attempting to write to the file are blocked with wait type `PREEMPTIVE_OS_WRITEFILEGATHER`.
+**`MAXSIZE`** is the upper size limit to which a file can grow. Without a meaningful cap, a runaway workload can keep consuming storage until the underlying volume is exhausted, which can affect not only one database but an entire instance or host. A staging database may use a strict `MAXSIZE` because it is disposable and should never crowd out production storage. In `stoxx_db` every file has an explicit cap: the primary file is 1 GB, each `FG_Current` file is 4 GB, the `FG_Archive` file is 2 GB, and the log is 2 GB.
 
-2. **Operational signal**
-   - Frequent autogrowth means your initial sizing is wrong or workload growth is unmanaged.
+A **Virtual Log File** (VLF) is an internal subdivision of the transaction log. The log is physically one or more files, but internally it is divided into VLFs, and excessive VLF counts degrade startup time, crash recovery, restore operations, and log-scanning operations used by HA/DR features. The operational thresholds are shown below.
 
-3. **Fragmentation risk**
-   - Repeated growth can lead to less contiguous allocation at the storage layer.
+| VLF count | Assessment | Action |
+|---|---|---|
+| < 200 | Healthy | No action needed |
+| 200–500 | Elevated | Investigate growth history; consider pre-sizing |
+| 500–1000 | High | Schedule a log rebuild (shrink + pre-size) during maintenance |
+| > 1000 | Critical | Prioritize remediation — recovery and HA performance are degraded |
 
-4. **Log-specific risk**
-   - Repeated small log growth events create too many VLFs.
+SQL Server creates VLFs during growth using three tiers: growth increments under 64 MB create 4 VLFs, increments from 64 MB to 1 GB create 8 VLFs, and increments over 1 GB create 16 VLFs — all of equal size. A 1,024 MB growth increment therefore creates 8 VLFs of 128 MB each, which is a well-balanced size for most production workloads. Bad VLF counts come from very small log growth increments (e.g., the 1 MB default), repeated autogrowth over weeks or months, or chronic log undersizing. To rebuild a fragmented log: (1) verify no active long-running transactions with `DBCC OPENTRAN`; (2) take a log backup to minimize active log; (3) shrink the log to the minimum with `DBCC SHRINKFILE(log_logical_name, 1)`; (4) grow the log back in 1,024–4,096 MB chunks to establish well-sized VLFs; (5) verify the new count with `sys.dm_db_log_info`.
 
-A log file starts at 1 GB and grows by 10 MB every few minutes during ETL. That may seem harmless, but after enough growth events you can end up with excessive VLF fragmentation and slower recovery.
+> [!quote] Korotkevitch
+>
+> Do not auto-shrink transaction log files. They will grow again and affect performance when SQL Server zeroes out the file. It is better to pre-allocate the space and manage log file size manually.
+>
+> Source: Dmitri Korotkevitch | SQL Server Advanced Troubleshooting and Performance Tuning
+
+#### Compare autogrowth across `stoxx` and `stoxx_db`
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -718,19 +617,7 @@ ORDER BY database_name, file_id;
 >
 > A healthy production database may still use autogrowth, but growth events should be infrequent, intentional, monitored, and sized in meaningful fixed increments.
 
-### `MAXSIZE` | upper limit preventing unbounded file growth
-
-**MAXSIZE** defines the upper size limit to which a file can grow.
-
-**Context:**
-Without a meaningful cap, a runaway workload can keep consuming storage until the underlying volume is exhausted. That can affect not only one database but an entire instance or host.
-
-**Implications:**
-- Protects shared storage from unbounded growth
-- Forces capacity planning discipline
-- Must be aligned with alerting and available disk space
-
-A staging database may use a strict `MAXSIZE` because it is disposable and should never crowd out production storage. In `stoxx_db` every file has an explicit cap: the primary data file cannot exceed 1 GB, each `FG_Current` file cannot exceed 4 GB, the `FG_Archive` file is capped at 2 GB, and the log is capped at 2 GB.
+#### Show `MAXSIZE` caps for every file on both databases
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -774,57 +661,9 @@ ORDER BY database_name, file_id;
 | `max_size_raw` | `268435456` | ⚠ | Engine ceiling for the log (2 TB). | Effectively unlimited in most environments; rely on alerting instead. |
 | `max_size_raw` | Explicit value | &#9989; | Bounded file. | Protects shared storage; requires monitoring to avoid hitting the cap. |
 
-### Virtual Log File | internal subdivision of the transaction log affecting recovery and HA
+#### Report the VLF layout of the transaction log
 
-A **Virtual Log File** is an internal subdivision of the transaction log.
-
-
-The log is physically one or more files, but internally it is divided into VLFs. Excessive VLF counts degrade:
-- startup time
-- crash recovery
-- restore operations
-- log-scanning operations used by HA/DR features
-
-**Operational thresholds:**
-
-| VLF Count | Assessment | Action |
-|---|---|---|
-| < 200 | Healthy | No action needed |
-| 200–500 | Elevated | Investigate growth history; consider pre-sizing |
-| 500–1000 | High | Schedule a log rebuild (shrink + pre-size) during maintenance |
-| > 1000 | Critical | Prioritize remediation — recovery and HA performance are degraded |
-
-Check the current VLF count with `DBCC LOGINFO` or `sys.dm_db_log_info` (SQL Server 2016 SP2+).
-
-**How SQL Server creates VLFs during growth:**
-
-| Growth Increment | VLFs Created | Resulting VLF Size |
-|---|---|---|
-| < 64 MB | 4 | Growth ÷ 4 |
-| 64 MB–1 GB | 8 | Growth ÷ 8 |
-| > 1 GB | 16 | Growth ÷ 16 |
-
-A 1,024 MB growth increment creates 8 VLFs of 128 MB each — a well-balanced size for most production workloads.
-
-**What causes bad VLF counts:**
-- very small log growth increments (e.g., the 1 MB default)
-- repeated log autogrowth over weeks or months
-- chronic undersizing of the log
-
-**How to rebuild a fragmented transaction log:**
-1. Verify no active long-running transactions (`DBCC OPENTRAN`)
-2. Take a log backup to minimize active log
-3. Shrink the log to the minimum (`DBCC SHRINKFILE(log_logical_name, 1)`)
-4. Grow the log back in large chunks of 1,024 MB–4,096 MB to establish well-sized VLFs
-5. Verify the new VLF count with `sys.dm_db_log_info`
-
-> [!quote] Korotkevitch
->
-> Do not auto-shrink transaction log files. They will grow again and affect performance when SQL Server zeroes out the file. It is better to pre-allocate the space and manage log file size manually.
->
-> Source: Dmitri Korotkevitch | SQL Server Advanced Troubleshooting and Performance Tuning
-
-A 500 GB log file grown in tiny increments over months often behaves worse operationally than a 500 GB log file that was pre-sized sensibly.
+A 500 GB log file grown in tiny increments over months often behaves worse operationally than a 500 GB log file that was pre-sized sensibly. Check the current VLF count with `DBCC LOGINFO` or `sys.dm_db_log_info` (SQL Server 2016 SP2+).
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -881,55 +720,27 @@ SELECT DB_NAME(database_id), COUNT(*) FROM sys.dm_db_log_info(DB_ID('stoxx')) GR
 | `min_vlf_mb` vs `max_vlf_mb` | Similar | &#9989; | Log was pre-sized in a single large allocation. | Ideal. |
 | `min_vlf_mb` vs `max_vlf_mb` | Very different | ⚠ | Log grew in a mix of small and large events over time. | Consider a one-time log rebuild. |
 
-### Recovery model | controls logging behavior and point-in-time restore capabilities
+### Behavior defaults | recovery, collation, compatibility level, and Query Store
 
-The **recovery model** is a database setting that determines how transactions are logged and what restore options are possible.
+Four database-scoped behaviors are decided at creation time but do not fit under the file-layout group because they govern how the engine interprets data rather than where it stores it. Each has a full live demonstration in its own dedicated H2 section later in the note — this subsection is the one-paragraph primer so the design vocabulary is complete before the creation modes, storage architecture, and GCP sections reference them.
 
+The **recovery model** is a database setting that determines how transactions are logged and what restore options are possible. It is a business decision disguised as a technical setting: it determines whether point-in-time recovery is available and how much data loss is acceptable after failure. Two databases may hold similar data volumes, but the production system requires `FULL` because zero data loss is unacceptable, while a transient ETL landing zone may use `SIMPLE` because the data can be reloaded. The live comparison of `stoxx_db` and `stoxx` recovery models lives in the dedicated [Recovery Models](#recovery-models) section.
 
-The recovery model is a business decision disguised as a technical setting. It determines whether you can do point-in-time recovery and how much data loss you may face after failure.
+**Collation** defines string comparison and sorting rules — case sensitivity, accent sensitivity, sort order, binary vs linguistic comparison, and character encoding in UTF-8-capable collations. It affects correctness, not aesthetics. Different collations can change join behavior, uniqueness behavior, sort order, and interoperability with external systems. If the database collation differs from `tempdb`, string comparisons involving temp tables fail with error 468 unless explicit `COLLATE` clauses are applied on every comparison. The live inventory showing the UTF-8 vs legacy-collation mismatch on this instance lives in the dedicated [Collation](#collation) section.
 
-Two databases may hold similar data volumes, but the production system requires `FULL` because zero data loss is unacceptable, while a transient ETL landing zone may use `SIMPLE` because the data can be reloaded. A live query showing the recovery model of `stoxx_db` and `stoxx` appears in the dedicated [Recovery Models](#recovery-models) section below.
+The **compatibility level** is a database-scoped setting that controls portions of query processor and language behavior. It allows a database to run on a newer SQL Server engine while preserving older optimizer behavior for compatibility and regression control. After upgrading an instance to SQL Server 2022, a migrated database can be held temporarily below level 160 until testing confirms that plan changes are acceptable. The live inventory of engine version and per-database compatibility level lives in the dedicated [Compatibility Level](#compatibility-level) section.
 
-### Collation | defines string comparison, sort order, and encoding rules
+**Query Store** is a database-level feature that records query text, execution plans, and runtime statistics over time. It is part of the database's baseline observability, and in SQL Server 2022 it also underpins several intelligent query processing and plan-forcing features. When performance regresses after a compatibility-level change, Query Store identifies the plan change and supports plan forcing as a mitigation. The live inspection of `sys.database_query_store_options` against `stoxx_db` lives in the dedicated [Query Store](#query-store) section.
 
-**Collation** defines string comparison and sorting rules.
+### Specialized filegroups | `FILESTREAM` and `MEMORY_OPTIMIZED_DATA`
 
-It determines:
-- case sensitivity
-- accent sensitivity
-- sort order
-- binary vs linguistic comparison behavior
-- character encoding behavior in supported collations
+Two filegroup types exist alongside the rowstore `ROWS_FILEGROUP` and serve completely different storage models. Both change backup, restore, and administration patterns, so they must be planned at creation time — neither can be added casually.
 
+**`FILESTREAM`** allows large binary objects (images, documents, videos, PDFs) to be stored in the NTFS filesystem while remaining transactionally consistent with SQL Server row data. It is not just "another file type" — it changes backup, restore, storage, and administration patterns because the filegroup maps to a directory structure rather than a `.ndf` file. FILESTREAM directories are backed up as part of the database backup, restore recreates the directory tree, and the filegroup must live on NTFS or ReFS. Enabling it requires `sp_configure 'filestream access level'` at the instance level and a service restart, then `FILEGROUP [name] CONTAINS FILESTREAM` in `CREATE DATABASE` or `ALTER DATABASE`.
 
-Collation affects correctness, not just aesthetics. Different collations can change join behavior, uniqueness behavior, sort order, and interoperability with external systems.
+**`MEMORY_OPTIMIZED_DATA`** is the filegroup type required for durable In-Memory OLTP objects. Unlike rowstore filegroups, it contains **checkpoint file pairs** (data and delta files) that persist the in-memory state across restarts. Only one `MEMORY_OPTIMIZED_DATA` filegroup is allowed per database. Checkpoint files cannot be incrementally backed up — they are always full-copied in backups, which inflates backup size for workloads that use In-Memory OLTP heavily. Once added, this filegroup cannot be dropped without dropping every memory-optimized object on it first.
 
-If your database collation differs from `tempdb`, string comparisons involving temp tables may fail unless you explicitly apply `COLLATE`. A live query showing the collation of `stoxx_db`, `stoxx`, and `tempdb` appears in the dedicated [Collation](#collation) section below, including a demonstration of the UTF-8 vs legacy-collation mismatch that exists in this environment.
-
-### Compatibility level | controls optimizer and language behavior per database
-
-The **compatibility level** is a database-scoped setting that controls portions of query processor and language behavior.
-
-
-It allows a database to run on a newer SQL Server engine while still preserving older optimizer behavior for compatibility and regression control.
-
-After upgrading an instance to SQL Server 2022, you may choose to keep a migrated database temporarily below level 160 until testing confirms that plan changes are acceptable. A live query showing the compatibility level of `stoxx_db` and `stoxx` appears in the dedicated [Compatibility Level](#compatibility-level) section below.
-
-### Query Store | records query text, plans, and runtime statistics over time
-
-**Query Store** is a database-level feature that records query text, plans, and runtime statistics over time.
-
-**Why this matters during database creation:**
-Query Store is part of the database’s baseline observability. In SQL Server 2022, it also underpins several intelligent query processing and optimization features.
-
-If performance regresses after a compatibility-level change, Query Store helps identify plan changes and can support plan forcing. A live query reading `sys.database_query_store_options` against `stoxx_db` appears in the dedicated [Query Store](#query-store) section below.
-
-### `FILESTREAM` | file-system storage for transactionally consistent large binary objects
-
-**FILESTREAM** allows large binary objects to be stored in the file system while remaining transactionally consistent with SQL Server.
-
-
-It is not just “another file type.” It changes backup, restore, storage, and administration patterns.
+#### Verify FILESTREAM filegroup presence on stoxx_db
 
 *Verify whether `stoxx_db` has a FILESTREAM filegroup configured.*
 
@@ -948,12 +759,7 @@ WHERE type_desc = 'FILESTREAM_DATA_FILEGROUP';
 
 *Zero rows means no FILESTREAM filegroup is configured on this database. `stoxx_db` holds only structured tabular data — there are no large binary payloads in the bronze/silver/gold layers that would justify FILESTREAM. Adding FILESTREAM later is possible via `ALTER DATABASE ADD FILEGROUP ... CONTAINS FILESTREAM`, but it requires instance-level FILESTREAM access to be enabled first (`sp_configure 'filestream access level'`) and a service restart.*
 
-### `MEMORY_OPTIMIZED_DATA` | required filegroup for durable In-Memory OLTP objects
-
-The **MEMORY_OPTIMIZED_DATA** filegroup is required for durable In-Memory OLTP objects.
-
-
-A database intended to host durable memory-optimized tables must be created with the correct special-purpose filegroup design. This cannot be treated as an afterthought in production architecture.
+#### Verify `MEMORY_OPTIMIZED_DATA` filegroup presence on stoxx_db
 
 *Verify whether `stoxx_db` has a MEMORY_OPTIMIZED_DATA filegroup configured.*
 
@@ -1073,14 +879,20 @@ WITH
     REPLACE, CHECKSUM, STATS = 10;
 ```
 
-**Key restore options:**
-
-- `MOVE 'logical_name' TO 'new_path'` — relocate each logical file. Required when restoring to a different directory or alongside the source on the same instance (new files must not collide with the source's).
-- `REPLACE` — overwrite an existing database of the same name. Use deliberately; without `REPLACE`, SQL Server refuses to overwrite to prevent accidents.
-- `RECOVERY` (default) vs `NORECOVERY` — `RECOVERY` brings the copy online immediately; `NORECOVERY` leaves it in a restoring state for subsequent log chain restores.
-- `STANDBY = 'undo_file'` — restore with a read-only standby file, useful for log-shipping targets.
-- `FILE`, `FILEGROUP`, `PAGE` — partial restores for piecemeal or page-level recovery scenarios.
-- `KEEP_CDC`, `KEEP_REPLICATION` — preserve change data capture or replication metadata on the copy.
+| Flag | Syntax | Description |
+|---|---|---|
+| `MOVE` | `MOVE 'logical_name' TO 'new_path'` | Relocate each logical file. Required when restoring to a different directory or alongside the source on the same instance (new files must not collide with the source's). |
+| `REPLACE` | `WITH REPLACE` | Overwrite an existing database of the same name. Without it, SQL Server refuses to overwrite to prevent accidents. |
+| `RECOVERY` | `WITH RECOVERY` (default) | Bring the copy online immediately after the restore completes. No further log restores possible. |
+| `NORECOVERY` | `WITH NORECOVERY` | Leave the database in a restoring state so subsequent differential or log restores can be applied to extend the chain. |
+| `STANDBY` | `WITH STANDBY = 'undo_file'` | Restore with a read-only standby file so the database is queryable between log restores. Used by log-shipping targets. |
+| `FILE` | `RESTORE DATABASE ... FILE = 'logical_name'` | Partial restore of a single file — used in piecemeal recovery. |
+| `FILEGROUP` | `RESTORE DATABASE ... FILEGROUP = 'fg_name'` | Partial restore of a single filegroup. `PRIMARY` must be restored first. |
+| `PAGE` | `RESTORE DATABASE ... PAGE = 'file:page'` | Page-level restore for isolated corruption repair. |
+| `KEEP_CDC` | `WITH KEEP_CDC` | Preserve change data capture metadata on the restored copy. |
+| `KEEP_REPLICATION` | `WITH KEEP_REPLICATION` | Preserve replication metadata on the restored copy. |
+| `CHECKSUM` | `WITH CHECKSUM` | Verify backup checksums during the restore; fail fast on a corrupted backup. |
+| `STATS` | `WITH STATS = n` | Report restore progress every `n` percent. |
 
 > [!warning] Orphaned users after restore
 >
@@ -1112,17 +924,21 @@ WITH
 DBCC CLONEDATABASE (SalesOps, SalesOps_Clone);
 ```
 
-**Key options:**
-
-- `NO_STATISTICS` — exclude column statistics from the clone
-- `NO_QUERYSTORE` — exclude Query Store data from the clone
-- `VERIFY_CLONEDB` — run integrity checks on the resulting clone
-- `BACKUP_CLONEDB` — back up the cloned database immediately after creation
-- `SERVICEBROKER` — include Service Broker metadata
+| Flag | Syntax | Description |
+|---|---|---|
+| `NO_STATISTICS` | `DBCC CLONEDATABASE (src, clone) WITH NO_STATISTICS` | Exclude column statistics from the clone. Use when only schema is needed. |
+| `NO_QUERYSTORE` | `... WITH NO_QUERYSTORE` | Exclude Query Store data from the clone. Default is to include it. |
+| `VERIFY_CLONEDB` | `... WITH VERIFY_CLONEDB` | Run `DBCC CHECKDB` on the resulting clone to validate internal consistency. |
+| `BACKUP_CLONEDB` | `... WITH BACKUP_CLONEDB` | Back up the cloned database immediately after creation so it can be handed off as a `.bak`. |
+| `SERVICEBROKER` | `... WITH SERVICEBROKER` | Include Service Broker metadata in the clone. |
 
 > [!warning] Read-only and unsupported for production workloads
 >
 > The resulting clone is read-only by default and Microsoft explicitly states it is not supported for production use. The exact list of objects included or excluded may change between cumulative updates. Use only for diagnostic purposes, then drop or mark it clearly as a diagnostic artifact.
+
+> [!success] Use only as a diagnostic hand-off artifact
+>
+> Treat every `DBCC CLONEDATABASE` output as a throwaway diagnostic, not a dev copy. Immediately rename it with a prefix like `dbg_` or `clone_`, scope it to a dedicated test instance, and drop it as soon as the investigation is done. Never use a clone for data-dependent work — use `BACKUP` + `RESTORE ... WITH MOVE` for that.
 
 ### Detach, copy, attach | physical file-level copy path
 
@@ -1134,24 +950,31 @@ This pattern takes a database offline, copies its `.mdf`/`.ndf`/`.ldf` files at 
 - salvaging a database whose backup chain is broken
 - moving a development database in a single maintenance window
 
-*Template showing detach of the source, filesystem-level copy, and attach of the copies as a new database.*
+The full sequence is four discrete steps, two inside SQL Server and one at the OS level:
+
+1. **Detach the source** with `sp_detach_db`. This takes the database offline immediately and releases its files from the engine so the OS can copy them.
+2. **Copy the `.mdf`/`.ndf`/`.ldf` files** at the filesystem level to the destination directory (`cp` on Linux, `Copy-Item` on Windows).
+3. **Attach the copies** as a new database by running `CREATE DATABASE ... FOR ATTACH` pointing at every copied file.
+4. **Reattach the source** to its original paths by running a second `CREATE DATABASE ... FOR ATTACH` pointing at the original locations, restoring the source to production.
+
+*Template showing detach of the source, attach of the copies as a new database, and reattach of the source. The filesystem copy step runs outside T-SQL between the two SQL blocks.*
 
 ```sql
--- 1. Detach the source (takes it offline immediately)
 EXEC sp_detach_db @dbname = N'SalesOps', @skipchecks = 'false';
+```
 
--- 2. Copy files at the OS level
---    cp /var/opt/mssql/data/SalesOps*.{mdf,ndf} /var/opt/mssql/data/copy/
---    cp /var/opt/mssql/log/SalesOps*.ldf        /var/opt/mssql/log/copy/
+```bash
+cp /var/opt/mssql/data/SalesOps*.{mdf,ndf} /var/opt/mssql/data/copy/
+cp /var/opt/mssql/log/SalesOps*.ldf        /var/opt/mssql/log/copy/
+```
 
--- 3. Attach the copies as a new database
+```sql
 CREATE DATABASE [SalesOps_Copy] ON
     ( FILENAME = N'/var/opt/mssql/data/copy/SalesOps_Primary.mdf' ),
     ( FILENAME = N'/var/opt/mssql/data/copy/SalesOps_Current_01.ndf' ),
     ( FILENAME = N'/var/opt/mssql/log/copy/SalesOps_Log.ldf' )
 FOR ATTACH;
 
--- 4. Reattach the source to its original path
 CREATE DATABASE [SalesOps] ON
     ( FILENAME = N'/var/opt/mssql/data/SalesOps_Primary.mdf' ),
     ( FILENAME = N'/var/opt/mssql/data/SalesOps_Current_01.ndf' ),
@@ -1193,6 +1016,10 @@ sqlpackage /Action:Import \
 > [!warning] BACPAC export is not transactionally consistent by default
 >
 > `sqlpackage /Action:Export` does not take a database snapshot of the source, so rows that change during the export can produce an inconsistent archive. For production exports, create a database snapshot first and export from the snapshot — or set the source to single-user for the duration of the export.
+
+> [!success] Export from a database snapshot for point-in-time consistency
+>
+> Create a database snapshot with `CREATE DATABASE [src_snap] ON (NAME = ..., FILENAME = '...') AS SNAPSHOT OF [src]`, then point `sqlpackage /Action:Export` at the snapshot instead of the live database. The snapshot is read-only and frozen at creation time, so the exported BACPAC reflects a single transactionally consistent point. Drop the snapshot after the export completes. For environments that cannot use snapshots, schedule the export during a maintenance window and set the source database to `SINGLE_USER` for the duration.
 
 > [!info] BACPAC vs DACPAC
 >
@@ -2527,22 +2354,27 @@ Changing a file's physical path is a multi-step process because SQL Server holds
 3. Move the physical file at the OS level (`mv` on Linux, `Move-Item` on Windows) to the new path.
 4. Bring the database online with `ALTER DATABASE [db] SET ONLINE`.
 
+The four steps, already enumerated in prose above, map directly to one T-SQL block, one OS-level command, and one T-SQL block.
+
 *Template showing the full move-file sequence. Do not run this against `layout_demo` because the demo database is dropped at cleanup — this template is illustrative.*
 
 ```sql
--- 1. Update metadata (takes effect on next startup)
 ALTER DATABASE [SalesOps] MODIFY FILE
     ( NAME = N'SalesOps_Current_01',
       FILENAME = N'/new/path/SalesOps_Current_01.ndf' );
 
--- 2. Take the database offline
 ALTER DATABASE [SalesOps] SET OFFLINE;
+```
 
--- 3. Move the file at the OS level (outside SQL Server)
---    Linux: mv /old/path/SalesOps_Current_01.ndf /new/path/
---    Windows: Move-Item -Path ... -Destination ...
+*Move the physical file at the OS level while the database is offline. Linux uses `mv`, Windows uses `Move-Item`.*
 
--- 4. Bring the database back online
+```bash
+mv /old/path/SalesOps_Current_01.ndf /new/path/
+```
+
+*Bring the database back online. SQL Server now opens the file at the new path written to `sys.master_files` in the first block.*
+
+```sql
 ALTER DATABASE [SalesOps] SET ONLINE;
 ```
 
@@ -2731,23 +2563,15 @@ Poor collation choices cause:
 
 ### Common collations | SQL_Latin1, Latin1_100_UTF8, and BIN2 compared
 
-#### `SQL_Latin1_General_CP1_CI_AS`
-Legacy SQL collation.
+Three collations cover most production decisions on SQL Server 2022. The table compares their case, accent, supplementary-character, and encoding behavior side by side so the choice is driven by workload requirements rather than historical inheritance.
 
-**Context:**
-Common in older environments. Often chosen for compatibility rather than modern design quality.
+| Collation | Generation | Case | Accent | Supplementary characters | Encoding | Typical use |
+|---|---|---|---|---|---|---|
+| `SQL_Latin1_General_CP1_CI_AS` | Legacy SQL collation | Insensitive | Sensitive | No | UCS-2 / CP1 for `varchar` | Carried forward from older environments for compatibility; rarely the right default for new databases |
+| `Latin1_General_100_CI_AS_SC_UTF8` | Modern Windows collation (version 100) with UTF-8 support | Insensitive | Sensitive | Yes (`SC`) | UTF-8 (`varchar` stores UTF-8, `nvarchar` stores UTF-16) | Default for new databases handling multilingual text, JSON-heavy payloads, or emoji/supplementary characters |
+| `Latin1_General_BIN2` | Binary collation | Binary-exact | Binary-exact | Yes (`BIN2` is code-point-ordered) | Binary comparison against stored bytes | Exact binary comparisons, case-sensitive technical identifiers, high-throughput scans where linguistic sorting is unwanted |
 
-#### `Latin1_General_100_CI_AS_SC_UTF8`
-Modern Windows collation with UTF-8 support.
-
-**Context:**
-Useful when modern multilingual text or JSON-heavy workloads benefit from UTF-8 storage semantics.
-
-#### `Latin1_General_BIN2`
-Binary collation.
-
-**Context:**
-Useful for exact binary comparisons and certain technical workloads where linguistic sorting is not desired.
+The live inventory query in the [Collation inventory](#collation-inventory--inspect-instance-database-and-tempdb-collations-together) subsection above shows exactly which collation each database on this instance currently uses.
 
 ### Collation vs TempDB | mismatch risks with temporary objects
 
@@ -3054,6 +2878,10 @@ ORDER BY database_id;
 > [!warning] TempDB dependency on enabling RCSI
 >
 > Turning on RCSI without ensuring TempDB is sized and placed correctly shifts blocking problems into TempDB version-store problems. Before enabling RCSI on a busy database, verify TempDB is on fast storage, has multiple equally-sized data files, and is monitored for `version_store_reserved_page_count` growth and long-running transactions.
+
+> [!success] Prepare TempDB before flipping the RCSI flag
+>
+> The operational sequence is: verify TempDB is on the lowest-latency media available, check that the data file count matches the logical CPU count (up to 8), pre-size each TempDB data file to the expected peak version-store footprint, and stand up alerts on `sys.dm_tran_version_store_space_usage` and `tempdb` free space. Only then run `ALTER DATABASE [db] SET READ_COMMITTED_SNAPSHOT ON`. Doing the TempDB work after enabling RCSI is the pattern that produces the midnight incident.
 
 ### `ALLOW_SNAPSHOT_ISOLATION` | enable explicit snapshot-isolation transactions
 
@@ -3533,20 +3361,23 @@ ALTER AUTHORIZATION ON DATABASE::[MarketAnalytics] TO [sa];
 GO
 ```
 
-### Live verification of stoxx_db | confirm the reference database matches the baseline template
+### Live verification of `stoxx_db` | confirm the reference database matches the baseline template
 
-The `stoxx_db` reference database used throughout this note was created using a size-adjusted version of the template above. Its file layout, filegroup structure, settings, and backup chain can all be verified against the baseline with a single consolidated query.
+The `stoxx_db` reference database used throughout this note was created using a size-adjusted version of the template above. Its file layout, filegroup structure, settings, and backup chain can all be verified against the baseline with three atomic queries, each answering one question about the creation outcome.
+
+#### Verify the file and filegroup architecture
 
 > [!info]- Clause-by-clause breakdown
 >
-> - The first block joins `sys.database_files` with `sys.filegroups` to prove the filegroup/file architecture matches the template (one primary file in `PRIMARY`, two sibling files in `FG_Current`, one file in `FG_Archive`, one log).
-> - The second block reads `sys.databases` to confirm every post-creation `ALTER DATABASE` setting took effect (recovery model, compatibility level, collation, RCSI, snapshot isolation, page verify, auto-close/shrink, Query Store).
-> - The third block reads `msdb.dbo.backupset` to confirm the initial full backup was taken, which establishes the backup chain that `FULL` recovery relies on.
+> - `sys.database_files` returns one row per file in the current database.
+> - The `LEFT JOIN` to `sys.filegroups` resolves `data_space_id` into a human-readable filegroup name.
+> - Log files have `filegroup = NULL` because they are not members of any filegroup.
+> - `size / 128.0` converts the internal 8 KB page count to megabytes.
+> - `max_size` is converted with a `CASE` expression so `-1` renders as `UNLIMITED` and everything else renders in megabytes.
 
-*Run all three verification queries against `stoxx_db` in sequence.*
+*Confirm that the five files landed in the expected three filegroups with the expected initial sizes and caps.*
 
 ```sql
--- 1. File and filegroup architecture
 USE [stoxx_db];
 GO
 
@@ -3563,8 +3394,32 @@ SELECT
 FROM sys.database_files f
 LEFT JOIN sys.filegroups fg ON f.data_space_id = fg.data_space_id
 ORDER BY f.file_id;
+```
 
--- 2. Post-creation settings
+| file_id | logical_name | type_desc | filegroup | size_mb | max_size |
+|---:|---|---|---|---:|---|
+| 1 | stoxx_db_Primary | ROWS | PRIMARY | 128.00 | 1024.00 MB |
+| 2 | stoxx_db_Log | LOG | NULL | 256.00 | 2048.00 MB |
+| 3 | stoxx_db_Current_01 | ROWS | FG_Current | 256.00 | 4096.00 MB |
+| 4 | stoxx_db_Current_02 | ROWS | FG_Current | 256.00 | 4096.00 MB |
+| 5 | stoxx_db_Archive_01 | ROWS | FG_Archive | 128.00 | 2048.00 MB |
+
+*Five files across three filegroups with explicit `MAXSIZE` caps on every row. The primary file is small (128 MB) because user data lives in `FG_Current` and `FG_Archive`, not `PRIMARY`. The two `FG_Current` files are pre-sized identically (256 MB each) so the proportional-fill algorithm distributes writes evenly. The layout matches the baseline template exactly.*
+
+#### Verify the post-creation `ALTER DATABASE` settings
+
+> [!info]- Clause-by-clause breakdown
+>
+> - `sys.databases` holds every database-level setting in a single row per database.
+> - `recovery_model_desc`, `compatibility_level`, `collation_name` cover the core baseline decisions.
+> - `is_read_committed_snapshot_on` and `snapshot_isolation_state_desc` together prove that both row-versioning modes are on.
+> - `page_verify_option_desc` confirms `CHECKSUM` is active.
+> - `is_auto_close_on` and `is_auto_shrink_on` confirm the two dangerous defaults are disabled.
+> - `is_query_store_on` confirms the observability baseline is active.
+
+*Confirm that every `ALTER DATABASE ... SET` statement from the template took effect.*
+
+```sql
 SELECT
     recovery_model_desc,
     compatibility_level,
@@ -3577,8 +3432,26 @@ SELECT
     CAST(is_query_store_on AS int) AS is_query_store_on
 FROM sys.databases
 WHERE name = 'stoxx_db';
+```
 
--- 3. Backup chain (most recent full backup only; msdb retains history across drops)
+| recovery_model_desc | compatibility_level | collation_name | rcsi | snapshot_iso | page_verify_option_desc | is_auto_close_on | is_auto_shrink_on | is_query_store_on |
+|---|---:|---|---:|---|---|---:|---:|---:|
+| FULL | 160 | Latin1_General_100_CI_AS_SC_UTF8 | 1 | ON | CHECKSUM | 0 | 0 | 1 |
+
+*`FULL` recovery with compatibility level 160 and UTF-8 collation; RCSI and snapshot isolation both enabled; `CHECKSUM` page verification active; `AUTO_CLOSE` and `AUTO_SHRINK` both off; Query Store on. Every decision from the template is reflected in the row.*
+
+#### Verify that the initial full backup initialized the chain
+
+> [!info]- Clause-by-clause breakdown
+>
+> - `msdb.dbo.backupset` is the history table that records every backup the instance has taken, across database drops and recreations.
+> - `type = 'D'` filters to full backups only (`L` is log, `I` is differential, `F` is file/filegroup).
+> - `TOP 1 ... ORDER BY backup_finish_date DESC` returns the most recent full backup.
+> - `backup_size / 1048576.0` converts from bytes to megabytes.
+
+*Confirm that the baseline's mandatory first full backup exists, which is what transforms a `FULL`-recovery database out of pseudo-simple mode into a real point-in-time recoverable database.*
+
+```sql
 SELECT TOP 1
     type,
     CONVERT(varchar(30), backup_start_date,  120) AS backup_start,
@@ -3590,23 +3463,11 @@ WHERE database_name = 'stoxx_db'
 ORDER BY backup_finish_date DESC;
 ```
 
-| file_id | logical_name | type_desc | filegroup | size_mb | max_size |
-|---:|---|---|---|---:|---|
-| 1 | stoxx_db_Primary | ROWS | PRIMARY | 128.00 | 1024.00 MB |
-| 2 | stoxx_db_Log | LOG | NULL | 256.00 | 2048.00 MB |
-| 3 | stoxx_db_Current_01 | ROWS | FG_Current | 256.00 | 4096.00 MB |
-| 4 | stoxx_db_Current_02 | ROWS | FG_Current | 256.00 | 4096.00 MB |
-| 5 | stoxx_db_Archive_01 | ROWS | FG_Archive | 128.00 | 2048.00 MB |
-
-| recovery_model_desc | compatibility_level | collation_name | rcsi | snapshot_iso | page_verify_option_desc | is_auto_close_on | is_auto_shrink_on | is_query_store_on |
-|---|---:|---|---:|---|---|---:|---:|---:|
-| FULL | 160 | Latin1_General_100_CI_AS_SC_UTF8 | 1 | ON | CHECKSUM | 0 | 0 | 1 |
-
 | type | backup_start | backup_finish | backup_size_mb | recovery_model |
 |---|---|---|---:|---|
 | D | 2026-04-11 12:13:31 | 2026-04-11 12:13:31 | 6.09 | FULL |
 
-*The three result sets confirm every architectural decision from the template: five files across three filegroups with explicit MAXSIZE caps, full recovery with compatibility level 160 and UTF-8 collation, RCSI and snapshot isolation both enabled, checksum page verification, Query Store on, and a type `D` (full) backup taken on 2026-04-11 to initialize the backup chain. The backup is small (6 MB) because the database was just created and contains only the system catalog pages — no user data yet. A database in this state is ready for production workloads — every decision the note advocates is reflected live in the DMVs.*
+*A type `D` (full) backup was taken on 2026-04-11 to initialize the backup chain. The backup is small (6 MB) because the database was just created and contains only the system catalog pages — no user data yet. With this backup in place, log backups can now be scheduled and point-in-time recovery is unlocked. A database in this state is ready for production workloads — every decision the note advocates is reflected live in the DMVs.*
 
 ---
 

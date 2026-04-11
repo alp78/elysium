@@ -163,6 +163,12 @@ Two practical observations from this matrix:
 
 ### Inspection | query the current isolation level and database settings
 
+Before running any of the demos below it is worth checking which concurrency features are actually enabled on the target database. The two flags that matter most for this note are `ALLOW_SNAPSHOT_ISOLATION` (required for `SNAPSHOT` and for the 3960 update-conflict behavior) and `READ_COMMITTED_SNAPSHOT` (which swaps locking `READ COMMITTED` for versioned reads). Both are exposed on `sys.databases` and do not require elevated permissions to inspect.
+
+#### Read snapshot settings from sys.databases
+
+The query below reports the two database-level concurrency flags for the `stoxx` database in a single row. `snapshot_isolation_state_desc` returns `ON` when `ALLOW_SNAPSHOT_ISOLATION` is enabled, and `is_read_committed_snapshot_on` returns `True` when RCSI is enabled. Both values are durable metadata that survive restart and are scoped to the database, not the session.
+
 *Show the current session's transaction isolation level from `sys.dm_exec_sessions`, joined to the database's snapshot settings.*
 
 ```sql
@@ -204,6 +210,10 @@ The classic lost update is a read-then-write sequence where both sessions read t
 
 Both sessions read `qty = 100`, compute their new values (`90` and `80`) in client-side variables, and issue an `UPDATE` using the stale variable. The final row reflects only the last writer; the first session's decrement is completely lost.
 
+#### Setup | create single-row demo table with qty = 100
+
+The demo needs a single row whose value both sessions will race to update. A narrow two-column table is enough — `id` as the primary key and `qty` as the counter under contention. The `DROP TABLE IF EXISTS` ensures a clean slate so repeated runs of the demo start from exactly `qty = 100`.
+
 *Setup — create a single-row demo table holding `qty = 100`.*
 
 ```sql
@@ -223,6 +233,10 @@ SELECT id, qty FROM dbo.race_lost_update_demo;
 |---|---|
 | 1 | 100 |
 
+#### Session 1 | read into variable, wait, write qty - 10
+
+Session 1 runs the classic read-then-write pattern application code uses when the business logic involves a computation on the client side. It captures the current `qty` into `@qty`, holds it across a two-second delay to simulate application-side processing, then issues the `UPDATE` using the stored variable. There is no protection between the read and the write — whatever Session 2 does in that window is invisible to this session.
+
 *Session 1 — read the current quantity into a variable, wait, then write the variable minus 10.*
 
 ```sql
@@ -241,6 +255,10 @@ SELECT 'session1' AS actor, @qty AS read_qty, @qty - 10 AS wrote_qty;
 | actor | read_qty | wrote_qty |
 |---|---|---|
 | session1 | 100 | 90 |
+
+#### Session 2 | read into variable, wait, write qty - 20
+
+Session 2 runs the same pattern against the same row but decrements by 20 instead of 10. The 400 ms offset is chosen so that Session 2's `SELECT` fires after Session 1's `SELECT` but before Session 1's `UPDATE` commits. Both sessions therefore capture the pre-update value (`100`) into their own local variables and each compute their new value in isolation.
 
 *Session 2 — same pattern, but decrement by 20, started 400 ms after Session 1 so both reads hit the same `100` value.*
 
@@ -262,6 +280,10 @@ SELECT 'session2' AS actor, @qty AS read_qty, @qty - 20 AS wrote_qty;
 | session2 | 100 | 80 |
 
 *Both sessions read `100` from the live database. Session 1 commits `qty = 90` at roughly t=2.1s. Session 2's `UPDATE` waits briefly on the exclusive lock and then writes `qty = 80` using its stale variable — Session 1's change is silently overwritten.*
+
+#### Final state | verify the lost update against serialized expected value
+
+With both sessions committed, the surviving value in `qty` shows which write won the race. A serialized execution (`100 - 10 - 20`) would leave `qty = 70`; the actual result comes from whichever session committed its variable-based `UPDATE` last. The query below makes the comparison explicit by emitting both the observed value and the expected serialized value in the same row.
 
 *Final state — read the row and compare against what a properly serialized execution would have produced.*
 
@@ -292,6 +314,10 @@ FROM dbo.race_lost_update_demo;
 
 If the business operation is "subtract 10" or "increment by 1", express that directly in the `UPDATE` statement as `SET qty = qty - 10`. There is no stale-read window because the value being modified is read and written inside the same statement under a single exclusive lock.
 
+#### Reset | restore qty to 100 for a fresh run
+
+The fix demo reuses the same `dbo.race_lost_update_demo` table left behind by the previous demo. Rather than dropping and recreating it, a one-line `UPDATE` resets the single row back to `qty = 100` so the two sessions below start from the same baseline as the broken version.
+
 *Reset the row to `qty = 100` for a fresh run.*
 
 ```sql
@@ -302,6 +328,10 @@ SELECT qty FROM dbo.race_lost_update_demo WHERE id = 1;
 | qty |
 |---|
 | 100 |
+
+#### Session 1 | atomic UPDATE SET qty = qty - 10
+
+Session 1 no longer reads `qty` into a local variable. Instead the decrement is expressed directly in the `SET` clause, so the engine reads the current value and writes the new value inside a single statement protected by one exclusive row lock. The business operation "subtract 10" is now entirely server-side and cannot be corrupted by a stale variable captured before any concurrent writer committed.
 
 *Session 1 — atomic update.*
 
@@ -316,6 +346,10 @@ SELECT 'session1' AS actor, 'applied qty - 10' AS action;
 | actor | action |
 |---|---|
 | session1 | applied qty - 10 |
+
+#### Session 2 | atomic UPDATE SET qty = qty - 20
+
+Session 2 applies the same pattern with a different delta (`qty - 20`). Because Session 1 holds an exclusive lock on the row during its atomic `UPDATE`, Session 2's statement briefly waits until Session 1 commits, then reads the freshly committed value (`90`) and applies its own decrement. Both decrements are applied server-side against whatever the current value is, so the ordering of the two `UPDATE` statements no longer matters.
 
 *Session 2 — atomic update with a different delta.*
 
@@ -332,6 +366,10 @@ SELECT 'session2' AS actor, 'applied qty - 20' AS action;
 | session2 | applied qty - 20 |
 
 *Session 2's `UPDATE` briefly waits on Session 1's exclusive lock, then reads the fresh value (`90`) and applies its own decrement to produce `70`. Both decrements survive because neither session ever held a stale copy in a variable.*
+
+#### Final state | both decrements preserved
+
+The final value in `qty` must equal `70` — the serialized expected result of applying both decrements to the initial `100`. The query below emits the observed value alongside the expected value and a CASE expression that turns the comparison into a human-readable outcome so the demo output makes the correctness of the fix unambiguous.
 
 *Final state — the atomic pattern preserves both changes.*
 
@@ -360,6 +398,10 @@ The second classic race appears in idempotent-insert code: "does a row with this
 
 Both sessions check `NOT EXISTS` against the same business key, both see no rows, and both proceed to the `INSERT`. With no unique constraint on `customer_code`, both inserts succeed and the table ends up with two rows.
 
+#### Setup | create table with no unique constraint
+
+The demo needs a table whose business key is intentionally unprotected — no primary key, no unique constraint, no unique index. This removes the database-level safety net and forces the race to manifest as duplicate rows rather than a `2627` unique-violation error. A realistic schema would always have such a constraint; the demo deliberately omits it to show the outcome when application code relies solely on an existence check.
+
 *Setup — create a table with no unique constraint on the business key.*
 
 ```sql
@@ -376,6 +418,10 @@ SELECT COUNT(*) AS initial_rows FROM dbo.race_insert_demo;
 | initial_rows |
 |---|
 | 0 |
+
+#### Session 1 | check-then-insert with delay between check and insert
+
+Session 1 runs the application-level upsert pattern: first `IF NOT EXISTS` against the business key, then a deliberate two-second `WAITFOR DELAY` inside the `IF` block, then the `INSERT`. The delay simulates any realistic workload where the application does some processing between "does this already exist?" and "ok, create it". Under the default `READ COMMITTED` isolation level, the existence check takes a shared lock that is released immediately, leaving the key range completely unlocked during the wait.
 
 *Session 1 — check-then-insert with a delay between the check and the insert so Session 2 has time to run its own check before either insert commits.*
 
@@ -395,6 +441,10 @@ FROM dbo.race_insert_demo WHERE customer_code = 'C001';
 | actor | rows_for_key |
 |---|---|
 | session1 | 1 |
+
+#### Session 2 | identical check-then-insert pattern
+
+Session 2 runs exactly the same existence-check-then-insert pattern, starting 400 ms after Session 1. That offset is chosen so Session 2's `IF NOT EXISTS` fires while Session 1 is still inside its two-second delay — before Session 1 has inserted its row. Session 2 therefore sees an empty result from its own check and enters its `INSERT` branch, producing a duplicate that the database has no way to reject.
 
 *Session 2 — same pattern.*
 
@@ -416,6 +466,10 @@ FROM dbo.race_insert_demo WHERE customer_code = 'C001';
 | session2 | 2 |
 
 *When Session 1 ran its existence check the row did not exist (`COUNT = 0`). When Session 2 ran its existence check a few hundred milliseconds later, the row **still** did not exist — because Session 1 was waiting on its internal `WAITFOR DELAY` before issuing the `INSERT`. Both sessions then inserted. Session 2's final count of `2` is the first moment either session became aware of the duplicate.*
+
+#### Final state | two rows for the same business key
+
+A grouped query confirms the duplicate and, via `STRING_AGG`, shows which sessions wrote the colliding rows. This is the diagnostic shape a reconciliation job would use in production: count rows per business key and surface keys where the count exceeds one. In a table with no unique constraint this is the only way the duplicate will ever be discovered.
 
 *Final state — the table holds two rows for the same business key.*
 
@@ -452,6 +506,10 @@ The canonical race-free upsert pattern in SQL Server uses two table hints on the
 
 Together, `UPDLOCK + HOLDLOCK` on the existence check makes the first session "own" the business key for the duration of its transaction. The second session waits on the U lock until the first commits, then re-runs the existence check and sees the row the first session just inserted — so it takes the UPDATE branch instead of the INSERT branch.
 
+#### Setup | table with primary key plus update_count column
+
+The fix demo uses a correctly constrained table: `customer_code` is the primary key, and an `update_count` column lets the demo prove that both sessions actually ran against the same row. The first session will see `IF EXISTS` return false and insert with `update_count = 1`; the second session, after waiting on the range lock, will see `IF EXISTS` return true and increment `update_count` to `2`. That final value is the load-bearing proof that the serialization worked.
+
 *Setup — a table with a primary key on the business key, plus a payload and an update counter so we can prove both sessions ran.*
 
 ```sql
@@ -463,6 +521,10 @@ CREATE TABLE dbo.race_upsert_demo (
     update_count  int         NOT NULL
 );
 ```
+
+#### Session 1 | UPDLOCK HOLDLOCK existence check and insert branch
+
+Session 1 wraps the existence-check-then-insert pattern in an explicit `BEGIN TRAN` / `COMMIT` and adds the `WITH (UPDLOCK, HOLDLOCK)` table hint to the `EXISTS` predicate. The combination takes a U-mode key-range lock on the slot where `customer_code = 'C001'` would live, whether the row exists yet or not. Session 1 sees no row, takes the `INSERT` branch, commits, and releases the range lock — and for the entire duration of its transaction no other session can even run the existence check against that key.
 
 *Session 1 — upsert pattern with `UPDLOCK, HOLDLOCK` inside an explicit transaction.*
 
@@ -494,6 +556,10 @@ COMMIT;
 | actor | action |
 |---|---|
 | session1 | inserted |
+
+#### Session 2 | same upsert pattern 200 ms later
+
+Session 2 runs the identical `UPDLOCK + HOLDLOCK` upsert, starting 200 ms after Session 1. Because Session 1 already holds the range lock, Session 2's own existence check blocks at the lock manager until Session 1 commits. When the lock is released, Session 2 re-runs its existence check and now finds the row Session 1 just inserted, so it takes the `UPDATE` branch and increments `update_count`. This is the exact serialization the fix is supposed to produce.
 
 *Session 2 — same pattern, started 200 ms later.*
 
@@ -528,6 +594,10 @@ COMMIT;
 
 *Session 1 took the `UPDLOCK + HOLDLOCK` range lock on the empty slot for `C001`, saw no row, inserted, committed, and released the lock. Session 2's own `EXISTS` check waited on that range lock. As soon as Session 1 committed, Session 2 acquired the lock, re-ran the existence check, saw the row Session 1 just inserted, and took the UPDATE branch — incrementing `update_count` to 2.*
 
+#### Final state | one row, update_count = 2 proves serialization
+
+The row-count and `update_count` together form the correctness proof: exactly one row exists for `C001` (no duplicate), and `update_count = 2` shows that both sessions successfully touched it in sequence rather than one losing to a unique-violation error or silently overwriting the other. The `payload = 'session2'` value further confirms which session wrote last.
+
 *Final state — one row, and `update_count = 2` proves both sessions ran in serialized order.*
 
 ```sql
@@ -558,6 +628,12 @@ WHERE customer_code = 'C001';
 
 ### Demonstration | writer rolls back, reader already observed the uncommitted value
 
+This demo requires two sessions to interleave: a writer that updates then rolls back, and a reader under `READ UNCOMMITTED` that observes the in-flight update before the rollback fires. The reader's observation is the dirty read — a value that existed in the row's data page for a few hundred milliseconds but was never part of the database's committed history.
+
+#### Setup | create single-row table with qty = 100
+
+The demo uses the same narrow two-column shape as the lost-update demo. The only durable state needed is a single row with a known starting value so the reader's observation of `999` can be unambiguously identified as data that differs from both the pre-transaction and post-rollback committed state.
+
 *Setup.*
 
 ```sql
@@ -570,6 +646,10 @@ CREATE TABLE dbo.race_dirty_read_demo (
 
 INSERT INTO dbo.race_dirty_read_demo(id, qty) VALUES (1, 100);
 ```
+
+#### Writer | update to 999, wait 3 seconds, ROLLBACK
+
+The writer opens an explicit transaction, changes `qty` to `999`, and holds the transaction open for three seconds under an exclusive row lock before issuing `ROLLBACK`. During those three seconds the row's data page contains the value `999` even though no `COMMIT` has ever been issued for it. After the rollback, the engine restores the row to `100` and the transaction leaves no trace — as if it had never run.
 
 *Writer — open a transaction, change the value to `999`, wait 3 seconds, then ROLLBACK. After rollback the committed value is still `100`.*
 
@@ -592,6 +672,10 @@ FROM dbo.race_dirty_read_demo WHERE id = 1;
 |---|---|
 | writer_after_rollback | 100 |
 
+#### Reader | READ UNCOMMITTED observes the uncommitted 999
+
+The reader sets its transaction isolation level to `READ UNCOMMITTED`, waits 1.5 seconds so the writer is mid-transaction with `qty = 999` but has not yet rolled back, then issues a `SELECT`. Because `READ UNCOMMITTED` ignores exclusive locks and reads the row's current data-page content, the reader sees `999` — the value that is about to be discarded. This is the dirty read: a value the reader returned as fact but which never became committed state.
+
 *Reader — under `READ UNCOMMITTED`, ignore the writer's exclusive lock and read whatever is in the row's data page. Times its read for roughly 1.5 seconds after the writer begins, so the writer has updated to `999` but not yet rolled back.*
 
 ```sql
@@ -608,6 +692,10 @@ FROM dbo.race_dirty_read_demo WHERE id = 1;
 | reader_read_uncommitted | 999 |
 
 *The reader observed `999`, which was never committed. The writer's later ROLLBACK removed `999` from the committed-state history entirely. If the reader used that value to make a decision — sending a shipment, paying a balance, writing to another table — that decision is now wrong and there is no record in `stoxx` that the value `999` ever existed.*
+
+#### Final state | committed value is still 100, the 999 never existed
+
+After both sessions finish, a committed read against the row returns `100`. There is no committed history in which `qty = 999`, and no DMV, no transaction log inspection, and no audit trail will show that the value ever existed in committed state. The only evidence the reader ever saw `999` is whatever that session recorded downstream — a log line, an HTTP response, a write to another table — which is exactly why dirty reads are so dangerous in data pipelines.
 
 *Final state — after the writer rolls back, the committed value is still `100`. The `999` the reader saw was never real.*
 
@@ -641,6 +729,12 @@ A non-repeatable read happens when a transaction reads the same row twice and ge
 
 ### Demonstration | same row, two different values inside one transaction
 
+This demo interleaves a reader inside an explicit transaction with a concurrent writer that updates the same row and commits. The reader reads twice — once before the writer commits, once after — and observes two different values despite both reads happening inside the same transaction. That is the textbook non-repeatable read: the transaction cannot re-read a row and get the same value.
+
+#### Setup | create single-row table with qty = 100
+
+The setup mirrors the previous demos: a narrow two-column table with one row. The starting value of `100` is chosen so that the reader's first `SELECT` and the writer's later update produce visibly different numbers (`100` vs `999`) that the final output can compare directly.
+
 *Setup.*
 
 ```sql
@@ -653,6 +747,10 @@ CREATE TABLE dbo.race_nonrepeat_demo (
 
 INSERT INTO dbo.race_nonrepeat_demo(id, qty) VALUES (1, 100);
 ```
+
+#### Reader | READ COMMITTED transaction with two SELECTs around a delay
+
+The reader opens an explicit transaction under the default `READ COMMITTED` isolation level, reads `qty` into `@read1`, waits two seconds, then reads `qty` again into `@read2`. Because `READ COMMITTED` releases shared locks as soon as each row is returned, the row is unlocked during the two-second gap — any writer that commits during that window will be visible to the second read. The `CASE` expression at the bottom turns the comparison into a single `repeatable` / `non-repeatable` outcome label.
 
 *Reader — explicit transaction under `READ COMMITTED`, reads the same row twice with a delay between reads. The reader sees `100` the first time and `999` the second time because the writer committed in between.*
 
@@ -679,6 +777,10 @@ SELECT 'reader' AS actor, @read1 AS first_read, @read2 AS second_read,
 |---|---|---|---|
 | reader | 100 | 999 | non-repeatable |
 
+#### Writer | UPDATE committed between the reader's two SELECTs
+
+The writer waits one second from its own start (which corresponds to roughly t=1s in the reader's timeline, between the reader's first and second `SELECT`), then issues an `UPDATE` that changes `qty` to `999`. Under `READ COMMITTED` the reader's first `SELECT` has already released its shared lock, so the writer takes an exclusive lock without blocking, applies the change, and commits immediately. The reader's second `SELECT` then sees the new committed value.
+
 *Writer — updates and commits one second into the reader's transaction, between the reader's two `SELECT` statements.*
 
 ```sql
@@ -699,11 +801,19 @@ SELECT 'writer' AS actor, 'committed qty = 999' AS message;
 
 Promoting the reader's transaction to `REPEATABLE READ` makes the first `SELECT` hold its shared lock on the row until the transaction commits. The writer's `UPDATE` then has to wait on that shared lock, so the reader's second `SELECT` sees the same value as the first.
 
+#### Reset | restore qty to 100
+
+Between the broken demo and the fix demo the row has already been updated to `999`. A single-line `UPDATE` returns it to the `100` baseline so the fix demo starts from the same state as the broken one and the comparison between the two outcomes is fair.
+
 *Reset the row to `100` for a clean run.*
 
 ```sql
 UPDATE dbo.race_nonrepeat_demo SET qty = 100 WHERE id = 1;
 ```
+
+#### Reader | REPEATABLE READ transaction holding shared locks until commit
+
+The only change from the broken demo is the isolation level: `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;` before `BEGIN TRAN`. Under this level, shared locks on every row the reader touches are held until `COMMIT` or `ROLLBACK`. The first `SELECT` therefore acquires a shared lock on the `id = 1` row and keeps it for the full duration of the transaction, preventing any concurrent writer from acquiring the exclusive lock it would need to change the value.
 
 *Reader under `REPEATABLE READ`.*
 
@@ -729,6 +839,10 @@ SELECT 'reader' AS actor, @read1 AS first_read, @read2 AS second_read,
 | actor | first_read | second_read | outcome |
 |---|---|---|---|
 | reader | 100 | 100 | repeatable (writer blocked) |
+
+#### Writer | UPDATE now blocks on the reader's shared lock
+
+The writer runs exactly the same `UPDATE ... SET qty = 999` as before. The difference is that now the reader's shared lock is still held, so the writer's request for an exclusive lock blocks at the lock manager until the reader commits. The writer's wall-clock runtime is visibly longer in this demo than in the broken one — the delta is the time it spends waiting on the reader — but its final committed value is the same.
 
 *Writer — same as before, but now blocks on the reader's shared lock until the reader commits.*
 
@@ -762,6 +876,12 @@ A phantom read is a non-repeatable read's range-based cousin: the same range que
 
 ### Demonstration | range query sees new rows mid-transaction under `REPEATABLE READ`
 
+This demo shows that `REPEATABLE READ` is enough to prevent non-repeatable reads on existing rows but is **not** enough to prevent new rows from appearing in a range query. The reader runs a `COUNT(*)` with a predicate, waits, re-runs the same `COUNT(*)`, and sees a higher number because the writer inserted a matching row between the two reads.
+
+#### Setup | two-row table with IX_race_phantom_category index
+
+The demo table has an explicit non-clustered index on `category`. An index matters here because range locks are taken on index key positions — without an index the engine may take a more coarse lock (page or table) and the demonstration loses precision about what a key-range lock actually does. Two rows with `category = 'alpha'` provide the baseline that the reader will count at the start.
+
 *Setup — a two-row table with an index on `category` to make the demo realistic (the phantom lock behavior is more obvious when there is an index the engine can take a range lock on).*
 
 ```sql
@@ -776,6 +896,10 @@ CREATE TABLE dbo.race_phantom_demo (
 
 INSERT INTO dbo.race_phantom_demo VALUES (1, 'alpha', 10), (2, 'alpha', 20);
 ```
+
+#### Reader | REPEATABLE READ transaction counts alpha rows twice
+
+The reader promotes its session to `REPEATABLE READ` and runs two `COUNT(*)` queries two seconds apart. `REPEATABLE READ` holds shared locks on every **row** the reader actually touches, which prevents updates to those rows. It does not hold any lock on the empty space between or after those rows, so any concurrent insert whose key does not collide with an existing locked row is free to proceed.
 
 *Reader under `REPEATABLE READ` — counts the `alpha` rows twice.*
 
@@ -802,6 +926,10 @@ SELECT 'reader' AS actor, @count1 AS first_count, @count2 AS second_count,
 |---|---|---|---|
 | reader | 2 | 3 | phantom occurred |
 
+#### Writer | INSERT new alpha row between the two counts
+
+The writer waits one second and then inserts a third `alpha` row with `id = 3`. The insert does not collide with either of the two existing locked rows (`id = 1` and `id = 2`), so the engine places the new key position in the index without blocking. When the reader re-runs its count a second later, the new row is visible and the count returns `3` instead of `2` — the phantom read.
+
 *Writer — inserts a new row in the same category one second into the reader's transaction.*
 
 ```sql
@@ -822,11 +950,19 @@ SELECT 'writer' AS actor, 'inserted id=3' AS message;
 
 Promoting the reader to `SERIALIZABLE` makes its `SELECT` acquire key-range locks that cover every key position satisfying the `WHERE` clause. The writer's `INSERT` then has to wait on the range lock until the reader commits, so the second count matches the first.
 
+#### Reset | delete the phantom row
+
+The previous demo left behind the `id = 3` row that caused the phantom. A single `DELETE` returns the table to the original two-row state so the fix demo starts from the same baseline and can be compared directly against the broken version.
+
 *Reset.*
 
 ```sql
 DELETE FROM dbo.race_phantom_demo WHERE id = 3;
 ```
+
+#### Reader | SERIALIZABLE transaction acquires key-range locks
+
+The only change from the broken demo is promoting the reader to `SERIALIZABLE`. Under this level, the `SELECT` takes key-range locks that cover not only the existing `alpha` rows but also the empty key positions where future matching rows could be inserted. The reader's first `COUNT(*)` therefore locks the entire `category = 'alpha'` range for the duration of the transaction.
 
 *Reader under `SERIALIZABLE`.*
 
@@ -852,6 +988,10 @@ SELECT 'reader' AS actor, @count1 AS first_count, @count2 AS second_count,
 | actor | first_count | second_count | outcome |
 |---|---|---|---|
 | reader | 2 | 2 | no phantom (range locked) |
+
+#### Writer | INSERT blocks on the range lock until reader commits
+
+The writer runs exactly the same `INSERT` as in the broken demo. The difference is that its request for a new key position in the `alpha` range now collides with the reader's key-range lock and blocks at the lock manager until the reader commits. Its wall-clock runtime is visibly longer than under `REPEATABLE READ` — that extra time is the price `SERIALIZABLE` charges for phantom-free counts.
 
 *Writer — same INSERT, but it now blocks on the reader's range lock until the reader commits.*
 
@@ -883,6 +1023,10 @@ Write skew is the subtle anomaly that `SNAPSHOT` isolation does not protect agai
 
 The business rule is: at least one doctor must remain on call at all times. The code checks `IF @count >= 2` before taking the doctor off-call (so removing one still leaves at least one on call). Both sessions pass this check against their independent snapshots and both update their own doctor's row. The result is zero doctors on call — invariant violated.
 
+#### Setup | two doctors both initially on call
+
+The scheduling table holds one row per doctor with a `bit` column recording their current on-call state. Both doctors start with `is_on_call = 1`, which is the state in which the invariant "at least one doctor is on call" holds. This is the precondition both off-call transactions will verify before they act.
+
 *Setup — two doctors, both initially on call.*
 
 ```sql
@@ -895,6 +1039,10 @@ CREATE TABLE dbo.race_writeskew_demo (
 
 INSERT INTO dbo.race_writeskew_demo VALUES ('alice', 1), ('bob', 1);
 ```
+
+#### Session 1 | Alice's request-off transaction under SNAPSHOT
+
+Alice runs her off-call transaction under `SNAPSHOT` isolation. She reads the current number of on-call doctors into `@count`, waits two seconds to simulate application-side processing, then checks `IF @count >= 2` and takes herself off call if the check passes. Under `SNAPSHOT`, her read returns the row versions as of her transaction's start, and any concurrent writes by other sessions are invisible until they commit — and even then only if her transaction itself updates the same row.
 
 *Session 1 — Alice's request-off transaction under `SNAPSHOT` isolation. Reads the count, waits, checks the invariant, and removes Alice from the on-call set if the count was ≥ 2.*
 
@@ -921,6 +1069,10 @@ SELECT 'alice' AS actor, @count AS saw_oncall_count,
 | actor | saw_oncall_count | alice_state_after |
 |---|---|---|
 | alice | 2 | False |
+
+#### Session 2 | Bob's request-off transaction under SNAPSHOT
+
+Bob runs the exact same off-call transaction pattern, 200 ms after Alice. His snapshot is taken before Alice's transaction commits, so his `SELECT COUNT(*)` sees both doctors still on call (`@count = 2`) from his own frozen snapshot view. He passes the `>= 2` check and updates his own row. Because his `UPDATE` targets `doctor = 'bob'` — a different row from the one Alice updated — `SNAPSHOT` isolation's row-level conflict detection does not fire.
 
 *Session 2 — Bob's request-off transaction, identical pattern but against his own row.*
 
@@ -950,6 +1102,10 @@ SELECT 'bob' AS actor, @count AS saw_oncall_count,
 
 *Both sessions see `saw_oncall_count = 2` in their respective snapshots — neither snapshot contains the other's pending update. Both pass the `@count >= 2` check. Both update their own disjoint row. Both commit successfully with no error, because `SNAPSHOT` only detects update conflicts on the **same** row, and each session is updating a different row (alice vs bob).*
 
+#### Final state | both doctors off call
+
+A simple `SELECT` against the table shows the committed post-race state. Both rows now have `is_on_call = False`. Neither Alice's nor Bob's session raised an error; both returned success to their application. From the database's perspective everything is fine. From the business's perspective the hospital has zero doctors on call at an hour when at least one was supposed to be available.
+
 *Final state — both doctors are off call. The invariant is broken.*
 
 ```sql
@@ -960,6 +1116,10 @@ SELECT doctor, is_on_call FROM dbo.race_writeskew_demo ORDER BY doctor;
 |---|---|
 | alice | False |
 | bob | False |
+
+#### Invariant check | verify the at-least-one-on-call business rule
+
+The business rule — "at least one doctor must be on call" — is not enforced by any constraint in the schema, so a query has to check it explicitly. The statement below sums the `is_on_call` bits and uses a `CASE` expression to translate the total into a clear `invariant holds` vs `WRITE SKEW: invariant violated` outcome. Any recurring integrity check in production would take this same shape.
 
 *Invariant check — explicitly verify the business rule that at least one doctor must be on call.*
 
@@ -995,6 +1155,12 @@ FROM dbo.race_writeskew_demo;
 
 ### Demonstration | two snapshots cannot both update the same row
 
+This demo replays the original lost-update pattern but with both sessions running under `SNAPSHOT` isolation. The first session commits as before, but the second session's `UPDATE` no longer overwrites the first — instead SQL Server detects that the second session's snapshot is stale relative to the row's current committed state and aborts the transaction with error `3960`. This is the controlled-failure mode that makes `SNAPSHOT` safe for same-row write patterns that cannot be expressed as a single atomic statement.
+
+#### Setup | recreate the lost-update demo table
+
+The table is identical to the lost-update demo's setup: a single row with `qty = 100`. Reusing the same shape makes the comparison direct — the only change between the broken lost-update demo and this one is that both sessions now set `SNAPSHOT` isolation, and the outcome changes from a silent overwrite to a visible error.
+
 *Setup — reuse the lost-update table pattern.*
 
 ```sql
@@ -1007,6 +1173,10 @@ CREATE TABLE dbo.race_lost_update_demo (
 
 INSERT INTO dbo.race_lost_update_demo(id, qty) VALUES (1, 100);
 ```
+
+#### Session 1 | SNAPSHOT read, wait, update, commit successfully
+
+Session 1 opens a `SNAPSHOT` transaction, reads `qty` into `@q`, waits two seconds, and issues an `UPDATE`. Because no other transaction has modified the row since Session 1's snapshot was taken, the engine allows the `UPDATE` to proceed and commit normally. Session 1 behaves exactly as it would under any other isolation level — it is the winner of the race.
 
 *Session 1 — read under `SNAPSHOT`, wait, update, commit.*
 
@@ -1031,6 +1201,10 @@ SELECT 'session1' AS actor, 'committed' AS outcome;
 | actor | outcome |
 |---|---|
 | session1 | committed |
+
+#### Session 2 | SNAPSHOT update aborts with error 3960
+
+Session 2 runs the same pattern 200 ms later. Its snapshot is established while Session 1's transaction is still in-flight, so its read sees the pre-Session-1 row value. When Session 2 finally issues its own `UPDATE`, SQL Server checks whether any committed transaction has modified that row since Session 2's snapshot was taken — it has (Session 1) — so the engine raises error `3960` and aborts Session 2's transaction. The `COMMIT` statement at the end never runs; the transaction is already rolled back by the time control returns to the client.
 
 *Session 2 — same pattern, starts slightly later. Its snapshot is taken before Session 1 commits, so its `UPDATE` will hit a conflict.*
 
@@ -1072,6 +1246,10 @@ When the write depends on a computation the database cannot express in a single 
 
 A `rowversion` column (formerly called `timestamp`) is an 8-byte binary column that SQL Server automatically bumps on every update to the row. It is a database-global monotonic counter — each version value is unique across the entire database, not just across rows. Every table can have at most one `rowversion` column, and inserts and updates populate it automatically; you never set it yourself.
 
+#### Setup | create table with rowversion column
+
+The demo table has a `rowversion` column named `row_version`. SQL Server manages this column internally — any `INSERT` assigns it a fresh value, any `UPDATE` assigns it a new, strictly greater value, and any attempt to `SET` it in an application statement is rejected. The `SELECT` after the insert reads the initial value so the column's binary shape (`0x00000000000004EB04` in this run) is visible in the output.
+
 *Setup — a table with a `rowversion` column.*
 
 ```sql
@@ -1095,6 +1273,12 @@ SELECT id, qty, row_version FROM dbo.race_rowversion_demo;
 *The `row_version` value is an opaque 8-byte counter the engine manages. Do not parse it — only compare it. Every time this row is updated, SQL Server will assign it a new, strictly greater value.*
 
 ### Demonstration | one winner, one conflict under concurrent optimistic updates
+
+Both sessions run the optimistic-concurrency pattern: capture the row version alongside the value, perform the application-side computation, then update with `WHERE id = 1 AND row_version = @captured`. The first session to commit wins the race and bumps the row version. The second session's `UPDATE` matches zero rows because the captured version no longer equals the current version, and `@@ROWCOUNT = 0` is the signal the application uses to retry.
+
+#### Session 1 | capture row_version, wait, update with WHERE row_version = @captured
+
+Session 1 captures both the current `qty` and the current `row_version` into local variables, waits two seconds to simulate application-side computation, then issues an `UPDATE` whose `WHERE` clause compares against the captured `row_version`. At the moment the `UPDATE` runs, the row's version still matches what Session 1 captured, so one row is affected, `@@ROWCOUNT = 1`, and the application sees `applied` in the outcome column.
 
 *Session 1 — capture the row version, wait, update with `WHERE row_version = @captured`.*
 
@@ -1121,6 +1305,10 @@ SELECT 'session1' AS actor, @rc AS rows_affected,
 | actor | rows_affected | outcome |
 |---|---|---|
 | session1 | 1 | applied |
+
+#### Session 2 | same pattern, @@ROWCOUNT = 0 signals the conflict
+
+Session 2 runs the same pattern 400 ms after Session 1. Its initial `SELECT` captures the same `row_version` value that Session 1 captured — they both read the pre-update version. But by the time Session 2 issues its `UPDATE`, Session 1 has already committed and bumped `row_version` to a new value. Session 2's `WHERE row_version = @captured` clause matches zero rows, and `@@ROWCOUNT = 0` is the controlled-failure signal the application uses to retry.
 
 *Session 2 — same pattern. Reads the same initial `row_version`, attempts to update under the same `WHERE row_version = @captured` clause, finds no matching row because Session 1 has already bumped the version.*
 
@@ -1149,6 +1337,10 @@ SELECT 'session2' AS actor, @rc AS rows_affected,
 | session2 | 0 | conflict (retry) |
 
 *Session 1 captured `row_version = 0x...EB04`, computed `qty - 10 = 90`, and updated the row under `WHERE row_version = 0x...EB04`. The update matched, applied, and SQL Server automatically bumped `row_version` to a new value. Session 2 had captured the same `0x...EB04` before Session 1's update. Its `UPDATE` with the same `WHERE` clause matched zero rows — `@@ROWCOUNT = 0` — because the row's current version no longer matches the captured one. The application sees `rows_affected = 0` and knows it has a conflict to retry.*
+
+#### Final state | one applied write, one pending retry
+
+The committed value in `qty` is `90` — Session 1's decrement of 10, applied cleanly. Session 2's attempted decrement of 20 never reached the row because its optimistic check failed. In production, Session 2's application code would catch the `@@ROWCOUNT = 0` condition, re-read the row (picking up the new `row_version` and the current `qty = 90`), recompute the desired delta, and issue a fresh `UPDATE` under the new captured version — turning the lost update into a retryable conflict.
 
 *Final state — one change applied, one pending retry.*
 
@@ -1189,6 +1381,10 @@ Already demonstrated in the [check-then-insert fix](#fix--with-updlock-holdlock-
 
 `READPAST` tells a `SELECT` or `UPDATE` to skip rows that are currently held under incompatible locks, instead of blocking. Combined with `UPDLOCK` and `ROWLOCK`, it is the canonical pattern for a work-claim queue: each worker grabs the next unclaimed row without blocking other workers.
 
+#### Template | atomic UPDATE TOP (1) OUTPUT with READPAST UPDLOCK ROWLOCK
+
+The canonical work-claim statement is a single `UPDATE TOP (1) ... OUTPUT` with three table hints. `READPAST` skips any row that is already locked (i.e. currently claimed by another worker). `UPDLOCK` takes an update lock on the single row the worker does claim, so two workers competing for the same row are serialized rather than both racing. `ROWLOCK` prevents lock escalation from row to page or table level, which would otherwise serialize all workers once the queue is large enough. The `OUTPUT` clause returns the claimed row to the worker in the same statement, so the claim and the read are atomic — there is no intermediate state in which a row is marked `in_progress` but not yet visible to its claimer.
+
 *Template — claim the next pending task from a queue without blocking other workers (illustrative, not run live because it requires a worker table pre-populated with pending rows).*
 
 ```sql
@@ -1211,6 +1407,10 @@ WHERE status = 'pending';
 ### `sp_getapplock` | coarse named serialization for pipeline slices
 
 For pipeline steps that must never overlap on the same business slice — a gold-layer recompute for a single business date, a cross-account transfer, a dimension reload for a single tenant — a named **application lock** can serialize the work even when the table design itself does not. Application locks are independent of row and key locks, have a resource name the caller chooses, and support `Session` or `Transaction` scope.
+
+#### Session 1 | acquire exclusive applock with @LockTimeout = 0
+
+Session 1 is the "leader" for the named resource. It opens a transaction, calls `sys.sp_getapplock` with `@LockMode = 'Exclusive'` and `@LockTimeout = 0` to fail immediately if the lock is already held, holds the lock for four seconds to simulate a pipeline step, and commits. `@LockOwner = 'Transaction'` means the lock is released automatically when the transaction commits — no explicit `sp_releaseapplock` call is needed.
 
 *Session 1 — acquire an exclusive application lock on a named resource with `@LockTimeout = 0` (fail immediately if contended), hold it for 4 seconds to simulate a pipeline step, then commit.*
 
@@ -1235,6 +1435,10 @@ SELECT 'session1' AS actor, @rc AS applock_result;
 | actor | applock_result |
 |---|---|
 | session1 | 0 |
+
+#### Session 2 | wait 2 seconds then time out with return code -1
+
+Session 2 starts 500 ms after Session 1 and requests the same named resource. It passes `@LockTimeout = 2000` so it waits up to two seconds for the lock before giving up. Session 1 holds the lock for four seconds, so Session 2's wait times out and `sp_getapplock` returns `-1`. The application sees this as a clean "skip this run" signal — no exception is raised and the transaction can be committed or rolled back at the application's discretion.
 
 *Session 2 — start 500 ms later, same resource name, `@LockTimeout = 2000` (wait up to 2 seconds, then give up).*
 

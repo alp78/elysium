@@ -89,7 +89,7 @@ SELECT
 
 `nvarchar` uses exactly twice the storage of `varchar` for the same ASCII content under UCS-2/UTF-16 encoding. On a 100-million-row table, a naive `nvarchar(100)` column over `varchar(100)` can cost an extra 100 GB — and the larger the row, the fewer rows per 8 KB page, compounding the cost on every index range scan.
 
-> [!question] When to choose nvarchar over varchar
+> [!tip] When to choose nvarchar over varchar
 >
 > Use `nvarchar` whenever the column can receive multilingual input (non-ASCII names, addresses, free-text fields) or whenever the data comes from an external system whose encoding contract is not guaranteed. Use `varchar` for columns that store strictly ASCII content by contract — ticker symbols, ISO codes, machine-generated identifiers, status enums.
 

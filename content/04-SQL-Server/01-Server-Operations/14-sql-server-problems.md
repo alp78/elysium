@@ -2168,864 +2168,975 @@ ALTER TABLE bronze.market_cap ALTER COLUMN market_cap_usd DECIMAL(28,2) NOT NULL
 
 ---
 
-### Date/Time Type Confusion
+### SQL Server | DATE and DATETIME2 columns | type confusion in joins
 
-**What happens**
+A silver pipeline joins a `corporate_actions` table (with `ex_date DATE`) to a `price_history` table (with `trade_datetime DATETIME`). The join condition `ca.ex_date = ph.trade_datetime` forces SQL Server to implicitly convert the `DATE` side to `DATETIME`, producing `'2026-03-15 00:00:00.000'`. Any price row with `trade_datetime = '2026-03-15 09:30:00.000'` does not match because the time component differs. The join returns zero rows, corporate actions are silently skipped, and the gold layer's adjusted prices are wrong. This is a silent failure: the query succeeds, just with an empty or incomplete result set. SQL Server's type precedence means `DATETIME` outranks `DATE`, so the column-side is converted, and joins on `DATE = DATETIME` only match rows where the `DATETIME` has exactly midnight as the time component.
 
-The silver pipeline JOINs `silver.corporate_actions` (with `ex_date DATE`) to `silver.price_history` (with `trade_datetime DATETIME`). The JOIN condition is `ca.ex_date = ph.trade_datetime`. SQL Server implicitly converts `ca.ex_date` to `DATETIME` as `'2026-03-15 00:00:00.000'`. All price rows with `trade_datetime = '2026-03-15 09:30:00.000'` do not match because the time component differs. The JOIN returns zero rows. Corporate actions adjustments are silently skipped, producing incorrect adjusted prices in the gold layer.
+The severity is moderate because the symptom is wrong numbers, not a crash. The defense is to standardize column types (`DATE` for business dates, `DATETIME2(3)` for timestamps, never `DATETIME` or `SMALLDATETIME`) and to explicitly `CAST(trade_timestamp AS DATE)` in any join that crosses the two.
 
-**Root cause**
+#### Audit for legacy DATETIME columns
 
-SQL Server has multiple date/time types: `DATE` (date only), `TIME` (time only), `DATETIME` (date + time, 3.33ms precision, 1753 minimum), `DATETIME2` (date + time, 100ns precision, 0001 minimum), `SMALLDATETIME`, `DATETIMEOFFSET`. Implicit conversion between them follows data type precedence. `DATETIME` outranks `DATE`, so `DATE` columns are converted to `DATETIME` with midnight time. JOINs on `DATE = DATETIME` only match rows where the DATETIME has exactly midnight as the time component.
+**When to run:** during any schema review, or after observing empty results from a date-join query.
+**Trigger:** empty result from a `DATE = DATETIME` join, or the presence of a legacy column type.
+**Context:** T-SQL session, read-only.
+**Purpose:** list every column using the legacy `datetime` or `smalldatetime` types so they can be migrated to `datetime2` or `date`.
 
-**Consequences**
+*Find all columns using the legacy datetime or smalldatetime types in silver and gold schemas on stoxx.*
 
-- Corporate actions adjustments not applied; adjusted prices are wrong
-- Dividend reinvestment factors not joined; total return index calculated incorrectly
-- ESG event dates not correlated with price dates; event-driven ESG scoring fails
-- Silent failure — the query succeeds, the result set is just empty or incomplete
-
-**Prevention protocol**
-
-1. Standardize date/time types across all schemas:
 ```sql
--- Standard: trade/reference dates use DATE, timestamps use DATETIME2(3)
--- NEVER use: DATETIME (legacy, 1753 minimum, 3.33ms precision)
--- NEVER use: SMALLDATETIME (1 minute precision)
-
--- Correct column types for financial tables:
-CREATE TABLE silver.corporate_actions (
-    action_id        INT          NOT NULL IDENTITY,
-    instrument_isin  VARCHAR(12)  NOT NULL,
-    ex_date          DATE         NOT NULL,   -- business date
-    record_date      DATE         NOT NULL,
-    pay_date         DATE         NOT NULL,
-    load_timestamp   DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME()
-);
-
-CREATE TABLE silver.price_history (
-    instrument_isin  VARCHAR(12)  NOT NULL,
-    trade_date       DATE         NOT NULL,   -- business date (not datetime)
-    trade_timestamp  DATETIME2(3) NULL,       -- exchange timestamp when available
-    close_price      DECIMAL(18,6) NOT NULL
-);
+SELECT
+    SCHEMA_NAME(t.schema_id) + '.' + t.name AS table_name,
+    c.name AS column_name,
+    ty.name AS data_type
+FROM sys.columns c
+JOIN sys.tables t ON c.object_id = t.object_id
+JOIN sys.types ty ON c.user_type_id = ty.user_type_id
+WHERE ty.name IN ('datetime','smalldatetime')
+  AND SCHEMA_NAME(t.schema_id) IN ('silver','gold','dbo')
+  AND t.is_ms_shipped = 0
+ORDER BY table_name, column_name;
 ```
 
-2. JOIN on `DATE` to `DATE` after casting, never `DATE` to `DATETIME`:
-```sql
--- BAD: implicit conversion, misses non-midnight rows
-SELECT * FROM silver.corporate_actions ca
-JOIN silver.price_history ph ON ca.ex_date = ph.trade_timestamp;
+| Field | Source column | Type | Meaning |
+|---|---|---|---|
+| `table_name` | computed | `nvarchar` | Two-part schema-qualified name |
+| `column_name` | `sys.columns.name` | `sysname` | Column name |
+| `data_type` | `sys.types.name` | `sysname` | `datetime` (3.33ms precision, 1753 minimum) or `smalldatetime` (1 minute precision, 1900 minimum) |
 
--- GOOD: cast DATETIME2 to DATE for the join
-SELECT * FROM silver.corporate_actions ca
-JOIN silver.price_history ph ON ca.ex_date = CAST(ph.trade_timestamp AS DATE);
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `data_type` | `datetime` | legacy | 3.33 ms precision, 1753 minimum | Migrate to `datetime2(3)` |
+| `data_type` | `smalldatetime` | legacy | 1-minute precision, 1900 minimum | Migrate to `datetime2(0)` |
+| `data_type` | `datetime2` | normal | Variable precision up to 100 ns | Current best practice |
+| `data_type` | `date` | normal | Business date only | Correct for dates without time |
+| `data_type` | `datetimeoffset` | specialized | Time-zone-aware | Use when TZ matters |
+
+#### Cast to DATE explicitly in joins crossing type boundaries
+
+> [!warning] Implicit DATE-to-DATETIME conversion drops non-midnight rows
+>
+> When SQL Server promotes a `DATE` column to `DATETIME` for comparison, the resulting value is `YYYY-MM-DD 00:00:00.000`. Any row on the `DATETIME` side whose time component is not exactly midnight fails the equality. The join silently returns zero matching rows for the non-midnight data — no error, no warning, just wrong results.
+
+> [!success] Cast the DATETIME side down to DATE or use half-open date ranges
+>
+> For equality joins, cast the timestamp column to `DATE`: `ON ca.ex_date = CAST(ph.trade_timestamp AS DATE)`. For range filters, always use half-open intervals: `WHERE ts >= '2026-01-01' AND ts < '2026-02-01'` instead of `BETWEEN '2026-01-01' AND '2026-01-31'`, which misses rows with timestamps after midnight on the end date.
+
+**When to run:** as the fix for any query that joins a `DATE` column to a `DATETIME`/`DATETIME2` column.
+**Trigger:** empty result from a date-join query, or code review flagging the pattern.
+**Context:** T-SQL query text. Non-invasive change.
+**Purpose:** produce the intended match result without relying on implicit conversion.
+
+*Join on DATE equality after explicitly casting the DATETIME2 side down to DATE.*
+
+```sql
+SELECT ca.instrument_isin, ca.ex_date, ph.close_price
+FROM silver.corporate_actions ca
+JOIN silver.price_history ph
+    ON ca.ex_date = CAST(ph.trade_timestamp AS DATE)
+WHERE ca.ex_date >= '2026-01-01' AND ca.ex_date < '2026-04-01';
 ```
 
-3. Common pitfalls reference:
-```sql
--- Pitfall 1: GETDATE() returns DATETIME, not DATE
-SELECT CAST(GETDATE() AS DATE) AS today;              -- correct
-SELECT GETDATE() AS today;                             -- wrong type for date-only comparisons
-
--- Pitfall 2: BETWEEN on dates
--- BAD (misses rows on end date after midnight):
-WHERE trade_timestamp BETWEEN '2026-01-01' AND '2026-01-31'
--- GOOD:
-WHERE trade_date >= '2026-01-01' AND trade_date <= '2026-01-31'  -- if trade_date is DATE
-WHERE trade_timestamp >= '2026-01-01' AND trade_timestamp < '2026-02-01'  -- if DATETIME2
-
--- Pitfall 3: DATEDIFF works differently across types
-SELECT DATEDIFF(DAY, '2026-01-01', '2026-01-31 23:59:59');  -- returns 30, not 31
-```
-
-**Fix procedure**
-
-1. Identify type mismatches in queries:
-```sql
-SELECT COLUMN_NAME, DATA_TYPE
-FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_NAME IN ('corporate_actions', 'price_history')
-  AND DATA_TYPE IN ('datetime', 'smalldatetime');  -- flag legacy types
-```
-
-2. Alter legacy DATETIME columns to DATETIME2 or DATE as appropriate:
-```sql
-ALTER TABLE silver.price_history ALTER COLUMN trade_datetime DATETIME2(3);
-```
+> [!info] silver.corporate_actions and silver.price_history do not exist on stoxx
+>
+> The pattern is generic. The equivalent on stoxx would use `silver.eurostoxx50_ohlcv.[date]` (a `date` column, already correctly typed) as the left side of the join and any timestamp column as the right. See [08-date-and-time-functions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/date-and-time-functions) for the full date/time function reference.
 
 ---
 
-### TempDB Contention
+### SQL Server | tempdb | PFS and GAM latch contention under concurrent workload
 
-**What happens**
+During an end-of-day gold calculation, eight parallel sessions each execute complex sort + hash join queries that allocate worktables and sort runs in tempdb. If tempdb is configured with a single data file, every session contends on the same PFS (Page Free Space), GAM (Global Allocation Map), and SGAM (Shared GAM) system pages. SQL Server serializes updates to these pages with latches, and the wait type `PAGELATCH_UP` spikes. Queries stall not on I/O or CPU but on internal page-allocation locks, and the pipeline takes 25 minutes to do what should be 4 minutes. The Microsoft-recommended fix is to create multiple tempdb data files — one per logical CPU, up to 8 — so SQL Server's proportional-fill algorithm round-robins allocations across files, distributing the PFS/GAM contention.
 
-During the end-of-day gold calculation, 8 parallel Airflow tasks run simultaneously, each executing complex sort+hash join queries. All of them allocate worktables and sort runs in TempDB. The TempDB data file (single file, default configuration) becomes a bottleneck. Wait type `PAGELATCH_UP` on PFS, GAM, and SGAM pages spikes. Queries stall not on I/O or CPU, but on internal TempDB page allocation locks.
+The severity is moderate because the workaround (add tempdb files) is well known and the symptom is not a hard failure — just a throughput ceiling. SQL Server 2016+ automatically enables trace flags 1117 and 1118 behavior for tempdb, eliminating the need for manual trace flag configuration on modern instances.
 
-**Root cause**
+#### Audit tempdb file layout
 
-TempDB uses a small number of special system pages (PFS — Page Free Space, GAM — Global Allocation Map, SGAM — Shared GAM) to track page allocations. Under concurrent workloads, all sessions compete to update these pages. SQL Server serializes updates to these pages using latches, creating a bottleneck. The fix is to create multiple TempDB data files — SQL Server round-robins allocations across files, reducing contention on any single file's PFS/GAM pages. Best practice: 1 file per logical CPU core, up to 8 files.
+**When to run:** during initial instance setup, after any `PAGELATCH_UP` wait spike, or when onboarding a new analytics workload.
+**Trigger:** suspected tempdb latch contention, or pre-deployment health check.
+**Context:** T-SQL session, read-only.
+**Purpose:** count the tempdb data files and their sizes so you can verify the multi-file configuration matches the core count.
 
-**Consequences**
+*Show every tempdb file with size, growth, and max size.*
 
-- Parallel pipeline tasks stall waiting for TempDB page allocations
-- Overall pipeline throughput reduced; tasks that should take 4 minutes take 25 minutes
-- CPU appears underutilized (threads are waiting on latches, not running)
-- TempDB growth under heavy RCSI workload compounds the problem
-
-**Prevention protocol**
-
-1. Check current TempDB configuration:
 ```sql
-SELECT name, physical_name, size * 8 / 1024 AS size_mb,
-       max_size * 8 / 1024 AS max_size_mb, growth * 8 / 1024 AS growth_mb
+SELECT
+    name AS logical_name,
+    physical_name,
+    type_desc,
+    size * 8 / 1024 AS size_mb,
+    CASE WHEN max_size = -1 THEN -1 ELSE CAST(max_size AS BIGINT) * 8 / 1024 END AS max_size_mb,
+    growth * 8 / 1024 AS growth_mb,
+    is_percent_growth
 FROM sys.master_files
-WHERE database_id = DB_ID('tempdb');
-
--- Check for PFS/GAM latch contention
-SELECT wait_type, waiting_tasks_count, wait_time_ms, signal_wait_time_ms
-FROM sys.dm_os_wait_stats
-WHERE wait_type = 'PAGELATCH_UP'
-ORDER BY wait_time_ms DESC;
+WHERE database_id = DB_ID('tempdb')
+ORDER BY type_desc, name;
 ```
 
-2. Configure TempDB with multiple equal-sized files (run once, requires restart):
-```sql
--- Add TempDB files (on an 8-core machine, add 7 more files)
--- File 1 already exists — modify it
-ALTER DATABASE tempdb MODIFY FILE (NAME = tempdev, SIZE = 4096MB, FILEGROWTH = 512MB);
+| Field | Source column | Type | Meaning |
+|---|---|---|---|
+| `logical_name` | `sys.master_files.name` | `sysname` | File logical name |
+| `physical_name` | `sys.master_files.physical_name` | `nvarchar(260)` | Absolute path |
+| `type_desc` | `sys.master_files.type_desc` | `nvarchar(60)` | `ROWS` = data file, `LOG` = transaction log |
+| `size_mb` | computed | `int` | Current allocation in MB |
+| `max_size_mb` | computed | `bigint` | `-1` = unlimited |
+| `growth_mb` | computed | `int` | Per-autogrow increment |
+| `is_percent_growth` | `sys.master_files.is_percent_growth` | `bit` | `1` = percent, avoid |
 
--- Add files 2 through 8
+*Live capture against the local stoxx instance on 2026-04-11, showing the first 5 of the 9 total tempdb files:*
+
+| logical_name | physical_name | type_desc | size_mb | max_size_mb | growth_mb | is_percent_growth |
+|---|---|---|---|---|---|---|
+| templog | /var/opt/mssql/data/templog.ldf | LOG | 8 | -1 | 64 | False |
+| tempdev | /var/opt/mssql/data/tempdb.mdf | ROWS | 8 | -1 | 64 | False |
+| tempdev2 | /var/opt/mssql/data/tempdb2.ndf | ROWS | 8 | -1 | 64 | False |
+| tempdev3 | /var/opt/mssql/data/tempdb3.ndf | ROWS | 8 | -1 | 64 | False |
+| tempdev4 | /var/opt/mssql/data/tempdb4.ndf | ROWS | 8 | -1 | 64 | False |
+
+stoxx tempdb has 8 data files (`tempdev` through `tempdev8`) each at 8 MB with 64 MB growth, plus one log file. This is the canonical multi-file configuration that eliminates PFS/GAM contention on parallel workloads. A production instance with a single `tempdev` file and no additional `tempdev2..N` is the broken configuration this problem describes.
+
+#### Add tempdb files during a planned maintenance window
+
+> [!warning] Adding tempdb files requires a SQL Server restart
+>
+> `ALTER DATABASE tempdb ADD FILE` registers the file in metadata, but tempdb is recreated on every service start, so the new files only take effect after `sudo systemctl restart mssql-server`. Plan a maintenance window and coordinate with the application team before restarting.
+
+> [!success] Create all tempdb files equally sized at the same time
+>
+> SQL Server's proportional-fill algorithm directs allocations to the file with the most free space. If tempdb files are different sizes, the biggest one receives the most allocations, which defeats the purpose of multiple files. Pre-create all files at the same initial size during the same maintenance window and let them grow in lockstep.
+
+**When to run:** during a planned maintenance window on an instance that has a single tempdb data file and shows PFS/GAM latch contention.
+**Trigger:** confirmed single-file tempdb and confirmed `PAGELATCH_UP` waits on tempdb pages.
+**Context:** T-SQL session, `ALTER DATABASE` permission. State-changing. Requires restart to take effect.
+**Purpose:** create the multi-file tempdb configuration so the proportional-fill algorithm spreads allocations across files and reduces contention on any single file's PFS/GAM pages.
+
+*Add 7 additional tempdb data files to a single-file instance; repeat for each file with sequential names.*
+
+```sql
+ALTER DATABASE tempdb MODIFY FILE (NAME = tempdev, SIZE = 4096MB, FILEGROWTH = 512MB);
 ALTER DATABASE tempdb ADD FILE (NAME = tempdev2, FILENAME = '/var/opt/mssql/data/tempdb2.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
 ALTER DATABASE tempdb ADD FILE (NAME = tempdev3, FILENAME = '/var/opt/mssql/data/tempdb3.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
 ALTER DATABASE tempdb ADD FILE (NAME = tempdev4, FILENAME = '/var/opt/mssql/data/tempdb4.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
-ALTER DATABASE tempdb ADD FILE (NAME = tempdev5, FILENAME = '/var/opt/mssql/data/tempdb5.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
-ALTER DATABASE tempdb ADD FILE (NAME = tempdev6, FILENAME = '/var/opt/mssql/data/tempdb6.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
-ALTER DATABASE tempdb ADD FILE (NAME = tempdev7, FILENAME = '/var/opt/mssql/data/tempdb7.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
-ALTER DATABASE tempdb ADD FILE (NAME = tempdev8, FILENAME = '/var/opt/mssql/data/tempdb8.ndf', SIZE = 4096MB, FILEGROWTH = 512MB);
 ```
 
-> [!warning] TempDB changes require SQL Server restart
+> [!info] stoxx already has the correct multi-file tempdb
 >
-> TempDB file changes take effect after `sudo systemctl restart mssql-server`. Plan a maintenance window.
-
-> [!success] Safe Pattern
->
-> Schedule TempDB file additions during a planned low-traffic window (e.g., Sunday 02:00 UTC). Pre-create all TempDB files at the same initial size so SQL Server's proportional fill algorithm distributes allocations evenly from the start. Verify the file count with `SELECT COUNT(*) FROM sys.master_files WHERE database_id = DB_ID('tempdb') AND type = 0` after restart.
-
-3. Enable trace flag 1118 (uniform extent allocation, reduces GAM contention):
-```bash
-# Add to /var/opt/mssql/mssql.conf or SQL Server Agent startup
-sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -Q "DBCC TRACEON(1118, -1);"
-```
-
-**Fix procedure**
-
-1. Identify TempDB contention:
-```sql
-SELECT session_id, wait_type, wait_duration_ms, resource_description
-FROM sys.dm_os_waiting_tasks
-WHERE wait_type = 'PAGELATCH_UP'
-  AND resource_description LIKE '2:%';  -- 2 = TempDB file_id
-```
-
-2. Add TempDB files per the prevention protocol above and restart SQL Server.
+> The audit above confirms stoxx ships with 8 tempdb data files pre-created, so the `ADD FILE` commands would fail with "cannot add file, name already exists." The commands are shown as the production DDL to run on a single-file instance.
 
 ---
 
-### Query Plan Regression After Statistics Update
+### SQL Server | Query Store plan history | regression after statistics update
 
-**What happens**
+A weekend maintenance job runs `UPDATE STATISTICS WITH FULLSCAN` across all user tables. Monday morning, a gold-layer stored procedure that ran in 45 seconds on Friday now takes 12 minutes. Query Store shows the plan changed from a hash join to a nested-loop join after the statistics refresh — the new histogram revealed a skew pattern (one key has 100× the average row count) that misled the optimizer into choosing a plan optimal for the skewed case and catastrophic for the average case. This is the inverse of the stale-statistics problem: fresh statistics can also cause regressions when they expose data skew the previous histogram had smoothed over. The fix is to force the previously known-good plan via `sp_query_store_force_plan` while investigating whether the procedure should be hardened with `OPTIMIZE FOR UNKNOWN` to avoid future skew-driven recompiles.
 
-The weekend maintenance job runs `UPDATE STATISTICS WITH FULLSCAN` on all tables. Monday morning, the gold-layer aggregation stored procedure — which ran in 45 seconds Friday — now runs for 12 minutes. Query Store shows the plan changed from a hash join to a nested-loop join after the statistics update. The new statistics revealed a data skew that caused the optimizer to choose a suboptimal plan for the average case.
+The severity is moderate because the fix is deterministic (force the good plan) and the instance-level automatic tuning feature (`AUTOMATIC_TUNING (FORCE_LAST_GOOD_PLAN = ON)`) can do this automatically on SQL Server 2017+. The procedural risk is that the operator must identify the specific `query_id` and `plan_id`, which requires Query Store to have captured both the good and bad plans.
 
-**Root cause**
+#### Enable automatic plan correction
 
-Statistics updates trigger stored procedure recompilation on next execution. The new plan is based on current, accurate statistics. However, accurate statistics can sometimes reveal skew patterns (e.g., one ISIN has 100x more rows than average) that mislead the optimizer into choosing a plan that is optimal for the skewed case but terrible for the average case. This is the inverse of Problem #10: too-fresh statistics can also cause regressions.
+**When to run:** once per database, during initial Query Store setup on SQL Server 2017+.
+**Trigger:** database onboarding, or first observed plan regression that required manual intervention.
+**Context:** T-SQL session, `ALTER DATABASE` permission.
+**Purpose:** let Query Store automatically detect a plan regression (3× slower than the previous plan) and force the previous good plan without operator intervention.
 
-**Consequences**
+*Enable FORCE_LAST_GOOD_PLAN on the stoxx database.*
 
-- Monday morning gold calculations delayed; publication SLA at risk
-- Performance regression appears after routine maintenance — difficult to diagnose causally
-- Manual intervention required to identify and force the correct plan
-
-**Prevention protocol**
-
-1. Enable Query Store automatic plan correction:
 ```sql
-ALTER DATABASE analytics_db
+ALTER DATABASE stoxx
 SET AUTOMATIC_TUNING (FORCE_LAST_GOOD_PLAN = ON);
 ```
 
-2. Before statistics updates in production, test in a dev/staging environment with the same data profile.
+*Verify the setting is in effect.*
 
-3. Force a previously known-good plan via Query Store:
 ```sql
--- Find the query that regressed
-SELECT qsq.query_id, qsp.plan_id, qsp.avg_duration,
-       qsp.last_execution_time, qsp.is_forced_plan
-FROM sys.query_store_query qsq
-JOIN sys.query_store_plan qsp ON qsq.query_id = qsp.query_id
-JOIN sys.query_store_query_text qsqt ON qsq.query_text_id = qsqt.query_text_id
-WHERE qsqt.query_sql_text LIKE '%usp_calculate_index_nav%'
-ORDER BY qsp.last_execution_time DESC;
-
--- Force the last known-good plan (from before the regression)
-EXEC sys.sp_query_store_force_plan @query_id = 15, @plan_id = 3;  -- plan_id 3 = Friday's fast plan
+SELECT name, desired_state, actual_state, reason_desc
+FROM sys.database_automatic_tuning_options;
 ```
 
-**Fix procedure**
+> [!info] Not executed against stoxx to avoid perturbing other notes
+>
+> The `ALTER DATABASE` command is shown as the production form. Microsoft's guidance is to enable `FORCE_LAST_GOOD_PLAN` on every production database running SQL Server 2017 or later unless there is a specific reason not to. The automatic tuning engine is conservative: it only forces a plan after observing a 3× regression for multiple executions, and it removes the forced plan if the database schema changes.
 
-1. Identify the regression in Query Store:
+#### Force a specific plan when automatic tuning is off
+
+> [!warning] Forcing a plan is brittle across schema changes
+>
+> `sp_query_store_force_plan` pins the optimizer to a specific plan_id. If the underlying schema changes (new index, dropped column, changed constraint) the forced plan becomes invalid and Query Store unforces it automatically. Do not force plans as a permanent fix — use it as a tactical bridge while the root cause (parameter sniffing, statistics skew) is being addressed.
+
+> [!success] Document every forced plan with an expiry date
+>
+> Maintain a wiki or Notion page listing every plan currently forced on the instance: `query_id`, `plan_id`, date forced, operator, reason, and expiry date. Review weekly and unforce any plan whose root cause has been addressed or whose expiry has passed.
+
+**When to run:** after identifying a regression in Query Store and deciding that forcing the old plan is the right tactical fix.
+**Trigger:** confirmed plan regression with both good and bad plans captured in Query Store.
+**Context:** T-SQL session, `ALTER DATABASE` scope.
+**Purpose:** force the optimizer to use a specific previously-observed plan for a specific query.
+
+*Force the old plan for query 42 back to plan 7.*
+
 ```sql
--- Query Store: plans with significant performance change
-SELECT qsq.query_id, qsqt.query_sql_text,
-       qsp_new.plan_id AS new_plan_id, qsp_new.avg_duration AS new_avg_us,
-       qsp_old.plan_id AS old_plan_id, qsp_old.avg_duration AS old_avg_us
-FROM sys.query_store_query qsq
-JOIN sys.query_store_query_text qsqt ON qsq.query_text_id = qsqt.query_text_id
-JOIN sys.query_store_plan qsp_new ON qsq.query_id = qsp_new.query_id
-JOIN sys.query_store_plan qsp_old ON qsq.query_id = qsp_old.query_id
-WHERE qsp_new.plan_id > qsp_old.plan_id
-  AND qsp_new.avg_duration > qsp_old.avg_duration * 3;  -- 3x slower regression threshold
+EXEC sys.sp_query_store_force_plan @query_id = 42, @plan_id = 7;
 ```
 
-2. Force the old plan and verify performance is restored.
+*Later, unforce the plan once the underlying regression is fixed.*
 
-3. Investigate why the new statistics caused a regression and consider `OPTIMIZE FOR UNKNOWN` if the data distribution is genuinely bimodal.
+```sql
+EXEC sys.sp_query_store_unforce_plan @query_id = 42, @plan_id = 7;
+```
 
 ---
 
-### MAXDOP Misconfiguration
+### SQL Server | sp_configure parallelism knobs | MAXDOP and cost threshold defaults
 
-**What happens**
+SQL Server is installed on an 8-vCPU instance with the default `MAXDOP = 0` (use all cores) and `cost threshold for parallelism = 5` (the absurdly low default). Gold aggregations correctly use 8 cores. But the silver pipeline runs 50 small one-per-constituent queries concurrently, and each one processes 200 rows at a cost of 6 — just above the threshold — so each goes parallel on 8 threads. The parallelism overhead (thread setup, repartition streams, gather streams) exceeds the actual work, and the pipeline takes 45 minutes instead of 8. Large legitimate parallel queries are simultaneously starved for worker threads because the small ones are hogging them. The fix is to raise `cost threshold for parallelism` to a realistic value (50 is the community consensus) so small queries stay serial, and to set `MAXDOP` to roughly half the logical core count (4 on an 8-core instance) so even when parallelism kicks in it leaves headroom for other work.
 
-SQL Server is installed on an n2-standard-8 GCE instance (8 vCPUs). Default `MAXDOP = 0` (use all available cores). The gold aggregation queries correctly use all 8 cores in parallel. However, the silver cleaning pipeline runs 50 small queries (one per index constituent) concurrently. Each small query — which processes 200 rows — goes parallel on 8 threads. The overhead of thread synchronization, exchange operators, and parallelism coordinator exceeds the actual query work. The silver pipeline takes 45 minutes instead of 8 minutes. Meanwhile, the legitimate parallel gold queries are starved for worker threads.
+The severity is moderate because the workload still completes — just slowly and with high CPU noise. The fix is a single pair of `sp_configure` calls that take effect immediately without restart. The live audit below shows stoxx running the classic broken default (`MAXDOP = 0`, `cost threshold = 5`) which this section exists to warn against.
 
-**Root cause**
+#### Audit current parallelism configuration
 
-`MAXDOP = 0` means every query *can* use all CPU cores when the optimizer decides parallelism is beneficial. The optimizer chooses parallelism when the estimated cost exceeds the `cost threshold for parallelism` (default: 5, which is absurdly low). A query with cost 6 on 200 rows goes parallel. The parallelism overhead (thread setup, repartition streams, gather streams) for small queries exceeds the work saved. `MAXDOP` controls the maximum degree, and `cost threshold for parallelism` controls when parallelism is even considered.
+**When to run:** during instance setup, or when investigating CPU-bound throughput complaints.
+**Trigger:** high CPU with low useful throughput, `CXPACKET` waits dominating `sys.dm_os_wait_stats`, or pre-deployment health check.
+**Context:** T-SQL session, read-only against `sys.configurations`.
+**Purpose:** confirm the current values of `max degree of parallelism` and `cost threshold for parallelism`, and flag any instance running the defaults.
 
-**Consequences**
+*List the critical configuration knobs with their current values; sys.configurations.value and value_in_use are sql_variant and must be CAST.*
 
-- Small queries use 8 threads instead of 1; worker thread pool depleted
-- Large legitimate parallel queries wait for worker threads
-- Overall system throughput drops; more CPU cycles spent on parallelism coordination than query work
-- Harder to diagnose because CPU usage looks high but useful work is low
-
-**Prevention protocol**
-
-1. Configure MAXDOP and cost threshold based on core count:
 ```sql
--- For 8 cores: MAXDOP = 4 (half of cores, leave headroom for OS and other processes)
+SELECT
+    name,
+    CAST(value AS INT) AS configured_value,
+    CAST(value_in_use AS INT) AS value_in_use,
+    CAST(minimum AS INT) AS minimum,
+    CAST(maximum AS BIGINT) AS maximum,
+    is_dynamic,
+    is_advanced
+FROM sys.configurations
+WHERE name IN (
+    'max degree of parallelism',
+    'cost threshold for parallelism',
+    'max server memory (MB)',
+    'min server memory (MB)',
+    'optimize for ad hoc workloads'
+)
+ORDER BY name;
+```
+
+| Field | Source column | Type | Meaning |
+|---|---|---|---|
+| `name` | `sys.configurations.name` | `nvarchar(35)` | Configuration option name |
+| `configured_value` | `sys.configurations.value` | `sql_variant` → `int` | Value set by the administrator |
+| `value_in_use` | `sys.configurations.value_in_use` | `sql_variant` → `int` | Value currently active |
+| `is_dynamic` | `sys.configurations.is_dynamic` | `bit` | `1` = takes effect on `RECONFIGURE`; `0` = requires restart |
+| `is_advanced` | `sys.configurations.is_advanced` | `bit` | `1` = requires `show advanced options` |
+
+*Live capture against the local stoxx instance on 2026-04-11:*
+
+| name | configured_value | value_in_use | minimum | maximum | is_dynamic | is_advanced |
+|---|---|---|---|---|---|---|
+| cost threshold for parallelism | 5 | 5 | 0 | 32767 | True | True |
+| max degree of parallelism | 0 | 0 | 0 | 32767 | True | True |
+| max server memory (MB) | 2147483647 | 2147483647 | 128 | 2147483647 | True | True |
+| min server memory (MB) | 0 | 16 | 0 | 2147483647 | True | True |
+| optimize for ad hoc workloads | 0 | 0 | 0 | 1 | True | True |
+
+The stoxx instance ships with all defaults: `cost threshold for parallelism = 5` (trivially low), `max degree of parallelism = 0` (use all cores), and `max server memory = 2147483647 MB` (unlimited, the one that causes Linux OOM on busy instances). This is a textbook "out of the box" configuration and every row above is a known anti-pattern for production. A production-ready instance running 8 vCPUs would show `cost threshold = 50`, `maxdop = 4`, and `max server memory` set to roughly 75% of the physical RAM minus the OS reservation.
+
+| Column | Value | Watch | Meaning | Implication |
+|---|---|---|---|---|
+| `cost threshold for parallelism` | `5` | default | Trivially low | Small queries go parallel unnecessarily |
+| `cost threshold for parallelism` | `25 – 50` | normal | Community consensus | Small queries stay serial; large queries still parallel |
+| `cost threshold for parallelism` | `> 100` | watch | Very high | May force genuinely parallelizable queries to stay serial |
+| `max degree of parallelism` | `0` | default | Use all cores | No headroom for other work |
+| `max degree of parallelism` | `1` | override | Force serial | Only for OLTP or specific workloads |
+| `max degree of parallelism` | `half core count` | normal | Balanced | Production default on analytics workloads |
+| `max server memory (MB)` | `2147483647` | default | Unlimited | Risk of OS OOM; on Linux, mssql can be killed |
+| `max server memory (MB)` | `~75% of physical` | normal | Leave headroom for OS | Safe for dedicated SQL host |
+| `optimize for ad hoc workloads` | `0` | default | Cache every ad-hoc plan | Plan cache bloats with one-shot queries |
+| `optimize for ad hoc workloads` | `1` | normal | Cache stub only until second execution | Recommended for mixed workloads |
+
+#### Apply production-recommended parallelism settings
+
+**When to run:** during instance hardening, or after the audit above shows defaults on an analytics-style workload.
+**Trigger:** audit confirming defaults; scheduled instance hardening.
+**Context:** T-SQL session, `ALTER SETTINGS` permission. Dynamic — `RECONFIGURE` takes effect immediately without restart.
+**Purpose:** raise `cost threshold for parallelism` to 50 and set `max degree of parallelism` to half the logical core count so small queries stay serial and large queries still parallelize.
+
+*Raise cost threshold to 50 and set MAXDOP to 4 on an 8-core instance.*
+
+```sql
 EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+
+EXEC sp_configure 'cost threshold for parallelism', 50;
 RECONFIGURE;
 
 EXEC sp_configure 'max degree of parallelism', 4;
 RECONFIGURE;
-
--- Raise cost threshold for parallelism to avoid trivially going parallel
-EXEC sp_configure 'cost threshold for parallelism', 50;  -- default is 5; 50 is more realistic
-RECONFIGURE;
-
--- Verify
-EXEC sp_configure 'max degree of parallelism';
-EXEC sp_configure 'cost threshold for parallelism';
 ```
 
-2. For specific small queries, override with `OPTION(MAXDOP 1)`:
-```sql
--- Force serial execution for known-small queries
-SELECT ic.instrument_isin, ic.weight
-FROM silver.index_constituents ic
-WHERE ic.index_code = @index_code
-OPTION(MAXDOP 1);
-```
-
-3. Monitor parallelism wait types:
-```sql
-SELECT wait_type, waiting_tasks_count, wait_time_ms
-FROM sys.dm_os_wait_stats
-WHERE wait_type IN ('CXPACKET', 'CXCONSUMER', 'EXCHANGE')
-ORDER BY wait_time_ms DESC;
-```
-
-> [!warning] CXPACKET waits
+> [!info] Not executed against stoxx to preserve the default capture
 >
-> High `CXPACKET` waits indicate parallelism skew (one thread finishes, others wait). This is a symptom of bad MAXDOP or CTFP settings. Raising cost threshold for parallelism is usually the correct fix — not blindly setting MAXDOP 1.
-
-> [!success] Safe Pattern
->
-> Set `cost threshold for parallelism` to 50 (from the default of 5) to prevent small queries from going parallel. Set `MAXDOP` to half the logical CPU count (4 on an 8-core VM). Then add `OPTION (MAXDOP 1)` only to the specific small queries that are confirmed to perform worse with parallelism.
-
-**Fix procedure**
-
-1. Apply the `sp_configure` changes above.
-
-2. `RECONFIGURE` takes effect immediately; no restart needed for these settings.
+> Running these `sp_configure` changes would alter the live capture above that intentionally shows the broken defaults as a teaching example. On a real production instance, running the three `sp_configure` pairs takes less than a second and the new values are active immediately.
 
 ---
 
-### Orphaned Transactions
+### SQL Server | sleeping session | orphaned transaction holding locks
 
-**What happens**
+A Python pipeline task starts a transaction via `conn.autocommit = False`, inserts 10,000 rows into a bronze table, and then crashes with a network error before commit. The Python process exits but the TDS connection enters a half-closed state — SQL Server has not yet received a clean disconnect. The transaction stays open, the locks it acquired stay held, and the session appears in `sys.dm_exec_sessions` with `status = sleeping`. Four hours later a silver transform task is blocked by the orphaned transaction's exclusive locks on the bronze table. No error in Airflow logs, just a hanging task. SQL Server's session cleanup eventually terminates the zombie session based on TCP keepalive intervals, but "eventually" can be minutes to hours.
 
-A Python pipeline task starts a transaction (`BEGIN TRANSACTION` via `conn.autocommit = False`), inserts 10,000 rows into `bronze.price_history`, and then crashes due to a network error before committing. The Python process exits, but the TDS connection is in a half-closed state — SQL Server has not received a clean disconnect signal. The transaction remains open. 4 hours later, the silver transform task is blocked by the orphaned transaction holding exclusive locks on the bronze table.
+The defense is three layers: (1) `SET XACT_ABORT ON` inside every stored procedure so a runtime error automatically rolls back; (2) short connection timeouts and `LoginTimeout` on the client side so the client does not wait forever for a disconnected server; (3) SQL Server TCP keepalive configuration so orphaned sessions are detected in minutes rather than hours. This problem and its fix reuse the open-transaction audit query from Problem 1 (the transaction log full problem) — the difference is the lens: for log fullness you care about `ACTIVE_TRANSACTION` holding VLFs, here you care about orphaned `sleeping` sessions holding row and table locks.
 
-**Root cause**
+#### Find sessions with open transactions in sleeping state
 
-When a SQL Server client connection drops ungracefully (process killed, network failure), SQL Server may not immediately detect the disconnect. The TCP keepalive interval determines how long it takes. During this window, the open transaction and its locks persist. SQL Server's session cleanup eventually terminates the zombie session, but this can take minutes to hours depending on network keepalive settings and connection pooling behavior.
+**When to run:** whenever a pipeline task hangs without a visible error, or as a routine check during a blocking incident.
+**Trigger:** hung Airflow task, or the open-transactions audit from Problem 1 returning long-lived sleeping sessions.
+**Context:** T-SQL session, read-only, requires `VIEW SERVER STATE`.
+**Purpose:** identify sessions that are holding an open transaction but are not currently executing anything — the precise signature of an orphaned transaction.
 
-**Consequences**
+*Show every sleeping session with an open transaction, including transaction age in seconds.*
 
-- Shared and exclusive locks held by the orphaned transaction block all subsequent pipeline tasks
-- The blocking chain (see Problem #9) can cascade to dozens of waiting sessions
-- No visible error in the Airflow logs — tasks simply hang until lock timeout
-
-**Prevention protocol**
-
-1. Set `XACT_ABORT ON` in all stored procedures (automatic rollback on error):
 ```sql
-CREATE OR ALTER PROCEDURE usp_load_bronze_prices AS
-BEGIN
-    SET XACT_ABORT ON;  -- any error automatically rolls back the transaction
-    SET NOCOUNT ON;
-    BEGIN TRANSACTION;
-        INSERT INTO bronze.price_history ...;
-        UPDATE bronze.load_log SET status = 'LOADED' ...;
-    COMMIT;
-END;
-```
-
-2. Set connection timeout in pyodbc to detect dead connections:
-```python
-conn_str = (
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=localhost;DATABASE=analytics_db;"
-    f"UID=sa;PWD={SA_PASSWORD};"
-    "TrustServerCertificate=yes;"
-    "Connect Timeout=30;"      # fail connection if server unreachable for 30s
-    "LoginTimeout=30;"
-)
-```
-
-3. Configure SQL Server keepalive settings:
-```bash
-# In /var/opt/mssql/mssql.conf
-# These settings reduce the time SQL Server detects a dead TCP connection
-echo "[network]" >> /var/opt/mssql/mssql.conf
-echo "tcpkeepaliveinterval = 30" >> /var/opt/mssql/mssql.conf
-```
-
-**Fix procedure**
-
-1. Find orphaned transactions:
-```sql
-DBCC OPENTRAN('analytics_db');
-
--- More detail: sessions with open transactions but no active request
-SELECT s.session_id, s.login_name, s.host_name, s.program_name,
-       s.open_transaction_count, s.status, s.last_request_start_time,
-       t.transaction_begin_time
+SELECT
+    s.session_id,
+    s.login_name,
+    s.host_name,
+    s.program_name,
+    s.status,
+    s.open_transaction_count,
+    DATEDIFF(SECOND, t.transaction_begin_time, SYSUTCDATETIME()) AS tx_age_seconds
 FROM sys.dm_exec_sessions s
 JOIN sys.dm_tran_session_transactions tst ON s.session_id = tst.session_id
 JOIN sys.dm_tran_active_transactions t ON tst.transaction_id = t.transaction_id
-WHERE s.open_transaction_count > 0
-  AND s.status = 'sleeping';  -- sleeping = client not currently executing
+WHERE s.status = 'sleeping'
+  AND s.is_user_process = 1
+  AND s.open_transaction_count > 0;
 ```
 
-2. Kill the orphaned session:
+*Live capture against the local stoxx instance on 2026-04-11:*
+
+```text
+(0 rows)
+```
+
+No orphaned sleeping sessions on stoxx at capture time, which is the healthy baseline. During a real incident a single row would appear with `status = sleeping`, `open_transaction_count = 1`, and `tx_age_seconds` in the thousands. See Problem 1's open-transactions audit query for the field definition table — the columns are identical.
+
+#### Use XACT_ABORT ON in stored procedures to eliminate orphan risk
+
+> [!warning] Client-side transactions bypass XACT_ABORT
+>
+> `SET XACT_ABORT ON` only takes effect inside the T-SQL scope that sets it. If a Python client opens a transaction via `conn.autocommit = False` and then crashes, `XACT_ABORT` is not in play at all — the abort logic lives on the client. The correct defense for client-side transactions is a short connection timeout plus server-side TCP keepalive.
+
+> [!success] Use stored procedures with XACT_ABORT ON for multi-statement transactions
+>
+> Wrap any multi-statement transaction in a stored procedure that sets `XACT_ABORT ON` and has its own `TRY/CATCH` with explicit `ROLLBACK`. Call the procedure from the client with a single `EXEC`, not via client-side `BEGIN TRAN`. This keeps transaction lifetime bound to the server and eliminates the orphan class entirely.
+
+**When to run:** during code review of any multi-statement transaction, and retroactively on existing procedures that lack it.
+**Trigger:** new procedure PR, or observed orphan.
+**Context:** T-SQL, `ALTER` on the procedure.
+**Purpose:** force automatic rollback on any runtime error so no orphaned transaction is possible inside this procedure.
+
+*Template stored procedure with XACT_ABORT ON, TRY/CATCH, and explicit ROLLBACK on error.*
+
 ```sql
-KILL 62;  -- replace with actual session_id
+CREATE OR ALTER PROCEDURE dbo.usp_load_bronze_prices
+    @batch_id UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+            INSERT INTO bronze.price_history (batch_id, price) VALUES (@batch_id, 100);
+            UPDATE dbo.batch_log SET status = 'LOADED' WHERE id = @batch_id;
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        THROW;
+    END CATCH;
+END;
 ```
 
 ---
 
-### Collation Mismatch
+### SQL Server | temp table collation | mismatch between user db and tempdb
 
-**What happens**
+A developer creates a temp table without specifying collation: `CREATE TABLE #stage (instrument_isin VARCHAR(12))`. The temp table inherits `tempdb`'s collation, which was set at SQL Server installation and typically differs from the user database collation when the instance is rebuilt or migrated. A join between `#stage.instrument_isin` and a permanent table's `VARCHAR` column with a different collation fails with `Msg 468: Cannot resolve the collation conflict between "SQL_Latin1_General_CP1_CI_AS" and "Latin1_General_CI_AS" in the equal to operation`. The error message is clear but the fix is non-obvious to developers unfamiliar with collations. The defense is to always declare `COLLATE DATABASE_DEFAULT` on temp table string columns so they pick up the current user database's collation instead of tempdb's.
 
-The server default collation is `Latin1_General_CI_AS`. A developer creates a temp table without specifying collation: `CREATE TABLE #stage (instrument_isin VARCHAR(12))`. The temp table inherits `tempdb`'s collation, which is `SQL_Latin1_General_CP1_CI_AS` (set during initial SQL Server installation). A JOIN between `#stage.instrument_isin` and `silver.index_constituents.instrument_isin` fails with `Cannot resolve the collation conflict between "SQL_Latin1_General_CP1_CI_AS" and "Latin1_General_CI_AS" in the equal to operation`.
+#### Audit collations across server, databases, and temp tables
 
-**Root cause**
+**When to run:** during instance migration, before creating temp tables in new code, or after any error 468.
+**Trigger:** error 468 in the pipeline log, or cross-database join that unexpectedly fails.
+**Context:** T-SQL session, read-only.
+**Purpose:** identify which collation boundaries exist on the instance so temp table code can target the correct `COLLATE` clause.
 
-Every string column in SQL Server has a collation that controls sort order, case sensitivity, and accent sensitivity. When two columns with different collations are compared, SQL Server cannot implicitly resolve the conflict and raises an error. `tempdb` collation is set at SQL Server installation time and cannot be easily changed. If `tempdb` collation differs from user database collation, any temp table created without explicit `COLLATE` will cause this error.
+*Show server collation, user database collations, and tempdb collation on a single row.*
 
-**Consequences**
+```sql
+SELECT
+    CAST(SERVERPROPERTY('Collation') AS VARCHAR(64)) AS server_collation,
+    (SELECT collation_name FROM sys.databases WHERE name = 'stoxx') AS stoxx_collation,
+    (SELECT collation_name FROM sys.databases WHERE name = 'tempdb') AS tempdb_collation;
+```
 
-- ETL queries using temp tables fail; pipeline aborts
-- Difficult to reproduce in dev if dev instance has matching collations
-- Affects all string JOINs between temp tables and permanent tables
-- The error message is clear but the fix is non-obvious for developers unfamiliar with collations
+| Field | Source column | Type | Meaning |
+|---|---|---|---|
+| `server_collation` | `SERVERPROPERTY('Collation')` | `varchar(64)` | Instance-level default collation, set at install time |
+| `stoxx_collation` | `sys.databases.collation_name` | `nvarchar(128)` | Collation of the stoxx user database |
+| `tempdb_collation` | `sys.databases.collation_name` | `nvarchar(128)` | Collation of tempdb — same as server_collation on a fresh install, can drift on migration |
 
-**Prevention protocol**
+*Live capture against the local stoxx instance on 2026-04-11:*
 
-1. Always specify `COLLATE DATABASE_DEFAULT` on temp table string columns:
+| server_collation | stoxx_collation | tempdb_collation |
+|---|---|---|
+| SQL_Latin1_General_CP1_CI_AS | SQL_Latin1_General_CP1_CI_AS | SQL_Latin1_General_CP1_CI_AS |
+
+All three collations are identical on stoxx, which is the healthy baseline and the most common configuration for new instances. A migrated or rebuilt instance where the user database has been detached/attached from a different server can show divergent collations between `stoxx_collation` and `tempdb_collation` — that is the configuration where untagged temp tables will fail with error 468.
+
+#### Always declare COLLATE DATABASE_DEFAULT on temp table string columns
+
+> [!warning] Omitting COLLATE on a temp table is non-portable
+>
+> A temp table without an explicit `COLLATE` clause inherits the collation of `tempdb`. Code that works on a development instance where `tempdb` matches the user database will fail in production if the two collations differ. Treat untagged temp tables the same way you would treat an untagged hard-coded charset in source code: a latent portability bug.
+
+> [!success] Use COLLATE DATABASE_DEFAULT for the current database's collation
+>
+> `COLLATE DATABASE_DEFAULT` resolves to the collation of whatever database the code is currently running in, which is almost always the right answer. It works inside stored procedures, in ad hoc queries, and across database contexts. Make it the standard in the temp-table section of the style guide.
+
+**When to run:** as a code standard in every new query that creates a temp table with a string column.
+**Trigger:** new code writing a `CREATE TABLE #...` or `DECLARE @... TABLE`.
+**Context:** T-SQL query text.
+**Purpose:** ensure the temp table's string columns match the user database's collation so joins against permanent tables do not hit error 468.
+
+*Create a temp table with every string column tagged COLLATE DATABASE_DEFAULT.*
+
 ```sql
 CREATE TABLE #esg_stage (
-    instrument_isin     VARCHAR(12) COLLATE DATABASE_DEFAULT NOT NULL,
-    score_date          DATE        NOT NULL,
-    composite_score     DECIMAL(6,4) NOT NULL
+    instrument_isin VARCHAR(12)   COLLATE DATABASE_DEFAULT NOT NULL,
+    score_date      DATE          NOT NULL,
+    composite_score DECIMAL(6,4)  NOT NULL
 );
-```
-
-2. Check current collation settings:
-```sql
--- Server collation
-SELECT SERVERPROPERTY('Collation') AS server_collation;
-
--- Database collation
-SELECT name, collation_name FROM sys.databases WHERE name IN ('analytics_db', 'tempdb');
-
--- Column-level collations
-SELECT TABLE_NAME, COLUMN_NAME, COLLATION_NAME
-FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_SCHEMA IN ('silver', 'gold')
-  AND DATA_TYPE IN ('varchar', 'nvarchar', 'char', 'nchar')
-ORDER BY TABLE_NAME, COLUMN_NAME;
-```
-
-3. Standardize the server collation at install time:
-```bash
-# During SQL Server for Linux initial setup
-sudo /opt/mssql/bin/mssql-conf set-collation
-# Choose: Latin1_General_CI_AS (or SQL_Latin1_General_CP1_CI_AS consistently)
-```
-
-**Fix procedure**
-
-1. Add `COLLATE DATABASE_DEFAULT` to the failing temp table column:
-```sql
--- Quick fix: add COLLATE clause to the temp table definition
-CREATE TABLE #stage (
-    instrument_isin VARCHAR(12) COLLATE DATABASE_DEFAULT NOT NULL
-);
-```
-
-2. Alternatively, use explicit COLLATE in the JOIN:
-```sql
-SELECT * FROM #stage s
-JOIN silver.index_constituents ic
-    ON s.instrument_isin COLLATE Latin1_General_CI_AS = ic.instrument_isin;
 ```
 
 ---
 
-## Low — Annoyances / Technical Debt
+## Low — Annoyances and technical debt
 
----
+> [!abstract] Backlog class
+>
+> These five problems are technical debt that degrades code quality, maintainability, and future performance but does not cause immediate incidents. The fix window is "tech debt week" or a dedicated cleanup sprint. None require emergency attention but leaving them unfixed compounds over time.
 
-### SELECT * in Production Queries
+### SQL Server | production queries | SELECT * coupling and performance
 
-**What happens**
+A silver-to-gold aggregation uses `SELECT * FROM silver.esg_scores` to feed a downstream calculation. The table has 15 columns including four large `NVARCHAR(MAX)` description fields used only for reporting. The query reads 15 columns but uses 5, the extra columns are transmitted over the network to the application, and the buffer pool fills with unnecessary data. When a developer adds a new `xml_metadata` column, the downstream `SELECT *` returns an unexpected column and breaks the Dapper mapping in the C# API. `SELECT *` is evaluated at runtime against the current schema, so it couples the query to the schema in an implicit way that is invisible to static code review. It also prevents covering indexes from being useful: the optimizer cannot use a 3-column covering index when the query wants 15 columns. The fix is to enforce "no `SELECT *` in persistent code" as a lint rule in CI (sqlfluff `AM04`), with an exception only for ad-hoc SSMS inspection.
 
-A silver-to-gold aggregation query uses `SELECT * FROM silver.esg_scores` to feed a downstream calculation. The `silver.esg_scores` table has 15 columns, including 4 large `NVARCHAR(MAX)` description columns used only for reporting. The query reads 15 columns but uses 5. Unnecessary I/O consumes buffer pool pages; the extra columns are transmitted over the network to the application. When a developer adds a new `xml_metadata` column to `silver.esg_scores`, the downstream `SELECT *` query suddenly returns an unexpected column, breaking the Dapper mapping in the C# API.
+#### Audit stored procedures and views for SELECT *
 
-**Root cause**
+**When to run:** during a code hygiene sprint or as a nightly CI check.
+**Trigger:** backlog grooming, or after a Dapper mapping failure caused by a new column.
+**Context:** T-SQL session, read-only against `sys.sql_modules`.
+**Purpose:** produce a list of every persisted database object whose definition contains `SELECT *` so the team can refactor them.
 
-`SELECT *` is evaluated at runtime against the current table schema. It couples the query to the schema, breaks when columns are added or reordered, returns unnecessary data, prevents covering index usage, and bloats execution plan memory grants. It is technically valid SQL but universally considered harmful in production code.
+*Find every stored procedure, view, or trigger whose T-SQL body contains SELECT *.*
 
-**Consequences**
-
-- Excess I/O from wide selects (especially with LOB columns)
-- Buffer pool polluted with unnecessary column data
-- Dapper/ORM mapping breaks when columns are added
-- Covering index cannot be used (the index covers 3 columns; `SELECT *` needs 15)
-
-**Prevention protocol**
-
-1. Enforce `sqlfluff` linting in the CI pipeline:
-```yaml
-# .sqlfluff (sqlfluff configuration)
-[sqlfluff]
-dialect = tsql
-rules = L004,L010,L028,L034,AM04  # AM04: no SELECT *
-
-# In CI (GitHub Actions or similar)
-- name: Lint SQL
-  run: sqlfluff lint sql/ --dialect tsql --rules AM04
-```
-
-2. Code review rule: all production SQL must list explicit columns. No exceptions for INSERT/SELECT either — always list target columns.
-
-3. Alias all columns in complex queries for documentation:
 ```sql
--- Good practice: explicit, documented column list
 SELECT
-    es.instrument_isin,
-    es.score_date,
-    es.environmental_score,
-    es.social_score,
-    es.governance_score,
-    es.composite_score
-FROM silver.esg_scores es
-WHERE es.score_date = @calculation_date;
+    OBJECT_SCHEMA_NAME(object_id) + '.' + OBJECT_NAME(object_id) AS object_name,
+    type_desc,
+    LEN(definition) AS definition_length
+FROM sys.sql_modules m
+JOIN sys.objects o ON m.object_id = o.object_id
+WHERE m.definition LIKE '%SELECT *%'
+   OR m.definition LIKE '%select *%';
 ```
 
-**Fix procedure**
+| Field | Source column | Type | Meaning |
+|---|---|---|---|
+| `object_name` | computed | `nvarchar` | Two-part schema-qualified object name |
+| `type_desc` | `sys.objects.type_desc` | `nvarchar(60)` | `SQL_STORED_PROCEDURE`, `VIEW`, `SQL_TRIGGER`, `SQL_SCALAR_FUNCTION`, etc. |
+| `definition_length` | `LEN(m.definition)` | `int` | Size of the module's T-SQL source in characters |
 
-1. Audit existing stored procedures and views for `SELECT *`:
-```sql
-SELECT OBJECT_NAME(object_id) AS object_name, definition
-FROM sys.sql_modules
-WHERE definition LIKE '%SELECT *%'
-   OR definition LIKE '%SELECT%\*%' ESCAPE '\';
-```
+> [!warning] This lint match produces false positives
+>
+> The `LIKE '%SELECT *%'` match finds any module where `SELECT *` appears in the source text — including comments, column list with `*` for multiply, and whitespace variations. For a production audit, run the output through a parser (sqlfluff or T-SQL tokenizer) to filter out the false positives. This query is the starting point, not the final answer.
 
-2. Replace each `SELECT *` with explicit column lists and redeploy.
+> [!success] Use sqlfluff in CI to block new SELECT * introductions
+>
+> Add `sqlfluff` to the repo's lint CI with the `AM04` rule enabled. Every PR that introduces `SELECT *` in production code will fail the lint check before it merges. Combined with a one-time sweep to refactor existing instances, this drives the count of `SELECT *` in production code to zero and keeps it there.
+
+*Live capture against stoxx returns a small set of matches because the teaching database has only a handful of persisted modules. Run this against the production analytics database to get a meaningful list.*
 
 ---
 
-### No Query Store Enabled
+### SQL Server | Query Store | not enabled on production database
 
-**What happens**
+A pipeline performance regression is reported: the load that ran in 3 minutes last week now takes 20 minutes. Without Query Store, there is no execution history, no plan change record, and no way to determine when or why the plan changed. The team spends 4 hours investigating with no conclusive answer; the incident is closed as "unclear." Two weeks later, it happens again. Query Store is an opt-in feature that captures query execution statistics and plan history directly inside the database, persisted through SQL Server restart and independent of the live plan cache. Without it, the only post-hoc performance data is `sys.dm_exec_query_stats`, which is flushed on restart and does not retain plan history across plan changes.
 
-A pipeline performance regression is reported: the index constituent load that ran in 3 minutes last week now takes 20 minutes. Without Query Store, there is no execution history, no plan change record, and no way to determine when or why the plan changed. The team spends 4 hours investigating with no conclusive answer. The incident is closed as "unclear." Two weeks later, it happens again.
+#### Enable Query Store with production defaults
 
-**Root cause**
+**When to run:** on every new production database at onboarding time, and retroactively on any database where it is not already enabled.
+**Trigger:** database creation, or discovery that a database lacks Query Store.
+**Context:** T-SQL session, `ALTER DATABASE` permission. State-changing on database options; non-destructive.
+**Purpose:** turn on Query Store in read-write mode with production-appropriate sizing and retention so historical query plans and runtime stats are captured going forward.
 
-Query Store is an opt-in feature that captures query execution statistics and plan history directly inside the database. Without it, the only post-hoc performance data available is the live `sys.dm_exec_query_stats` DMV — which is flushed on SQL Server restart and does not retain plan history across plan changes. Query Store is the essential foundation for any production performance investigation.
+*Enable Query Store on stoxx with typical production settings.*
 
-**Prevention protocol**
-
-1. Enable Query Store on all user databases from day one:
 ```sql
-ALTER DATABASE analytics_db SET QUERY_STORE = ON;
-ALTER DATABASE analytics_db SET QUERY_STORE (
-    OPERATION_MODE = READ_WRITE,
-    DATA_FLUSH_INTERVAL_SECONDS = 900,       -- flush to disk every 15 min
-    INTERVAL_LENGTH_MINUTES = 60,            -- aggregation interval: 1 hour
-    MAX_STORAGE_SIZE_MB = 2048,              -- 2 GB for query store data
-    QUERY_CAPTURE_MODE = AUTO,               -- only capture queries with meaningful impact
-    SIZE_BASED_CLEANUP_MODE = AUTO,          -- auto-cleanup when space fills
-    STALE_QUERY_THRESHOLD_DAYS = 30,         -- retain 30 days of history
-    WAIT_STATS_CAPTURE_MODE = ON             -- also capture wait stats per query
+ALTER DATABASE stoxx SET QUERY_STORE = ON;
+
+ALTER DATABASE stoxx SET QUERY_STORE (
+    OPERATION_MODE               = READ_WRITE,
+    DATA_FLUSH_INTERVAL_SECONDS  = 900,
+    INTERVAL_LENGTH_MINUTES      = 60,
+    MAX_STORAGE_SIZE_MB          = 2048,
+    QUERY_CAPTURE_MODE           = AUTO,
+    SIZE_BASED_CLEANUP_MODE      = AUTO,
+    STALE_QUERY_THRESHOLD_DAYS   = 30,
+    WAIT_STATS_CAPTURE_MODE      = ON
 );
-
--- Verify
-SELECT actual_state_desc, desired_state_desc, current_storage_size_mb,
-       max_storage_size_mb, query_capture_mode_desc
-FROM sys.database_query_store_options;
 ```
 
-2. Enable automatic plan correction:
-```sql
-ALTER DATABASE analytics_db
-SET AUTOMATIC_TUNING (FORCE_LAST_GOOD_PLAN = ON);
-```
+> [!info] Query Store is already enabled on stoxx
+>
+> See the Query Store audit capture in Problem 8's `database_query_store_options` table: stoxx is at `READ_WRITE`, 10 MB used of 1000 MB ceiling, `ALL` capture mode, 30-day retention, wait stats on. The DDL cell above would re-apply settings that are already in effect; it is shown as the canonical form for a new database.
 
-**Fix procedure**
+> [!warning] Query Store is not retroactive
+>
+> Enabling Query Store captures data going forward only. No historical data is recovered from before the enable. If a regression has already been reported, Query Store will not help for that specific incident — but it will capture the next one. The best time to enable Query Store is database creation; the second-best time is now.
 
-Enable Query Store per the prevention steps above. No data retroactively becomes available — historical data is only captured going forward from the moment it is enabled.
+> [!success] Pair Query Store with automatic plan correction
+>
+> On SQL Server 2017+, also enable `ALTER DATABASE stoxx SET AUTOMATIC_TUNING (FORCE_LAST_GOOD_PLAN = ON)` so plan regressions are detected and reverted automatically without operator intervention. See Problem 17 for the details.
 
 ---
 
-### Cursor-Based Logic Instead of Set-Based
+### SQL Server | T-SQL cursors | row-by-row loops replacing set-based queries
 
-**What happens**
+A developer implements index constituent weight normalization using a `DECLARE CURSOR` loop: for each of 3,000 constituents, fetch a row, calculate the normalized weight, execute an `UPDATE`. This produces 3,000 individual round-trips and 3,000 lock/unlock cycles. The normalization job takes 45 minutes. The same logic written as a set-based `UPDATE ... SET ... = ... / SUM(...) OVER (PARTITION BY ...)` runs in 8 seconds. SQL Server is optimized for set-based operations; cursor row-by-row processing defeats the query optimizer, bypasses bulk I/O, prevents parallelism, and holds locks for the full cursor lifetime. T-SQL cursors inside stored procedures at least avoid the network round-trip that a Python loop would incur, but they are still dramatically slower than the equivalent set-based query.
 
-A developer implements index constituent weight normalization using a `DECLARE CURSOR` loop: for each of 3,000 constituents, execute a `SELECT`, calculate the normalized weight in Python/T-SQL, then execute an `UPDATE`. This runs 3,000 individual round-trips. The normalization job takes 45 minutes. The same logic written as a set-based window function query runs in 8 seconds.
+#### Replace a cursor with a window function
 
-**Root cause**
+> [!warning] Cursors have legitimate uses but they are rare
+>
+> There are specific patterns where a cursor is the right answer: stepping through an administrative script row-by-row with error handling, calling a stored procedure per row when the procedure has side effects, or implementing pack-and-reduce algorithms that genuinely cannot be expressed declaratively. For data transformation in the pipeline, cursors are almost always the wrong answer.
 
-SQL Server is optimized for set-based operations. Row-by-row cursor processing defeats the query optimizer, bypasses bulk I/O optimizations, and generates 3,000 individual lock/unlock cycles instead of one. The TDS round-trip overhead alone (client-server for each row in a Python loop) compounds the problem. T-SQL cursors inside stored procedures avoid the network round-trip but still process row-by-row, preventing parallelism.
+> [!success] Replace cursors with window functions, CTEs, or APPLY
+>
+> The rewrite patterns are well-known: running totals use `SUM() OVER`, ranked operations use `ROW_NUMBER()`/`RANK()`/`DENSE_RANK()`, gap-filling uses recursive CTEs, per-row derived calculations use `CROSS APPLY` against a table-valued function. For the weight normalization case specifically, `SUM(raw_weight) OVER (PARTITION BY index_code)` is the direct replacement and runs roughly 300× faster than the equivalent cursor.
 
-**Consequences**
+**When to run:** during any code review that encounters a `DECLARE CURSOR`, and as a search-and-rewrite sprint for existing procedures.
+**Trigger:** cursor found in a persisted stored procedure, or slow update job.
+**Context:** T-SQL query text, `ALTER` on the procedure.
+**Purpose:** replace the row-by-row loop with a single set-based statement that runs in one execution and holds locks only for its own duration.
 
-- 45 minutes of wall-clock time for a 8-second operation
-- Holds locks on tables for the entire cursor duration, creating blocking for concurrent sessions
-- CPU underutilized (single-threaded, sequential execution)
-- Silver-to-gold calculation delayed; publication SLA at risk
+*Set-based weight normalization using a window function — a single UPDATE, no loop, no cursor.*
 
-**Prevention protocol**
-
-1. Replace cursor logic with window functions — the canonical example:
 ```sql
--- BAD: cursor approach (row-by-row weight normalization)
-DECLARE @isin VARCHAR(12), @weight DECIMAL(10,8), @total DECIMAL(10,8);
-DECLARE weight_cursor CURSOR FOR
-    SELECT instrument_isin, raw_weight FROM gold.index_weights WHERE index_code = @index_code;
-OPEN weight_cursor;
-FETCH NEXT FROM weight_cursor INTO @isin, @weight;
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    SELECT @total = SUM(raw_weight) FROM gold.index_weights WHERE index_code = @index_code;
-    UPDATE gold.index_weights SET normalized_weight = @weight / @total
-    WHERE instrument_isin = @isin AND index_code = @index_code;
-    FETCH NEXT FROM weight_cursor INTO @isin, @weight;
-END;
-CLOSE weight_cursor; DEALLOCATE weight_cursor;
-
--- GOOD: set-based window function (same result, runs in milliseconds)
-UPDATE iw
-SET normalized_weight = iw.raw_weight / weight_totals.total_weight
-FROM gold.index_weights iw
-JOIN (
-    SELECT index_code, SUM(raw_weight) AS total_weight
-    FROM gold.index_weights
-    WHERE index_code = @index_code
-    GROUP BY index_code
-) weight_totals ON iw.index_code = weight_totals.index_code
-WHERE iw.index_code = @index_code;
-
--- EVEN BETTER: using window function directly
 UPDATE gold.index_weights
 SET normalized_weight = raw_weight / SUM(raw_weight) OVER (PARTITION BY index_code)
 WHERE index_code = @index_code;
 ```
 
-2. Enforce as a code review standard. Use `sqlfluff` or SQL Server Extended Events to flag cursor usage in stored procedures.
+*Audit for any DECLARE CURSOR references in persisted modules on stoxx.*
 
-**Fix procedure**
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(object_id) + '.' + OBJECT_NAME(object_id) AS object_name,
+    type_desc
+FROM sys.sql_modules m
+JOIN sys.objects o ON m.object_id = o.object_id
+WHERE m.definition LIKE '%DECLARE %CURSOR%'
+   OR m.definition LIKE '%declare %cursor%';
+```
 
-Replace the cursor with the equivalent set-based query. For running totals, use `SUM() OVER`, `LAG()`, `LEAD()`. For rank-based operations, use `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`. For gap-filling, use recursive CTEs.
+*Live capture against the local stoxx instance on 2026-04-11 — the teaching database has a handful of cursors for demonstration purposes; production analytics code should return zero rows for this audit.*
 
 ---
 
-### Missing Error Handling in Stored Procedures
+### SQL Server | stored procedures | missing XACT_ABORT and TRY/CATCH
 
-**What happens**
+A stored procedure inserts calculated weights into a gold table and then updates an audit log table. The INSERT succeeds, the UPDATE fails due to a FK violation. Without `SET XACT_ABORT ON`, the INSERT remains committed and the UPDATE error bubbles up to the calling Python code, which catches it and logs a warning — but the gold table now has new rows with no corresponding audit entry. The next reconciliation check fails and the engineering team spends hours tracing the inconsistency. Without `SET XACT_ABORT ON`, a runtime error inside a procedure does not automatically roll back the open transaction; the transaction stays open at the point of failure and later statements may or may not execute depending on error severity. Without `TRY/CATCH`, the calling code receives the error but by then the partial changes may already be committed. The fix is a procedure-writing standard: every procedure that modifies state sets `XACT_ABORT ON`, wraps work in `BEGIN TRY / BEGIN CATCH`, and rolls back explicitly on error.
 
-The stored procedure `usp_load_gold_index_weights` inserts calculated weights and then updates a `load_audit` table. The INSERT succeeds, but the UPDATE fails due to a FK violation. Without `TRY/CATCH` or `XACT_ABORT`, the INSERT is committed and the UPDATE error is silently swallowed by the calling Python code (which only checks `@@ERROR` implicitly). The gold table has new weights, but the audit table is out of sync. The next reconciliation check fails, and the engineering team spends hours tracing the inconsistency.
+#### Audit stored procedures for missing error handling
 
-**Root cause**
+**When to run:** during a code hygiene sprint, or after any data-consistency incident where a procedure left the database in a partial state.
+**Trigger:** reconciliation failure, or unexplained missing/extra rows after a procedure call.
+**Context:** T-SQL, read-only against `sys.sql_modules`.
+**Purpose:** find every stored procedure whose body does not contain the strings `TRY` or `XACT_ABORT`, indicating missing error handling.
 
-Without `SET XACT_ABORT ON`, a runtime error inside a stored procedure (constraint violation, conversion error, etc.) does not automatically roll back the transaction. The transaction remains open at the point of the error; subsequent statements may or may not execute depending on the error severity. Without a `TRY/CATCH` block, the calling code receives the error but may have already committed partial changes. This leaves the database in an inconsistent intermediate state.
+*Find stored procedures without TRY/CATCH on stoxx.*
 
-**Prevention protocol**
-
-1. Mandatory stored procedure template — enforce via code review:
 ```sql
-CREATE OR ALTER PROCEDURE usp_load_gold_index_weights
+SELECT
+    OBJECT_SCHEMA_NAME(object_id) + '.' + OBJECT_NAME(object_id) AS procedure_name,
+    LEN(m.definition) AS definition_length
+FROM sys.sql_modules m
+JOIN sys.objects o ON m.object_id = o.object_id
+WHERE o.type = 'P'
+  AND m.definition NOT LIKE '%BEGIN TRY%'
+  AND m.definition NOT LIKE '%begin try%';
+```
+
+> [!warning] LIKE-based lint is a starting point, not a final answer
+>
+> The `NOT LIKE '%BEGIN TRY%'` filter catches procedures where the TRY block is missing entirely, but misses procedures where the TRY block exists but the CATCH is empty or does not roll back. For a rigorous audit, parse the procedure text with a T-SQL parser (TSqlFragment in the ScriptDom library) and check for the presence of a rollback statement inside the CATCH block.
+
+#### Use the mandatory procedure template
+
+> [!success] Every state-changing procedure follows the same skeleton
+>
+> `SET NOCOUNT ON; SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION; ... COMMIT; END TRY BEGIN CATCH IF @@TRANCOUNT > 0 ROLLBACK; THROW; END CATCH;`. This is six lines of boilerplate that eliminate the entire "partial state after error" class. Make it the first code snippet in the stored procedure style guide.
+
+**When to run:** during every new procedure creation and as the remediation for procedures identified by the audit.
+**Trigger:** new procedure PR, or audit finding.
+**Context:** T-SQL, `ALTER` on the procedure.
+**Purpose:** guarantee that any error inside the procedure rolls back all state changes atomically.
+
+*Mandatory stored procedure template with XACT_ABORT, TRY/CATCH, explicit ROLLBACK, and THROW to re-raise.*
+
+```sql
+CREATE OR ALTER PROCEDURE gold.usp_load_index_weights
     @index_code    VARCHAR(20),
     @effective_date DATE
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON;  -- any error = automatic full rollback
+    SET XACT_ABORT ON;
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
-            -- Step 1: Delete existing weights for this index/date (idempotent load)
             DELETE FROM gold.index_weights
             WHERE index_code = @index_code AND effective_date = @effective_date;
 
-            -- Step 2: Insert calculated weights from silver
-            INSERT INTO gold.index_weights (index_code, instrument_isin, weight,
-                                            market_cap_usd, effective_date)
-            SELECT @index_code, ic.instrument_isin,
-                   ic.raw_weight / SUM(ic.raw_weight) OVER (PARTITION BY ic.index_code),
-                   mc.market_cap_usd,
-                   @effective_date
+            INSERT INTO gold.index_weights (
+                index_code, instrument_isin, weight, effective_date
+            )
+            SELECT
+                @index_code,
+                ic.instrument_isin,
+                ic.raw_weight / SUM(ic.raw_weight) OVER (PARTITION BY ic.index_code),
+                @effective_date
             FROM silver.index_constituents ic
-            JOIN silver.market_cap mc
-                ON ic.instrument_isin = mc.instrument_isin
-               AND mc.price_date = @effective_date
-            WHERE ic.index_code = @index_code AND ic.effective_date = @effective_date;
+            WHERE ic.index_code = @index_code
+              AND ic.effective_date = @effective_date;
 
-            -- Step 3: Audit log
-            INSERT INTO dbo.load_audit (load_type, entity_code, effective_date,
-                                         rows_loaded, load_timestamp)
-            VALUES ('GOLD_INDEX_WEIGHTS', @index_code, @effective_date,
-                    @@ROWCOUNT, SYSUTCDATETIME());
+            INSERT INTO dbo.load_audit (
+                load_type, entity_code, effective_date, rows_loaded, load_timestamp
+            )
+            VALUES (
+                'GOLD_INDEX_WEIGHTS', @index_code, @effective_date,
+                @@ROWCOUNT, SYSUTCDATETIME()
+            );
 
         COMMIT;
-
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK;
-
-        -- Re-raise with context
-        THROW;  -- preserves original error number, severity, state
-        -- Alternative: RAISERROR with custom message
+        THROW;
     END CATCH;
 END;
 ```
 
-2. Python pipeline: always check for exceptions and do not swallow errors:
-```python
-try:
-    with pyodbc.connect(CONN_STR, autocommit=False) as conn:
-        conn.execute("{CALL usp_load_gold_index_weights(?, ?)}", (index_code, effective_date))
-        conn.commit()
-except pyodbc.Error as e:
-    logger.error(f"Failed to load gold weights for {index_code}/{effective_date}: {e}")
-    raise  # let Airflow mark the task as failed
-```
-
-**Fix procedure**
-
-1. Identify stored procedures without error handling:
-```sql
-SELECT OBJECT_NAME(object_id) AS proc_name, definition
-FROM sys.sql_modules
-WHERE objectproperty(object_id, 'IsProcedure') = 1
-  AND definition NOT LIKE '%TRY%'
-ORDER BY OBJECT_NAME(object_id);
-```
-
-2. Remediate each procedure by adding `SET XACT_ABORT ON` + `TRY/CATCH` per the template above.
-
-3. Test each remediated procedure with deliberate failures (wrong FK value, type mismatch) to confirm rollback behavior.
+See [18-stored-procedures-dynamic-sql-and-error-handling](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/stored-procedures-dynamic-sql-and-error-handling) for the full error-handling pattern reference.
 
 ---
 
-### SQL Server on Linux Gotchas
+### SQL Server | Linux host | filesystem ownership, Kerberos, and case sensitivity
 
-**What happens**
+After the SQL Server Linux host is patched via `apt upgrade`, the `mssql-server` service starts but cannot write to `/var/opt/mssql/data/`. The backup script fails because the backup directory is owned by `root`, not the `mssql` service account. A developer connects from a Windows laptop using domain credentials and gets `Login failed for user ''` because Kerberos is not configured on Linux. A query that works on a Windows dev instance fails on Linux because the ext4 filesystem is case-sensitive. SQL Server on Linux runs as the `mssql` system user (UID 10001) and expects `/var/opt/mssql/*` to be owned by `mssql:mssql` with mode `770`. Windows/AD authentication requires explicit Kerberos setup on Linux; it is not automatic. File paths in T-SQL (`BACKUP TO DISK = '...'`, `RESTORE FROM DISK = '...'`) must match the exact case on the filesystem. SQL Server itself is still case-insensitive at the collation layer, but the OS path handling is not.
 
-After the SQL Server Linux instance is patched via `apt upgrade`, the `mssql-server` service starts but SQL Server cannot write to `/var/opt/mssql/data/`. The backup script also fails because the backup directory `/data/mssql/backups/` is owned by `root`, not the `mssql` service account. A developer connects via the domain Windows account from their laptop — and gets `Login failed for user ''` because Kerberos authentication is not configured on Linux. Meanwhile, a query that works on the Windows dev instance fails on Linux because the Linux filesystem is case-sensitive for file paths.
+The severity is low because each gotcha has a clear, well-documented fix; they are annoyances rather than incidents. But they cluster at host provisioning time and catch new operators by surprise, so documenting them as a group saves hours of onboarding confusion.
 
-**Root cause**
+#### Verify mssql service ownership and permissions
 
-SQL Server on Linux runs as the `mssql` system user (UID 10001 by default). File system paths for data files, log files, backup directories, and certificate files must be owned by `mssql:mssql` with appropriate permissions. Windows authentication (Active Directory / Kerberos) requires explicit Kerberos configuration on Linux — it is not automatic. The Linux filesystem (ext4) is case-sensitive; SQL Server itself is case-insensitive (controlled by collation), but paths in `BACKUP DATABASE TO DISK=` and file references must match the exact case on the filesystem.
+**When to run:** after any OS patch or migration, as part of the post-patch validation checklist.
+**Trigger:** `mssql-server` fails to start, or backup/data writes fail with permission errors.
+**Context:** Linux shell on the SQL Server host, `sudo` required.
+**Purpose:** confirm `/var/opt/mssql` and any custom data/log/backup directories are owned by `mssql:mssql` with mode `770`.
 
-**Consequences**
+*Check ownership and permissions of the SQL Server directories.*
 
-- SQL Server fails to start or write data files after directory permission changes
-- Backup jobs fail silently if the backup directory lacks write permissions for `mssql`
-- Windows/AD authentication not available; all connections require SQL auth (sa or SQL login)
-- Certificate and backup path errors that do not occur on Windows instances
-
-**Prevention protocol**
-
-1. Set correct ownership and permissions for all SQL Server directories:
 ```bash
-# Data and log files
-sudo chown -R mssql:mssql /var/opt/mssql/
-sudo chmod -R 770 /var/opt/mssql/
-
-# Custom backup directory
-sudo mkdir -p /data/mssql/backups
-sudo chown -R mssql:mssql /data/mssql/
-sudo chmod -R 770 /data/mssql/
-
-# Verify
+ls -la /var/opt/mssql/
 ls -la /var/opt/mssql/data/
-ls -la /data/mssql/backups/
+ls -la /var/opt/mssql/backup/
 ```
 
-2. Manage SQL Server as a systemd service:
+*Reset ownership and permissions to the expected state if they drift.*
+
 ```bash
-# Start, stop, restart, status
-sudo systemctl start mssql-server
-sudo systemctl stop mssql-server
-sudo systemctl restart mssql-server
-sudo systemctl status mssql-server
-
-# View error log (equivalent to SQL Server error log on Windows)
-sudo cat /var/opt/mssql/log/errorlog
-sudo tail -f /var/opt/mssql/log/errorlog  # live monitoring
-
-# Check if service is enabled at boot
-sudo systemctl is-enabled mssql-server
-sudo systemctl enable mssql-server
-```
-
-3. Configure SQL Server settings on Linux (mssql-conf):
-```bash
-# Set SA password (initial setup)
-sudo /opt/mssql/bin/mssql-conf set-sa-password
-
-# Set memory limit (important on GCE — leave headroom for OS)
-sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 28672  # 28 GB on 32 GB VM
-
-# View current configuration
-sudo cat /var/opt/mssql/mssql.conf
-
-# Set default data and log directories
-sudo /opt/mssql/bin/mssql-conf set filelocation.defaultdatadir /data/mssql/data
-sudo /opt/mssql/bin/mssql-conf set filelocation.defaultlogdir /data/mssql/log
-sudo /opt/mssql/bin/mssql-conf set filelocation.defaultbackupdir /data/mssql/backups
-```
-
-4. Linux-specific path and case-sensitivity gotchas:
-```bash
-# File paths in T-SQL must use exact case matching the Linux filesystem
-# BAD: BACKUP TO DISK = '/var/opt/MSSQL/backups/...'  -- fails on Linux
-# GOOD: BACKUP TO DISK = '/var/opt/mssql/backups/...' -- exact case
-
-# Check ODBC driver is installed correctly
-odbcinst -q -d -n "ODBC Driver 18 for SQL Server"
-cat /etc/odbcinst.ini
-
-# Test connectivity from Python
-python3 -c "
-import pyodbc
-conn = pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=analytics_db;UID=sa;PWD=YourPassword;TrustServerCertificate=yes;')
-print('Connected:', conn.getinfo(pyodbc.SQL_SERVER_NAME))
-conn.close()
-"
-```
-
-5. Use SQL authentication (not Windows auth) for all pipeline connections:
-```python
-# pyodbc connection string for Linux SQL Server (no Windows auth)
-CONN_STR = (
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=10.0.0.5,1433;"          # use IP or internal DNS, not Windows hostname
-    "DATABASE=analytics_db;"
-    "UID=pipeline_svc;"              # dedicated service account, not sa
-    f"PWD={os.environ['DB_PASSWORD']};"
-    "TrustServerCertificate=yes;"    # required if not using proper TLS cert
-    "Encrypt=yes;"
-)
-```
-
-**Fix procedure**
-
-1. If SQL Server fails to start after a permission change:
-```bash
-# Reset permissions
 sudo chown -R mssql:mssql /var/opt/mssql/
 sudo chmod -R 770 /var/opt/mssql/
 sudo systemctl restart mssql-server
 sudo systemctl status mssql-server
-
-# Check error log for specific errors
-sudo tail -50 /var/opt/mssql/log/errorlog
 ```
 
-2. If backup fails with access denied:
-```bash
-sudo chown mssql:mssql /data/mssql/backups/
-sudo chmod 770 /data/mssql/backups/
-# Test: run a manual backup as the mssql service user
-sudo -u mssql sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -Q "BACKUP DATABASE analytics_db TO DISK = '/data/mssql/backups/test.bak';"
-```
+> [!info] Linux commands not live-captured
+>
+> The stoxx instance runs inside a Docker container and its filesystem is not directly addressable from this workstation. These commands are the operational pattern for a non-container Linux SQL Server host. Inside the container, the equivalent verification is `docker exec stoxx-db ls -la /var/opt/mssql/`.
 
-3. If SQL Server process is consuming too much memory and being OOM-killed:
+#### Configure memory limit via mssql-conf to prevent Linux OOM
+
+> [!danger] Default max server memory on Linux is unlimited
+>
+> SQL Server's `max server memory (MB)` defaults to `2147483647`, which on Linux means SQL Server will consume memory until the OS out-of-memory killer terminates the `mssql` process. The first symptom is `mssql-server` service entering `failed` state with `journalctl -u mssql-server` showing an OOM kill message. This is distinct from Windows, where the operating system caps process memory at physical RAM and SQL Server self-regulates.
+
+> [!success] Cap max server memory at ~75% of physical RAM
+>
+> Run `sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb <value>` to cap SQL Server at roughly 75% of physical RAM, leaving headroom for the OS, the Linux page cache, and any other services on the host. On a 32 GB VM, `28672` MB (28 GB) is a reasonable setting; on a dedicated 64 GB VM, `57344` MB. This limit is applied via the container mechanism rather than via SQL Server's `max server memory`, so both need to be set on Linux.
+
+**When to run:** during initial SQL Server Linux setup, after any change to VM memory allocation, or after observing OOM kills.
+**Trigger:** `mssql-server` service in `failed` state with OOM kill messages in `journalctl`.
+**Context:** Linux shell on the SQL Server host, `sudo` required. Requires service restart to apply.
+**Purpose:** cap SQL Server memory consumption at a safe fraction of physical RAM.
+
+*Set the memory limit via mssql-conf and restart the service.*
+
 ```bash
-# Check if SQL Server was killed
-sudo journalctl -u mssql-server --since "1 hour ago"
-# Set memory limit via mssql-conf
-sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 24576  # 24 GB
+sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 28672
 sudo systemctl restart mssql-server
+sudo systemctl status mssql-server
 ```
 
----
+*Verify the service is running and check for recent OOM kills.*
 
-### Related
+```bash
+sudo journalctl -u mssql-server --since "1 hour ago" | grep -i "killed\|oom"
+```
 
-- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/wait-stats-analysis) — Wait type diagnosis
-- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool) — Memory pressure diagnosis
-- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/execution-plans) — Reading execution plans
-- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/query-store-regressions-and-plan-forcing) — Query Store and plan forcing
-- [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention) — Deadlock deep dive
-- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/blocking-and-locking) — Blocking chain analysis
-- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-maintenance) — Fragmentation management
-- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/backup-types-and-strategy) — Backup configuration
+See [11-memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool) for the full memory tuning pattern and the relationship between `memory.memorylimitmb` and SQL Server's internal `max server memory` setting.
 
----
+## Operational reference tables
 
-### Sources
+> [!abstract] Command options consolidated in one place
+>
+> This section pulls together the flag tables for the commands used across all 25 problems — BACKUP / RESTORE WITH options, DBCC CHECKDB options, ALTER INDEX REBUILD options, sqlcmd flags, and mssql-conf settings. Every command that appears in a code cell above is documented here with its full documented option set, not just the flags used in the examples.
 
-- SQL Server Performance Tuning Checklist 2026 (SQLYARD)
-- 10 SQL Server Performance Killers (DEV Community)
-- SQL Server Deadlocks by Example (Red Gate)
-- Implicit Conversions (Brent Ozar)
-- Ola Hallengren Index and Statistics Maintenance
-- SQL Server Memory Troubleshooting (Microsoft Learn)
-- String or Binary Data Truncated (Brent Ozar)
+### BACKUP DATABASE and BACKUP LOG WITH options
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `COMPRESSION` | `WITH COMPRESSION` | Use native MS_XPRESS compression on the backup stream |
+| `NO_COMPRESSION` | `WITH NO_COMPRESSION` | Force uncompressed backup |
+| `CHECKSUM` | `WITH CHECKSUM` | Compute page checksums at backup time and validate read integrity |
+| `NO_CHECKSUM` | `WITH NO_CHECKSUM` | Skip checksum computation (default) |
+| `STOP_ON_ERROR` | `WITH STOP_ON_ERROR` | Abort backup on first page read failure |
+| `CONTINUE_AFTER_ERROR` | `WITH CONTINUE_AFTER_ERROR` | Attempt to back up damaged pages despite errors |
+| `INIT` | `WITH INIT` | Overwrite existing backup sets on the media |
+| `NOINIT` | `WITH NOINIT` | Append to existing backup sets (default) |
+| `FORMAT` | `WITH FORMAT` | Reinitialize the backup media (destroys all existing backups) |
+| `NOFORMAT` | `WITH NOFORMAT` | Preserve media header (default) |
+| `NAME` | `WITH NAME = N'backup name'` | Human-readable backup set name |
+| `DESCRIPTION` | `WITH DESCRIPTION = N'...'` | Free-text description |
+| `EXPIREDATE` | `WITH EXPIREDATE = '2026-12-31'` | Set backup expiration date |
+| `RETAINDAYS` | `WITH RETAINDAYS = 30` | Retain for N days before allowing overwrite |
+| `STATS` | `WITH STATS = 10` | Progress message every N percent |
+| `COPY_ONLY` | `WITH COPY_ONLY` | Take backup without affecting the log chain |
+| `DIFFERENTIAL` | `WITH DIFFERENTIAL` | Take a differential backup (data file only) |
+| `MEDIADESCRIPTION` | `WITH MEDIADESCRIPTION = N'...'` | Media description on first write |
+| `MEDIANAME` | `WITH MEDIANAME = N'...'` | Media name on first write |
+| `BLOCKSIZE` | `WITH BLOCKSIZE = 65536` | Physical block size for the backup device |
+| `BUFFERCOUNT` | `WITH BUFFERCOUNT = 50` | Number of I/O buffers used |
+| `MAXTRANSFERSIZE` | `WITH MAXTRANSFERSIZE = 4194304` | Max size of each I/O transfer |
+| `MIRROR TO` | `MIRROR TO DISK = '...'` | Write identical backup to a second device |
+| `ENCRYPTION` | `WITH ENCRYPTION (ALGORITHM = AES_256, SERVER CERTIFICATE = cert_name)` | Encrypt the backup with a certificate or asymmetric key |
+| `NO_TRUNCATE` | `WITH NO_TRUNCATE` | `BACKUP LOG` option: do not truncate log after backup |
+
+### RESTORE DATABASE and RESTORE LOG WITH options
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `RECOVERY` | `WITH RECOVERY` | Bring database online after restore (default) |
+| `NORECOVERY` | `WITH NORECOVERY` | Leave database in restoring state for further log apply |
+| `STANDBY` | `WITH STANDBY = '/path/to/undo.bak'` | Leave database in read-only state with undo file |
+| `REPLACE` | `WITH REPLACE` | Overwrite existing database |
+| `CHECKSUM` | `WITH CHECKSUM` | Validate page checksums during restore |
+| `NO_CHECKSUM` | `WITH NO_CHECKSUM` | Skip checksum validation |
+| `MOVE` | `WITH MOVE 'logical_name' TO '/new/path/file.mdf'` | Redirect a logical file to a new physical path |
+| `KEEP_CDC` | `WITH KEEP_CDC` | Preserve Change Data Capture metadata |
+| `KEEP_REPLICATION` | `WITH KEEP_REPLICATION` | Preserve replication settings |
+| `PARTIAL` | `WITH PARTIAL` | Restore a subset of filegroups (piecemeal restore) |
+| `STOPAT` | `WITH STOPAT = '2026-04-11 15:30:00'` | Stop log recovery at a specific point in time |
+| `STOPATMARK` | `WITH STOPATMARK = 'tx_name'` | Stop at a named transaction mark |
+| `STOPBEFOREMARK` | `WITH STOPBEFOREMARK = 'tx_name'` | Stop immediately before a named transaction mark |
+| `STATS` | `WITH STATS = 5` | Progress message every N percent |
+| `FILE` | `FILE = 2` | Select backup set N from the media |
+| `PASSWORD` | `WITH PASSWORD = N'...'` | Password-protected backup set (deprecated in SQL 2012+) |
+| `RESTART` | `WITH RESTART` | Restart an interrupted restore |
+| `RESTRICTED_USER` | `WITH RESTRICTED_USER` | Allow only `db_owner` / `dbcreator` / `sysadmin` after restore |
+
+### DBCC CHECKDB options
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `NO_INFOMSGS` | `WITH NO_INFOMSGS` | Suppress informational messages, return only errors |
+| `ALL_ERRORMSGS` | `WITH ALL_ERRORMSGS` | Return every error, not just the first per object |
+| `PHYSICAL_ONLY` | `WITH PHYSICAL_ONLY` | Skip logical checks; only read page structure and checksums |
+| `DATA_PURITY` | `WITH DATA_PURITY` | Check column values for out-of-range data |
+| `ESTIMATEONLY` | `WITH ESTIMATEONLY` | Report tempdb space required without running checks |
+| `TABLOCK` | `WITH TABLOCK` | Use table locks instead of a database snapshot (faster but blocks writers) |
+| `EXTENDED_LOGICAL_CHECKS` | `WITH EXTENDED_LOGICAL_CHECKS` | Check indexed views, XML indexes, spatial indexes |
+| `MAXDOP` | `WITH MAXDOP = N` | Override instance MAXDOP for the CHECKDB run |
+| `REPAIR_ALLOW_DATA_LOSS` | `REPAIR_ALLOW_DATA_LOSS` | Repair by deallocating corrupt pages; data loss is possible |
+| `REPAIR_REBUILD` | `REPAIR_REBUILD` | Repair without data loss; fixes missing rows in nonclustered indexes |
+| `REPAIR_FAST` | `REPAIR_FAST` | Deprecated no-op, kept for syntax compatibility |
+
+### ALTER INDEX REBUILD / REORGANIZE options
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `REBUILD` | `ALTER INDEX ... REBUILD` | Drop and rebuild the index from scratch |
+| `REORGANIZE` | `ALTER INDEX ... REORGANIZE` | Online incremental compaction of leaf level |
+| `ONLINE` | `WITH (ONLINE = ON)` | Allow reads and writes during rebuild (Enterprise or SQL 2022 Std) |
+| `OFFLINE` | `WITH (ONLINE = OFF)` | Acquire schema modification lock for the rebuild (faster) |
+| `FILLFACTOR` | `WITH (FILLFACTOR = 90)` | Leaf page fullness percentage (`0` = 100%) |
+| `PAD_INDEX` | `WITH (PAD_INDEX = ON)` | Apply FILLFACTOR to non-leaf pages as well |
+| `SORT_IN_TEMPDB` | `WITH (SORT_IN_TEMPDB = ON)` | Use tempdb for intermediate sort during rebuild |
+| `DATA_COMPRESSION` | `WITH (DATA_COMPRESSION = PAGE)` | Apply `NONE`, `ROW`, `PAGE`, or `COLUMNSTORE_ARCHIVE` compression |
+| `MAXDOP` | `WITH (MAXDOP = N)` | Max parallelism for the rebuild |
+| `RESUMABLE` | `WITH (RESUMABLE = ON)` | Allow `ALTER INDEX ... PAUSE` and resume (SQL 2017+) |
+| `MAX_DURATION` | `WITH (MAX_DURATION = N MINUTES)` | Auto-pause a resumable rebuild after N minutes |
+| `WAIT_AT_LOW_PRIORITY` | `WITH (ONLINE = ON (WAIT_AT_LOW_PRIORITY (MAX_DURATION = N MINUTES, ABORT_AFTER_WAIT = NONE)))` | Low-priority lock wait behavior on online rebuild |
+
+### UPDATE STATISTICS options
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `FULLSCAN` | `WITH FULLSCAN` | Scan every row to build the histogram |
+| `SAMPLE` | `WITH SAMPLE 50 PERCENT` | Scan a percentage of rows |
+| `SAMPLE ROWS` | `WITH SAMPLE 1000000 ROWS` | Scan a fixed number of rows |
+| `RESAMPLE` | `WITH RESAMPLE` | Reuse the previous sample rate |
+| `NORECOMPUTE` | `WITH NORECOMPUTE` | Disable auto-update for this statistic going forward |
+| `INCREMENTAL` | `WITH INCREMENTAL = ON` | Per-partition statistics on partitioned tables |
+| `MAXDOP` | `WITH MAXDOP = N` | Max parallelism for the statistics rebuild |
+| `ON PARTITIONS` | `ON PARTITIONS (1, 2, 3)` | Update stats only for named partitions |
+| `PERSIST_SAMPLE_PERCENT` | `WITH PERSIST_SAMPLE_PERCENT = ON` | Remember the sample percentage for future auto-updates |
+
+### sqlcmd flags
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-S` | `-S server[,port]` | Server host and optional port (use comma, not colon) |
+| `-U` | `-U login` | SQL Server login |
+| `-P` | `-P password` | Password for SQL auth |
+| `-E` | `-E` | Use trusted (Windows) authentication |
+| `-d` | `-d database_name` | Default database context |
+| `-Q` | `-Q "SELECT ..."` | Execute a single query and exit |
+| `-q` | `-q "SELECT ..."` | Execute a query but do not exit |
+| `-i` | `-i /path/to/script.sql` | Read T-SQL from a file |
+| `-o` | `-o /path/to/output.txt` | Write output to a file |
+| `-W` | `-W` | Strip trailing whitespace (useful for CSV output) |
+| `-s` | `-s "\|"` | Column separator character |
+| `-w` | `-w 255` | Output line width |
+| `-h` | `-h -1` | Header rows (-1 suppresses headers) |
+| `-t` | `-t 60` | Query timeout in seconds |
+| `-l` | `-l 30` | Login timeout in seconds |
+| `-b` | `-b` | Terminate on error (sets errorlevel for scripting) |
+| `-r` | `-r {0\|1}` | Redirect stderr to stdout (0) or all output to stderr (1) |
+| `-C` | `-C` | Trust server certificate (skip TLS validation) |
+| `-N` | `-N` | Use encrypted connection |
+| `-v` | `-v var=value` | Define a scripting variable |
+| `-I` | `-I` | Enable quoted identifier (`SET QUOTED_IDENTIFIER ON`) |
+
+### mssql-conf settings used in production hardening
+
+| Setting | Syntax | Description |
+|---|---|---|
+| `memory.memorylimitmb` | `sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 28672` | Cap SQL Server memory consumption in MB (prevents Linux OOM) |
+| `telemetry.customerfeedback` | `... set telemetry.customerfeedback false` | Disable Customer Experience Improvement Program telemetry |
+| `filelocation.defaultdatadir` | `... set filelocation.defaultdatadir /data/mssql/data` | Default directory for new data files |
+| `filelocation.defaultlogdir` | `... set filelocation.defaultlogdir /data/mssql/log` | Default directory for new log files |
+| `filelocation.defaultbackupdir` | `... set filelocation.defaultbackupdir /data/mssql/backup` | Default directory for backup files |
+| `network.tcpport` | `... set network.tcpport 1433` | TCP port SQL Server listens on |
+| `network.forceencryption` | `... set network.forceencryption 1` | Force TLS encryption on all connections |
+| `network.tlscert` | `... set network.tlscert /etc/ssl/certs/mssql.pem` | TLS certificate file |
+| `network.tlskey` | `... set network.tlskey /etc/ssl/private/mssql.key` | TLS private key file |
+| `network.tlsprotocols` | `... set network.tlsprotocols 1.2` | Enabled TLS protocol versions |
+| `sqlagent.enabled` | `... set sqlagent.enabled true` | Enable SQL Server Agent on Linux |
+| `sqlagent.databasemailprofile` | `... set sqlagent.databasemailprofile default` | Database mail profile for Agent job failure notifications |
+| `traceflag` | `... traceflag set 1222` | Set a startup trace flag (e.g. 1222 for verbose deadlock logging) |
+| `language.lcid` | `... set language.lcid 1033` | Default LCID for session language |
+| `coredump.coredumptype` | `... set coredump.coredumptype full` | Enable full core dumps for crash analysis |
+| `hadr.hadrenabled` | `... set hadr.hadrenabled 1` | Enable Always On Availability Groups on Linux (requires Pacemaker) |
+
+## Diagnostic decision flow
+
+The following flowchart captures how a senior operator routes from a wait type observation to a specific root cause class. Use this after the severity triage flowchart in the opening section has identified a symptom class and you need to drill into the specific cause.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    wait[Top wait type<br/>from sys.dm_os_wait_stats] --> family{Wait family?}
+
+    family -->|LCK_M_*| lck[Lock wait]
+    family -->|PAGELATCH_*| latch[Page latch wait]
+    family -->|PAGEIOLATCH_*| io[Page IO latch wait]
+    family -->|CXPACKET / CXCONSUMER| par[Parallelism wait]
+    family -->|WRITELOG| wlog[Log flush wait]
+    family -->|RESOURCE_SEMAPHORE| mem[Memory grant wait]
+    family -->|ASYNC_NETWORK_IO| net[Client-side consumer wait]
+
+    lck --> lckq{Cycle in<br/>waits-for graph?}
+    lckq --> yes1[YES]
+    lckq --> no1[NO]
+    yes1 -.->|deadlock| p2[P2: Deadlock during ETL]
+    no1 -.->|blocking| p9[P9: Blocking chain]
+
+    latch --> latchq{PFS or GAM page<br/>in tempdb?}
+    latchq --> yes2[YES]
+    latchq --> no2[NO]
+    yes2 -.->|tempdb contention| p16[P16: Tempdb PFS/GAM]
+    no2 -.->|allocation contention| p16
+
+    io -.->|I/O subsystem saturated| disk[Storage I/O bottleneck]
+    disk -.->|correlate with<br/>dm_io_virtual_file_stats| p3[P3: Data disk full?]
+
+    par --> parq{cost threshold<br/>for parallelism = 5?}
+    parq --> yes3[YES]
+    parq --> no3[NO]
+    yes3 -.->|small queries going parallel| p19[P19: MAXDOP misconfiguration]
+    no3 -.->|genuine parallelism skew| p19
+
+    wlog -.->|log flush backed up| p1[P1: Transaction log full?]
+    mem -.->|memory pressure| mem2[Check max server memory]
+    net -.->|slow client read| net2[Not a server problem]
+
+    classDef yesNode fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    classDef noNode fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+    class yes1,yes2,yes3 yesNode
+    class no1,no2,no3 noNode
+```
+
+Every wait family in the flowchart maps to a specific problem in this note. Once the wait stats point at a family, jump to the corresponding H3 section and run the diagnostic query at the top of that section to confirm the specific cause.
+
+## Related
+
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/wait-stats-analysis) — wait type diagnosis and resolution playbook
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool) — memory pressure, max server memory tuning, buffer pool extension
+- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/execution-plans) — reading execution plans and identifying CONVERT_IMPLICIT warnings
+- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/query-store-regressions-and-plan-forcing) — Query Store deep dive and plan forcing workflow
+- [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention) — full deadlock graph schema and prevention patterns
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/blocking-and-locking) — blocking chain analysis with live reproduction
+- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-maintenance) — fragmentation measurement, rebuild/reorganize strategies, Ola Hallengren solution
+- [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) — lost updates, phantom reads, MERGE under concurrency
+- [stored-procedures-dynamic-sql-and-error-handling](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/stored-procedures-dynamic-sql-and-error-handling) — full error handling pattern reference
+- [06-essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — catch-all diagnostic playbook for uncategorized symptoms
+
+## Sources
+
+- Microsoft Learn — [sys.databases](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-databases-transact-sql), [sys.dm_db_log_space_usage](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-log-space-usage-transact-sql), [sys.dm_db_index_physical_stats](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql), [sys.dm_database_encryption_keys](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-database-encryption-keys-transact-sql), [sys.query_store_plan](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-query-store-plan-transact-sql), [sys.dm_exec_query_stats](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-query-stats-transact-sql), [BACKUP (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/backup-transact-sql), [RESTORE (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/restore-statements-transact-sql), [ALTER INDEX](https://learn.microsoft.com/sql/t-sql/statements/alter-index-transact-sql), [DBCC CHECKDB](https://learn.microsoft.com/sql/t-sql/database-console-commands/dbcc-checkdb-transact-sql), [UPDATE STATISTICS](https://learn.microsoft.com/sql/t-sql/statements/update-statistics-transact-sql), [sqlcmd utility](https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-utility), [mssql-conf Linux settings](https://learn.microsoft.com/sql/linux/sql-server-linux-configure-mssql-conf)
+- Community — Paul Randal "Transaction log is full", Erik Darling "Parameter Sniffing", Brent Ozar "Implicit Conversions" and "String or Binary Data Truncated", Aaron Bertrand "Don't use MERGE", Michael J. Swart "What to avoid if you want to use MERGE", Ola Hallengren "IndexOptimize" solution, Glenn Berry "SQL Server Diagnostic Information Queries"
+- Microsoft Knowledge Base — KB2694124, KB2925678, KB4497928 (MERGE concurrency issues)
 

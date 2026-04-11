@@ -29,7 +29,7 @@ pre code {
   padding-bottom: 0.3em;
 }
 [saved-theme="dark"] h2 {
-  color: #b900b9 !important;
+  color: #8a008a !important;
   font-weight: 600 !important;
 }
 [saved-theme="dark"] h3 {
@@ -89,8 +89,8 @@ pre code {
 
 [saved-theme="dark"] :not(pre) > code {
   font-family: var(--codeFont) !important;
-  background-color: #000000 !important;
-  color: #ffffff !important;
+  background-color: #252525 !important;
+  color: #e6e6e6 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
@@ -106,8 +106,8 @@ pre code {
 }
 
 [saved-theme="light"] :not(pre) > code {
-  background-color: #000000 !important;
-  color: #3b3950 !important;
+  background-color: #3a3d4a !important;
+  color: #f0f0f2 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
@@ -506,6 +506,25 @@ article a:hover {
 /* ── Hide darkmode toggle (dark-only theme) ─────────────────── */
 button.darkmode {
   display: none !important;
+}
+
+/* ── Recolor ✅ → deep green ✔︎ ───────────────────────────────
+   The source ✅ (U+2705) is replaced at runtime by recolor-emoji.inline.ts
+   with <span class="deep-check">✔︎</span>. The span below uses ✔ (U+2714)
+   forced into text presentation (via U+FE0E appended in the script), which
+   IS recolorable via CSS — unlike the original color-glyph emoji. */
+.deep-check {
+  color: #1b5e20; /* deep green */
+  font-weight: 700;
+  /* Nudge slightly so the check visually matches the old emoji's size. */
+  font-size: 1.05em;
+  line-height: 1;
+  /* Force text presentation even in browsers that still prefer emoji. */
+  font-variant-emoji: text;
+}
+
+[saved-theme="dark"] .deep-check {
+  color: #1faa59; /* slightly brighter deep green for dark bg contrast */
 }
 
 /* ── Mermaid diagrams ────────────────────────────────────────── */

@@ -98,19 +98,9 @@ The `stoxx` lab runs on SQL Server 2022 (`major = 16`), so every feature in this
 | Query Store Hints (`sp_query_store_set_hints`) | SQL 2022 (16) | Inject hints without editing code |
 | Query Store for readable secondaries | SQL 2022 (16) | Primary replicas only before that |
 
-> [!question]- Knowledge check — Query Store fundamentals
+> [!info]- Where Query Store lives and how to join to SQL text
 >
-> 1. Is Query Store stored in `msdb`, in each user database, or in a system-wide repository?
-> 2. What happens to Query Store data when the SQL Server service is restarted?
-> 3. Which Query Store feature specifically requires SQL Server 2022 or later?
-> 4. Which DMV relates `query_id` to the actual SQL text of the query?
->
-> **Answers**
->
-> 1. In each user database — the data files of the database itself hold the Query Store pages. This is why Query Store grows the database and why the retention settings matter.
-> 2. It survives the restart. Query Store data is persistent on disk; the in-memory buffer flushes on restart and reloads on startup.
-> 3. Query Store Hints (`sp_query_store_set_hints`). Plan forcing via `sp_query_store_force_plan` has been available since SQL 2016, but hints only landed in SQL 2022.
-> 4. `sys.query_store_query_text` — linked to `sys.query_store_query` via `query_text_id`, and to `sys.query_store_plan` via `query_id`.
+> Query Store data is stored in each user database — the data files of the database itself hold the Query Store pages, which is why Query Store grows the database and why retention settings matter. Data survives service restarts: the in-memory buffer flushes on restart and reloads on startup. To get from `query_id` to the actual SQL text, join `sys.query_store_query` to `sys.query_store_query_text` via `query_text_id`.
 
 ## Query Store Baseline
 
@@ -252,20 +242,6 @@ SELECT 'flushed' AS status;
 > - **Automated tests** — any test that asserts against Query Store state should flush to ensure deterministic observation.
 > - **Production** — rarely needed; the background flush is usually fast enough for triage work.
 
-> [!question]- Knowledge check — baseline state
->
-> 1. What does it mean if `desired_state_desc = READ_WRITE` but `actual_state_desc = READ_ONLY`?
-> 2. Which `readonly_reason` bit value indicates that Query Store reached its storage ceiling?
-> 3. Why might a fresh repro workflow see nothing in `sys.query_store_plan` even though the query just ran?
-> 4. What is the trade-off of setting `interval_length_minutes` to 5 instead of the default 60?
->
-> **Answers**
->
-> 1. Query Store automatically flipped to read-only because of some condition. Check `readonly_reason` to identify which — most commonly 65536 (size limit reached) — and either free space or raise `max_storage_size_mb`.
-> 2. `65536`. Fix by increasing `MAX_STORAGE_SIZE_MB`, running `SET QUERY_STORE CLEAR`, or lowering `STALE_QUERY_THRESHOLD_DAYS`.
-> 3. The runtime statistics are still in the in-memory buffer and have not yet been flushed to disk. Call `sp_query_store_flush_db` before querying, or wait for the next scheduled flush interval.
-> 4. Finer time-series resolution (you can see regressions within 5-minute windows instead of hourly windows) at the cost of multiplying the number of interval rows, which grows Query Store storage proportionally.
-
 ## Plan Regression Candidates
 
 > [!abstract] Find queries with materially different plan variants
@@ -337,20 +313,6 @@ The strongest candidates are the three `DELETE ... MAX(date)` bronze cleanup sta
 > - Exclude auto-parameterized `msparam_` queries from SSMS itself — they are tooling overhead, not application workload.
 > - Join to `sys.query_store_runtime_stats_interval` if you want to restrict to a specific time window (e.g., "last 24 hours only").
 > - For production dashboards, add `COUNT(*) AS exec_count` to weight the shortlist by how often the query actually ran — a 100x regression on a query that runs twice a week is lower priority than a 3x regression on a query that runs every minute.
-
-> [!question]- Knowledge check — regression shortlist
->
-> 1. Why is the shortlist grouped by `query_id` and not by `plan_id`?
-> 2. What does a `regression_factor` of 1.05 tell you?
-> 3. Why do `UPDATE STATISTICS` entries appear in the shortlist, and why are they usually not real regression candidates?
-> 4. How would you restrict the shortlist to queries that actually ran in the last hour?
->
-> **Answers**
->
-> 1. Because the goal is to find unstable logical queries (queries with multiple plan variants that perform differently), not merely expensive individual plans. `plan_id` groups would show you the single slowest plan but could not compute a best-vs-worst spread.
-> 2. The plans perform nearly identically — not a plan-choice problem. Spend investigation time elsewhere.
-> 3. `UPDATE STATISTICS` runtime scales with the amount of data the engine samples, which varies by table state. The variance is expected behaviour, not a plan regression. Filter these out of operational triage.
-> 4. Join the shortlist to `sys.query_store_runtime_stats_interval` and filter on `end_time > DATEADD(hour, -1, SYSDATETIMEOFFSET())`.
 
 ## Controlled Force-Plan Workflow
 
@@ -644,19 +606,9 @@ The hint was created successfully. `query_hint_text` shows the exact `OPTION(...
 | `query_hint_failure_count` | `> 0` | Problem | Hint has failed to apply. | Possible syntax mismatch, unsupported hint in context, or invalid option. |
 | `comment` | `NULL` | Normal | No extra annotation stored. | Track rationale in an external change log. |
 
-> [!question]- Knowledge check — forcing and hints
+> [!warning] Forcing attempts — not guarantees — and unsupported hints
 >
-> 1. What does `is_forced_plan = 1` guarantee, and what does it not guarantee?
-> 2. Which catalog view row do you check to detect that a forced plan stopped being applied?
-> 3. Which query hint is **not** supported inside a Query Store Hint?
-> 4. If the stored procedure returns without error but `is_forced_plan` is still `0`, what is the most likely explanation?
->
-> **Answers**
->
-> 1. It guarantees that Query Store will attempt to apply this plan on every subsequent execution of the query. It does not guarantee the plan is actually used — schema changes, missing indexes, and parameter incompatibilities can cause the force to silently fall back to recompilation.
-> 2. `sys.query_store_plan.force_failure_count` — any value greater than zero means the force failed at least once. `last_force_failure_reason_desc` gives the specific cause.
-> 3. `USE PLAN` — because Query Store's plan-forcing mechanism (`sp_query_store_force_plan`) is the canonical replacement. Others not supported include `OPTIMIZE FOR (@var = val)`, `MAXRECURSION`, and all table hints.
-> 4. Query Store has not yet flushed the in-memory state to disk. Call `sp_query_store_flush_db` and re-query `sys.query_store_plan`.
+> `is_forced_plan = 1` guarantees only that Query Store will **attempt** to apply the plan on every subsequent execution. Schema changes, missing indexes, and parameter incompatibilities can cause the force to silently fall back to recompilation — watch `sys.query_store_plan.force_failure_count` and `last_force_failure_reason_desc` for the specific cause. If `sp_query_store_force_plan` returns without error but `is_forced_plan` is still `0`, the most common explanation is that Query Store has not yet flushed the in-memory state to disk; call `sp_query_store_flush_db` and re-query. Query Store Hints do **not** support `USE PLAN` (replaced by plan forcing itself), `OPTIMIZE FOR (@var = val)`, `MAXRECURSION`, or any table hints.
 
 ## Operational Guidance
 
@@ -693,20 +645,6 @@ The hint was created successfully. `query_hint_text` shows the exact `OPTION(...
 > - Record every force and every hint in a change log with owner, reason, and removal date.
 > - Re-evaluate all active forces and hints quarterly.
 > - Use `sys.query_store_plan` and `sys.query_store_query_hints` as your source of truth — never trust memory or tribal knowledge about what is currently forced or hinted.
-
-> [!question]- Knowledge check — operational choices
->
-> 1. When should you choose "observe only" over forcing a plan?
-> 2. What is the main risk of a Query Store Hint compared to a forced plan?
-> 3. How do you detect that Query Store is approaching its storage ceiling before it flips to read-only?
-> 4. Which intervention is appropriate when the problem is stale statistics rather than plan choice?
->
-> **Answers**
->
-> 1. When the query has multiple captured plans but the runtime difference between them is small or noisy — forcing a plan when the evidence is weak risks pinning a plan that is not actually the best one.
-> 2. A hint is long-lived operational debt: it modifies optimizer behaviour globally for that `query_id` and tends to get forgotten. A forced plan at least points to a specific historical plan and can be compared against current plans. Both are temporary in principle but hints accumulate faster.
-> 3. Monitor `current_storage_size_mb` vs `max_storage_size_mb` in `sys.database_query_store_options`. Alert when current exceeds 80% of max. Combine with `SIZE_BASED_CLEANUP_MODE = AUTO` to have the engine clean proactively.
-> 4. Root-cause fix: run `UPDATE STATISTICS` on the affected table(s). Forcing a plan over stale statistics only masks the real problem and leaves the next parameter value to regress again.
 
 ## References
 

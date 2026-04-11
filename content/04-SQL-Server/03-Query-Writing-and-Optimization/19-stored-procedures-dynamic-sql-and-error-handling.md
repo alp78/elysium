@@ -129,19 +129,9 @@ The scalar subquery returned no rows, so the expression evaluates to `NULL`, and
 > - The intent is clear to any reader: "I expect exactly one or zero rows; anything else is a bug".
 > - Reserve `SELECT @v = col FROM t` for cases where you specifically want the behaviour "assign once per row in the result set", which is rare.
 
-> [!question]- Knowledge check — variables and assignment
+> [!info]- Error number 512 and the concatenation idiom
 >
-> 1. What does `SELECT @v = col FROM t WHERE 1 = 0` leave `@v` equal to, and why is that dangerous?
-> 2. Which error number is raised when `SET @v = (SELECT ...)` encounters a multi-row result?
-> 3. When is `SELECT @v = col FROM t` the correct idiom rather than a bug?
-> 4. Where do variables declared in an outer batch go when a stored procedure called from that batch runs?
->
-> **Answers**
->
-> 1. It leaves `@v` at its previous value. Dangerous because a loop iteration that finds no match will silently carry a stale value from an earlier iteration.
-> 2. Error 512 ("Subquery returned more than 1 value").
-> 3. When the assignment target is intentionally updated once per row (e.g., accumulating a concatenation: `SELECT @csv = @csv + ',' + name FROM tags`) — a now-legacy pattern replaced by `STRING_AGG` in SQL 2017+.
-> 4. They are not visible. Procedure bodies have their own variable scope; the outer batch's variables are out of scope inside the procedure, and vice versa.
+> When `SET @v = (SELECT ...)` encounters a multi-row result, the engine raises error **512** ("Subquery returned more than 1 value"). The one case where `SELECT @v = col FROM t` is genuinely correct is the legacy string-accumulation idiom: `SELECT @csv = @csv + ',' + name FROM tags` — a pattern that has been replaced by `STRING_AGG` in SQL Server 2017+.
 
 ## Control-of-Flow
 
@@ -244,19 +234,9 @@ SELECT DATEDIFF(MILLISECOND, @start, SYSDATETIME()) AS elapsed_ms;
 > - Connection pool in the client keeps the connection checked out.
 > - Use sparingly, never inside high-frequency code paths, and never with durations longer than seconds.
 
-> [!question]- Knowledge check — control-of-flow
+> [!failure] IF without BEGIN/END controls only one statement
 >
-> 1. Why does `IF @a > 0 SELECT 'a'; SELECT 'b';` execute the second `SELECT` unconditionally?
-> 2. Name a legitimate production use case for `WHILE`.
-> 3. What is the difference between `WAITFOR DELAY '00:00:01'` and `WAITFOR TIME '03:00:00'`?
-> 4. Why is `GOTO` almost never the right tool in modern T-SQL?
->
-> **Answers**
->
-> 1. Because `IF` without `BEGIN...END` controls only the immediately following single statement. The second `SELECT` is not inside the `IF` body. The fix is `IF @a > 0 BEGIN SELECT 'a'; SELECT 'b'; END;`.
-> 2. Batched cleanup on a very large table: `WHILE EXISTS (...) DELETE TOP (N) ...` to avoid long locks and log pressure.
-> 3. `DELAY` sleeps for an interval (duration); `TIME` blocks until a specific clock time is reached.
-> 4. `TRY...CATCH` replaces `GOTO error_handler`, and `IF/ELSE` with `BEGIN/END` replaces every other pattern `GOTO` was used for. It remains valid syntax for backward compatibility.
+> `IF @a > 0 SELECT 'a'; SELECT 'b';` executes the second `SELECT` unconditionally — `IF` binds only to the immediately following single statement. The fix is `IF @a > 0 BEGIN SELECT 'a'; SELECT 'b'; END;`. For the same reason, `GOTO` has no place in modern T-SQL: `TRY...CATCH` replaces `GOTO error_handler`, and `IF/ELSE` with `BEGIN/END` replaces every other pattern `GOTO` was used for.
 
 ## Stored Procedures
 
@@ -384,20 +364,6 @@ SQL Server sends a `DONE_IN_PROC` TDS message after every statement inside a pro
 > - Prevents certain ORM clients from mistaking `DONE_IN_PROC` messages for additional result sets.
 > - Has no observable effect on `@@ROWCOUNT` inside the procedure — that variable still updates normally.
 > - Put it immediately after `AS BEGIN` in every new procedure.
-
-> [!question]- Knowledge check — stored procedures
->
-> 1. What is the difference between `CREATE OR ALTER PROCEDURE` and `CREATE PROCEDURE`?
-> 2. How do you capture a procedure's `RETURN` code at the call site?
-> 3. Why prefer named arguments (`@p = v`) over positional arguments (`v`)?
-> 4. What does `SET NOCOUNT ON` do, and why is it the first line of every production procedure?
->
-> **Answers**
->
-> 1. `CREATE OR ALTER` creates the procedure if it does not exist, or atomically replaces its definition if it does. `CREATE PROCEDURE` fails if the name is already taken.
-> 2. `EXEC @rc = dbo.proc_name @arg1 = v1, ...;` — the variable receiving the return code goes on the left of the `=` before the procedure name.
-> 3. Named arguments are self-documenting, resilient to signature changes (new parameters added in the middle), and make the call site easier to review.
-> 4. It suppresses the `DONE_IN_PROC` TDS messages the server would otherwise emit after every statement. Fewer messages on the wire means less network traffic, lower latency, and fewer client-library surprises.
 
 ## Dynamic SQL
 
@@ -581,19 +547,9 @@ SELECT
 
 If the validation returns `rejected`, raise an error and do not execute the dynamic SQL at all. This closes the narrow remaining window where an attacker with partial control of a valid identifier could reach a table they should not see.
 
-> [!question]- Knowledge check — dynamic SQL
+> [!info]- Returning values from dynamic SQL
 >
-> 1. Why does `EXEC (@sql)` with a concatenated user value enable SQL injection, while `sp_executesql` with a parameter does not?
-> 2. How do you return a scalar value from a dynamic SQL string back to the outer batch?
-> 3. Why can table names not be parameterized, and what is the safe pattern for dynamic identifiers?
-> 4. What does `QUOTENAME('foo]bar')` return, and why does that matter?
->
-> **Answers**
->
-> 1. `EXEC(@sql)` parses whatever string is handed to it — including any extra statements the attacker injected through the concatenation. `sp_executesql` compiles the parameterized string into a query plan once; parameter values are passed as typed arguments that cannot escape their placeholder position.
-> 2. Declare an `OUTPUT` parameter in the `sp_executesql` parameter declaration list, and pass the outer variable as that parameter with the `OUTPUT` keyword.
-> 3. Object names are resolved at compile time; the optimizer needs to know the table before it builds a plan. The safe pattern is `QUOTENAME` on every identifier and an `EXISTS` check against `sys.tables` / `sys.columns` before executing.
-> 4. `[foo]]bar]` — the inner `]` is doubled to escape itself inside the brackets. This prevents `foo]; DROP TABLE x; --` from becoming a statement separator.
+> To return a scalar value from a dynamic SQL string back to the outer batch, declare an `OUTPUT` parameter in the `sp_executesql` parameter declaration list and pass the outer variable as that parameter with the `OUTPUT` keyword. `QUOTENAME('foo]bar')` returns `[foo]]bar]` — the inner `]` is doubled to escape itself inside the brackets, which prevents `foo]; DROP TABLE x; --` from becoming a statement separator.
 
 ## TRY/CATCH and Error Information
 
@@ -699,19 +655,9 @@ DROP TABLE #t;
 > - Capture it into a local variable on the next line if you need to reference it later: `DECLARE @affected int = @@ROWCOUNT;`.
 > - Avoid `IF @@ROWCOUNT = 0 ...` directly — the `IF` itself resets `@@ROWCOUNT` on the branch.
 
-> [!question]- Knowledge check — TRY/CATCH
+> [!info]- Four categories bypass TRY/CATCH
 >
-> 1. Which four error categories bypass `TRY/CATCH`?
-> 2. What does `ERROR_NUMBER()` return outside a `CATCH` block?
-> 3. Why must you capture `@@ROWCOUNT` into a local variable before using it in later logic?
-> 4. Which is the modern replacement for the pre-2005 `IF @@ERROR <> 0 GOTO error_handler` pattern?
->
-> **Answers**
->
-> 1. Compile errors, severity 0–10 informational messages, severity 20–25 connection-terminating errors, and errors in a separate batch.
-> 2. `NULL`. Every `ERROR_*` function returns `NULL` when called outside a `CATCH` block.
-> 3. Every subsequent statement — including `IF`, `SET`, `SELECT` — resets `@@ROWCOUNT` to reflect its own row count. Capturing it immediately preserves the value across the rest of the batch.
-> 4. `BEGIN TRY ... END TRY BEGIN CATCH ... END CATCH` — modern structured error handling catches the error and lets the `ERROR_*` functions inspect it.
+> `TRY...CATCH` does not catch: compile errors, severity 0–10 informational messages, severity 20–25 connection-terminating errors, and errors raised in a separate batch. Every `ERROR_*` function returns `NULL` when called outside a `CATCH` block.
 
 ## THROW and RAISERROR
 
@@ -798,20 +744,6 @@ The format string is `'Symbol %s returned %d rows.'` with two substitution argum
 > - **Re-raise**: bare `THROW;` in a `CATCH` block preserves original error number, message, line, and procedure.
 > - **Transparent**: `THROW` is atomic — it cannot be "caught and swallowed" by another layer without the caller noticing.
 > - Use `RAISERROR` only when you need format-string substitution or `WITH LOG` / `WITH NOWAIT` options — wrap the format call in a string variable and `THROW` the result when possible.
-
-> [!question]- Knowledge check — THROW and RAISERROR
->
-> 1. What is the smallest custom error number you can `THROW`?
-> 2. What does a bare `THROW;` do when executed inside a `CATCH` block?
-> 3. Why does `THROW` require the preceding statement to be terminated with a semicolon?
-> 4. When should you still use `RAISERROR` instead of `THROW`?
->
-> **Answers**
->
-> 1. `50000`. Numbers below 50000 are reserved for system errors defined in `sys.messages`.
-> 2. Re-raises the currently-caught error with its original error number, severity, message, line, and procedure name, as if it had never been caught. The outer scope sees the original error.
-> 3. `THROW` was added in SQL 2012 and the parser needed to distinguish it from identifiers in older code; requiring the preceding semicolon disambiguated the grammar. Using a leading semicolon (`;THROW`) is a safe habit.
-> 4. When you specifically need `printf`-style format-string substitution, `WITH LOG` to write to the Windows event log, or `WITH NOWAIT` to flush the message to the client before the batch continues.
 
 ## Transactions
 
@@ -985,20 +917,6 @@ The second `INSERT` violated the `CHECK (n > 0)` constraint. With `XACT_ABORT ON
 > - Pair with `BEGIN TRY ... END TRY BEGIN CATCH IF @@TRANCOUNT > 0 ROLLBACK; THROW; END CATCH` for predictable failure semantics.
 > - Put it as the second line of every write procedure, right after `SET NOCOUNT ON`.
 
-> [!question]- Knowledge check — transactions
->
-> 1. What does `@@TRANCOUNT` show after two nested `BEGIN TRAN` statements followed by one `COMMIT`?
-> 2. What happens to `@@TRANCOUNT` when an unqualified `ROLLBACK` is executed at depth 3?
-> 3. What does `XACT_STATE() = -1` mean, and how did the transaction get into that state?
-> 4. Why is `SET XACT_ABORT ON` the recommended default for write procedures?
->
-> **Answers**
->
-> 1. `1`. The nested `COMMIT` only decrements the counter; the outer transaction is still active.
-> 2. It drops to `0`. A single unqualified `ROLLBACK` discards the entire transaction regardless of nesting depth.
-> 3. The transaction is active but doomed: the only legal action is `ROLLBACK`. It got into that state because an error occurred while `XACT_ABORT` was `ON`, or because an error of a class that always dooms the transaction (certain deadlock paths, truncate on a replicated table, etc.) was encountered.
-> 4. It ensures that any error inside a transaction dooms the transaction, preventing partial writes from accidentally committing. It also makes the `TRY/CATCH`-based error-handling pattern reliable — you always know the transaction must be rolled back if you landed in `CATCH`.
-
 ## Security Context and Ownership
 
 > [!abstract] GRANT EXECUTE and ownership chaining
@@ -1058,20 +976,6 @@ With `WITH EXECUTE AS OWNER`, the dynamic SQL runs under the procedure owner's (
 > - Prefer static SQL with `IF` branching when the query shape is predictable.
 > - Prefer explicit grants to a dedicated application role when the set of readable tables is small.
 > - `EXECUTE AS OWNER` elevates every call to the owner's privilege — audit the procedure body carefully, because any new table reference inherits the elevation.
-
-> [!question]- Knowledge check — security context
->
-> 1. Why can a user with `EXECUTE` on a procedure read rows from a table they have no direct `SELECT` on?
-> 2. What specifically breaks ownership chaining?
-> 3. When should you use `WITH EXECUTE AS OWNER` on a procedure definition?
-> 4. What is the risk of over-using `EXECUTE AS OWNER`?
->
-> **Answers**
->
-> 1. Ownership chaining: when the procedure and the table share the same owner, SQL Server checks permissions only at the procedure boundary, not again on each referenced table.
-> 2. Dynamic SQL (the runtime-assembled string is a new batch in the caller's context), cross-database references where the ownership chain does not align, and explicit impersonation via `EXECUTE AS`.
-> 3. When the procedure must use dynamic SQL (which breaks ownership chaining) and the calling principal lacks direct permissions on the underlying tables. `EXECUTE AS OWNER` re-elevates execution to the owner's privileges.
-> 4. Every call runs with the owner's full privileges. Any additional table reference added later inherits that elevation, and any bug in the procedure can become a privilege escalation. Audit the body every time it is changed.
 
 ## Production Procedure Template
 

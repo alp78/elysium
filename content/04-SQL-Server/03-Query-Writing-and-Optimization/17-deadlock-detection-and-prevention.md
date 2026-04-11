@@ -12,7 +12,15 @@ status: complete
 
 SQL Server resolves deadlocks automatically by choosing a victim and rolling back that transaction with error `1205`.
 
-## What Makes A Deadlock Different From Blocking
+## Deadlock Fundamentals
+
+This section establishes the conceptual baseline: how a deadlock differs from ordinary blocking, and the decision flow to follow when one is reported in production.
+
+### SQL Server | Deadlock | Concept and triage
+
+A deadlock is a circular wait between sessions, not a linear queue. Recognizing that distinction is what allows a DBA to jump straight from "error 1205" to the deadlock graph instead of hunting through wait stats.
+
+#### Circular wait vs. linear blocking
 
 Blocking is linear: one session waits for another to finish. A deadlock is circular: session A needs a lock held by session B, while session B needs a lock held by session A. That cycle cannot resolve without intervention.
 
@@ -24,7 +32,7 @@ flowchart LR
     D --> A
 ```
 
-## Production Detection Sequence
+#### Production triage decision flow
 
 ```mermaid
 flowchart TD
@@ -45,7 +53,15 @@ flowchart TD
     class N1,N2 no;
 ```
 
-## Quick Health Check
+## Detection From `system_health`
+
+The built-in `system_health` Extended Events session captures `xml_deadlock_report` events by default on modern SQL Server builds. These three queries extract progressively more detail from it — from a simple count to a full victim-and-resource summary.
+
+### SQL Server | system_health | Forensic extraction
+
+`system_health` is usually the first stop when investigating a deadlock because it requires no setup and persists across restarts. The queries below locate its event file, count its captured deadlocks, and extract the latest graph.
+
+#### Count captured deadlock events
 
 The fastest production check is to count how many deadlock reports are already present in the built-in `system_health` Extended Events session.
 
@@ -81,7 +97,7 @@ WHERE object_name = 'xml_deadlock_report';
 
 *This instance already has two captured deadlock graphs in `system_health`. That is enough to do real forensic analysis without waiting for the next deadlock.*
 
-## Recent Deadlocks From `system_health`
+#### List recent deadlock reports with sessions and objects
 
 The next step is to extract a compact summary of the latest deadlock reports so you can see the victim, the sessions involved, and the contested objects.
 
@@ -142,7 +158,7 @@ ORDER BY utc_time DESC;
 | `resource*_object` | Same object on both rows | &#10060; when unexpected | Both sides contended on the same table or index. | Look for conflicting access order or hot-key activity. |
 | `resource*_object` | Different objects | Depends | The cycle crossed tables or indexes. | Ordered object access is often the first fix to test. |
 
-## Latest Deadlock Graph Summary
+#### Extract the latest deadlock graph summary
 
 For root-cause work, you need more than a count. You need the victim, the number of processes in the cycle, and the exact resources each side waited on.
 
@@ -202,7 +218,15 @@ FROM src;
 | `process*_waitresource` | `KEY:` resource | Depends | The wait was on an index key. | Narrow index access can still deadlock if lock order conflicts. |
 | `process*_waitresource` | `PAGE:` or `OBJECT:` resource | &#10060; when frequent | The deadlock involved broader resources. | Look for scans, escalation, or DDL interaction. |
 
-## Recommended Persistent Capture
+## Persistent Deadlock Capture
+
+`system_health` rolls over and eventually loses older deadlock reports. When a workload is deadlock-sensitive, a dedicated Extended Events session with an owner-controlled retention policy is the right long-term answer.
+
+### SQL Server | Extended Events | Dedicated deadlock session
+
+A dedicated session writes `xml_deadlock_report` events to a file target you control. Retention, storage location, and rollover behavior stop being shared with the general health session.
+
+#### Create a persistent XE session for deadlocks
 
 The built-in `system_health` session is useful, but production environments benefit from a dedicated deadlock capture session with a retention policy you control.
 
@@ -228,95 +252,106 @@ STATE = START;
 GO
 ```
 
-## Reproduce A Deadlock Deliberately
+## Deterministic Deadlock Reproduction
 
-The following demo creates a deterministic two-table deadlock by updating the same two tables in opposite order.
+A reproducible deadlock is the fastest way to validate detection queries, retry policies, and Extended Events capture. The demo below builds a deterministic two-table cycle, confirms the victim error, and inspects the surviving row state.
 
-> [!example]-
-> **Setup**
-> ```sql
-> USE stoxx;
-> GO
->
-> IF OBJECT_ID('dbo.deadlock_demo_a', 'U') IS NOT NULL
->     DROP TABLE dbo.deadlock_demo_a;
-> IF OBJECT_ID('dbo.deadlock_demo_b', 'U') IS NOT NULL
->     DROP TABLE dbo.deadlock_demo_b;
-> GO
->
-> CREATE TABLE dbo.deadlock_demo_a
-> (
->     id int NOT NULL PRIMARY KEY,
->     payload int NOT NULL
-> );
->
-> CREATE TABLE dbo.deadlock_demo_b
-> (
->     id int NOT NULL PRIMARY KEY,
->     payload int NOT NULL
-> );
-> GO
->
-> INSERT INTO dbo.deadlock_demo_a(id, payload) VALUES (1, 10);
-> INSERT INTO dbo.deadlock_demo_b(id, payload) VALUES (1, 20);
-> GO
-> ```
->
-> **Session 1**
-> ```sql
-> USE stoxx;
-> GO
->
-> SET DEADLOCK_PRIORITY LOW;
->
-> BEGIN TRAN;
->
-> UPDATE dbo.deadlock_demo_a
-> SET payload = payload + 1
-> WHERE id = 1;
->
-> WAITFOR DELAY '00:00:05';
->
-> UPDATE dbo.deadlock_demo_b
-> SET payload = payload + 1
-> WHERE id = 1;
->
-> COMMIT TRAN;
-> GO
-> ```
->
-> **Session 2**
-> ```sql
-> USE stoxx;
-> GO
->
-> BEGIN TRAN;
->
-> UPDATE dbo.deadlock_demo_b
-> SET payload = payload + 1
-> WHERE id = 1;
->
-> WAITFOR DELAY '00:00:05';
->
-> UPDATE dbo.deadlock_demo_a
-> SET payload = payload + 1
-> WHERE id = 1;
->
-> COMMIT TRAN;
-> GO
-> ```
->
-> **Cleanup**
-> ```sql
-> USE stoxx;
-> GO
->
-> DROP TABLE IF EXISTS dbo.deadlock_demo_a;
-> DROP TABLE IF EXISTS dbo.deadlock_demo_b;
-> GO
-> ```
+### SQL Server | T-SQL | Two-table deadlock demo
 
-## Victim Error And Survivor State
+The following demo creates a deterministic two-table deadlock by updating the same two tables in opposite order. Each cell is a separate step to be executed in its own SSMS window or session.
+
+#### Set up the demo tables and seed data
+
+```sql
+USE stoxx;
+GO
+
+IF OBJECT_ID('dbo.deadlock_demo_a', 'U') IS NOT NULL
+    DROP TABLE dbo.deadlock_demo_a;
+IF OBJECT_ID('dbo.deadlock_demo_b', 'U') IS NOT NULL
+    DROP TABLE dbo.deadlock_demo_b;
+GO
+
+CREATE TABLE dbo.deadlock_demo_a
+(
+    id int NOT NULL PRIMARY KEY,
+    payload int NOT NULL
+);
+
+CREATE TABLE dbo.deadlock_demo_b
+(
+    id int NOT NULL PRIMARY KEY,
+    payload int NOT NULL
+);
+GO
+
+INSERT INTO dbo.deadlock_demo_a(id, payload) VALUES (1, 10);
+INSERT INTO dbo.deadlock_demo_b(id, payload) VALUES (1, 20);
+GO
+```
+
+#### Run Session 1 (update A, then B)
+
+```sql
+USE stoxx;
+GO
+
+SET DEADLOCK_PRIORITY LOW;
+
+BEGIN TRAN;
+
+UPDATE dbo.deadlock_demo_a
+SET payload = payload + 1
+WHERE id = 1;
+
+WAITFOR DELAY '00:00:05';
+
+UPDATE dbo.deadlock_demo_b
+SET payload = payload + 1
+WHERE id = 1;
+
+COMMIT TRAN;
+GO
+```
+
+#### Run Session 2 (update B, then A)
+
+```sql
+USE stoxx;
+GO
+
+BEGIN TRAN;
+
+UPDATE dbo.deadlock_demo_b
+SET payload = payload + 1
+WHERE id = 1;
+
+WAITFOR DELAY '00:00:05';
+
+UPDATE dbo.deadlock_demo_a
+SET payload = payload + 1
+WHERE id = 1;
+
+COMMIT TRAN;
+GO
+```
+
+#### Clean up the demo tables
+
+```sql
+USE stoxx;
+GO
+
+DROP TABLE IF EXISTS dbo.deadlock_demo_a;
+DROP TABLE IF EXISTS dbo.deadlock_demo_b;
+GO
+```
+
+### SQL Server | T-SQL | Victim outcome verification
+
+Once the demo deadlock has fired, two things must be confirmed: the victim session received error `1205`, and the surviving session's changes actually committed.
+
+#### Deadlock victim error 1205
 
 The deadlock victim gets error `1205`. The surviving session completes and commits its changes.
 
@@ -333,6 +368,10 @@ The deadlock victim gets error `1205`. The surviving session completes and commi
 |---|---|---|---|---|
 | `message_number` | `1205` | &#10060; | Deadlock victim error. | The transaction was rolled back by SQL Server and may need a retry. |
 | `message_number` | Other runtime error | Depends | Different failure mode. | Use the appropriate error-handling path; do not assume deadlock semantics. |
+
+#### Inspect surviving row state after rollback
+
+After the victim rolls back, the surviving transaction's change is still visible in the target table. Querying both tables confirms which side committed.
 
 > [!info]-
 > This query checks the surviving row values after the deadlock. One side committed; the deadlock victim did not.
@@ -351,16 +390,22 @@ ORDER BY table_name, id;
 
 *Only the surviving transaction committed. Each table increased by `1`, not by `2`, which is exactly what you expect when one transaction becomes the deadlock victim and rolls back fully.*
 
-## Prevention Priorities
+## Deadlock Prevention Strategies
 
-### 1. Enforce A Consistent Access Order
+Prevention falls into three families: lock-order discipline at the transaction boundary, isolation-level changes that remove reader/writer conflict, and targeted use of `DEADLOCK_PRIORITY` when one workload should always lose.
+
+### SQL Server | Transactions | Lock-order discipline
+
+Most production deadlocks come from code paths touching the same objects in different orders, or from plan shapes that widen the locking footprint. These three patterns attack the problem at its source.
+
+#### Enforce a consistent access order
 
 If every transaction touches tables or indexes in the same order, the most common two-object deadlock disappears.
 
 - Bad pattern: one code path updates `OrderHeader` then `OrderLine`, while another updates `OrderLine` then `OrderHeader`.
 - Better pattern: all code paths acquire locks in the same object order and with the same lookup shape.
 
-### 2. Narrow The Access Path
+#### Narrow the access path
 
 Many deadlocks are really plan problems in disguise. Broad scans, key lookups, and non-SARGable predicates expand the lock footprint and increase the chance of conflicting lock order.
 
@@ -368,7 +413,7 @@ Many deadlocks are really plan problems in disguise. Broad scans, key lookups, a
 - Remove unnecessary lookups when they widen the locking pattern.
 - Revisit parameter-sensitive plans if the deadlock happens only for some parameter values.
 
-### 3. Keep Transactions Short
+#### Keep transactions short
 
 The longer a transaction stays open, the larger the window for a cycle to form.
 
@@ -376,14 +421,22 @@ The longer a transaction stays open, the larger the window for a cycle to form.
 - Do not perform remote calls inside a transaction unless they are unavoidable.
 - Stage data first, then open the transaction only for the final mutation.
 
-### 4. Use Row Versioning For Reader/Writer Deadlocks
+### SQL Server | Isolation | Row versioning for reader/writer cycles
+
+Row versioning changes what a reader has to acquire. It cannot break writer-versus-writer cycles, but it often eliminates the reader-versus-writer half of a cycle entirely.
+
+#### Use `READ COMMITTED SNAPSHOT` or `SNAPSHOT` to break reader/writer cycles
 
 `READ COMMITTED SNAPSHOT` and `SNAPSHOT` do not fix writer-versus-writer deadlocks, but they often remove reader-versus-writer cycles caused by shared locks.
 
 - If the deadlock involves only writers, row versioning is not enough.
 - If one side is a long reader and the other is a writer, row versioning can remove that half of the cycle.
 
-### 5. Use `DEADLOCK_PRIORITY` Intentionally
+### SQL Server | T-SQL | `DEADLOCK_PRIORITY`
+
+When cycles cannot be fully eliminated, making a specific workload the designated victim turns random production pain into a predictable, retryable outcome.
+
+#### Lower deadlock priority for background workloads
 
 Sometimes the right fix is not "make deadlocks impossible"; it is "make the least important session lose predictably".
 
@@ -395,7 +448,15 @@ SET DEADLOCK_PRIORITY LOW;
 GO
 ```
 
-## Retry Policy
+## Application Retry Policy
+
+Deadlocks are a normal part of a concurrent workload, so well-behaved applications must be prepared to retry them — but only when the unit of work is safe to replay.
+
+### C# | ADO.NET | Deadlock-safe retry helper
+
+A dedicated retry helper keeps deadlock handling in one place, uses a bounded attempt count, and refuses to swallow anything other than error `1205`.
+
+#### Retry `SqlException 1205` with bounded backoff
 
 Applications should retry `1205` only when the operation is safe to replay.
 

@@ -161,20 +161,6 @@ SELECT
 
 The 30-second mark rounds up; 29 seconds rounds down. This is independent of the `datetime` 1/300-second quirk — `smalldatetime` drops everything below minute precision entirely. Use it only when working with legacy schemas; never choose it for new columns.
 
-> [!question]- Knowledge check — data types
->
-> 1. How many bytes does `datetime2(7)` use, and how does that compare to legacy `datetime`?
-> 2. Why does `CAST('2025-01-01 23:59:59.999' AS datetime)` return `2025-01-02 00:00:00`?
-> 3. When should you use `datetimeoffset` instead of `datetime2`?
-> 4. Why is `smalldatetime` still technically useful, and why should you still avoid it in new code?
->
-> **Answers**
->
-> 1. `datetime2(7)` is 8 bytes; legacy `datetime` is also 8 bytes — but `datetime2(7)` has sub-millisecond precision and the full calendar range, while `datetime` rounds to 1/300 of a second and starts from 1753.
-> 2. `datetime` rounds to the nearest 1/300 second. `.999` is closer to `1.000` than to `.996667`, so it rounds forward — crossing midnight.
-> 3. When the UTC offset is part of the contract (user-facing timestamps that must display in the viewer's original zone, audit logs that must retain the zone in which an action occurred, multi-region systems). Storing local time in a naive `datetime2` loses the offset context forever.
-> 4. It uses only 4 bytes and covers 1900–2079, which was attractive before storage was cheap. Today the savings are trivial compared to the risk of minute-level rounding and the calendar-range limit.
-
 ## Current Time Functions
 
 > [!abstract] Seven ways to ask "what time is it?"
@@ -251,19 +237,9 @@ SELECT
 > - **Interoperability**: every downstream system can present UTC in whatever local zone it wants; the reverse is harder.
 > - Store `SYSUTCDATETIME()` in a `datetime2(3)` or `datetime2(7)` column depending on how precise your domain needs to be.
 
-> [!question]- Knowledge check — current time functions
+> [!info]- Why legacy datetime rounds to 1/300 second
 >
-> 1. Which two current-time functions share the same return type and precision?
-> 2. Why does `GETDATE()` round to 1/300 of a second?
-> 3. What does `CURRENT_TIMEZONE()` return on a SQL Server container running Linux with `TZ=Europe/Paris`?
-> 4. In a new ETL pipeline, which function should populate the `loaded_at` column, and why?
->
-> **Answers**
->
-> 1. `GETDATE()` and `CURRENT_TIMESTAMP` — both return legacy `datetime` for local server time. They are aliases.
-> 2. Because `datetime` stores the fractional second as a signed integer divided by 300, and the rounding behaviour is a property of that representation. `datetime2` uses a different underlying format and does not suffer from this.
-> 3. A Windows time zone name mapped from `Europe/Paris`, typically `Romance Standard Time` per the Linux-to-Windows mapping table SQL Server uses internally.
-> 4. `SYSUTCDATETIME()` — it is timezone-unambiguous, has full precision, and matches how every other modern system records audit timestamps.
+> The `datetime` type stores the fractional second as a signed integer divided by 300, so the smallest representable step is 3.33 ms. `datetime2` uses a different underlying format (100-ns ticks) and does not suffer from this. On a SQL Server container running Linux with `TZ=Europe/Paris`, `CURRENT_TIMEZONE()` returns the Windows zone name mapped from the IANA zone — typically `Romance Standard Time` per the Linux-to-Windows mapping table SQL Server uses internally.
 
 ## DATEADD, DATEDIFF, and DATEDIFF_BIG
 
@@ -430,19 +406,9 @@ SELECT DATEDIFF_BIG(MILLISECOND, '1900-01-01', '2025-01-01') AS ms_since_1900;
 > - You need monotonic, uniquely-ordered tick counts for audit or sequencing.
 > - You are computing Unix timestamps: `DATEDIFF_BIG(SECOND, '1970-01-01', SYSUTCDATETIME())` is the standard T-SQL shape.
 
-> [!question]- Knowledge check — DATEADD and DATEDIFF
+> [!info]- Overflow threshold and tick counting
 >
-> 1. Why does `DATEADD(MONTH, 1, '2025-01-31')` return `2025-02-28` instead of `2025-03-03`?
-> 2. Why is `DATEDIFF(YEAR, '2024-12-31', '2025-01-01')` equal to `1`?
-> 3. When does `DATEDIFF(MILLISECOND, a, b)` overflow, and what do you use instead?
-> 4. Which DATEDIFF unit gives you the literal count of "ticks" between two `datetime2(7)` values?
->
-> **Answers**
->
-> 1. SQL Server clamps the resulting day to the last valid day of the target month (ISO-style). February 28th is the closest valid day to January 31st in February 2025.
-> 2. DATEDIFF counts boundaries crossed by the datepart unit, and one year boundary (midnight on January 1st) was crossed between the two dates — regardless of how much real time elapsed.
-> 3. Whenever the span in milliseconds exceeds `2^31 - 1` (about 25 days). Use `DATEDIFF_BIG(MILLISECOND, ...)` which returns `bigint`.
-> 4. `DATEDIFF_BIG(NANOSECOND, ...)` — but be careful: `nanosecond` on `datetime2(7)` is really 100-ns ticks (the underlying precision), so the count is the number of stored ticks between the two values.
+> `DATEDIFF(MILLISECOND, a, b)` overflows whenever the span exceeds `2^31 - 1` milliseconds — about **25 days**. `DATEDIFF_BIG(NANOSECOND, ...)` on `datetime2(7)` returns the count of 100-ns ticks between the two values, not true nanoseconds, because 100-ns is the underlying precision of the type.
 
 ## Date Parts and Components
 
@@ -570,20 +536,6 @@ Same answer, 1099 rows. The difference is that this form is **SARGable** — the
 > - It is SARGable — the optimizer can use any index on the column.
 > - Compute the boundary values once, pass them as parameters or literals, and let the engine do the work.
 
-> [!question]- Knowledge check — parts and SARGability
->
-> 1. Why does `DATEPART(NANOSECOND, @dt2)` max out at `999999900` for `datetime2(7)`?
-> 2. What is the difference between `DATENAME(MONTH, ...)` and `DATEPART(MONTH, ...)` — and why should production code prefer the latter?
-> 3. Name three "functions on column" patterns that break SARGability.
-> 4. What half-open range covers exactly "January 2025" on a `datetime2` column?
->
-> **Answers**
->
-> 1. Because `datetime2(7)` stores time in 100-nanosecond ticks. The largest fractional part that fits is `999999900` ns = 9,999,999 ticks. It cannot distinguish nanoseconds finer than a 100-ns increment.
-> 2. `DATENAME` returns the localized string (e.g., `April` in English, `avril` in French); `DATEPART` returns the stable integer. Production code should return stable values and do localization in the presentation layer.
-> 3. `WHERE YEAR(col) = ...`, `WHERE CAST(col AS date) = ...`, `WHERE DATEDIFF(DAY, col, GETDATE()) < ...`. All wrap the column in a function.
-> 4. `WHERE col >= '2025-01-01' AND col < '2025-02-01'`.
-
 ## Parts-Based Constructors
 
 > [!abstract] Build dates from integers, not strings
@@ -640,18 +592,6 @@ February 30th does not exist and the constructor raises error 289. Compare this 
 > - `CAST(CONCAT(yr, '-', mo, '-', dy) AS date)` succeeds in surprising ways and can hide bad data.
 > - The parts form does not depend on the session's `DATEFORMAT` or `LANGUAGE`.
 > - It is also slightly faster because there is no string allocation or parse step.
-
-> [!question]- Knowledge check — parts constructors
->
-> 1. Why is `DATETIMEOFFSETFROMPARTS(2025, 4, 8, 14, 30, 0, 0, 2, 0, 0)` preferable to `CAST('2025-04-08 14:30:00 +02:00' AS datetimeoffset)`?
-> 2. What does `DATEFROMPARTS(2025, 13, 1)` return?
-> 3. When should you still use the legacy `DATETIMEFROMPARTS` constructor?
->
-> **Answers**
->
-> 1. The parts form is locale-independent, type-checks every argument at compile time, and fails with a clear error on invalid inputs. The string form can be affected by `SET DATEFORMAT`/`SET LANGUAGE` and may parse unexpectedly across regional settings.
-> 2. It raises error 289 ("some of the arguments have values which are not valid"). Month 13 does not exist.
-> 3. Only when maintaining a legacy schema that uses `datetime` and cannot be migrated. In all new code, prefer `DATETIME2FROMPARTS`.
 
 ## EOMONTH and Business Boundaries
 
@@ -718,18 +658,6 @@ SELECT
 > - Last of quarter: `EOMONTH(DATEADD(QUARTER, DATEDIFF(QUARTER, 0, x) + 1, -1))` — or just compute first-of-next-quarter and use `< first_of_next` in a half-open range.
 > - Last of year: `DATEFROMPARTS(YEAR(x), 12, 31)`.
 > - In most query contexts, the "first of next period" form is cleaner than the "last of this period" form because it composes directly with the half-open range pattern: `col >= start AND col < next_start`.
-
-> [!question]- Knowledge check — period boundaries
->
-> 1. What does `EOMONTH('2024-02-01')` return, and why?
-> 2. How does `DATEADD(QUARTER, DATEDIFF(QUARTER, 0, x), 0)` work?
-> 3. Why is "first of next period" more useful than "last of this period" for query predicates?
->
-> **Answers**
->
-> 1. `2024-02-29`. 2024 is a leap year, so February has 29 days.
-> 2. `DATEDIFF(QUARTER, 0, x)` counts how many quarter boundaries lie between `1900-01-01` and `x`. Adding that count of quarters back to zero lands you at the start of the quarter containing `x`. The same trick works for any datepart by substituting `QUARTER` with `WEEK`, `MONTH`, `HOUR`, etc.
-> 3. Because half-open ranges (`col >= a AND col < b`) combine directly with first-of-next boundaries, without any concern for the exact moment the "end" boundary falls on. You never have to think about `23:59:59.9999999` or precision scale.
 
 ## ISO 8601 Literals and Safe Parsing
 
@@ -821,18 +749,6 @@ SELECT
 > - `TRY_CONVERT` uses the same rules as `CONVERT` (and `CAST`) but suppresses errors.
 > - `TRY_PARSE` uses .NET's `DateTime.Parse` and accepts a `USING <culture>` clause for locale-specific parsing; it is slower and should only be used when you need .NET's parsing flexibility.
 > - For ISO-formatted inputs and most other cases, prefer `TRY_CONVERT`.
-
-> [!question]- Knowledge check — literals
->
-> 1. Why is `'2025-04-08'` safer to write than `'04/08/2025'`?
-> 2. What does `TRY_CONVERT(date, '2025-13-40')` return, and how does that differ from `CAST`?
-> 3. When would you reach for `TRY_PARSE` instead of `TRY_CONVERT`?
->
-> **Answers**
->
-> 1. ISO 8601 is interpreted the same way regardless of `DATEFORMAT` or `LANGUAGE`. The slash-separated form depends on the session's `DATEFORMAT` setting and can silently flip month and day.
-> 2. `TRY_CONVERT` returns `NULL`. `CAST` (and `CONVERT` without `TRY_`) raise an error and abort the statement.
-> 3. When you need locale-specific parsing that SQL Server's built-in conversion cannot perform, and you are willing to pay the CLR overhead of invoking .NET's `DateTime.Parse`.
 
 ## AT TIME ZONE
 
@@ -938,20 +854,6 @@ The three columns are:
 > - Pass `Central Europe Standard Time` instead of `Europe/Berlin`.
 > - Pass `Eastern Standard Time` instead of `America/New_York`.
 > - If you need to cross-reference between IANA and Windows, the Linux-to-Windows mapping in the SQL Server on Linux docs is the authoritative table.
-
-> [!question]- Knowledge check — AT TIME ZONE
->
-> 1. What is the return type of `x AT TIME ZONE 'UTC'` when `x` is a `datetime2`?
-> 2. Why do you need two `AT TIME ZONE` calls to convert a naive UTC value into Paris local time?
-> 3. What does `Central Europe Standard Time` map to in IANA terms?
-> 4. How do you list the valid zone names on your server?
->
-> **Answers**
->
-> 1. `datetimeoffset`. `AT TIME ZONE` always returns `datetimeoffset`, regardless of the input type.
-> 2. The first call attaches the `UTC` zone to the naive input (turns it into a `datetimeoffset +00:00`); the second call converts that `datetimeoffset` into Paris local time. A single call against a naive value would only attach the offset, not convert.
-> 3. `Europe/Berlin` (and more broadly the Central European Time zone used by Germany, Austria, etc.). The name is historical — Windows uses one identifier per DST rule set, which is coarser than IANA.
-> 4. `SELECT name FROM sys.time_zone_info` — the catalog view reflects the zones installed on the host OS.
 
 ## DST and Boundary Pitfalls
 
@@ -1102,20 +1004,6 @@ All three April 30 events are included, and the May 1 midnight event is correctl
 > - It handles all precision scales without thinking about trailing 9s.
 > - It is SARGable (no functions on the column side).
 > - It composes naturally with first-of-next-period patterns.
-
-> [!question]- Knowledge check — DST and boundaries
->
-> 1. What happens when `AT TIME ZONE` is applied to a naive `datetime2` value during the spring-forward gap?
-> 2. Why is "`BETWEEN '2025-04-01' AND '2025-04-30'`" on a `datetime2` column wrong?
-> 3. Given two events with the same local wall-clock time during the fall-back hour, how do you distinguish them in T-SQL?
-> 4. What is the only fully reliable storage type for audit log timestamps?
->
-> **Answers**
->
-> 1. The value is converted with the *after-DST* offset, effectively snapping forward to the first valid instant. The original local value is lost.
-> 2. The literal `'2025-04-30'` parses as `2025-04-30 00:00:00`, so `BETWEEN` becomes `<= 2025-04-30 00:00:00` — excluding every event later on April 30. The fix is the half-open range `>= '2025-04-01' AND < '2025-05-01'`.
-> 3. Only by their `datetimeoffset` — the wall-clock strings are identical but the offsets differ (`+02:00` vs `+01:00`). If both are stored as naive `datetime2`, they are indistinguishable.
-> 4. `datetime2` in UTC, populated via `SYSUTCDATETIME()`. `datetimeoffset` is the only type that preserves the user's original offset, but UTC + conversion at read time is simpler for most systems.
 
 ## Practical Date Patterns
 

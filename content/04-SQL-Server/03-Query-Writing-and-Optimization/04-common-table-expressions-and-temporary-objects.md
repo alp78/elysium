@@ -169,20 +169,6 @@ This pattern replaces both one-off lookup tables and repetitive `CASE` expressio
 > - The mapping is specific to one query and should not leak into the rest of the codebase.
 > - You want an inline `INSERT` body: `INSERT INTO t (a, b) VALUES (1, 'x'), (2, 'y');` is the same constructor in statement position.
 
-> [!question]- Knowledge check — derived tables and VALUES
->
-> 1. Why can the outer `WHERE` only reference columns defined in the derived table's projection?
-> 2. What is the difference between a `VALUES` constructor in a `FROM` clause and a `VALUES` clause in an `INSERT` statement?
-> 3. Why does `VALUES (...) AS x` require a column list after the alias?
-> 4. When would you prefer a window function over an "aggregate and rejoin" derived table?
->
-> **Answers**
->
-> 1. A derived table is a named rowset; anything outside its parentheses sees only the columns it projects. The inner columns are out of scope.
-> 2. Both are row-value constructors. In `FROM`, the constructor is a rowset that gets an alias and column names. In `INSERT`, the constructor supplies literal row values to insert — no alias, column names come from the target table.
-> 3. Without a column list, the rowset has no column names and cannot be referenced by the outer query.
-> 4. When the aggregate should be computed per row without changing cardinality. `AVG(close) OVER (PARTITION BY symbol)` evaluates once and attaches the group average to every row, avoiding the join back entirely.
-
 ## Common Table Expressions
 
 > [!abstract] Naming an intermediate result set
@@ -394,20 +380,6 @@ The temp table holds a single concrete value and both `SELECT`s see it.
 > - The optimizer may inline it and run the expensive work once per reference.
 > - Non-deterministic functions (`NEWID()`, `GETDATE()`, `RAND()`) return different values on each reference.
 > - The fix is to materialize: write the result to a `#temp` table first, then reference the temp table.
-
-> [!question]- Knowledge check — CTEs
->
-> 1. Why does `WITH x AS (...) SELECT * FROM x; SELECT * FROM x;` fail on the second `SELECT`?
-> 2. What happens when a CTE containing `NEWID()` is referenced twice in a `UNION ALL`? Why?
-> 3. When is the `;WITH` leading-semicolon convention unnecessary — and why do experienced DBAs use it anyway?
-> 4. Which T-SQL shape would you use instead of a CTE if you need to reference the same intermediate result in three different `UPDATE` statements?
->
-> **Answers**
->
-> 1. A CTE exists only for the single statement directly after its `WITH` clause. The second `SELECT` is a new statement in which `x` is no longer defined.
-> 2. `NEWID()` is evaluated twice — once per reference — and produces two different GUIDs, because the optimizer inlines the CTE definition into each referencing site rather than memoizing the result.
-> 3. It is unnecessary when the CTE is the first statement of the batch or when the preceding statement is already terminated with a semicolon. Experienced DBAs use it anyway because stored procedure bodies, dynamic SQL concatenation, and code templates often obscure what is actually upstream.
-> 4. A `#temp` table — materialize the intermediate result once and reference it three times.
 
 ## Recursive CTEs
 
@@ -626,20 +598,6 @@ The query now terminates cleanly and returns 200 — the natural stopping point 
 > - You have explicit approval from a DBA, because a runaway recursion with `MAXRECURSION 0` will exhaust memory and the server's worker threads.
 > - There is no safer alternative like a `WHILE` loop with an explicit counter.
 
-> [!question]- Knowledge check — recursive CTEs
->
-> 1. What are the three mandatory parts of a recursive CTE?
-> 2. Why must the anchor and recursive members produce identical column types?
-> 3. What does `MAXRECURSION 0` do, and why is it dangerous?
-> 4. When should you prefer a persistent calendar table over a recursive date-spine CTE?
->
-> **Answers**
->
-> 1. An anchor member (the seed rowset), a recursive member (a `SELECT` that references the CTE name and produces the next rowset), and a termination condition (a filter in the recursive member that eventually makes it return zero rows). The anchor and recursive members are joined by `UNION ALL`.
-> 2. Because the recursive member's output is appended to the anchor's output and fed back as input; if the types diverge, the engine cannot unify them without implicit conversions, which breaks recursion's pipelined execution.
-> 3. It disables the default cap of 100 recursion levels, allowing unbounded recursion. If the termination condition is buggy, the engine will recurse until it runs out of memory or worker threads.
-> 4. When the spine is needed in operational code. A persistent calendar table joins cheaply, carries business-calendar metadata (holidays, fiscal weeks) for free, and does not consume recursion slots every time it is referenced.
-
 ## Temporary Tables
 
 > [!abstract] Session-scoped rowsets in tempdb
@@ -816,20 +774,6 @@ SELECT n FROM #t ORDER BY n;
 
 The pre-transaction `INSERT INTO #t VALUES (99)` survives. The three rows inserted inside `BEGIN TRAN ... ROLLBACK` are reverted. The temp table itself survives because the `CREATE TABLE` happened outside the explicit transaction — if `CREATE TABLE #t` had been inside `BEGIN TRAN`, the rollback would also drop the table.
 
-> [!question]- Knowledge check — temp tables
->
-> 1. What is the difference between a `#temp` and a `##temp` table's visibility?
-> 2. Why is "bulk-load first, index second" faster than creating the index before loading?
-> 3. What happens to a temp table created inside `BEGIN TRAN` if the transaction is rolled back?
-> 4. Why should global temp tables be avoided in most application code?
->
-> **Answers**
->
-> 1. `#temp` is session-local — only the session that created it can see it. `##temp` is global — every session on the server can read and write it for as long as any session holds a reference.
-> 2. `CREATE INDEX` on a populated table is a single-pass operation. Creating the index first forces the engine to maintain it on every `INSERT`, which is many small updates rather than one bulk operation.
-> 3. The table itself is dropped along with any data it contained. Only tables created outside the explicit transaction survive `ROLLBACK`.
-> 4. Because they are not isolated between sessions: any other session can read, write, or drop them; naming collisions are likely; and the lifetime rules depend on connection-pooling behaviour that is hard to reason about.
-
 ## Table Variables
 
 > [!abstract] Variable-scoped rowsets
@@ -939,20 +883,6 @@ OPTION (RECOMPILE);
 > - You need transaction-independent accumulation (write survives rollback).
 > - The calling pattern is a stored procedure parameter — use a TVP instead (see below).
 
-> [!question]- Knowledge check — table variables
->
-> 1. What happens to rows inserted into `@t` inside `BEGIN TRAN ... ROLLBACK`?
-> 2. What is the default cardinality estimate for a table variable, and what are its consequences?
-> 3. When is `OPTION (RECOMPILE)` the right fix for a table variable performance problem?
-> 4. Give two scenarios where a table variable is the correct choice over a temp table.
->
-> **Answers**
->
-> 1. They survive the rollback. Table variable DML is not transactional.
-> 2. One row (pre-SQL 2019 / pre-deferred-compilation). If the variable actually holds many rows, the optimizer will pick a plan optimized for a single row and perform catastrophically.
-> 3. When the variable's row count varies from call to call and the optimizer's one-row estimate produces a bad plan. `OPTION (RECOMPILE)` lets the optimizer see the real count at execution time, at the cost of a recompile per call.
-> 4. Two valid answers: (a) multi-statement TVF return types, where temp tables are not allowed; (b) accumulating state that must survive an explicit transaction rollback inside the procedure.
-
 ## Inline Table-Valued Functions
 
 > [!abstract] Parameterized reusable queries
@@ -1044,20 +974,6 @@ A multi-statement TVF wraps a table variable declaration, imperative statements,
 > - A **CTE** or **temp table** inlined into the calling query — if the reuse across queries is minimal.
 
 Starting with SQL Server 2019, some scalar UDFs and multi-statement TVFs are inlined automatically by the optimizer (the **Scalar UDF Inlining** and **TVF Inlining** features). These features significantly improve the performance of legacy code, but they are not a license to write new multi-statement TVFs: inline TVFs remain the clearest, most performant shape.
-
-> [!question]- Knowledge check — inline TVFs
->
-> 1. What is the single-statement restriction on an inline TVF?
-> 2. Why does an inline TVF typically outperform a multi-statement TVF with the same logic?
-> 3. What is the fixed cardinality estimate for a multi-statement TVF prior to SQL Server 2014?
-> 4. Which T-SQL operator is most commonly paired with an inline TVF to run it once per row of an outer rowset?
->
-> **Answers**
->
-> 1. The body must be exactly one `SELECT` statement: `RETURN ( SELECT ... )`. No `BEGIN/END`, no variables, no intermediate INSERT, no flow control.
-> 2. Because the optimizer inlines the inline TVF's body into the caller's plan and optimizes the combined query holistically. A multi-statement TVF is opaque — the optimizer sees only the function's signature and a fixed cardinality estimate.
-> 3. 100 rows, regardless of the actual output.
-> 4. `CROSS APPLY` (or `OUTER APPLY` when the inline TVF may return zero rows and you want to keep the outer row).
 
 ## Table-Valued Parameters
 
@@ -1195,19 +1111,9 @@ using var reader = await cmd.ExecuteReaderAsync();
 > - **Comma-delimited string parameters with a T-SQL split function** — fragile, no type safety, hard to parameterize sensibly.
 > - **Dynamic SQL with an `IN (...)` list built in application code** — SQL injection risk, plan cache pollution from parameterless `IN` lists.
 
-> [!question]- Knowledge check — TVPs
+> [!warning] Evolving a TVP type is painful
 >
-> 1. Why must a TVP parameter be declared `READONLY`?
-> 2. What is the operational cost of altering a user-defined table type used by an existing procedure?
-> 3. How does the calling application send a TVP value in ADO.NET?
-> 4. Which three older anti-patterns do TVPs replace?
->
-> **Answers**
->
-> 1. SQL Server enforces it at compile time to keep the caller's rowset immutable inside the procedure, which simplifies the execution model and avoids round-trip mutation semantics between client and server.
-> 2. You must drop every object that references the type, drop and recreate the type, then recreate every referencing object. This makes TVPs painful to evolve in long-lived systems — usually you introduce a new versioned type (`dbo.SymbolList_v2`) rather than altering the existing one.
-> 3. By setting `SqlDbType.Structured` on the parameter, populating a `DataTable` with the right schema, and setting `TypeName` to the fully-qualified UDTT name.
-> 4. Repeated singleton INSERTs into a staging table, comma-delimited string parameters with a T-SQL split, and dynamic SQL with an application-built `IN (...)` list.
+> Altering a user-defined table type that is referenced by an existing procedure requires dropping every referencing object, dropping and recreating the type, then recreating every object. In long-lived systems the usual pattern is to introduce a new versioned type (`dbo.SymbolList_v2`) rather than modifying the existing one.
 
 ## Decision Matrix
 
