@@ -3,12 +3,6 @@ title: "02 - Terraform: Compute"
 tags: [terraform, gcp, compute]
 aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimized OS, COS, startup script terraform]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."
-parent: "[[domain-gcp-resources]]"
-links:
-  - "[[01-terraform-networking]]"
-  - "[[03-terraform-iam-and-secrets]]"
-  - "[[04-terraform-cloud-run]]"
-  - "[[05-terraform-registry-and-ci]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -9,11 +9,6 @@ aliases:
   - point-in-time recovery
   - PITR
 description: "SQL Server restore execution patterns for full restore, side-by-side restore, point-in-time recovery, and recovery monitoring, with real restore history and validation output."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[07-backup-types-and-strategy]]"
-  - "[[01-server-configuration]]"
-  - "[[06-essential-dba-queries]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -267,8 +262,3 @@ WHERE command LIKE '%RECOVERY%';
 
 ---
 
-## Related
-
-- [[07-backup-types-and-strategy]] for the backup-chain design that makes restore possible
-- [[01-server-configuration]] for the recovery-model and RCSI decisions that shape recovery behavior
-- [[06-essential-dba-queries]] for backup and log-state checks before and after recovery work

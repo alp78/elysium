@@ -3,9 +3,6 @@ title: "14 - Testing - C#"
 tags: [testing, csharp]
 aliases: [unit testing, xUnit, NUnit, test driven development, mocking, assertions]
 description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [14-py-testing](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/14-py-testing) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[14-py-testing]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > — **Kent Beck**, *Test-Driven Development: By Example*
 
-This note covers C# testing patterns using xUnit, Moq, and FluentAssertions. For the Python equivalent using pytest and unittest.mock, see [[14-py-testing]].
+This note covers C# testing patterns using xUnit, Moq, and FluentAssertions.
 
 ### Key terms used in this note
 
@@ -1484,10 +1481,3 @@ TradingPipeline/
 | Test is non-deterministic (flaky) | Shared static state, `DateTime.Now`, or `Guid.NewGuid()` used directly | Inject `ISystemClock` or `TimeProvider`; abstract `Guid` generation behind an interface |
 | `Assert.Equal` failure message is unclear | Raw `Assert.Equal` provides minimal context | Switch to `actual.Should().Be(expected, because: "price must be rounded to 4dp")` |
 
-## Cross-References
-
-- [[14-py-testing]] — Python equivalent: pytest, unittest.mock, fixtures, pandera
-- [[08-cs-errorhandling]] — exception handling patterns tested with `Assert.Throws<T>`
-- [[19-cs-performance-quality]] — code quality tools (analyzers, coverage thresholds) that complement testing
-- [[18-cs-designpatterns]] — dependency injection and interface patterns that enable mocking
-- [[16-cs-database]] — database layer tested with integration fixtures and transactional rollback

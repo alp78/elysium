@@ -3,12 +3,6 @@ title: "05 - Terraform Plan, Apply and Destroy"
 tags: [terraform, iac]
 aliases: [terraform workflow, terraform apply, terraform plan, terraform destroy, terraform init, terraform import]
 description: "The core Terraform workflow: init, plan, apply, destroy, and importing existing resources into state. Includes the -chdir flag, targeted applies, and state inspection commands."
-parent: "[[domain-language-and-workflow]]"
-links:
-  - "[[01-hcl-syntax-basics]]"
-  - "[[03-terraform-variables-and-outputs]]"
-  - "[[02-terraform-providers-and-backend]]"
-  - "[[04-terraform-state-management]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

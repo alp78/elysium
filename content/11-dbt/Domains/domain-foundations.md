@@ -18,25 +18,8 @@ mindmap
 ```
 
 > [!abstract]- [[01-dbt-core-concepts]]
->
-> - [[dbt-core-concepts#What dbt Is (and Is Not)|What dbt is and is not]]
-> - [[dbt-core-concepts#dbt Core vs dbt Cloud|Core vs Cloud]]
-> - [[dbt-core-concepts#dbt Compilation Architecture|Compilation architecture]]
-> - [[dbt-core-concepts#The dbt DAG|The DAG]]
-> - [[dbt-core-concepts#dbt Profiles and Targets|Profiles and targets]]
 
 > [!abstract]- [[02-dbt-project-structure]]
->
-> - [[dbt-project-structure#dbt Directory Tree|Directory tree]]
-> - [[dbt-project-structure#dbt_project.yml — Fully Annotated|dbt_project.yml annotated]]
-> - [[dbt-project-structure#dbt Naming Conventions|Naming conventions]]
-> - [[dbt-project-structure#dbt Config Inheritance: Project to Folder to Model|Config inheritance]]
-> - [[dbt-project-structure#dbt Mapping to Medallion Architecture|Medallion architecture mapping]]
 
 > [!abstract]- [[03-dbt-cli-reference]]
->
-> - [[dbt-cli-reference#Core Commands Overview]]
-> - [[dbt-cli-reference#Selector Syntax|Node selection syntax]]
-> - [[dbt-cli-reference#Key Flags Reference|Key flags]]
-> - [[dbt-cli-reference#Reading CLI Output|Reading CLI output]]
 

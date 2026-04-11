@@ -3,10 +3,6 @@ title: "14 - System Functions and Session Metadata"
 tags: [sql, sql-server, tsql, system-functions, metadata-functions, session-context, scope-identity, rowcount]
 aliases: [system function reference, session metadata ROWCOUNT, SCOPE_IDENTITY]
 description: "T-SQL reference for SQL Server system functions and metadata helpers such as @@ROWCOUNT, @@TRANCOUNT, @@SPID, SCOPE_IDENTITY, IDENT_CURRENT, DB_NAME, OBJECT_ID, SESSION_CONTEXT, APP_NAME, HOST_NAME, ORIGINAL_LOGIN, and related helpers."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[18-stored-procedures-dynamic-sql-and-error-handling]]"
-  - "[[08-date-and-time-functions]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -126,8 +122,4 @@ Use them in auditing, troubleshooting, and procedure logging.
 - Use `SESSION_CONTEXT` for structured per-session tags instead of ad hoc temp tables or string parsing.
 - Use metadata helpers such as `OBJECT_ID` and `DB_NAME` to make scripts idempotent and environment-aware.
 
-## Related
-
-- [[18-stored-procedures-dynamic-sql-and-error-handling]]
-- [[08-date-and-time-functions]]
 

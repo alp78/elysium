@@ -22,11 +22,6 @@ description: >
   integration for Airflow/Spark/dbt, data quality scans, impact analysis workflows,
   and a comparison of GCP-native vs open-source alternatives. Dense with gcloud
   commands, Python SDK examples, YAML configurations, and actionable checklists.
-parent: "[[domain-gcp-native-monitoring]]"
-links:
-  - "[[01-gcp-cloud-monitoring-deep-dive]]"
-  - "[[02-gcp-cloud-trace-and-logging]]"
-  - "[[03-gcp-pipeline-health-and-sla]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

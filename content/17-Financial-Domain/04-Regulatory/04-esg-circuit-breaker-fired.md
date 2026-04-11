@@ -5,11 +5,6 @@ type: runbook
 technology: [python, bigquery, sql-server]
 status: stable
 updated: 2026-04-08
-parent: "[[domain-regulatory]]"
-links:
-  - "[[01-eu-bmr-benchmark-regulation]]"
-  - "[[02-iosco-benchmark-principles]]"
-  - "[[03-sfdr-data-requirements]]"
 ---
 
 # ESG Circuit Breaker Fired
@@ -37,5 +32,5 @@ Use this runbook when ESG quality gates stop publication because the upstream da
 
 ## Related
 
-- [[03-sfdr-data-requirements]] — regulatory output that depends on normalized ESG data
+
 - [data-sources-and-refresh](https://alp78.github.io/elysium/17-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh) — upstream refresh and ingestion timing

@@ -4,10 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "CLI commands, node selection, flags, output interpretation"
-parent: "[[domain-foundations]]"
-links:
-  - "[[01-dbt-core-concepts]]"
-  - "[[02-dbt-project-structure]]"
 ---
 
 # dbt: CLI Reference

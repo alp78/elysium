@@ -4,13 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-py-visualization]]"
-  - "[[08-cs-visualization]]"
-  - "[[09-cs-database-interface]]"
-  - "[[10-py-testing-migration]]"
-  - "[[10-cs-testing-migration]]"
 created: 2026-03-24
 updated: 2026-04-04
 status: complete
@@ -4170,10 +4163,3 @@ print("Test tables and procedures cleaned up")
 | DuckDB query returns wrong types | DuckDB infers types independently from Polars/Pandas | Cast columns explicitly in the SQL query |
 | `read_sql()` returns empty DataFrame | Query returns no rows, or wrong database/schema targeted | Run the query directly in the database client to verify |
 
-## Cross-references
-
-- **C# counterpart:** [[09-cs-database-interface]] — database connectivity using ADO.NET and Polars.NET
-- **Previous in sequence:** [[08-py-visualization]] — visualizing query results
-- **Next in sequence:** [[10-py-testing-migration]] — testing database-backed pipelines and migration
-- **Types and interop:** [[07-py-types-interop]] — data type mapping between DataFrames and databases
-- **Domain index:** [[domain-integrate-and-validate]] — parent domain page for this note

@@ -10,13 +10,6 @@ tags:
   - security
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
 description: "Production guidance for organizing SQL Server databases and schemas in layered data systems, grounded in the live stoxx schema layout and focused on permissions, ownership, and operational boundaries."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[01-sql-server-loading-patterns]]"
-  - "[[10-sql-server-change-tracking]]"
-  - "[[05-sql-server-incremental-transforms]]"
-  - "[[08-sql-server-pipeline-anti-patterns]]"
-  - "[[07-pipeline-integration-and-devex]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -563,14 +556,6 @@ The live database already has the right backbone:
 - reserve `audit`, `history`, or `contract` schemas for clear non-layer purposes instead of letting those objects drift into `dbo`
 - keep demos disposable and clearly separated from production-facing objects
 - start using schema-level roles if this environment becomes more than a single-admin sandbox
-
-## Related
-
-- [[01-sql-server-loading-patterns]]
-- [[05-sql-server-incremental-transforms]]
-- [[10-sql-server-change-tracking]]
-- [[08-sql-server-pipeline-anti-patterns]]
-- [[07-pipeline-integration-and-devex]]
 
 ## References
 

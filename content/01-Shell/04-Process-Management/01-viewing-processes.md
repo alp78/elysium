@@ -7,17 +7,6 @@ tags: [shell, process-management]
 aliases: [ps aux, htop, top, pstree, process list, process monitoring, iostat, docker stats]
 keywords: [ps aux, htop, top, pstree, process list, PID, CPU usage, memory usage, RSS, VSZ, zombie process, D state, uninterruptible sleep, iostat, docker stats, process tree, uptime, load average, free memory]
 description: "Linux and PowerShell commands for viewing running processes, understanding resource usage, and diagnosing system performance issues. Covers ps aux, htop, top, pstree, and the D state (uninterruptible sleep) that cannot be killed."
-parent: "[[domain-system-and-network]]"
-links:
-  - "[[04-system-resources]]"
-  - "[[02-killing-processes]]"
-  - "[[03-managing-services]]"
-  - "[[01-connectivity-testing]]"
-  - "[[03-socket-inspection]]"
-  - "[[02-http-requests-and-apis]]"
-  - "[[04-firewalls]]"
-  - "[[05-iap-tunneling]]"
-  - "[[06-connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

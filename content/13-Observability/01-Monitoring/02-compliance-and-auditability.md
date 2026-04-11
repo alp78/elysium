@@ -11,10 +11,6 @@ aliases:
   - price adjustment factor
   - divisor
   - EU BMR
-parent: "[[domain-strategy-and-foundations]]"
-links:
-  - "[[01-observability-strategy-matrix]]"
-  - "[[01-observability-deep-dive]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

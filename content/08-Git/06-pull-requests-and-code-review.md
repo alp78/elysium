@@ -7,12 +7,6 @@ tags:
   - code-review
 aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."
-parent: "[[domain-branching-and-collaboration]]"
-links:
-  - "[[03-git-branching-and-merging]]"
-  - "[[04-merge-vs-rebase-vs-squash]]"
-  - "[[10-git-merge-conflicts]]"
-  - "[[05-git-remote-management]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

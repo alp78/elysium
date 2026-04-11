@@ -3,9 +3,6 @@ title: "18 - Design Patterns - C#"
 tags: [csharp, design-patterns]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [18-py-designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/18-py-designpatterns) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[18-py-designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
 
-This note documents C# design patterns and architectural idioms, including ASP.NET Core's built-in DI container, for data engineering and backend development. For the Python equivalent implementation, see [[18-py-designpatterns]].
+This note documents C# design patterns and architectural idioms, including ASP.NET Core's built-in DI container, for data engineering and backend development.
 
 ### Key terms used in this note
 
@@ -934,10 +931,3 @@ flowchart TD
 | Reflection `GetValue` returns `null` for a non-null property | Property is write-only or has a backing field with a different name | Check `PropertyInfo.CanRead`; use `GetField` with `BindingFlags.NonPublic` for backing fields |
 | Decorator not invoked — original service called directly | DI container still resolves the unwrapped concrete type | Register decorator via `services.Decorate<IService, LoggingDecorator>()` (Scrutor) or manually re-register |
 
-## Cross-References
-
-- [[18-py-designpatterns]] — Python implementations of every pattern covered here: ABC, module-level singleton, callback bus, Pydantic validation
-- [[domain-language-foundations]] — parent MOC linking all Python and C# language notes
-- [[17-cs-testing]] — applying the Repository and DI patterns to write unit tests with mock implementations and `WebApplicationFactory`
-- [[14-cs-oop]] — interfaces, abstract classes, and `IDisposable` foundations that underpin these patterns
-- [[15-cs-collections]] — `IEnumerable<T>` and `IReadOnlyList<T>` used as repository return types throughout this note

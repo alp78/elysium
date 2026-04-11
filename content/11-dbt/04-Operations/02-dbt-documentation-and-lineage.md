@@ -4,16 +4,6 @@ tags: [pipeline, observability, dbt]
 status: stable
 updated: 2026-03-23
 description: "dbt docs generate, exposures, lineage graph, static hosting on GCS, Dataplex/DataHub integration, and regulatory traceability for EU BMR."
-parent: "[[domain-operations-and-adapters]]"
-links:
-  - "[[01-dbt-airflow-integration]]"
-  - "[[05-dbt-ci-cd]]"
-  - "[[03-dbt-observability]]"
-  - "[[04-dbt-performance-tuning]]"
-  - "[[06-dbt-troubleshooting]]"
-  - "[[02-dbt-bigquery-adapter]]"
-  - "[[01-dbt-sqlserver-adapter]]"
-  - "[[03-dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: Documentation and Lineage

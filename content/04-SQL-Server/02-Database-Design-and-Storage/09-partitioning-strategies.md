@@ -3,11 +3,6 @@ title: "09 - Partitioning Strategies"
 tags: [sql, sql-server, storage, tsql]
 aliases: [table partitioning, partition function, partition scheme, sliding window, partition elimination, switch partition]
 description: "Production guide to SQL Server table partitioning: when partitioning helps, how partition functions and schemes work, partition elimination, metadata-only SWITCH operations, and the sliding-window SPLIT/MERGE pattern."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[06-index-types-and-strategy]]"
-  - "[[07-index-maintenance]]"
-  - "[[08-table-compression]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -440,9 +435,4 @@ _The partition map grows from four partitions to five when the future boundary i
 - Compress colder partitions more aggressively than hot ones when the data lifecycle supports it.
 - Prefer an empty future partition before the next load window so `SPLIT` is planned, not reactive.
 
-## Related
-
-- [[06-index-types-and-strategy]]
-- [[07-index-maintenance]]
-- [[08-table-compression]]
 

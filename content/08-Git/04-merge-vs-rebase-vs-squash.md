@@ -6,12 +6,6 @@ tags:
   - rebase
 aliases: [merge vs rebase, rebase vs squash, git merge strategies]
 description: "Comparison of Git merge strategies — standard merge, rebase, and squash merge — with guidance on when to use each."
-parent: "[[domain-branching-and-collaboration]]"
-links:
-  - "[[03-git-branching-and-merging]]"
-  - "[[10-git-merge-conflicts]]"
-  - "[[05-git-remote-management]]"
-  - "[[06-pull-requests-and-code-review]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

@@ -1,15 +1,16 @@
 ---
 title: "02 - Storage Internals"
-tags: [sql, sql-server, storage, tsql]
+tags:
+  - sql-server
+  - storage-internals
+  - pages
+  - transaction-log
+  - vlf
+  - tempdb
+  - heap
+  - page-splits
 aliases: [SQL Server pages, extents, WAL, write-ahead logging, VLF, forwarding records, page splits, tempdb internals]
 description: "Production guide to SQL Server storage internals: file layout, 8 KB pages, write-ahead logging, log and VLF health, heap forwarding records, page splits, and tempdb behavior, grounded in live stoxx output."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[06-index-types-and-strategy]]"
-  - "[[08-table-compression]]"
-  - "[[09-partitioning-strategies]]"
-  - "[[07-index-maintenance]]"
-  - "[[11-memory-and-buffer-pool]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -28,6 +29,8 @@ Storage internals explain why the same SQL text can behave very differently depe
 
 ## Core Model
 
+SQL Server manages rowstore data in a small number of physical units that every storage topic in this note builds on. Pages are the unit of I/O, extents are the unit of allocation, data and log files carry different durability guarantees, and VLFs are the internal slices that govern log reuse. The table below fixes the sizes and operational meaning of each unit so the later DMV output can be read against a concrete frame of reference.
+
 | Unit | Size | What it means operationally |
 |---|---:|---|
 | Page | 8 KB | SQL Server reads and writes disk-based rowstore data one page at a time. |
@@ -38,10 +41,17 @@ Storage internals explain why the same SQL text can behave very differently depe
 
 ## Inspect The Current File Layout
 
+Any sizing, growth, or capacity investigation on a SQL Server database starts with the physical file layout. Before looking at fragmentation, log pressure, or `tempdb` behavior, confirm how many files the database has, which volumes they live on, how they are allowed to grow, and whether any of them is uncapped. The `sys.database_files` catalog view is the authoritative source for this information.
+
 ### `sys.database_files` | verify how the database is physically configured
 
-> [!info]-
-> This query inspects the physical files that make up the current database.
+`sys.database_files` is a per-database catalog view that returns one row per file composing the current database. It is the first query to run when investigating growth events, disk-space incidents, or unexpected capacity consumption, because it exposes file type, physical path, current size, growth increment, and maximum cap in a single result set.
+
+#### List data and log files with size, growth, and cap
+
+Report every physical file of the current database along with the normalized size, growth setting, and maximum cap. Percent growth is flagged separately so the operator can see at a glance whether growth will scale with file size.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `sys.database_files` returns one row per database file in the current database.
 > - `file_id` is the stable file identifier used by many low-level DMVs and DBCC commands.
@@ -51,7 +61,9 @@ Storage internals explain why the same SQL text can behave very differently depe
 > - `max_size` is converted into a readable form. `-1` means unlimited growth.
 > - `growth` is normalized so the output clearly shows whether growth is in fixed MB increments or percentages.
 > - `is_percent_growth` is important operationally because percent growth becomes increasingly expensive and unpredictable as the file grows.
->
+
+*List every physical file that composes the current database with its size, growth setting, and maximum cap.*
+
 ```sql
 SELECT
     file_id,
@@ -85,10 +97,17 @@ ORDER BY file_id;
 
 ## Inspect A Real Data Page
 
+Reading the file layout tells the operator how storage is structured at the file level, but it says nothing about how rows are laid out inside an 8 KB page. To reason about clustered-index scans, B-tree traversal, forwarding records, and page splits later in this note, it helps to first look at one real leaf page from a production table and read its header metadata and sibling linkage directly.
+
 ### `sys.dm_db_database_page_allocations` + `sys.dm_db_page_info` | inspect one live data page
 
-> [!info]-
-> This batch finds one real data page from `silver.eurostoxx50_ohlcv` and then inspects the page header metadata.
+`sys.dm_db_database_page_allocations` enumerates the pages allocated to an object, and `sys.dm_db_page_info` reads the header of a specific page by `(database_id, file_id, page_id)`. Used together they let the operator pick one real row-bearing page from a clustered index and examine its slot count, free bytes, and neighbor links without attaching a debugger or running undocumented DBCC commands.
+
+#### Read header metadata and linkage of one leaf data page
+
+Select one leaf `DATA_PAGE` from the clustered index of a production table, capture its `file_id` and `page_id`, then pass those identifiers to `sys.dm_db_page_info` to read the header.
+
+> [!info]- Batch breakdown
 >
 > - `sys.dm_db_database_page_allocations` returns the pages allocated to an object.
 > - `OBJECT_ID(N'silver.eurostoxx50_ohlcv')` targets a real production table instead of a synthetic object.
@@ -98,7 +117,9 @@ ORDER BY file_id;
 > - `page_level = 0` means this is a leaf-level page, not an internal B-tree branch page.
 > - `slot_count` is the number of row slots on the page.
 > - `free_bytes` shows how much free space remains on that page at capture time.
->
+
+*Pick one real leaf data page from a production table and read its header metadata and linkage.*
+
 ```sql
 DECLARE @file_id int, @page_id int;
 
@@ -147,19 +168,42 @@ FROM sys.dm_db_page_info(DB_ID(), @file_id, @page_id, 'DETAILED');
 ## Write-Ahead Logging And Log Health
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart LR
-    A[Row Modification] --> B[Log Records Generated]
-    B --> C[Log Records Flushed To .ldf]
-    C --> D[Transaction Can Commit]
-    D --> E[Dirty Page Can Flush Later]
+    A["Row Modification"] --> B["Log Records Generated"]
+    B --> C["Log Records Flushed To .ldf"]
+    C --> D["Transaction Can Commit"]
+    D --> E["Dirty Page Can Flush Later"]
+
+    style A fill:#292e42,stroke:#7aa2f7,stroke-width:2px,color:#c0caf5
+    style B fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style C fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style D fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style E fill:#24283b,stroke:#e0af68,color:#c0caf5
 ```
 
 Write-ahead logging means the log is durable first and the data page is durable later. A committed row can still live only in memory for a while, but the change is already safe because the log record was flushed first.
 
 ### `sys.dm_db_log_space_usage` | check current log pressure
 
-> [!info]-
-> This query combines database metadata with the current log-usage DMV so you can assess log pressure in one result.
+`sys.dm_db_log_space_usage` reports the current size and used percentage of the transaction log for the database the query runs in, together with the number of bytes accumulated since the last log backup. Combined with the recovery model from `sys.databases`, it is the fastest way to tell whether the log is under pressure and whether the log-backup chain is keeping up with write activity.
+
+#### Report log size, used percent, and log since last backup
+
+Join `sys.databases` with `sys.dm_db_log_space_usage` to report the recovery model, total log size, used percent, free space, and how much log has accumulated since the last log backup. In `FULL` or `BULK_LOGGED` recovery, the last column is the single most important reuse signal.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `sys.databases` contributes the recovery model.
 > - `sys.dm_db_log_space_usage` contributes the current log footprint for the current database.
@@ -167,7 +211,9 @@ Write-ahead logging means the log is durable first and the data page is durable 
 > - `used_log_mb` and `used_log_pct` show how much of that log is currently occupied.
 > - `free_log_mb` is computed for readability.
 > - `log_since_last_backup_mb` matters most in `FULL` or `BULK_LOGGED` recovery, because regular log backups are what allow inactive VLFs to be reused.
->
+
+*Report the current log size, used percentage, and log accumulated since the last log backup.*
+
 ```sql
 SELECT
     d.name AS database_name,
@@ -201,14 +247,21 @@ WHERE d.database_id = DB_ID();
 
 ### `sys.dm_db_log_info` | inspect VLF count
 
-> [!info]-
-> This query summarizes the current virtual log file layout.
+`sys.dm_db_log_info` returns one row per virtual log file in the current database's transaction log. The total number of VLFs, the number currently active, and the total VLF footprint together indicate whether the log has been fragmented by repeated small growth events, which can slow recovery, startup, and some log-reader operations.
+
+#### Count total and active VLFs in the current log
+
+Aggregate `sys.dm_db_log_info` to return total VLF count, active VLF count, and summed VLF size. A large total count with only a small active portion is healthy; a total close to or exceeding 200 is a sign that growth increments have been too small historically.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `sys.dm_db_log_info(DB_ID())` returns one row per VLF in the current database log.
 > - `vlf_count` is the total number of VLFs.
 > - `active_vlf_count` is the number of currently active VLFs.
 > - `total_vlf_size_mb` confirms the summed VLF footprint matches the actual log size.
->
+
+*Count total and active VLFs to detect log fragmentation from repeated small growth events.*
+
 ```sql
 SELECT
     COUNT(*) AS vlf_count,
@@ -233,16 +286,28 @@ FROM sys.dm_db_log_info(DB_ID());
 
 ### `sys.fn_dblog` | confirm that one row change writes multiple log records
 
-> [!warning]
-> `sys.fn_dblog` is undocumented and unsupported. Use it only for controlled diagnostics, not as a routine application dependency.
+`sys.fn_dblog` exposes the active portion of the transaction log at the log-record level. It is valuable for one specific teaching point: a single business-level row modification is not a single log record. SQL Server also logs page formatting, allocation-map bits, and PFS updates, and `sys.fn_dblog` makes those secondary log records directly visible for a disposable test table.
+
+#### Inspect recent log records for a single demo table
+
+Filter `sys.fn_dblog` output by `AllocUnitName` to restrict results to one disposable table, then select the top five most recent log records to show the `INSERT`, page format, allocation-map update, and PFS modification that one row change generates.
+
+> [!warning] Undocumented DMV
 >
-> [!info]-
-> This query inspects the most recent log records associated with a disposable demo table.
+> `sys.fn_dblog` is undocumented and unsupported by Microsoft. It is not part of the public DMV contract, its output columns can change between builds, and it can take schema locks while reading the active log.
+
+> [!success] Disposable diagnostic only
+>
+> Use `sys.fn_dblog` only for interactive troubleshooting on controlled, disposable tables. Never embed it in application code, monitoring jobs, or recurring scheduled tasks. For supported log-health signals, prefer `sys.dm_db_log_space_usage`, `sys.dm_db_log_info`, and `sys.dm_db_log_stats` instead.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `sys.fn_dblog(NULL, NULL)` reads the active portion of the transaction log.
 > - The filter limits the result to one demo table so the output stays interpretable.
 > - The result shows that a simple `INSERT` is not a single physical action. SQL Server logs row insertion, page formatting, allocation-map changes, and allocation bookkeeping.
->
+
+*Read the most recent log records for a disposable demo table to reveal the multi-record cost of a single `INSERT`.*
+
 ```sql
 SELECT TOP (5)
     [Current LSN],
@@ -277,18 +342,28 @@ ORDER BY [Current LSN] DESC;
 
 ## Heap Forwarding Records
 
-> [!example]
-> This demo is intentionally disposable. It shows why mutable heaps age poorly when updated rows no longer fit on their original pages.
->
-### Setup
+A heap is a table with no clustered index, so rows are stored in no particular key order. When an `UPDATE` widens a row beyond the free space remaining on its current page, SQL Server does not reorganize the heap; it moves the row to a page with enough space and leaves a forwarding pointer on the original page. Every subsequent read that lands on the original page pays an extra I/O to follow the pointer. Forwarding records therefore act as a structural tax that grows over time on any mutable heap, and `sys.dm_db_index_physical_stats` exposes their count directly.
 
-> [!info]-
-> This batch creates a small heap and inserts narrow rows.
+> [!example] Mutable heaps age poorly
+>
+> A disposable heap with 200 narrow rows is used below to reproduce the failure mode: widening half the rows forces forwarding pointers to appear, which would otherwise require a long-running production workload to observe.
+
+### Setup | create a heap with 200 narrow rows
+
+The first step of the reproduction is to create a table with no clustered index and seed it with 200 narrow rows that pack densely onto a single 8 KB page. This establishes a known clean starting state so the forwarding-record count can be measured before and after the widening update.
+
+#### Create a heap and seed 200 narrow rows
+
+Drop any previous copy of the demo table, create a heap with an `int` key column and a short `varchar(800)` payload, and insert 200 rows whose payload is 20 bytes of padding. The `ROW_NUMBER()` generator from `sys.all_objects` is a common idiom for producing a small sequential series without a numbers table.
+
+> [!info]- Script breakdown
 >
 > - The table has no clustered index, so it is a heap.
 > - The initial payload is short so most rows fit densely on the original page.
 > - The widening update later will force SQL Server to move some rows to different pages and leave forwarding pointers behind.
->
+
+*Create a fresh heap and insert 200 narrow rows that pack densely onto a single page.*
+
 ```sql
 DROP TABLE IF EXISTS dbo.demo_storage_heap_forwarding;
 
@@ -308,15 +383,22 @@ SELECT n.row_id, REPLICATE('A', 20)
 FROM n;
 ```
 
-### Baseline
+### Baseline | confirm a clean heap with zero forwarding records
 
-> [!info]-
-> This query checks the physical state of the heap before the widening update.
+Before widening any rows, capture the physical state of the heap so the post-update comparison has a known reference. `sys.dm_db_index_physical_stats` returns the page count, record count, and forwarded record count required to prove that the starting state is clean.
+
+#### Measure heap page count and forwarding records before widening
+
+Call `sys.dm_db_index_physical_stats` with the object id of the heap and `index_id = 0`, using the `'DETAILED'` scanning mode to force a full read of every page so forwarded record counts are accurate.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `sys.dm_db_index_physical_stats` returns low-level physical information about the object.
 > - `index_id = 0` means heap storage.
 > - `forwarded_record_count` is the critical column here. In a healthy fresh heap it should be zero.
->
+
+*Check the physical state of the heap before any widening update.*
+
 ```sql
 SELECT
     index_type_desc,
@@ -338,28 +420,42 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_heap_f
 | `forwarded_record_count` | `0` | &#9989; | No forwarding pointers exist. | Reads do not need extra heap hops yet. |
 | `forwarded_record_count` | `> 0` | &#10060; | Some rows were moved and left forwarding stubs. | Heap lookups now require extra page visits. |
 
-### Widen The Rows
+### Widen The Rows | expand half the rows beyond their original slot size
 
-> [!info]-
-> This update makes half the rows much larger.
+With the baseline established, an `UPDATE` is issued that makes half of the existing rows significantly larger than their current slot. Because the table is a heap, SQL Server has no clustered key order to preserve and relocates any widened row that no longer fits on its original page.
+
+#### Widen half the rows to force forwarding pointers
+
+Run a single `UPDATE` that replaces the payload of every even-numbered row with 500 bytes of padding. Updates of odd-numbered rows are untouched, leaving a mixed state where some slots are still on their original page and others point forward.
+
+> [!info]- Update breakdown
 >
 > - The widened payload no longer fits the original packed layout.
 > - Because this is a heap, SQL Server can move rows elsewhere and leave forwarding pointers behind instead of maintaining a clustered key order.
->
+
+*Double the payload size of every even-numbered row so many rows no longer fit their original slot.*
+
 ```sql
 UPDATE dbo.demo_storage_heap_forwarding
 SET payload = REPLICATE('Z', 500)
 WHERE row_id % 2 = 0;
 ```
 
-### Post-change Validation
+### Post-change Validation | observe pages and forwarding records after widening
 
-> [!info]-
-> This is the same physical-stats query after the widening update.
+Re-running the same `sys.dm_db_index_physical_stats` query after the widening update quantifies the structural cost. The business row count is unchanged at 200, so any increase in `page_count` and any non-zero `forwarded_record_count` is attributable entirely to the storage layout response.
+
+#### Re-measure page count and forwarding records after widening
+
+Issue the identical query used in the baseline step. The page count, record count, and forwarded record count are the three fields that reveal how the heap absorbed the widening update.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - Compare `page_count` and `forwarded_record_count` to the baseline.
 > - The rows themselves are still only 200 business rows, but the physical storage now includes forwarding overhead.
->
+
+*Re-run the heap physical-stats query after the widening update to observe forwarding records.*
+
 ```sql
 SELECT
     index_type_desc,
@@ -383,20 +479,35 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_heap_f
 
 ## Page Splits
 
-> [!warning]
-> Do not use fragmentation percentage in isolation. Small objects can show dramatic percentages without being a maintenance priority. Use this demo to understand the mechanism, not as a rebuild threshold.
->
-> [!example]
-> This demo shows how widening updates can force a clustered index to split pages and consume more space.
->
-### Setup
+A page split occurs when an `INSERT` or `UPDATE` needs to place a row on a leaf page that no longer has enough free space to accept it. SQL Server allocates a new page, moves roughly half the existing rows onto it, and links the new page into the doubly-linked leaf chain. The result is extra space consumption, out-of-order leaf pages, and the fragmentation value that `sys.dm_db_index_physical_stats` reports as `avg_fragmentation_in_percent`. Splits are the natural counterpart to heap forwarding records: both are what happens when existing rows no longer fit their original slot.
 
-> [!info]-
-> This batch creates a clustered table with narrow rows.
+> [!warning] Fragmentation percentage is not a threshold
+>
+> Do not use `avg_fragmentation_in_percent` in isolation. Small objects can show dramatic percentages (50-100%) without being a maintenance priority because the absolute page count is trivial. Triggering rebuilds on percentage alone causes unnecessary I/O and log churn on objects where the split pattern is irrelevant.
+
+> [!success] Use page count and workload together
+>
+> Combine `avg_fragmentation_in_percent` with `page_count` and the workload type before deciding to rebuild. Treat indexes below ~1,000 pages as noise regardless of percentage, focus maintenance on large indexes with sustained range scans, and prefer targeted fill-factor tuning over blind rebuilds for known hot-spot patterns.
+
+> [!example] Widening updates force page splits
+>
+> A disposable clustered table with 200 narrow rows is used below to reproduce the split mechanism: widening every row forces the leaf level to allocate additional pages, and the fragmentation column reflects the result.
+
+### Setup | create a clustered table with 200 narrow rows
+
+The first step mirrors the heap demo, but the table now carries a clustered primary key on `row_id`. SQL Server therefore maintains a key-ordered leaf chain, so any later widening update that cannot fit a row in place must split the affected page rather than relocate the row freely.
+
+#### Create a clustered table and seed 200 narrow rows
+
+Drop any previous copy of the table, create it with a `PRIMARY KEY CLUSTERED` on `row_id`, and seed it with 200 rows whose payload is 20 bytes of padding. The starting layout packs all rows onto a single leaf page.
+
+> [!info]- Script breakdown
 >
 > - The table starts compact and ordered by `row_id`.
 > - The later widening update forces the leaf level to allocate more pages.
->
+
+*Create a clustered-index table with 200 narrow rows packed densely on one leaf page.*
+
 ```sql
 DROP TABLE IF EXISTS dbo.demo_storage_page_splits;
 
@@ -417,15 +528,22 @@ SELECT n.row_id, REPLICATE('A', 20)
 FROM n;
 ```
 
-### Baseline
+### Baseline | confirm one leaf page with zero fragmentation
 
-> [!info]-
-> This query inspects only the leaf level of the clustered index.
+Before widening any rows, capture the leaf-level page count and fragmentation so the post-update result can be compared against a known clean state. The baseline also confirms that the table is small enough to fit on a single leaf page at the start.
+
+#### Measure leaf page count and fragmentation before widening
+
+Call `sys.dm_db_index_physical_stats` against the clustered index (`index_id = 1`) in `'DETAILED'` mode and filter to `index_level = 0` so only the leaf level is returned. Non-leaf levels are irrelevant to row-read performance in this example.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `index_level = 0` isolates the leaf pages where the actual rows live.
 > - `avg_fragmentation_in_percent` is measured only on the leaf level.
 > - `page_count` shows how many leaf pages the clustered index currently needs.
->
+
+*Measure leaf-level fragmentation and page count before any widening update.*
+
 ```sql
 SELECT
     index_level,
@@ -449,28 +567,42 @@ WHERE index_level = 0;
 | `avg_fragmentation_in_percent` | `5 - 30` | ⚠ | Evaluate in context. | Check page count and workload type before rebuilding. |
 | `avg_fragmentation_in_percent` | `> 30` | &#10060; | Material fragmentation on meaningful objects. | Often worth maintenance when page count is also substantial. |
 
-### Widen The Rows
+### Widen The Rows | expand every row so the leaf level must split
 
-> [!info]-
-> This update makes every row much wider.
+Unlike the heap demo, every row is widened this time. Because the clustered index must preserve key order, the engine cannot relocate individual rows freely; instead it allocates new leaf pages and splits the existing page contents across them.
+
+#### Widen every row to force leaf-level page splits
+
+Run a single `UPDATE` that replaces the payload of every row with 500 bytes of padding. The clustered key column is not touched, so the update is purely about fitting larger rows into the existing leaf chain.
+
+> [!info]- Update breakdown
 >
 > - The clustered key stays the same.
 > - The leaf level must allocate more pages to keep the larger rows.
 > - This is a classic route to page splits and extra read amplification.
->
+
+*Widen every row so the leaf level must allocate more pages to hold the payload.*
+
 ```sql
 UPDATE dbo.demo_storage_page_splits
 SET payload = REPLICATE('Y', 500);
 ```
 
-### Post-change Validation
+### Post-change Validation | observe page count and fragmentation after widening
 
-> [!info]-
-> This reruns the same leaf-level physical-stats query after the widening update.
+Re-running the same leaf-level query after the widening update makes the split visible: the leaf page count rises, fragmentation appears where there was none, and the record count stays fixed at the original 200.
+
+#### Re-measure leaf page count and fragmentation after widening
+
+Issue the identical leaf-level query used in the baseline. The change in `page_count` and `avg_fragmentation_in_percent` relative to the baseline is the storage cost imposed by the widening update.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - Compare both `page_count` and `avg_fragmentation_in_percent` to the baseline.
 > - The row count is unchanged, so any growth is purely storage overhead created by the wider rows.
->
+
+*Re-run the leaf-level physical-stats query after the widening update to observe the page splits.*
+
 ```sql
 SELECT
     index_level,
@@ -485,7 +617,7 @@ WHERE index_level = 0;
 |---:|---:|---:|---:|
 | 0 | 12.00 | 25 | 200 |
 
-*The row count stayed at 200, but the leaf level expanded from 1 page to 25 pages and fragmentation rose from 0% to 12%. The exact percentage is not the main lesson here because the object is tiny; the real lesson is that widening rows forces additional pages and breaks the original dense layout.*
+*The row count stayed at 200, but the leaf level expanded from 1 page to 25 pages and fragmentation rose from 0% to 12%. On an object this small the exact percentage is not actionable on its own; the structural effect is what matters: widening rows forces the clustered index to allocate additional leaf pages and breaks the original dense layout.*
 
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
@@ -495,17 +627,26 @@ WHERE index_level = 0;
 
 ## `tempdb` Space By Category
 
+`tempdb` is shared by every session on the instance and absorbs several distinct kinds of workload: temp tables and table variables from user sessions, worktables and sorts from the query executor, and row versions from snapshot isolation, RCSI, and online index operations. When `tempdb` is under pressure, the useful question is not how full it is overall but which category is consuming the space, because the remediation is different for each one.
+
 ### `tempdb.sys.dm_db_file_space_usage` | see what is consuming `tempdb`
 
-> [!info]-
-> This query summarizes `tempdb` usage by allocation category.
+`sys.dm_db_file_space_usage` returns per-file allocation counters for every database, but when run against `tempdb` specifically it exposes the page-count breakdown by category that the operator needs to localize pressure: free pages, version store, user objects, internal objects, and mixed extents.
+
+#### Break down tempdb by unallocated, version store, user, internal, and mixed
+
+Aggregate the reserved-page counts across all `tempdb` files and convert from 8 KB pages to megabytes for each category. The resulting five columns tell the operator whether pressure is coming from versioning, user scratch objects, internal executor workspace, or nothing at all.
+
+> [!info]- Clause-by-clause breakdown
 >
 > - `unallocated_mb` is free space already inside the `tempdb` files.
 > - `version_store_mb` is row-version storage used by snapshot isolation, RCSI, online index operations, and some internal consumers.
 > - `user_object_mb` covers temp tables, table variables, and other user-created objects materialized in `tempdb`.
 > - `internal_object_mb` covers worktables, sorts, hashes, spools, and other internal engine work.
 > - `mixed_extent_mb` is low-level allocation overhead and is usually a secondary signal.
->
+
+*Break down current `tempdb` usage by allocation category: free, version store, user objects, internal objects, and mixed extents.*
+
 ```sql
 SELECT
     CAST(SUM(unallocated_extent_page_count) * 8.0 / 1024 AS decimal(18,2)) AS unallocated_mb,
@@ -533,6 +674,8 @@ FROM tempdb.sys.dm_db_file_space_usage;
 
 ## Production Recommendations
 
+The following recommendations translate the storage internals covered in the preceding sections into operating rules for production databases. They apply to any OLTP or mixed workload on SQL Server and cover file growth, log backups, heap design, index maintenance, and `tempdb` monitoring.
+
 - Use fixed MB growth, not percent growth, for both data and log files.
 - Do not leave primary data files effectively uncapped in production unless the underlying storage layer is explicitly managed and monitored.
 - In `FULL` recovery, monitor `log_since_last_backup_mb` and the actual log-backup cadence together. A healthy backup strategy is what makes log reuse possible.
@@ -540,11 +683,4 @@ FROM tempdb.sys.dm_db_file_space_usage;
 - Treat page splits as a design signal first. Sequential clustering, narrower rows, lower churn, and targeted fill factor changes usually matter more than blind rebuilds.
 - Watch `tempdb` version store and internal object space when troubleshooting snapshot workloads, spills, or online maintenance.
 
-## Related
-
-- [[06-index-types-and-strategy]]
-- [[08-table-compression]]
-- [[09-partitioning-strategies]]
-- [[07-index-maintenance]]
-- [[11-memory-and-buffer-pool]]
 

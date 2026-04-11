@@ -3,12 +3,6 @@ title: "03 - Applied Prompting"
 tags: [ai, prompt-engineering, python, sql, terraform, airflow, bigquery]
 aliases: [applied prompt engineering, prompt engineering examples, before after prompts, prompt optimization examples, research prompts, code generation prompts, data extraction prompts, content creation prompts]
 description: "Applied prompt engineering with complete before/after examples for four core domains: research and analysis, content creation, code and technical tasks, and data analysis and extraction. Every example includes the weak prompt, the optimized prompt, and the principle behind the improvement."
-parent: "[[domain-prompt-craft]]"
-links:
-  - "[[01-prompt-foundations]]"
-  - "[[02-prompt-architecture]]"
-  - "[[04-model-specific-prompting]]"
-  - "[[05-prompt-debugging]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

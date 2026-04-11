@@ -3,9 +3,6 @@ title: "23 - Data Ingestion - Python"
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
 description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23-cs-data-ingestion](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/23-cs-data-ingestion) for the C# equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[23-cs-data-ingestion]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
-This note covers Python bulk-load patterns for SQL Server, BigQuery, and Firestore, including performance benchmarking across file formats and source tiers. For the equivalent C# implementation, see [[23-cs-data-ingestion]].
+This note covers Python bulk-load patterns for SQL Server, BigQuery, and Firestore, including performance benchmarking across file formats and source tiers.
 
 ### Key terms used in this note
 
@@ -2342,11 +2339,4 @@ print('  Cleanup done')
 | BCP exits with `Error = [Microsoft][ODBC Driver] SSL Provider` | TLS mismatch between bcp binary version and SQL Server TLS policy | Add `-C RAW` or `-t` flag; confirm bcp version matches SQL Server's minimum TLS requirement |
 | `load_table_from_uri` job never completes | GCS bucket is in a different region from the BigQuery dataset | Ensure bucket and BQ dataset are in the same GCP region |
 
-## Cross-References
-
-- [[23-cs-data-ingestion]] — C# equivalent: SqlBulkCopy, BigQuery client, Firestore WriteBatch
-- [[domain-gcp-integration]] — GCP integration domain overview (BigQuery, GCS, Firestore patterns)
-- [[01-py-foundations-io]] — Python I/O foundations: file reading, CSV/JSON/Parquet basics
-- [[22-py-data-export]] — complementary export notebook: BQ extract jobs, GCS upload, local write
-- [[domain-sql-server]] — SQL Server domain: connection strings, DDL conventions, bulk-load tuning
 

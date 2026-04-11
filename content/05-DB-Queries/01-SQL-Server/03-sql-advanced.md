@@ -3,10 +3,6 @@ title: "03 - SQL Advanced"
 tags: [sql-server, tsql, advanced]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."
-parent: "[[domain-sql-server]]"
-links:
-  - "[[01-sql-fundamentals]]"
-  - "[[02-sql-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +17,7 @@ status: complete
 
 This note covers advanced T-SQL patterns for data engineering pipelines — window function deep dives (percentile ranking, FIRST_VALUE/LAST_VALUE, running totals, frame semantics), recursive CTEs for date-series generation, CROSS APPLY / OUTER APPLY for lateral joins, PIVOT/UNPIVOT for reshaping, MERGE for upsert loads, EXISTS/NOT EXISTS for semi- and anti-joins, GROUPING SETS/ROLLUP/CUBE for multi-level aggregation, string functions, NULL handling patterns, set operations, date/calendar arithmetic, and the CTE vs temp table vs table variable decision framework.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -35,7 +31,7 @@ This note covers advanced T-SQL patterns for data engineering pipelines — wind
 | **Frame clause (`ROWS` vs `RANGE`)** | Controls which rows a window function sees. `ROWS` counts physical rows. `RANGE` groups by logical values (treats ties as one position). Default (no frame) is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. | `ROWS` is required for correct moving averages. `RANGE` groups ties, producing incorrect SMA values when ORDER BY has duplicates. | Omitting the frame clause — the implicit `RANGE` default groups tied ORDER BY values, silently inflating or deflating moving averages. |
 | **`SAFE_DIVIDE` / `NULLIF`** | `NULLIF(expr, 0)` returns NULL when the denominator is zero, preventing divide-by-zero errors. BigQuery has `SAFE_DIVIDE(a, b)` for the same purpose. | Every division in this note uses the `x / NULLIF(y, 0)` pattern to avoid runtime errors on zero denominators. | Dividing without protection — SQL Server returns an error on integer division by zero, or NULL on float division by zero (depending on `ANSI_WARNINGS`). |
 
-### What this note covers
+## What this note covers
 
 - **Advanced window functions** — ROW_NUMBER dedup, PERCENT_RANK, CUME_DIST, FIRST_VALUE, LAST_VALUE, running totals, frame deep dive (ROWS vs RANGE)
 - **Recursive CTEs** — date-series generation, MAXRECURSION limits, gap detection via LEFT JOIN
@@ -83,6 +79,8 @@ The window functions in this section are used extensively in the [silver-transfo
 ### Window Functions — ROW_NUMBER for Deduplication
 
 Assigns a unique sequential integer within each partition, ordered by the specified column. The outer query filters to `rn = 1` to retain only the most recent row per symbol — the standard deduplication pattern for picking the latest record per key.
+
+#### Pick the latest price per stock with ROW_NUMBER
 
 *Pick the latest price per stock using ROW_NUMBER partitioned by symbol, ordered by date descending.*
 
@@ -147,6 +145,8 @@ ORDER BY [close] DESC
 - `CUME_DIST()`: cumulative distribution — fraction of rows with value ≤ current row.
 
 Use case: "ASML is in the 90th percentile of composite scores."
+
+#### Compute percentile rank and cumulative distribution for composite scores
 
 *Compute percentile rank and cumulative distribution for composite scores across the Euro Stoxx 50.*
 
@@ -228,6 +228,8 @@ ORDER BY composite_rank
 
 `FIRST_VALUE` retrieves the first trading day's close for the year (the January opening price). Every subsequent row divides the current close by that anchor to compute the year-to-date return percentage.
 
+#### Anchor YTD return to the first close with FIRST_VALUE
+
 *Compute YTD return for each day by anchoring to the first close of the year via FIRST_VALUE.*
 
 ```sql
@@ -304,6 +306,8 @@ ORDER BY date DESC
 
 `SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)` — cumulative sum from the first row to current.
 Use case: cumulative volume, cumulative return, running P&L.
+
+#### Compute cumulative volume with SUM OVER and ROWS UNBOUNDED PRECEDING
 
 *Compute cumulative trading volume from the start of 2025 using SUM with ROWS UNBOUNDED PRECEDING.*
 
@@ -385,6 +389,8 @@ The frame clause controls which rows within the current partition a window funct
 > Use `ROWS BETWEEN N PRECEDING AND CURRENT ROW` for all moving average calculations. Reserve `RANGE` only for scenarios where you explicitly need tie-grouping behavior (e.g., cumulative totals where tied ranks should share the same running total). When in doubt, `ROWS` is the safer, more predictable default.
 
 The query demonstrates three `OVER` variants side by side: `sma_5_rows` uses `ROWS BETWEEN 4 PRECEDING AND CURRENT ROW` (exactly 5 physical rows), `avg_all` uses no frame clause (full-partition average for comparison), and `vol_30d` uses `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` (30-day rolling standard deviation as a volatility proxy).
+
+#### Compare three window frame variants side by side
 
 *Compare three frame variants: 5-row SMA, full-partition average, and 30-day rolling volatility.*
 
@@ -481,6 +487,8 @@ A **recursive CTE** has an anchor member (the starting row) and a recursive memb
 >
 > Add `OPTION (MAXRECURSION 0)` at the end of the statement whenever a recursive CTE is used to generate sequences longer than 100 rows (e.g., `OPTION (MAXRECURSION 0)` for a full-year date series). Set a specific limit (e.g., `MAXRECURSION 366`) rather than 0 in production to prevent runaway recursion from buggy CTEs.
 
+#### Generate a date series and detect missing trading days
+
 *Generate a continuous date series for March 2026, then LEFT JOIN to OHLCV to find missing trading days.*
 
 ```sql
@@ -555,6 +563,8 @@ ORDER BY d.dt
 
 `CROSS JOIN` produces the Cartesian product: every row from A paired with every row from B. Use case: generate all (symbol, date) combinations to expose missing bronze data. The silver layer is gap-filled, so the check targets the bronze table directly.
 
+#### Build a complete symbol x date grid with CROSS JOIN
+
 *CROSS JOIN symbols with trading calendar dates, then LEFT JOIN to detect missing bronze price data.*
 
 ```sql
@@ -618,6 +628,8 @@ ORDER BY s.symbol, c.date
 
 `CROSS APPLY` is a lateral join — it runs a subquery **for each row** of the outer table.
 Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-volume days per stock.
+
+#### Retrieve the top 3 highest-volume days per stock with CROSS APPLY
 
 *Use CROSS APPLY to retrieve the top 3 highest-volume trading days per stock.*
 
@@ -690,6 +702,8 @@ ORDER BY d.symbol, t.volume DESC
 
 Like `CROSS APPLY` but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
 Use case: latest score per stock — some stocks may not have scores yet.
+
+#### Get the latest score per stock with OUTER APPLY (NULL-safe)
 
 *Use OUTER APPLY to get the latest score per stock, preserving stocks without scores (NULLs).*
 
@@ -776,6 +790,8 @@ ORDER BY s.composite_rank
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
 
+#### Pivot monthly average close prices into columns
+
 *PIVOT monthly average close prices into columns (Jan through May) for ASML in 2025.*
 
 ```sql
@@ -818,6 +834,8 @@ PIVOT (
 
 `PIVOT` is SQL Server specific. The portable equivalent uses `CASE` inside aggregates.
 Works in any SQL engine (BigQuery, PostgreSQL, etc.).
+
+#### Portable CASE-based pivot without PIVOT syntax
 
 *Portable CASE-based pivot: compute monthly averages without SQL Server PIVOT syntax.*
 
@@ -864,6 +882,8 @@ GROUP BY symbol
 ### UNPIVOT — Columns to Rows
 
 The reverse — turn multiple score columns into rows for easier comparison/charting.
+
+#### Unpivot score columns into rows for per-component analysis
 
 *UNPIVOT three score columns (value, momentum, sentiment) into rows for per-component analysis.*
 
@@ -943,6 +963,8 @@ This is the core of incremental pipeline loads — "upsert" new data, update cha
 
 **Syntax**: `MERGE target USING source ON join_key WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`
 
+#### Create staging and target temp tables for the MERGE demo
+
 *Create staging and target temp tables, then demonstrate the MERGE upsert pattern.*
 
 ```sql
@@ -955,6 +977,8 @@ INSERT INTO #staging VALUES
 CREATE TABLE #target (
     symbol VARCHAR(20), date DATE, [close] FLOAT, volume BIGINT)
 ```
+
+#### Execute the MERGE upsert and verify the target
 
 *Execute the MERGE: insert new rows, update matched rows, then verify the target contents.*
 
@@ -1027,6 +1051,8 @@ DROP TABLE #target
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
 
+#### Find index members that have at least one matching score (semi-join)
+
 *Semi-join: find Euro Stoxx 50 members that have at least one gold-layer score.*
 
 ```sql
@@ -1081,6 +1107,8 @@ ORDER BY d.symbol
 ### EXISTS vs IN vs JOIN — Anti-Join with NOT EXISTS
 
 Find rows in A that have **no match** in B — the anti-join pattern. `NOT EXISTS` is more efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases and avoids the NULL trap of `NOT IN`. The example finds Euro Stoxx 50 members that are not also constituents of the Oil & Gas 20 index.
+
+#### Find Euro Stoxx 50 members not in Oil & Gas 20 (anti-join)
 
 *Anti-join: find Euro Stoxx 50 members that are NOT in the Oil & Gas 20 index.*
 
@@ -1145,6 +1173,8 @@ ORDER BY d.symbol
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
 use `GROUPING SETS` — more efficient and readable.
+
+#### Aggregate by sector, by country, and overall with GROUPING SETS
 
 *Compute aggregate scores grouped by sector, by country, and overall total — all in one pass.*
 
@@ -1213,6 +1243,8 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
 ### Grouping Sets, ROLLUP, CUBE — ROLLUP Hierarchical Subtotals
 
 `ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
+
+#### Hierarchical subtotals per sector with ROLLUP
 
 *ROLLUP by sector: per-sector volume totals plus a grand total row marked '*** TOTAL ***'.*
 
@@ -1284,6 +1316,8 @@ SQL Server 2017 introduced `STRING_AGG` as the standard way to concatenate row v
 Concatenate values from multiple rows into a single comma-separated string.
 Use case: list all tickers in a sector as one field.
 
+#### Concatenate ticker symbols per sector with STRING_AGG
+
 *Concatenate all ticker symbols per sector into a comma-separated string using STRING_AGG.*
 
 ```sql
@@ -1338,6 +1372,8 @@ ORDER BY stocks DESC
 ### String Functions — Parsing with SPLIT, CHARINDEX, SUBSTRING
 
 Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
+
+#### Parse ticker symbols into code and exchange with CHARINDEX / SUBSTRING
 
 *Parse ticker symbols into company code and exchange suffix using CHARINDEX and SUBSTRING.*
 
@@ -1416,6 +1452,8 @@ The table below summarizes how `NULL` propagates through common SQL expressions 
 
 
 The query demonstrates three NULL-handling patterns: `COALESCE` formats `forward_pe` as `'N/A'` when the value is `NULL`; `NULLIF` prevents divide-by-zero when computing earnings per share; `COUNT(*)` counts all rows while `COUNT(forward_pe)` counts only rows where PE is not `NULL` — showing the difference between the two in the same result set.
+
+#### Demonstrate COALESCE, NULLIF, and COUNT NULL behavior
 
 *Demonstrate COALESCE for display defaults, NULLIF for safe division, and COUNT(*) vs COUNT(col) differences.*
 
@@ -1503,6 +1541,8 @@ Set operations combine the results of two or more `SELECT` statements with match
 - `INTERSECT`: rows in both queries
 - `EXCEPT`: rows in first query but not second
 
+#### Find index difference with EXCEPT
+
 *EXCEPT: find Euro Stoxx 50 symbols that are not in the Asia 50 index.*
 
 ```sql
@@ -1548,6 +1588,8 @@ Financial date arithmetic cannot rely on `DATEADD` alone — markets observe hol
 
 Use the `trading_calendar` table to count trading days between dates.
 Weekend/holiday-aware calculations are essential for financial data.
+
+#### Count trading days vs calendar days per exchange
 
 *Count trading days vs calendar days per exchange in Q1 2026 using the trading_calendar table.*
 
@@ -1663,6 +1705,8 @@ flowchart TD
 
 ## When to Use These Advanced Patterns
 
+Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler construct from `01-sql-fundamentals` or `02-sql-engineering` when the problem does not actually require advanced syntax.
+
 - **Recursive CTEs** — when you need a continuous date series, a hierarchical traversal, or any iterative computation that stops on a condition. Preferred over cursors and WHILE loops.
 - **CROSS APPLY** — when you need top-N per group or a correlated subquery that returns multiple rows. More readable and often more efficient than self-joins with ROW_NUMBER.
 - **PIVOT** — when downstream consumers (dashboards, Excel exports) need data in wide format with fixed, known column names.
@@ -1672,6 +1716,8 @@ flowchart TD
 
 ## When Not to Use These Advanced Patterns
 
+These patterns are either SQL Server-specific, have known bugs, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
+
 - **Recursive CTEs for date series in BigQuery** — use `GENERATE_DATE_ARRAY` / `UNNEST` instead; no recursion limit, single-pass, and more idiomatic.
 - **CROSS APPLY in BigQuery / PostgreSQL** — use `ROW_NUMBER` + subquery pattern instead; `APPLY` is SQL Server-specific syntax.
 - **MERGE for high-concurrency tables** — use explicit INSERT/UPDATE in a transaction due to known SQL Server MERGE concurrency bugs.
@@ -1679,6 +1725,8 @@ flowchart TD
 - **CUBE** — generates all possible column combinations, which grows exponentially. For 4 columns, CUBE produces 16 grouping levels. Use GROUPING SETS to specify only the combinations you need.
 
 ## Warnings
+
+The table below lists the highest-impact traps that silently produce wrong results or degraded performance. Each entry corresponds to a warning or danger callout earlier in this note.
 
 | Topic | Warning |
 |---|---|
@@ -1691,6 +1739,8 @@ flowchart TD
 | **UNION without ALL** | Forces a deduplication sort. Expensive on large result sets. Use `UNION ALL` unless dedup is specifically needed. |
 
 ## Recommendations
+
+Standing guidance for applying the advanced patterns covered above. Apply these as defaults unless a specific query has a documented reason to deviate.
 
 | Area | Recommendation |
 |---|---|
@@ -1705,6 +1755,8 @@ flowchart TD
 
 ## Troubleshooting
 
+Symptoms you will encounter when one of these advanced patterns misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Recursive CTE fails with error 530 | Exceeded MAXRECURSION limit (default 100) | Add `OPTION (MAXRECURSION 0)` or a specific limit (e.g., 366 for a year). |
@@ -1717,8 +1769,8 @@ flowchart TD
 
 ## Cross-references
 
-- [[01-sql-fundamentals]] — SELECT, filtering, JOINs, basic window functions, CTEs, quality checks
-- [[02-sql-engineering]] — views, stored procedures, indexes, transactions, SCD, execution plans
+Related notes that extend or depend on the patterns covered here.
+
 - [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — SARGable predicate patterns for index usage
 - [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — production versions of LAG, gap-fill, and daily return patterns
 - [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — production z-score, ranking, and MERGE patterns

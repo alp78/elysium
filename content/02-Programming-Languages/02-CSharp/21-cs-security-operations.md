@@ -3,9 +3,6 @@ title: "21 - Security Operations - C#"
 tags: [csharp, gcp, security, encryption, identity]
 aliases: [Security Operations CSharp, Encryption and Identity CSharp]
 description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20-py-security-setup](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/20-py-security-setup). See [21-py-security-operations](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/21-py-security-operations) for the Python equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[21-py-security-operations]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
-This note demonstrates C# security operations across GCP services — encryption, certificates, identity, and secure access — using infrastructure provisioned by [[20-py-security-setup]]. See [[21-py-security-operations]] for the Python equivalent covering the same operations.
+This note demonstrates C# security operations across GCP services — encryption, certificates, identity, and secure access.
 
 ### Key terms used in this note
 
@@ -1192,8 +1189,5 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 
 ## Cross-References
 
-- [[20-py-security-setup]] — infrastructure prerequisite: provisions all GCP resources consumed by this notebook
-- [[21-py-security-operations]] — Python equivalent covering the same security operations against the same infrastructure
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — identity model, credential types, and OAuth2 flows
-- [[domain-gcp-integration]] — GCP integration domain MOC
 - [gcp-cloud-sql](https://alp78.github.io/elysium/06-GCP/Services/gcp-cloud-sql) — Cloud SQL SSL configuration, CMEK, and `SqlClient` connection patterns

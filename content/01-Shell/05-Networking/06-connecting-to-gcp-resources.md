@@ -7,17 +7,6 @@ tags: [shell, gcp, networking]
 aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP, Datadog agent, connection matrix]
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."
-parent: "[[domain-system-and-network]]"
-links:
-  - "[[01-viewing-processes]]"
-  - "[[04-system-resources]]"
-  - "[[02-killing-processes]]"
-  - "[[03-managing-services]]"
-  - "[[01-connectivity-testing]]"
-  - "[[03-socket-inspection]]"
-  - "[[02-http-requests-and-apis]]"
-  - "[[04-firewalls]]"
-  - "[[05-iap-tunneling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

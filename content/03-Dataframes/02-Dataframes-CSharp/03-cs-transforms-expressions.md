@@ -4,15 +4,6 @@ tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - with_columns, IfElse, apply, transform
 description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 03/10 - Transforms, Expressions & Chaining (WithColumns, IfElse, Cast). Executable examples with cell outputs. See [03_py_transforms_expressions](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/03_py_transforms_expressions) for the Python equivalent."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-27
 updated: 2026-04-07
 status: complete
@@ -1192,7 +1183,3 @@ If the same transformation can run earlier in SQL, DuckDB, Spark, or a lakehouse
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[03-py-transforms-expressions]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-transform-and-analyze]]

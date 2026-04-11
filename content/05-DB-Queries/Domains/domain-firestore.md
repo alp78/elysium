@@ -19,9 +19,9 @@ mindmap
 
 > [!abstract]- Firestore Queries
 >
-> - Read operations — [[firestore-python#Read Operations|py]] · [[firestore-csharp#Read Operations|cs]]
-> - Filtering and ordering — [[firestore-python#Filtering & Ordering|py]] · [[firestore-csharp#Filtering & Ordering|cs]]
-> - Subcollections — [[firestore-python#Subcollections|py]] · [[firestore-csharp#Subcollections|cs]]
-> - Write operations — [[firestore-python#Write Operations|py]] · [[firestore-csharp#Write Operations|cs]]
-> - Batch operations and transactions — [[firestore-python#Batch Operations & Transactions|py]] · [[firestore-csharp#Batch Operations & Transactions|cs]]
-> - Collection group queries — [[firestore-python#Collection Group Queries|py]] · [[firestore-csharp#Collection Group Queries|cs]]
+> - Read operations — [[01-firestore-python#Read Operations|py]] · [[02-firestore-csharp#Read Operations|cs]]
+> - Filtering and ordering — [[01-firestore-python#Filtering & Ordering|py]] · [[02-firestore-csharp#Filtering & Ordering|cs]]
+> - Subcollections — [[01-firestore-python#Subcollections|py]] · [[02-firestore-csharp#Subcollections|cs]]
+> - Write operations — [[01-firestore-python#Write Operations|py]] · [[02-firestore-csharp#Write Operations|cs]]
+> - Batch operations and transactions — [[01-firestore-python#Batch Operations & Transactions|py]] · [[02-firestore-csharp#Batch Operations & Transactions|cs]]
+> - Collection group queries — [[01-firestore-python#Collection Group Queries|py]] · [[02-firestore-csharp#Collection Group Queries|cs]]

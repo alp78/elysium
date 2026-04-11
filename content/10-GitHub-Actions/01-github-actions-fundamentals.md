@@ -14,9 +14,6 @@ aliases:
   - concurrency
   - reusable workflows
 description: "GitHub Actions fundamentals — workflow anatomy, triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency."
-parent: "[[domain-foundations-and-patterns]]"
-links:
-  - "[[02-github-actions-patterns]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
@@ -1288,11 +1285,6 @@ Common step patterns for copy-paste use. Each snippet is a standalone step fragm
 ```
 
 ## Related
-
-**GitHub Actions chapter:**
-- [[03-github-actions-ci-cd]] — secrets management, caching, concurrency, environments, security best practices
-- [[02-github-actions-patterns]] — matrix builds, reusable workflows, deployment strategies
-- [[04-github-actions-data-engineering]] — data pipeline CI/CD, Workload Identity, dbt CI
 
 **Git (Chapter 08):**
 - [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — branching strategy that pairs with these workflows

@@ -11,15 +11,6 @@ tags:
   - temporal-tables
 aliases: [Change Tracking, SCD2 SQL Server, Temporal Tables, CDC, Change Data Capture, Slowly Changing Dimensions]
 description: "Production choices for tracking data changes in SQL Server: manual SCD2, temporal tables, CDC, Change Tracking, and external snapshot patterns."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[01-sql-server-loading-patterns]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[05-sql-server-incremental-transforms]]"
-  - "[[08-sql-server-pipeline-anti-patterns]]"
-  - "[[02-bronze-layer-loading]]"
-  - "[[03-silver-transforms]]"
-  - "[[04-gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -858,14 +849,6 @@ The current state of `stoxx` supports a clear production recommendation:
 
 ---
 
-## Related
-
-- [[01-sql-server-loading-patterns]]
-- [[05-sql-server-incremental-transforms]]
-- [[05-sql-server-schema-layering]]
-- [[08-sql-server-pipeline-anti-patterns]]
-- [[03-silver-transforms]]
-- [[04-gold-transforms]]
 
 ## References
 

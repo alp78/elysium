@@ -3,9 +3,6 @@ title: "01 - Basics - Python"
 tags: [python]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "Python basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01-cs-basics](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/01-cs-basics) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[01-cs-basics]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Brian W. Kernighan & Dennis Ritchie**, *The C Programming Language* (1978)
 
-This note covers the absolute foundations of Python as a programming language: how to set up and verify a runtime environment, read and write console output, declare variables, work with every built-in data type, use all operator families, implement custom operator behavior via dunder methods, and understand the mutable-vs-immutable distinction that governs safe data handling. Every concept is paired with its C# equivalent in [[01-cs-basics]].
+This note covers the absolute foundations of Python as a programming language: how to set up and verify a runtime environment, read and write console output, declare variables, work with every built-in data type, use all operator families, implement custom operator behavior via dunder methods, and understand the mutable-vs-immutable distinction that governs safe data handling.
 
 ### Key terms used in this note
 
@@ -2152,11 +2149,4 @@ my_list: [1, 2, 3]
 | `ModuleNotFoundError` | Package not installed in the active virtual environment | Run `pip install <package>` inside the correct venv |
 | `PermissionError` when importing | System Python is protected or pip needs `--user` flag | Activate a virtual environment first; never use `sudo pip` |
 
-## Cross-References
-
-- **C# equivalent** — [[01-cs-basics]] covers the same concepts in C#: variables, types, operators, console I/O, operator overloading, and value/reference type semantics
-- **Strings deep dive** — [[02-py-strings]] extends string handling with indexing, slicing, methods, regex
-- **Collections deep dive** — [[05-py-collections]] covers lists, dicts, sets, tuples, and specialized containers in detail
-- **Error handling** — [[08-py-errorhandling]] covers try/except, custom exceptions, context managers, and EAFP patterns
-- **Environments and dependencies** — [[26-py-environments]] covers venv, pip, Docker, and CI/CD setup for Python projects
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when `bytes`, JSON, and Parquet choices matter in pipelines

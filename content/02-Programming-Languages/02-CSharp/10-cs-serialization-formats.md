@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10-py-serialization-formats](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/10-py-serialization-formats) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[10-py-serialization-formats]]"
 created: 2026-03-25
 updated: 2026-03-25
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
-This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Protocol Buffers, Avro, and binary struct layouts — with executable read/write examples and a side-by-side performance benchmark. Every concept is paired with its Python equivalent in [[10-py-serialization-formats]].
+This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Protocol Buffers, Avro, and binary struct layouts — with executable read/write examples and a side-by-side performance benchmark.
 
 ### Key terms used in this note
 
@@ -1215,9 +1212,3 @@ Directory.Delete(benchDir, recursive: true);
 | Binary data corrupted across platforms | Endianness mismatch | Use `BinaryPrimitives.ReadInt32BigEndian` explicitly |
 | Benchmark shows unexpected results | JIT warmup, GC pressure, or small dataset size | Use `BenchmarkDotNet` for reliable microbenchmarks |
 
-## Cross-References
-
-- **Python equivalent** — [[10-py-serialization-formats]] covers Parquet (pyarrow), Avro (fastavro), Protobuf (dynamic), MessagePack
-- **File I/O** — [[09-cs-fileio-serialization]] covers JSON, CSV, YAML, binary streams, and basic serialization
-- **LINQ** — [[07-cs-generics-linq]] covers LINQ operations on deserialized data collections
-- **Database** — [[16-cs-database]] covers data movement between serialization formats and databases

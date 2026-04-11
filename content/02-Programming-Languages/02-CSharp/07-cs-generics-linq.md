@@ -3,9 +3,6 @@ title: "07 - Generics & LINQ - C#"
 tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [07-py-generics-linq](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/07-py-generics-linq) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[07-py-generics-linq]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
-Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. This note covers generic type parameters and constraints, core LINQ operators on in-memory collections, advanced analytics queries against live SQL Server data, and a side-by-side comparison of LINQ pipelines with Polars.NET DataFrames. Every concept is paired with its Python equivalent in [[07-py-generics-linq]].
-
+Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. This note covers generic type parameters and constraints, core LINQ operators on in-memory collections, advanced analytics queries against live SQL Server data, and a side-by-side comparison of LINQ pipelines with Polars.NET DataFrames.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1250,10 +1246,3 @@ df.Select(keepCols).Head(3)
 | `Aggregate` produces wrong result | Seed value is wrong, or accumulator function has a bug | Verify seed and step through the accumulator logic manually |
 | Query syntax `let` not available in method syntax | `let` is a query-syntax-only keyword | Use a `.Select()` to create an intermediate anonymous type |
 
-## Cross-References
-
-- **Python equivalent** — [[07-py-generics-linq]] covers `TypeVar`, `Generic[T]`, `Protocol`, comprehensions, `map`/`filter`, pandas, Polars
-- **Functions** — [[04-cs-functions]] covers `Func<T>`/`Action<T>`, lambdas, and extension methods that power LINQ
-- **Collections** — [[05-cs-collections]] covers `List<T>`, `Dictionary`, `HashSet` — the collections LINQ operates on
-- **OOP** — [[06-cs-oop]] covers interfaces and records — the types that generics parameterize and LINQ projects into
-- **Dataframes** — [[01-cs-foundations-io]] covers Polars.NET foundations in the Dataframes chapter

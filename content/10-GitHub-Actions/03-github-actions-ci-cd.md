@@ -6,10 +6,6 @@ tags:
   - gcp
 aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix testing, secrets management]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."
-parent: "[[domain-applied-automation]]"
-links:
-  - "[[04-github-actions-data-engineering]]"
-  - "[[05-github-actions-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
@@ -679,10 +675,6 @@ flowchart TD
 ```
 
 ## Related
-
-**GitHub Actions chapter:**
-- [[01-github-actions-fundamentals]] — YAML syntax, triggers, runners, and core concepts
-- [[02-github-actions-patterns]] — reusable workflows, composite actions, advanced patterns
 
 **Git (Chapter 08):**
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — PR events that trigger workflows

@@ -3,7 +3,6 @@ title: "20 - Security Setup - Python"
 tags: [python, gcp, security, infrastructure]
 aliases: [Security Setup, GCP Security Infrastructure, Workload Identity Setup]
 description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [21-py-security-operations](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/21-py-security-operations) and [21-cs-security-operations](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/21-cs-security-operations)."
-parent: "[[domain-gcp-integration]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -20,7 +19,7 @@ status: complete
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
-This note provisions the full GCP security infrastructure — service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and demo data — that [[21-py-security-operations]] and [[21-cs-security-operations]] depend on. Run every section once in order before executing any operations notebook.
+This note provisions the full GCP security infrastructure — service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and demo data. Run every section once in order before executing any operations notebook.
 
 ### Key terms used in this note
 
@@ -1763,8 +1762,5 @@ PROJECT_NUMBER  # Project number
 
 ## Cross-References
 
-- [[21-py-security-operations]] — Python operations notebook that consumes all resources provisioned here
-- [[21-cs-security-operations]] — C# operations notebook that runs the same security patterns against this infrastructure
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — theoretical foundation: identity models, credential types, OAuth2 flows
-- [[domain-gcp-integration]] — GCP integration domain MOC
 - [gcp-cloud-sql](https://alp78.github.io/elysium/06-GCP/Services/gcp-cloud-sql) — Cloud SQL configuration reference including SSL and CMEK options

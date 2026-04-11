@@ -4,13 +4,6 @@ tags: [python, pandas, polars, dataframes, matplotlib, seaborn, bokeh, plotly]
 aliases:
   - matplotlib, seaborn, bokeh, plotting, charts
 description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, bokeh, plotly). Side-by-side executable examples with cell outputs and interactive embeds."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-cs-visualization]]"
-  - "[[09-py-database-interface]]"
-  - "[[09-cs-database-interface]]"
-  - "[[10-py-testing-migration]]"
-  - "[[10-cs-testing-migration]]"
 created: 2026-03-24
 updated: 2026-04-08
 status: complete
@@ -4061,9 +4054,3 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 | Exported HTML file is too large | Plotly JavaScript bundle embedded per chart | Use `include_plotlyjs="cdn"` or export as static image |
 | Chart colors are invisible on dark background | Default color palette designed for light backgrounds | Apply dark theme: Tokyo Night for Matplotlib, `plotly_dark` for Plotly |
 
-## Cross-references
-
-- **C# counterpart:** [[08-cs-visualization]] — visualization using ScottPlot and Polars.NET
-- **Previous in sequence:** [[07-py-types-interop]] — data types and format handling for visualization inputs
-- **Next in sequence:** [[09-py-database-interface]] — database connectivity (data source for visualizations)
-- **Domain index:** [[domain-integrate-and-validate]] — parent domain page for this note

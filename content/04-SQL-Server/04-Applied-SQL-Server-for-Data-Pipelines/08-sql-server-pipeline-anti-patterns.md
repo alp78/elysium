@@ -10,15 +10,6 @@ tags:
   - data-quality
 aliases: [Anti-Patterns, Pipeline Mistakes, SQL Server Gotchas, Common Mistakes]
 description: "Production checklist of SQL Server pipeline anti-patterns, with live sanity checks from `stoxx` and links to the canonical deep-dive notes."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[01-sql-server-loading-patterns]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[10-sql-server-change-tracking]]"
-  - "[[05-sql-server-incremental-transforms]]"
-  - "[[02-bronze-layer-loading]]"
-  - "[[03-silver-transforms]]"
-  - "[[04-gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -160,13 +151,13 @@ for row in rows:
     )
 ```
 
-Use batched interfaces such as `fast_executemany`, `SqlBulkCopy`, `bcp`, or `BULK INSERT` instead. The canonical guidance is in [[01-sql-server-loading-patterns]].
+Use batched interfaces such as `fast_executemany`, `SqlBulkCopy`, `bcp`, or `BULK INSERT` instead.
 
 ### Loading directly into the published table
 
 This removes the validation gate. If a file is malformed, the published table becomes the first place you discover it.
 
-Use a stage table, validate row count and business keys there, then publish. The reproducible pattern is in [[01-sql-server-loading-patterns]].
+Use a stage table, validate row count and business keys there, then publish.
 
 ### Multi-step loads with no explicit transaction
 
@@ -266,7 +257,7 @@ Always list columns explicitly in both `SELECT` and `INSERT`.
 
 If SQL Server has to convert the column rather than the literal or parameter, the index becomes far less useful and the query can fall back to a scan.
 
-Use the exact target types in parameters and predicates. The full plan-level demonstration lives in [[12-execution-plans]] and [[11-sargable-queries]].
+Use the exact target types in parameters and predicates.
 
 ### `NOLOCK` as a pipeline fix
 
@@ -278,7 +269,7 @@ If readers block writers or writers block readers, solve the isolation design. D
 
 Window functions are not inherently bad. The anti-pattern is running them on large tables that cannot deliver rows in the required `PARTITION BY` and `ORDER BY` order. Then SQL Server sorts, asks for memory, and may spill to TempDB.
 
-Check the supporting index before scaling the query. The live example is in [[05-sql-server-incremental-transforms]].
+Check the supporting index before scaling the query.
 
 ### Table variables for large ETL intermediates
 
@@ -355,25 +346,9 @@ The current `stoxx` environment supports a strong baseline:
 - keep large ETL intermediates on temp-table patterns instead of defaulting to table variables
 - keep detailed plan and loading investigations in the canonical notes instead of duplicating ad hoc fixes here
 
-Use this page as the checklist. Use the companion notes for the full reproduction:
-
-- [[01-sql-server-loading-patterns]]
-- [[05-sql-server-incremental-transforms]]
-- [[10-sql-server-change-tracking]]
-- [[05-sql-server-schema-layering]]
-- [[12-execution-plans]]
+Use this page as the checklist.
 
 ---
-
-## Related
-
-- [[01-sql-server-loading-patterns]]
-- [[05-sql-server-incremental-transforms]]
-- [[10-sql-server-change-tracking]]
-- [[05-sql-server-schema-layering]]
-- [[02-bronze-layer-loading]]
-- [[03-silver-transforms]]
-- [[04-gold-transforms]]
 
 ## References
 

@@ -3,13 +3,6 @@ title: "16 - Deadlock Detection and Prevention"
 tags: [sql-server, tsql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
 description: "Production-focused SQL Server deadlock guide."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[13-tde-encryption]]"
-  - "[[12-audit-logging]]"
-  - "[[15-blocking-and-locking]]"
-  - "[[17-race-conditions]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -444,9 +437,4 @@ public static async Task<T> ExecuteWithDeadlockRetryAsync<T>(
 - Lower deadlock priority for background work only when retries are cheap and safe.
 - Keep a dedicated deadlock capture session on systems where rollover of `system_health` is not enough.
 
-## Related
-
-- [[15-blocking-and-locking]]
-- [[17-race-conditions]]
-- [[12-execution-plans]]
 

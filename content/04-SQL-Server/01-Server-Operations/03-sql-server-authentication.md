@@ -3,10 +3,6 @@ title: "03 - SQL Server Authentication"
 tags: [sql, sql-server, security, tsql]
 aliases: [SQL Server authentication, login hardening, SQL login hardening, mixed mode, TLS SQL Server, network encryption, force encryption]
 description: "Production guide to SQL Server authentication and connection hardening on Linux and GCP: login inventory, sysadmin exposure, database principal surface, TLS posture, and perimeter recommendations."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[12-audit-logging]]"
-  - "[[13-tde-encryption]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -463,7 +459,6 @@ Prefer an administrative path that is attributable and narrow:
 
 Authentication hardening without audit is incomplete. Login success, login failure, and principal-change events should be captured and reviewed continuously.
 
-Implementation details and production queries for SQL Server Audit live in [[12-audit-logging]].
 
 ## Recommendations
 
@@ -474,8 +469,4 @@ Implementation details and production queries for SQL Server Audit live in [[12-
 - Make Linux TLS settings explicit in `mssql.conf` instead of relying on incidental defaults.
 - Use database users and role memberships intentionally inside `stoxx`; an empty custom-principal surface is better than sprawl, but it still means the permission model has not been fully expressed yet.
 
-## Related
-
-- [[12-audit-logging]]
-- [[13-tde-encryption]]
 

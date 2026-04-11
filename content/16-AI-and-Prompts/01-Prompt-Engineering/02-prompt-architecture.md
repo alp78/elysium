@@ -3,12 +3,6 @@ title: "02 - Prompt Architecture"
 tags: [ai, prompt-engineering]
 aliases: [prompt structure, 4-layer prompt, prompt layering, role goal constraints format, XML prompting, JSON schema prompting, meta-prompting, chain of thought, prompt template]
 description: "The 4-layer prompt architecture (Role, Goal, Constraints, Format) with complete worked examples, plus modular structural formats — XML tags, JSON schemas, and paragraph form — with guidance on when to use each. Covers meta-prompting and chain-of-thought structuring."
-parent: "[[domain-prompt-craft]]"
-links:
-  - "[[01-prompt-foundations]]"
-  - "[[03-applied-prompting]]"
-  - "[[04-model-specific-prompting]]"
-  - "[[05-prompt-debugging]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -11,15 +11,6 @@ tags:
   - etl
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
 description: "Production loading patterns for SQL Server: full refresh, staged validation, upsert, bulk-load interfaces, and minimal-logging decisions."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[05-sql-server-schema-layering]]"
-  - "[[10-sql-server-change-tracking]]"
-  - "[[05-sql-server-incremental-transforms]]"
-  - "[[08-sql-server-pipeline-anti-patterns]]"
-  - "[[02-bronze-layer-loading]]"
-  - "[[03-silver-transforms]]"
-  - "[[04-gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -806,16 +797,6 @@ The current `stoxx` workload supports a clear production pattern:
 - treat minimal logging as a DBA-level recovery decision, not as an always-on tuning trick
 
 ---
-
-## Related
-
-- [[05-sql-server-incremental-transforms]]
-- [[10-sql-server-change-tracking]]
-- [[05-sql-server-schema-layering]]
-- [[08-sql-server-pipeline-anti-patterns]]
-- [[02-bronze-layer-loading]]
-- [[03-silver-transforms]]
-- [[04-gold-transforms]]
 
 ## References
 

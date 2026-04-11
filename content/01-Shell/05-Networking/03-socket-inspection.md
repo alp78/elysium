@@ -7,17 +7,6 @@ tags: [shell, networking]
 aliases: [ss, netstat, socket inspection, TCP state, LISTEN, ESTABLISHED, TIME-WAIT, ephemeral ports, connection refused vs timed out]
 keywords: [ss, netstat, socket inspection, TCP state, LISTEN, ESTAB, TIME-WAIT, ephemeral ports, loopback, 0.0.0.0, 127.0.0.1, connection refused, connection timed out, connection count, Get-NetTCPConnection, SQL Server ports, 1433, 1434, DAC, connection pool, Recv-Q]
 description: "Reading socket state with ss (socket statistics) to diagnose network connectivity issues. Covers listening vs established connections, loopback vs all-interface binding, ephemeral ports, TIME-WAIT connections, and the 'connection refused vs timed out' distinction."
-parent: "[[domain-system-and-network]]"
-links:
-  - "[[01-viewing-processes]]"
-  - "[[04-system-resources]]"
-  - "[[02-killing-processes]]"
-  - "[[03-managing-services]]"
-  - "[[01-connectivity-testing]]"
-  - "[[02-http-requests-and-apis]]"
-  - "[[04-firewalls]]"
-  - "[[05-iap-tunneling]]"
-  - "[[06-connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [trade finance terms, treasury glossary, cash management terms, working capital glossary, export credit, sales financing, wholesale financing, transaction banking terms]
 keywords: [trade finance, cash management, treasury services, working capital, export credit agency, ECA, sales financing, wholesale financing, floor plan financing, dealer financing, letter of credit, documentary collection, supply chain finance, factoring, forfaiting, cash pooling, liquidity management, FX hedging, transaction banking, corporate treasury, working capital management, accounts receivable, accounts payable]
 description: "Encyclopedia definitions for trade finance, cash management, treasury services, working capital, export credit agency finance, sales financing, and wholesale financing terms from the example Index universe, covering how corporations and banks manage short-term liquidity and cross-border trade flows."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[02-business-models-and-commerce]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[04-compliance-and-risk-management]]"
-  - "[[05-corporate-finance-and-strategy]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[08-exchanges-and-market-infrastructure]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[13-real-estate-and-industrial]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

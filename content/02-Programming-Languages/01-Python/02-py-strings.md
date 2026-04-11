@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [02-cs-strings](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/02-cs-strings) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[02-cs-strings]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Yukihiro Matsumoto**, creator of Ruby
 
-This note covers Python's string type in full: creation and immutability, indexing and slicing, the complete set of built-in string methods, all three formatting mechanisms (f-strings, `.format()`, `%`), efficient string building patterns, and regular expressions with the `re` module. Every concept is paired with its C# equivalent in [[02-cs-strings]].
+This note covers Python's string type in full: creation and immutability, indexing and slicing, the complete set of built-in string methods, all three formatting mechanisms (f-strings, `.format()`, `%`), efficient string building patterns, and regular expressions with the `re` module.
 
 ### Key terms used in this note
 
@@ -1144,9 +1141,4 @@ strong password     : ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$
 
 ## Cross-References
 
-- **C# equivalent** — [[02-cs-strings]] covers the same concepts in C#: string creation, indexing, methods, interpolation, `StringBuilder`, and `Regex`
-- **Basics and types** — [[01-py-basics]] covers `str` as a data type, `bytes`/`bytearray`, encoding, and `repr()` vs `str()`
-- **Collections** — [[05-py-collections]] covers `list`, `dict`, `set` which interact heavily with string `split()`/`join()` patterns
-- **File I/O** — [[09-py-fileio-serialization]] covers reading/writing text files, CSV parsing, and encoding handling
-- **Testing** — [[14-py-testing]] covers `pytest` assertions for string matching and regex validation
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when string encoding choices matter in data pipelines

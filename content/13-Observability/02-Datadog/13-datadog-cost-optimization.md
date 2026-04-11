@@ -3,21 +3,6 @@ title: "13 - Datadog Cost Optimization"
 tags: [monitoring, observability, performance, cost, datadog, gcp]
 aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost, Datadog Cost Reference, Datadog Monthly Cost]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."
-parent: "[[domain-datadog-platform]]"
-links:
-  - "[[01-datadog-architecture-overview]]"
-  - "[[03-datadog-agent-airflow-vm]]"
-  - "[[02-datadog-agent-sql-vm]]"
-  - "[[06-datadog-gcp-integration]]"
-  - "[[04-datadog-sql-server-integration]]"
-  - "[[08-datadog-custom-queries]]"
-  - "[[11-datadog-log-management]]"
-  - "[[12-datadog-sql-server-logs]]"
-  - "[[10-datadog-apm-traces]]"
-  - "[[07-datadog-dashboards]]"
-  - "[[09-datadog-alerting]]"
-  - "[[05-datadog-airflow-observability]]"
-  - "[[14-datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

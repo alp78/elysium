@@ -4,15 +4,6 @@ tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
 description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 05/10 - Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-27
 updated: 2026-04-07
 status: complete
@@ -1328,7 +1319,3 @@ Melted shape: (20, 4)
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[05-py-aggregation-reshaping]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-transform-and-analyze]]

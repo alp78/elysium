@@ -7,15 +7,6 @@ tags: [python, sql, airflow, financial]
 aliases: [Data Sources and Refresh, yfinance data sources, data refresh, pipeline schedule, yfinance data pipeline]
 keywords: [data sources, refresh cadence, yfinance, pipeline schedule, price data, volume, market cap, forward PE, analyst target, recommendation, dividend yield, quarterly financials, governance, ticker membership, pulse, intraday]
 description: "Data sources, refresh cadences, and pipeline schedule for the financial data platform dashboard — yfinance data feeds, update frequencies, and the relationship between data freshness and scoring accuracy."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[04-quarterly-signal-scores]]"
-  - "[[01-scoring-methodology]]"
-  - "[[08-vendor-file-late-or-missing]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -57,7 +48,7 @@ The [Airflow DAGs](https://alp78.github.io/elysium/12-Orchestration/Airflow/airf
 yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scored) → Dashboard
 ```
 
-1. **[Bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[08-vendor-file-late-or-missing]] runbook
+1. **[Bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)**: Raw yfinance data lands as-is in `bronze.*` tables
 2. **[Silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)**: Deduplication, type casting, gap-filling in `silver.*` tables
 3. **[Gold](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)**: Z-scores, composite scores, rankings in `gold.*` tables
 

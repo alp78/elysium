@@ -3,9 +3,6 @@ title: "15 - Web and APIs - C#"
 tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, ASP.NET, minimal API]
 description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15-py-webapis](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/15-py-webapis) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[15-py-webapis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Greg Brockman**
 
-This note covers C# web and API patterns using `HttpClient`, ASP.NET Core Minimal APIs, and data validation with records and Data Annotations. For the Python equivalent using `requests`, `httpx`, and FastAPI, see [[15-py-webapis]].
+This note covers C# web and API patterns using `HttpClient`, ASP.NET Core Minimal APIs, and data validation with records and Data Annotations.
 
 ### Key terms used in this note
 
@@ -936,10 +933,3 @@ Summary table of production best practices for C# API validation, mapped to Pyth
 | Data Annotations not triggering | Annotations present but validation not called | Call `Validator.TryValidateObject()` explicitly or add a validation filter/middleware |
 | Request body deserialization returns null | `Content-Type: application/json` missing from client request | Set header: `request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json")` or use `PostAsJsonAsync` |
 
-## Cross-References
-
-- [[14-cs-testing]] — testing `HttpClient` with `MockHttpMessageHandler` and minimal API integration tests
-- [[12-cs-asyncconcurrency]] — async/await and `CancellationToken` patterns underpinning all HTTP calls
-- [[08-cs-errorhandling]] — exception handling strategies for `HttpRequestException` and retry logic
-- [[16-cs-database]] — combining HTTP calls with database writes in pipeline handlers
-- [[15-py-webapis]] — Python equivalent: `requests`, `httpx`, FastAPI, and Pydantic

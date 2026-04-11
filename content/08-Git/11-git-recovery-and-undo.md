@@ -6,11 +6,6 @@ tags:
   - rebase
 aliases: [git reset, git revert, git reflog, git stash, undo commit, recover lost commit, git undo]
 description: "Complete guide to undoing changes in Git — safe methods (restore, revert) and destructive methods (reset --hard), using reflog to recover lost commits, and stash for temporary shelving."
-parent: "[[domain-releases-and-recovery]]"
-links:
-  - "[[09-git-tagging-and-releases]]"
-  - "[[12-git-common-errors]]"
-  - "[[13-git-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

@@ -4,13 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - head, tail, describe, info, select, filter, isin, where
 description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
-parent: "[[domain-ingest-and-explore]]"
-links:
-  - "[[01-py-foundations-io]]"
-  - "[[01-cs-foundations-io]]"
-  - "[[02-cs-explore-select-filter]]"
-  - "[[07-py-types-interop]]"
-  - "[[07-cs-types-interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -9956,10 +9949,3 @@ display(Markdown(comparison))
 | Polars `filter()` returns all rows unchanged | Expression always evaluates to `True` (e.g., comparing wrong column) | Print the boolean expression separately to verify: `df.select(expr)` |
 | `isin()` returns all False | List values don't match column dtype (e.g., string "1" vs integer 1) | Ensure the list values match the column dtype exactly |
 
-## Cross-references
-
-- **C# counterpart:** [[02-cs-explore-select-filter]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Foundations (prerequisites):** [[01-py-foundations-io]] — Series, DataFrame, and data type fundamentals
-- **Next in sequence:** [[03-py-transforms-expressions]] — column transforms and expression building
-- **Types and interop:** [[07-py-types-interop]] — Arrow interoperability and cross-library type mapping
-- **Domain index:** [[domain-ingest-and-explore]] — parent domain page for this note

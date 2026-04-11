@@ -12,12 +12,6 @@ aliases:
   - budget planning
   - cost breakdown
 description: Concrete TCO calculations for classic data engineering pipeline architectures on GCP. Covers four reference architectures from small batch (~$100/month) to enterprise scale (~$3,000-10,000/month), with precise per-line-item cost breakdowns, Mermaid architecture diagrams, paused vs. running cost comparisons, multi-cloud comparisons, and a hidden costs checklist.
-parent: "[[domain-operations-and-cost]]"
-links:
-  - "[[01-cloud-logging]]"
-  - "[[02-cloud-monitoring-metrics]]"
-  - "[[01-gcp-billing-and-pricing]]"
-  - "[[02-gcp-cost-monitoring-and-budgets]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

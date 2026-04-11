@@ -3,9 +3,6 @@ title: "17 - GCP - C#"
 tags: [csharp]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [17-py-gcp](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/17-py-gcp) for the Python equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[17-py-gcp]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +17,7 @@ status: complete
 >
 > — **Werner Vogels**, CTO of Amazon
 
-This note covers the Google Cloud Platform .NET SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples. Every concept is paired with its Python equivalent in [[17-py-gcp]].
+This note covers the Google Cloud Platform .NET SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples.
 
 ### Key terms used in this note
 
@@ -743,9 +740,3 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 | Firestore `PermissionDenied` | Missing Firestore IAM role | Grant `roles/datastore.user` to the service account |
 | Secret Manager `NotFound` | Wrong secret name or version | Check `projects/{project}/secrets/{name}/versions/latest` format |
 
-## Cross-References
-
-- **Python equivalent** — [[17-py-gcp]] covers the same GCP services with Python client libraries
-- **Database** — [[16-cs-database]] covers SQL database access patterns
-- **Async** — [[12-cs-asyncconcurrency]] covers async patterns used in GCP client operations
-- **Error handling** — [[08-cs-errorhandling]] covers retry and exception patterns for cloud operations

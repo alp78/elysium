@@ -4,16 +4,6 @@ tags: [pipeline, performance, dbt]
 status: stable
 updated: 2026-03-23
 description: "Identifying slow models from run_results.json, BigQuery and SQL Server tuning, thread configuration, incremental strategy optimisation, and model refactoring with dbt-audit-helper."
-parent: "[[domain-operations-and-adapters]]"
-links:
-  - "[[01-dbt-airflow-integration]]"
-  - "[[05-dbt-ci-cd]]"
-  - "[[02-dbt-documentation-and-lineage]]"
-  - "[[03-dbt-observability]]"
-  - "[[06-dbt-troubleshooting]]"
-  - "[[02-dbt-bigquery-adapter]]"
-  - "[[01-dbt-sqlserver-adapter]]"
-  - "[[03-dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: Performance Tuning

@@ -22,12 +22,6 @@ aliases:
   - cross_downstream
   - chain
 description: "Comprehensive reference for Apache Airflow DAG patterns: task dependencies, task groups, dynamic DAG generation, branching, trigger rules, idempotency, backfill, parameterization, dataset-driven scheduling, and SLA/callback configuration."
-parent: "[[domain-airflow]]"
-links:
-  - "[[01-airflow-core-concepts]]"
-  - "[[03-airflow-deployment]]"
-  - "[[05-airflow-problems]]"
-  - "[[04-airflow-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -9,14 +9,7 @@ tags:
   - esg
 aliases:
   - "ESG Terms Glossary"
-parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-04-08
-links:
-  - "[[04-esg-frameworks]]"
-  - "[[05-esg-ratings]]"
-  - "[[09-financial-instruments]]"
-  - "[[12-regulatory]]"
-  - "[[07-sustainability-themes]]"
 ---
 
 # ESG Terms

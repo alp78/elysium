@@ -3,10 +3,6 @@ title: "03 - BigQuery Advanced"
 tags: [bigquery, gcp, advanced]
 aliases: [BigQuery advanced, BigQuery window functions, BigQuery CTE, BigQuery PIVOT, BigQuery MERGE]
 description: "Advanced BigQuery GoogleSQL patterns with executable examples — covers window functions, recursive CTEs, lateral joins, PIVOT/UNPIVOT, MERGE, grouping sets, NULL handling, and set operations."
-parent: "[[domain-bigquery]]"
-links:
-  - "[[01-bq-fundamentals]]"
-  - "[[02-bq-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +17,7 @@ status: complete
 
 This note covers advanced GoogleSQL patterns for data engineering pipelines — window function deep dives (percentile ranking, FIRST_VALUE/LAST_VALUE, running totals, frame semantics), recursive CTEs, lateral join equivalents (ROW_NUMBER replacing CROSS APPLY), PIVOT/UNPIVOT, MERGE for upsert loads, EXISTS/NOT EXISTS for semi- and anti-joins, GROUPING SETS/ROLLUP/CUBE, string functions, NULL handling, set operations, date/calendar arithmetic, and the CTE vs temp table decision framework — all with BigQuery-specific syntax and cost awareness.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -31,7 +27,7 @@ This note covers advanced GoogleSQL patterns for data engineering pipelines — 
 | **`IS NOT DISTINCT FROM`** | BigQuery operator that treats NULLs as equal. `a IS NOT DISTINCT FROM b` returns TRUE when both are NULL (unlike `a = b` which returns NULL). | Safe NULL-aware equality comparison for JOIN keys and WHERE filters where NULLs should match. | Not available in SQL Server — use `WHERE a = b OR (a IS NULL AND b IS NULL)` for cross-engine compatibility. |
 | **Slot** | A unit of BigQuery computational capacity (CPU + memory). Queries are parallelized across available slots. On-demand pricing provides up to 2,000 concurrent slots per project. | Window functions distribute computation across slots by partition — each slot handles a subset of partitions in parallel. | Assuming more slots = proportionally faster queries — some operations (global sorts, GROUPING SETS with many combinations) have sequential bottlenecks. |
 
-### What this note covers
+## What this note covers
 
 - **Advanced window functions** — ROW_NUMBER dedup with QUALIFY, PERCENT_RANK, CUME_DIST, FIRST_VALUE, LAST_VALUE, running totals, frame deep dive
 - **Recursive CTEs** — date-series generation, GENERATE_DATE_ARRAY alternative, recursion limits
@@ -83,6 +79,10 @@ Assign a unique sequential number within each partition. The classic pattern for
 > BigQuery supports `QUALIFY` to filter on window function results without a subquery:
 > `SELECT symbol, date, close FROM table QUALIFY ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) = 1`
 > This eliminates the subquery-plus-filter pattern. `QUALIFY` is not ANSI SQL and does not exist in SQL Server.
+
+#### Pick the latest price per stock with ROW_NUMBER
+
+*Pick the latest price per stock using ROW_NUMBER partitioned by symbol, ordered by date descending.*
 
 ```sql
 SELECT symbol, date, `close`, volume
@@ -149,6 +149,10 @@ LIMIT 10
 
 Use case: "ASML is in the 90th percentile of composite scores."
 
+
+#### Compute percentile rank and cumulative distribution
+
+*Compute percentile rank and cumulative distribution for composite scores across the Euro Stoxx 50.*
 
 ```sql
 SELECT
@@ -223,6 +227,10 @@ LIMIT 15
 
 Use case: compare every day's close to the first close of the year (YTD return). `FIRST_VALUE` grabs the January 2nd close; every subsequent row computes its return relative to that anchor.
 
+
+#### Anchor YTD return to the first close with FIRST_VALUE
+
+*Compute YTD return for each day by anchoring to the first close of the year via FIRST_VALUE.*
 
 ```sql
 SELECT
@@ -303,6 +311,10 @@ LIMIT 15
 Use case: cumulative volume, cumulative return, running P&L.
 
 
+#### Compute cumulative volume with SUM OVER and ROWS UNBOUNDED PRECEDING
+
+*Compute cumulative trading volume from the start of 2025 using SUM with ROWS UNBOUNDED PRECEDING.*
+
 ```sql
 SELECT
     symbol, date, volume,
@@ -377,6 +389,10 @@ The frame clause controls which rows the function sees:
 
 The query below demonstrates three frame variants side by side: `sma_5_rows` uses exactly 5 physical rows (`ROWS BETWEEN 4 PRECEDING AND CURRENT ROW`), `avg_all` uses the entire partition (no frame = all rows), and `vol_30d` computes rolling 30-day standard deviation. Always use `ROWS` (not `RANGE`) for moving averages to get a precise row count.
 
+
+#### Compare three window frame variants side by side
+
+*Compare three frame variants: 5-row SMA, full-partition average, and 30-day rolling volatility.*
 
 ```sql
 SELECT
@@ -456,6 +472,8 @@ LIMIT 10
 
 ## Recursive CTEs
 
+Recursive CTEs let a query reference itself during execution, producing result sets through iteration. BigQuery's recursive CTE support is close to ANSI SQL but differs from SQL Server in two details: the default iteration limit is 500 (vs SQL Server's 100) and the `WITH RECURSIVE` keyword is required at the start of the CTE chain. For date series specifically, BigQuery's `GENERATE_DATE_ARRAY()` is almost always the better choice — it is single-pass, has no iteration cap, and reads more idiomatically than recursion.
+
 ### Recursive CTEs — Date Series Generation
 
 A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
@@ -472,6 +490,10 @@ Classic use: generate a continuous date sequence to detect missing trading days.
 > [!info] Cross-engine comparison
 >
 > SQL Server supports recursive CTEs with a 100-iteration default (`OPTION (MAXRECURSION N)` to override). BigQuery defaults to 500. Firestore has no query-level recursion — hierarchical data requires client-side traversal or denormalized paths.
+
+#### Generate a date series with a recursive CTE and detect missing trading days
+
+*Generate a continuous date series with a recursive CTE, then LEFT JOIN to OHLCV to find missing trading days.*
 
 ```sql
 WITH RECURSIVE dates AS (
@@ -538,6 +560,8 @@ LIMIT 15
 
 ## CROSS JOIN & Lateral Patterns
 
+BigQuery supports `CROSS JOIN` for Cartesian products but does not support SQL Server's `CROSS APPLY` / `OUTER APPLY` lateral join operators. The idiomatic BigQuery equivalent is a `ROW_NUMBER()` window function inside a subquery, filtered to `rn = 1` (or `rn <= N` for top-N). This section shows the CROSS JOIN grid pattern for gap detection, the top-N-per-group replacement, and the optional lateral join variant that preserves outer rows with no matches.
+
 ### CROSS JOIN — Build a Complete Grid
 
 `CROSS JOIN` produces the cartesian product — every row from A paired with every row from B. Use case: generate all (symbol, date) combinations to find missing data. The silver layer is gap-filled (missing dates forward-filled), so this query checks the bronze layer to identify true data gaps.
@@ -549,6 +573,10 @@ LIMIT 15
 > [!success] Safe Pattern
 >
 > Keep one side of the CROSS JOIN to a dimension table or CTE with known small cardinality. For large-scale gap detection, use `GENERATE_DATE_ARRAY` + `UNNEST` instead of a calendar table CROSS JOIN.
+
+#### Build a complete symbol x date grid with CROSS JOIN
+
+*CROSS JOIN symbols with trading calendar dates, then LEFT JOIN to detect missing bronze price data.*
 
 ```sql
 WITH symbols AS (
@@ -618,6 +646,10 @@ In SQL Server, `CROSS APPLY` runs a correlated subquery for each outer row — a
 >
 > SQL Server uses `CROSS APPLY (SELECT TOP 3 ... WHERE o.symbol = d.symbol ORDER BY volume DESC)` for the same pattern. BigQuery's window-function approach scans the table once and partitions in parallel across slots — typically more efficient than row-by-row correlated subqueries.
 
+
+#### Top-N per group with ROW_NUMBER (CROSS APPLY equivalent)
+
+*Find the top 3 highest-volume trading days per stock using ROW_NUMBER — BigQuery's CROSS APPLY equivalent.*
 
 ```sql
 SELECT symbol, short_name, date, volume, `close`
@@ -690,6 +722,10 @@ LIMIT 15
 
 SQL Server's `OUTER APPLY` keeps the outer row even when the correlated subquery returns nothing — equivalent to a `LEFT JOIN LATERAL`. BigQuery has no `OUTER APPLY`; the idiomatic pattern is `LEFT JOIN` on a subquery that uses `ROW_NUMBER()` to pick the best match per key, then filter to `rn = 1`. Outer rows with no match retain NULLs for the joined columns.
 
+
+#### Optional lateral join with LEFT JOIN + ROW_NUMBER (OUTER APPLY equivalent)
+
+*Join the latest score per stock using LEFT JOIN + ROW_NUMBER, preserving stocks without scores.*
 
 ```sql
 SELECT d.symbol, d.short_name, d.sector,
@@ -767,6 +803,8 @@ LIMIT 15
 
 ## PIVOT / UNPIVOT
 
+BigQuery has native `PIVOT` and `UNPIVOT` operators that transform rows into columns and back. The native syntax is concise but requires a static, compile-time column list — dynamic pivots must fall back to procedural SQL or client-side reshaping. The portable alternative is conditional aggregation with `CASE` expressions inside aggregates, which works across BigQuery, SQL Server, and PostgreSQL without relying on engine-specific operators.
+
 ### PIVOT / UNPIVOT — Rows to Columns
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
@@ -775,6 +813,10 @@ Turn row values into column headers. Classic use: monthly close prices as column
 >
 > BigQuery has native `PIVOT` / `UNPIVOT` syntax. SQL Server also supports `PIVOT` / `UNPIVOT` with slightly different syntax (requires aggregate function in the PIVOT clause). Firestore has no query-level pivoting — reshape data client-side.
 
+
+#### Pivot monthly average close prices with native PIVOT
+
+*Use BigQuery's native PIVOT syntax to turn monthly average close prices into columns.*
 
 ```sql
 SELECT * FROM (
@@ -819,6 +861,10 @@ Works in any SQL engine (BigQuery, PostgreSQL, etc.).
 
 
 The portable equivalent uses `CASE` inside aggregate functions — this works in any SQL engine (BigQuery, SQL Server, PostgreSQL) without relying on `PIVOT` syntax.
+
+#### Portable CASE-based pivot without PIVOT syntax
+
+*Portable CASE-based pivot: compute monthly averages without BigQuery PIVOT syntax.*
 
 ```sql
 SELECT
@@ -866,6 +912,10 @@ GROUP BY symbol
 
 The reverse — turn multiple score columns into rows for easier comparison/charting.
 
+
+#### Unpivot score columns into rows for per-component analysis
+
+*Unpivot three score columns (value, momentum, sentiment) into rows for per-component analysis.*
 
 ```sql
 SELECT symbol, score_type, ROUND(score_value, 4) AS score_value
@@ -923,6 +973,8 @@ LIMIT 15
 
 ## MERGE (Upsert)
 
+`MERGE` performs INSERT, UPDATE, and DELETE in a single atomic operation against a target table, driven by a source dataset. It is the core tool for incremental pipeline loads — upsert new data, update changed rows, optionally delete rows absent from the source. BigQuery's MERGE is stable and widely used, but every execution counts against the 1,500 DML/day quota per table — high-frequency upserts must use the Storage Write API instead.
+
 > [!tip] Related pattern
 >
 > For cross-language equivalents of MERGE and window functions, see [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
@@ -935,6 +987,10 @@ This is the core of incremental pipeline loads — "upsert" new data, update cha
 **Syntax**: `MERGE target USING source ON join_key WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`
 
 BigQuery MERGE works on permanent tables only — it cannot target temp tables or CTEs in jupysql magic. The syntax matches SQL Server:
+
+#### MERGE upsert syntax — reference pattern
+
+*Reference MERGE syntax for upserting a source table into a target — illustrates the WHEN MATCHED / WHEN NOT MATCHED pattern.*
 
 ```sql
 MERGE `project.dataset.target` AS t
@@ -958,6 +1014,10 @@ WHEN NOT MATCHED THEN INSERT (symbol, date, close, volume)
 > BigQuery MERGE has a 1,500 DML/day quota per table. SQL Server MERGE has no such limit but requires careful locking strategy under concurrency. Firestore has no MERGE — use batched writes (500 document limit per batch) with `set(..., merge=True)` for upsert semantics.
 
 The demo below shows staging-like data that would be the source for a MERGE operation.
+
+#### Show MERGE staging source data
+
+*Show staging-like source data that would feed a MERGE operation.*
 
 ```sql
 SELECT 'DEMO.XX' AS symbol, DATE '2026-03-20' AS date, 100.0 AS `close`, 1000000 AS volume
@@ -996,11 +1056,17 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
 
 ## EXISTS vs IN vs JOIN
 
+`EXISTS` checks whether a correlated subquery returns at least one row and short-circuits at the first match — it never reads more rows than necessary. `NOT EXISTS` is the safe anti-join pattern: unlike `NOT IN`, it is immune to the NULL-in-subquery trap that silently returns zero rows. BigQuery and SQL Server both support these operators with identical semantics, making them the portable choice for semi- and anti-joins in cross-engine code.
+
 ### EXISTS vs IN vs JOIN — Semi-Join with EXISTS
 
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
 
+
+#### Find index members with at least one matching score (semi-join)
+
+*Semi-join: find Euro Stoxx 50 members that have at least one gold-layer score.*
 
 ```sql
 SELECT d.symbol, d.short_name, d.sector
@@ -1059,6 +1125,10 @@ LIMIT 15
 Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
 
 
+#### Find Euro Stoxx 50 members not in Oil & Gas 20 (anti-join)
+
+*Anti-join: find Euro Stoxx 50 members that are not also in the Oil & Gas 20 index.*
+
 ```sql
 SELECT d.symbol, d.short_name, d.sector
 FROM `bq-wh-nb.stoxx_silver.index_dim` d
@@ -1113,10 +1183,16 @@ LIMIT 15
 
 ## Grouping Sets, ROLLUP, CUBE
 
+`GROUPING SETS`, `ROLLUP`, and `CUBE` extend `GROUP BY` to generate multiple aggregation levels in a single pass. `GROUPING SETS` specifies exact combinations; `ROLLUP(a, b)` generates hierarchical subtotals from most to least granular; `CUBE(a, b)` generates every possible combination. All three are more efficient than `UNION ALL` of separate aggregations because BigQuery reads the source table once and computes all grouping levels in a single slot-distributed pass.
+
 ### Grouping Sets, ROLLUP, CUBE — GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations, use `GROUPING SETS` — BigQuery reads the source table once and computes all grouping combinations in a single slot-distributed pass, avoiding the repeated scans that UNION ALL would require.
 
+
+#### Aggregate by sector, by country, and overall with GROUPING SETS
+
+*Aggregate by sector, by country, and overall total — all in one pass using GROUPING SETS.*
 
 ```sql
 SELECT
@@ -1188,6 +1264,10 @@ LIMIT 15
 `ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
 
 
+#### Hierarchical subtotals per sector with ROLLUP
+
+*ROLLUP by sector: per-sector volume totals plus a grand total row marked '*** TOTAL ***'.*
+
 ```sql
 SELECT
     COALESCE(d.sector, '*** TOTAL ***') AS sector,
@@ -1252,11 +1332,17 @@ LIMIT 15
 
 ## String Aggregation & Functions
 
+String manipulation in BigQuery covers two common needs: aggregating row values into a single concatenated string (`STRING_AGG`), and parsing structured strings into components (`SPLIT`, `STRPOS`, `SUBSTR`, `REGEXP_EXTRACT`). Both are useful in pipeline queries that need to format output for display or decompose composite keys into their parts.
+
 ### String Aggregation — STRING_AGG
 
 Concatenate values from multiple rows into a single comma-separated string.
 Use case: list all tickers in a sector as one field.
 
+
+#### Concatenate ticker symbols per sector with STRING_AGG
+
+*Concatenate all ticker symbols per sector into a comma-separated string using STRING_AGG.*
 
 ```sql
 SELECT
@@ -1314,6 +1400,10 @@ LIMIT 10
 
 Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
+
+#### Parse tickers into ticker code and exchange suffix
+
+*Parse ticker symbols into ticker and exchange suffix using STRPOS, LEFT, and SUBSTR.*
 
 ```sql
 SELECT
@@ -1375,6 +1465,8 @@ LIMIT 10
 
 ## NULL Handling Patterns
 
+SQL's three-valued logic (TRUE, FALSE, UNKNOWN) makes NULL handling one of the most common sources of silent bugs. BigQuery follows ANSI SQL rules — `NULL = NULL` returns NULL, aggregates skip NULLs, and arithmetic with NULL yields NULL. The tools for handling NULLs safely are `COALESCE`, `IFNULL`, `NULLIF`, and BigQuery's `SAFE_DIVIDE` and `IS NOT DISTINCT FROM` operators.
+
 ### NULL Handling — Rules and COALESCE, IFNULL, NULLIF
 
 | Expression | Result | Why |
@@ -1398,6 +1490,10 @@ LIMIT 10
 
 
 The query demonstrates three patterns: `COALESCE` provides a default display value when PE is null, `NULLIF` prevents division-by-zero errors (returns NULL instead of error), and `COUNT(*)` vs `COUNT(column)` shows the difference between counting all rows and counting non-null values.
+
+#### Demonstrate COALESCE, NULLIF, and COUNT NULL behavior
+
+*Demonstrate COALESCE for display defaults, NULLIF for safe division, and COUNT(*) vs COUNT(col) differences.*
 
 ```sql
 SELECT
@@ -1473,6 +1569,8 @@ LIMIT 10
 
 ## Set Operations
 
+Set operations combine the result sets of multiple queries. `UNION ALL` stacks rows without deduplication (fast), `UNION` stacks and deduplicates (slower, requires a sort), `INTERSECT` returns rows present in both queries, and `EXCEPT DISTINCT` returns rows in the first query but not the second. BigQuery requires the explicit `DISTINCT` keyword for `EXCEPT`, unlike SQL Server which uses bare `EXCEPT` with implicit deduplication.
+
 ### Set Operations — UNION / INTERSECT / EXCEPT
 
 - `UNION ALL`: stack result sets (keep duplicates) — fast
@@ -1492,6 +1590,10 @@ LIMIT 10
 >
 > BigQuery uses `EXCEPT DISTINCT` (explicit keyword). SQL Server uses `EXCEPT` (implicit DISTINCT behavior — same semantics, different naming). Both engines support `INTERSECT` with identical behavior.
 
+
+#### Find index difference with EXCEPT DISTINCT
+
+*EXCEPT DISTINCT: find Euro Stoxx 50 symbols that are not in the Asia 50 index.*
 
 ```sql
 SELECT symbol FROM `bq-wh-nb.stoxx_silver.index_dim`
@@ -1533,12 +1635,18 @@ LIMIT 15
 
 ## Date & Calendar Table Patterns
 
+Financial pipelines rely on exchange-aware date arithmetic — "two business days after trade date" is not the same as "two calendar days after trade date," because weekends and holidays interrupt trading. BigQuery's built-in date functions (`DATE_ADD`, `DATE_DIFF`, `GENERATE_DATE_ARRAY`) cover calendar arithmetic, but exchange holidays require a dedicated calendar table. The `trading_calendar` dimension table in the stoxx warehouse holds every calendar date with exchange-specific trading flags.
+
 ### Date & Calendar — Business Day Arithmetic
 
 The `trading_calendar` table is a precomputed dimension table storing every calendar date with exchange-specific flags (`is_trading_day`, `exchange_code`). It is generated once and updated when exchange holiday schedules change. Use it instead of `GENERATE_DATE_ARRAY` whenever you need exchange-aware business day arithmetic — `GENERATE_DATE_ARRAY` produces calendar dates but has no knowledge of holidays.
 
 For BigQuery infrastructure details on how this table is loaded and maintained, see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
+
+#### Count trading days vs calendar days per exchange
+
+*Count trading days vs calendar days per exchange in Q1 2026 using the trading_calendar table.*
 
 ```sql
 SELECT
@@ -1601,6 +1709,8 @@ LIMIT 10
 
 ## Temp Tables vs CTEs
 
+CTEs and temporary tables are the two mechanisms BigQuery offers for naming and reusing intermediate result sets. CTEs are inline syntactic sugar — they are not materialized and re-execute on every reference in the same query, which means a CTE referenced three times pays three times the scan cost. Temporary tables (`CREATE TEMP TABLE`) are materialized once per session, making them the right choice for large intermediate sets referenced more than once. The decision diagram below summarizes when to reach for each.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -1646,6 +1756,8 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 
 ## When to Use These Advanced Patterns
 
+Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler constructs from `01-bq-fundamentals` or `02-bq-engineering` when the problem does not actually require advanced syntax.
+
 - **QUALIFY** — for deduplication and top-N-per-group queries in BigQuery-only code. Simpler than the subquery + WHERE pattern.
 - **GENERATE_DATE_ARRAY** — always prefer over recursive CTEs for date-series generation in BigQuery. No iteration limit, single-pass.
 - **ROW_NUMBER top-N** — BigQuery's replacement for SQL Server's CROSS APPLY. One table scan, distributed across slots.
@@ -1656,12 +1768,16 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 
 ## When Not to Use These Advanced Patterns
 
+These patterns are either BigQuery-specific, have quota implications, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
+
 - **QUALIFY in cross-engine code** — it fails on SQL Server. Use the subquery + WHERE pattern for dbt models targeting multiple engines.
 - **Recursive CTEs for date series** — use GENERATE_DATE_ARRAY + UNNEST. Recursive CTEs are limited to 500 iterations and are slower.
 - **CUBE with many columns** — generates all 2^N grouping combinations. For 4 columns = 16 levels. Use GROUPING SETS to specify only what you need.
 - **MERGE more than once per pipeline cycle** — counts against the 1,500 DML/day quota per table.
 
 ## Warnings
+
+The table below lists the highest-impact traps that silently produce wrong results or degraded performance in BigQuery. Each entry corresponds to a warning or danger callout earlier in this note.
 
 | Topic | Warning |
 |---|---|
@@ -1675,6 +1791,8 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 
 ## Recommendations
 
+Standing guidance for applying the advanced patterns covered above. Apply these as defaults unless a specific query has a documented reason to deviate.
+
 | Area | Recommendation |
 |---|---|
 | **Deduplication** | Use `QUALIFY ROW_NUMBER() OVER (...) = 1` in BigQuery. Use the subquery pattern for cross-engine SQL. |
@@ -1687,6 +1805,8 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 
 ## Troubleshooting
 
+Symptoms you will encounter when one of these advanced patterns misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `EXCEPT` syntax error | Missing `DISTINCT` keyword | Use `EXCEPT DISTINCT` in BigQuery. |
@@ -1698,8 +1818,8 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 
 ## Cross-references
 
-- [[01-bq-fundamentals]] — SELECT, filtering, JOINs, basic window functions, CTEs, quality checks
-- [[02-bq-engineering]] — views, table functions, clustering, DML, SCD, transactions, partitioning
+Related notes that extend or depend on the patterns covered here.
+
 - [03-sql-advanced](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-advanced) — SQL Server equivalent of every pattern in this note
 - [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) — DataFrame equivalents of PIVOT, window functions, aggregation
 - [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) — C# LINQ equivalents

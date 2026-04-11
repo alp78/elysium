@@ -4,12 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Model contracts, access levels, versioning, and breaking-change detection for financial data pipelines"
-parent: "[[domain-extensions-and-quality]]"
-links:
-  - "[[01-dbt-macros-and-jinja]]"
-  - "[[03-dbt-packages]]"
-  - "[[02-dbt-snapshots-and-scd]]"
-  - "[[01-dbt-testing-framework]]"
 ---
 
 # dbt: Data Contracts Implementation

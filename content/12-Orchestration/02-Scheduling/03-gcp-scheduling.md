@@ -3,10 +3,6 @@ title: "03 - GCP Scheduling"
 tags: [orchestration, python, gcp, scheduling, cron]
 aliases: [Cloud Scheduler, Cloud Tasks, Cloud Workflows, Cloud Functions trigger, GCP scheduling, serverless scheduling, cron GCP, GCP cron, managed cron GCP, cloud scheduler http target, cloud scheduler pubsub]
 description: "Exhaustive reference for all GCP scheduling and workflow services — Cloud Scheduler (managed cron), Cloud Tasks (task queues), Cloud Workflows (serverless orchestration), and patterns for triggering Cloud Run jobs and Cloud Functions on a schedule."
-parent: "[[domain-scheduling]]"
-links:
-  - "[[01-linux-scheduling]]"
-  - "[[02-windows-scheduling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

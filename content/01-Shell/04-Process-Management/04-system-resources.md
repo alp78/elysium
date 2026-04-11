@@ -6,17 +6,6 @@ tags:
 aliases: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory monitoring, disk IO]
 keywords: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory, CPU, disk I/O, buffer cache, swap, available memory, page life expectancy, PLE, SQL Server memory, OOM killer, performance monitoring, Get-Counter]
 description: "Linux and PowerShell commands for monitoring memory, CPU, and disk I/O. Explains the 'available' vs 'free' memory distinction, load average interpretation, and how to read iostat for disk saturation."
-parent: "[[domain-system-and-network]]"
-links:
-  - "[[01-viewing-processes]]"
-  - "[[02-killing-processes]]"
-  - "[[03-managing-services]]"
-  - "[[01-connectivity-testing]]"
-  - "[[03-socket-inspection]]"
-  - "[[02-http-requests-and-apis]]"
-  - "[[04-firewalls]]"
-  - "[[05-iap-tunneling]]"
-  - "[[06-connecting-to-gcp-resources]]"
 ---
 
 # System Resources — Memory, CPU, and Disk I/O

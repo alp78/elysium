@@ -3,9 +3,6 @@ title: "12 - Async and Concurrency - C#"
 tags: [csharp, async, concurrency]
 aliases: [async await, concurrency, parallelism, tasks, threads, Task]
 description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [12-py-asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/12-py-asyncconcurrency) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[12-py-asyncconcurrency]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)
 
-C# provides `async`/`await` for I/O-bound concurrency, `Task.Run` and `Parallel.ForEach` for CPU-bound parallelism, `Channel<T>` for producer-consumer pipelines, and a rich set of synchronization primitives. No GIL — threads provide true CPU parallelism. This note covers async fundamentals, task parallelism, threading, and synchronization. Every concept is paired with its Python equivalent in [[12-py-asyncconcurrency]].
+C# provides `async`/`await` for I/O-bound concurrency, `Task.Run` and `Parallel.ForEach` for CPU-bound parallelism, `Channel<T>` for producer-consumer pipelines, and a rich set of synchronization primitives. No GIL — threads provide true CPU parallelism. This note covers async fundamentals, task parallelism, threading, and synchronization.
 
 ### Key terms used in this note
 
@@ -1425,9 +1422,3 @@ flowchart TD
 | `SemaphoreSlim` deadlock | `WaitAsync` called re-entrantly from same async chain | Restructure to avoid re-entrant semaphore access |
 | `AggregateException` from `Task.WhenAll` | One or more tasks threw exceptions | Inspect `AggregateException.InnerExceptions` for all errors |
 
-## Cross-References
-
-- **Python equivalent** — [[12-py-asyncconcurrency]] covers `asyncio`, `async`/`await`, `concurrent.futures`, `threading`, GIL
-- **Functions** — [[04-cs-functions]] covers delegates and `Func<T>` used in concurrent callbacks
-- **Error handling** — [[08-cs-errorhandling]] covers `AggregateException` and async exception patterns
-- **Collections** — [[05-cs-collections]] covers `ConcurrentDictionary` and thread-safe collections

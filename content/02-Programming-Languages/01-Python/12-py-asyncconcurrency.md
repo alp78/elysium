@@ -3,9 +3,6 @@ title: "12 - Async and Concurrency - Python"
 tags: [python, async, concurrency]
 aliases: [async await, concurrency, parallelism, threads, asyncio]
 description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [12-cs-asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/12-cs-asyncconcurrency) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[12-cs-asyncconcurrency]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)
 
-Python provides async/await for I/O-bound concurrency, `concurrent.futures` for thread/process pooling, and `threading`/`multiprocessing` for low-level control. The GIL limits CPU parallelism to multi-processing. This note covers asyncio fundamentals, task parallelism, threading, and synchronization primitives. Every concept is paired with its C# equivalent in [[12-cs-asyncconcurrency]].
-
+Python provides async/await for I/O-bound concurrency, `concurrent.futures` for thread/process pooling, and `threading`/`multiprocessing` for low-level control. The GIL limits CPU parallelism to multi-processing. This note covers asyncio fundamentals, task parallelism, threading, and synchronization primitives.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1199,9 +1195,3 @@ Worker 2: load done
 | `asyncio.gather` cancels all tasks on first error | Default behavior — one failure cancels siblings | Pass `return_exceptions=True` to collect errors instead |
 | `ProcessPoolExecutor` fails with pickle error | Arguments or return values not picklable | Ensure all data passed to workers is picklable |
 
-## Cross-References
-
-- **C# equivalent** — [[12-cs-asyncconcurrency]] covers `async`/`await`, `Task`, `Parallel.ForEach`, `SemaphoreSlim`, `Channel<T>`
-- **Functions** — [[04-py-functions]] covers `functools` and higher-order patterns used in concurrent callbacks
-- **Error handling** — [[08-py-errorhandling]] covers `ExceptionGroup` for multi-error scenarios in concurrent code
-- **OOP** — [[06-py-oop]] covers `Protocol` and ABC patterns used in async interface design

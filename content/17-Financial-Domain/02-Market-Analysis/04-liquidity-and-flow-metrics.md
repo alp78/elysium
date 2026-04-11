@@ -7,13 +7,6 @@ tags: [python, financial]
 aliases: [Liquidity and Flow Metrics, liquidity metrics, bid-ask spread, turnover ratio, Money Flow Index, MFI, On-Balance Volume, OBV]
 keywords: [liquidity metrics, flow metrics, bid-ask spread, turnover ratio, Money Flow Index, MFI, On-Balance Volume, OBV, trading volume, market liquidity, volume analysis, flow indicators]
 description: "Liquidity and flow metrics for equity index analysis — bid-ask spread, turnover ratio, Money Flow Index, and On-Balance Volume with formulas, thresholds, and interpretation."
-parent: "[[domain-market-analysis]]"
-links:
-  - "[[05-breadth-and-sentiment-indicators]]"
-  - "[[06-index-maintenance-and-corporate-actions]]"
-  - "[[03-risk-and-volatility-metrics]]"
-  - "[[01-technical-indicators]]"
-  - "[[02-valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -3,16 +3,6 @@ title: "13 - Wait Stats Analysis"
 tags: [performance, sql, sql-server, tsql]
 aliases: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, wait type interpretation]
 description: "Production-first SQL Server wait-stats analysis with live stoxx outputs for health baselines, actionable waits, signal-vs-resource wait ratios, persisted heavy queries, file latency, TempDB distribution, and Query Store regressions."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-index-maintenance]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[07-pipeline-integration-and-devex]]"
-  - "[[06-pit-integrity-logic]]"
-  - "[[15-troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -22,7 +12,7 @@ status: complete
 
 Wait statistics answer the most important production triage question in SQL Server: what is the engine spending time waiting on right now, and which resource family should you investigate first?
 
-This note is the deep-dive companion to [[15-troubleshooting-flowcharts]] and [[16-performance-audit-playbook]]. The queries below are production-facing, and the outputs are real results from the current `stoxx` instance. That matters because cumulative waits, file stalls, and Query Store evidence are only as trustworthy as the uptime window that produced them.
+The queries below are production-facing, and the outputs are real results from the current `stoxx` instance. That matters because cumulative waits, file stalls, and Query Store evidence are only as trustworthy as the uptime window that produced them.
 
 ## System Health Dashboard — First Check
 
@@ -241,13 +231,13 @@ _Only `2.20%` of the current actionable wait profile is signal wait time. That m
 
 | Wait type or family | Usual meaning | First question to ask | First linked note |
 |---|---|---|---|
-| `LCK_M_*` | Blocking or lock serialization | Who is the blocker and how long is the transaction open? | [[12-execution-plans]] |
-| `PAGEIOLATCH_*` | Data page had to be read from disk | Is this storage latency or a cache-coverage problem? | [[11-memory-and-buffer-pool]] |
-| `WRITELOG` | Commit or log flush latency | Is the log file slow or is the workload committing too often? | [[16-performance-audit-playbook]] |
-| `CXPACKET`, `CXSYNC_PORT`, `CXCONSUMER` | Parallel plan coordination and skew | Is the plan going parallel for good reason, and is work balanced? | [[12-execution-plans]] |
-| `RESOURCE_SEMAPHORE`, `RESERVED_MEMORY_ALLOCATION_EXT` | Memory grant pressure or reservation pressure | Are queries asking for large grants, or is memory capped badly? | [[11-memory-and-buffer-pool]] |
-| `PAGELATCH_*` in TempDB contexts | Allocation or metadata contention | Are TempDB files balanced, and is concurrency too allocation-heavy? | [[07-index-maintenance]] |
-| `ASYNC_NETWORK_IO` | Client is consuming rows slowly | Is the consumer fetching too much or too slowly? | [[07-pipeline-integration-and-devex]] |
+| `LCK_M_*` | Blocking or lock serialization | Who is the blocker and how long is the transaction open? | |
+| `PAGEIOLATCH_*` | Data page had to be read from disk | Is this storage latency or a cache-coverage problem? | |
+| `WRITELOG` | Commit or log flush latency | Is the log file slow or is the workload committing too often? | |
+| `CXPACKET`, `CXSYNC_PORT`, `CXCONSUMER` | Parallel plan coordination and skew | Is the plan going parallel for good reason, and is work balanced? | |
+| `RESOURCE_SEMAPHORE`, `RESERVED_MEMORY_ALLOCATION_EXT` | Memory grant pressure or reservation pressure | Are queries asking for large grants, or is memory capped badly? | |
+| `PAGELATCH_*` in TempDB contexts | Allocation or metadata contention | Are TempDB files balanced, and is concurrency too allocation-heavy? | |
+| `ASYNC_NETWORK_IO` | Client is consuming rows slowly | Is the consumer fetching too much or too slowly? | |
 
 ## Top Resource-Consuming Queries
 
@@ -435,7 +425,7 @@ Wait families tell you what hurts. Query Store helps answer whether a changed pl
 > - `plan_count > 1` is the minimum sign that plan variability exists.
 > - `best_avg_ms` and `worst_avg_ms` show the spread between persisted plans.
 > - `regression_factor` is the ratio of worst to best average duration.
-> - The sample text is intentionally truncated; the handoff for full plan work is [[19-query-store-regressions-and-plan-forcing]].
+> - The sample text is intentionally truncated; the handoff for full plan work is the Query Store note.
 >
 > *Find persisted Query Store statements whose alternative plans differ materially in average duration.*
 >
@@ -516,18 +506,7 @@ _There are real multi-plan candidates in the live Query Store history. The stron
 | `RESOURCE_SEMAPHORE` | Queries waiting for memory grants | Memory grants and max server memory |
 | `ASYNC_NETWORK_IO` | Client fetching too slowly | Consumer-side fetch and result handling |
 
-## Related
-
-### Companion notes
-
-- [[15-troubleshooting-flowcharts]]
-- [[16-performance-audit-playbook]]
-- [[12-execution-plans]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[11-memory-and-buffer-pool]]
-- [[07-pipeline-integration-and-devex]]
-
-### Official references
+## References
 
 - [sys.dm_os_wait_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-wait-stats-transact-sql?view=sql-server-ver17)
 - [sys.dm_io_virtual_file_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-io-virtual-file-stats-transact-sql?view=sql-server-ver17)

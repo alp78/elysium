@@ -3,18 +3,6 @@ title: "10 - Always On Availability Groups"
 tags: [sql-server, gcp, tsql]
 aliases: [Always On AG, availability group, AOAG, AG, HA, Pacemaker HA, SQL Server HA, failover clustering, SQL Server Linux HA]
 description: "Complete guide to SQL Server Always On Availability Groups on Linux (GCP): architecture, replication modes, step-by-step setup with Pacemaker, essential monitoring DMVs, planned and forced failover operations, read-only routing, and troubleshooting for 5 common issues."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[01-server-configuration]]"
-  - "[[02-sqlcmd-connection-and-usage]]"
-  - "[[06-essential-dba-queries]]"
-  - "[[05-sql-server-agent-jobs]]"
-  - "[[07-backup-types-and-strategy]]"
-  - "[[08-restore-and-recovery]]"
-  - "[[17-finops-cost-optimization]]"
-  - "[[09-high-availability-overview]]"
-  - "[[14-sql-server-problems]]"
-  - "[[15-troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

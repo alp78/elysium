@@ -8,9 +8,6 @@ tags:
   - dependencies
 aliases: [virtual environments, venv, pip, requirements.txt, pyenv, python environments]
 description: "Python environment and dependency management — venv creation, pip workflows, requirements.txt lifecycle, pyenv version management, Docker/CI/CD/GCP deployment patterns, and anti-patterns."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[26-cs-environments]]"
 created: 2026-03-30
 updated: 2026-03-30
 status: complete
@@ -23,7 +20,7 @@ status: complete
 >
 > — **Attributed to various DevOps practitioners**
 
-This note covers Python environment and dependency management — from `venv` isolation and `pip` workflows to `pyenv`, `uv`, Docker, CI/CD, and GCP deployment patterns. See [[26-cs-environments]] for the equivalent C#/.NET environment management patterns.
+This note covers Python environment and dependency management — from `venv` isolation and `pip` workflows to `pyenv`, `uv`, Docker, CI/CD, and GCP deployment patterns.
 
 ### Key terms used in this note
 
@@ -1361,9 +1358,4 @@ The table below consolidates the most frequent Python environment mistakes. Each
 
 ## Cross-References
 
-- [[26-cs-environments]] — C# equivalent: `dotnet new`, NuGet, `global.json`, Docker multi-stage, GitHub Actions for .NET
-- [[25-py-functional-pipeline]] — Production pipeline using the environment patterns documented here
-- [[20-py-security-setup]] — Security-hardened pip configuration, private registry authentication, and supply chain controls
-- [[09-py-fileio-serialization]] — File I/O patterns that run inside the environments described here
-- [[23-py-data-ingestion]] — Data ingestion pipelines that depend on environment-specific package sets
 - [Environment Strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — Cross-cutting environment strategy

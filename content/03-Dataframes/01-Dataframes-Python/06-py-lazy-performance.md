@@ -4,15 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - lazy evaluation, query plan, collect, benchmarks
 description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -666,11 +657,3 @@ print(f"Polars version: {pl.__version__}")
 | `.profile()` shows I/O as the bottleneck | Disk read dominates computation time | Switch to Parquet (columnar, compressed); use SSD storage |
 | `.apply()` runs slower than expected | Python GIL prevents parallelism; row-by-row execution | Replace with vectorized expression or `map_batches()` for batch UDFs |
 
-## Cross-references
-
-- **C# counterpart:** [[06-cs-lazy-performance]] — Polars.NET lazy execution and performance
-- **Previous in sequence:** [[05-py-aggregation-reshaping]] — aggregation and reshaping (benefits most from lazy optimization)
-- **Next in sequence:** [[07-py-types-interop]] — data types, Arrow interop, and cross-library exchange
-- **Transforms:** [[03-py-transforms-expressions]] — expression building (the operations that lazy execution optimizes)
-- **Foundations:** [[01-py-foundations-io]] — eager vs lazy overview and I/O format comparison
-- **Domain index:** [[domain-transform-and-analyze]] — parent domain page for this note

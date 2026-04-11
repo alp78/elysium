@@ -4,16 +4,6 @@ tags: [pipeline, dbt, bigquery]
 status: stable
 updated: 2026-03-23
 description: "BigQuery adapter partitioning, clustering, incremental strategies, slot estimation, cost control, and BigQuery-specific SQL patterns."
-parent: "[[domain-operations-and-adapters]]"
-links:
-  - "[[01-dbt-airflow-integration]]"
-  - "[[05-dbt-ci-cd]]"
-  - "[[02-dbt-documentation-and-lineage]]"
-  - "[[03-dbt-observability]]"
-  - "[[04-dbt-performance-tuning]]"
-  - "[[06-dbt-troubleshooting]]"
-  - "[[01-dbt-sqlserver-adapter]]"
-  - "[[03-dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: BigQuery Adapter

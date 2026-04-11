@@ -4,13 +4,6 @@ tags: [csharp, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
 description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-py-visualization]]"
-  - "[[08-cs-visualization]]"
-  - "[[09-py-database-interface]]"
-  - "[[10-py-testing-migration]]"
-  - "[[10-cs-testing-migration]]"
 created: 2026-03-27
 updated: 2026-04-04
 status: complete
@@ -971,7 +964,3 @@ Quick-reference matrix across the three tools used in this notebook. "Result →
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[09-py-database-interface]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-integrate-and-validate]]

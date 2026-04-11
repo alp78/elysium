@@ -11,18 +11,6 @@ const observer = new IntersectionObserver((entries) => {
       }
     }
   }
-
-  // Auto-scroll the TOC to keep the last highlighted entry visible
-  for (const toc of document.querySelectorAll("ul.toc-content")) {
-    const inViewItems = toc.querySelectorAll("a.in-view")
-    if (inViewItems.length > 0) {
-      const lastInView = inViewItems[inViewItems.length - 1].closest("li") as HTMLElement | null
-      if (lastInView && toc instanceof HTMLElement) {
-        const targetScroll = lastInView.offsetTop - toc.offsetHeight / 2
-        toc.scrollTo({ top: targetScroll, behavior: "smooth" })
-      }
-    }
-  }
 })
 
 function toggleToc(this: HTMLElement) {

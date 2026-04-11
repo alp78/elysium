@@ -3,13 +3,6 @@ title: "03 - Disks and Snapshots"
 tags: [gcp, compute-engine, compute]
 aliases: [GCE disks, persistent disk snapshots, disk resize, serial console, disk snapshot GCP]
 description: "How to manage Compute Engine persistent disks — creating incremental snapshots before risky changes, resizing disks, restoring from snapshots, and using the serial console when a VM won't boot."
-parent: "[[domain-compute-and-messaging]]"
-links:
-  - "[[01-vm-lifecycle]]"
-  - "[[02-vm-ssh-and-file-transfer]]"
-  - "[[03-cloud-run-jobs-vs-services]]"
-  - "[[02-pubsub-messaging]]"
-  - "[[01-pubsub-topics-and-subscriptions]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

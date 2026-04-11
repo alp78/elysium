@@ -3,18 +3,6 @@ title: "11 - Memory and the Buffer Pool"
 tags: [sql, sql-server, tsql]
 aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS, Lock Pages in Memory, LPIM]
 description: "Production-focused guide to SQL Server memory diagnostics: max server memory, process memory, buffer pool health, Page Life Expectancy, buffer cache hit ratio, memory clerks, plan cache bloat, and pending memory grants. Includes live stoxx outputs."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[11-sargable-queries]]"
-  - "[[10-merge-and-upsert]]"
-  - "[[08-date-and-time-functions]]"
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[07-index-maintenance]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[07-pipeline-integration-and-devex]]"
-  - "[[06-pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -619,13 +607,6 @@ _The current instance reports `CONVENTIONAL`. On this Linux host, that is expect
 | `LOCK_PAGES` | &#9989; on tuned Windows servers | Locked pages are active. | Requires a correctly set `max server memory` cap. |
 | `LARGE_PAGES` | Depends | Large-page allocations are active. | Specialist configuration; validate carefully before using. |
 
-## Related
-
-- [[13-wait-stats-analysis]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[12-execution-plans]]
-- [[07-index-maintenance]]
-- [[16-performance-audit-playbook]]
 
 ## References
 

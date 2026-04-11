@@ -7,13 +7,6 @@ tags: [python, financial]
 aliases: [Risk and Volatility Metrics, risk metrics, volatility, Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR]
 keywords: [risk metrics, volatility, beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR, Sharpe ratio, risk-adjusted return, downside deviation, tail risk, implied volatility]
 description: "Risk and volatility metrics for equity index analysis — Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, and Value at Risk with formulas, thresholds, and interpretation."
-parent: "[[domain-market-analysis]]"
-links:
-  - "[[05-breadth-and-sentiment-indicators]]"
-  - "[[06-index-maintenance-and-corporate-actions]]"
-  - "[[04-liquidity-and-flow-metrics]]"
-  - "[[01-technical-indicators]]"
-  - "[[02-valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

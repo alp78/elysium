@@ -3,11 +3,6 @@ title: "08 - Table Compression"
 tags: [sql, sql-server, storage, tsql]
 aliases: [SQL Server compression, row compression, page compression, DATA_COMPRESSION, sp_estimate_data_compression_savings]
 description: "Production guide to SQL Server row and page compression: when compression helps, how to estimate savings, how to validate the actual reduction, and when compression should be avoided."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[02-storage-internals]]"
-  - "[[06-index-types-and-strategy]]"
-  - "[[07-index-maintenance]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -282,11 +277,4 @@ _The actual reduction is substantial: from 296 pages to 144 pages, or from 2.31 
 - Avoid broad page-compression rollouts on hot write-heavy bronze tables.
 - Re-check page count and query-read patterns after compression. The goal is fewer pages and lower I/O, not just a new metadata flag.
 - Remember that columnstore compression is a different storage model; do not treat `COLUMNSTORE` as interchangeable with row/page compression.
-- Keep compression strategy aligned with [[07-index-maintenance]] so rebuild jobs preserve the intended compression setting.
-
-## Related
-
-- [[02-storage-internals]]
-- [[06-index-types-and-strategy]]
-- [[07-index-maintenance]]
 

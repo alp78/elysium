@@ -20,11 +20,6 @@ description: >
   Storage, Log Analytics SQL, audit logs, OpenTelemetry tracing, span
   instrumentation, trace-log correlation, and a full GCP-native observability
   stack architecture with cost comparison vs Datadog.
-parent: "[[domain-gcp-native-monitoring]]"
-links:
-  - "[[01-gcp-cloud-monitoring-deep-dive]]"
-  - "[[04-gcp-data-lineage-and-catalog]]"
-  - "[[03-gcp-pipeline-health-and-sla]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

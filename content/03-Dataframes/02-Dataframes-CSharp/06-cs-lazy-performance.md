@@ -4,15 +4,6 @@ tags: [csharp, deedle, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks
 description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [06_py_lazy_performance](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/06_py_lazy_performance) for the Python equivalent."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -628,7 +619,3 @@ If your workflow fits in memory and you only need basic operations, Deedle works
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[06-py-lazy-performance]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-transform-and-analyze]]

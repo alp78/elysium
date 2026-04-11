@@ -3,21 +3,6 @@ title: "01 - Datadog Architecture Overview"
 tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Datadog Overview, the data pipeline project Observability, Datadog Architecture]
 description: "Architecture overview of Datadog monitoring for the data platform — two agents (Airflow VM + SQL VM) plus GCP Integration cover metrics, logs, and traces across the full stack."
-parent: "[[domain-datadog-platform]]"
-links:
-  - "[[03-datadog-agent-airflow-vm]]"
-  - "[[02-datadog-agent-sql-vm]]"
-  - "[[06-datadog-gcp-integration]]"
-  - "[[04-datadog-sql-server-integration]]"
-  - "[[08-datadog-custom-queries]]"
-  - "[[11-datadog-log-management]]"
-  - "[[12-datadog-sql-server-logs]]"
-  - "[[10-datadog-apm-traces]]"
-  - "[[07-datadog-dashboards]]"
-  - "[[09-datadog-alerting]]"
-  - "[[05-datadog-airflow-observability]]"
-  - "[[13-datadog-cost-optimization]]"
-  - "[[14-datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

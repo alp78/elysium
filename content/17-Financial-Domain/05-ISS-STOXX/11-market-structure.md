@@ -9,20 +9,7 @@ tags:
   - market-structure
 aliases:
   - "Market Structure Glossary"
-parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
-links:
-  - "[[08-corporate-governance]]"
-  - "[[13-data-methodology]]"
-  - "[[04-esg-frameworks]]"
-  - "[[05-esg-ratings]]"
-  - "[[09-financial-instruments]]"
-  - "[[10-financial-metrics]]"
-  - "[[02-index-construction]]"
-  - "[[01-index-families]]"
-  - "[[12-regulatory]]"
-  - "[[03-smart-beta-factors]]"
-  - "[[07-sustainability-themes]]"
 ---
 
 # Market Structure — ISS & STOXX Glossary

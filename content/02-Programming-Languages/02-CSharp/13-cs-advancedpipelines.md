@@ -3,9 +3,6 @@ title: "13 - Advanced Pipelines - C#"
 tags: [csharp, pipeline]
 aliases: [advanced pipelines, TPL Dataflow, channels, IAsyncEnumerable, cross-process]
 description: "C# advanced parallel pipelines reference with executable examples and cell outputs — covers TPL Dataflow, Channel-based batching, IAsyncEnumerable for paginated APIs, rate-limited parallel fetch, and cross-process execution. See [13-py-advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/13-py-advancedpipelines) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[13-py-advancedpipelines]]"
 created: 2026-03-25
 updated: 2026-04-04
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
 
-This note covers advanced parallel pipeline patterns in C# — TPL Dataflow for multi-stage pipelines, Channel-based async batching, IAsyncEnumerable for paginated APIs, rate-limited parallel ingestion, and cross-process execution. Every concept is paired with its Python equivalent in [[13-py-advancedpipelines]].
+This note covers advanced parallel pipeline patterns in C# — TPL Dataflow for multi-stage pipelines, Channel-based async batching, IAsyncEnumerable for paginated APIs, rate-limited parallel ingestion, and cross-process execution.
 
 ### Key terms used in this note
 
@@ -613,9 +610,3 @@ All 3 processes completed in 31ms
 | HTTP 429 from API | Too many concurrent requests | Add `SemaphoreSlim(n)` to limit concurrency |
 | `Channel` reader never completes | Writer didn't call `Complete()` | Always call `writer.Complete()` when done producing |
 
-## Cross-References
-
-- **Python equivalent** — [[13-py-advancedpipelines]] covers async generators, aiohttp, subprocess, Celery
-- **Async fundamentals** — [[12-cs-asyncconcurrency]] covers `async`/`await`, `Task`, `Channel<T>`, `SemaphoreSlim`
-- **Web APIs** — [[15-cs-webapis]] covers HttpClient patterns and API consumption
-- **Error handling** — [[08-cs-errorhandling]] covers retry patterns and error accumulation

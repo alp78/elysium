@@ -3,10 +3,6 @@ title: "01 - BigQuery Fundamentals"
 tags: [bigquery, gcp, fundamentals]
 aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuery basics]
 description: "BigQuery GoogleSQL fundamentals with executable examples — covers schema exploration, SELECT/filtering, aggregation, JOINs across medallion layers, window functions, CTEs, data quality checks, and bronze-silver-gold transforms."
-parent: "[[domain-bigquery]]"
-links:
-  - "[[03-bq-advanced]]"
-  - "[[02-bq-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +17,7 @@ status: complete
 
 This note is an executable GoogleSQL reference for data engineers working with BigQuery. It covers the same core query patterns as the SQL Server fundamentals note — schema exploration, filtering, aggregation, JOINs, window functions, CTEs, quality checks, and medallion transforms — but with BigQuery-specific syntax, cost model awareness, and performance characteristics, all demonstrated against the same Euro Stoxx 50 OHLCV dataset.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -34,7 +30,7 @@ This note is an executable GoogleSQL reference for data engineers working with B
 | **`SAFE_DIVIDE(a, b)`** | BigQuery-only function that returns `NULL` instead of an error when dividing by zero. Cleaner alternative to `a / NULLIF(b, 0)`. | Used in financial calculations where zero denominators (e.g., zero opening price for a delisted stock) would otherwise cause query failure. | Not available in SQL Server or PostgreSQL — use `NULLIF(denominator, 0)` for cross-engine portability. |
 | **`QUALIFY`** | BigQuery-exclusive clause that filters on window function results without requiring a subquery. `SELECT ... QUALIFY ROW_NUMBER() OVER (...) = 1` replaces the common subquery+WHERE pattern. | Simplifies deduplication and top-N-per-group queries. Not ANSI SQL — does not exist in SQL Server. | Using QUALIFY in cross-engine SQL or dbt models that target multiple engines — it will fail on SQL Server. |
 
-### What this note covers
+## What this note covers
 
 - **Schema exploration** — listing tables via Python client, inspecting column types via INFORMATION_SCHEMA
 - **SELECT, filtering, sorting** — basic queries, BigQuery vs SQL Server syntax differences, cost model
@@ -67,9 +63,13 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 ## Schema Exploration
 
+BigQuery exposes metadata through two interfaces: the Python client library (`bigquery.Client.list_tables`) for programmatic inventory and the ANSI-standard `INFORMATION_SCHEMA` views for SQL-based introspection. Both are free to query (metadata access is not billed per bytes scanned). Use these as the first step when working with an unfamiliar dataset — understand which tables exist, which medallion layer they belong to, and what data types each column uses.
+
 ### Schema Exploration — List All Tables
 
 First thing in any database — see what's there. The Python client library lists all tables across the three medallion-layer datasets (bronze, silver, gold), which BigQuery organizes as separate schemas (called "datasets"). The result shows table names, row counts, and storage sizes.
+
+#### List tables with row counts and storage sizes via the Python client
 
 *List all tables across the three medallion datasets with row counts and storage sizes.*
 
@@ -144,6 +144,8 @@ pd.DataFrame(rows).sort_values(['dataset', 'table']).reset_index(drop=True)
 
 Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join.
 
+#### Inspect column names, types, and nullability with INFORMATION_SCHEMA
+
 *Inspect column names, data types, and nullability for the silver OHLCV table via INFORMATION_SCHEMA.*
 
 ```sql
@@ -199,6 +201,8 @@ ORDER BY ordinal_position
 
 ## SELECT, Filtering & Sorting
 
+`SELECT` is the workhorse of GoogleSQL — pick columns, filter rows with `WHERE`, sort with `ORDER BY`, and truncate output with `LIMIT`. Column selection matters more in BigQuery than in SQL Server because billing is driven by bytes scanned: every column named in the `SELECT` list reads its full column data, while `LIMIT` does not reduce cost. The subsections below cover basic filtering and multi-condition predicates, plus the cost-aware syntax differences between GoogleSQL and T-SQL.
+
 > [!tip]- BigQuery vs SQL Server — Key Differences
 >
 > | Behavior | BigQuery | SQL Server |
@@ -226,6 +230,8 @@ The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits
 > [!tip] Backtick escaping for table references
 >
 > BigQuery requires backticks around `project.dataset.table` when the project ID contains hyphens: `` `my-project.dataset.table` ``. Without backticks, the parser interprets the hyphen as minus. Column names that are reserved words (`close`, `open`) also need backticks, whereas SQL Server uses `[brackets]`.
+
+#### Retrieve the 10 most recent ASML trading days
 
 *Retrieve the 10 most recent ASML trading days with full OHLCV columns.*
 
@@ -312,6 +318,8 @@ LIMIT 10
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
+#### Find high-volume days with large intraday price swings
+
 *Find high-volume days with price swings exceeding 3% — potential breakout or crash events.*
 
 ```sql
@@ -383,6 +391,8 @@ LIMIT 15
 
 ## Aggregation (GROUP BY)
 
+`GROUP BY` collapses rows sharing a common key into a single row per group, evaluated after `WHERE` filtering. BigQuery runs aggregations in parallel across slots — each slot processes a shard of the input and emits partial aggregates that are merged in a final step. Because BigQuery bills per bytes scanned, every `GROUP BY` query should reference only the columns actually needed for the grouping key and aggregate inputs — `SELECT *` in an aggregation is both unnecessary and expensive.
+
 > [!danger] BigQuery Bills Per Bytes Scanned
 >
 > BigQuery charges per bytes scanned — `SELECT *` on a 1TB table costs ~$5.
@@ -397,6 +407,8 @@ LIMIT 15
 ### Aggregation GROUP BY — Aggregate by Stock
 
 `GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
+
+#### Rank stocks by average daily trading volume
 
 *Rank Euro Stoxx 50 stocks by average daily trading volume across the full history.*
 
@@ -494,6 +506,8 @@ Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-serie
 >
 > BigQuery uses `IFNULL(expr, default)` where SQL Server uses `ISNULL(expr, default)`. `COALESCE()` works identically in both. BigQuery also has `SAFE_DIVIDE(a, b)` which returns `NULL` instead of error on division by zero — SQL Server has no equivalent.
 
+#### Build a monthly time-series summary per stock
+
 *Build a monthly time-series summary for ASML: high, low, average close, and total volume per month.*
 
 ```sql
@@ -578,6 +592,8 @@ LIMIT 15
 
 ## JOINs Across Medallion Layers
 
+`JOIN` combines rows from two or more tables on a matching key. In the medallion architecture, joins connect fact tables (OHLCV prices in silver) with dimension tables (company metadata) and pre-computed analytics (gold scores). BigQuery distributes both sides of a join across worker slots and performs a shuffle based on the join key — small dimension tables are automatically broadcast, but joins between two large tables trigger a full data shuffle. Clustering the join key on both sides reduces shuffle cost significantly.
+
 > [!info] Cross-engine comparison
 >
 > BigQuery supports all standard JOIN types (INNER, LEFT, RIGHT, FULL, CROSS). SQL Server adds `CROSS APPLY` and `OUTER APPLY` for correlated lateral joins. Firestore has no server-side joins — denormalize your data model or perform client-side joins.
@@ -599,6 +615,8 @@ LIMIT 15
 `JOIN` combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
 
 The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
+
+#### Join latest price per stock with company dimension metadata
 
 *Join the latest price per stock (via ROW_NUMBER deduplication) with dimension metadata.*
 
@@ -689,6 +707,8 @@ LIMIT 15
 ### JOIN Across Medallion Layers — Gold Scores + Dimension (Cross-Layer)
 
 The gold layer has pre-computed composite scores. We join with the dimension table to add human-readable names and sector labels — this is what a dashboard query looks like.
+
+#### Join gold composite scores with dimension labels for a ranked dashboard
 
 *Join gold-layer composite scores with dimension metadata to produce a ranked stock dashboard.*
 
@@ -811,6 +831,8 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` — the window slides forward one row at a time.
 
+#### Compute 30-day and 90-day SMAs with a sliding window
+
 *Compute 30-day and 90-day simple moving averages for ASML's closing price.*
 
 ```sql
@@ -893,6 +915,8 @@ Use cases:
 - **Daily returns**: `(close - LAG(close)) / LAG(close)`
 - **Gap detection**: `DATE_DIFF(date, LAG(date), DAY)` — a `days_gap` value >1 indicates a weekend (normal: 3 for Fri→Mon) or holiday (>3 is unusual and worth investigating)
 - **Trend direction**: compare today vs yesterday
+
+#### Calculate daily return percentage and detect calendar gaps
 
 *Calculate daily return percentage and detect calendar gaps using LAG on close price and date.*
 
@@ -985,6 +1009,8 @@ This is the core of the gold scoring engine — rank stocks by composite score.
 >
 > CTE `bounds` computes the year's first and last trading dates in one scan. CTE `ytd` self-joins to get the opening and closing prices for each symbol. The final SELECT ranks by YTD return.
 
+#### Rank stocks by YTD return and assign quartile buckets
+
 *Compute YTD return per stock, then rank and assign quartile buckets using RANK and NTILE.*
 
 ```sql
@@ -1075,6 +1101,8 @@ A CTE (`WITH name AS (SELECT ...)`) creates a named temporary result set scoped 
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
 
 This builds a sector heatmap: average score, best/worst rank per sector.
+
+#### Build a sector heatmap with chained CTEs
 
 *Chain two CTEs to compute per-sector average scores and rank ranges from the latest gold scoring run.*
 
@@ -1171,6 +1199,8 @@ ORDER BY avg_score DESC
 ### CTEs & Subqueries — Chained CTEs Cross-Index Comparison
 
 Multiple CTEs chained together. Compares YTD performance, volatility, and valuation across all 4 indices — the kind of query an index provider runs daily.
+
+#### Compare key metrics across all four indices
 
 *Compare YTD return, 30-day volatility, P/E, and dividend yield across all four indices.*
 
@@ -1276,6 +1306,8 @@ Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one 
 
 The first cell checks structural integrity (null prices, negative values, high < low). The second checks operational health (gap-filled row count, data freshness).
 
+#### Run structural quality checks (NULLs, negatives, impossible values)
+
 *Run structural quality checks: null prices, negative prices, and impossible high < low.*
 
 ```sql
@@ -1291,6 +1323,8 @@ SELECT 'high_lt_low', COUNT(*)
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE high < low
 ```
+
+#### Run operational freshness and gap-fill checks
 
 *Run operational checks: count of gap-filled synthetic rows and days since last data update.*
 
@@ -1368,6 +1402,8 @@ flowchart LR
 
 The silver transform adds computed columns to raw data. Here, `LAG()` computes daily returns from the price time series. The `is_filled` flag marks gap-filled rows (weekends/holidays).
 
+#### Compute daily return with LAG and NULLIF safe division
+
 *Compute daily return as a percentage change from the previous day's close using LAG with NULLIF safe-division.*
 
 ```sql
@@ -1442,6 +1478,8 @@ LIMIT 10
 
 The gold transform normalizes scores across the index using z-scores: `(value - mean) / stddev`. Stocks are then ranked by composite score. This is the core of any index scoring engine.
 
+#### Normalize composite scores to z-scores across the index
+
 *Normalize composite scores to z-scores across the index and rank stocks by composite score.*
 
 ```sql
@@ -1511,6 +1549,8 @@ LIMIT 10
 
 ## When to Use BigQuery for Queries
 
+BigQuery is the right tool when the workload matches its serverless, scan-based cost model: large-scale scans, flexible schemas, bursty ad-hoc analytics, and multi-layer medallion pipelines where storage and compute scale independently.
+
 - **Large-scale analytics** — BigQuery's distributed architecture handles petabyte-scale tables without index planning. Queries parallelize automatically across slots.
 - **Ad-hoc exploration** — serverless, no infrastructure to manage. Run a query immediately without provisioning a server or creating indexes first.
 - **Cost-per-query billing** — pay only for bytes scanned. For infrequent queries on large datasets, this is dramatically cheaper than maintaining a dedicated SQL Server VM.
@@ -1519,12 +1559,16 @@ LIMIT 10
 
 ## When Not to Use BigQuery for Queries
 
+BigQuery is the wrong tool when the workload needs point lookups, low-latency OLTP access, or frequent small writes. The scenarios below usually belong on Cloud SQL, Firestore, or another engine optimized for the workload shape.
+
 - **Sub-second transactional queries** — BigQuery has a minimum query overhead of ~0.5-2 seconds regardless of data size. SQL Server with indexed seeks delivers single-digit millisecond response times.
 - **High-frequency DML** — the 1,500 DML statements/day/table quota makes BigQuery unsuitable for high-frequency upsert patterns. Use the Storage Write API for streaming.
 - **Complex procedural logic** — BigQuery scripting supports `IF`/`LOOP`/`BEGIN...EXCEPTION`, but there is no plan caching, and variable scoping across cells is limited in notebooks.
 - **Small, frequently-updated tables** — for tables under 1GB with frequent writes, SQL Server or PostgreSQL with proper indexes is simpler and cheaper.
 
 ## Warnings
+
+The table below lists the BigQuery-specific query anti-patterns that silently increase cost, degrade performance, or produce wrong results. Each entry corresponds to a pattern covered earlier in this note.
 
 | Topic | Warning |
 |---|---|
@@ -1538,6 +1582,8 @@ LIMIT 10
 
 ## Recommendations
 
+Standing guidance for writing cost-efficient BigQuery queries in this medallion pipeline. Apply these as defaults unless a specific query has a documented reason to deviate.
+
 | Area | Recommendation |
 |---|---|
 | **Cost control** | Always dry-run before expensive queries: `bq query --dry_run "SELECT ..."`. Use `job_config.dry_run = True` in Python. |
@@ -1550,6 +1596,8 @@ LIMIT 10
 
 ## Troubleshooting
 
+Symptoms you will encounter when a BigQuery query misbehaves or unexpectedly scans too many bytes, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Query costs more than expected | Missing partition filter, or `SELECT *` scanning all columns | Add a WHERE filter on the partition column. Select only needed columns. Dry-run to verify bytes. |
@@ -1560,8 +1608,8 @@ LIMIT 10
 
 ## Cross-references
 
-- [[02-bq-engineering]] — views, table functions, clustering, DML, SCD, deduplication, transactions, partitioning
-- [[03-bq-advanced]] — window function deep dives, recursive CTEs, lateral patterns, PIVOT/UNPIVOT, MERGE, GROUPING SETS
+Related notes that extend or depend on the patterns covered here.
+
 - [01-sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) — SQL Server equivalent of every query pattern in this note
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — slot management, reservation strategies, cost control
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — ingestion pipeline feeding the medallion architecture

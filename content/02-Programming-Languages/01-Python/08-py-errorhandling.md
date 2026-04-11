@@ -3,9 +3,6 @@ title: "08 - Error Handling - Python"
 tags: [python]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [08-cs-errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/08-cs-errorhandling) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[08-cs-errorhandling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
-Python uses `try`/`except`/`else`/`finally` blocks for exception handling, a class-based hierarchy rooted in `BaseException`, and context managers (`with` statement) for deterministic resource cleanup. This note covers exception catching and chaining, the built-in exception tree, custom domain exceptions, context managers (both generator-based and class-based), and data-engineering patterns like error accumulation, safe parse helpers, and retry with backoff. Every concept is paired with its C# equivalent in [[08-cs-errorhandling]].
-
+Python uses `try`/`except`/`else`/`finally` blocks for exception handling, a class-based hierarchy rooted in `BaseException`, and context managers (`with` statement) for deterministic resource cleanup. This note covers exception catching and chaining, the built-in exception tree, custom domain exceptions, context managers (both generator-based and class-based), and data-engineering patterns like error accumulation, safe parse helpers, and retry with backoff.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -816,10 +812,3 @@ IOError group: File B not found
 | Silent data corruption in ETL | Exceptions caught and swallowed without logging | Always log, count, or accumulate caught exceptions |
 | Retry loop runs forever | No maximum retry count | Always set `max_retries` and `raise` after exhaustion |
 
-## Cross-References
-
-- **C# equivalent** — [[08-cs-errorhandling]] covers `try`/`catch`/`finally`, exception filters, `IDisposable`/`using`, custom exceptions
-- **Functions** — [[04-py-functions]] covers decorator-based retry and error accumulation patterns
-- **OOP** — [[06-py-oop]] covers class hierarchies — custom exceptions use inheritance
-- **Collections** — [[05-py-collections]] covers `defaultdict` for error accumulation patterns
-- **Concurrency** — [[12-py-asyncconcurrency]] covers async exception handling and `TaskGroup` error propagation

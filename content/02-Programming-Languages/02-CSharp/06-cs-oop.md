@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [06-py-oop](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/06-py-oop) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[06-py-oop]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +20,7 @@ status: complete
 >
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
 
-C# OOP organises code into classes, interfaces, inheritance hierarchies, and records. This page covers all core constructs with executable examples — from basic class declaration through to records and static members. Every concept is paired with its Python equivalent in [[06-py-oop]].
+C# OOP organises code into classes, interfaces, inheritance hierarchies, and records. This page covers all core constructs with executable examples — from basic class declaration through to records and static members.
 
 ### Key terms used in this note
 
@@ -919,10 +916,3 @@ True
 | `CS0122: inaccessible due to its protection level` | Trying to access `private` or `protected` member from outside | Change access modifier or expose through a public property/method |
 | Abstract class can't be instantiated | Tried `new Shape()` on an abstract class | Instantiate a concrete subclass: `new Rectangle(5, 3)` |
 
-## Cross-References
-
-- **Python equivalent** — [[06-py-oop]] covers classes, inheritance, ABC, Protocol, `@dataclass`, `@property`, `@classmethod`/`@staticmethod`
-- **Collections** — [[05-cs-collections]] covers `record` as collection record types and struct-based value types
-- **Functions** — [[04-cs-functions]] covers delegates, `Func<T>`/`Action<T>`, and extension methods that complement OOP patterns
-- **Error handling** — [[08-cs-errorhandling]] covers exception hierarchies and custom exception classes
-- **Design patterns** — [[18-cs-designpatterns]] covers strategy, factory, and observer patterns using OOP constructs

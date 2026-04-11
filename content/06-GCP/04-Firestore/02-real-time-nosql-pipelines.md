@@ -15,16 +15,6 @@ description: >
   event-driven processing patterns, config-driven behavior, Pub/Sub + Dataflow
   streaming, change data capture, full Python implementations, monitoring, cost
   optimization, and security. Batch vs. real-time decision framework included.
-parent: "[[domain-data-services]]"
-links:
-  - "[[01-gcs-buckets-and-lifecycle]]"
-  - "[[02-gcs-object-operations]]"
-  - "[[01-dataset-and-table-management]]"
-  - "[[02-data-loading-and-export]]"
-  - "[[03-querying-and-cost-optimization]]"
-  - "[[04-job-management]]"
-  - "[[05-bigquery-problems]]"
-  - "[[01-firestore-data-model-and-operations]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

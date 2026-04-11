@@ -4,11 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Business logic transforms, silver layer"
-parent: "[[domain-model-design]]"
-links:
-  - "[[01-dbt-staging-models]]"
-  - "[[03-dbt-mart-models]]"
-  - "[[04-dbt-materializations]]"
 ---
 
 # dbt: Intermediate Models

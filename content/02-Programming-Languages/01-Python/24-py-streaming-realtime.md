@@ -7,9 +7,6 @@ tags:
   - streaming
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24-cs-streaming-realtime](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/24-cs-streaming-realtime) for the C# equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[24-cs-streaming-realtime]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
-This note covers Python implementations of five streaming and transfer patterns — WebSocket, SSE, Pub/Sub, Firestore, and enterprise file transfer. See [[24-cs-streaming-realtime]] for the equivalent C# patterns.
+This note covers Python implementations of five streaming and transfer patterns — WebSocket, SSE, Pub/Sub, Firestore, and enterprise file transfer.
 
 ### Key terms used in this note
 
@@ -1075,11 +1072,4 @@ Decision matrix for selecting the right streaming or transfer pattern based on t
 | `DefaultCredentialsError` when running Pub/Sub or Firestore locally | Application Default Credentials not configured | Run `gcloud auth application-default login` or set `GOOGLE_APPLICATION_CREDENTIALS` to the path of a service account key |
 | GCS Transfer Service job shows status `FAILED` with no transferred objects | Source bucket permissions not granted to the Transfer Service agent | Grant `roles/storage.objectViewer` on the source bucket to the service account `project-<PROJECT_NUMBER>@storage-transfer-service.iam.gserviceaccount.com` |
 
-## Cross-References
-
-- [[24-cs-streaming-realtime]] — C# equivalents: `ClientWebSocket`, `IAsyncEnumerable` SSE, Google.Cloud.PubSub.V1, Firestore SDK
-- [[23-py-data-ingestion]] — Batch ingestion patterns that feed into Pub/Sub topics and Firestore collections
-- [[12-py-asyncconcurrency]] — asyncio foundations: event loops, tasks, coroutines, and `asyncio.Queue`
-- [[25-py-functional-pipeline]] — End-to-end pipeline that can be triggered from Pub/Sub push subscriptions
-- [[17-py-gcp]] — GCP authentication, project setup, and service account management for all GCP client libraries
 | High-bandwidth production | **Cloud Interconnect** | Dedicated line, consistent 10+ Gbps |

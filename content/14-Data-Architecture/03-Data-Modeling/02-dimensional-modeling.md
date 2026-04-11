@@ -23,9 +23,6 @@ description: >
   advanced patterns (bridge tables, factless facts, aggregates, late-arriving data),
   and physical implementation in SQL Server and BigQuery. Every concept is grounded
   in a financial index provider domain with full DDL and concrete SQL examples.
-parent: "[[domain-data-modeling]]"
-links:
-  - "[[01-data-modeling-patterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

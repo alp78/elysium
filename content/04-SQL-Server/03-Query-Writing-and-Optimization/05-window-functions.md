@@ -3,11 +3,6 @@ title: "05 - Window Functions"
 tags: [sql, sql-server, tsql, over, partition-by, row-number, rank, lag, lead, running-total]
 aliases: [OVER clause, analytic functions, ranking functions, LAG LEAD]
 description: "T-SQL reference for the OVER clause, PARTITION BY, ORDER BY, ranking functions, LAG/LEAD, FIRST_VALUE/LAST_VALUE, running totals, moving averages, and window frames."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[01-select-and-query-basics]]"
-  - "[[03-joins-subqueries-and-apply]]"
-  - "[[04-common-table-expressions-and-temporary-objects]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -250,9 +245,4 @@ Use this instead of correlated `TOP (1)` subqueries when you need multiple rows 
 - Be explicit about frames for running totals and `LAST_VALUE`.
 - Use `ROW_NUMBER()` plus a CTE or derived table for top-N-per-group patterns.
 
-## Related
-
-- [[01-select-and-query-basics]]
-- [[03-joins-subqueries-and-apply]]
-- [[04-common-table-expressions-and-temporary-objects]]
 

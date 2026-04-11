@@ -3,14 +3,6 @@ title: "03 - Lakehouse Architecture"
 tags: [data-architecture, architecture, lakehouse, python, bigquery, gcp]
 aliases: [lakehouse, data lakehouse, lake house, Delta Lake, Apache Iceberg, Apache Hudi, BigLake, Unity Catalog, Tabular, Databricks Lakehouse, lakehouse architecture]
 description: "The lakehouse architecture combines the low-cost flexible storage of a data lake with the transactional guarantees and governance of a data warehouse, enabled by open table formats (Delta Lake, Apache Iceberg, Apache Hudi) that add ACID transactions, time travel, and schema enforcement directly on object storage."
-parent: "[[domain-system-blueprints]]"
-links:
-  - "[[01-data-warehouse-architecture]]"
-  - "[[02-data-lake-architecture]]"
-  - "[[04-data-mesh-architecture]]"
-  - "[[05-streaming-architecture]]"
-  - "[[06-open-table-formats]]"
-  - "[[07-context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

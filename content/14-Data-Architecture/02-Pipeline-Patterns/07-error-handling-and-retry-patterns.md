@@ -15,12 +15,6 @@ tags:
 aliases:
   - "Retry Patterns"
   - "Error Handling Strategy"
-parent: "[[domain-pipeline-reliability]]"
-links:
-  - "[[06-data-quality-framework]]"
-  - "[[05-data-contracts]]"
-  - "[[08-data-pipeline-testing-strategy]]"
-  - "[[09-environment-management-strategy]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

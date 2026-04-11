@@ -3,13 +3,6 @@ title: "15 - Blocking and Locking"
 tags: [sql-server, tsql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
 description: "Production-focused SQL Server locking guide."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[13-tde-encryption]]"
-  - "[[12-audit-logging]]"
-  - "[[16-deadlock-detection-and-prevention]]"
-  - "[[17-race-conditions]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -679,10 +672,4 @@ ORDER BY wait_time_ms DESC;
 - Use `XACT_ABORT ON` and a finite `LOCK_TIMEOUT` for unattended write workloads.
 - Investigate lock escalation by fixing access patterns first. Disabling escalation is a last-mile intervention, not a first response.
 
-## Related
-
-- [[16-deadlock-detection-and-prevention]]
-- [[17-race-conditions]]
-- [[12-execution-plans]]
-- [[13-wait-stats-analysis]]
 

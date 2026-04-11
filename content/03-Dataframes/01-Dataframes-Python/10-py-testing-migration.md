@@ -4,13 +4,6 @@ tags: [pipeline, python, pandas, polars, dataframes]
 aliases:
   - end-to-end project, validation, migration guide
 description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-py-visualization]]"
-  - "[[08-cs-visualization]]"
-  - "[[09-py-database-interface]]"
-  - "[[09-cs-database-interface]]"
-  - "[[10-cs-testing-migration]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -1553,11 +1546,3 @@ Polars is not a drop-in Pandas replacement. It is a different mental model:
 | `SettingWithCopyWarning` during migration testing | Pandas code still uses in-place mutation patterns | Convert to `.assign()` / `.copy()` in Pandas, or migrate to Polars |
 | Memory profiling shows unexpected spike | Intermediate DataFrames not garbage-collected | Delete intermediate variables with `del df_temp` or restructure as a chain |
 
-## Cross-references
-
-- **C# counterpart:** [[10-cs-testing-migration]] — testing and migration patterns for Polars.NET
-- **Previous in sequence:** [[09-py-database-interface]] — database connectivity (source for integration tests)
-- **Foundations:** [[01-py-foundations-io]] — data type system and null representation basics
-- **Transforms:** [[03-py-transforms-expressions]] — the operations being tested and migrated
-- **Lazy execution:** [[06-py-lazy-performance]] — Polars performance model (critical context for migration)
-- **Domain index:** [[domain-integrate-and-validate]] — parent domain page for this note

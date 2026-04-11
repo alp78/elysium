@@ -12,10 +12,6 @@ aliases:
   - continuous data delivery
   - data value stream
 description: "DataOps principles and practices — the intersection of Agile, DevOps, and Lean applied to data engineering, covering the DataOps manifesto, CI/CD for data, shift-left testing, and maturity models."
-parent: "[[domain-principles-and-practice]]"
-links:
-  - "[[05-dataops-for-indices]]"
-  - "[[03-self-service-data-platform]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

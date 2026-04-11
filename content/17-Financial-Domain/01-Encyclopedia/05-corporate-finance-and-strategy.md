@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [corporate finance terms, M&A glossary, merger acquisition glossary, restructuring glossary, spin-off glossary]
 keywords: [mergers acquisitions, M&A, divestitures, spin-off, restructuring, corporate finance advisory, holding company, subsidiaries, segments, joint venture, incorporated, financial advisory, goodwill, tender offer]
 description: "Encyclopedia definitions for corporate finance and strategy terms covering M&A, divestitures, spin-offs, restructuring, advisory, holding companies, and corporate governance drawn from the example Index universe."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[02-business-models-and-commerce]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[04-compliance-and-risk-management]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[08-exchanges-and-market-infrastructure]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[13-real-estate-and-industrial]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
-  - "[[16-trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

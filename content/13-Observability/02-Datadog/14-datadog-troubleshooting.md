@@ -3,21 +3,6 @@ title: "14 - Datadog Troubleshooting"
 tags: [monitoring, observability, sql, terraform, docker, datadog, gcp]
 aliases: [Datadog Troubleshooting, DD Agent Troubleshooting, Datadog Common Issues]
 description: "Troubleshooting guide for Datadog agent issues on the data platform — covering agent not appearing, missing APM traces, no logs, COS filesystem constraints, ghost hosts, and Windows line ending issues."
-parent: "[[domain-datadog-platform]]"
-links:
-  - "[[01-datadog-architecture-overview]]"
-  - "[[03-datadog-agent-airflow-vm]]"
-  - "[[02-datadog-agent-sql-vm]]"
-  - "[[06-datadog-gcp-integration]]"
-  - "[[04-datadog-sql-server-integration]]"
-  - "[[08-datadog-custom-queries]]"
-  - "[[11-datadog-log-management]]"
-  - "[[12-datadog-sql-server-logs]]"
-  - "[[10-datadog-apm-traces]]"
-  - "[[07-datadog-dashboards]]"
-  - "[[09-datadog-alerting]]"
-  - "[[05-datadog-airflow-observability]]"
-  - "[[13-datadog-cost-optimization]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

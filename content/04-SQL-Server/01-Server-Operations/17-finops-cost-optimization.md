@@ -9,11 +9,6 @@ aliases:
   - SQL Server cost optimization
   - SQL Server FinOps
 description: "Cost-control patterns for SQL Server on GCP, grounded on current SQL Server storage signals and focused on backup compression, snapshots, retention, and compute commitment choices."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[07-backup-types-and-strategy]]"
-  - "[[01-server-configuration]]"
-  - "[[11-memory-and-buffer-pool]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -316,8 +311,3 @@ These are the highest-value cost actions suggested by the current evidence.
 
 ---
 
-## Related
-
-- [[07-backup-types-and-strategy]] for the SQL-aware backup chain that underpins any storage-cost discussion
-- [[01-server-configuration]] for the instance settings that influence backup behavior and log growth
-- [[11-memory-and-buffer-pool]] for the live SQL Server memory signals that should inform right-sizing

@@ -3,9 +3,6 @@ title: "25 - Functional Pipeline - Python"
 tags: [python, pipeline, data-quality, lineage, polars, pydantic, fastapi, streamlit, sql-server, medallion, parquet, airflow, validation, plotly]
 aliases: [functional pipeline, medallion pipeline, data lineage, pydantic validation]
 description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [25-cs-functional-pipeline](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/25-cs-functional-pipeline) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[25-cs-functional-pipeline]]"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete
@@ -33,7 +30,7 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 >
 > — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
-This note implements an end-to-end functional data pipeline in Python using Polars, Pydantic, FastAPI, and SQL Server with medallion architecture, lineage tracking, and SHA-256 tamper detection. See [[25-cs-functional-pipeline]] for the equivalent C#/.NET implementation.
+This note implements an end-to-end functional data pipeline in Python using Polars, Pydantic, FastAPI, and SQL Server with medallion architecture, lineage tracking, and SHA-256 tamper detection.
 
 ### Key terms used in this note
 
@@ -5796,10 +5793,3 @@ print(f"\nContract says: '{vol_meta['description']}'")
 | Gold aggregation produces `NaN` for some symbols | Silver rows for those symbols failed the quality gate and were quarantined, leaving no rows to aggregate | Query the quarantine table first; fix the root data issue before rerunning Silver and Gold for those symbols |
 | FastAPI `/data` endpoint returns empty JSON list | Parquet file path in the endpoint does not match the export path constant | Print `PARQUET_PATH` in both the export step and the API startup log; confirm both reference the same absolute path |
 
-## Cross-References
-
-- [[25-cs-functional-pipeline]] — C# equivalent using FluentValidation, LINQ transforms, Dapper, and HttpListener
-- [[24-py-streaming-realtime]] — Real-time ingestion patterns that can feed the Bronze landing zone via Pub/Sub
-- [[16-py-database]] — pyodbc, SQLAlchemy, and SQL Server connection management patterns
-- [[02-py-strings]] — String normalization and hashing utilities used in SHA-256 tamper detection
-- [[19-py-performance-quality]] — Polars performance profiling and memory optimization for large Silver/Gold transforms

@@ -3,16 +3,6 @@ title: "04 - Job Management"
 tags: [bigquery, gcp]
 aliases: [BigQuery jobs, bq jobs, bq cancel, bq show job, BigQuery job listing]
 description: "How to list, inspect, and cancel BigQuery jobs using the bq CLI — essential for diagnosing failed queries, understanding cost history, and stopping accidental large scans."
-parent: "[[domain-data-services]]"
-links:
-  - "[[01-gcs-buckets-and-lifecycle]]"
-  - "[[02-gcs-object-operations]]"
-  - "[[01-dataset-and-table-management]]"
-  - "[[02-data-loading-and-export]]"
-  - "[[03-querying-and-cost-optimization]]"
-  - "[[05-bigquery-problems]]"
-  - "[[01-firestore-data-model-and-operations]]"
-  - "[[02-real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

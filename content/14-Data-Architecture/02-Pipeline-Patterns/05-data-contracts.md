@@ -19,12 +19,6 @@ aliases:
   - "Data Contract"
 description: "Formal agreements between data producers and consumers — schema, SLAs, semantics, ownership, versioning — with YAML examples, CI enforcement, and breaking-change classification."
 status: complete
-parent: "[[domain-pipeline-reliability]]"
-links:
-  - "[[06-data-quality-framework]]"
-  - "[[08-data-pipeline-testing-strategy]]"
-  - "[[07-error-handling-and-retry-patterns]]"
-  - "[[09-environment-management-strategy]]"
 created: 2026-03-23
 updated: 2026-03-29
 ---

@@ -3,11 +3,6 @@ title: "01 - Terraform: Foundation and Networking Blocks"
 tags: [terraform, gcp, networking, vpc, firewall, dns]
 aliases: [terraform block library, terraform GCP blocks, terraform networking blocks, terraform foundation blocks, GCP terraform snippets, terraform copy-paste blocks]
 description: "Atomic Terraform block library for GCP foundation and networking resources. Every block is self-contained and copy-pasteable with argument tables and plain-text explanations. Covers provider/backend setup, variables, outputs, locals, VPC, subnets, Cloud NAT, firewall rules, static IPs, DNS, VPC peering, Shared VPC, and Private Service Connect."
-parent: "[[domain-block-library]]"
-links:
-  - "[[02-tf-compute-and-storage]]"
-  - "[[03-tf-data-services]]"
-  - "[[04-tf-iam-secrets-serverless]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

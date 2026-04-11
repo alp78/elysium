@@ -3,10 +3,6 @@ title: "12 - Audit Logging"
 tags: [sql, sql-server, security, tsql]
 aliases: [SQL Server Audit, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection]
 description: "Production guide to SQL Server Audit on Linux: file targets, server and database audit specifications, reading .sqlaudit files, failed-login burst detection, and operational forwarding patterns for GCP."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[13-tde-encryption]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -541,8 +537,4 @@ If the external platform cannot parse `.sqlaudit` natively, convert and summariz
 - Forward audit artifacts off-host. A local-only audit is weaker against host compromise and instance loss.
 - Review `LGIF`, `AUSC`, and principal-change events regularly even if no alert fired.
 
-## Related
-
-- [[03-sql-server-authentication]]
-- [[13-tde-encryption]]
 

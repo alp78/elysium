@@ -7,16 +7,6 @@ tags: [shell, scripting]
 aliases: [command chaining, shell operators, chain commands, && operator, pipe operator, semicolon operator, OR operator]
 keywords: [command chaining, exit code, logical AND, logical OR, pipe, pipeline, semicolon, fail-fast, bash operators, powershell operators, process exit code, shell execution flow]
 description: "How bash and PowerShell command chaining operators (&&, ||, ;, |) use exit codes to control execution flow, enabling fail-fast scripts and graceful error handling."
-parent: "[[domain-script-engineering]]"
-links:
-  - "[[02-command-history]]"
-  - "[[03-io-redirection]]"
-  - "[[06-process-substitution]]"
-  - "[[05-brace-expansion-and-globbing]]"
-  - "[[01-environment-variables]]"
-  - "[[07-defensive-scripting]]"
-  - "[[01-bash-automation]]"
-  - "[[02-powershell-automation]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

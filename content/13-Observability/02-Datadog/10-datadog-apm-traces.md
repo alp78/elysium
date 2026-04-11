@@ -3,21 +3,6 @@ title: "10 - Datadog APM Traces"
 tags: [monitoring, observability, python, docker, datadog, gcp]
 aliases: [Datadog APM, ddtrace, Pipeline Traces, APM Instrumentation]
 description: "How ddtrace APM instrumentation works in the data pipeline — auto-instruments pyodbc and requests, creates per-step flame graphs, and injects trace IDs into logs for correlation."
-parent: "[[domain-datadog-platform]]"
-links:
-  - "[[01-datadog-architecture-overview]]"
-  - "[[03-datadog-agent-airflow-vm]]"
-  - "[[02-datadog-agent-sql-vm]]"
-  - "[[06-datadog-gcp-integration]]"
-  - "[[04-datadog-sql-server-integration]]"
-  - "[[08-datadog-custom-queries]]"
-  - "[[11-datadog-log-management]]"
-  - "[[12-datadog-sql-server-logs]]"
-  - "[[07-datadog-dashboards]]"
-  - "[[09-datadog-alerting]]"
-  - "[[05-datadog-airflow-observability]]"
-  - "[[13-datadog-cost-optimization]]"
-  - "[[14-datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

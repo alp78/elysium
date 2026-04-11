@@ -3,9 +3,6 @@ title: "25 - Functional Pipeline - C#"
 tags: [csharp, pipeline, data-quality, lineage, dotnet, fluentvalidation, polly, dapper, aspnet, sql-server, medallion, parquet, validation, plotly]
 aliases: [functional pipeline csharp, medallion pipeline dotnet, data lineage csharp]
 description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [25-py-functional-pipeline](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/25-py-functional-pipeline) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[25-py-functional-pipeline]]"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete
@@ -33,7 +30,7 @@ LINQ transforms → Silver → LINQ aggregation → Gold → Parquet → HttpLis
 >
 > — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
-This note implements an end-to-end functional data pipeline in C#/.NET using FluentValidation, Dapper, LINQ transforms, and HttpListener with medallion architecture, lineage tracking, and SHA-256 tamper detection. See [[25-py-functional-pipeline]] for the equivalent Python/Polars/Pydantic implementation.
+This note implements an end-to-end functional data pipeline in C#/.NET using FluentValidation, Dapper, LINQ transforms, and HttpListener with medallion architecture, lineage tracking, and SHA-256 tamper detection.
 
 ### Key terms used in this note
 
@@ -4349,12 +4346,5 @@ Console.WriteLine($"\nContract says: '{volMeta.GetProperty("description").GetStr
 | Dapper `InvalidOperationException: Sequence contains no elements` | `QuerySingle` used on a query that returned zero rows | Replace `QuerySingle` with `QuerySingleOrDefault` and check for `null` before using the result |
 | `JsonException: The JSON value could not be converted to System.Double` | Gold row has a `NaN` or `Infinity` value (from a zero-price division) that `System.Text.Json` cannot serialize | Guard against division by zero in the Gold aggregation step; replace invalid doubles with `null` before serialization |
 
-## Cross-References
-
-- [[25-py-functional-pipeline]] — Python equivalent using Polars, Pydantic, FastAPI, and Tenacity
-- [[24-cs-streaming-realtime]] — Real-time ingestion patterns that can feed the Bronze landing zone via Pub/Sub
-- [[16-cs-database]] — Dapper, `SqlBulkCopy`, and SQL Server connection management in depth
-- [[08-cs-errorhandling]] — Exception handling patterns and Polly resilience strategies
-- [[19-cs-performance-quality]] — LINQ performance profiling, `Span<T>`, and memory optimization for large transforms
 
     Contract says: 'Standard deviation of daily returns — annualize by multiplying by sqrt(252)'

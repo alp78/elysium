@@ -8,11 +8,6 @@ aliases:
   - SQL Server Agent
   - Agent jobs
 description: "SQL Server Agent on Linux: current instance state, enablement, Linux limitations, job creation, monitoring, and when Agent should or should not own scheduled work."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[01-server-configuration]]"
-  - "[[07-backup-types-and-strategy]]"
-  - "[[02-sqlcmd-connection-and-usage]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -311,8 +306,3 @@ Typical examples:
 
 ---
 
-## Related
-
-- [[01-server-configuration]] for the current `Agent XPs` and related instance settings
-- [[07-backup-types-and-strategy]] for one of the most common job types Agent should own
-- [[02-sqlcmd-connection-and-usage]] for shell-driven alternatives when Agent is not the right scheduler

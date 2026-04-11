@@ -10,13 +10,6 @@ aliases:
   - differential backup
   - transaction log backup
 description: "Production SQL Server backup strategy: backup types, backup-chain rules, verification commands, retention guidance, and real backup metadata captured from the current environment."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[01-server-configuration]]"
-  - "[[08-restore-and-recovery]]"
-  - "[[05-sql-server-agent-jobs]]"
-  - "[[02-sqlcmd-connection-and-usage]]"
-  - "[[06-essential-dba-queries]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -378,10 +371,3 @@ WITH COMPRESSION, CHECKSUM, RETAINDAYS = 30;
 
 ---
 
-## Related
-
-- [[08-restore-and-recovery]] for the actual restore commands and side-by-side restore workflow
-- [[01-server-configuration]] for the recovery-model decision that makes the backup-chain design possible
-- [[05-sql-server-agent-jobs]] for scheduling and monitoring recurring backup jobs
-- [[02-sqlcmd-connection-and-usage]] for shell-based backup automation patterns
-- [[06-essential-dba-queries]] for the `msdb` and log-space checks that prove the strategy is actually running

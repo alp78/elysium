@@ -3,9 +3,6 @@ title: "18 - Design Patterns - Python"
 tags: [python, design-patterns]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18-cs-designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/18-cs-designpatterns) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[18-cs-designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
 
-This note documents Python design patterns and architectural idioms used in data engineering and backend development. For the C# equivalent implementation, see [[18-cs-designpatterns]].
+This note documents Python design patterns and architectural idioms used in data engineering and backend development.
 
 ### Key terms used in this note
 
@@ -927,10 +924,3 @@ flowchart TD
 | Strategy produces wrong result after swap | New strategy class does not match expected interface (method name or signature differs) | Define the strategy contract as an `ABC`; add a unit test that exercises every concrete strategy |
 | Repository mock not called in unit test | Test injects the wrong instance (e.g., real repo leaked via default argument) | Never use mutable defaults in constructors; always inject explicitly in test setup |
 
-## Cross-References
-
-- [[18-cs-designpatterns]] — C# implementations of every pattern covered here: interfaces, `Lazy<T>` Singleton, event delegates, ASP.NET Core DI
-- [[domain-language-foundations]] — parent MOC linking all Python and C# language notes
-- [[17-py-testing]] — applying the Repository and DI patterns to write unit tests with mocks and fakes
-- [[14-py-oop]] — ABC, `@abstractmethod`, `__new__`, `__init__`, and `Protocol` foundations that underpin these patterns
-- [[13-py-modules]] — module-level singleton idiom, `__init__.py` conventions, and package layout referenced in Project Structure

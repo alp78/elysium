@@ -3,9 +3,6 @@ title: "11 - DateTime, Math & Utilities - Python"
 tags: [python]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 description: "Python date, time, math and utilities reference with executable examples and cell outputs — covers datetime, timezones, timedelta, math, random, and common utility functions. See [11-cs-datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/11-cs-datetimemathutils) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[11-cs-datetimemathutils]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Jon Skeet**
 
-Python's `datetime` module provides date/time types, `timedelta` intervals, and timezone-aware operations. This note also covers math, random number generation, logging, and configuration/environment variable management — common utility patterns for data engineering. Every concept is paired with its C# equivalent in [[11-cs-datetimemathutils]].
-
+Python's `datetime` module provides date/time types, `timedelta` intervals, and timezone-aware operations. This note also covers math, random number generation, logging, and configuration/environment variable management — common utility patterns for data engineering.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1211,9 +1207,3 @@ tmp_dir  # Cleaned up
 | Logging output not appearing | Logger not configured or level too high | Call `logging.basicConfig(level=logging.DEBUG)` at startup |
 | `random.seed()` produces same sequence | Seed set to fixed value | Remove fixed seed for production; use fixed seed only for reproducible tests |
 
-## Cross-References
-
-- **C# equivalent** — [[11-cs-datetimemathutils]] covers `DateTime`, `DateOnly`, `TimeSpan`, `TimeZoneInfo`, `Math`, `Random`, `ILogger`, `IConfiguration`
-- **File I/O** — [[09-py-fileio-serialization]] covers config file parsing (JSON, YAML)
-- **Error handling** — [[08-py-errorhandling]] covers exception patterns for date parsing failures
-- **Shell** — [[05-date-and-time-handling]] covers command-line date operations in Bash/PowerShell

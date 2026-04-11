@@ -44,17 +44,6 @@ keywords:
   - zgrep
   - compressed file search
 description: "Exhaustive reference for grep and pattern matching in bash and PowerShell, covering basic flags, regular expressions, advanced features, data engineering scenarios, and ripgrep. Every bash example paired with its PowerShell Select-String equivalent."
-parent: "[[domain-data-and-files]]"
-links:
-  - "[[01-navigation-and-listing]]"
-  - "[[01-reading-file-contents]]"
-  - "[[04-awk-data-processing]]"
-  - "[[03-sed-stream-editing]]"
-  - "[[05-date-and-time-handling]]"
-  - "[[03-finding-files]]"
-  - "[[02-file-manipulation]]"
-  - "[[04-compression]]"
-  - "[[05-data-transfer]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

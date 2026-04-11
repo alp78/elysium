@@ -7,12 +7,6 @@ tags:
   - fetch
 aliases: [git remote, git fetch, upstream, force-with-lease, fork workflow, git remote -v, git fetch origin, git fetch prune, safe force push, origin remote]
 description: "How to manage git remote connections — view, add, fetch, prune, and safely force-push to remote repositories including upstream fork synchronization."
-parent: "[[domain-branching-and-collaboration]]"
-links:
-  - "[[03-git-branching-and-merging]]"
-  - "[[04-merge-vs-rebase-vs-squash]]"
-  - "[[10-git-merge-conflicts]]"
-  - "[[06-pull-requests-and-code-review]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

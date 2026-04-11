@@ -3,11 +3,6 @@ title: "06 - Numeric and Aggregate Functions"
 tags: [sql, sql-server, tsql, numeric-functions, aggregate-functions, count, sum, avg, round]
 aliases: [math functions, aggregate reference, COUNT SUM AVG]
 description: "T-SQL reference for SQL Server numeric functions, aggregate functions, rounding, ratios, divide-by-zero protection, and common analytical math patterns."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[01-select-and-query-basics]]"
-  - "[[05-window-functions]]"
-  - "[[02-data-types-conversion-and-null-handling]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -136,9 +131,4 @@ Use a decimal literal such as `100.0` when fractional precision is required. Int
 - Keep row grain and group grain explicit before aggregating.
 - Use window aggregates when you need group context without collapsing rows.
 
-## Related
-
-- [[01-select-and-query-basics]]
-- [[05-window-functions]]
-- [[02-data-types-conversion-and-null-handling]]
 

@@ -23,14 +23,6 @@ description: >
   provenance, temporal modeling, quality metadata, business context, data
   contracts, schema evolution, and propagation patterns across SQL Server,
   BigQuery, GCS, Firestore, and Python.
-parent: "[[domain-system-blueprints]]"
-links:
-  - "[[01-data-warehouse-architecture]]"
-  - "[[02-data-lake-architecture]]"
-  - "[[03-lakehouse-architecture]]"
-  - "[[04-data-mesh-architecture]]"
-  - "[[05-streaming-architecture]]"
-  - "[[06-open-table-formats]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

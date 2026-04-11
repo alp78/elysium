@@ -4,13 +4,6 @@ tags: [csharp, polars, dataframes, plotly, scottplot]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-py-visualization]]"
-  - "[[09-py-database-interface]]"
-  - "[[09-cs-database-interface]]"
-  - "[[10-py-testing-migration]]"
-  - "[[10-cs-testing-migration]]"
 created: 2026-03-27
 updated: 2026-04-08
 status: complete
@@ -16080,6 +16073,3 @@ svgStream.Dispose();
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-## Cross-references
-- **Python counterpart:** [[08-py-visualization]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-integrate-and-validate]]

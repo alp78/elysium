@@ -9,9 +9,6 @@ aliases:
   - career ladder
   - team structure
 description: "How to build, organize, and scale data engineering teams — team topologies, role definitions, career ladders, RACI matrices, and collaboration models."
-parent: "[[domain-people-and-organization]]"
-links:
-  - "[[04-leadership-and-collaboration]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

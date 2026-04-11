@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [05-cs-collections](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/05-cs-collections) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[05-cs-collections]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +20,7 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
-Python's built-in collections span the full spectrum from mutable sequences to immutable records, ordered mappings to hash sets, and specialized structures for queues, stacks, and priority scheduling. This page covers the core types and the `collections` module extensions. Every concept is paired with its C# equivalent in [[05-cs-collections]].
+Python's built-in collections span the full spectrum from mutable sequences to immutable records, ordered mappings to hash sets, and specialized structures for queues, stacks, and priority scheduling. This page covers the core types and the `collections` module extensions.
 
 ### Key terms used in this note
 
@@ -1050,10 +1047,3 @@ Choosing the right collection type depends on access pattern, ordering requireme
 | `Counter` total doesn't match data | Negative counts from subtraction or manual assignment | Use `+counter` to strip zero/negative counts |
 | `deque` loses oldest items | `maxlen` silently drops elements when full | Expected behavior for bounded buffers — check `maxlen` value |
 
-## Cross-References
-
-- **C# equivalent** — [[05-cs-collections]] covers `List<T>`, `Dictionary`, `HashSet`, arrays, `Span<T>`, `Stack<T>`, `Queue<T>`, `PriorityQueue`
-- **Strings** — [[02-py-strings]] covers string methods, formatting, and regex — strings are immutable sequences
-- **Control flow** — [[03-py-control-flow]] covers comprehensions (`[x for x in lst]`) as the idiomatic way to build and filter collections
-- **Functions** — [[04-py-functions]] covers `map`/`filter`/`reduce` and `functools` tools that operate on collections
-- **OOP** — [[06-py-oop]] covers `@dataclass` as a mutable alternative to `namedtuple`

@@ -14,9 +14,6 @@ aliases:
   - deployment workflows
   - monorepo CI
 description: "Advanced GitHub Actions patterns — matrix builds, reusable workflows, composite actions, deployment strategies, Terraform CI/CD, Docker builds, and monorepo patterns."
-parent: "[[domain-foundations-and-patterns]]"
-links:
-  - "[[01-github-actions-fundamentals]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
@@ -1340,12 +1337,6 @@ jobs:
 ```
 
 ## Related
-
-**GitHub Actions chapter:**
-- [[01-github-actions-fundamentals]] — workflow anatomy, triggers, runners, core concepts
-- [[03-github-actions-ci-cd]] — secrets, caching, concurrency, environments, security
-- [[04-github-actions-data-engineering]] — data pipeline CI/CD, dbt, Workload Identity
-- [[05-github-actions-problems]] — practice exercises applying these patterns
 
 **Terraform (Chapter 07):**
 - [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform workflow details

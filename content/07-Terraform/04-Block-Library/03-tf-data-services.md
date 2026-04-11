@@ -12,11 +12,6 @@ aliases:
   - google_firestore_database terraform
   - google_dataflow_job terraform
 description: "Atomic Terraform block library for GCP data services — BigQuery datasets, tables, views, materialized views, UDFs, external tables, scheduled queries, reservations, Firestore databases, indexes, backup schedules, Dataflow batch and streaming jobs, Cloud SQL instances, log sinks, monitoring alert policies, and billing budgets."
-parent: "[[domain-block-library]]"
-links:
-  - "[[01-tf-foundation-and-networking]]"
-  - "[[02-tf-compute-and-storage]]"
-  - "[[04-tf-iam-secrets-serverless]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

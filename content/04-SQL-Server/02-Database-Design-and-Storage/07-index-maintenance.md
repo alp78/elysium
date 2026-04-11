@@ -3,18 +3,6 @@ title: "07 - Index Maintenance"
 tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren, resumable index rebuild, dm_db_index_physical_stats, missing index suggestions, unused indexes]
 description: "Production-oriented guide to SQL Server index maintenance: page density, fragmentation detection, REORGANIZE vs REBUILD, resumable operations, fill factor, statistics refresh, and index discovery DMVs. Includes reproducible stoxx outputs."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[11-sargable-queries]]"
-  - "[[10-merge-and-upsert]]"
-  - "[[08-date-and-time-functions]]"
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[07-pipeline-integration-and-devex]]"
-  - "[[06-pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -1646,15 +1634,6 @@ For automation, prefer a battle-tested maintenance solution such as **Ola Hallen
 | Creating every missing-index suggestion | Missing-index DMVs are heuristic, overlapping, and volatile | Validate against existing design and real workload cost |
 | Forgetting paused resumable rebuilds | Extra index state stays on disk and continues to affect writes | Resume or abort intentionally |
 | Assuming `ONLINE = ON` always works | Support varies by operation and index type | Validate edition and object-type support before issuing DDL |
-
-## Related
-
-- [[12-execution-plans]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[13-wait-stats-analysis]]
-- [[11-memory-and-buffer-pool]]
-- [[16-performance-audit-playbook]]
-- [[11-sargable-queries]]
 
 ## References
 

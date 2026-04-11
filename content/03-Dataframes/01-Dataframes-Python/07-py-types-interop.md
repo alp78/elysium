@@ -4,13 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - categoricals, nested types, Arrow, zero-copy
 description: "Pandas/Polars DataFrame reference 07/10 — Advanced Types & Interoperability (categoricals, nested types, Arrow, zero-copy). Side-by-side executable examples with cell outputs."
-parent: "[[domain-ingest-and-explore]]"
-links:
-  - "[[01-py-foundations-io]]"
-  - "[[01-cs-foundations-io]]"
-  - "[[02-py-explore-select-filter]]"
-  - "[[02-cs-explore-select-filter]]"
-  - "[[07-cs-types-interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -2789,10 +2782,3 @@ print("Temp files cleaned up")
 | Parquet schema mismatch on append | New data has different column names or types | Validate schema before appending; use `schema_overrides` on read |
 | `OverflowError` on large integers in CSV | CSV reader infers `int64` but values exceed range | Pass `dtypes={"col": pl.UInt64}` or use `schema_overrides` |
 
-## Cross-references
-
-- **C# counterpart:** [[07-cs-types-interop]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Foundations:** [[01-py-foundations-io]] — basic dtype system and null representation
-- **Exploration:** [[02-py-explore-select-filter]] — inspecting dtypes, value counts, and null patterns
-- **Lazy I/O:** [[06-py-lazy-performance]] — scan_parquet, scan_csv for lazy file reading with pushdown
-- **Domain index:** [[domain-ingest-and-explore]] — parent domain page for this note

@@ -13,11 +13,6 @@ aliases:
   - git global config
   - what is git
 description: "Core Git concepts glossary, initial identity and global configuration commands, and repository creation and cloning variants including shallow clone for CI/CD."
-parent: "[[domain-setup-and-daily-use]]"
-links:
-  - "[[02-git-daily-workflow]]"
-  - "[[07-gitignore-patterns]]"
-  - "[[08-git-history-and-inspection]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

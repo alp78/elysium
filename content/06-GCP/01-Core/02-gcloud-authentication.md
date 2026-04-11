@@ -3,11 +3,6 @@ title: "02 - gcloud Authentication"
 tags: [gcp, gcloud, authentication]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, and the credential search order that client libraries follow."
-parent: "[[domain-platform-foundations]]"
-links:
-  - "[[03-gcloud-configurations]]"
-  - "[[04-gcloud-output-formatting]]"
-  - "[[01-gcp-projects-and-apis]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

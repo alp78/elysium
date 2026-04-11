@@ -3,10 +3,6 @@ title: "01 - Container Lifecycle"
 tags: [docker]
 aliases: [container lifecycle, docker ps, docker logs, docker exec, docker stats, docker inspect, docker run, container management, docker commands, container operations]
 description: "Comprehensive Docker container lifecycle reference — running containers with all key flags, listing and filtering, lifecycle management (start/stop/kill/pause), logs, exec, file copying, inspection, debugging, and cleanup. Covers everything a data engineer needs to manage containers day-to-day."
-parent: "[[domain-containers-and-orchestration]]"
-links:
-  - "[[02-image-management]]"
-  - "[[03-docker-compose]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

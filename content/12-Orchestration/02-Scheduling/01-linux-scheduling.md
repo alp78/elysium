@@ -3,10 +3,6 @@ title: "01 - Linux Scheduling"
 tags: [orchestration, bash, scheduling, cron]
 aliases: [cron, crontab, systemd timer, at, anacron, Linux scheduling, cron job, cron expression, crontab syntax, cron schedule, crond, cron daemon, task scheduler linux]
 description: "Exhaustive reference for Linux task scheduling covering cron, systemd timers, at/batch, and anacron. Includes crontab syntax, overlap prevention with flock, environment handling, output logging, SSH configuration for remote scheduling, and a decision table for choosing between cron, Airflow, and Cloud Scheduler."
-parent: "[[domain-scheduling]]"
-links:
-  - "[[03-gcp-scheduling]]"
-  - "[[02-windows-scheduling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

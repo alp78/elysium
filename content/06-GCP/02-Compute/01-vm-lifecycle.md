@@ -3,13 +3,6 @@ title: "01 - VM Lifecycle"
 tags: [gcp, compute, compute-engine]
 aliases: [Compute Engine VM lifecycle, VM start stop, VM resize, VM machine types, GCE lifecycle]
 description: "How to manage Compute Engine VM lifecycle operations — start, stop, reset, resize machine types, schedule start/stop windows, and right-size VMs using monitoring data."
-parent: "[[domain-compute-and-messaging]]"
-links:
-  - "[[02-vm-ssh-and-file-transfer]]"
-  - "[[03-disks-and-snapshots]]"
-  - "[[03-cloud-run-jobs-vs-services]]"
-  - "[[02-pubsub-messaging]]"
-  - "[[01-pubsub-topics-and-subscriptions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

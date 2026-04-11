@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [03-cs-control-flow](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/03-cs-control-flow) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[03-cs-control-flow]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
-This note covers every mechanism Python provides for directing program execution: conditional branching (`if`/`elif`/`else`, ternary, `match`/`case`), loops (`for`, `while`), loop control (`break`, `continue`, `pass`, `for...else`), iterators and generators (`yield`, `yield from`, generator expressions), and comprehensions as functional alternatives to imperative loops. Every concept is paired with its C# equivalent in [[03-cs-control-flow]].
+This note covers every mechanism Python provides for directing program execution: conditional branching (`if`/`elif`/`else`, ternary, `match`/`case`), loops (`for`, `while`), loop control (`break`, `continue`, `pass`, `for...else`), iterators and generators (`yield`, `yield from`, generator expressions), and comprehensions as functional alternatives to imperative loops.
 
 ### Key terms used in this note
 
@@ -1351,11 +1348,3 @@ print(sorted(names, key=lambda n: n[-1]))
 | `zip` truncates silently | Input iterables have different lengths | Use `itertools.zip_longest(fill_value=None)` |
 | Nested comprehension unreadable | More than 2 `for` clauses | Extract inner logic into a named function |
 
-## Cross-References
-
-- **C# equivalent** — [[03-cs-control-flow]] covers conditionals, switch expressions, pattern matching, loops, LINQ equivalents
-- **Basics** — [[01-py-basics]] covers truthy/falsy values, ternary, and walrus operator fundamentals
-- **Functions** — [[04-py-functions]] covers lambda, closures, and decorators used with `map`/`filter`
-- **Collections** — [[05-py-collections]] covers the iterables that `for`, comprehensions, and generators operate on
-- **Error handling** — [[08-py-errorhandling]] covers try/except patterns for loop error handling and context managers
-- **Async** — [[12-py-asyncconcurrency]] covers `async for`, `async generators`, and `asyncio` loop patterns

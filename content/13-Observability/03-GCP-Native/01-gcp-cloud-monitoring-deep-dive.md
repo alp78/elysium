@@ -17,11 +17,6 @@ description: >
   monitor data engineering infrastructure. Covers metric types, monitored resources,
   MQL, custom metrics, dashboards, alerting policies, uptime checks, SLOs, and a
   comprehensive feature-parity comparison with Datadog — using only GCP-native tools.
-parent: "[[domain-gcp-native-monitoring]]"
-links:
-  - "[[02-gcp-cloud-trace-and-logging]]"
-  - "[[04-gcp-data-lineage-and-catalog]]"
-  - "[[03-gcp-pipeline-health-and-sla]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

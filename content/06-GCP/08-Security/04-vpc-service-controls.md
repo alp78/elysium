@@ -3,11 +3,6 @@ title: "04 - VPC Service Controls"
 tags: [gcp, security, iam, vpc-sc]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
-parent: "[[domain-security-and-identity]]"
-links:
-  - "[[01-service-accounts-and-iam]]"
-  - "[[02-gcp-identity-and-connection-patterns]]"
-  - "[[03-secrets-management]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

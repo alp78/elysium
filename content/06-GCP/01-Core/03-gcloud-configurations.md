@@ -3,11 +3,6 @@ title: "03 - gcloud Configurations"
 tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
 description: "How to use gcloud named configurations to safely manage multiple GCP projects (dev, staging, production) and switch between them without error-prone manual config changes."
-parent: "[[domain-platform-foundations]]"
-links:
-  - "[[02-gcloud-authentication]]"
-  - "[[04-gcloud-output-formatting]]"
-  - "[[01-gcp-projects-and-apis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

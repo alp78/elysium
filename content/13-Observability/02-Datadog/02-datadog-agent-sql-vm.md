@@ -3,21 +3,6 @@ title: "02 - Datadog Agent: SQL VM"
 tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [DD Agent SQL VM, Datadog SQL Server VM, datadog-agent systemd]
 description: "How to set up the Datadog Agent as a systemd service on the example SQL Server VM (Ubuntu 22.04), covering automated bootstrap, manual install steps, and the dd_agent SQL login."
-parent: "[[domain-datadog-platform]]"
-links:
-  - "[[01-datadog-architecture-overview]]"
-  - "[[03-datadog-agent-airflow-vm]]"
-  - "[[06-datadog-gcp-integration]]"
-  - "[[04-datadog-sql-server-integration]]"
-  - "[[08-datadog-custom-queries]]"
-  - "[[11-datadog-log-management]]"
-  - "[[12-datadog-sql-server-logs]]"
-  - "[[10-datadog-apm-traces]]"
-  - "[[07-datadog-dashboards]]"
-  - "[[09-datadog-alerting]]"
-  - "[[05-datadog-airflow-observability]]"
-  - "[[13-datadog-cost-optimization]]"
-  - "[[14-datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

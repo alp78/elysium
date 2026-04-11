@@ -4,15 +4,6 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - with_columns, assign, apply, map, when/then, method chaining
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -3067,11 +3058,3 @@ display(final)
 | Unexpected `float64` column after integer arithmetic | Division produces float; nulls promote integers to float | Use `//` for integer division; use nullable integer dtypes |
 | Transform is unexpectedly slow | Using `.apply()` or `.map_elements()` instead of native expressions | Rewrite as vectorized expression; profile with `%%timeit` |
 
-## Cross-references
-
-- **C# counterpart:** [[03-cs-transforms-expressions]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Previous in sequence:** [[02-py-explore-select-filter]] — selection and filtering (prerequisite for transforms)
-- **Next in sequence:** [[04-py-missing-strings-datetime]] — handling missing data, strings, and datetime types
-- **Aggregation and reshaping:** [[05-py-aggregation-reshaping]] — group_by, window functions, joins (builds on transforms)
-- **Lazy execution:** [[06-py-lazy-performance]] — how expressions are optimized in Polars LazyFrame
-- **Domain index:** [[domain-transform-and-analyze]] — parent domain page for this note

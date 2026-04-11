@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03-py-control-flow](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/03-py-control-flow) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[03-py-control-flow]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
-This note covers every mechanism C# provides for directing program execution: conditional branching (`if`/`else`, ternary, null-coalescing), `switch` statements and expressions with exhaustive pattern matching (type, property, relational, list, positional), loops (`for`, `foreach`, `while`, `do-while`), loop control (`break`, `continue`, `goto`), iterator methods with `yield return`, and LINQ as functional pipeline equivalents. Every concept is paired with its Python equivalent in [[03-cs-control-flow]].
+This note covers every mechanism C# provides for directing program execution: conditional branching (`if`/`else`, ternary, null-coalescing), `switch` statements and expressions with exhaustive pattern matching (type, property, relational, list, positional), loops (`for`, `foreach`, `while`, `do-while`), loop control (`break`, `continue`, `goto`), iterator methods with `yield return`, and LINQ as functional pipeline equivalents.
 
 ### Key terms used in this note
 
@@ -1221,11 +1218,3 @@ x, x, x
 | Pattern matching variable shadows outer | `is` pattern introduces same-named variable | Rename the pattern variable or the outer variable |
 | LINQ performance worse than loop | Virtual dispatch and allocation overhead in tight loops | Use plain `for` loop for hot paths processing millions of items |
 
-## Cross-References
-
-- **Python equivalent** — [[03-py-control-flow]] covers conditionals, match/case, loops, generators, comprehensions
-- **Basics** — [[01-cs-basics]] covers ternary, null-coalescing, and operator precedence
-- **Functions** — [[04-cs-functions]] covers lambda expressions, delegates, and closures used with LINQ
-- **Collections** — [[05-cs-collections]] covers the collections that `foreach`, LINQ, and iterators operate on
-- **Error handling** — [[08-cs-errorhandling]] covers try/catch patterns for loop error handling and IDisposable
-- **Async** — [[12-cs-asyncconcurrency]] covers `await foreach`, `IAsyncEnumerable<T>`, and async LINQ patterns

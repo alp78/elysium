@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [exchange terms, market infrastructure glossary, stock exchange terms, clearing house glossary, securities infrastructure]
 keywords: [stock exchange, futures exchange, clearing house, clearinghouse, custodian, custodian services, market making, prime brokerage, listing, securities clearing, stock transfer agency, dual-listed, settlement, depository, central counterparty, CCP, HKEX, Deutsche Boerse, Xetra, Eurex, order matching, bid ask spread]
 description: "Encyclopedia definitions for exchange and market infrastructure terms from the example Index universe, covering stock and futures exchanges, clearing houses, custodian services, market-making, prime brokerage, listing, securities clearing, and stock transfer agency."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[02-business-models-and-commerce]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[04-compliance-and-risk-management]]"
-  - "[[05-corporate-finance-and-strategy]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[13-real-estate-and-industrial]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
-  - "[[16-trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

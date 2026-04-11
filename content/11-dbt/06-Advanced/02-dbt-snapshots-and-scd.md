@@ -4,12 +4,6 @@ tags: [data-modeling, pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "SCD Type 2 snapshots with timestamp and check strategies, PIT queries, ESG audit trails, and gotchas for financial data pipelines"
-parent: "[[domain-extensions-and-quality]]"
-links:
-  - "[[01-dbt-macros-and-jinja]]"
-  - "[[03-dbt-packages]]"
-  - "[[01-dbt-testing-framework]]"
-  - "[[02-dbt-data-contracts-implementation]]"
 ---
 
 # dbt: Snapshots and SCD

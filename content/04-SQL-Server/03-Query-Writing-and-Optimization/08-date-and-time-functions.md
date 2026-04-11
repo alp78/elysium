@@ -3,11 +3,6 @@ title: "08 - Date and Time Functions"
 tags: [sql, sql-server, tsql, date, time, datetime2, datetimeoffset, dateadd, datediff, at-time-zone]
 aliases: [datetime functions, AT TIME ZONE, DATEDIFF, DATEADD, EOMONTH, datetimeoffset]
 description: "T-SQL reference for SQL Server date and time types, current time functions, DATEADD, DATEDIFF, DATEDIFF_BIG, EOMONTH, DATEFROMPARTS, AT TIME ZONE, ISO 8601 literals, and DST-safe date logic."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[02-data-types-conversion-and-null-handling]]"
-  - "[[01-select-and-query-basics]]"
-  - "[[11-sargable-queries]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -198,7 +193,7 @@ WHERE event_date >= DATEFROMPARTS(YEAR(SYSUTCDATETIME()), MONTH(SYSUTCDATETIME()
 
 ### Rolling window by business boundary
 
-Use explicit start and exclusive end dates rather than `DATEDIFF`-based predicates on the column side when performance matters. See [[11-sargable-queries]].
+Use explicit start and exclusive end dates rather than `DATEDIFF`-based predicates on the column side when performance matters.
 
 ## Practical Guidance
 
@@ -209,9 +204,4 @@ Use explicit start and exclusive end dates rather than `DATEDIFF`-based predicat
 - Use `AT TIME ZONE` for timezone logic, not manual offset math.
 - Use `DATEFROMPARTS` and related constructors when building dates from components.
 
-## Related
-
-- [[02-data-types-conversion-and-null-handling]]
-- [[01-select-and-query-basics]]
-- [[11-sargable-queries]]
 

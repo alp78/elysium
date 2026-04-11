@@ -3,9 +3,6 @@ title: "15 - Web and APIs - Python"
 tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, Flask, requests]
 description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15-cs-webapis](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/15-cs-webapis) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[15-cs-webapis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Greg Brockman**
 
-This note covers Python web and API patterns using `requests`, `httpx`, FastAPI, and Pydantic. For the C# equivalent using `HttpClient` and ASP.NET Core, see [[15-cs-webapis]].
+This note covers Python web and API patterns using `requests`, `httpx`, FastAPI, and Pydantic.
 
 ### Key terms used in this note
 
@@ -1310,10 +1307,3 @@ use aliases for public APIs, freeze config models, enable strict mode for financ
 | Bearer token rejected (401) | Token expired or wrong header format | Refresh the token; confirm header is `Authorization: Bearer <token>` (capital B) |
 | Paginated API returns duplicate records across pages | Offset pagination with concurrent writes; item inserted between requests | Prefer cursor-based pagination; add deduplication by unique ID after collection |
 
-## Cross-References
-
-- [[14-py-testing]] — testing HTTP clients with `pytest` and `respx` mocking
-- [[12-py-asyncconcurrency]] — async/await patterns underpinning `httpx.AsyncClient` usage
-- [[08-py-errorhandling]] — exception handling strategies for HTTP errors and retries
-- [[16-py-database]] — combining API calls with database writes in pipeline code
-- [[15-cs-webapis]] — C# equivalent: `HttpClient`, ASP.NET Core Minimal APIs, and data validation

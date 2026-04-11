@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05-py-collections](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/05-py-collections) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[05-py-collections]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +20,7 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
-C# collections cover fixed arrays, dynamic lists, dictionaries, sets, tuples, enums, and specialised structures. This page covers all core types with executable examples — from `T[]` and `List<T>` through `Span<T>`, `Dictionary`, `HashSet`, and `PriorityQueue`. Every concept is paired with its Python equivalent in [[05-py-collections]].
+C# collections cover fixed arrays, dynamic lists, dictionaries, sets, tuples, enums, and specialised structures. This page covers all core types with executable examples — from `T[]` and `List<T>` through `Span<T>`, `Dictionary`, `HashSet`, and `PriorityQueue`.
 
 ### Key terms used in this note
 
@@ -1107,10 +1104,3 @@ Need O(1) insert/remove at position? → LinkedList<T>
 | Enum cast produces undefined value | Arbitrary int cast to enum with no matching member | Validate with `Enum.IsDefined()` or `Enum.TryParse()` before use |
 | `PriorityQueue` not available | Target framework is older than .NET 6 | Upgrade to .NET 6+ or use a third-party heap library |
 
-## Cross-References
-
-- **Python equivalent** — [[05-py-collections]] covers lists, dicts, sets, tuples, `deque`, `heapq`, `Counter`, `defaultdict`, `namedtuple`
-- **Strings** — [[02-cs-strings]] covers string methods, interpolation, and regex — strings are immutable sequences
-- **Control flow** — [[03-cs-control-flow]] covers LINQ queries (`Where`, `Select`, `GroupBy`) as the idiomatic way to filter and transform collections
-- **Functions** — [[04-cs-functions]] covers `Func<T>`/`Action<T>`, lambdas, and extension methods that power LINQ
-- **OOP** — [[06-cs-oop]] covers records, classes, and structs as alternatives to tuples and dictionaries for structured data

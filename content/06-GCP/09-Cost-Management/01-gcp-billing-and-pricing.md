@@ -18,12 +18,6 @@ aliases:
   - per-TB pricing
   - per-slot pricing
 description: Definitive reference on how every GCP data engineering service is billed — pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and gcloud/BigQuery commands for ongoing cost analysis and optimization.
-parent: "[[domain-operations-and-cost]]"
-links:
-  - "[[01-cloud-logging]]"
-  - "[[02-cloud-monitoring-metrics]]"
-  - "[[02-gcp-cost-monitoring-and-budgets]]"
-  - "[[03-gcp-total-cost-of-ownership]]"
 created: 2026-03-22
 updated: 2026-03-29
 status: complete

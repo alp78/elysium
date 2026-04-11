@@ -7,17 +7,6 @@ tags: [shell]
 aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, file transfer, data movement, robocopy]
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run, robocopy, Robocopy MIR, Robocopy exit codes, Invoke-Sqlcmd, Export-Csv, IPG, inter-packet gap]
 description: "Complete guide to data transfer tools for data engineering: rsync and Robocopy for local/remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd/Invoke-Sqlcmd for query-based export."
-parent: "[[domain-data-and-files]]"
-links:
-  - "[[01-navigation-and-listing]]"
-  - "[[01-reading-file-contents]]"
-  - "[[02-grep-and-pattern-matching]]"
-  - "[[04-awk-data-processing]]"
-  - "[[03-sed-stream-editing]]"
-  - "[[05-date-and-time-handling]]"
-  - "[[03-finding-files]]"
-  - "[[02-file-manipulation]]"
-  - "[[04-compression]]"
 created: 2026-03-22
 updated: 2026-04-01
 status: complete

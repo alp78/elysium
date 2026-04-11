@@ -3,9 +3,6 @@ title: "11 - DateTime, Math & Utilities - C#"
 tags: [csharp]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [11-py-datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/11-py-datetimemathutils) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[11-py-datetimemathutils]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Jon Skeet**
 
-.NET provides date/time types (`DateTime`, `DateOnly`, `DateTimeOffset`, `TimeSpan`), math utilities, random number generation, logging with `ILogger`, and configuration with `IConfiguration`. This note covers all common utility patterns for data engineering. Every concept is paired with its Python equivalent in [[11-py-datetimemathutils]].
-
+.NET provides date/time types (`DateTime`, `DateOnly`, `DateTimeOffset`, `TimeSpan`), math utilities, random number generation, logging with `ILogger`, and configuration with `IConfiguration`. This note covers all common utility patterns for data engineering.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1262,9 +1258,3 @@ Console.WriteLine(tmpDir);  // Cleaned up
 | Config value is `null` | Key not found in any config source, or wrong section path | Check key path with `:` separator; verify env var uses `__` |
 | `TimeZoneNotFoundException` | IANA timezone ID on Windows, or Windows ID on Linux | Use `TimeZoneInfo.FindSystemTimeZoneById` with the platform's ID format |
 
-## Cross-References
-
-- **Python equivalent** — [[11-py-datetimemathutils]] covers `datetime`, `timedelta`, `zoneinfo`, `math`, `random`, `logging`, `os.environ`
-- **File I/O** — [[09-cs-fileio-serialization]] covers config file parsing (JSON, YAML)
-- **Error handling** — [[08-cs-errorhandling]] covers exception patterns for date parsing failures
-- **Shell** — [[05-date-and-time-handling]] covers command-line date operations in Bash/PowerShell

@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [string manipulation, string formatting, regex, string interpolation]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [02-py-strings](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/02-py-strings) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[02-py-strings]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Yukihiro Matsumoto**, creator of Ruby
 
-This note covers C#'s string type in full: creation and immutability, indexing and range syntax, the complete set of string methods, interpolation and composite formatting, `StringBuilder` for efficient construction, `Span<char>` for zero-allocation parsing, and regular expressions including .NET 7's source-generated `[GeneratedRegex]`. Every concept is paired with its Python equivalent in [[02-py-strings]].
+This note covers C#'s string type in full: creation and immutability, indexing and range syntax, the complete set of string methods, interpolation and composite formatting, `StringBuilder` for efficient construction, `Span<char>` for zero-allocation parsing, and regular expressions including .NET 7's source-generated `[GeneratedRegex]`.
 
 ### Key terms used in this note
 
@@ -1345,9 +1342,4 @@ var match = MyRegexHelper.PhonePattern().Match(text);
 
 ## Cross-References
 
-- **Python equivalent** — [[02-py-strings]] covers the same concepts in Python: `str` type, slicing, methods, f-strings, `io.StringIO`, and `re` module
-- **Basics and types** — [[01-cs-basics]] covers `string` as a data type, `char`, `byte`, encoding, and value vs reference semantics
-- **Collections** — [[05-cs-collections]] covers `List<string>`, `Dictionary<string, T>`, and LINQ string operations
-- **File I/O** — [[09-cs-fileio-serialization]] covers reading/writing text files, encoding specification, and stream-based processing
-- **Testing** — [[14-cs-testing]] covers xUnit string assertions and regex validation patterns
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when string encoding choices matter in pipelines

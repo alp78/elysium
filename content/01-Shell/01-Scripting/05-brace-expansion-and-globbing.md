@@ -7,16 +7,6 @@ tags: [shell, scripting]
 aliases: [brace expansion, globbing, extglob, globstar, failglob, shopt]
 keywords: [brace expansion, globbing, extglob, globstar, failglob, shopt, wildcard, pattern matching, bash expansion, file patterns, recursive glob, exclude patterns]
 description: "Brace expansion and globbing in Bash for generating multiple arguments from patterns, recursive file matching, and excluding file types. Includes shopt settings for production shells."
-parent: "[[domain-script-engineering]]"
-links:
-  - "[[02-command-history]]"
-  - "[[03-io-redirection]]"
-  - "[[04-command-chaining]]"
-  - "[[06-process-substitution]]"
-  - "[[01-environment-variables]]"
-  - "[[07-defensive-scripting]]"
-  - "[[01-bash-automation]]"
-  - "[[02-powershell-automation]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

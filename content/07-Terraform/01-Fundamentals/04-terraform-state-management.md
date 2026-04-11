@@ -3,12 +3,6 @@ title: "04 - Terraform State Management"
 tags: [terraform, iac]
 aliases: [terraform state, terraform.tfstate, remote state, state locking, terraform backend, GCS backend]
 description: "How Terraform state works, why remote state in GCS is essential, how state locking prevents concurrent applies, and the terraform state subcommands for safe state manipulation."
-parent: "[[domain-language-and-workflow]]"
-links:
-  - "[[01-hcl-syntax-basics]]"
-  - "[[03-terraform-variables-and-outputs]]"
-  - "[[02-terraform-providers-and-backend]]"
-  - "[[05-terraform-plan-apply-destroy]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

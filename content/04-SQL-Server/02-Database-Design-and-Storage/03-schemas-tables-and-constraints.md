@@ -16,13 +16,6 @@ aliases:
   - table constraints
   - heap vs clustered
 description: "Reference for CREATE SCHEMA, CREATE TABLE, nullability, clustered versus heap design, and PRIMARY KEY, UNIQUE, CHECK, FOREIGN KEY, and DEFAULT constraints in SQL Server."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[01-database-creation-and-file-layout]]"
-  - "[[04-keys-defaults-identity-and-sequences]]"
-  - "[[06-index-types-and-strategy]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[10-sql-server-change-tracking]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -161,9 +154,4 @@ Column renames and breaking shape changes ripple into queries, procedures, ETL, 
 - compatibility view
 - staged deprecation
 
-## Related
 
-- [[01-database-creation-and-file-layout]] for database-scoped defaults before table creation
-- [[04-keys-defaults-identity-and-sequences]] for identity and sequence choices
-- [[06-index-types-and-strategy]] for the index layer that sits on top of table design
-- [[05-sql-server-schema-layering]] for schema strategy in larger estates

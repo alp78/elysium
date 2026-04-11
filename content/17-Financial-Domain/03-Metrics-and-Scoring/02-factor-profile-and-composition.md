@@ -7,14 +7,6 @@ tags: [sql, financial]
 aliases: [Factor Profile, Radar Chart, Index Composition, Donut Chart]
 keywords: [factor profile, radar chart, factor tilt, value, momentum, sentiment, quality, governance, index composition, donut chart, sector allocation, cap-weighted, cube-root scaling]
 description: "Factor profile radar chart and index composition donut chart from the financial data platform dashboard, showing five-axis factor tilts and dual-ring sector/stock weight breakdowns."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[04-quarterly-signal-scores]]"
-  - "[[01-scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

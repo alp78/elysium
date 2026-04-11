@@ -10,15 +10,6 @@ aliases:
   - SQL Server security model
   - SQL Server principals
 description: "Definitive professional guide to SQL Server 2022 users, logins, roles, permissions, and access design patterns for admins, engineers, pipelines, consumers, and application identities."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[01-server-configuration]]"
-  - "[[01-database-creation-and-file-layout]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[03-schemas-tables-and-constraints]]"
-  - "[[12-audit-logging]]"
-  - "[[05-sql-server-agent-jobs]]"
 created: 2026-04-09
 updated: 2026-04-09
 status: complete
@@ -2007,13 +1998,6 @@ GO
 
 ---
 
-## Cross-References
-
-- **Authentication posture:** [[03-sql-server-authentication]] — engine authentication, TLS configuration, and identity boundary design
-- **Instance configuration:** [[01-server-configuration]] — server-level security settings and baseline hardening
-- **Database creation:** [[01-database-creation-and-file-layout]] — database creation choices that affect initial security posture
-- **Schema layering:** [[05-sql-server-schema-layering]] — schema-as-security-boundary design for `bronze`/`silver`/`gold` patterns
-- **Object design:** [[03-schemas-tables-and-constraints]] — table and constraint design after access boundaries are defined
 
 ---
 

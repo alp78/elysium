@@ -4,12 +4,6 @@ tags: [orchestration, airflow]
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of Airflow production problems — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams."
-parent: "[[domain-airflow]]"
-links:
-  - "[[01-airflow-core-concepts]]"
-  - "[[02-airflow-dag-patterns]]"
-  - "[[03-airflow-deployment]]"
-  - "[[04-airflow-troubleshooting]]"
 ---
 
 # Airflow Production Problems

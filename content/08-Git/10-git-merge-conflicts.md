@@ -7,12 +7,6 @@ tags: [git, github, merge-conflicts]
 aliases: [merge conflict, conflict markers, resolve conflicts, git merge abort, conflict resolution, git mergetool, rebase conflict, three-way merge, accept incoming, accept current]
 keywords: [merge conflict, conflict markers, resolve conflict, git merge abort, git mergetool, rebase continue, rebase abort, conflict resolution, three-way merge, HEAD, incoming changes, stash pop conflict, VS Code merge tool, accept current, accept incoming, prevent merge conflicts, conflict markers explanation]
 description: "How to understand, resolve, and prevent git merge conflicts — including conflict marker syntax, step-by-step resolution, git mergetool with VS Code, and rebase conflict resolution with a real-world case study."
-parent: "[[domain-branching-and-collaboration]]"
-links:
-  - "[[03-git-branching-and-merging]]"
-  - "[[04-merge-vs-rebase-vs-squash]]"
-  - "[[05-git-remote-management]]"
-  - "[[06-pull-requests-and-code-review]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

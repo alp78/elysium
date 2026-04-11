@@ -3,11 +3,6 @@ title: "18 - Stored Procedures, Dynamic SQL, and Error Handling"
 tags: [sql, sql-server, tsql, stored-procedures, dynamic-sql, sp-executesql, try-catch, throw, transactions]
 aliases: [procedure reference, sp_executesql, TRY CATCH, THROW, XACT_ABORT]
 description: "T-SQL reference for variables, control-of-flow, stored procedures, parameters, dynamic SQL with sp_executesql, TRY...CATCH, THROW, transactions, SAVE TRAN, and XACT_ABORT."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[04-common-table-expressions-and-temporary-objects]]"
-  - "[[10-merge-and-upsert]]"
-  - "[[14-system-functions-and-session-metadata]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -218,9 +213,4 @@ Use this pattern for write procedures:
 - Prefer `THROW` over `RAISERROR` in new code.
 - For multi-step writes, pair explicit transactions with `TRY...CATCH` and usually `XACT_ABORT ON`.
 
-## Related
-
-- [[04-common-table-expressions-and-temporary-objects]]
-- [[10-merge-and-upsert]]
-- [[14-system-functions-and-session-metadata]]
 

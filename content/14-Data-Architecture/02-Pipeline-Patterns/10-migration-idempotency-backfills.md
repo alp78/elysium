@@ -3,14 +3,6 @@ title: "10 - Migration, Idempotency and Backfills"
 tags: [data-architecture, architecture, pipeline, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [idempotency patterns, backfill strategies, migration playbook, data architect playbook, strangler fig pattern, schema evolution, expand-and-contract, event-driven architecture, data contracts, schema registry, FinOps, cloud cost optimization, streaming windowing, Dataflow pipeline, exactly-once processing]
 description: "The data architect's playbook covering migration patterns (lift-and-shift through re-architecture, strangler fig), idempotency deep dive (truncate-reload, upsert, delete-insert, SCD Type 2), backfill strategies, exactly-once processing, schema evolution without downtime, event-driven architecture on GCP (Pub/Sub + Cloud Functions + Dataflow), data contracts (Protobuf, Avro, Schema Registry), FinOps for BigQuery, and advanced streaming patterns with Apache Beam. Includes all code examples and diagrams."
-parent: "[[domain-pipeline-construction]]"
-links:
-  - "[[01-medallion-architecture]]"
-  - "[[03-functional-pipeline-architecture]]"
-  - "[[02-data-flow-architecture]]"
-  - "[[04-idempotent-pipeline-design]]"
-  - "[[11-dbt-transformation-layer]]"
-  - "[[12-serialization-formats]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

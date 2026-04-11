@@ -4,10 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Project layout, naming conventions, config inheritance, multi-adapter"
-parent: "[[domain-foundations]]"
-links:
-  - "[[01-dbt-core-concepts]]"
-  - "[[03-dbt-cli-reference]]"
 ---
 
 # dbt: Project Structure

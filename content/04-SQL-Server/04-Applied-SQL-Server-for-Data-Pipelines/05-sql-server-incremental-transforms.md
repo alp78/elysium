@@ -11,15 +11,6 @@ tags:
   - performance
 aliases: [Incremental Transforms, Watermark Loading, Partition SWITCH, Gap Fill, Pre-computed Aggregations, Indexed Views]
 description: "Production patterns for incremental SQL Server transforms: watermarks, overlap windows, deduplication, incremental aggregation refresh, window functions, cadence validation, and partition-aligned replacement."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[01-sql-server-loading-patterns]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[10-sql-server-change-tracking]]"
-  - "[[08-sql-server-pipeline-anti-patterns]]"
-  - "[[02-bronze-layer-loading]]"
-  - "[[03-silver-transforms]]"
-  - "[[04-gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-08
 status: complete
@@ -945,16 +936,6 @@ The current `stoxx` environment already supports a clean production pattern:
 - treat gaps in `silver.signals_daily` as a cadence-validation problem, not automatically as missing-data corruption
 
 ---
-
-## Related
-
-- [[01-sql-server-loading-patterns]]
-- [[10-sql-server-change-tracking]]
-- [[05-sql-server-schema-layering]]
-- [[08-sql-server-pipeline-anti-patterns]]
-- [[02-bronze-layer-loading]]
-- [[03-silver-transforms]]
-- [[04-gold-transforms]]
 
 ## References
 

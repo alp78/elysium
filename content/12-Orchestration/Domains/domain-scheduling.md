@@ -31,8 +31,3 @@ mindmap
 > schtasks.exe (legacy CLI), PowerShell ScheduledTasks module (Register-ScheduledTask, triggers, settings), PSScheduledJob for native PowerShell output, data engineering patterns for SSIS/sqlcmd/Python pipelines, event-based triggers (ONLOGON, ONEVENT), and a mapping to Linux cron equivalents.
 
 > [!abstract]- [[01-linux-scheduling]]
->
-> - [[linux-scheduling#Cron and Crontab|Cron and crontab]]
-> - [[linux-scheduling#Common Schedule Patterns|Common schedule patterns]]
-> - [[linux-scheduling#Environment in Cron|Environment in cron]]
-> - [[linux-scheduling#Overlap Prevention with flock|Overlap prevention with flock]]

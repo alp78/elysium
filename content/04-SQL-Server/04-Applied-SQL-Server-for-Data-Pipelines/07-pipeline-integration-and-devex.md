@@ -3,14 +3,6 @@ title: "07 - Pipeline Integration and Developer Experience"
 tags: [pipeline, python, sql, airflow, sql-server, tsql]
 aliases: [pipeline integration, SQL query tagging, Airflow SQL correlation, schema migrations, connection pool management, developer experience]
 description: "Production-focused patterns for integrating SQL Server into data pipelines: stable query identity, Query Store correlation, application naming, connection monitoring, migration workflow, and monitoring integration."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[06-pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -464,18 +456,7 @@ GRANT CONNECT ANY DATABASE TO dd_agent;
 EXEC sp_addrolemember 'db_datareader', 'dd_agent';
 ```
 
-## Related
-
-### Companion notes
-
-- [[12-execution-plans]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[13-wait-stats-analysis]]
-- [[11-memory-and-buffer-pool]]
-- [[16-performance-audit-playbook]]
-- [[06-pit-integrity-logic]]
-
-### Official references
+## References
 
 - [sys.dm_exec_sql_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sql-text-transact-sql)
 - [sys.query_store_query_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-query-text-transact-sql)

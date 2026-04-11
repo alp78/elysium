@@ -8,11 +8,6 @@ aliases:
   - sqlcmd
   - SQL Server command-line client
 description: "Production sqlcmd usage for connection testing, inline queries, script execution, variables, error handling, and DAC access, grounded on the current environment."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[06-essential-dba-queries]]"
-  - "[[07-backup-types-and-strategy]]"
-  - "[[08-restore-and-recovery]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -247,8 +242,3 @@ sqlcmd -S admin:localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C
 
 ---
 
-## Related
-
-- [[06-essential-dba-queries]] for the actual diagnostic queries to run once connected
-- [[07-backup-types-and-strategy]] for one-shot backup automation patterns that typically use `sqlcmd`
-- [[08-restore-and-recovery]] for scripted restore operations where `sqlcmd` is often the delivery vehicle

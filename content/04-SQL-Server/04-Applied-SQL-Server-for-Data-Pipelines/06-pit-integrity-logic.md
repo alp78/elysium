@@ -3,18 +3,6 @@ title: "06 - Point-in-Time Integrity Logic"
 tags: [performance, sql-server, tsql, temporal, auditability, financial-data]
 aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight normalization, constituent list, rebalancing, index reconstitution, SCD Type 2, temporal join]
 description: "Production patterns for point-in-time integrity in SQL Server: daily snapshot retrieval, valid-time reference data, system-versioned corrections, weight-sum gates, temporal joins, and reconciliation checks."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[11-sargable-queries]]"
-  - "[[10-merge-and-upsert]]"
-  - "[[08-date-and-time-functions]]"
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-index-maintenance]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[07-pipeline-integration-and-devex]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -761,18 +749,7 @@ _On the dates shared by both gold-layer surfaces, constituent counts reconcile e
 | Cast float weights to decimal before validation. | The current live weight surface uses `FLOAT`, so the audit gate must normalize the arithmetic surface first. |
 | Gate publication on explicit reconciliation outputs. | A pass/fail query is operational; a vague expectation is not. |
 
-## Related
-
-### Companion notes
-
-- [[12-execution-plans]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[13-wait-stats-analysis]]
-- [[07-index-maintenance]]
-- [[16-performance-audit-playbook]]
-- [[07-pipeline-integration-and-devex]]
-
-### Official references
+## References
 
 - [Temporal tables](https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables?view=sql-server-ver17)
 - [Query data in a system-versioned temporal table](https://learn.microsoft.com/en-us/sql/relational-databases/tables/querying-data-in-a-system-versioned-temporal-table?view=sql-server-ver17)

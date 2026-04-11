@@ -3,12 +3,6 @@ title: "05 - Terraform: Registry and CI"
 tags: [terraform, gcp, artifact-registry, ci-cd]
 aliases: [terraform Artifact Registry, terraform CI service account, docker registry terraform, cleanup policies terraform]
 description: "Terraform configuration for GCP Artifact Registry (Docker image storage with cleanup policies) and the CI/CD service account used by GitHub Actions to push images and deploy Cloud Run services."
-parent: "[[domain-gcp-resources]]"
-links:
-  - "[[01-terraform-networking]]"
-  - "[[02-terraform-compute]]"
-  - "[[03-terraform-iam-and-secrets]]"
-  - "[[04-terraform-cloud-run]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

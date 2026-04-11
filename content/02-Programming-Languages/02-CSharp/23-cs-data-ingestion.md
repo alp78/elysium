@@ -3,9 +3,6 @@ title: "23 - Data Ingestion - C#"
 tags: [csharp, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion CSharp, SQL Server Bulk Insert, BigQuery Load]
 description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23-py-data-ingestion](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/23-py-data-ingestion) for the Python equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[23-py-data-ingestion]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
-This note covers C# bulk-load patterns for SQL Server, BigQuery, and Firestore in a .NET Interactive notebook, including performance benchmarking across file formats and source tiers. For the equivalent Python implementation, see [[23-py-data-ingestion]].
+This note covers C# bulk-load patterns for SQL Server, BigQuery, and Firestore in a .NET Interactive notebook, including performance benchmarking across file formats and source tiers.
 
 ### Key terms used in this note
 
@@ -1636,11 +1633,4 @@ Console.WriteLine("  Local exports cleaned up");
 | BCP exits with SSL handshake error | TLS version mismatch between bcp binary and SQL Server TLS policy | Add `-N` (encrypt) flag and confirm bcp version; or set `TrustServerCertificate=True` for dev environments |
 | `CreateExtractJob` produces empty GCS object | Source table is empty or query returned 0 rows | Verify the staging table was populated; check `job.Resource.Status.State == "DONE"` and `ErrorResult == null` |
 
-## Cross-References
-
-- [[23-py-data-ingestion]] — Python equivalent: pyodbc fast_executemany, BigQuery client, Firestore BulkWriter
-- [[domain-gcp-integration]] — GCP integration domain overview (BigQuery, GCS, Firestore patterns)
-- [[22-cs-data-export]] — complementary export notebook: BQ extract jobs, GCS upload, local StreamWriter
-- [[domain-sql-server]] — SQL Server domain: connection strings, DDL conventions, bulk-load tuning
-- [[domain-csharp-dotnet]] — C# and .NET domain: async patterns, NuGet package management in .NET Interactive
 

@@ -59,11 +59,6 @@ keywords:
     conflict modify delete,
   ]
 description: "Reference guide for 25 common Git and GitHub error messages — what causes each error and the exact commands to fix it, covering push rejections, detached HEAD, SSH failures, merge conflicts, lock files, line endings, accidental commits, and more."
-parent: "[[domain-releases-and-recovery]]"
-links:
-  - "[[09-git-tagging-and-releases]]"
-  - "[[11-git-recovery-and-undo]]"
-  - "[[13-git-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
@@ -732,7 +727,7 @@ gh run rerun <RUN_ID>
 
 > [!success] Merge the PR to trigger a secrets-enabled run
 >
-> Merge the fork/Dependabot PR first, then the push-to-main workflow runs with full secret access. Alternatively, use Workload Identity Federation (OIDC) which does not require stored secrets. See [[03-github-actions-ci-cd]] for WIF setup.
+> Merge the fork/Dependabot PR first, then the push-to-main workflow runs with full secret access. Alternatively, use Workload Identity Federation (OIDC) which does not require stored secrets.
 
 ## Quick Reference
 
@@ -768,18 +763,3 @@ Summary table for rapid lookup. Each row links to the detailed entry above.
 | `cannot lock ref` | Stale lock from crash | `rm -f .git/index.lock` |
 | `google-github-actions/auth failed` | Missing `GCP_SA_KEY` secret | `gh secret set GCP_SA_KEY < key.json` |
 
-## Related
-
-**Git chapter:**
-- [[11-git-recovery-and-undo]] — Full undo and recovery reference (reset, revert, reflog, stash)
-- [[03-git-branching-and-merging]] — Branch creation, merging, and conflict resolution
-- [[10-git-merge-conflicts]] — Detailed conflict resolution strategies
-- [[02-git-daily-workflow]] — Everyday commit, push, and pull patterns
-- [[08-git-history-and-inspection]] — Inspecting logs, diff, and blame
-- [[07-gitignore-patterns]] — Structuring `.gitignore` and stopping tracked files
-- [[06-pull-requests-and-code-review]] — PR workflow, squash merges, branch deletion
-- [[01-git-setup-and-config]] — SSH keys, HTTPS auth, `.gitattributes`, line endings
-- [[05-git-remote-management]] — Remote URLs, fetch, and push configuration
-
-**GitHub Actions:**
-- [[03-github-actions-ci-cd]] — CI/CD secrets, Workload Identity Federation, and workflow triggers

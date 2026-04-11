@@ -29,87 +29,27 @@ mindmap
 ```
 
 > [!abstract]- [[02-index-construction]]
->
-> - [[index-construction#B|Weighting and rebalancing (B)]]
-> - [[index-construction#C|Capping and calculation (C)]]
-> - [[index-construction#F|Free-float and filters (F)]]
-> - [[index-construction#S|Selection and screening (S)]]
 
 > [!abstract]- [[01-index-families]]
->
-> - [[index-families#D|DAX family (D)]]
-> - [[index-families#E|EURO STOXX family (E)]]
-> - [[index-families#S|STOXX family (S)]]
-> - [[index-families#Additional Index Families|Additional index families]]
 
 > [!abstract]- [[10-financial-metrics]]
->
-> - [[financial-metrics#D|Dividend and debt metrics (D)]]
-> - [[financial-metrics#R|Return and risk metrics (R)]]
-> - [[financial-metrics#V|Volatility and valuation (V)]]
 
 > [!abstract]- [[09-financial-instruments]]
->
-> - [[financial-instruments#D|Derivatives (D)]]
-> - [[financial-instruments#I|Index-linked instruments (I)]]
-> - [[financial-instruments#S|Structured products (S)]]
-> - [[financial-instruments#Quick Reference — Instrument Categories|Instrument categories]]
 
 > [!abstract]- [[11-market-structure]]
->
-> - [[market-structure#C|Classification systems (C)]]
-> - [[market-structure#L|Liquidity and listing (L)]]
-> - [[market-structure#S|Sectors and exchanges (S)]]
 
 > [!abstract]- [[05-esg-ratings]]
->
-> - [[esg-ratings#C|Controversy and carbon scores (C)]]
-> - [[esg-ratings#E|ESG risk ratings (E)]]
-> - [[esg-ratings#K|Key performance indicators (K)]]
 
 > [!abstract]- [[06-esg-terms]]
->
-> - [[esg-terms#Green Bond Principles|Green Bond Principles]]
-> - [[esg-terms#Use-of-Proceeds|Use-of-Proceeds]]
-> - [[esg-terms#Social Bond Principles|Social Bond Principles]]
-> - [[esg-terms#Sustainability Performance Targets|Sustainability performance targets]]
 
 > [!abstract]- [[04-esg-frameworks]]
->
-> - [[esg-frameworks#E|EU taxonomy and regulations (E)]]
-> - [[esg-frameworks#G|GRI and global standards (G)]]
-> - [[esg-frameworks#S|SASB and SFDR (S)]]
-> - [[esg-frameworks#T|TCFD and reporting (T)]]
 
 > [!abstract]- [[07-sustainability-themes]]
->
-> - [[sustainability-themes#C|Carbon and climate metrics (C)]]
-> - [[sustainability-themes#E|Energy transition (E)]]
-> - [[sustainability-themes#N|Net-zero and nature (N)]]
-> - [[sustainability-themes#W|Water risk (W)]]
 
 > [!abstract]- [[08-corporate-governance]]
->
-> - [[corporate-governance#B|Board structure (B)]]
-> - [[corporate-governance#E|Executive compensation (E)]]
-> - [[corporate-governance#P|Proxy voting (P)]]
-> - [[corporate-governance#Quick Reference — ISS QualityScore Pillars|ISS QualityScore pillars]]
 
 > [!abstract]- [[03-smart-beta-factors]]
->
-> - [[smart-beta-factors#F|Factor definitions (F)]]
-> - [[smart-beta-factors#M|Momentum and minimum volatility (M)]]
-> - [[smart-beta-factors#Q|Quality and quantitative (Q)]]
-> - [[smart-beta-factors#V|Value and volatility (V)]]
 
 > [!abstract]- [[13-data-methodology]]
->
-> - [[data-methodology#B|Back-testing and bias (B)]]
-> - [[data-methodology#C|Coverage and collection (C)]]
-> - [[data-methodology#Q|Quality assurance (Q)]]
 
 > [!abstract]- [[12-regulatory|Regulatory terms]]
->
-> - [[regulatory#E|EU BMR and ESG regulation (E)]]
-> - [[regulatory#P|Paris-aligned benchmarks (P)]]
-> - [[regulatory#T|Taxonomy regulation (T)]]

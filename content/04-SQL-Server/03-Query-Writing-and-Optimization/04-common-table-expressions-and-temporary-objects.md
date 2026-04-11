@@ -3,12 +3,6 @@ title: "04 - Common Table Expressions and Temporary Objects"
 tags: [sql, sql-server, tsql, cte, recursive-cte, temp-table, table-variable, tvp, derived-table]
 aliases: [CTE reference, temp tables, table variables, TVPs, derived tables]
 description: "T-SQL reference for common table expressions, recursive CTEs, derived tables, VALUES constructors, temp tables, table variables, and table-valued parameters."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[01-select-and-query-basics]]"
-  - "[[03-joins-subqueries-and-apply]]"
-  - "[[05-window-functions]]"
-  - "[[18-stored-procedures-dynamic-sql-and-error-handling]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -270,10 +264,4 @@ TVP rules:
 - Use recursive CTEs for true hierarchy/recursion problems, not as a generic sequence generator when a calendar table already exists.
 - Start the first CTE with `;WITH` when there is any ambiguity about statement termination.
 
-## Related
-
-- [[01-select-and-query-basics]]
-- [[03-joins-subqueries-and-apply]]
-- [[05-window-functions]]
-- [[18-stored-procedures-dynamic-sql-and-error-handling]]
 

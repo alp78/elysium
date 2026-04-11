@@ -3,9 +3,6 @@ title: "19 - Performance and Code Quality - Python"
 tags: [python, performance]
 aliases: [performance profiling, code quality, timeit, cProfile, tracemalloc, ruff, mypy]
 description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [19-cs-performance-quality](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/19-cs-performance-quality) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[19-cs-performance-quality]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Wes Dyer**, blog post (2007)
 
-This note is the Python reference for performance measurement and code quality tooling. The C# counterpart covering `Stopwatch`, `BenchmarkDotNet`, `Span<T>`, and Roslyn Analyzers is [[19-cs-performance-quality]].
+This note is the Python reference for performance measurement and code quality tooling.
 
 ### Key terms used in this note
 
@@ -1271,13 +1268,5 @@ Zip with exhausted generator: []
 | Generator pipeline produces an empty result on second call | Generator exhausted on first iteration; no error raised on reuse | Materialize with `list()` before storing in a variable that will be iterated more than once |
 | `memoryview` raises `TypeError: a bytes-like object is required` | Source object does not implement the buffer protocol (e.g., a plain list) | Use `bytes`, `bytearray`, `array.array`, or NumPy arrays as the backing object |
 | Polars `.profile()` shows short node times on test data but is slow in production | Small test frames fit in L1/L2 cache; production row counts expose memory-bandwidth pressure | Profile with a representative sample (≥ 1 M rows); use `.explain(streaming=True)` to check plan differences |
-
-## Cross-References
-
-- [[19-cs-performance-quality]] — C# counterpart: `Stopwatch`, `BenchmarkDotNet`, `Span<T>`, Roslyn Analyzers
-- [[12-py-asyncconcurrency]] — async and threading patterns that interact with profiling and GIL behaviour
-- [[13-py-advancedpipelines]] — advanced pipeline patterns where generator exhaustion and memory pressure are common
-- [[14-py-testing]] — integrating `timeit` and `tracemalloc` assertions into the test suite
-- [[25-py-functional-pipeline]] — functional composition patterns and lazy evaluation pitfalls covered here
 
 **No-Go's:** String concat in loops. Nested loops on large data. Bare except. Mutable defaults. eval(). Hardcoded secrets. Wildcard imports.

@@ -3,13 +3,6 @@ title: "02 - VM SSH and File Transfer"
 tags: [gcp, compute-engine, ssh, iap]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
-parent: "[[domain-compute-and-messaging]]"
-links:
-  - "[[01-vm-lifecycle]]"
-  - "[[03-disks-and-snapshots]]"
-  - "[[03-cloud-run-jobs-vs-services]]"
-  - "[[02-pubsub-messaging]]"
-  - "[[01-pubsub-topics-and-subscriptions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

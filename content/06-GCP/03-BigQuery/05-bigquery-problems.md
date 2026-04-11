@@ -4,16 +4,6 @@ tags: [bigquery, gcp]
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of BigQuery production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers cost control, query performance, DML concurrency, data types, and operational issues."
-parent: "[[domain-data-services]]"
-links:
-  - "[[01-gcs-buckets-and-lifecycle]]"
-  - "[[02-gcs-object-operations]]"
-  - "[[01-dataset-and-table-management]]"
-  - "[[02-data-loading-and-export]]"
-  - "[[03-querying-and-cost-optimization]]"
-  - "[[04-job-management]]"
-  - "[[01-firestore-data-model-and-operations]]"
-  - "[[02-real-time-nosql-pipelines]]"
 ---
 
 # BigQuery Production Problems

@@ -7,14 +7,6 @@ tags: [python, sql, bigquery, financial, stoxx]
 aliases: [corporate actions processing, index maintenance, financial index engineering, stock split adjustment, free-float methodology, index divisor, reconstitution pipeline, ESG data integration, point-in-time data, bi-temporal modeling]
 keywords: [financial index, corporate actions, stock split, dividend, merger, spinoff, free-float, index divisor, index reconstitution, weight capping, total return, price return, net return, withholding tax, point-in-time, look-ahead bias, SCD type 2, bi-temporal, ESG, SFDR, BMR, European equity index, MSCI, rebalancing, buffer rules, index calculation, benchmark regulation]
 description: "Comprehensive guide to financial index maintenance: corporate actions processing (splits, dividends, mergers, spinoffs), free-float methodology, weight capping, quarterly reconstitution, and ESG data integration. Covers the index divisor, point-in-time (PIT) temporal data, bi-temporal modeling, and EU regulatory requirements (BMR, SFDR). Essential for data engineers at financial index providers."
-parent: "[[domain-market-analysis]]"
-links:
-  - "[[05-breadth-and-sentiment-indicators]]"
-  - "[[07-corporate-action-missed]]"
-  - "[[04-liquidity-and-flow-metrics]]"
-  - "[[03-risk-and-volatility-metrics]]"
-  - "[[01-technical-indicators]]"
-  - "[[02-valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -325,7 +317,7 @@ Not everything happens on schedule. These events require immediate index adjustm
 | **Stock exchange migration** | Update exchange codes, trading hours, currency | On migration date |
 
 > [!warning] NULL Price Is Not "No Trade Today"
-> Your pipeline must handle all these edge cases. When a corporate action is missed or misprocessed, follow the [[07-corporate-action-missed]] runbook for immediate remediation. A `NULL` price is not the same as "not traded today" — it might mean "suspended pending material news" and requires different treatment than a weekend or holiday.
+> Your pipeline must handle all these edge cases. A `NULL` price is not the same as "not traded today" — it might mean "suspended pending material news" and requires different treatment than a weekend or holiday.
 
 ## The Regulatory Landscape
 

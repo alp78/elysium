@@ -3,11 +3,6 @@ title: "11 - SARGable Queries"
 tags: [sql, sql-server, tsql, sargable, predicates, implicit-conversion, index-seek, where-clause]
 aliases: [SARGable, search argument, index seek, non-sargable, predicate]
 description: "T-SQL reference for writing SARGable predicates in SQL Server: bare-column comparisons, date-range rewrites, prefix searches, implicit conversion traps, and computed-column or filtered-index escape hatches."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[01-select-and-query-basics]]"
-  - "[[06-index-types-and-strategy]]"
-  - "[[12-execution-plans]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -172,11 +167,6 @@ It does not own:
 - wait-stats analysis
 - parameter-sniffing remediation workflows
 
-Those topics belong in [[12-execution-plans]], [[19-query-store-regressions-and-plan-forcing]], and the Performance folder.
+Those topics belong in the Execution Plans and Query Store notes, and the Performance folder.
 
-## Related
-
-- [[01-select-and-query-basics]]
-- [[06-index-types-and-strategy]]
-- [[12-execution-plans]]
 

@@ -3,11 +3,6 @@ title: "09 - JSON, XML, and Semi-Structured Data"
 tags: [sql, sql-server, tsql, json, xml, openjson, json-value, xml-nodes, semi-structured-data]
 aliases: [OPENJSON, JSON_VALUE, JSON_QUERY, XML methods, nodes value query exist]
 description: "T-SQL reference for SQL Server JSON and XML handling, including ISJSON, JSON_VALUE, JSON_QUERY, JSON_MODIFY, OPENJSON, FOR JSON, xml methods such as nodes(), value(), query(), exist(), and modify()."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[07-string-functions-and-pattern-matching]]"
-  - "[[02-data-types-conversion-and-null-handling]]"
-  - "[[06-index-types-and-strategy]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -173,9 +168,4 @@ Practical rule:
 - Use XML methods deliberately; `nodes()` + `value()` is the most common shredding pattern.
 - Keep semi-structured payloads at the boundary when the data has a stable relational shape.
 
-## Related
-
-- [[07-string-functions-and-pattern-matching]]
-- [[02-data-types-conversion-and-null-handling]]
-- [[06-index-types-and-strategy]]
 

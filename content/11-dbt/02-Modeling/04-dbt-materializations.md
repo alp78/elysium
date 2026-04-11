@@ -4,11 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "View table incremental ephemeral snapshot deep dive"
-parent: "[[domain-model-design]]"
-links:
-  - "[[01-dbt-staging-models]]"
-  - "[[02-dbt-intermediate-models]]"
-  - "[[03-dbt-mart-models]]"
 ---
 
 # dbt: Materializations

@@ -9,20 +9,7 @@ tags:
   - corporate-governance
 aliases:
   - "Corporate Governance Glossary"
-parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
-links:
-  - "[[13-data-methodology]]"
-  - "[[04-esg-frameworks]]"
-  - "[[05-esg-ratings]]"
-  - "[[09-financial-instruments]]"
-  - "[[10-financial-metrics]]"
-  - "[[02-index-construction]]"
-  - "[[01-index-families]]"
-  - "[[11-market-structure]]"
-  - "[[12-regulatory]]"
-  - "[[03-smart-beta-factors]]"
-  - "[[07-sustainability-themes]]"
 ---
 
 # Corporate Governance — ISS & STOXX Glossary

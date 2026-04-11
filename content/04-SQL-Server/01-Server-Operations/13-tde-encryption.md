@@ -3,10 +3,6 @@ title: "13 - Transparent Data Encryption (TDE)"
 tags: [sql, sql-server, security, tsql]
 aliases: [TDE, database encryption, at-rest encryption, database encryption key, DEK]
 description: "Production guide to SQL Server Transparent Data Encryption on Linux: what TDE protects, certificate-based key hierarchy, live encryption-state checks, certificate backup, and disaster-recovery requirements."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[12-audit-logging]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -465,8 +461,4 @@ GO
 - On SQL Server 2019 and later, backup compression for TDE-enabled databases no longer needs the older manual `MAXTRANSFERSIZE > 64 KB` workaround that earlier versions depended on.
 - If you archive exported certificate artifacts to GCS, protect that archive with strict IAM and, if required, Cloud KMS. That external protection hardens the backup artifacts, not the live SQL Server TDE runtime chain.
 
-## Related
-
-- [[03-sql-server-authentication]]
-- [[12-audit-logging]]
 

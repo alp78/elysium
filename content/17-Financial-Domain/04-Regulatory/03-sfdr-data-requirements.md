@@ -5,11 +5,6 @@ type: reference
 technology: [python, bigquery, sql-server]
 status: stable
 updated: 2026-03-23
-parent: "[[domain-regulatory]]"
-links:
-  - "[[04-esg-circuit-breaker-fired]]"
-  - "[[01-eu-bmr-benchmark-regulation]]"
-  - "[[02-iosco-benchmark-principles]]"
 ---
 
 # SFDR Data Requirements
@@ -54,7 +49,7 @@ links:
 
 ### Data Pipeline for PAI Computation
 
-See [[07-data-sources-and-refresh]] for the upstream vendor refresh pipeline (when the ESG quality checks fail, follow the [[04-esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
+The PAI computation sits on top of the normalized ESG scores:
 
 ```
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report

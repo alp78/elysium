@@ -4,9 +4,6 @@ tags:
   - csharp
 aliases: [lambda, closures, decorators, delegates, higher-order functions]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and events. See [04-py-functions](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/04-py-functions) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[04-py-functions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
-This note covers C#'s function system in full: method definitions and return types, parameter modes (`ref`, `out`, `in`, `params`), `Func<T>`/`Action<T>` delegate types, lambda expressions, closures and captured variables, the event/delegate pattern, method overloading, and extension methods that power LINQ. Every concept is paired with its Python equivalent in [[04-py-functions]].
+This note covers C#'s function system in full: method definitions and return types, parameter modes (`ref`, `out`, `in`, `params`), `Func<T>`/`Action<T>` delegate types, lambda expressions, closures and captured variables, the event/delegate pattern, method overloading, and extension methods that power LINQ.
 
 ### Key terms used in this note
 
@@ -1220,11 +1217,3 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 | Closure causes heap allocation | Non-static local function captures enclosing variables | Add `static` modifier to prevent capture |
 | `out` parameter not assigned error | Method exits without assigning all `out` parameters | Assign all `out` parameters before any `return` or exception |
 
-## Cross-References
-
-- **Python equivalent** — [[04-py-functions]] covers `def`, `*args`/`**kwargs`, lambda, closures, decorators, type hints
-- **Control flow** — [[03-cs-control-flow]] covers LINQ as functional loop replacement
-- **OOP** — [[06-cs-oop]] covers methods in class context, virtual dispatch, and interface implementation
-- **Design patterns** — [[18-cs-designpatterns]] covers dependency injection, strategy, and observer patterns
-- **Error handling** — [[08-cs-errorhandling]] covers exception handling in delegates and event handlers
-- **Async** — [[12-cs-asyncconcurrency]] covers `async`/`await`, `Task<T>`, and async lambda patterns

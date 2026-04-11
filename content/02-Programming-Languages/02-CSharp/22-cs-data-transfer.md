@@ -7,9 +7,6 @@ tags:
   - benchmarks
 aliases: [Data Transfer CSharp, GCS Transfer, BigQuery Load]
 description: "C# data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22-py-data-transfer](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/22-py-data-transfer) for the Python equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[22-py-data-transfer]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > — **Kent Beck**
 
-This note is the C# reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery; the Python equivalent is [[22-py-data-transfer]].
+This note is the C# reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery.
 
 ### Key terms used in this note
 
@@ -2989,10 +2986,3 @@ Console.WriteLine("  Cleanup done");
 | CRC32C mismatch after chunk download | Network corruption or incomplete download (connection dropped mid-stream) | Re-download the affected chunk; add retry logic with `Polly` (`RetryPolicy` with exponential back-off) around the download call |
 | `ZstdSharp` compression throws `DllNotFoundException` on Linux | Native `libzstd` not present on the target OS image | Install `libzstd-dev` via `apt`, or switch to the `ZstdNet` package which bundles the native library as an embedded resource |
 
-## Cross-References
-
-- [[22-py-data-transfer]] — Python equivalent covering the same GCS, SQL Server, and BigQuery transfer patterns
-- [[01-cs-foundations-io]] — C# I/O foundations: `FileStream`, `StreamReader`, `BinaryWriter`, and path manipulation
-- [[domain-gcp-integration]] — GCP integration MOC linking all GCS, BigQuery, and Pub/Sub notes
-- [[03-cs-file-compression]] — Compression algorithm benchmarks referenced in the pipeline section
-- [[02-cs-bigquery]] — BigQuery client patterns: schema management, query jobs, and partitioned table loads

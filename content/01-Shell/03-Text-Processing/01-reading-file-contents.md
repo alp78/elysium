@@ -4,17 +4,6 @@ tags: [shell, text-processing]
 aliases: [cat, head, tail, tail -f, grep large files, log analysis, less, reading files]
 keywords: [cat, head, tail, tail -f, grep, awk, less, log file, incident response, reading files, follow log, large file, line count, wc -l, extract time window, ripgrep, rg, Select-String]
 description: "Commands for reading file contents from quick config checks to deep log file analysis during incidents. Covers tail -f for real-time log following, grep performance flags, and PowerShell Select-String."
-parent: "[[domain-data-and-files]]"
-links:
-  - "[[01-navigation-and-listing]]"
-  - "[[02-grep-and-pattern-matching]]"
-  - "[[04-awk-data-processing]]"
-  - "[[03-sed-stream-editing]]"
-  - "[[05-date-and-time-handling]]"
-  - "[[03-finding-files]]"
-  - "[[02-file-manipulation]]"
-  - "[[04-compression]]"
-  - "[[05-data-transfer]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

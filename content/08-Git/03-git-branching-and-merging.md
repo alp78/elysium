@@ -12,12 +12,6 @@ description: "Git branching and merging strategies — creating feature branches
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
-parent: "[[domain-branching-and-collaboration]]"
-links:
-  - "[[04-merge-vs-rebase-vs-squash]]"
-  - "[[10-git-merge-conflicts]]"
-  - "[[05-git-remote-management]]"
-  - "[[06-pull-requests-and-code-review]]"
 ---
 
 # Git Branching and Merging
@@ -598,15 +592,3 @@ git branch recovered-feature 3a1b2c3
 
 See [git-history-and-inspection](https://alp78.github.io/elysium/08-Git/git-history-and-inspection) for advanced log and reflog inspection techniques.
 
-## Related
-
-**Git chapter:**
-- [[02-git-daily-workflow]] — Status, staging, committing, pushing
-- [[11-git-recovery-and-undo]] — Comprehensive recovery workflows and undo techniques
-- [[04-merge-vs-rebase-vs-squash]] — Detailed comparison table of merge strategies with tradeoffs
-- [[10-git-merge-conflicts]] — Resolving conflicts during merge and rebase operations
-- [[08-git-history-and-inspection]] — Log, reflog, blame, and diff inspection
-- [[12-git-common-errors]] — Detached HEAD, wrong branch merge, and other pitfalls
-
-**GitHub Actions:**
-- [[03-github-actions-ci-cd]] — CI/CD pipelines triggered by branch and PR events

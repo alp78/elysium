@@ -3,13 +3,6 @@ title: "06 - Index Types and Strategy"
 tags: [sql, sql-server, storage, tsql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, composite index, index seek, index scan, key lookup]
 description: "Production guide to SQL Server index design: clustered vs nonclustered, composite and covering strategies, filtered and columnstore indexes, missing-index caveats, and live index-surface analysis in stoxx."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[02-storage-internals]]"
-  - "[[08-table-compression]]"
-  - "[[09-partitioning-strategies]]"
-  - "[[07-index-maintenance]]"
-  - "[[12-execution-plans]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -880,13 +873,5 @@ _The columnstore example currently has one compressed rowgroup with no deleted r
 - Re-check every proposed index against its write cost and overlap with existing indexes.
 - Use columnstore for scans and aggregates, not as a universal replacement for rowstore.
 
-For fragmentation, rebuild policy, page density, and statistics maintenance, use [[07-index-maintenance]]. For plan-level proof of seek vs scan vs lookup behavior, use [[12-execution-plans]].
 
-## Related
-
-- [[02-storage-internals]]
-- [[08-table-compression]]
-- [[09-partitioning-strategies]]
-- [[07-index-maintenance]]
-- [[12-execution-plans]]
 

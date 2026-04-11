@@ -7,14 +7,6 @@ tags: [python, sql, financial]
 aliases: [Scoring Methodology, z-score methodology, z-score calculation, composite scores, dense ranking, cap-weighting]
 keywords: [scoring methodology, z-score, cross-sectional, composite score, dense rank, cap-weighted, standardization, normalization, ranking, mean, standard deviation, inverted z-score, sign inversion]
 description: "Z-score calculation methodology, composite scoring, dense ranking, and cap-weighting formulas used across all financial data platform dashboard signals and metrics."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[04-quarterly-signal-scores]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

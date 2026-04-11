@@ -9,16 +9,6 @@ aliases:
   - SQL Server production triage queries
   - DBA query pack
 description: "Production-facing SQL Server queries for server identity, database state, files, active requests, waits, backups, and capacity checks, with live output from the stoxx instance."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[01-server-configuration]]"
-  - "[[07-backup-types-and-strategy]]"
-  - "[[08-restore-and-recovery]]"
-  - "[[05-sql-server-agent-jobs]]"
-  - "[[02-sqlcmd-connection-and-usage]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[12-execution-plans]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -652,11 +642,3 @@ ORDER BY used_mb DESC;
 
 ---
 
-## Related
-
-- [[01-server-configuration]] for the corrective configuration work that usually follows the baseline queries
-- [[07-backup-types-and-strategy]] for interpreting recovery-model and log-backup findings
-- [[08-restore-and-recovery]] for moving from backup evidence to actual restore execution
-- [[05-sql-server-agent-jobs]] for scheduling the recurring checks and maintenance these queries often motivate
-- [[13-wait-stats-analysis]] for deeper wait interpretation after the top-line instance snapshot
-- [[12-execution-plans]] for query-level follow-up once the live-request query identifies a problematic statement

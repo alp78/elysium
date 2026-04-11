@@ -3,9 +3,6 @@ title: "14 - Testing - Python"
 tags: [testing, python]
 aliases: [unit testing, pytest, unittest, ipytest, hypothesis, test driven development, mocking, assertions]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14-cs-testing](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/14-cs-testing) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[14-cs-testing]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > — **Kent Beck**, *Test-Driven Development: By Example*
 
-This note covers Python testing patterns. For the C# equivalent using xUnit, Moq, and FluentAssertions, see [[14-cs-testing]].
+This note covers Python testing patterns.
 
 ### Key terms used in this note
 
@@ -1925,10 +1922,3 @@ trading_pipeline/
 | `pandera.errors.SchemaError` in integration test | DataFrame output violates schema (wrong dtype, out-of-range) | Fix the pipeline transformation; do not relax the schema without review |
 | `assert_called_once_with` fails despite correct call | Argument equality uses `==`; objects with `__eq__` not defined compare by identity | Use `ANY` from `unittest.mock` for arguments you cannot control, or implement `__eq__` |
 
-## Cross-References
-
-- [[14-cs-testing]] — C# equivalent: xUnit, Moq, FluentAssertions, `dotnet test`
-- [[08-py-errorhandling]] — exception handling patterns tested with `pytest.raises`
-- [[19-py-performance-quality]] — code quality tools (mypy, ruff, coverage) that complement testing
-- [[25-py-functional-pipeline]] — pure functional transforms that are the easiest to unit test
-- [[16-py-database]] — database layer tested with integration fixtures and transactional rollback

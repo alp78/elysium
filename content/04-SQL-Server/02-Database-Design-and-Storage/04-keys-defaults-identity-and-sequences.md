@@ -15,12 +15,6 @@ aliases:
   - SEQUENCE
   - default constraints
 description: "Reference for natural and surrogate key strategy, composite keys, IDENTITY, SEQUENCE, default constraints, generated values, and retrieval patterns in SQL Server."
-parent: "[[domain-database-design-and-storage]]"
-links:
-  - "[[01-database-creation-and-file-layout]]"
-  - "[[03-schemas-tables-and-constraints]]"
-  - "[[06-index-types-and-strategy]]"
-  - "[[10-sql-server-change-tracking]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -155,8 +149,4 @@ Do not use defaults to hide missing business inputs that the caller should have 
 5. use `SEQUENCE` when the number generator must outlive one table
 6. use defaults only for contract-owned generated values
 
-## Related
 
-- [[03-schemas-tables-and-constraints]] for the table and constraint layer
-- [[10-sql-server-change-tracking]] for historical row versioning patterns
-- [[06-index-types-and-strategy]] for the indexing consequences of key choice

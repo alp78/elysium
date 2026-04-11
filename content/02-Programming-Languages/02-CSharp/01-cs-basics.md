@@ -3,9 +3,6 @@ title: "01 - Basics - C#"
 tags: [csharp]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "C# basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01-py-basics](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/01-py-basics) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[01-py-basics]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Brian W. Kernighan & Dennis Ritchie**, *The C Programming Language* (1978)
 
-This note covers the absolute foundations of C# as a programming language: how to set up and verify a .NET Interactive notebook environment, read and write console output, declare variables with static typing, work with every built-in data type, use all operator families, implement custom operator behavior via operator overloading, and understand the value-vs-reference type distinction that governs memory layout and mutation safety. Every concept is paired with its Python equivalent in [[01-py-basics]].
+This note covers the absolute foundations of C# as a programming language: how to set up and verify a .NET Interactive notebook environment, read and write console output, declare variables with static typing, work with every built-in data type, use all operator families, implement custom operator behavior via operator overloading, and understand the value-vs-reference type distinction that governs memory layout and mutation safety.
 
 ### Key terms used in this note
 
@@ -2242,11 +2239,4 @@ Console.WriteLine(string.Join(",", myList));   // list after
 | `decimal` literal error | Missing `m` suffix: `19.99` is `double` | Add `m`: `19.99m` |
 | `#r nuget` fails in notebook | Package not found or version conflict | Verify package name on nuget.org; specify version explicitly |
 
-## Cross-References
-
-- **Python equivalent** — [[01-py-basics]] covers the same concepts in Python: variables, types, operators, console I/O, dunder methods, and mutable/immutable semantics
-- **Strings deep dive** — [[02-cs-strings]] extends string handling with indexing, methods, interpolation, StringBuilder, regex
-- **Collections deep dive** — [[05-cs-collections]] covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections
-- **Error handling** — [[08-cs-errorhandling]] covers try/catch/finally, exception hierarchy, custom exceptions, IDisposable/using
-- **Environments and dependencies** — [[26-cs-environments]] covers .NET project setup, NuGet, Docker, and CI/CD for C# projects
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when bytes, JSON, and Parquet choices matter in pipelines

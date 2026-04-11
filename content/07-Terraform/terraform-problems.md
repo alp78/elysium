@@ -4,11 +4,6 @@ tags: [infrastructure, terraform, iac]
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of Terraform production problems — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams on GCP."
-parent: "[[domain-patterns-and-reference]]"
-links:
-  - "[[02-terraform-conditional-resources]]"
-  - "[[01-terraform-resource-dependencies]]"
-  - "[[03-terraform-module-composition]]"
 ---
 
 # Terraform Production Problems

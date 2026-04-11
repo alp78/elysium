@@ -3,12 +3,6 @@ title: "03 - Terraform Variables and Outputs"
 tags: [terraform, iac]
 aliases: [terraform variables, tfvars, terraform outputs, HCL variables, input variables]
 description: "How to define and use Terraform input variables (variables.tf) and output values (outputs.tf), including sensitive variables, defaults, and the locals vs variables distinction."
-parent: "[[domain-language-and-workflow]]"
-links:
-  - "[[01-hcl-syntax-basics]]"
-  - "[[02-terraform-providers-and-backend]]"
-  - "[[04-terraform-state-management]]"
-  - "[[05-terraform-plan-apply-destroy]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

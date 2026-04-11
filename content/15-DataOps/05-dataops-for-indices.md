@@ -8,10 +8,6 @@ aliases:
   - regression testing
   - blue-green data
   - calculation validation
-parent: "[[domain-principles-and-practice]]"
-links:
-  - "[[01-dataops-principles-and-practices]]"
-  - "[[03-self-service-data-platform]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

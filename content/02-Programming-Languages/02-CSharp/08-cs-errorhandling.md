@@ -3,9 +3,6 @@ title: "08 - Error Handling - C#"
 tags: [csharp]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [08-py-errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/08-py-errorhandling) for the Python equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[08-py-errorhandling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
-C# uses structured exception handling with `try`/`catch`/`finally` blocks, a class-based exception hierarchy rooted in `System.Exception`, and the `using` pattern for deterministic resource cleanup. This note covers exception catching and filtering, the built-in exception type tree, custom domain exceptions, `IDisposable`/`using`, and data-engineering patterns like error accumulation and retry with exponential backoff. Every concept is paired with its Python equivalent in [[08-py-errorhandling]].
+C# uses structured exception handling with `try`/`catch`/`finally` blocks, a class-based exception hierarchy rooted in `System.Exception`, and the `using` pattern for deterministic resource cleanup. This note covers exception catching and filtering, the built-in exception type tree, custom domain exceptions, `IDisposable`/`using`, and data-engineering patterns like error accumulation and retry with exponential backoff.
 
 ### Key terms used in this note
 
@@ -918,10 +915,3 @@ Result after 3 attempts: data loaded successfully
 | `ObjectDisposedException` on resource access | Used a resource after its `using` scope ended | Ensure the `using` scope covers all usage of the resource |
 | Retry loop runs forever | No maximum retry count | Always set `maxRetries` and `throw` after exhaustion |
 
-## Cross-References
-
-- **Python equivalent** — [[08-py-errorhandling]] covers `try`/`except`/`finally`, context managers, custom exceptions, `ExceptionGroup`
-- **Functions** — [[04-cs-functions]] covers delegates and `Func<T>` used in retry patterns
-- **OOP** — [[06-cs-oop]] covers class hierarchies — custom exceptions use inheritance
-- **LINQ** — [[07-cs-generics-linq]] covers LINQ error handling in query pipelines
-- **Concurrency** — [[12-cs-asyncconcurrency]] covers async exception handling and `Task` error propagation

@@ -4,13 +4,6 @@ tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
 description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet/JSON). Executable examples with cell outputs. See [01_py_foundations_io](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/01_py_foundations_io) for the Python equivalent."
-parent: "[[domain-ingest-and-explore]]"
-links:
-  - "[[01-py-foundations-io]]"
-  - "[[02-py-explore-select-filter]]"
-  - "[[02-cs-explore-select-filter]]"
-  - "[[07-py-types-interop]]"
-  - "[[07-cs-types-interop]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -1283,9 +1276,3 @@ The operationally correct choice is usually obvious once the source boundary and
 | CSV import has wrong types | Type inference guessed wrong | Pass explicit schema or type overrides |
 | `InvalidOperationException` on DataFrame | Attempted mutation on Polars.NET DataFrame | Polars.NET is immutable — use `WithColumn()` or `WithColumns()` to create a new DataFrame |
 
-## Cross-references
-
-- **Python counterpart:** [[01-py-foundations-io]] — same topics using Pandas and Polars
-- **Next in sequence:** [[02-cs-explore-select-filter]] — selection, filtering, and exploration
-- **Types and interop:** [[07-cs-types-interop]] — advanced types, Categorical, Arrow interop
-- **Domain index:** [[domain-ingest-and-explore]] — parent domain page for this note

@@ -3,18 +3,6 @@ title: "16 - Performance Audit Playbook"
 tags: [performance, sql, sql-server, tsql]
 aliases: [SQL Server audit, performance audit, health check, DBA audit, instance audit]
 description: "Production-first SQL Server performance audit playbook with live stoxx outputs for baseline configuration, memory, waits, I/O, query cache, index health, TempDB, blocking, statistics, file growth, and security."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[11-sargable-queries]]"
-  - "[[10-merge-and-upsert]]"
-  - "[[08-date-and-time-functions]]"
-  - "[[12-execution-plans]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-index-maintenance]]"
-  - "[[07-pipeline-integration-and-devex]]"
-  - "[[06-pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -177,7 +165,7 @@ _The database-level defaults are mostly healthy: all databases are online, `comp
 
 ## Phase 2 | Memory and Buffer Pool
 
-This phase checks whether the instance is actually under memory pressure, how the buffer pool is distributed, and whether any query is currently waiting for a memory grant. For deeper clerk-level analysis and process-memory detail, use [[11-memory-and-buffer-pool]] after this phase.
+This phase checks whether the instance is actually under memory pressure, how the buffer pool is distributed, and whether any query is currently waiting for a memory grant.
 
 ### Working-set and memory-pressure checks
 
@@ -510,7 +498,7 @@ _This ranking is real but not workload-representative. Every top row is a one-of
 
 ## Phase 6 | Index Health
 
-Index health is not just fragmentation. The point of this phase is to determine whether physically meaningful indexes are degraded enough to matter and whether the data-access layer is likely to benefit from maintenance or design changes. For the full maintenance playbook, use [[07-index-maintenance]].
+Index health is not just fragmentation. The point of this phase is to determine whether physically meaningful indexes are degraded enough to matter and whether the data-access layer is likely to benefit from maintenance or design changes.
 
 ### Actionable physical-design signals
 
@@ -1095,19 +1083,7 @@ The audit is only useful if it ends in a prioritized report. Each finding should
 | File growth | User database growth is sane; system databases still use percentage growth. | `stoxx` grows by fixed `64 MB`; `master` and `msdb` use `10%`. | Medium | Normalize system-database growth increments to fixed MB values. |
 | Security | Privilege surface is too broad. | `sa` enabled; `BUILTIN\Administrators` and `NETWORK SERVICE` are sysadmin. | High | Review and reduce sysadmin membership. |
 
-## Related
-
-This playbook is the entry point. Use the focused notes below when one phase becomes the main diagnostic branch.
-
-### Deep-dive notes
-
-- [[11-memory-and-buffer-pool]]
-- [[13-wait-stats-analysis]]
-- [[12-execution-plans]]
-- [[19-query-store-regressions-and-plan-forcing]]
-- [[07-index-maintenance]]
-
-### Official references
+## References
 
 - [sys.dm_os_wait_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-wait-stats-transact-sql?view=sql-server-ver17)
 - [sys.dm_exec_query_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-query-stats-transact-sql?view=sql-server-ver17)

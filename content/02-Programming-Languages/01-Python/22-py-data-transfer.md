@@ -3,9 +3,6 @@ title: "22 - Data Transfer - Python"
 tags: [python, gcp, data-transfer, benchmarks]
 aliases: [Data Transfer Python, GCS Transfer, BigQuery Load]
 description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22-cs-data-transfer](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/22-cs-data-transfer) for the C# equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[22-cs-data-transfer]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Kent Beck**
 
-This note is the Python reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery; the C# equivalent is [[22-cs-data-transfer]].
+This note is the Python reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery.
 
 ### Key terms used in this note
 
@@ -2766,10 +2763,3 @@ print("  Cleanup done")
 | CRC32C mismatch after download | Network corruption or incomplete download (connection dropped mid-stream) | Re-download the affected chunk; enable Transfer Manager's built-in retry with `num_retries=3` |
 | Transfer Manager `upload_chunks_concurrently` raises `AttributeError` | `google-cloud-storage` version < 2.14 does not expose `upload_chunks_concurrently` | Upgrade: `pip install "google-cloud-storage>=2.14"` |
 
-## Cross-References
-
-- [[22-cs-data-transfer]] — C# equivalent covering the same GCS, SQL Server, and BigQuery transfer patterns
-- [[01-py-foundations-io]] — Python I/O foundations: file handles, buffered reads, path manipulation
-- [[domain-gcp-integration]] — GCP integration MOC linking all GCS, BigQuery, and Pub/Sub notes
-- [[03-py-file-compression]] — Compression algorithm benchmarks referenced in the pipeline section
-- [[02-py-bigquery]] — BigQuery client patterns: schema management, query jobs, and partitioned table loads

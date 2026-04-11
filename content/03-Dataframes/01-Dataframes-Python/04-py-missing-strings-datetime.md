@@ -4,15 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - null handling, string methods, datetime parsing, timezones
 description: "Pandas/Polars DataFrame reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Side-by-side executable examples with cell outputs."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-24
 updated: 2026-04-04
 status: complete
@@ -1994,11 +1985,3 @@ display(asml_pl_sorted.with_columns(
 | `shift()` fills with NaN instead of null | Pandas uses NaN; Polars uses null | Expected behavior — use the appropriate null check for each library |
 | Cumulative sum resets unexpectedly | Group boundary not respected | Use `.over("group")` (Polars) or `.groupby("group").cumsum()` (Pandas) |
 
-## Cross-references
-
-- **C# counterpart:** [[04-cs-missing-strings-datetime]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Previous in sequence:** [[03-py-transforms-expressions]] — column transforms and expression building
-- **Next in sequence:** [[05-py-aggregation-reshaping]] — group_by, window functions, joins, reshaping
-- **Foundations:** [[01-py-foundations-io]] — data type system and null representation fundamentals
-- **Lazy execution:** [[06-py-lazy-performance]] — how Polars optimizes null-handling and datetime operations in lazy mode
-- **Domain index:** [[domain-transform-and-analyze]] — parent domain page for this note

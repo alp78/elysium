@@ -3,10 +3,6 @@ title: "02 - SQL Engineering"
 tags: [sql-server, tsql, engineering]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
-parent: "[[domain-sql-server]]"
-links:
-  - "[[01-sql-fundamentals]]"
-  - "[[03-sql-advanced]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +17,7 @@ status: complete
 
 This note covers SQL Server database objects and performance patterns for data engineering pipelines. It demonstrates views, stored procedures, user-defined functions, index design, SCD patterns, gap detection, deduplication, execution plan analysis, isolation levels, bulk loading, audit columns, and partitioning — all using a dedicated `demo` schema with full cleanup.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -36,7 +32,7 @@ This note covers SQL Server database objects and performance patterns for data e
 | **Partition elimination** | The optimizer's ability to skip entire partitions that cannot satisfy the `WHERE` clause predicate. Requires the filter column to match the partition function's column. | On partitioned tables, queries that filter on the partition key scan only relevant partitions — equivalent to a physical shard filter. | Wrapping the partition column in a function (`WHERE YEAR(date) = 2025`) — this prevents partition elimination, just like it prevents index seeks. |
 | **Parameter sniffing** | SQL Server compiles an SP's plan using the first parameter values it sees and caches that plan for all subsequent calls. If the first values are atypical, the cached plan performs poorly for typical values. | Every SP in this note is susceptible. The `sp_top_stocks` procedure cached with `@top_n = 5` may use nested loops — catastrophic for `@top_n = 10000`. | Assuming `OPTION (RECOMPILE)` is free — it forces a full recompile on every call. Use it only for plans that genuinely vary by input, not as a blanket fix. |
 
-### What this note covers
+## What this note covers
 
 - **Views** — regular views, cross-layer dashboard views, and when to use indexed views
 - **Stored procedures** — parameterized SPs, TRY/CATCH error handling, parameter sniffing mitigations
@@ -118,6 +114,8 @@ SQL Server views encapsulate reusable queries as named database objects. They si
 A view is a saved query. It doesn't store data — it runs the query every time you SELECT from it.
 Use case: wrap the "latest price per stock" pattern so downstream queries are simple.
 
+#### Create a view wrapping ROW_NUMBER deduplication logic
+
 *Create a view that returns the most recent OHLCV row per stock using ROW_NUMBER deduplication.*
 
 ```sql
@@ -143,6 +141,8 @@ WHERE rn = 1;
 
 
 Once the view is created, the `ROW_NUMBER` deduplication logic is hidden — consumers write a simple `SELECT` against the view.
+
+#### Query the view with a simple SELECT
 
 *Query the view — the complex dedup logic is now hidden behind a simple SELECT.*
 
@@ -262,6 +262,8 @@ SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
 
+#### Create a cross-layer dashboard view
+
 *Create a cross-layer dashboard view joining gold scores with silver dimension metadata.*
 
 ```sql
@@ -294,6 +296,8 @@ JOIN silver.index_dim d ON s.symbol = d.symbol AND d._index = s._index AND d.is_
 
 
 
+
+#### Query the dashboard view for the latest rankings
 
 *Query the dashboard view for the latest Euro Stoxx 50 scores ordered by rank.*
 
@@ -492,6 +496,8 @@ Use case: pipeline steps as SPs — each step has consistent parameters and erro
 >
 > Use `sp_executesql` with typed parameters for all variable values: `EXEC sp_executesql N'SELECT ... WHERE symbol = @sym', N'@sym VARCHAR(20)', @sym = @input`. For dynamic object names (table/column names), always validate the input against `sys.tables` or `sys.columns` before concatenating it into SQL — never trust caller input directly.
 
+#### Create a parameterized top-N stored procedure
+
 *Create a parameterized stored procedure that returns the top N stocks by composite rank for a given index.*
 
 ```sql
@@ -526,6 +532,8 @@ END;
 
 
 
+
+#### Execute the stored procedure for Euro Stoxx 50
 
 *Execute the stored procedure for the Euro Stoxx 50 index, returning the top 5 stocks.*
 
@@ -596,6 +604,8 @@ Production SPs wrap logic in `TRY/CATCH` with explicit transactions. If anything
 >
 > Three options in order of preference: (1) `OPTION (RECOMPILE)` on the statement — recompiles every call using the actual parameter values, best for plans that vary dramatically by input; (2) `OPTION (OPTIMIZE FOR (@param UNKNOWN))` — uses average statistics rather than the sniffed value; (3) reassign to a local variable inside the SP (`DECLARE @local = @param`) — prevents sniffing but may produce suboptimal plans for all inputs.
 
+#### Create an SP with TRY/CATCH, transaction, and OUTPUT parameter
+
 *Create an SP with TRY/CATCH error handling, explicit transaction, and an OUTPUT parameter for row count.*
 
 ```sql
@@ -656,6 +666,8 @@ SQL Server supports three types of user-defined functions: scalar functions (ret
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
 Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
 
+#### Create an inline table-valued function for price history
+
 *Create an inline table-valued function that returns OHLCV data for a given symbol and date range.*
 
 ```sql
@@ -685,6 +697,8 @@ AS RETURN (
 
 
 The iTVF is called in the `FROM` clause exactly like a table — the optimizer inlines it into the outer query plan.
+
+#### Call the iTVF from a SELECT statement
 
 *Call the iTVF for ASML March 2026 data — the optimizer inlines it into the outer query plan.*
 
@@ -814,6 +828,8 @@ The table below summarizes SQL Server index types and their primary use cases fo
 
 The query below inspects existing indexes on the `silver.eurostoxx50_ohlcv` table using catalog views. `STRING_AGG` aggregates the key column names in ordinal order to show the composite key layout.
 
+#### Inspect existing indexes on a table via catalog views
+
 *Inspect existing indexes on the OHLCV table: name, type, uniqueness, and key columns.*
 
 ```sql
@@ -878,6 +894,8 @@ The MERGE patterns used for SCD Type 2 below are a key building block for [idemp
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
+
+#### Simulate an SCD Type 1 overwrite on a temp table
 
 *Simulate an SCD Type 1 overwrite: copy 5 rows into a temp table, then UPDATE ASML's sector in place.*
 
@@ -948,6 +966,8 @@ SELECT * FROM #scd_demo
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
+
+#### Query SCD Type 2 validity ranges
 
 *Query SCD Type 2 history: show valid_from/valid_to ranges for Euro Stoxx 50 dimension rows.*
 
@@ -1067,6 +1087,8 @@ Time-series data in financial pipelines frequently contains gaps: missing tradin
 
 Uses `LAG()` to compare each trading date to the previous date for the same symbol. A gap larger than 3 calendar days (accounting for weekends) signals a missing trading session or ingestion failure.
 
+#### Detect calendar gaps with LAG and DATEDIFF
+
 *Detect time-series gaps: compare each date to the previous date using LAG and flag gaps > 3 days.*
 
 ```sql
@@ -1177,6 +1199,8 @@ Assigns `ROW_NUMBER()` within each `(symbol, date)` group ordered by descending 
 
 
 The CTE simulates a duplicate by `UNION ALL`-ing the same latest-date row with a slightly modified close and volume. `ROW_NUMBER()` partitioned by `(symbol, date)` and ordered by descending volume assigns `rn = 1` to the row with the highest volume (the tie-breaking rule). `COUNT(*) OVER` counts how many copies exist per key — the outer `WHERE copies > 1` isolates only the duplicated dates for inspection.
+
+#### Identify duplicates with ROW_NUMBER and tie-breaking
 
 *Simulate a duplicate row and identify it using ROW_NUMBER with volume-based tie-breaking.*
 
@@ -1293,6 +1317,8 @@ The following patterns prevent SQL Server from using indexes efficiently. Each f
 
 Both queries return the same count, but the non-sargable version (`YEAR(date) = 2025`) wraps the column in a function, preventing the index seek — SQL Server must evaluate `YEAR()` for every row. The sargable version (`date >= '2025-01-01' AND date < '2026-01-01'`) expresses the same filter as a range predicate the index can seek directly.
 
+#### Compare non-SARGable vs SARGable predicates
+
 *Compare non-SARGable (function-on-column) vs SARGable (range) predicates — same result, different plans.*
 
 ```sql
@@ -1386,6 +1412,8 @@ Every table in the stoxx database has audit columns:
 | `is_current` | BIT | SCD Type 2 current flag (dimension) |
 
 
+#### Check data freshness across all medallion layers
+
 *Check data freshness across all four medallion layers — the latest timestamp per layer.*
 
 ```sql
@@ -1447,6 +1475,8 @@ The OHLCV tables (~65K rows each) are too small to benefit. In production with 1
 
 The schema below shows how a partition function and scheme would be defined — for reference only; do not run in the lab environment.
 
+#### Define a yearly partition function and scheme
+
 *Define a yearly partition function and scheme for a partitioned OHLCV table (reference only — not executed in lab).*
 
 ```sql
@@ -1462,6 +1492,14 @@ CREATE TABLE silver.ohlcv_partitioned (
 ```
 
 ## Cleanup
+
+Drop all objects created in the `demo` schema by this notebook. Running the cleanup leaves the database in its original state and makes the notebook safe to re-run from a clean slate.
+
+### Demo object cleanup
+
+Every view, stored procedure, and function created earlier must be dropped in reverse dependency order before the schema itself can be removed.
+
+#### Drop all demo objects and the demo schema
 
 *Drop all demo objects and the demo schema to leave the database clean.*
 
@@ -1492,6 +1530,8 @@ SELECT 'Demo objects cleaned up' AS status
 
 ## When to Use These Patterns
 
+Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, iTVFs over scalar UDFs, and `#temp` tables over table variables.
+
 - **Views** — when multiple consumers (dashboards, stored procedures, ad-hoc analysts) need the same query logic. One view definition, one place to update.
 - **Stored procedures** — when pipeline steps need parameterized execution with error handling and transaction control. SPs compile once and reuse cached plans.
 - **iTVFs over scalar UDFs** — always prefer iTVFs for any function that returns data. Scalar UDFs disable parallelism and force row-by-row execution.
@@ -1501,6 +1541,8 @@ SELECT 'Demo objects cleaned up' AS status
 
 ## When Not to Use These Patterns
 
+The same patterns become liabilities when applied in the wrong context. The scenarios below are the most common misuse cases seen in pipeline code reviews.
+
 - **Indexed views** — avoid on tables with frequent writes (OHLCV with daily loads). Indexed views must be maintained on every INSERT/UPDATE/DELETE, adding write overhead.
 - **Stored procedures for simple reads** — if the query has no parameters, no error handling, and no transaction, a view or iTVF is simpler and equally fast.
 - **MERGE for high-concurrency pipelines** — due to known SQL Server MERGE bugs, use explicit INSERT/UPDATE in a transaction for tables with concurrent access.
@@ -1508,6 +1550,8 @@ SELECT 'Demo objects cleaned up' AS status
 - **Partitioning on small tables** — the 65K-row OHLCV tables in this lab gain nothing from partitioning. Partition overhead (metadata, plan complexity) outweighs the benefit below ~10M rows.
 
 ## Warnings
+
+The table below lists the highest-impact production pitfalls associated with the database objects and patterns covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
 | Topic | Warning |
 |---|---|
@@ -1521,6 +1565,8 @@ SELECT 'Demo objects cleaned up' AS status
 
 ## Recommendations
 
+Standing guidance for designing, writing, and operating the database objects covered above. Apply these as defaults unless a specific workload has a documented reason to deviate.
+
 | Area | Recommendation |
 |---|---|
 | **View vs SP vs iTVF** | Use views for static logic, iTVFs for parameterized reads, SPs for multi-step procedural logic with transactions. |
@@ -1533,6 +1579,8 @@ SELECT 'Demo objects cleaned up' AS status
 
 ## Troubleshooting
 
+Symptoms you will encounter when a database object or query misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | SP runs fast the first time, slow on subsequent calls | Parameter sniffing — plan cached for atypical first values | Add `OPTION (RECOMPILE)` or `WITH RECOMPILE` on the SP, or use `sp_recompile` to flush the plan. |
@@ -1544,8 +1592,8 @@ SELECT 'Demo objects cleaned up' AS status
 
 ## Cross-references
 
-- [[01-sql-fundamentals]] — SELECT, filtering, JOINs, window functions, CTEs, and quality checks
-- [[03-sql-advanced]] — recursive CTEs, PIVOT/UNPIVOT, CROSS APPLY, GROUPING SETS, NULL handling
+Related notes that extend or depend on the patterns covered here.
+
 - [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) — full index internals, columnstore, fragmentation maintenance, missing index DMV analysis
 - [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) — partition functions, schemes, sliding windows, maintenance scripts
 - [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — deep dive on SARGable vs non-SARGable predicates

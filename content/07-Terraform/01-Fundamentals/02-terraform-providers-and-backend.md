@@ -3,12 +3,6 @@ title: "02 - Terraform Providers and Backend"
 tags: [terraform, iac, gcp]
 aliases: [terraform provider, terraform backend, GCS backend, terraform GCS, google provider, remote state backend]
 description: "How to configure the Terraform Google provider and GCS remote state backend — version constraints, authentication, state locking, and why remote state matters."
-parent: "[[domain-language-and-workflow]]"
-links:
-  - "[[01-hcl-syntax-basics]]"
-  - "[[03-terraform-variables-and-outputs]]"
-  - "[[04-terraform-state-management]]"
-  - "[[05-terraform-plan-apply-destroy]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

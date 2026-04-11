@@ -3,9 +3,6 @@ title: "16 - Database - C#"
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [16-py-database](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/16-py-database) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[16-py-database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
-This note covers C# database access from raw ADO.NET to micro-ORM and full ORM, including embedded and analytical databases. Every concept is paired with its Python equivalent in [[16-py-database]].
+This note covers C# database access from raw ADO.NET to micro-ORM and full ORM, including embedded and analytical databases.
 
 ### Key terms used in this note
 
@@ -3311,11 +3308,4 @@ results
 | Migration `dotnet ef database update` fails with `already exists` | `EnsureCreated()` was used previously — schema exists but no migrations history | Delete the database and re-apply, or manually insert the baseline migration row into `__EFMigrationsHistory` |
 | `SqlDataReader` throws `InvalidCastException` on nullable column | Calling `reader.GetString(i)` on a `DBNull` value | Check `reader.IsDBNull(i)` before reading, or use `reader.GetValue(i) as string` |
 
-## Cross-References
-
-- **Python equivalent** — [[16-py-database]] covers sqlite3, pyodbc, SQLAlchemy ORM, and DuckDB for Python
-- **Data ingestion** — [[23-py-data-ingestion]] covers batch ETL patterns that build on these connection patterns (Python side)
-- **EF Core migrations** — [[17-py-gcp]] (GCP chapter) shows BigQuery as a cloud alternative to SQL Server for large-scale analytics
-- **File I/O and serialisation** — [[09-py-fileio-serialization]] covers Parquet file handling referenced in the DuckDB sections
-- **Error handling** — [[08-cs-errorhandling]] covers `try`/`catch`/`finally` and retry patterns for transient database failures
 > **Medallion architecture:** Bronze (raw ingested data) → Silver (cleaned, deduplicated, SCD-2) → Gold (composite scores, index performance)

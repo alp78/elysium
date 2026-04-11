@@ -9,14 +9,6 @@ aliases:
   - max server memory
   - TempDB configuration
 description: "Production SQL Server instance-configuration baselines for memory, parallelism, TempDB, and Linux host settings, grounded on the current stoxx instance."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[06-essential-dba-queries]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-backup-types-and-strategy]]"
-  - "[[08-restore-and-recovery]]"
-  - "[[05-sql-server-agent-jobs]]"
-  - "[[01-database-creation-and-file-layout]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -26,7 +18,6 @@ status: complete
 
 This note focuses on the instance-level settings that decide whether a SQL Server instance behaves predictably in production. The defaults shipped by the product are not a production baseline. The point is not to change everything. The point is to verify the settings that materially affect stability, memory pressure, parallelism, TempDB allocation, and operational access.
 
-Database-scoped settings such as recovery model, compatibility level, Query Store, and row-versioned isolation live in [[01-database-creation-and-file-layout]]. Table-shape guardrails such as clustered-vs-heap decisions live in [[03-schemas-tables-and-constraints]].
 
 The live outputs in this note come from the current `stoxx` instance, which is:
 
@@ -212,7 +203,6 @@ RECONFIGURE;
 
 ---
 
-Database-level defaults such as recovery model, compatibility level, Query Store, row-versioning, and heap-vs-clustered decisions are covered in [[01-database-creation-and-file-layout]] and [[03-schemas-tables-and-constraints]].
 
 ---
 
@@ -340,10 +330,3 @@ echo none | sudo tee /sys/block/sdb/queue/scheduler
 
 ---
 
-## Related
-
-- [[06-essential-dba-queries]] for the live precheck queries used to validate these settings
-- [[11-memory-and-buffer-pool]] for memory interpretation after setting a server memory cap
-- [[07-backup-types-and-strategy]] for the operational consequences of the recovery model choice
-- [[05-sql-server-agent-jobs]] for why `Agent XPs = 0` currently aligns with the instance state
-- [[07-index-maintenance]] for the maintenance consequences of heap prevention and TempDB sizing

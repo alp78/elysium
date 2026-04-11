@@ -7,14 +7,6 @@ tags: [python, sql, financial]
 aliases: [Quarterly Signals, Quality Score, Moat Score, Health Warnings, Governance Risk Score]
 keywords: [quarterly signals, quality score, moat score, gross margin, ROE, operating margin, leverage, debt-to-equity, FCF yield, free cash flow, health warnings, liquidity flag, leverage flag, cash burn, revenue decline, governance risk, audit risk, board risk, compensation risk, shareholder rights, ISS]
 description: "Quarterly earnings-based scores in the financial data platform dashboard: quality/moat score, binary health warning flags, and ISS-style governance risk score with component breakdowns."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[01-scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

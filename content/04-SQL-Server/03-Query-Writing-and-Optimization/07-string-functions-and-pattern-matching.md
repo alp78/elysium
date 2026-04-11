@@ -3,11 +3,6 @@ title: "07 - String Functions and Pattern Matching"
 tags: [sql, sql-server, tsql, string-functions, like, charindex, patindex, string-agg, string-split, unicode]
 aliases: [text functions, pattern matching, CHARINDEX, PATINDEX, STRING_AGG, STRING_SPLIT]
 description: "T-SQL reference for SQL Server string functions, pattern matching, Unicode handling, collation-sensitive comparisons, and text-splitting and aggregation functions."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[02-data-types-conversion-and-null-handling]]"
-  - "[[11-sargable-queries]]"
-  - "[[09-json-xml-and-semi-structured-data]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -73,7 +68,7 @@ FROM silver.eurostoxx50_ohlcv;
 
 Performance caution:
 
-- Wrapping indexed columns in these functions inside `WHERE` or `JOIN` predicates can make the query non-SARGable. See [[11-sargable-queries]].
+- Wrapping indexed columns in these functions inside `WHERE` or `JOIN` predicates can make the query non-SARGable.
 
 ### STUFF, REPLACE, and TRANSLATE
 
@@ -220,9 +215,4 @@ Practical rule:
 - Use prefix `LIKE` patterns when search behavior permits.
 - Use `QUOTENAME` for dynamic object names, never manual bracket-building.
 
-## Related
-
-- [[02-data-types-conversion-and-null-handling]]
-- [[11-sargable-queries]]
-- [[09-json-xml-and-semi-structured-data]]
 

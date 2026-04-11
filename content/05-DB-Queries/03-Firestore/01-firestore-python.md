@@ -8,9 +8,6 @@ tags:
   - fundamentals
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
-parent: "[[domain-firestore]]"
-links:
-  - "[[02-firestore-csharp]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -25,7 +22,7 @@ status: complete
 
 This note is an executable reference for Firestore operations using the `google-cloud-firestore` Python SDK. It covers the full CRUD lifecycle — reads, queries, writes, batches, transactions, real-time listeners, aggregations, collection group queries, pagination, and operational monitoring — all demonstrated against a live Euro Stoxx 50 dataset organized as Firestore documents and subcollections.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -40,7 +37,7 @@ This note is an executable reference for Firestore operations using the `google-
 | **Real-time listener** | A `on_snapshot` callback that Firestore invokes whenever documents matching a query change. The callback receives the full document snapshot, not just the delta. | Used for live dashboards and alerting — when a stock's score changes, the listener fires immediately. | Not unsubscribing — listeners hold an open gRPC stream. Forgetting to call `unsubscribe()` leaks connections and accumulates read costs. |
 | **Collection group query** | A query that searches across all subcollections with the same name, regardless of their parent document. `db.collection_group("prices")` searches prices under every stock. | Enables cross-stock price analysis without knowing the parent document IDs in advance. | Not creating the required collection group index — collection group queries need a special index type (scope: "COLLECTION_GROUP" instead of "COLLECTION"). |
 
-### What this note covers
+## What this note covers
 
 - **Setup & connection** — SDK initialization, ADC authentication, composite index utility
 - **Read operations** — single document get, full collection list, filtered queries
@@ -134,6 +131,8 @@ This cell:
 >
 > Use `os.environ.setdefault(...)` so the env var is only set if not already present — this lets Cloud Run's metadata server take precedence in production. Store the key path in a `.env` file excluded from version control, and never commit `gcp-*-key.json` to git.
 
+*Initialize the Firestore client with ADC and list all top-level collections to verify connectivity.*
+
 ```python
 import os
 os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", r"C:\Users\aperi\DEV\LANG\gcp-bq-key.json")
@@ -176,6 +175,8 @@ The Admin API client creates composite indexes. `_project_db` is the path prefix
 >
 > The Admin API client creates composite indexes. The database path is the prefix for all index operations.
 
+*Instantiate the Firestore Admin API client and define the project database path prefix.*
+
 ```python
 from google.cloud import firestore_admin_v1
 import time as _time
@@ -191,6 +192,8 @@ The function inspects `scope` and field count to decide which creation path to t
 > [!info] ensure_index() — Composite Index Creation
 >
 > Routes to the correct index creation method based on field count and scope. Multi-field indexes use the Admin API. Single-field collection group indexes use the REST API field exemption endpoint. The function is idempotent — safe to call multiple times.
+
+*Define `ensure_index()` and route to the composite index or field exemption path based on scope and field count.*
 
 ```python
 def ensure_index(collection: str, fields: list[dict],
@@ -224,6 +227,8 @@ def ensure_index(collection: str, fields: list[dict],
 > [!success] Safe Pattern
 >
 > Always call `ensure_index()` before the first query that requires a composite index. The helper polls until `state != CREATING`, so the subsequent query is guaranteed to find the index available. In production CI, pre-create all required indexes via `gcloud firestore indexes composite create` and include them in the deployment pipeline — never rely on runtime index creation in production flows.
+
+*Poll the `create_index()` long-running operation until the index is ready, with fallthrough handling for `already exists` errors.*
 
 ```python
         # Poll until the operation completes
@@ -263,6 +268,8 @@ This fragment authenticates via service account credentials and builds the beare
 >
 > Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries (querying across all subcollections with the same name), you must create a "field exemption" via the REST API. This is separate from composite indexes.
 
+*Authenticate with service account credentials and build bearer-token headers for REST calls to the Firestore field config endpoint.*
+
 ```python
 def _ensure_field_exemption(collection: str, field: dict) -> None:
     """Single-field collection group exemption via REST API."""
@@ -287,6 +294,8 @@ GETs the current field config and returns early if a `COLLECTION_GROUP`-scoped i
 > [!tip] Idempotent Check-Before-Create
 >
 > The function checks whether the exemption already exists before creating it. If it exists but is still building (`state == "CREATING"`), it polls until ready. This makes the function safe to call on every notebook run.
+
+*GET the current field config and return early if a COLLECTION_GROUP exemption already exists, polling if one is still building.*
 
 ```python
     url = (f"https://firestore.googleapis.com/v1/{_project_db}"
@@ -332,6 +341,8 @@ Merges existing `COLLECTION`-scoped index entries with two new `COLLECTION_GROUP
 > [!success] Safe Pattern
 >
 > Always GET the current field config before issuing a PATCH: extract all `queryScope == "COLLECTION"` entries, strip the `state` key (the API rejects it on write), then append the new `COLLECTION_GROUP` entries. The `_ensure_field_exemption()` helper in this page implements this pattern correctly.
+
+*PATCH the field config to add ascending and descending COLLECTION_GROUP exemptions, then poll until ready.*
 
 ```python
     current_indexes = []
@@ -390,6 +401,8 @@ This cell:
 
 Run this after setup to confirm the connection works and data is populated.
 
+*Iterate every top-level collection and print its server-side `count().get()` result.*
+
 ```python
 print("=== Firestore Collections ===")
 for coll in db.collections():
@@ -426,6 +439,8 @@ This cell:
 5. Extracts an **array field**: `tags` — a list of strings like `["technology", "netherlands", "euro_stoxx_50"]`
 
 `doc.to_dict()` returns the entire document as a Python dict. Use `.get(key, default)` for safe access.
+
+*Fetch `stocks/ASML.AS`, check existence, and print flat, nested, and array fields.*
 
 ```python
 doc = db.collection("stocks").document("ASML.AS").get()  # type: ignore
@@ -472,6 +487,8 @@ This cell:
 >
 > Always chain `.limit(N)` before `.stream()` for list operations in production. For counts, use `.count().get()` — it is charged as 1 read regardless of collection size and transfers no document data. For large exports, paginate with `.start_after(last_doc)` rather than streaming the entire collection.
 
+*Stream every document in the `stocks` collection and print a formatted summary table.*
+
 ```python
 print("=== Stocks (top 10) ===")
 docs = db.collection("stocks").limit(10).stream()
@@ -516,6 +533,8 @@ This cell:
 
 **Why not loop?** Three separate `.get()` calls = 3 round-trips. `get_all()` = 1 round-trip.
 For 50 documents, that's 50x faster.
+
+*Fetch multiple stock documents in a single round-trip using `get_all()` with a list of document references.*
 
 ```python
 refs = [
@@ -566,6 +585,8 @@ This cell:
 Operators: `==`, `!=`, `<`, `>`, `<=`, `>=`
 Firestore creates a single-field index automatically for equality filters.
 
+*Query `stocks` where `country == 'Germany'` and stream the matching documents.*
+
 ```python
 print("=== German Stocks ===")
 docs = db.collection("stocks").where(filter=FieldFilter("country", "==", "Germany")).stream()
@@ -609,6 +630,8 @@ This cell:
 works with the auto-created single-field index. Range on one field + order on a different field
 requires a composite index.
 
+*Query `stocks` where `current_price > 500`, ordered by price descending.*
+
 ```python
 print("=== High-Price Stocks (>500) ===")
 docs = (db.collection("stocks")
@@ -648,6 +671,8 @@ This cell:
 > [!success] Safe Pattern
 >
 > For OR-style queries, run two separate queries and merge the results client-side (deduplicating by document ID). For the common case of OR across a finite set of values, use `.where(filter=FieldFilter("field", "in", [val1, val2, ...]))` which supports up to 30 values.
+
+*Chain multiple `where()` filters — country equals France AND price below 200 — and stream the intersection.*
 
 ```python
 ensure_index("stocks", [
@@ -695,6 +720,8 @@ This cell:
 >
 > `in` supports up to 30 values. For more, split into multiple queries and merge client-side. Adding `order_by` on a different field with an IN filter requires a composite index — sort client-side instead for small result sets.
 
+*Use `IN` to match stocks whose sector is either Technology or Healthcare.*
+
 ```python
 print("=== Tech & Healthcare ===")
 docs = (db.collection("stocks")
@@ -728,6 +755,8 @@ This cell:
 
 Each stock's `tags` array looks like `["technology", "germany", "euro_stoxx_50"]`.
 `array_contains` checks if the value exists anywhere in the array.
+
+*Use `array_contains` to filter stocks whose `tags` array contains the value `'germany'`.*
 
 ```python
 print("=== Stocks tagged 'germany' ===")
@@ -769,6 +798,8 @@ This cell:
 
 `array_contains_any` is the OR version of `array_contains`.
 Max 30 values in the list.
+
+*Use `array_contains_any` to filter stocks whose `tags` array contains any of several country tags.*
 
 ```python
 print("=== French or Dutch stocks ===")
@@ -822,6 +853,8 @@ This cell:
 **Nested field sorting**: `order_by("scores.composite")` sorts by a field inside the `scores` map.
 Firestore supports dot notation for nested maps up to 20 levels deep.
 
+*Order stocks by a nested map field using dot notation and take the top 5 by composite score.*
+
 ```python
 print("=== Top 5 by Composite Score ===")
 docs = (db.collection("stocks")
@@ -860,6 +893,8 @@ This cell:
 3. Prints momentum and composite scores for high-momentum stocks
 
 Dot notation works in both `where()` and `order_by()` for nested maps.
+
+*Filter and sort with `where()` + `order_by()` on a nested map field via dot notation.*
 
 ```python
 print("=== Stocks with momentum > 0.05 ===")
@@ -915,6 +950,8 @@ This cell:
 
 Nested maps are Python dicts — access with `d.get("metadata", {}).get("source")`.
 
+*Stream alert documents and access nested map fields from the returned dict.*
+
 ```python
 print("=== Alert Metadata ===")
 docs = db.collection("alerts").limit(5).stream()
@@ -950,6 +987,8 @@ This cell:
 
 Subcollections are independent collections nested inside a document.
 Each stock has its own `prices` subcollection with 30 daily price documents.
+
+*Navigate to the `prices` subcollection of ASML.AS and stream the most recent 5 trading days.*
 
 ```python
 print("=== ASML.AS Price History (last 5 days) ===")
@@ -987,6 +1026,8 @@ This cell:
 
 This only searches ASML's prices — not other stocks.
 For cross-stock queries, use **Collection Group Queries** (Section 10).
+
+*Apply `where()` and `order_by()` inside a single stock's `prices` subcollection.*
 
 ```python
 print("=== ASML Days Above 700 ===")
@@ -1059,6 +1100,8 @@ This cell:
 >
 > Use `set(data, merge=True)` for upserts, and `update(fields)` when you only want to touch specific fields on a document you know exists. Reserve bare `set(data)` for cases where you intentionally want to replace the entire document (e.g., a full refresh of a config singleton).
 
+*Create a watchlist document with `set()` and merge-update specific fields with `merge=True`.*
+
 ```python
 db.collection("watchlists").document("test_watchlist").set({
     "name": "Test Watchlist",
@@ -1101,6 +1144,8 @@ This cell:
 
 These are **atomic field-level operations** — no race conditions even with concurrent writers.
 
+*Apply atomic field transforms — `ArrayUnion`, `ArrayRemove`, and `Increment` — in a single `update()` call.*
+
 ```python
 from google.cloud.firestore_v1 import ArrayUnion, ArrayRemove, Increment
 
@@ -1138,6 +1183,8 @@ This cell:
 >
 > Before deleting a parent document, enumerate and delete all subcollection documents first. In production, use a Cloud Function triggered on document deletion to cascade the cleanup, or use the Firebase Admin SDK's `delete_collection()` helper which recursively deletes all subcollection documents in batches of 500.
 
+*Delete the watchlist document and verify it no longer exists.*
+
 ```python
 db.collection("watchlists").document("test_watchlist").delete()
 print("Deleted test_watchlist")
@@ -1174,6 +1221,8 @@ This cell:
 > [!info] Batch Limit Is 500 Operations
 >
 > Maximum 500 operations per batch. For more, split into multiple batches. Batches are faster than individual writes because they use a single network round-trip.
+
+*Group multiple writes into a single atomic `batch.commit()` operation.*
 
 ```python
 batch = db.batch()
@@ -1220,6 +1269,8 @@ This cell:
 > [!tip] Transactions Prevent Lost Updates
 >
 > Without a transaction, two clients could both read `acknowledged = false` simultaneously and both write `true` — duplicating the work. The transaction guarantees only one client wins; the other retries automatically.
+
+*Use a `@firestore.transactional` function to read, check a condition, and conditionally write inside a retrying transaction.*
 
 ```python
 @firestore.transactional
@@ -1275,6 +1326,8 @@ This cell:
 **How it works**: Firestore maintains a persistent connection and pushes changes instantly.
 No polling. The callback fires within milliseconds of a write anywhere in the world.
 This is Firestore's killer feature vs BigQuery/SQL Server.
+
+*Register an `on_snapshot` listener on German stocks, trigger it with a document update, and unsubscribe cleanly.*
 
 ```python
 import threading
@@ -1351,6 +1404,8 @@ This cell:
 **Cost**: aggregation queries are charged as 1 document read per 1000 documents counted.
 Much cheaper than streaming all documents and counting in Python.
 
+*Run a server-side `count()` per country by chaining `where()` filters in a loop.*
+
 ```python
 for country in ["Germany", "France", "Netherlands", "Italy", "Spain"]:
     query = db.collection("stocks").where(filter=FieldFilter("country", "==", country))
@@ -1379,6 +1434,8 @@ This cell:
 3. **`count()`**: counts total documents
 
 All three run server-side. The client receives a single number, not 50 documents.
+
+*Compute `sum()`, `avg()`, and `count()` in a single aggregation request.*
 
 ```python
 query = db.collection("stocks")
@@ -1424,6 +1481,8 @@ This cell:
 
 **Without collection groups**, you'd need 50 separate queries (one per stock).
 Collection groups search across all subcollections with the same name in one query.
+
+*Use `collection_group('prices')` with `order_by('close')` to query every prices subcollection at once.*
 
 ```python
 ensure_index("prices", [
@@ -1483,6 +1542,8 @@ This cell:
 
 This is the Firestore equivalent of:
 `SELECT symbol, close, volume FROM all_prices WHERE date = @latest ORDER BY close DESC`
+
+*Filter every `prices` subcollection to a single trading date using a collection group query.*
 
 ```python
 ensure_index("prices", [
@@ -1556,6 +1617,8 @@ This cell:
 **Why cursors?** Firestore has no `OFFSET` (skip N). Cursor-based pagination is O(1)
 regardless of how deep you are — page 1000 is as fast as page 1.
 
+*Paginate query results by passing the last document snapshot from each page to `start_after()`.*
+
 ```python
 print("=== Paginated Stock List ===")
 page_size = 5
@@ -1623,6 +1686,8 @@ This cell:
 
 Use this as a health check: detect empty collections or unexpected document counts.
 
+*Enumerate every top-level collection and run a server-side `count()` on each.*
+
 ```python
 print("=== Collections ===")
 for coll in db.collections():
@@ -1655,6 +1720,8 @@ This cell:
 Firestore is schema-less — this is how you discover the structure.
 Different documents can have different subcollections.
 
+*Discover and count subcollections under a specific parent document.*
+
 ```python
 print("=== Subcollections of stocks/ASML.AS ===")
 doc_ref = db.collection("stocks").document("ASML.AS")
@@ -1681,6 +1748,8 @@ This cell:
 
 Use this pattern for **data freshness monitoring**: alert when the pipeline
 hasn't produced new data within the expected interval.
+
+*Find pipeline run documents whose `started_at` is older than a 48-hour threshold.*
 
 ```python
 print("=== Stale Pipeline Runs (>48h) ===")
@@ -1716,6 +1785,8 @@ This cell:
 
 The `steps` field is an array of maps: `[{"name": "fetch_ohlcv", "status": "FAILED", "duration_ms": 1200}, ...]`
 
+*Find failed pipeline runs and identify which step failed.*
+
 ```python
 print("=== Failed Runs ===")
 docs = (db.collection("pipeline_runs")
@@ -1747,6 +1818,8 @@ This cell:
 3. Prints the symbol and alert message
 
 In production, this query feeds a dashboard widget or triggers a PagerDuty/Slack notification.
+
+*Query high-severity unacknowledged alerts that require action.*
 
 ```python
 ensure_index("alerts", [
@@ -1789,6 +1862,8 @@ This cell:
 
 Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
 
+*Read the pipeline and display singleton config documents from the `config` collection.*
+
 ```python
 print("=== Pipeline Config ===")
 config = db.collection("config").document("pipeline").get().to_dict() or {} # type: ignore
@@ -1818,6 +1893,8 @@ for k, v in config.items():
 
 ## When to Use Firestore
 
+Firestore is the right tool when the workload needs low-latency single-document lookups, real-time sync to mobile or web clients, schema-flexible data, or operational metadata like pipeline run logs. Its document model and native push listeners excel where a relational database or a columnar warehouse would be overkill.
+
 - **Low-latency document lookups** — Firestore returns single documents in <10ms. For user-facing dashboards that need to render a single stock's data instantly, Firestore outperforms SQL queries.
 - **Real-time sync** — `on_snapshot` listeners push changes to clients within seconds. Ideal for live alerting dashboards, watchlist updates, and config propagation.
 - **Schema-flexible data** — when document structures vary between records (e.g., some stocks have ESG scores, others don't), Firestore's schema-less nature avoids nullable columns.
@@ -1826,6 +1903,8 @@ for k, v in config.items():
 
 ## When Not to Use Firestore
 
+Firestore is the wrong tool when the workload needs analytical aggregation, cross-collection joins, or cost-efficient full scans. These shapes belong on BigQuery or SQL Server, with Firestore restricted to the operational metadata layer.
+
 - **Analytical aggregation** — Firestore has no window functions, no GROUP BY, no JOINs. Server-side aggregation is limited to COUNT, SUM, AVG. Use BigQuery for analytics.
 - **Cross-collection queries** — Firestore has no JOINs. If you need to combine data from `stocks` and `sectors`, you must either denormalize the data or perform client-side joins.
 - **Large result sets** — Firestore charges per document read. Scanning 65,000 OHLCV rows costs 65,000 reads. BigQuery scans the same data for pennies.
@@ -1833,6 +1912,8 @@ for k, v in config.items():
 - **Transactions over 500 documents** — Firestore limits transactions to 500 operations. For batch processing thousands of rows, use BigQuery or SQL Server.
 
 ## Warnings
+
+The table below lists the highest-impact Firestore pitfalls associated with the patterns covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
 | Topic | Warning |
 |---|---|
@@ -1847,6 +1928,8 @@ for k, v in config.items():
 
 ## Recommendations
 
+Standing guidance for designing Firestore data models and query patterns. Apply these as defaults unless a specific workload has a documented reason to deviate.
+
 | Area | Recommendation |
 |---|---|
 | **Data model** | Denormalize aggressively. Store sector name inside each stock document rather than referencing a separate sectors collection. Firestore has no JOINs — denormalization is the intended pattern. |
@@ -1860,6 +1943,8 @@ for k, v in config.items():
 
 ## Troubleshooting
 
+Symptoms you will encounter when a Firestore query or write misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `FAILED_PRECONDITION` error on query | Missing composite index for the filter/order combination | Click the error link to auto-create the index in the Firebase console, or use `ensure_index()`. |
@@ -1872,7 +1957,8 @@ for k, v in config.items():
 
 ## Cross-references
 
-- [[02-firestore-csharp]] — C# equivalent of every operation in this note
+Related notes that extend or depend on the patterns covered here.
+
 - [01-sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) — SQL Server relational approach to the same data
 - [01-bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — BigQuery analytical approach to the same data
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — ADC, metadata server, service account authentication

@@ -11,11 +11,6 @@ description: >
   organized by type (google_compute_instance, google_storage_bucket, etc.) with
   operational variants, argument tables, callouts, and mermaid diagrams. Covers VMs,
   disks, snapshots, scheduling, GCS buckets, IAM, objects, and Pub/Sub notifications.
-parent: "[[domain-block-library]]"
-links:
-  - "[[01-tf-foundation-and-networking]]"
-  - "[[03-tf-data-services]]"
-  - "[[04-tf-iam-secrets-serverless]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

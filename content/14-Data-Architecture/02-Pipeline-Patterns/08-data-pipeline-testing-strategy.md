@@ -14,12 +14,6 @@ aliases:
   - "Testing Strategy"
   - "Pipeline Testing"
 description: "The testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across bronze/silver/gold layers."
-parent: "[[domain-pipeline-reliability]]"
-links:
-  - "[[06-data-quality-framework]]"
-  - "[[05-data-contracts]]"
-  - "[[07-error-handling-and-retry-patterns]]"
-  - "[[09-environment-management-strategy]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

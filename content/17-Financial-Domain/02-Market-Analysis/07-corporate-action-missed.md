@@ -7,14 +7,6 @@ tags: [financial, stoxx, sql, python]
 aliases: [missed corporate action runbook, corporate action incident]
 keywords: [corporate action missed, restatement, divisor correction, split missed, dividend missed, benchmark incident]
 description: "Operational runbook for missed or misprocessed corporate actions in an index pipeline."
-parent: "[[domain-market-analysis]]"
-links:
-  - "[[05-breadth-and-sentiment-indicators]]"
-  - "[[06-index-maintenance-and-corporate-actions]]"
-  - "[[04-liquidity-and-flow-metrics]]"
-  - "[[03-risk-and-volatility-metrics]]"
-  - "[[01-technical-indicators]]"
-  - "[[02-valuation-ratios]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -45,5 +37,5 @@ Run this procedure when a split, dividend, merger, spinoff, deletion, or free-fl
 
 ## Related
 
-- [[06-index-maintenance-and-corporate-actions]] — corporate-action processing context and edge cases
+
 - [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/17-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) — restatement and record-keeping obligations

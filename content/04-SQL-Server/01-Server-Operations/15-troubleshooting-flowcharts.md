@@ -3,17 +3,6 @@ title: "15 - Troubleshooting Flowcharts"
 tags: [sql, sql-server, tsql, troubleshooting, operations]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 description: "Production-first troubleshooting flowcharts for SQL Server slowness, pipeline failures, indexing decisions, and disk-space triage, with real starter queries from the live stoxx instance."
-parent: "[[domain-server-operations]]"
-links:
-  - "[[16-performance-audit-playbook]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[12-execution-plans]]"
-  - "[[07-index-maintenance]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-pipeline-integration-and-devex]]"
-  - "[[19-query-store-regressions-and-plan-forcing]]"
-  - "[[02-sqlcmd-connection-and-usage]]"
-  - "[[14-sql-server-problems]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -144,10 +133,10 @@ _The live first signal is mixed, but the most decision-relevant families are loc
 
 | Wait family | Watch | What it usually means | First linked note |
 |---|---|---|---|
-| `LCK_M_*` | &#10060; | Blocking or lock serialization | [[13-wait-stats-analysis]] |
-| `PAGEIOLATCH_*`, `WRITELOG` | &#10060; | Storage path or buffer-pool pressure | [[11-memory-and-buffer-pool]] |
-| `CX*`, `SOS_*` | Depends | Parallelism skew, CPU pressure, or both | [[16-performance-audit-playbook]] |
-| Mostly nothing actionable | Depends | Instance too fresh, idle, or badly filtered | [[16-performance-audit-playbook]] |
+| `LCK_M_*` | &#10060; | Blocking or lock serialization | |
+| `PAGEIOLATCH_*`, `WRITELOG` | &#10060; | Storage path or buffer-pool pressure | |
+| `CX*`, `SOS_*` | Depends | Parallelism skew, CPU pressure, or both | |
+| Mostly nothing actionable | Depends | Instance too fresh, idle, or badly filtered | |
 
 ## Flowchart 2: "Pipeline Failed" — Data Pipeline Troubleshooting
 
@@ -382,18 +371,3 @@ _There is no current disk emergency on this instance. Both the data file and log
 | `free_space_mb` | Low inside one file | &#10060; | The file itself is close to full. | Fix file sizing, growth policy, or log reuse. |
 | `volume_free_gb` | Low on the host volume | &#10060; | The whole underlying volume is tight. | Treat as host-capacity incident, not just a database-file issue. |
 
-## Related
-
-### Deep-dive notes
-
-- [[13-wait-stats-analysis]]
-- [[16-performance-audit-playbook]]
-- [[12-execution-plans]]
-- [[07-index-maintenance]]
-- [[11-memory-and-buffer-pool]]
-- [[07-pipeline-integration-and-devex]]
-- [[19-query-store-regressions-and-plan-forcing]]
-
-### Companion practice note
-
-- [[14-sql-server-problems]]

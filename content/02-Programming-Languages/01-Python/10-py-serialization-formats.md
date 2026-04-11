@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10-cs-serialization-formats](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/10-cs-serialization-formats) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[10-cs-serialization-formats]]"
 created: 2026-03-25
 updated: 2026-03-25
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
-This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Avro, Protocol Buffers, and MessagePack — with executable read/write examples and a side-by-side performance benchmark. Every concept is paired with its C# equivalent in [[10-cs-serialization-formats]].
+This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Avro, Protocol Buffers, and MessagePack — with executable read/write examples and a side-by-side performance benchmark.
 
 ### Key terms used in this note
 
@@ -1076,9 +1073,3 @@ shutil.rmtree(bench_dir)
 | Parquet file much larger than expected | Wrong compression codec or no compression | Set `compression='zstd'` or `compression='snappy'` |
 | `fastavro` raises `SchemaParseException` | Avro schema JSON is malformed | Validate schema against Avro spec; check field types and names |
 
-## Cross-References
-
-- **C# equivalent** — [[10-cs-serialization-formats]] covers Parquet, Protobuf, Avro with .NET libraries
-- **File I/O** — [[09-py-fileio-serialization]] covers JSON, CSV, YAML, pickle, and basic serialization
-- **Dataframes** — [[01-py-foundations-io]] covers pandas/Polars Parquet I/O for analytical workloads
-- **Database** — [[16-py-database]] covers data movement between serialization formats and databases

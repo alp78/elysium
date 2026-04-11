@@ -3,9 +3,6 @@ title: "13 - Advanced Pipelines - Python"
 tags: [python, pipeline]
 aliases: [advanced pipelines, async generators, parallel ingestion, subprocess]
 description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [13-cs-advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/13-cs-advancedpipelines) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[13-cs-advancedpipelines]]"
 created: 2026-03-25
 updated: 2026-04-04
 status: complete
@@ -28,7 +25,7 @@ status: complete
 > - In production (GCP), read secrets at runtime via `google-cloud-secret-manager` — never bake them into images or config files
 > - Rotate keys in the secret manager without touching code; inject via `os.environ` or a dedicated secrets-loader function
 
-This note covers advanced parallel pipeline patterns — async generators for paginated APIs, rate-limited parallel ingestion, async batching, cross-process execution with `subprocess`, and distributed task queue architecture. Every concept is paired with its C# equivalent in [[13-cs-advancedpipelines]].
+This note covers advanced parallel pipeline patterns — async generators for paginated APIs, rate-limited parallel ingestion, async batching, cross-process execution with `subprocess`, and distributed task queue architecture.
 
 ### Key terms used in this note
 
@@ -409,9 +406,3 @@ Each step adds a layer of scalability. Start with the simplest model that meets 
 | Subprocess hangs indefinitely | Child process waiting for stdin or producing too much output | Use `timeout=` parameter; pipe and read stdout/stderr |
 | Celery task silently disappears | Broker connection lost or worker crashed | Monitor with Flower; configure task retries and dead-letter queues |
 
-## Cross-References
-
-- **C# equivalent** — [[13-cs-advancedpipelines]] covers TPL Dataflow, Channel-based batching, IAsyncEnumerable, cross-process execution
-- **Async fundamentals** — [[12-py-asyncconcurrency]] covers `asyncio`, `async`/`await`, `concurrent.futures`
-- **Web APIs** — [[15-py-webapis]] covers HTTP client patterns and API consumption
-- **Error handling** — [[08-py-errorhandling]] covers retry patterns and error accumulation

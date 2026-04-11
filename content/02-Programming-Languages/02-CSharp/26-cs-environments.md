@@ -3,9 +3,6 @@ title: "26 - Environments - C#"
 tags: [csharp, nuget, dotnet, environments, dependencies]
 aliases: [dotnet environments, nuget, .csproj, global.json, dotnet SDK]
 description: "C#/.NET environment and dependency management — project creation, NuGet packages, dependency pinning, global.json SDK control, Docker multi-stage builds, CI/CD, GCP deployment, and anti-patterns."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[26-py-environments]]"
 created: 2026-03-30
 updated: 2026-03-30
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Attributed to various DevOps practitioners**
 
-This note covers C#/.NET environment and dependency management — from `dotnet new` and NuGet workflows to `global.json` SDK pinning, Docker multi-stage builds, GitHub Actions, and GCP deployment. See [[26-py-environments]] for the equivalent Python `venv` and `pip` patterns.
+This note covers C#/.NET environment and dependency management — from `dotnet new` and NuGet workflows to `global.json` SDK pinning, Docker multi-stage builds, GitHub Actions, and GCP deployment.
 
 ### Key terms used in this note
 
@@ -1533,9 +1530,4 @@ This table maps equivalent commands between the two ecosystems for quick cross-r
 
 ## Cross-References
 
-- [[26-py-environments]] — Python equivalent: `venv`, `pip`, `pyenv`, `uv`, Docker for Python, GitHub Actions for Python
-- [[25-cs-functional-pipeline]] — Production pipeline using the `.csproj` and NuGet patterns documented here
-- [[09-cs-fileio-serialization]] — File I/O patterns that run inside the environments described here
-- [[21-cs-security-operations]] — NuGet feed authentication, credential providers, and supply chain security
-- [[23-cs-data-ingestion]] — Data ingestion pipelines that depend on environment-specific package sets
 - [Environment Strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — Cross-cutting environment strategy

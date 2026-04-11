@@ -5,17 +5,6 @@ tags:
   - text-processing
 aliases: [sed, stream editor, find and replace, text substitution, in-place editing, -i flag]
 description: "Exhaustive reference for sed (stream editor) covering substitution, deletion, insertion, addressing, regex capture groups, and in-place file editing — with PowerShell equivalents for every command."
-parent: "[[domain-data-and-files]]"
-links:
-  - "[[01-navigation-and-listing]]"
-  - "[[01-reading-file-contents]]"
-  - "[[02-grep-and-pattern-matching]]"
-  - "[[04-awk-data-processing]]"
-  - "[[05-date-and-time-handling]]"
-  - "[[03-finding-files]]"
-  - "[[02-file-manipulation]]"
-  - "[[04-compression]]"
-  - "[[05-data-transfer]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

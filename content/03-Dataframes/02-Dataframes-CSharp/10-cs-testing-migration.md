@@ -4,13 +4,6 @@ tags: [pipeline, csharp, polars, dataframes]
 aliases:
   - unit testing, validation, migration guide
 description: "Polars.NET / C# DataFrames reference 10/10 — Project, Testing & Migration (end-to-end, validation, migration guide). Executable examples with cell outputs. See [10_py_testing_migration](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/10_py_testing_migration) for the Python equivalent."
-parent: "[[domain-integrate-and-validate]]"
-links:
-  - "[[08-py-visualization]]"
-  - "[[08-cs-visualization]]"
-  - "[[09-py-database-interface]]"
-  - "[[09-cs-database-interface]]"
-  - "[[10-py-testing-migration]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -966,7 +959,3 @@ Console.WriteLine($"  {"TOTAL",-20} {timings.Sum(t => t.Ms),6} ms");
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[10-py-10]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-integrate-and-validate]]

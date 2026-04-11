@@ -3,13 +3,6 @@ title: "02 - Pub/Sub Messaging"
 tags: [gcp, pubsub, messaging]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."
-parent: "[[domain-compute-and-messaging]]"
-links:
-  - "[[01-vm-lifecycle]]"
-  - "[[02-vm-ssh-and-file-transfer]]"
-  - "[[03-disks-and-snapshots]]"
-  - "[[03-cloud-run-jobs-vs-services]]"
-  - "[[01-pubsub-topics-and-subscriptions]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

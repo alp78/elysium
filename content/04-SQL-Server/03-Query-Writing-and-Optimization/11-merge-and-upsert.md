@@ -3,11 +3,6 @@ title: "10 - MERGE and Upsert"
 tags: [sql, sql-server, tsql, merge, upsert, output-clause, holdlock, insert-update-delete]
 aliases: [MERGE, upsert patterns, atomic upsert, OUTPUT $action]
 description: "T-SQL reference for SQL Server upsert patterns, MERGE syntax, OUTPUT $action, HOLDLOCK safety, deduplicated source requirements, and transaction-safe write patterns."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[18-stored-procedures-dynamic-sql-and-error-handling]]"
-  - "[[17-race-conditions]]"
-  - "[[01-sql-server-loading-patterns]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -172,7 +167,7 @@ WHEN NOT MATCHED BY TARGET THEN
     VALUES (source.business_key, source.payload);
 ```
 
-Concurrency theory and blocking consequences belong in [[17-race-conditions]] and [[15-blocking-and-locking]].
+Concurrency theory and blocking consequences belong in the Concurrency notes.
 
 ## When Not To Use MERGE
 
@@ -207,9 +202,4 @@ It does not own:
 
 Those belong in Patterns and Concurrency.
 
-## Related
-
-- [[18-stored-procedures-dynamic-sql-and-error-handling]]
-- [[17-race-conditions]]
-- [[01-sql-server-loading-patterns]]
 

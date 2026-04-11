@@ -3,9 +3,6 @@ title: "16 - Database - Python"
 tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [16-cs-database](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/16-cs-database) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[16-cs-database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
-This note covers Python database access from raw SQL to full ORM, including embedded and analytical databases and pandas integration. Every concept is paired with its C# equivalent in [[16-cs-database]].
+This note covers Python database access from raw SQL to full ORM, including embedded and analytical databases and pandas integration.
 
 ### Key terms used in this note
 
@@ -3898,11 +3895,4 @@ pd.DataFrame(results)
 | `sqlite3.ProgrammingError: Cannot operate on a closed database` | Reusing a cursor or connection after `conn.close()` | Re-open the connection; use a context manager to control lifetime |
 | SQLAlchemy ORM insert silently does nothing | `session.add(obj)` without `session.commit()` | Always follow `add` with `commit`; wrap in `with Session(engine) as s: s.add(obj); s.commit()` |
 
-## Cross-References
-
-- **C# equivalent** — [[16-cs-database]] covers ADO.NET, Dapper, Entity Framework Core, and DuckDB.NET
-- **Data ingestion pipelines** — [[23-py-data-ingestion]] covers batch ETL patterns that build on the connection patterns here
-- **Dataframes** — [[03-Dataframes/01-Dataframes-Python/01-py-foundations-io|py-foundations-io]] covers `pd.read_parquet` / `pl.scan_parquet` used alongside DuckDB
-- **File I/O and serialisation** — [[09-py-fileio-serialization]] covers Parquet and CSV file handling referenced in the DuckDB section
-- **GCP / BigQuery** — [[17-py-gcp]] covers `google-cloud-bigquery` and `bigquery-storage` as an alternative to SQL Server for cloud analytics
 

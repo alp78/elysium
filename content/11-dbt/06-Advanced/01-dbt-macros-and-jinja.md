@@ -4,12 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch, hooks, and anti-patterns for financial data pipelines"
-parent: "[[domain-extensions-and-quality]]"
-links:
-  - "[[03-dbt-packages]]"
-  - "[[02-dbt-snapshots-and-scd]]"
-  - "[[01-dbt-testing-framework]]"
-  - "[[02-dbt-data-contracts-implementation]]"
 ---
 
 # dbt: Macros and Jinja

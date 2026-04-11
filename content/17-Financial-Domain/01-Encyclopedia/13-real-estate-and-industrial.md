@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [real estate terms, industrial terms, logistics glossary, supply chain glossary, procurement glossary, OEM glossary, MRO glossary, aftermarket glossary, concessions glossary, fleet management glossary]
 keywords: [real estate, real estate investment, property development, concessions, fleet management, logistics, supply chain, procurement, OEM, original equipment manufacturer, aftermarket, MRO, maintenance repair overhaul, distributors, resellers, warehouse, distribution, toll road, motorway, airport concession, leasing fleet, telematics, GPS tracking, value-added reseller, VAR]
 description: "Encyclopedia definitions for real estate, concessions, fleet management, logistics, supply chain, procurement, OEM, aftermarket, MRO, distributors, and resellers terms from the example Index universe, covering industrial operations and physical asset management."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[02-business-models-and-commerce]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[04-compliance-and-risk-management]]"
-  - "[[05-corporate-finance-and-strategy]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[08-exchanges-and-market-infrastructure]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
-  - "[[16-trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

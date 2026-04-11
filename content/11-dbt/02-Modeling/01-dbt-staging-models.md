@@ -4,11 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Staging models 1:1 with source, source freshness"
-parent: "[[domain-model-design]]"
-links:
-  - "[[02-dbt-intermediate-models]]"
-  - "[[03-dbt-mart-models]]"
-  - "[[04-dbt-materializations]]"
 ---
 
 # dbt: Staging Models

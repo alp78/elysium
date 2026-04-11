@@ -24,11 +24,6 @@ description: >
   processed data to dashboards and downstream systems). Covers HTTP fundamentals,
   authentication patterns, pagination strategies, rate limiting, async consumption
   with httpx, FastAPI for data serving, OpenAPI specifications, and curl workflows.
-parent: "[[domain-integration-and-protocols]]"
-links:
-  - "[[04-api-protocols-comparison]]"
-  - "[[02-grpc-for-data-pipelines]]"
-  - "[[03-graphql-for-data-access]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -7,9 +7,6 @@ tags:
   - streaming
 aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24-py-streaming-realtime](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/24-py-streaming-realtime) for the Python equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[24-py-streaming-realtime]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -22,7 +19,7 @@ status: complete
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
-This note covers C#/.NET implementations of four streaming and transfer patterns — WebSocket, SSE, Pub/Sub, and Firestore. See [[24-py-streaming-realtime]] for the equivalent Python patterns.
+This note covers C#/.NET implementations of four streaming and transfer patterns — WebSocket, SSE, Pub/Sub, and Firestore.
 
 ### Key terms used in this note
 
@@ -899,11 +896,4 @@ Decision matrix for selecting the right streaming or transfer pattern based on t
 | `Channel.Writer.WriteAsync` blocks indefinitely | Channel created with `BoundedChannel` and the consumer is too slow — the channel is full | Increase channel capacity, speed up the consumer, or use `TryWrite` with a drop/log strategy to shed load |
 | Process does not exit after `Ctrl+C` | `SubscriberClient` or `FirestoreChangeListener` was not stopped | Ensure `StopAsync()` is called for all streaming clients in the shutdown path; use a `CancellationTokenSource` linked to `ConsoleLifetime` |
 
-## Cross-References
-
-- [[24-py-streaming-realtime]] — Python equivalents: `websockets`, `aiohttp` SSE, `google-cloud-pubsub`, Firestore Python SDK
-- [[23-cs-data-ingestion]] — Batch ingestion patterns that feed into Pub/Sub topics and Firestore collections
-- [[12-cs-asyncconcurrency]] — async/await foundations, `Task`, `Channel<T>`, and `IAsyncEnumerable<T>` in depth
-- [[25-cs-functional-pipeline]] — End-to-end pipeline that can be triggered from Pub/Sub push subscriptions
-- [[17-cs-gcp]] — GCP authentication, service accounts, and SDK configuration for all Google Cloud client libraries
 | High-bandwidth production | **Cloud Interconnect** | Dedicated line, consistent 10+ Gbps |

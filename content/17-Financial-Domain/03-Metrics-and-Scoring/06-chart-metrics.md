@@ -7,14 +7,6 @@ tags: [sql, financial]
 aliases: [Chart Metrics, Dashboard Charts, Time Series Charts]
 keywords: [chart metrics, synthetic portfolio return, rolling return, drawdown, peak to trough, volatility, Sharpe ratio, risk-adjusted return, annualized volatility, bear market, correction]
 description: "Five synchronized time-series charts in the financial data platform dashboard: portfolio return, rolling 30d return, drawdown from peak, annualized volatility, and rolling Sharpe ratio."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[04-quarterly-signal-scores]]"
-  - "[[01-scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

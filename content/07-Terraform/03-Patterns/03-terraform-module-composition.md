@@ -3,11 +3,6 @@ title: "03 - Terraform Module Composition"
 tags: [terraform, iac, modules]
 aliases: [terraform modules, terraform module composition, multi-environment terraform, terraform workspaces, DRY terraform]
 description: "How to use Terraform modules to create reusable, composable infrastructure for multiple environments (dev, staging, prod), avoiding copy-paste between configurations."
-parent: "[[domain-patterns-and-reference]]"
-links:
-  - "[[02-terraform-conditional-resources]]"
-  - "[[01-terraform-resource-dependencies]]"
-  - "[[terraform-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

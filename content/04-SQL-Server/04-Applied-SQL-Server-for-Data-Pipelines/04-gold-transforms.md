@@ -3,15 +3,6 @@ title: "04 - Gold Transforms"
 tags: [sql, sql-server, tsql, medallion-project]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
-parent: "[[domain-applied-sql-server-pipelines]]"
-links:
-  - "[[01-sql-server-loading-patterns]]"
-  - "[[05-sql-server-schema-layering]]"
-  - "[[10-sql-server-change-tracking]]"
-  - "[[05-sql-server-incremental-transforms]]"
-  - "[[08-sql-server-pipeline-anti-patterns]]"
-  - "[[02-bronze-layer-loading]]"
-  - "[[03-silver-transforms]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

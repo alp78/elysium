@@ -3,14 +3,6 @@ title: "19 - Query Store Regressions and Plan Forcing"
 tags: [performance, sql, sql-server, tsql]
 aliases: [query-plan-analysis, Query Store regressions, plan forcing, Query Store hints, regressed queries]
 description: "Production-focused guide to SQL Server Query Store regression analysis, plan forcing, and Query Store hints, with real stoxx outputs and a disposable forcing demo."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[12-execution-plans]]"
-  - "[[13-wait-stats-analysis]]"
-  - "[[11-memory-and-buffer-pool]]"
-  - "[[07-index-maintenance]]"
-  - "[[16-performance-audit-playbook]]"
-  - "[[07-pipeline-integration-and-devex]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -18,7 +10,7 @@ status: complete
 
 # Query Store Regressions and Plan Forcing
 
-This page is not the place to learn how to read an execution plan from scratch. That material now lives in [[12-execution-plans]]. This page starts later in the workflow: Query Store is already enabled, a query has more than one plan or its runtime has drifted, and the job is to decide whether to observe, force, hint, or fix the root cause.
+This page starts later in the workflow: Query Store is already enabled, a query has more than one plan or its runtime has drifted, and the job is to decide whether to observe, force, hint, or fix the root cause.
 
 The focus here is operational plan governance:
 
@@ -468,20 +460,7 @@ Query Store gives you three different control levels. Choose the least invasive 
 | Query Store hint failures | `NONE`, count `0` | Failure reason not `NONE` or count rising | Remove or correct the hint |
 | Plan count | Stable small set | Continues growing unexpectedly | Check parameter sensitivity, context settings, and workload churn |
 
-## Related
-
-This page assumes the reader already understands plan capture and plan interpretation.
-
-### Companion notes
-
-- [[12-execution-plans]]
-- [[13-wait-stats-analysis]]
-- [[11-memory-and-buffer-pool]]
-- [[07-index-maintenance]]
-- [[16-performance-audit-playbook]]
-- [[07-pipeline-integration-and-devex]]
-
-### Official references
+## References
 
 - [Query Store overview](https://learn.microsoft.com/en-us/sql/relational-databases/performance/monitoring-performance-by-using-the-query-store)
 - [sys.database_query_store_options](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-query-store-options-transact-sql)

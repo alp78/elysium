@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [compliance terms, risk management glossary, regulatory terms, IP terms, patent glossary, royalties glossary]
 keywords: [compliance, risk management, regulatory approval, intellectual property, IP, patents, royalties, licensing, KYC, AML, anti-money laundering, know your customer, FDA approval, EMA approval, PMDA, fiduciary duty, derivatives hedging, foreign exchange risk, operational risk, counterparty risk, regtech]
 description: "Encyclopedia definitions for compliance, risk management, regulatory approval, intellectual property, patents, and royalties terms from the example Index universe, covering how firms manage legal, regulatory, and IP-related obligations and risks."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[02-business-models-and-commerce]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[05-corporate-finance-and-strategy]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[08-exchanges-and-market-infrastructure]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[13-real-estate-and-industrial]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
-  - "[[16-trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

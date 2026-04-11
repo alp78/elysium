@@ -3,11 +3,6 @@ title: "04 - gcloud Output Formatting"
 tags: [gcp, gcloud, scripting]
 aliases: [gcloud format, gcloud filter, gcloud output, gcloud --format, gcloud --filter]
 description: "How to use gcloud --format and --filter flags to extract structured data from GCP APIs, enabling scriptable output in table, value, CSV, JSON, and flattened formats."
-parent: "[[domain-platform-foundations]]"
-links:
-  - "[[02-gcloud-authentication]]"
-  - "[[03-gcloud-configurations]]"
-  - "[[01-gcp-projects-and-apis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -7,14 +7,6 @@ tags: [sql, financial]
 aliases: [Index Snapshot, Index Aggregates, Dashboard Snapshot]
 keywords: [index snapshot, YTD return, 30d return, 90d return, volatility, P/E ratio, P/B ratio, dividend yield, cap-weighted, return interpretation, trend reversal]
 description: "Cap-weighted index-level aggregate metrics displayed in the financial data platform dashboard snapshot panel, including return periods, volatility, and valuation ratios."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[04-quarterly-signal-scores]]"
-  - "[[01-scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

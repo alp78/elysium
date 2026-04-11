@@ -7,17 +7,6 @@ tags: [shell, networking]
 aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebRequest]
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
-parent: "[[domain-system-and-network]]"
-links:
-  - "[[01-viewing-processes]]"
-  - "[[04-system-resources]]"
-  - "[[02-killing-processes]]"
-  - "[[03-managing-services]]"
-  - "[[01-connectivity-testing]]"
-  - "[[03-socket-inspection]]"
-  - "[[04-firewalls]]"
-  - "[[05-iap-tunneling]]"
-  - "[[06-connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

@@ -5,10 +5,6 @@ type: reference
 technology: []
 status: stable
 updated: 2026-03-23
-parent: "[[domain-regulatory]]"
-links:
-  - "[[01-eu-bmr-benchmark-regulation]]"
-  - "[[03-sfdr-data-requirements]]"
 ---
 
 # IOSCO Benchmark Principles

@@ -4,13 +4,6 @@ tags: [csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
 description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [07_py_types_interop](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/07_py_types_interop) for the Python equivalent."
-parent: "[[domain-ingest-and-explore]]"
-links:
-  - "[[01-py-foundations-io]]"
-  - "[[01-cs-foundations-io]]"
-  - "[[02-py-explore-select-filter]]"
-  - "[[02-cs-explore-select-filter]]"
-  - "[[07-py-types-interop]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -942,7 +935,3 @@ Side-by-side reference for type support and I/O capabilities across the two libr
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[07-py-types-interop]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-ingest-and-explore]]

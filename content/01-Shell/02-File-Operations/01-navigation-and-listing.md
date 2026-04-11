@@ -7,17 +7,6 @@ tags: [shell]
 aliases: [ls, du, df, directory listing, disk usage, disk free, tree command]
 keywords: [ls, du, df, tree, directory listing, disk usage, disk space, file sizes, hidden files, human readable, sort by time, modification time, disk free, filesystem, navigation]
 description: "Linux and PowerShell commands for navigating the filesystem, listing files sorted by modification time, checking disk usage with du, and monitoring free disk space with df. Includes the du vs df discrepancy explained."
-parent: "[[domain-data-and-files]]"
-links:
-  - "[[01-reading-file-contents]]"
-  - "[[02-grep-and-pattern-matching]]"
-  - "[[04-awk-data-processing]]"
-  - "[[03-sed-stream-editing]]"
-  - "[[05-date-and-time-handling]]"
-  - "[[03-finding-files]]"
-  - "[[02-file-manipulation]]"
-  - "[[04-compression]]"
-  - "[[05-data-transfer]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -3,12 +3,6 @@ title: "01 - Prompt Foundations"
 tags: [ai, prompt-engineering]
 aliases: [prompt engineering basics, prompt fundamentals, prompt principles, LLM input design, context hierarchy, token efficiency]
 description: "Core principles of prompt engineering: the three axioms of LLM completion, the four-level context hierarchy (system → user → history → model knowledge), and how to achieve clarity, specificity, and intent alignment. Covers how prompt structure shapes reasoning, creative, and factual outputs."
-parent: "[[domain-prompt-craft]]"
-links:
-  - "[[02-prompt-architecture]]"
-  - "[[03-applied-prompting]]"
-  - "[[04-model-specific-prompting]]"
-  - "[[05-prompt-debugging]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

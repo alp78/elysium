@@ -17,16 +17,6 @@ description: >
   CLI operations, Terraform provisioning, and data engineering patterns including
   pipeline state stores, config-driven pipelines, event sourcing, and the
   Firestore vs BigQuery vs Bigtable decision matrix.
-parent: "[[domain-data-services]]"
-links:
-  - "[[01-gcs-buckets-and-lifecycle]]"
-  - "[[02-gcs-object-operations]]"
-  - "[[01-dataset-and-table-management]]"
-  - "[[02-data-loading-and-export]]"
-  - "[[03-querying-and-cost-optimization]]"
-  - "[[04-job-management]]"
-  - "[[05-bigquery-problems]]"
-  - "[[02-real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

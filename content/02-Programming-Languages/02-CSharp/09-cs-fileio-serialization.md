@@ -3,9 +3,6 @@ title: "09 - File I/O and Serialization - C#"
 tags: [csharp]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [09-py-fileio-serialization](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/09-py-fileio-serialization) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[09-py-fileio-serialization]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Jim Gray**, Turing Award lecture (1998)
 
-C# provides multiple layers for file I/O and serialization — from `File` class convenience methods through `StreamReader`/`StreamWriter` for buffered processing, to `System.Text.Json` for structured data and `System.IO.Pipelines` for high-throughput scenarios. This note covers reading/writing files, CSV, JSON, YAML, binary serialization, async I/O, memory-mapped files, and high-performance parsing patterns. Every concept is paired with its Python equivalent in [[09-py-fileio-serialization]].
+C# provides multiple layers for file I/O and serialization — from `File` class convenience methods through `StreamReader`/`StreamWriter` for buffered processing, to `System.Text.Json` for structured data and `System.IO.Pipelines` for high-throughput scenarios. This note covers reading/writing files, CSV, JSON, YAML, binary serialization, async I/O, memory-mapped files, and high-performance parsing patterns.
 
 ### Key terms used in this note
 
@@ -1539,10 +1536,3 @@ Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars
 | Binary data corrupted on read | Endianness mismatch between writer and reader | Use `BinaryPrimitives` with explicit endianness |
 | `Encoding.UTF8.GetString` produces garbled text | File isn't actually UTF-8 | Detect encoding or specify the correct `Encoding` |
 
-## Cross-References
-
-- **Python equivalent** — [[09-py-fileio-serialization]] covers `open()`, `pathlib`, `json`, `csv`, `yaml`, `pickle`, `orjson`, `aiofiles`
-- **Serialization formats** — [[10-cs-serialization-formats]] covers Parquet, Avro, Protocol Buffers, Arrow IPC in depth
-- **Error handling** — [[08-cs-errorhandling]] covers `IDisposable`/`using` patterns
-- **LINQ** — [[07-cs-generics-linq]] covers LINQ operations on deserialized collections
-- **Collections** — [[05-cs-collections]] covers `Dictionary`, `List` — primary targets for JSON serialization

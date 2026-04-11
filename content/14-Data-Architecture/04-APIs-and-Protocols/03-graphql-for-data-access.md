@@ -20,11 +20,6 @@ description: >
   definition, resolvers, the N+1 problem and DataLoader, Relay-style
   pagination, authentication, federation, and real-world GitHub API examples
   for pipeline automation. Python implementations with Strawberry and Ariadne.
-parent: "[[domain-integration-and-protocols]]"
-links:
-  - "[[04-api-protocols-comparison]]"
-  - "[[01-rest-api-design-and-consumption]]"
-  - "[[02-grpc-for-data-pipelines]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

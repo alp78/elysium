@@ -5,10 +5,6 @@ type: reference
 technology: [sql-server, bigquery, gcp]
 status: stable
 updated: 2026-03-23
-parent: "[[domain-regulatory]]"
-links:
-  - "[[02-iosco-benchmark-principles]]"
-  - "[[03-sfdr-data-requirements]]"
 ---
 
 # EU BMR — Benchmark Regulation

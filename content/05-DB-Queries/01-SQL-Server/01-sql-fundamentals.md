@@ -3,10 +3,6 @@ title: "01 - SQL Fundamentals"
 tags: [sql-server, tsql, fundamentals]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
-parent: "[[domain-sql-server]]"
-links:
-  - "[[03-sql-advanced]]"
-  - "[[02-sql-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +17,7 @@ status: complete
 
 This note is an executable T-SQL reference for data engineers working with SQL Server. It covers the core query patterns used in a medallion-architecture pipeline — from schema exploration and filtering through JOINs, window functions, CTEs, data quality gates, and bronze-to-gold transforms — all demonstrated against a live Euro Stoxx 50 OHLCV dataset.
 
-### Key terms used in this note
+## Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -37,7 +33,7 @@ This note is an executable T-SQL reference for data engineers working with SQL S
 | **`ROW_NUMBER()`** | A window function that assigns a unique sequential integer (1, 2, 3, ...) to each row within a partition, ordered by the specified column. No ties — every row gets a different number. | The primary deduplication tool in this note: `WHERE rn = 1` keeps only the most recent or highest-priority row per key. | Confusing with `RANK()` (allows ties and gaps: 1, 2, 2, 4) or `DENSE_RANK()` (allows ties, no gaps: 1, 2, 2, 3). |
 | **Gap-fill / `is_filled`** | A silver-layer transform that inserts synthetic rows for missing trading days (weekends, holidays) by forward-filling the previous day's close price. The `is_filled` flag marks these synthetic rows. | Quality checks and return calculations must account for gap-filled rows — including them in volume aggregates would be incorrect. | Treating gap-filled rows as real trading data — they have zero actual volume and a carried-forward price, not a market-determined price. |
 
-### What this note covers
+## What this note covers
 
 - **Schema exploration** — listing tables, inspecting column types across medallion layers
 - **SELECT, filtering, sorting** — basic queries, multi-condition WHERE, SQL Server vs BigQuery syntax differences
@@ -108,6 +104,8 @@ SQL Server exposes database metadata through system catalog views (`sys.tables`,
 
 This query joins `sys.tables`, `sys.schemas`, and `sys.partitions` to list every table with its schema name and row count. The medallion layers (bronze, silver, gold) are implemented as SQL Server schemas. The filter `index_id IN (0, 1)` targets heaps (0) and clustered indexes (1) to avoid double-counting rows from non-clustered indexes.
 
+#### List all tables with row counts per medallion schema
+
 *List all tables across medallion-layer schemas with their row counts.*
 
 ```sql
@@ -162,6 +160,8 @@ ORDER BY s.name, t.name
 ### Schema Exploration — Inspect Column Types
 
 The `INFORMATION_SCHEMA.COLUMNS` view is the ANSI-standard metadata interface — portable across SQL Server, PostgreSQL, and MySQL. It exposes column names, data types, maximum lengths, and nullability. Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join. The alternative `sys.columns` view is SQL Server-specific but exposes additional details like computed column definitions and default constraints.
+
+#### Inspect column names, types, and nullability with INFORMATION_SCHEMA
 
 *Inspect column names, data types, and nullability for the silver OHLCV table.*
 
@@ -222,6 +222,8 @@ ORDER BY ORDINAL_POSITION
 
 ## SELECT, Filtering & Sorting
 
+`SELECT` is the workhorse of T-SQL — pick columns, filter with `WHERE`, sort with `ORDER BY`, and limit rows with `TOP`. The subsections below cover basic filtering, multi-condition predicates, and the subtle syntax differences between SQL Server and BigQuery that trip up pipeline engineers working across both engines.
+
 > [!info]- SQL Server vs BigQuery Syntax
 >
 > | Concept | SQL Server | BigQuery |
@@ -256,6 +258,8 @@ The fundamental query: pick columns, filter rows, sort results. `TOP N` limits o
 > [!success] Safe Pattern
 >
 > Always pair `TOP N` with `ORDER BY` to get a deterministic result: `SELECT TOP 10 ... ORDER BY date DESC`. If you only need to check whether any row exists (e.g., in an `IF EXISTS` guard), use `SELECT TOP 1 1 FROM ...` with no `ORDER BY` — that is the one case where order genuinely doesn't matter.
+
+#### Retrieve the 10 most recent ASML trading days
 
 *Retrieve the 10 most recent ASML trading days with full OHLCV columns.*
 
@@ -347,6 +351,8 @@ Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This quer
 >
 > Use `DECIMAL(18, 4)` or `DECIMAL(18, 8)` for financial values that require exact arithmetic (NAV, index weights, fees). Use `FLOAT` only for analytics columns (daily returns, z-scores, volatility) where a sub-penny binary approximation error is acceptable. Never use `=` to compare `FLOAT` columns — use `ABS(a - b) < 0.0001` instead.
 
+#### Find high-volume days with large intraday price swings
+
 *Find high-volume days with price swings exceeding 3% — potential breakout or crash events.*
 
 ```sql
@@ -420,6 +426,8 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
 ### Aggregation GROUP BY — Aggregate by Stock
 
 `GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This query ranks stocks by average daily trading volume — a standard liquidity measure. The `CAST(volume AS FLOAT)` prevents integer overflow on large volume sums before the average is computed.
+
+#### Rank stocks by average daily trading volume
 
 *Rank Euro Stoxx 50 stocks by average daily trading volume across the full history.*
 
@@ -505,6 +513,8 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 > [!success] Safe Pattern
 >
 > Replace any function-on-column `WHERE` predicate with a range: `WHERE date >= '2025-01-01' AND date < '2026-01-01'` instead of `WHERE YEAR(date) = 2025`. For string patterns, use `WHERE symbol LIKE 'ASML%'` rather than `WHERE LEFT(symbol, 4) = 'ASML'`. This allows the engine to seek directly into the index rather than scanning every row.
+
+#### Build a monthly time-series summary per stock
 
 *Build a monthly time-series summary for ASML: high, low, average close, and total volume per month.*
 
@@ -631,6 +641,8 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 > | `WHERE d._index = 'euro_stoxx_50' AND d.is_current = 1` | Restricts to current Euro Stoxx 50 members (SCD Type 2 filter). |
 > | `ORDER BY p.[close] DESC` | Sorts by price descending — highest-priced stocks first. |
 
+#### Join latest price per stock with company dimension metadata
+
 *Join the latest price per stock (via ROW_NUMBER deduplication) with company metadata from the dimension table.*
 
 ```sql
@@ -726,6 +738,8 @@ The gold layer has pre-computed composite scores. This join adds human-readable 
 > | `ON s.symbol = d.symbol AND d._index = s._index AND d.is_current = 1` | Three-part join key: symbol match + same index + current dimension row only (SCD Type 2 filter). |
 > | `WHERE s.score_date = (SELECT MAX(score_date) ...)` | Correlated scalar subquery — the optimizer evaluates this once and caches the result. Avoids hardcoding a date. |
 > | `ORDER BY s.composite_rank` | Rank 1 = highest composite score (best stock by the scoring model). |
+
+#### Join gold composite scores with dimension labels for a ranked dashboard
 
 *Join gold-layer composite scores with dimension metadata to produce a ranked stock dashboard.*
 
@@ -857,6 +871,8 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` — the window slides forward one row at a time. The `OVER` clause has three parts: `PARTITION BY symbol` groups rows by stock, `ORDER BY date` establishes the time sequence within each group, and `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` defines a sliding window of exactly 30 rows (29 preceding + current).
 
+#### Compute 30-day and 90-day SMAs with a sliding window
+
 *Compute 30-day and 90-day simple moving averages for ASML's closing price.*
 
 ```sql
@@ -936,6 +952,8 @@ Use cases:
 - **Daily returns**: `(close - LAG(close)) / LAG(close)`
 - **Gap detection**: `DATEDIFF(DAY, LAG(date), date)` — if >1, there was a holiday/weekend
 - **Trend direction**: compare today vs yesterday
+
+#### Calculate daily return percentage and detect calendar gaps
 
 *Calculate daily return percentage and detect calendar gaps using LAG on close price and date.*
 
@@ -1031,6 +1049,8 @@ This is the core of the gold scoring engine — rank stocks by composite score. 
 > | 2 | `ytd` CTE | Self-joins the OHLCV table: row `f` (first date) and row `l` (last date) for the same symbol. Computes `(last_close - first_close) / first_close` as the YTD return. `NULLIF(f.[close], 0)` prevents division by zero for delisted stocks with a zero opening price. |
 > | 3 | Final SELECT | `RANK() OVER (ORDER BY ytd_return DESC)` ranks best performers (rank 1 = highest return). `NTILE(4)` divides all 50 stocks into 4 quartile buckets of ~13 stocks each. |
 
+#### Rank stocks by YTD return and assign quartile buckets
+
 *Compute YTD return per stock, then rank and assign quartile buckets using RANK and NTILE.*
 
 ```sql
@@ -1121,6 +1141,8 @@ A **Common Table Expression** (CTE) is a named temporary result set defined with
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
 
 This builds a sector heatmap: average score, best/worst rank per sector.
+
+#### Build a sector heatmap with chained CTEs
 
 *Chain two CTEs to compute per-sector average scores and rank ranges from the latest gold scoring run.*
 
@@ -1225,6 +1247,8 @@ Multiple CTEs chained together, each building on the previous. This query compar
 > | `WHERE p.rn = 1` | Keeps only the latest row per index. |
 > | Output columns | `ytd_return`, `rolling_30d_return`, `rolling_30d_volatility` (all pre-computed in gold), plus `avg_pe` and `avg_dividend_yield` for valuation context. |
 
+#### Compare key metrics across all four indices
+
 *Compare YTD return, 30-day volatility, P/E, and dividend yield across all four indices using a ROW_NUMBER dedup CTE.*
 
 ```sql
@@ -1325,6 +1349,8 @@ Every pipeline needs quality gates. The checks below are split into two categori
 >
 > Stack multiple checks into one result set with `UNION ALL`. Each check returns a named row with an issue count. Run after every load — any non-zero value needs investigation before promoting to gold.
 
+#### Run structural quality checks (NULLs, negatives, impossible values)
+
 *Run structural quality checks: null prices, negative prices, and impossible high < low.*
 
 ```sql
@@ -1345,6 +1371,8 @@ SELECT 'high_lt_low', COUNT(*)
 FROM silver.eurostoxx50_ohlcv
 WHERE high < low
 ```
+
+#### Run operational freshness and gap-fill checks
 
 *Run operational checks: count of gap-filled synthetic rows and days since last data update.*
 
@@ -1404,6 +1432,8 @@ The medallion architecture (bronze → silver → gold) is a progressive refinem
 ### Bronze → Silver → Gold Transforms — Daily Returns
 
 The silver transform adds computed columns to raw data. Here, `LAG()` computes daily returns from the price time series. The `is_filled` flag marks gap-filled rows (weekends/holidays).
+
+#### Compute daily return with LAG and NULLIF safe division
 
 *Compute daily return as a percentage change from the previous day's close using LAG with NULLIF safe-division.*
 
@@ -1485,6 +1515,8 @@ The gold transform normalizes scores across the index using z-scores: `(value - 
 > | `(composite_score - mean_score) / NULLIF(std_score, 0)` | Z-score formula: how many standard deviations each stock's score is from the mean. `NULLIF` prevents division by zero if all scores are identical. |
 > | `DENSE_RANK() OVER (ORDER BY composite_score DESC)` | Ranks stocks without gaps — ties get the same rank, and the next rank is N+1 (not N+2 like `RANK`). |
 
+#### Normalize composite scores to z-scores across the index
+
 *Normalize composite scores to z-scores across the index and rank stocks by composite score.*
 
 ```sql
@@ -1551,6 +1583,8 @@ ORDER BY [rank]
 
 ## When to Use SQL Server for Queries
 
+SQL Server is the right tool when the workload matches its strengths: transactional concurrency, low-latency reads on well-indexed tables, and procedural logic that cannot be expressed as a single declarative query.
+
 - **Transactional workloads** — SQL Server excels when queries run alongside concurrent writes that require row-level locking, ACID transactions, and immediate consistency. Pipelines that read-and-write in the same step (e.g., MERGE-based incremental loads) benefit from SQL Server's lock-based concurrency.
 - **Sub-second latency** — indexed seeks on clustered and covering indexes deliver single-digit millisecond response times. Dashboard queries hitting the gold layer via a view or stored procedure can serve interactive UIs directly.
 - **Complex procedural logic** — T-SQL stored procedures, cursors, and control flow (`IF`, `WHILE`, `TRY/CATCH`) support multi-step business logic that cannot be expressed in a single declarative query.
@@ -1558,12 +1592,16 @@ ORDER BY [rank]
 
 ## When Not to Use SQL Server for Queries
 
+SQL Server is the wrong tool when the workload shape does not match its cost model or scaling limits. The scenarios below usually belong on BigQuery, Firestore, or another engine.
+
 - **Petabyte-scale analytics** — SQL Server scales vertically (add CPU/RAM to one server). Once tables exceed hundreds of millions of rows and queries require full-table scans, BigQuery's distributed architecture is more cost-effective.
 - **Ad-hoc exploration of unfamiliar data** — BigQuery's serverless model requires no index planning. SQL Server queries on un-indexed columns degrade to full table scans with no automatic parallelism beyond the server's CPU count.
 - **Schema-less or hierarchical data** — document structures with nested objects, variable fields, and subcollections are a better fit for Firestore or a document database. Forcing them into relational tables adds complexity.
 - **Cost-per-query billing** — SQL Server charges for infrastructure (VM/license), not per query. If you run only a few queries per day on a large dataset, the idle infrastructure cost is wasted; BigQuery's per-bytes-scanned model would be cheaper.
 
 ## Warnings
+
+The table below lists the most common query anti-patterns that produce silent wrong results, degraded performance, or surprising behavior. Each entry corresponds to a pattern covered earlier in this note.
 
 | Topic | Warning |
 |---|---|
@@ -1579,6 +1617,8 @@ ORDER BY [rank]
 
 ## Recommendations
 
+Standing guidance for writing reliable SQL Server queries in this medallion pipeline. Apply these as defaults unless a specific query has a documented reason to deviate.
+
 | Area | Recommendation |
 |---|---|
 | **Index design** | Create a covering index on `(symbol, date) INCLUDE (close, volume, open, high, low)` for the OHLCV table. This satisfies most analytical queries from the index alone. |
@@ -1592,6 +1632,8 @@ ORDER BY [rank]
 
 ## Troubleshooting
 
+Symptoms you will encounter when a query misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Query returns 0 rows unexpectedly | `WHERE col = NULL` instead of `WHERE col IS NULL`, or `NOT IN` subquery contains NULLs | Replace with `IS NULL` / `IS NOT NULL`. Replace `NOT IN` with `NOT EXISTS`. |
@@ -1604,8 +1646,8 @@ ORDER BY [rank]
 
 ## Cross-references
 
-- [[02-sql-engineering]] — views, stored procedures, indexes, transactions, SCD patterns, and execution plan analysis
-- [[03-sql-advanced]] — recursive CTEs, PIVOT/UNPIVOT, MERGE, CROSS APPLY, GROUPING SETS, NULL handling, and set operations
+Related notes that extend or depend on the patterns covered here.
+
 - [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) — full index internals, columnstore, fragmentation maintenance
 - [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — deep dive on SARGable vs non-SARGable predicates
 - [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — the ingestion pipeline that feeds the medallion architecture queried here

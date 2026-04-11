@@ -4,15 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - groupby, agg, window functions, join, concat, pivot, melt
 description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[04-cs-missing-strings-datetime]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -1893,10 +1884,3 @@ display(df.to_dummies())
 | `explode()` raises error | Column is not list-typed | Cast to list first, or check with `df.schema` |
 | One-hot encoding produces too many columns | High-cardinality column (e.g., 10K unique values) | Bucket rare values into "other" before encoding |
 
-## Cross-references
-
-- **C# counterpart:** [[05-cs-aggregation-reshaping]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Previous in sequence:** [[04-py-missing-strings-datetime]] — missing data, strings, and datetime handling
-- **Next in sequence:** [[06-py-lazy-performance]] — lazy evaluation, query optimization, and performance benchmarks
-- **Transforms (prerequisite):** [[03-py-transforms-expressions]] — column transforms and expressions
-- **Domain index:** [[domain-transform-and-analyze]] — parent domain page for this note

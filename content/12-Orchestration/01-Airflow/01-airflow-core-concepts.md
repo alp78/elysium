@@ -26,12 +26,6 @@ aliases:
   - LocalExecutor
   - SequentialExecutor
 description: "Comprehensive reference for Apache Airflow core concepts: architecture (Scheduler, Webserver, Worker, Metadata DB, Executor), DAGs, Operators, Sensors, Hooks, XComs, the TaskFlow API, and a comparison of all Executor types."
-parent: "[[domain-airflow]]"
-links:
-  - "[[02-airflow-dag-patterns]]"
-  - "[[03-airflow-deployment]]"
-  - "[[05-airflow-problems]]"
-  - "[[04-airflow-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

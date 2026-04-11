@@ -9,21 +9,7 @@ tags:
   - financial-metrics
 aliases:
   - "Financial Instruments Glossary"
-parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
-links:
-  - "[[08-corporate-governance]]"
-  - "[[13-data-methodology]]"
-  - "[[04-esg-frameworks]]"
-  - "[[05-esg-ratings]]"
-  - "[[06-esg-terms]]"
-  - "[[10-financial-metrics]]"
-  - "[[02-index-construction]]"
-  - "[[01-index-families]]"
-  - "[[11-market-structure]]"
-  - "[[12-regulatory]]"
-  - "[[03-smart-beta-factors]]"
-  - "[[07-sustainability-themes]]"
 ---
 
 # Financial Instruments — ISS & STOXX Glossary
@@ -926,7 +912,7 @@ A green bond is a fixed-income instrument whose proceeds are exclusively allocat
 > - [Sustainability Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability%20Bond)
 > - [Sustainability-Linked Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability-Linked%20Bond)
 > - [Labeled Debt](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
-> - [[esg-terms#Green Bond Principles]]
+
 > - [index-families](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/index-families)
 
 > [!guide]- Source excerpts (5)
@@ -1229,7 +1215,7 @@ Labeled debt refers to any bond or debt instrument that carries a formal environ
 > - [Green Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
 > - [Social Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Social%20Bond)
 > - [Transition Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
-> - [[esg-terms#Use-of-Proceeds]]
+
 
 > [!guide]- Source excerpts (1)
 >
@@ -1538,7 +1524,7 @@ A social bond is a fixed-income instrument whose proceeds are allocated to proje
 > - [GSSS Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
 > - [Sustainability Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability%20Bond)
 > - [Labeled Debt](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
-> - [[esg-terms#Social Bond Principles]]
+
 
 > [!guide]- Source excerpts (2)
 >
@@ -1701,7 +1687,7 @@ A sustainability bond is a fixed-income instrument whose proceeds finance a comb
 > - [Social Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Social%20Bond)
 > - [GSSS Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
 > - [Labeled Debt](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
-> - [[esg-terms#Sustainability Bond Guidelines]]
+
 
 > [!guide]- Source excerpts (3)
 >
@@ -1743,7 +1729,7 @@ A sustainability-linked bond (SLB) is a fixed-income instrument whose financial 
 > - [GSSS Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
 > - [Labeled Debt](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [Transition Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
-> - [[esg-terms#Sustainability Performance Targets]]
+
 
 > [!guide]- Source excerpts (2)
 >
@@ -1882,7 +1868,7 @@ A transition bond is a fixed-income instrument designed to fund an issuer's tran
 > - [GSSS Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
 > - [Sustainability-Linked Bond](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability-Linked%20Bond)
 > - [Labeled Debt](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
-> - [[esg-terms#Climate Transition Finance]]
+
 
 > [!guide]- Source excerpts (1)
 >
@@ -1979,5 +1965,5 @@ A warrant is a securitized option — typically issued by a bank — that gives 
 > [!seealso] Related Glossary Files
 > - [index-families](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/index-families) — Index family definitions and constituents
 > - [index-construction](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/index-construction) — Methodology, weighting, and rebalancing terms
-> - [[06-esg-terms]] — ESG ratings, screening, and climate terminology
+
 > - [corporate-governance](https://alp78.github.io/elysium/17-Financial-Domain/ISS-STOXX/corporate-governance) — Governance, proxy, and stewardship terms

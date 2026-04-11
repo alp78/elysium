@@ -4,15 +4,6 @@ tags: [csharp, microsoft-data-analysis, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones
 description: "Polars.NET / Microsoft.Data.Analysis / C# DataFrames reference 04/10 - Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [04_py_missing_strings_datetime](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime) for the Python equivalent."
-parent: "[[domain-transform-and-analyze]]"
-links:
-  - "[[03-py-transforms-expressions]]"
-  - "[[03-cs-transforms-expressions]]"
-  - "[[04-py-missing-strings-datetime]]"
-  - "[[05-py-aggregation-reshaping]]"
-  - "[[05-cs-aggregation-reshaping]]"
-  - "[[06-py-lazy-performance]]"
-  - "[[06-cs-lazy-performance]]"
 created: 2026-03-27
 updated: 2026-04-07
 status: complete
@@ -1397,7 +1388,3 @@ new DataFrame(asmlCum.Columns["date"], asmlCum.Columns["close"], asmlCum.Columns
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
 
-## Cross-references
-
-- **Python counterpart:** [[04-py-missing-strings-datetime]] — same topics using Pandas and Polars
-- **Domain index:** [[domain-transform-and-analyze]]

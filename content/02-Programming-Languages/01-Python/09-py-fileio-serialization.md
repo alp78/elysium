@@ -3,9 +3,6 @@ title: "09 - File I/O and Serialization - Python"
 tags: [python]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 description: "Python file I/O and serialization reference with executable examples and cell outputs — covers file reading/writing, JSON, CSV, pickle, and pathlib. See [09-cs-fileio-serialization](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/09-cs-fileio-serialization) for the C# equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[09-cs-fileio-serialization]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Jim Gray**, Turing Award lecture (1998)
 
-Python provides multiple layers for file I/O and serialization — from built-in `open()` for text/binary files through `csv`, `json`, `yaml`, and `pickle` modules, to high-performance libraries like `orjson`, `pyarrow`, and `fastavro`. This note covers reading/writing files, structured data formats, encoding, async I/O, schema validation with Pydantic, and cloud-native storage patterns. Every concept is paired with its C# equivalent in [[09-cs-fileio-serialization]].
-
+Python provides multiple layers for file I/O and serialization — from built-in `open()` for text/binary files through `csv`, `json`, `yaml`, and `pickle` modules, to high-performance libraries like `orjson`, `pyarrow`, and `fastavro`. This note covers reading/writing files, structured data formats, encoding, async I/O, schema validation with Pydantic, and cloud-native storage patterns.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1620,10 +1616,3 @@ shutil.rmtree(tmp)
 | `FileNotFoundError` with relative path | Working directory differs from expected | Use `pathlib.Path(__file__).parent / 'data.csv'` for script-relative paths |
 | `aiofiles` doesn't improve performance | File I/O is CPU-bound (compression, parsing), not I/O-bound | `aiofiles` helps with concurrent I/O; for CPU-bound work use `ProcessPoolExecutor` |
 
-## Cross-References
-
-- **C# equivalent** — [[09-cs-fileio-serialization]] covers `File`/`Stream` APIs, `System.Text.Json`, CSV handling, async I/O
-- **Serialization formats** — [[10-py-serialization-formats]] covers Parquet, Avro, Protocol Buffers, Arrow IPC in depth
-- **Error handling** — [[08-py-errorhandling]] covers context managers and `with` statement patterns
-- **Collections** — [[05-py-collections]] covers `dict` and `list` — the primary targets for JSON/YAML serialization
-- **Dataframes** — [[01-py-foundations-io]] covers pandas/Polars file I/O for structured data

@@ -3,13 +3,6 @@ title: "17 - Race Conditions"
 tags: [sql-server, tsql]
 aliases: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption]
 description: "Production-focused SQL Server race-condition guide."
-parent: "[[domain-query-writing-and-optimization]]"
-links:
-  - "[[03-sql-server-authentication]]"
-  - "[[13-tde-encryption]]"
-  - "[[12-audit-logging]]"
-  - "[[15-blocking-and-locking]]"
-  - "[[16-deadlock-detection-and-prevention]]"
 created: 2026-03-22
 updated: 2026-04-08
 status: complete
@@ -543,9 +536,4 @@ SELECT 'session2' AS actor, @rc AS applock_result;
 - Avoid `NOLOCK` / `READ UNCOMMITTED` on any table where correctness matters.
 - If you must upsert, do not rely on application-side existence checks alone. Pair the pattern with locking semantics and a unique constraint.
 
-## Related
-
-- [[15-blocking-and-locking]]
-- [[16-deadlock-detection-and-prevention]]
-- [[01-sql-server-loading-patterns]]
 

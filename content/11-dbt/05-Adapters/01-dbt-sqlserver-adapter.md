@@ -4,16 +4,6 @@ tags: [pipeline, sql, dbt]
 status: stable
 updated: 2026-03-23
 description: "SQL Server adapter installation, auth, T-SQL differences, incremental strategy, index post-hooks, and known limitations."
-parent: "[[domain-operations-and-adapters]]"
-links:
-  - "[[01-dbt-airflow-integration]]"
-  - "[[05-dbt-ci-cd]]"
-  - "[[02-dbt-documentation-and-lineage]]"
-  - "[[03-dbt-observability]]"
-  - "[[04-dbt-performance-tuning]]"
-  - "[[06-dbt-troubleshooting]]"
-  - "[[02-dbt-bigquery-adapter]]"
-  - "[[03-dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: SQL Server Adapter

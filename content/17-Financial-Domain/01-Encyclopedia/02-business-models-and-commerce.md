@@ -7,23 +7,6 @@ tags: [financial]
 aliases: [business model terms, commerce glossary, e-commerce glossary, B2B glossary, B2C glossary, franchise glossary, subscription model, marketplace, omnichannel, white-label, managed services, on-demand delivery, membership warehouse]
 keywords: [e-commerce, B2B, B2C, business to business, business to consumer, franchise, licensing, platform business model, subscription model, subscription, omnichannel, marketplace, white-label, white label, managed services, on-demand delivery, membership warehouse, direct to consumer, DTC, digital commerce, network effects, recurring revenue, SaaS model, franchisee, franchisor, royalties]
 description: "Encyclopedia definitions for business model and commerce terms from the example Index universe, covering e-commerce, B2B, B2C, franchise, licensing, platform models, subscriptions, omnichannel, marketplace, white-label, managed services, on-demand delivery, and membership warehouse."
-parent: "[[domain-financial-encyclopedia]]"
-links:
-  - "[[01-banking-and-lending]]"
-  - "[[03-capital-markets-and-trading]]"
-  - "[[04-compliance-and-risk-management]]"
-  - "[[05-corporate-finance-and-strategy]]"
-  - "[[06-energy-and-commodities]]"
-  - "[[07-esg-and-sustainability]]"
-  - "[[08-exchanges-and-market-infrastructure]]"
-  - "[[09-insurance-and-risk]]"
-  - "[[10-investment-management]]"
-  - "[[11-payments-and-settlement]]"
-  - "[[12-pharma-and-healthcare]]"
-  - "[[13-real-estate-and-industrial]]"
-  - "[[14-structured-finance]]"
-  - "[[15-technology-and-digital]]"
-  - "[[16-trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

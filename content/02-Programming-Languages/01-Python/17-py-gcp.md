@@ -3,9 +3,6 @@ title: "17 - GCP - Python"
 tags: [python]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 description: "Python GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud Python SDK. See [17-cs-gcp](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/17-cs-gcp) for the C# equivalent."
-parent: "[[domain-gcp-integration]]"
-links:
-  - "[[17-cs-gcp]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +17,7 @@ status: complete
 
 ![Pipeline Architecture](/static/index_lab.jpg)
 
-This note covers the Google Cloud Platform Python SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples from a real index ETL pipeline. Every concept is paired with its C# equivalent in [[17-cs-gcp]].
+This note covers the Google Cloud Platform Python SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples from a real index ETL pipeline.
 
 ### Key terms used in this note
 
@@ -846,10 +843,3 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 | Secret Manager returns `PermissionDenied` | Service account lacks `secretmanager.secretAccessor` role | Grant the IAM role on the specific secret |
 | Cloud Storage `403 Forbidden` | Wrong bucket permissions or IAM policy | Check bucket IAM; verify service account has `storage.objectAdmin` |
 
-## Cross-References
-
-- **C# equivalent** — [[17-cs-gcp]] covers the same GCP services with .NET client libraries
-- **Database** — [[16-py-database]] covers SQL database access patterns that complement BigQuery
-- **File I/O** — [[09-py-fileio-serialization]] covers local file handling before cloud upload
-- **Security** — [[20-py-security-setup]] covers authentication, secrets management, and IAM in depth
-- **Async** — [[12-py-asyncconcurrency]] covers async patterns used in Pub/Sub consumers

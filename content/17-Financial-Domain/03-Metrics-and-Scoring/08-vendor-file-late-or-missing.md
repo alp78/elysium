@@ -7,15 +7,6 @@ tags: [financial, airflow, python, sql]
 aliases: [missing vendor file runbook, late vendor file runbook]
 keywords: [vendor file late, vendor file missing, stale data, refresh incident, bronze ingestion]
 description: "Operational runbook for late or missing upstream vendor files in the financial scoring pipeline."
-parent: "[[domain-metrics-and-scoring]]"
-links:
-  - "[[06-chart-metrics]]"
-  - "[[03-daily-signal-scores]]"
-  - "[[07-data-sources-and-refresh]]"
-  - "[[02-factor-profile-and-composition]]"
-  - "[[05-index-snapshot-metrics]]"
-  - "[[04-quarterly-signal-scores]]"
-  - "[[01-scoring-methodology]]"
 created: 2026-04-08
 updated: 2026-04-08
 status: complete
@@ -45,6 +36,6 @@ Use this runbook when the scheduled vendor extract does not arrive on time, arri
 
 ## Related
 
-- [[07-data-sources-and-refresh]] — upstream data flow and staleness impact
+
 - [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — raw-ingest handling patterns
 

@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [lambda, closures, decorators, higher-order functions]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [04-cs-functions](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/04-cs-functions) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[04-cs-functions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +16,7 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
-This note covers Python's function system in full: definition and first-class usage, flexible parameter modes (`*args`, `**kwargs`, defaults, keyword-only), lambda expressions, closures and scope rules (LEGB), the decorator pattern for cross-cutting concerns, and type hints for static analysis. Every concept is paired with its C# equivalent in [[04-cs-functions]].
+This note covers Python's function system in full: definition and first-class usage, flexible parameter modes (`*args`, `**kwargs`, defaults, keyword-only), lambda expressions, closures and scope rules (LEGB), the decorator pattern for cross-cutting concerns, and type hints for static analysis.
 
 ### Key terms used in this note
 
@@ -1173,11 +1170,3 @@ print(process.__annotations__)
 | Type hint doesn't prevent wrong type | Type hints are not enforced at runtime | Run `mypy` for static checking; use `pydantic` for runtime validation |
 | `lru_cache` doesn't work with dict args | Dict arguments aren't hashable | Convert to `frozenset(d.items())` or use a hashable key |
 
-## Cross-References
-
-- **C# equivalent** — [[04-cs-functions]] covers methods, delegates, `Func<T>`/`Action<T>`, lambdas, closures, extension methods, events
-- **Control flow** — [[03-py-control-flow]] covers `map`/`filter` and comprehensions as alternatives to loops with functions
-- **OOP** — [[06-py-oop]] covers methods, `@property`, `@staticmethod`, `@classmethod` in class context
-- **Design patterns** — [[18-py-designpatterns]] covers dependency injection, strategy, and decorator patterns
-- **Error handling** — [[08-py-errorhandling]] covers decorator-based retry and error accumulation patterns
-- **Async** — [[12-py-asyncconcurrency]] covers `async def`, `await`, and async decorators

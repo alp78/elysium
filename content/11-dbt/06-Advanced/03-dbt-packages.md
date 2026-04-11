@@ -4,12 +4,6 @@ tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, and writing custom packages for financial data pipelines"
-parent: "[[domain-extensions-and-quality]]"
-links:
-  - "[[01-dbt-macros-and-jinja]]"
-  - "[[02-dbt-snapshots-and-scd]]"
-  - "[[01-dbt-testing-framework]]"
-  - "[[02-dbt-data-contracts-implementation]]"
 ---
 
 # dbt: Packages

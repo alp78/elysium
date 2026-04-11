@@ -3,14 +3,6 @@ title: "06 - Open Table Formats"
 tags: [data-architecture, architecture, lakehouse, bigquery, gcp]
 aliases: [Apache Iceberg, Delta Lake, Apache Hudi, open table format, lakehouse, data lakehouse, BigLake, ACID transactions on data lake, table format comparison]
 description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a metadata layer on top of Parquet files on cloud storage to provide ACID transactions, snapshot isolation, time travel, schema evolution, and partition evolution. Covers the metadata tree, Iceberg vs Delta Lake vs Hudi comparison, BigQuery/GCP integration, table maintenance, medallion architecture mapping, and GDPR deletion patterns."
-parent: "[[domain-system-blueprints]]"
-links:
-  - "[[01-data-warehouse-architecture]]"
-  - "[[02-data-lake-architecture]]"
-  - "[[03-lakehouse-architecture]]"
-  - "[[04-data-mesh-architecture]]"
-  - "[[05-streaming-architecture]]"
-  - "[[07-context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

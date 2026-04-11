@@ -4,13 +4,6 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - Series, DataFrames, indexes, data types
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
-parent: "[[domain-ingest-and-explore]]"
-links:
-  - "[[01-cs-foundations-io]]"
-  - "[[02-py-explore-select-filter]]"
-  - "[[02-cs-explore-select-filter]]"
-  - "[[07-py-types-interop]]"
-  - "[[07-cs-types-interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -4516,11 +4509,3 @@ DataFrames are the wrong layer when:
 | Arithmetic on two Pandas DataFrames produces all NaN | Index misalignment — the two DataFrames have different indexes | `.reset_index()` both before operating, or use `.values` for positional arithmetic |
 | String column shows as `object` with poor performance | Pandas defaulted to `object` dtype for strings | Convert to `pd.StringDtype()`: `df["col"] = df["col"].astype("string")` |
 
-## Cross-references
-
-- **C# counterpart:** [[01-cs-foundations-io]] — same topics using Microsoft.Data.Analysis and Polars.NET
-- **Next in sequence:** [[02-py-explore-select-filter]] — selection, filtering, and slicing operations
-- **Types and interop deep dive:** [[07-py-types-interop]] — Arrow interoperability, type casting, and cross-library data exchange
-- **Lazy execution and performance:** [[06-py-lazy-performance]] — Polars LazyFrame query plans, optimization, and benchmarks
-- **Testing and migration:** [[10-py-testing-migration]] — schema assertion patterns and Pandas-to-Polars migration guide
-- **Domain index:** [[domain-ingest-and-explore]] — parent domain page for this note

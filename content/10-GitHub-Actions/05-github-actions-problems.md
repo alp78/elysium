@@ -12,10 +12,6 @@ aliases:
   - "GitHub Actions Security"
 description: "Comprehensive catalog of GitHub Actions problems in distributed teams — 20 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
 status: stable
-parent: "[[domain-applied-automation]]"
-links:
-  - "[[03-github-actions-ci-cd]]"
-  - "[[04-github-actions-data-engineering]]"
 created: 2026-03-23
 updated: 2026-04-05
 ---
@@ -1254,12 +1250,6 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 4. Add the workflow checklist to the PR template to prevent recurrence
 
 ## Related
-
-**GitHub Actions chapter:**
-- [[01-github-actions-fundamentals]] — workflow anatomy, triggers, runners, secrets
-- [[03-github-actions-ci-cd]] — secrets management, caching, concurrency, environments, security best practices
-- [[02-github-actions-patterns]] — reusable workflows, matrix builds, deployment patterns
-- [[04-github-actions-data-engineering]] — data pipeline CI/CD, Workload Identity, dbt CI
 
 **GCP (Chapter 06):**
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — secret rotation and GCP Secret Manager

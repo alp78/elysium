@@ -4,9 +4,6 @@ tags:
   - python
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06-cs-oop](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/06-cs-oop) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[06-cs-oop]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +20,7 @@ status: complete
 >
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
 
-Python OOP organises code into classes, inheritance hierarchies, abstract base classes, and dataclasses. This page covers all core constructs with executable examples — from basic class definition through to dataclasses and records. Every concept is paired with its C# equivalent in [[06-cs-oop]].
+Python OOP organises code into classes, inheritance hierarchies, abstract base classes, and dataclasses. This page covers all core constructs with executable examples — from basic class definition through to dataclasses and records.
 
 ### Key terms used in this note
 
@@ -973,10 +970,3 @@ for r in records:
 | `@classmethod` factory creates wrong type | Used `ClassName()` instead of `cls()` inside the classmethod | Always use `cls(...)` — it creates the correct subclass type |
 | `@staticmethod` not overridable in subclass | Static methods don't participate in polymorphic dispatch | Use `@classmethod` if subclass-specific behavior is needed |
 
-## Cross-References
-
-- **C# equivalent** — [[06-cs-oop]] covers classes, interfaces, inheritance, records, access modifiers, static members
-- **Collections** — [[05-py-collections]] covers `namedtuple` and `@dataclass` as collection record types
-- **Functions** — [[04-py-functions]] covers `@property`, `@staticmethod`, `@classmethod` as decorator patterns
-- **Error handling** — [[08-py-errorhandling]] covers exception hierarchies and custom exception classes
-- **Design patterns** — [[18-py-designpatterns]] covers strategy, factory, and observer patterns using OOP constructs

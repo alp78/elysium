@@ -3,9 +3,6 @@ title: "19 - Performance and Code Quality - C#"
 tags: [csharp, performance]
 aliases: [performance profiling, code quality, Stopwatch, BenchmarkDotNet, Span, nullable reference types]
 description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19-py-performance-quality](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/19-py-performance-quality) for the Python equivalent."
-parent: "[[domain-data-engineering]]"
-links:
-  - "[[19-py-performance-quality]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -18,7 +15,7 @@ status: complete
 >
 > — **Wes Dyer**, blog post (2007)
 
-This note is the C# reference for performance measurement and code quality tooling. The Python counterpart covering `timeit`, `cProfile`, `tracemalloc`, `ruff`, and `mypy` is [[19-py-performance-quality]].
+This note is the C# reference for performance measurement and code quality tooling.
 
 ### Key terms used in this note
 
@@ -763,13 +760,5 @@ Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAw
 | `dotnet-trace` file opens empty in PerfView | Trace stopped before the application finished flushing events | Wait for the process to exit cleanly or send `Ctrl+C` after the workload completes; add `--duration` flag to control capture window |
 | Roslyn Analyzer warning suppressed with `#pragma` has no recorded reason | Suppressions added without context become maintenance debt | Replace bare suppressions with `#pragma warning disable CA1234 // <reason>` and raise the issue in the next sprint |
 | High `% time in GC` under load despite no obvious allocations | LOH fragmentation from large short-lived arrays (> 85 KB) | Switch to `ArrayPool<T>` for large buffers; confirm with `dotnet-counters monitor` `loh-size` counter |
-
-## Cross-References
-
-- [[19-py-performance-quality]] — Python counterpart: `timeit`, `cProfile`, `tracemalloc`, `ruff`, `mypy`
-- [[12-cs-asyncconcurrency]] — async/await patterns directly affected by `Span<T>` restrictions and `ConfigureAwait` rules
-- [[13-cs-advancedpipelines]] — pipeline patterns where LINQ deferred execution and `IEnumerable` reuse are common failure points
-- [[14-cs-testing]] — integrating `BenchmarkDotNet` baselines and `GC.GetTotalMemory` assertions into the test suite
-- [[25-cs-functional-pipeline]] — functional composition and lazy evaluation patterns discussed in context of LINQ pitfalls here
 
 **No-Go's:** String += in loops. Empty catch. async void. .Result/.Wait(). Mutable public collections. new HttpClient() per request. Hardcoded secrets. dynamic.

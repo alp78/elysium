@@ -3,9 +3,6 @@ title: "07 - Generics & Functional Data Processing - Python"
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07-cs-generics-linq](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/07-cs-generics-linq) for the C# equivalent."
-parent: "[[domain-language-foundations]]"
-links:
-  - "[[07-cs-generics-linq]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,8 +15,7 @@ status: complete
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
-Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data. Every concept is paired with its C# equivalent in [[07-cs-generics-linq]].
-
+Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
 ### Key terms used in this note
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
@@ -1914,10 +1910,3 @@ pldf.drop('dividends', 'stock_splits', 'is_filled').head(3)
 | `TypeError: 'type' object is not subscriptable` | Using `list[int]` in Python <3.9 | Use `from __future__ import annotations` or `typing.List[int]` |
 | Generic class not type-checked | Forgot to inherit from `Generic[T]` | Add `Generic[T]` to the class bases |
 
-## Cross-References
-
-- **C# equivalent** — [[07-cs-generics-linq]] covers generic type parameters, constraints, LINQ query and method syntax, deferred execution
-- **Functions** — [[04-py-functions]] covers `map`/`filter`/`reduce`, `functools`, higher-order functions
-- **Collections** — [[05-py-collections]] covers `defaultdict`, `Counter`, and `itertools` usage with collections
-- **OOP** — [[06-py-oop]] covers `Protocol`, `ABC`, `@dataclass` — the types that generics parameterize
-- **Dataframes** — [[01-py-foundations-io]] covers pandas/Polars foundations in the Dataframes chapter

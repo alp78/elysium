@@ -3,12 +3,6 @@ title: "01 - Terraform: Networking"
 tags: [terraform, gcp, networking]
 aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules terraform, Cloud NAT terraform]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."
-parent: "[[domain-gcp-resources]]"
-links:
-  - "[[02-terraform-compute]]"
-  - "[[03-terraform-iam-and-secrets]]"
-  - "[[04-terraform-cloud-run]]"
-  - "[[05-terraform-registry-and-ci]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
