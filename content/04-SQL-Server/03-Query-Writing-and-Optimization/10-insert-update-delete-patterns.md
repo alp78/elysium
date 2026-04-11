@@ -2,7 +2,7 @@
 title: "10 - INSERT, UPDATE, DELETE, and OUTPUT Patterns"
 tags: [sql-server, tsql, query-writing, dml]
 aliases: [DML patterns, INSERT, UPDATE, DELETE, OUTPUT clause, BULK INSERT, SCOPE_IDENTITY, SEQUENCE, SELECT INTO, composable DML]
-description: "Exhaustive T-SQL reference for SQL Server data modification: INSERT (VALUES, SELECT, EXEC, SELECT INTO, BULK INSERT, OPENROWSET), UPDATE (searched, FROM/JOIN, TOP, CTE, via view), DELETE (searched, joined, TOP, batched, TRUNCATE), the OUTPUT clause (INSERTED/DELETED, INTO, composable DML), identity and SEQUENCE semantics, transactions, error handling, concurrency, and performance."
+description: "Production reference for SQL Server data modification: INSERT (VALUES, SELECT, EXEC, SELECT INTO, BULK INSERT, OPENROWSET), UPDATE (searched, FROM/JOIN, TOP, CTE, view), DELETE (searched, joined, TOP, batched, TRUNCATE), the OUTPUT clause (INSERTED/DELETED, audit trail, composable DML), identity and SEQUENCE semantics, transactions, error handling, concurrency, and performance."
 created: 2026-04-11
 updated: 2026-04-11
 status: complete
@@ -10,37 +10,9 @@ status: complete
 
 # INSERT, UPDATE, DELETE, and OUTPUT Patterns
 
-> [!abstract] Scope of this note
->
-> This note owns the full surface of SQL Server **data modification** statements and the patterns built on top of them:
->
-> - `INSERT` — `VALUES`, table value constructor, `INSERT ... SELECT`, `INSERT ... EXEC`, `INSERT ... DEFAULT VALUES`, `SELECT INTO`, `BULK INSERT`, `OPENROWSET(BULK ...)`
-> - `UPDATE` — searched `UPDATE`, the T-SQL `UPDATE ... FROM ... JOIN` extension, `UPDATE` with CTE / TOP / subquery / view / file-based source
-> - `DELETE` — searched `DELETE`, `DELETE ... FROM ... JOIN`, `DELETE TOP (n)`, batched deletes for large tables, `TRUNCATE TABLE` vs `DELETE`
-> - `OUTPUT` — `INSERTED` and `DELETED` pseudo-tables, `OUTPUT ... INTO` a table variable or permanent table, audit trail patterns, composable DML (`INSERT ... SELECT FROM ( <dml with output> )`)
-> - **Identity and SEQUENCE** semantics — `IDENTITY`, `SET IDENTITY_INSERT`, `SCOPE_IDENTITY()` vs `@@IDENTITY` vs `IDENT_CURRENT()`, `CREATE SEQUENCE`, `NEXT VALUE FOR`
-> - **Transactional semantics** — implicit vs explicit transactions, `XACT_ABORT`, `TRY/CATCH`, Halloween protection
-> - **Concurrency and locking** — `IX`/`X` locks on writes, `TABLOCK` for minimally logged bulk operations, `READPAST` for queue-pop patterns
-> - **Performance** — minimally logged `INSERT ... SELECT`, batched large DML, row-by-row anti-patterns
->
-> **Out of scope:**
->
-> - `MERGE` / upsert patterns — see [[11-merge-and-upsert]]
-> - Stored procedure wrapping, dynamic SQL, and structured error handling beyond the basic `TRY/CATCH` demo — see [[19-stored-procedures-dynamic-sql-and-error-handling]]
-> - Locking internals, deadlocks, and race conditions — see [[16-blocking-and-locking]], [[17-deadlock-detection-and-prevention]], and [[18-race-conditions]]
-> - Execution plans and SARGability analysis — see [[12-sargable-queries]] and [[13-execution-plans]]
+`INSERT`, `UPDATE`, `DELETE`, and the `OUTPUT` clause form the full surface of data modification in T-SQL. Every row change the database engine applies — whether from an application, an ETL job, a report refresh, or a one-time fix — ultimately resolves to one of these statements. This note documents every pattern a production workload uses, the constraints and performance characteristics of each form, and the decision rules that pick the right statement for a given scenario.
 
-## Demo Environment and Conventions
-
-Every query in this note runs live against the `stoxx_db` database on the local SQL Server 2022 CU23 instance. `stoxx_db` contains a medallion layout with `bronze.*`, `silver.*`, and `gold.*` schemas populated with real-world stock and ESG data.
-
-> [!info] Three reproducibility rules followed throughout
->
-> - **Transactions with `ROLLBACK`.** Every destructive demo opens a transaction and rolls it back at the end, so the source tables return to their original state after the reader finishes. The `OUTPUT` clause still returns rows to the client during the transaction, so no data is lost from the demo.
-> - **Table variables for captured output.** When a demo needs a destination for `OUTPUT INTO`, it uses a table variable (`DECLARE @audit TABLE (...)`) rather than creating a permanent table. Table variables disappear automatically at batch end.
-> - **File-based demos use paths inside the container.** CSV source files for `BULK INSERT` and `OPENROWSET(BULK ...)` demos live at `/var/opt/mssql/data/demo_files/` inside the SQL Server Linux container. On a Windows host, the same files would be at a path like `C:\SQLData\demo_files\`.
-
-### Conceptual model | SQL Server DML is always set-based and always transactional
+## Conceptual Model
 
 Two invariants apply to every `INSERT`, `UPDATE`, and `DELETE` statement in SQL Server:
 
@@ -62,7 +34,7 @@ These two invariants drive every pattern in the rest of this note.
 | Takes schema-modification lock | ❌ | ❌ | ❌ | ✅ (`SCH-M`) |
 | Minimally logged in `BULK_LOGGED`/`SIMPLE` | Only via `BULK INSERT`, `SELECT INTO`, or `INSERT ... SELECT` with `TABLOCK` on empty heap | ❌ | ❌ (always fully logged) | Always (only logs page deallocations) |
 
-This matrix answers the first decision every engineer faces when touching data: which statement is the right tool? The sections below document every row of the matrix with a live example and its output.
+This matrix answers the first decision every engineer faces when touching data: which statement is the right tool? The sections below document every row of the matrix with a concrete example and its output captured from the `stoxx_db` database.
 
 ---
 
@@ -76,19 +48,14 @@ The simplest form of `INSERT` provides a value for each column in a literal list
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `BEGIN TRAN` opens an explicit transaction so the insert can be rolled back at the end, leaving `bronze.dim_country` unchanged.
 > - `INSERT INTO bronze.dim_country (country_name, iso_alpha2)` names the target table and the two columns that receive values. Both columns are `NOT NULL`, so both must be supplied.
 > - `VALUES (N'Atlantis', 'ZZ')` provides the literal row. The `N` prefix marks the string as Unicode so it is directly compatible with the `nvarchar(200)` column.
-> - The intermediate `SELECT` confirms the row is visible inside the transaction before the `ROLLBACK`.
-> - `ROLLBACK` undoes the insert so the reader can re-run the demo later and get the same count.
 
-*Insert a single country row into `bronze.dim_country` inside a transaction, verify it is present, then roll back.*
+*Insert a single country row into `bronze.dim_country`.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 INSERT INTO bronze.dim_country (country_name, iso_alpha2)
 VALUES (N'Atlantis', 'ZZ');
@@ -96,15 +63,13 @@ VALUES (N'Atlantis', 'ZZ');
 SELECT country_name, iso_alpha2
 FROM bronze.dim_country
 WHERE iso_alpha2 = 'ZZ';
-
-ROLLBACK;
 ```
 
 | country_name | iso_alpha2 |
 |---|---|
 | Atlantis | ZZ |
 
-*The single literal row is visible inside the transaction. `ROLLBACK` then undoes the insert so the table returns to its original 212-row state. This pattern — transactional insert followed by `SELECT` verification followed by `ROLLBACK` — is the safest way to experiment with DML against shared data without leaving traces.*
+*One row inserted, verified by the follow-up `SELECT`. The `INSERT` returns `(1 rows affected)` to the client and increments any row-count metric tied to the statement.*
 
 ### `INSERT ... VALUES` with table value constructor | insert multiple rows in one statement
 
@@ -117,35 +82,31 @@ The Transact-SQL **table value constructor** lets a single `INSERT` statement su
 > - SQL Server treats the whole statement as a single transaction unit — if any row violates a constraint, the entire `INSERT` fails and none of the rows are persisted.
 > - The limit on rows per table value constructor is 1 000. Beyond that, split into multiple `INSERT` statements or use `INSERT ... SELECT FROM (VALUES ...) AS t(...)`.
 
-*Insert three fictional countries at once using the table value constructor.*
+*Insert three fictional countries in one statement using the table value constructor.*
 
 ```sql
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
 INSERT INTO bronze.dim_country (country_name, iso_alpha2)
 VALUES
-    (N'Atlantis', 'ZZ'),
-    (N'Wakanda',  'XX'),
-    (N'Genovia',  'QQ');
+    (N'Wakanda', 'WK'),
+    (N'Genovia', 'GV'),
+    (N'Narnia',  'NN');
 
 SELECT country_name, iso_alpha2
 FROM bronze.dim_country
-WHERE iso_alpha2 IN ('ZZ', 'XX', 'QQ')
+WHERE iso_alpha2 IN ('WK', 'GV', 'NN')
 ORDER BY iso_alpha2;
-
-ROLLBACK;
 ```
 
 | country_name | iso_alpha2 |
 |---|---|
-| Genovia | QQ |
-| Wakanda | XX |
-| Atlantis | ZZ |
+| Genovia | GV |
+| Narnia | NN |
+| Wakanda | WK |
 
-*Three rows inserted in one round trip. The client message is `(3 rows affected)` — a single statement, not three. If any one of the rows had violated a constraint (for instance, a `NULL` in a `NOT NULL` column), all three would have been rejected together.*
+*Three rows inserted in one round trip. The client receives `(3 rows affected)` — a single statement, not three. If any one of the rows had violated a constraint (for instance, a `NULL` in a `NOT NULL` column), all three would have been rejected together.*
 
 > [!warning] 1 000-row hard limit on the table value constructor
 >
@@ -161,45 +122,35 @@ ROLLBACK;
 
 > [!info]- Clause-by-clause breakdown
 >
-> - A `DECLARE @captured TABLE` table variable acts as a transient destination for the insert. Table variables belong to the batch and disappear automatically at `GO`.
-> - `INSERT INTO @captured (signal_date, symbol, forward_pe)` names the three columns to populate.
-> - `SELECT TOP (5) signal_date, symbol, forward_pe FROM silver.signals_daily WHERE forward_pe IS NOT NULL AND forward_pe BETWEEN 5 AND 25 ORDER BY signal_date DESC, symbol` reads five most recent rows meeting the filter.
-> - The final `SELECT * FROM @captured` shows what ended up in the destination.
+> - `INSERT INTO dbo.insert_log (target_table, new_id)` names the destination and the two non-default columns.
+> - `SELECT 'silver.signals_daily', id` projects a constant table name and the identity column of the source rows.
+> - `FROM silver.signals_daily WHERE symbol = 'SAP.DE'` selects the five SAP.DE rows.
+> - `dbo.insert_log` has `log_id` (identity) and `logged_at` / `logged_by` columns with defaults, so they are not named in the column list and are populated automatically.
 
-*Copy the five most recent rows from `silver.signals_daily` with a forward P/E between 5 and 25 into a table variable.*
+*Log every SAP.DE signal id into the audit table `dbo.insert_log`.*
 
 ```sql
 USE [stoxx_db];
 GO
 
-DECLARE @captured TABLE (
-    signal_date DATE,
-    symbol      VARCHAR(20),
-    forward_pe  FLOAT
-);
-
-INSERT INTO @captured (signal_date, symbol, forward_pe)
-SELECT TOP (5)
-    signal_date,
-    symbol,
-    forward_pe
+INSERT INTO dbo.insert_log (target_table, new_id)
+SELECT 'silver.signals_daily', id
 FROM silver.signals_daily
-WHERE forward_pe IS NOT NULL
-  AND forward_pe BETWEEN 5 AND 25
-ORDER BY signal_date DESC, symbol;
+WHERE symbol = 'SAP.DE';
 
-SELECT * FROM @captured ORDER BY signal_date DESC, symbol;
+SELECT log_id, target_table, new_id, logged_at
+FROM dbo.insert_log
+ORDER BY log_id DESC;
 ```
 
-| signal_date | symbol | forward_pe |
-|---|---|---:|
-| 2026-04-08 | 1299.HK | 12.879697999999999 |
-| 2026-04-08 | 1810.HK | 15.738319000000001 |
-| 2026-04-08 | 2269.HK | 18.445307 |
-| 2026-04-08 | 3382.T | 19.342813 |
-| 2026-04-08 | 4063.T | 19.937525000000001 |
+| log_id | target_table | new_id | logged_at |
+|---:|---|---:|---|
+| 4 | silver.signals_daily | 3006 | 2026-04-11 11:30:59.566 |
+| 3 | silver.signals_daily | 5 | 2026-04-11 11:30:59.566 |
+| 2 | silver.signals_daily | 2025 | 2026-04-11 11:30:59.566 |
+| 1 | silver.signals_daily | 1006 | 2026-04-11 11:30:59.566 |
 
-*The destination table variable holds exactly the rows projected by the `SELECT`. No user-visible column in `silver.signals_daily` has changed. This is how analytics pipelines copy curated data between layers of the medallion architecture, and it is the set-based counterpart to row-at-a-time cursor loops.*
+*Every SAP.DE signal id is now recorded in `dbo.insert_log` with the logging timestamp and logging principal populated from defaults. This is the standard pattern for write-time logging inside an application transaction: a single `INSERT ... SELECT` replaces any row-by-row logging loop.*
 
 > [!tip] Match destination columns by position, not by name
 >
@@ -211,12 +162,12 @@ SELECT * FROM @captured ORDER BY signal_date DESC, symbol;
 
 > [!info]- Clause-by-clause breakdown
 >
-> - A temp table `#db_list` is created with the two columns the query returns.
-> - `INSERT INTO #db_list ... EXEC sys.sp_databases` captures the result set of the system stored procedure `sp_databases` directly into the temp table.
-> - `sp_databases` is a system procedure that returns `DATABASE_NAME`, `DATABASE_SIZE`, and `REMARKS`. The target column list selects just the two of interest.
+> - A temp table `#db_list` is created with the three columns `sp_databases` returns.
+> - `INSERT INTO #db_list ... EXEC sys.sp_databases` captures the result set of the system stored procedure directly into the temp table.
+> - `sp_databases` is a system procedure that returns `DATABASE_NAME`, `DATABASE_SIZE`, and `REMARKS`.
 > - Temp tables are used here because an `INSERT ... EXEC` cannot target a table variable reliably across all result-set shapes.
 
-*Capture the result of `sys.sp_databases` into a temp table to get a tabular view of every database on the instance.*
+*Capture the result of `sys.sp_databases` into a temp table.*
 
 ```sql
 USE [stoxx_db];
@@ -233,7 +184,9 @@ CREATE TABLE #db_list (
 INSERT INTO #db_list (database_name, database_size, remarks)
 EXEC sys.sp_databases;
 
-SELECT TOP (5) database_name, database_size FROM #db_list ORDER BY database_size DESC;
+SELECT TOP (5) database_name, database_size
+FROM #db_list
+ORDER BY database_size DESC;
 
 DROP TABLE #db_list;
 ```
@@ -246,7 +199,7 @@ DROP TABLE #db_list;
 | msdb | 16960 |
 | model | 16384 |
 
-*`sp_databases` returns one row per online database with its size in KB. The `INSERT ... EXEC` form is valuable because it works with any procedure that returns a tabular result set — including undocumented procs and dynamic SQL built with `sp_executesql`.*
+*`sp_databases` returns one row per online database with its size in KB. The `INSERT ... EXEC` form works with any procedure that returns a tabular result set — including undocumented procs and dynamic SQL built with `sp_executesql`.*
 
 > [!warning] `INSERT ... EXEC` cannot be nested
 >
@@ -260,9 +213,8 @@ DROP TABLE #db_list;
 >
 > - A temp table `#pings` has an `IDENTITY` primary key and a `datetime2` default of `SYSUTCDATETIME()`, plus a third column with a literal string default. Every column has an automatic value source.
 > - Three consecutive `INSERT INTO #pings DEFAULT VALUES` statements each produce one row whose every column comes from the corresponding default or identity mechanism.
-> - The final `SELECT` shows the three rows with their generated values side by side.
 
-*Insert three rows into a temp table purely from defaults using `DEFAULT VALUES`.*
+*Insert three rows into a temp table purely from defaults.*
 
 ```sql
 USE [stoxx_db];
@@ -271,9 +223,9 @@ GO
 IF OBJECT_ID('tempdb..#pings') IS NOT NULL DROP TABLE #pings;
 
 CREATE TABLE #pings (
-    ping_id   INT IDENTITY(1,1) PRIMARY KEY,
-    ping_at   DATETIME2(3)  NOT NULL CONSTRAINT df_pings_at DEFAULT SYSUTCDATETIME(),
-    source    VARCHAR(20)   NOT NULL CONSTRAINT df_pings_src DEFAULT 'demo'
+    ping_id  INT IDENTITY(1,1) PRIMARY KEY,
+    ping_at  DATETIME2(3) NOT NULL CONSTRAINT df_pings_at DEFAULT SYSUTCDATETIME(),
+    source   VARCHAR(20)  NOT NULL CONSTRAINT df_pings_src DEFAULT 'app-1'
 );
 
 INSERT INTO #pings DEFAULT VALUES;
@@ -287,11 +239,11 @@ DROP TABLE #pings;
 
 | ping_id | ping_at | source |
 |---:|---|---|
-| 1 | 2026-04-11 04:10:33.120 | demo |
-| 2 | 2026-04-11 04:10:33.120 | demo |
-| 3 | 2026-04-11 04:10:33.120 | demo |
+| 1 | 2026-04-11 11:31:12.226 | app-1 |
+| 2 | 2026-04-11 11:31:12.226 | app-1 |
+| 3 | 2026-04-11 11:31:12.231 | app-1 |
 
-*Three rows are produced, each with a fresh `IDENTITY` value, the current UTC timestamp (close enough between inserts that they appear identical at millisecond granularity), and the literal `'demo'` string. `DEFAULT VALUES` is the only way to insert a row without naming any columns explicitly.*
+*Three rows produced, each with a fresh `IDENTITY` value, the current UTC timestamp, and the literal default string. `DEFAULT VALUES` is the only way to insert a row without naming any columns explicitly.*
 
 ### `SELECT ... INTO` | create a new table and insert rows in one statement
 
@@ -302,9 +254,8 @@ DROP TABLE #pings;
 > - `SELECT ... INTO #top_signals` creates a temp table named `#top_signals` and inserts every row returned by the query into it.
 > - The projected columns (`symbol`, `signal_date`, `forward_pe`, `beta`) become the columns of the new table with their source types.
 > - Because the source columns are all nullable, the new temp table's columns are also nullable. Constraints are not copied.
-> - `SELECT COUNT(*) FROM #top_signals` reports how many rows landed.
 
-*Create a temp table holding the 100 highest-beta rows from `silver.signals_daily` using `SELECT INTO`.*
+*Create a temp table holding the 100 highest-beta rows from `silver.signals_daily`.*
 
 ```sql
 USE [stoxx_db];
@@ -338,7 +289,7 @@ DROP TABLE #top_signals;
 | NVDA | 2026-03-07 | 16.553408000000001 | 2.375 |
 | NVDA | 2026-03-04 | 17.143456 | 2.375 |
 
-*`SELECT INTO` produces a fresh temp table in one statement — there is no separate `CREATE TABLE`. It is convenient for ad-hoc analysis and staging but should not replace `INSERT INTO` into a table designed intentionally.*
+*`SELECT INTO` produces a fresh temp table in one statement — there is no separate `CREATE TABLE`. It is convenient for ad-hoc analysis and staging but should not replace a deliberately designed target.*
 
 > [!warning] `SELECT INTO` strips constraints, defaults, and indexes
 >
@@ -355,24 +306,19 @@ DROP TABLE #top_signals;
 > [!info]- Clause-by-clause breakdown
 >
 > - `BULK INSERT bronze.dim_country` names the destination table. The table must exist already with a compatible schema.
-> - `FROM '/var/opt/mssql/data/demo_files/dim_country.csv'` is the path **inside the SQL Server container**. On Windows, the path would be `N'C:\...'`.
-> - `WITH (FORMAT='CSV', FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a', TABLOCK)` specifies: modern CSV format (SQL Server 2017+), skip the header row, comma delimiter, Windows CRLF row terminator (the CSV files in this demo were produced on Windows), and take a full table lock for minimally logged insert speed.
+> - `FROM '/var/opt/mssql/imports/dim_country.csv'` is the filesystem path on the SQL Server host. On a Windows-hosted SQL Server, the equivalent path would be `N'E:\SQLImports\dim_country.csv'` or any other directory the SQL Server service account can read.
+> - `WITH (FORMAT='CSV', FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a', TABLOCK)` specifies: modern CSV format (SQL Server 2017+), skip the header row, comma delimiter, Windows CRLF row terminator, and take a full table lock for minimally logged insert speed.
 > - Row terminator encoding matters: `0x0a` is a Unix `\n`, `0x0d0a` is a Windows `\r\n`. Picking the wrong one causes the trailing `\r` character to be parsed as part of the last column and produces bulk load truncation errors (msg 4863).
 > - On a Windows-hosted SQL Server, the optional `CODEPAGE='65001'` parameter forces UTF-8 interpretation of the source bytes. This parameter is **not** supported on SQL Server for Linux (error 16202) and must be omitted in containerized Linux environments.
-> - The enclosing `BEGIN TRAN ... ROLLBACK` ensures the 212 existing rows in `bronze.dim_country` are preserved after the demo — the rollback undoes every row the bulk load added.
 
-*Bulk-load `dim_country.csv` into `bronze.dim_country` inside a rollback-protected transaction.*
+*Bulk-load `dim_country.csv` into `bronze.dim_country`.*
 
 ```sql
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
-SELECT COUNT(*) AS rows_before FROM bronze.dim_country;
-
 BULK INSERT bronze.dim_country
-FROM '/var/opt/mssql/data/demo_files/dim_country.csv'
+FROM '/var/opt/mssql/imports/dim_country.csv'
 WITH (
     FORMAT          = 'CSV',
     FIRSTROW        = 2,
@@ -381,30 +327,33 @@ WITH (
     TABLOCK
 );
 
-SELECT COUNT(*) AS rows_after FROM bronze.dim_country;
-
-ROLLBACK;
-
-SELECT COUNT(*) AS rows_after_rollback FROM bronze.dim_country;
+SELECT COUNT(*) AS rows_now FROM bronze.dim_country;
 ```
 
-| rows_before |
+| rows_now |
 |---:|
-| 212 |
+| 428 |
 
-| rows_after |
-|---:|
-| 424 |
+*Before the bulk load, `bronze.dim_country` held 216 rows (the original 212 plus the four literal inserts earlier in this section). The CSV contains 212 rows which are appended to the table without deduplication, producing 428 rows total. The equivalent statement on a Windows-hosted SQL Server uses a Windows drive letter path and identical `WITH` options. The `CODEPAGE='65001'` parameter can be added on Windows when the source file uses UTF-8 and the target column collation is also UTF-8.*
 
-| rows_after_rollback |
-|---:|
-| 212 |
+*Windows parallel example (syntax only):*
 
-*Before the bulk insert, 212 country rows exist. The CSV contains 212 rows of the same reference data, so after the load the table holds 424 rows. `ROLLBACK` restores the original 212 rows. In real pipelines, the staging target would be empty so the post-load count would equal the CSV row count — the same pattern applies.*
+```sql
+BULK INSERT bronze.dim_country
+FROM N'E:\SQLImports\dim_country.csv'
+WITH (
+    FORMAT          = 'CSV',
+    FIRSTROW        = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR   = '0x0d0a',
+    CODEPAGE        = '65001',
+    TABLOCK
+);
+```
 
 > [!warning] File path is resolved on the SQL Server machine
 >
-> `BULK INSERT` does **not** read files from the client. It reads from the filesystem seen by the SQL Server service account. On a Linux container this means the path must exist inside the container and the `mssql` user must have read access. On Windows, the SQL Server service account must be able to reach the path and have `NTFS read` permission on the file.
+> `BULK INSERT` does **not** read files from the client. It reads from the filesystem seen by the SQL Server service account. On a Linux container this means the path must exist inside the container or on a volume mounted into it. On Windows, the SQL Server service account must be able to reach the path and have `NTFS read` permission on the file.
 
 > [!success] Grant `ADMINISTER BULK OPERATIONS` to the bulk loader
 >
@@ -416,26 +365,24 @@ SELECT COUNT(*) AS rows_after_rollback FROM bronze.dim_country;
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `OPENROWSET(BULK '...', FORMAT='CSV', FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a')` reads the CSV as a virtual table using the modern 2017+ CSV parser. The Windows CRLF row terminator matches the file's actual bytes.
+> - `OPENROWSET(BULK '...', FORMAT='CSV', FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a')` reads the CSV as a virtual table using the modern 2017+ CSV parser.
 > - `WITH (country_name NVARCHAR(200), iso_alpha2 CHAR(2))` supplies an inline schema — without it, SQL Server would return the rowset as a single `BulkColumn` wide column.
 > - `AS src` gives the rowset an alias so its columns can be referenced in the outer query.
-> - `WHERE src.iso_alpha2 COLLATE Latin1_General_100_CI_AS_SC_UTF8 NOT IN (SELECT iso_alpha2 FROM bronze.dim_country)` skips countries that already exist. The explicit `COLLATE` clause is mandatory in this environment because `OPENROWSET(BULK ...)` returns character columns in the server-level collation (`SQL_Latin1_General_CP1_CI_AS`), while `bronze.dim_country.iso_alpha2` uses the database-level UTF-8 collation (`Latin1_General_100_CI_AS_SC_UTF8`). Comparing them without the `COLLATE` forces a collation-conflict error (msg 468).
+> - `WHERE src.iso_alpha2 COLLATE Latin1_General_100_CI_AS_SC_UTF8 NOT IN (SELECT iso_alpha2 FROM bronze.dim_country)` skips countries that already exist. The explicit `COLLATE` clause is mandatory here because `OPENROWSET(BULK ...)` returns character columns in the server-level collation (`SQL_Latin1_General_CP1_CI_AS`), while `bronze.dim_country.iso_alpha2` uses the database-level UTF-8 collation (`Latin1_General_100_CI_AS_SC_UTF8`). Comparing them without the `COLLATE` forces a collation-conflict error (msg 468).
 > - The same `COLLATE` clause is also applied in the projected column list so the `INSERT` target column accepts the value directly.
 
-*Use `OPENROWSET(BULK ...)` to load only the country rows that are not already in the target table, resolving the collation mismatch explicitly.*
+*Load only the country rows from the CSV that are not already in the target table.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 INSERT INTO bronze.dim_country (country_name, iso_alpha2)
 SELECT
     src.country_name,
     src.iso_alpha2 COLLATE Latin1_General_100_CI_AS_SC_UTF8 AS iso_alpha2
 FROM OPENROWSET(
-        BULK '/var/opt/mssql/data/demo_files/dim_country.csv',
+        BULK '/var/opt/mssql/imports/dim_country.csv',
         FORMAT          = 'CSV',
         FIRSTROW        = 2,
         FIELDTERMINATOR = ',',
@@ -449,15 +396,15 @@ WHERE src.iso_alpha2 COLLATE Latin1_General_100_CI_AS_SC_UTF8
       NOT IN (SELECT iso_alpha2 FROM bronze.dim_country);
 
 SELECT @@ROWCOUNT AS rows_inserted;
-
-ROLLBACK;
 ```
 
 | rows_inserted |
 |---:|
 | 0 |
 
-*The anti-join filter eliminates every row in the file because all 212 ISO codes already exist in `bronze.dim_country`. In a true staging load, the same query would insert only genuinely new countries. This is the key architectural difference from `BULK INSERT`, which would blindly append all 212 rows as duplicates unless a `WHERE` clause could be pre-applied — which it cannot in the `BULK INSERT` statement itself.*
+*The anti-join filter eliminates every row in the file because every ISO code in the file already exists in `bronze.dim_country` (twice, after the bulk load above). In a true staging load where the target starts empty, the same query would insert exactly the new countries. This is the key architectural difference from `BULK INSERT`, which blindly appends every row in the file.*
+
+*On a Windows-hosted SQL Server, the same query reads from a local path such as `N'E:\SQLImports\dim_country.csv'`. The `FORMAT='CSV'`, `FIRSTROW`, field terminator, and row terminator options are identical.*
 
 > [!warning] OPENROWSET(BULK ...) inherits the server collation, not the database collation
 >
@@ -465,7 +412,7 @@ ROLLBACK;
 
 > [!success] Wrap OPENROWSET BULK in a view or inline TVF with pre-applied COLLATE
 >
-> If you load the same file often, wrap the `OPENROWSET(BULK ...)` expression in an inline table-valued function that applies `COLLATE DATABASE_DEFAULT` to every string column. Callers then receive correctly collated rows and no longer need to repeat `COLLATE` on every predicate.
+> If the same file is loaded often, wrap the `OPENROWSET(BULK ...)` expression in an inline table-valued function that applies `COLLATE DATABASE_DEFAULT` to every string column. Callers then receive correctly collated rows and no longer need to repeat `COLLATE` on every predicate.
 
 > [!info] Parquet reading requires an external data source
 >
@@ -475,7 +422,7 @@ ROLLBACK;
 
 ## Identity and SEQUENCE
 
-Every insert into a table with an auto-generated key relies on either the `IDENTITY` column property or a `SEQUENCE` object. The two mechanisms solve the same problem — producing unique monotonic integers — but with very different scoping, atomicity, and observability guarantees. The `silver.signals_daily` table already has an `IDENTITY(1,1)` primary-key-style column on `id`, so every demo below runs against a real table.
+Every insert into a table with an auto-generated key relies on either the `IDENTITY` column property or a `SEQUENCE` object. The two mechanisms solve the same problem — producing unique monotonic integers — but with very different scoping, atomicity, and observability guarantees. The `silver.signals_daily` table has an `IDENTITY(1,1)` primary-key-style column on `id`, so every query below runs against a real table.
 
 ### `IDENTITY` | auto-increment a column on every insert
 
@@ -484,16 +431,13 @@ Every insert into a table with an auto-generated key relies on either the `IDENT
 > [!info]- Clause-by-clause breakdown
 >
 > - The `INSERT` omits the `id` column entirely because it is an `IDENTITY` column — the engine will supply the value.
-> - Immediately after the insert, three functions are called in order: `SCOPE_IDENTITY()`, `@@IDENTITY`, and `IDENT_CURRENT('silver.signals_daily')`. In this simple scenario (no triggers, no concurrent writers) all three return the same value.
-> - `ROLLBACK` undoes the row insertion **but does not reset the identity counter** — the value 3171 is permanently burned.
+> - Immediately after the insert, three functions are called in order: `SCOPE_IDENTITY()`, `@@IDENTITY`, and `IDENT_CURRENT('silver.signals_daily')`. In a simple single-threaded scenario with no triggers, all three return the same value.
 
-*Insert one row into `silver.signals_daily`, capture the generated identity value via three different functions, then roll back.*
+*Insert one row into `silver.signals_daily` and capture the generated identity value via three different functions.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 INSERT INTO silver.signals_daily
     (_index, symbol, signal_date, current_price, forward_pe, price_to_book,
@@ -501,7 +445,7 @@ INSERT INTO silver.signals_daily
      sandp_52_week_change, fifty_day_average, two_hundred_day_average,
      dist_from_52_week_high, target_median_price, recommendation_mean, upside_potential)
 VALUES
-    ('demo_index', 'TEST.XX', '2026-04-11', 100.0, 15.0, 2.0, 10.0, 0.03,
+    ('euro_stoxx_50', 'TEST.XX', '2026-04-11', 100.0, 15.0, 2.0, 10.0, 0.03,
      1000000000, 1.0, 0.1, 0.05, 99.0, 95.0, 0.02, 110.0, 2.0, 0.1);
 
 DECLARE
@@ -513,15 +457,13 @@ SELECT
     @new_id_scope   AS scope_identity,
     @new_id_at      AS at_identity,
     @new_id_current AS ident_current;
-
-ROLLBACK;
 ```
 
 | scope_identity | at_identity | ident_current |
 |---:|---:|---:|
-| 3171 | 3171 | 3171 |
+| 1000999 | 1000999 | 1000999 |
 
-*All three functions return 3171, the identity value the engine generated for the new row. The differences between them only become visible when a trigger inserts into a second identity table, or when another session inserts into the same table concurrently — both edge cases that regularly trip up production systems.*
+*All three functions return 1000999, the identity value the engine generated for the new row. The differences between them only become visible when a trigger inserts into a second identity table, or when another session inserts into the same table concurrently.*
 
 ### `SCOPE_IDENTITY()` vs `@@IDENTITY` vs `IDENT_CURRENT()` | how they differ
 
@@ -546,17 +488,15 @@ ROLLBACK;
 > [!info]- Clause-by-clause breakdown
 >
 > - `SET IDENTITY_INSERT silver.signals_daily ON` enables explicit identity values for this table in this session only.
-> - The `INSERT` now includes `id` in the column list and supplies `999999` as its value.
+> - The `INSERT` now includes `id` in the column list and supplies `2000000` as its value.
 > - `SET IDENTITY_INSERT silver.signals_daily OFF` disables the override so subsequent inserts resume auto-generation.
-> - The surrounding `BEGIN TRAN ... ROLLBACK` means the row never persists, but the identity counter's watermark still advances if the explicit value is higher than the current seed — in this case the value 999999 is above the current seed, so the next natural identity value would become 1000000 after commit. The rollback undoes this as well.
+> - The explicit value 2000000 advances the identity counter past 2000000, so the next natural identity value will be 2000001 or higher.
 
-*Insert a row into `silver.signals_daily` with an explicit identity value of 999999.*
+*Insert a legacy row into `silver.signals_daily` with an explicit identity value of 2000000.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 SET IDENTITY_INSERT silver.signals_daily ON;
 
@@ -566,23 +506,21 @@ INSERT INTO silver.signals_daily
      sandp_52_week_change, fifty_day_average, two_hundred_day_average,
      dist_from_52_week_high, target_median_price, recommendation_mean, upside_potential)
 VALUES
-    (999999, 'demo_index', 'TEST.XX', '2026-04-11', 100.0, 15.0, 2.0, 10.0, 0.03,
-     1000000000, 1.0, 0.1, 0.05, 99.0, 95.0, 0.02, 110.0, 2.0, 0.1);
+    (2000000, 'euro_stoxx_50', 'LEGACY.XX', '2020-01-01', 50.0, 12.0, 1.5, 8.0, 0.04,
+     500000000, 0.8, 0.05, 0.02, 48.0, 45.0, 0.01, 55.0, 1.5, 0.05);
 
 SET IDENTITY_INSERT silver.signals_daily OFF;
 
 SELECT id, symbol, signal_date
 FROM silver.signals_daily
-WHERE id = 999999;
-
-ROLLBACK;
+WHERE id = 2000000;
 ```
 
 | id | symbol | signal_date |
 |---:|---|---|
-| 999999 | TEST.XX | 2026-04-11 |
+| 2000000 | LEGACY.XX | 2020-01-01 |
 
-*With `IDENTITY_INSERT` on, the explicit value 999999 is accepted. After the rollback, the identity counter that was temporarily moved above 999999 is also rolled back to its pre-transaction position — unlike natural identity generation, values set via `IDENTITY_INSERT` inside a rolled-back transaction do not permanently advance the counter.*
+*With `IDENTITY_INSERT` on, the explicit value 2000000 is accepted. This pattern is used to migrate rows from a legacy system while preserving their original primary keys, and to fill identity gaps after a one-time bulk delete.*
 
 > [!warning] Only one table per session can have IDENTITY_INSERT ON
 >
@@ -594,10 +532,10 @@ A `SEQUENCE` is a standalone database object that produces monotonic integers in
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `CREATE SEQUENCE dbo.demo_order_no AS BIGINT START WITH 1000 INCREMENT BY 1 CACHE 50` creates a sequence starting at 1000 with a cache of 50 values per allocation batch.
-> - Each `INSERT` statement uses `NEXT VALUE FOR dbo.demo_order_no` directly in the `VALUES` list to consume the next sequence value. This is the most explicit and widely supported pattern.
-> - `NEXT VALUE FOR` can also be used in `SELECT` projections, `UPDATE SET` clauses, or as a `DEFAULT` expression on a persistent table (but not on a temp table default expression in all versions).
-> - `DROP SEQUENCE` cleans up after the demo.
+> - `CREATE SEQUENCE dbo.seq_order_no AS BIGINT START WITH 1000 INCREMENT BY 1 CACHE 50` creates a sequence starting at 1000 with a cache of 50 values per allocation batch.
+> - Each `INSERT` statement uses `NEXT VALUE FOR dbo.seq_order_no` directly in the `VALUES` list to consume the next sequence value.
+> - `NEXT VALUE FOR` can also be used in `SELECT` projections, `UPDATE SET` clauses, or as a `DEFAULT` expression on a persistent table.
+> - `DROP SEQUENCE` cleans up after the example.
 
 *Create a sequence and use `NEXT VALUE FOR` directly in three `INSERT` statements to draw consecutive values.*
 
@@ -605,10 +543,10 @@ A `SEQUENCE` is a standalone database object that produces monotonic integers in
 USE [stoxx_db];
 GO
 
-IF OBJECT_ID('dbo.demo_order_no','SO') IS NOT NULL DROP SEQUENCE dbo.demo_order_no;
+IF OBJECT_ID('dbo.seq_order_no','SO') IS NOT NULL DROP SEQUENCE dbo.seq_order_no;
 GO
 
-CREATE SEQUENCE dbo.demo_order_no
+CREATE SEQUENCE dbo.seq_order_no
     AS BIGINT
     START WITH 1000
     INCREMENT BY 1
@@ -623,18 +561,18 @@ CREATE TABLE #orders (
 );
 
 INSERT INTO #orders (order_no, symbol, qty)
-VALUES (NEXT VALUE FOR dbo.demo_order_no, 'SAP.DE', 100);
+VALUES (NEXT VALUE FOR dbo.seq_order_no, 'SAP.DE', 100);
 
 INSERT INTO #orders (order_no, symbol, qty)
-VALUES (NEXT VALUE FOR dbo.demo_order_no, 'SIE.DE', 200);
+VALUES (NEXT VALUE FOR dbo.seq_order_no, 'SIE.DE', 200);
 
 INSERT INTO #orders (order_no, symbol, qty)
-VALUES (NEXT VALUE FOR dbo.demo_order_no, 'ASML.AS', 50);
+VALUES (NEXT VALUE FOR dbo.seq_order_no, 'ASML.AS', 50);
 
 SELECT * FROM #orders ORDER BY order_no;
 
 DROP TABLE #orders;
-DROP SEQUENCE dbo.demo_order_no;
+DROP SEQUENCE dbo.seq_order_no;
 ```
 
 | order_no | symbol | qty |
@@ -643,17 +581,17 @@ DROP SEQUENCE dbo.demo_order_no;
 | 1001 | SIE.DE | 200 |
 | 1002 | ASML.AS | 50 |
 
-*The sequence produces 1000, 1001, 1002 across three inserts. Unlike `IDENTITY`, the same sequence could feed multiple tables simultaneously, or be sampled ahead of time with a bare `SELECT NEXT VALUE FOR dbo.demo_order_no` without any insert happening at all.*
+*The sequence produces 1000, 1001, 1002 across three inserts. Unlike `IDENTITY`, the same sequence could feed multiple tables simultaneously, or be sampled ahead of time with a bare `SELECT NEXT VALUE FOR dbo.seq_order_no` without any insert happening at all.*
 
 > [!info] `IDENTITY` vs `SEQUENCE` decision
 >
-> Use `IDENTITY` for the common case of a single-table auto-generated primary key — simpler to create, easier for tooling, and the surrounding ecosystem assumes it. Use `SEQUENCE` when you need cross-table uniqueness (e.g., a shared event_id across ten audit tables), when you must allocate a block of numbers before the insert happens (e.g., for a parent-then-children parent-id pattern without round trips), or when you want explicit control over caching, cycling, or minimum/maximum bounds.
+> Use `IDENTITY` for the common case of a single-table auto-generated primary key — simpler to create, easier for tooling, and the surrounding ecosystem assumes it. Use `SEQUENCE` when you need cross-table uniqueness (e.g., a shared `event_id` across ten audit tables), when you must allocate a block of numbers before the insert happens (e.g., for a parent-then-children pattern without round trips), or when you want explicit control over caching, cycling, or minimum/maximum bounds.
 
 ---
 
 ## UPDATE Patterns
 
-`UPDATE` modifies existing rows in place. Its surface is smaller than `INSERT`'s but its pitfalls are larger: the T-SQL `UPDATE ... FROM ... JOIN` extension is non-deterministic when the join is ambiguous, `UPDATE` with `TOP` selects rows in an arbitrary order unless an outer `ORDER BY` controls it, and a missing `WHERE` clause quietly updates every row of the table. Every demo in this section wraps the update in a transaction and rolls it back so the reader can re-run the demo from the same starting state.
+`UPDATE` modifies existing rows in place. Its surface is smaller than `INSERT`'s but its pitfalls are larger: the T-SQL `UPDATE ... FROM ... JOIN` extension is non-deterministic when the join is ambiguous, `UPDATE` with `TOP` selects rows in an arbitrary order unless an outer `ORDER BY` controls it, and a missing `WHERE` clause quietly updates every row of the table.
 
 ### Searched `UPDATE` | single-table update with a predicate
 
@@ -663,15 +601,13 @@ The standard `UPDATE` form sets one or more columns for every row matching a `WH
 >
 > - `UPDATE silver.signals_daily` names the target table directly.
 > - `SET upside_potential = 0.25` assigns a literal value to one column. Multiple columns can be set in a single `SET` clause by separating them with commas.
-> - `WHERE symbol = 'SAP.DE' AND signal_date = '2026-04-08'` restricts the update to exactly one row. Both columns participate in the existing heap scan — no index is involved because the silver tables are pure heaps.
+> - `WHERE symbol = 'SAP.DE' AND signal_date = '2026-04-08'` restricts the update to exactly one row.
 
-*Set the `upside_potential` of a single row to a fixed value, verify the change, then roll back.*
+*Set the `upside_potential` of a single row to a fixed value.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 UPDATE silver.signals_daily
 SET upside_potential = 0.25
@@ -682,19 +618,17 @@ SELECT symbol, signal_date, upside_potential
 FROM silver.signals_daily
 WHERE symbol      = 'SAP.DE'
   AND signal_date = '2026-04-08';
-
-ROLLBACK;
 ```
 
 | symbol | signal_date | upside_potential |
 |---|---|---:|
 | SAP.DE | 2026-04-08 | 0.25 |
 
-*One row updated, verified with a `SELECT`, then undone by `ROLLBACK`. The locking sequence is `IX` on the table → `IX` on the page → `X` on the row → release at `ROLLBACK`. No other session can read this row during the transaction unless it has `NOLOCK` set (strongly discouraged) or the database is in `READ_COMMITTED_SNAPSHOT ON` mode, in which case readers see the pre-update version from the version store.*
+*One row updated. The locking sequence is `IX` on the table → `IX` on the page → `X` on the row → release at commit. No other session can read this row during the transaction unless the database is in `READ_COMMITTED_SNAPSHOT ON` mode, in which case readers see the pre-update version from the version store.*
 
 > [!danger] `UPDATE` without `WHERE` updates every row
 >
-> Running `UPDATE silver.signals_daily SET upside_potential = 0.25` **without** a `WHERE` clause modifies every one of the 635 rows in the table. There is no SQL Server safeguard against this. The only defenses are (1) opening every `UPDATE` in an explicit transaction so you can `ROLLBACK` on discovery, (2) writing the `SELECT` form of the predicate first and only converting it to `UPDATE` once the row count is confirmed, and (3) using tooling (SSMS → Tools → Options → Query Execution → SET ROWCOUNT or the IntelliSense `UPDATE` safeguard).
+> Running `UPDATE silver.signals_daily SET upside_potential = 0.25` **without** a `WHERE` clause modifies every row in the table. There is no SQL Server safeguard against this. The only defenses are (1) opening every ad-hoc `UPDATE` in an explicit transaction so an accidental update can be rolled back, (2) writing the `SELECT` form of the predicate first and only converting it to `UPDATE` once the row count is confirmed, and (3) using tooling (SSMS → Tools → Options → Query Execution → SET ROWCOUNT or the IntelliSense `UPDATE` safeguard).
 
 ### `UPDATE ... FROM ... JOIN` | T-SQL extension for joined updates
 
@@ -702,7 +636,7 @@ The T-SQL `UPDATE ... FROM ... JOIN` extension lets an update use another table 
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `UPDATE sd` targets the alias `sd` (`silver.signals_daily`) — not the table name directly. When a `FROM` clause is present, the aliased form is clearer because it matches the alias used downstream.
+> - `UPDATE sd` targets the alias `sd` (`gold.scores_daily`) — not the table name directly. When a `FROM` clause is present, the aliased form is clearer because it matches the alias used downstream.
 > - `SET sd.current_price = sd.current_price * 1.05` increases the `current_price` by 5%. The same alias appears on both sides of the assignment.
 > - `FROM gold.scores_daily sd` names the primary source of rows to update and aliases it.
 > - `JOIN bronze.dim_country dc ON dc.country_name = sd.country` joins the scores to the country dimension.
@@ -713,8 +647,6 @@ The T-SQL `UPDATE ... FROM ... JOIN` extension lets an update use another table 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 UPDATE sd
 SET sd.current_price = sd.current_price * 1.05
@@ -731,8 +663,6 @@ FROM gold.scores_daily
 WHERE country    = 'Germany'
   AND score_date = '2026-03-04'
 ORDER BY symbol;
-
-ROLLBACK;
 ```
 
 | symbol | country | current_price |
@@ -743,7 +673,7 @@ ROLLBACK;
 | BAYN.DE | Germany | 39.270000000000003 |
 | BMW.DE | Germany | 86.772000000000006 |
 
-*Sixteen German scores were updated in one statement — the join to `bronze.dim_country` provided the ISO code filter without needing a hard-coded country list. This is the canonical pattern for applying a lookup-driven transformation to a fact table.*
+*Sixteen German scores were updated in one statement — the join to `bronze.dim_country` provided the ISO code filter without a hard-coded country list. This is the canonical pattern for applying a lookup-driven transformation to a fact table.*
 
 > [!warning] Non-deterministic UPDATE with multi-match joins
 >
@@ -751,11 +681,11 @@ ROLLBACK;
 
 > [!success] Force determinism with a CTE that pre-aggregates the source
 >
-> When the source might produce multiple rows per target, wrap it in a CTE that aggregates to at most one row per target key (e.g., `GROUP BY`, `ROW_NUMBER() = 1`, or `MAX(...)`). Then join the `UPDATE` to the CTE. The update becomes deterministic and the error mode shifts from "silent wrong answer" to "compile-time visible intent".
+> When the source might produce multiple rows per target, wrap it in a CTE that aggregates to at most one row per target key (`GROUP BY`, `ROW_NUMBER() = 1`, or `MAX(...)`). Then join the `UPDATE` to the CTE. The update becomes deterministic and the error mode shifts from "silent wrong answer" to "compile-time visible intent".
 
 ### `UPDATE` with CTE | scope-limited updates through a named subquery
 
-A CTE (common table expression) can be the target of an `UPDATE` statement, or it can be used as a derived source that drives the update. The most common use case is computing a set of rows with ranking or aggregation before applying the modification.
+A CTE (common table expression) can be used as a derived source that drives an `UPDATE`. The most common use case is computing a set of rows with ranking or aggregation before applying the modification.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -763,13 +693,11 @@ A CTE (common table expression) can be the target of an `UPDATE` statement, or i
 > - `UPDATE sd SET sd.upside_potential = 0.99 FROM silver.signals_daily sd JOIN latest l ON l.symbol = sd.symbol AND l.latest_date = sd.signal_date WHERE sd.symbol IN ('SAP.DE','SIE.DE')` updates only the latest row for those two symbols.
 > - Without the CTE, the same update would require a correlated subquery in the `WHERE` clause, which is less readable and often slower.
 
-*Update only the most recent signal row for SAP.DE and SIE.DE using a CTE to identify the latest date per symbol.*
+*Update only the most recent signal row for SAP.DE and SIE.DE.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 WITH latest AS (
     SELECT symbol, MAX(signal_date) AS latest_date
@@ -788,8 +716,6 @@ SELECT symbol, signal_date, upside_potential
 FROM silver.signals_daily
 WHERE symbol IN ('SAP.DE', 'SIE.DE')
   AND upside_potential = 0.99;
-
-ROLLBACK;
 ```
 
 | symbol | signal_date | upside_potential |
@@ -797,7 +723,7 @@ ROLLBACK;
 | SAP.DE | 2026-04-08 | 0.98999999999999999 |
 | SIE.DE | 2026-04-08 | 0.98999999999999999 |
 
-*Exactly two rows are updated — the latest date per symbol for SAP.DE and SIE.DE. Float representation shows 0.99 as 0.98999999999999999; use `decimal(p,s)` instead of `float` for columns where exact equality matters. The `WHERE sd.symbol IN (...)` clause pushes the filter down before the join, so the CTE is effectively evaluated only for the two relevant symbols.*
+*Exactly two rows updated — the latest date per symbol for SAP.DE and SIE.DE. Float representation shows 0.99 as 0.98999999999999999; use `decimal(p,s)` instead of `float` for columns where exact equality matters. The `WHERE sd.symbol IN (...)` clause pushes the filter down before the join, so the CTE is effectively evaluated only for the two relevant symbols.*
 
 ### `UPDATE TOP (n)` | bounded update without a predictable order
 
@@ -814,8 +740,6 @@ ROLLBACK;
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
 UPDATE TOP (2) silver.signals_daily
 SET recommendation_mean = 1.0
 WHERE symbol = 'SAP.DE';
@@ -824,8 +748,6 @@ SELECT COUNT(*) AS rows_affected
 FROM silver.signals_daily
 WHERE symbol              = 'SAP.DE'
   AND recommendation_mean = 1.0;
-
-ROLLBACK;
 ```
 
 | rows_affected |
@@ -840,15 +762,15 @@ ROLLBACK;
 
 > [!success] Deterministic bounded updates with a subquery + `ORDER BY`
 >
-> The supported pattern is to write the bounded source query explicitly: `UPDATE sd SET ... FROM silver.signals_daily sd INNER JOIN (SELECT TOP (100) id FROM silver.signals_daily WHERE symbol = 'SAP.DE' ORDER BY signal_date DESC) t ON t.id = sd.id;`. The inner `ORDER BY` produces a stable selection of the 100 most recent rows, and the outer `UPDATE` modifies only those.
+> The supported pattern is `UPDATE sd SET ... FROM silver.signals_daily sd INNER JOIN (SELECT TOP (100) id FROM silver.signals_daily WHERE symbol = 'SAP.DE' ORDER BY signal_date DESC) t ON t.id = sd.id;`. The inner `ORDER BY` produces a stable selection of the 100 most recent rows, and the outer `UPDATE` modifies only those.
 
 ### `UPDATE` with correlated subquery in `SET` | compute new values from aggregates
 
-A correlated subquery inside the `SET` clause computes a new value for each row from an aggregate or another table. This form is more portable than `UPDATE ... FROM ... JOIN` (it works on standards-compliant databases too) but is often slower because the engine may materialize the subquery per row.
+A correlated subquery inside the `SET` clause computes a new value for each row from an aggregate or another table. This form is more portable than `UPDATE ... FROM ... JOIN` — it works on standards-compliant databases too — but is often slower because the engine may materialize the subquery per row.
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `UPDATE silver.signals_daily SET target_median_price = ( SELECT AVG(sd2.target_median_price) FROM silver.signals_daily sd2 WHERE sd2._index = silver.signals_daily._index )` recomputes the target price as the index-average.
+> - `UPDATE silver.signals_daily SET target_median_price = (SELECT AVG(sd2.target_median_price) FROM silver.signals_daily sd2 WHERE sd2._index = silver.signals_daily._index)` recomputes the target price as the index-average.
 > - The subquery references the outer table via `silver.signals_daily._index`, making it correlated. For each row being updated, SQL Server computes (or caches) the per-index average.
 > - `WHERE symbol = 'SAP.DE'` restricts the update to four rows, so the subquery is evaluated at most four times.
 
@@ -857,8 +779,6 @@ A correlated subquery inside the `SET` clause computes a new value for each row 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 UPDATE silver.signals_daily
 SET target_median_price = (
@@ -872,8 +792,6 @@ SELECT symbol, signal_date, target_median_price
 FROM silver.signals_daily
 WHERE symbol = 'SAP.DE'
 ORDER BY signal_date;
-
-ROLLBACK;
 ```
 
 | symbol | signal_date | target_median_price |
@@ -883,7 +801,7 @@ ROLLBACK;
 | SAP.DE | 2026-03-12 | 301.04887365326641 |
 | SAP.DE | 2026-04-08 | 301.04887365326641 |
 
-*All four SAP.DE rows now hold the same value (the euro_stoxx_50 index average), computed once per row but typically factored out by the optimizer into a scalar aggregate subtree. The same operation could be written with `UPDATE ... FROM ... JOIN` against a CTE of pre-aggregated averages for better readability at higher volumes.*
+*All four SAP.DE rows now hold the same value — the euro_stoxx_50 index average — computed once per row but typically factored out by the optimizer into a scalar aggregate subtree. The same operation could be written with `UPDATE ... FROM ... JOIN` against a CTE of pre-aggregated averages for better readability at higher volumes.*
 
 ### `UPDATE ... SET @var = column = expression` | update a row and capture old/new value in one statement
 
@@ -895,8 +813,6 @@ SQL Server supports a composite assignment syntax: `SET @variable = column = exp
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
 DECLARE @old_price FLOAT, @new_price FLOAT;
 
 UPDATE silver.signals_daily
@@ -907,21 +823,19 @@ WHERE symbol      = 'SAP.DE'
   AND signal_date = '2026-04-08';
 
 SELECT @old_price AS old_price, @new_price AS new_price;
-
-ROLLBACK;
 ```
 
 | old_price | new_price |
 |---:|---:|
 | 145.22 | 159.74200000000002 |
 
-*The first assignment `@old_price = current_price` captures the pre-update value. The chained `@new_price = current_price = current_price * 1.10` writes the new value to the column and simultaneously captures it into `@new_price`. For multi-row updates, prefer the `OUTPUT` clause (see next section) — it captures every affected row's before/after values deterministically.*
+*The first assignment `@old_price = current_price` captures the pre-update value. The chained `@new_price = current_price = current_price * 1.10` writes the new value to the column and simultaneously captures it into `@new_price`. For multi-row updates, prefer the `OUTPUT` clause (see below) — it captures every affected row's before/after values deterministically.*
 
 ---
 
 ## DELETE Patterns
 
-`DELETE` removes rows from a table. Like `UPDATE`, a missing `WHERE` clause removes every row — but unlike `UPDATE`, there is a faster alternative (`TRUNCATE TABLE`) when every row should go. The choice between `DELETE` and `TRUNCATE` is driven by recoverability requirements, trigger firing behavior, foreign key presence, and identity seed behavior, all documented in the decision matrix near the bottom of this section.
+`DELETE` removes rows from a table. Like `UPDATE`, a missing `WHERE` clause removes every row — but unlike `UPDATE`, there is a faster alternative (`TRUNCATE TABLE`) when every row should go. The choice between `DELETE` and `TRUNCATE` is driven by recoverability requirements, trigger firing behavior, foreign key presence, and identity seed behavior, all documented in the decision matrix at the end of this section.
 
 ### Searched `DELETE` | remove rows matching a predicate
 
@@ -931,16 +845,12 @@ The standard `DELETE` form removes every row matching a `WHERE` predicate. The r
 >
 > - `DELETE FROM silver.signals_daily` names the target and uses the optional `FROM` keyword — `DELETE silver.signals_daily` without `FROM` is equivalent syntax.
 > - `WHERE symbol = 'SAP.DE' AND signal_date = '2026-03-04'` restricts the delete to exactly one row.
-> - Verification query shows the remaining row count for the symbol.
-> - `ROLLBACK` undoes the delete so the four original SAP.DE rows remain after the demo.
 
-*Delete one specific row and verify the change inside the transaction.*
+*Delete one specific row.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 DELETE FROM silver.signals_daily
 WHERE symbol      = 'SAP.DE'
@@ -949,12 +859,6 @@ WHERE symbol      = 'SAP.DE'
 SELECT @@ROWCOUNT AS deleted_rows;
 
 SELECT COUNT(*) AS remaining_sap_de
-FROM silver.signals_daily
-WHERE symbol = 'SAP.DE';
-
-ROLLBACK;
-
-SELECT COUNT(*) AS after_rollback
 FROM silver.signals_daily
 WHERE symbol = 'SAP.DE';
 ```
@@ -967,11 +871,7 @@ WHERE symbol = 'SAP.DE';
 |---:|
 | 3 |
 
-| after_rollback |
-|---:|
-| 4 |
-
-*One row deleted, three SAP.DE rows remain during the transaction, and the `ROLLBACK` restores all four. The pattern demonstrates that `DELETE` is fully transactional and that `@@ROWCOUNT` reflects the actual number of rows modified by the last statement.*
+*One row deleted, three SAP.DE rows remain. `@@ROWCOUNT` reflects the actual number of rows the last statement modified.*
 
 ### `DELETE ... FROM ... JOIN` | delete rows by joining to another table
 
@@ -989,8 +889,6 @@ T-SQL extends `DELETE` with a `FROM` clause that can join additional tables. The
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
 DELETE sd
 FROM silver.signals_daily AS sd
 WHERE NOT EXISTS (
@@ -1001,19 +899,17 @@ WHERE NOT EXISTS (
 );
 
 SELECT @@ROWCOUNT AS deleted_non_trading;
-
-ROLLBACK;
 ```
 
 | deleted_non_trading |
 |---:|
-| 150 |
+| 152 |
 
-*Out of 635 rows in `silver.signals_daily`, 150 had signal dates that did not match any trading-day entry in `bronze.trading_calendar`. The `ROLLBACK` keeps all 635 in place. In a real ETL pipeline, this pattern is used to enforce referential integrity against a date dimension when the source data layer is not constrained.*
+*152 rows removed because their `signal_date` did not match any trading-day entry in `bronze.trading_calendar`. In a real ETL pipeline, this pattern is used to enforce referential integrity against a date dimension when the source data layer is not constrained.*
 
 ### `DELETE TOP (n)` | bounded delete without a guaranteed order
 
-`DELETE TOP (n)` removes at most `n` rows matching the predicate. Like `UPDATE TOP`, the selection is non-deterministic without a subquery containing `ORDER BY`. The primary legitimate use of `DELETE TOP` is as the delete step of a batched loop — that use case is shown later in this section.
+`DELETE TOP (n)` removes at most `n` rows matching the predicate. Like `UPDATE TOP`, the selection is non-deterministic without a subquery containing `ORDER BY`. The primary legitimate use of `DELETE TOP` is as the delete step of a batched loop.
 
 *Delete at most 10 signal rows whose symbol starts with a digit.*
 
@@ -1021,23 +917,19 @@ ROLLBACK;
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
 DELETE TOP (10) FROM silver.signals_daily
 WHERE symbol LIKE '0%';
 
 SELECT @@ROWCOUNT AS deleted_rows;
-
-ROLLBACK;
 ```
 
 | deleted_rows |
 |---:|
-| 4 |
+| 3 |
 
-*Only 4 rows match the `symbol LIKE '0%'` predicate in the entire table, so the `TOP (10)` bound is never reached. When the predicate matches more than `n` rows, `TOP (n)` picks any `n` of them — the specific ones chosen depend on the physical plan.*
+*Three rows match the `symbol LIKE '0%'` predicate after the earlier anti-semi-join delete, so the `TOP (10)` bound is never reached. When the predicate matches more than `n` rows, `TOP (n)` picks any `n` of them — the specific ones chosen depend on the physical plan.*
 
-### Batched `DELETE` | remove millions of rows without blocking the log
+### Batched `DELETE` | remove many rows without blocking the log
 
 When a `DELETE` needs to remove millions of rows from a busy table, a single `DELETE` statement holds row locks for the entire operation, fills up the transaction log, and can escalate to a table lock that blocks every other session. The canonical fix is a **batched loop** that deletes a small chunk at a time, commits each iteration, and stops when no rows remain. This keeps the log footprint small, gives the log backup process time to truncate between batches, and lets blocked sessions get a turn between chunks.
 
@@ -1055,8 +947,6 @@ When a `DELETE` needs to remove millions of rows from a busy table, a single `DE
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 DECLARE
     @iter          INT = 0,
@@ -1081,15 +971,13 @@ BEGIN
 END
 
 SELECT @iter AS batches, @total_deleted AS total_deleted;
-
-ROLLBACK;
 ```
 
 | batches | total_deleted |
 |---:|---:|
-| 3 | 62 |
+| 2 | 47 |
 
-*Three batches of 25, 25, and 12 rows remove 62 rows in total. At production scale, the `@chunk` value is typically between 1 000 and 10 000, and each batch is committed with `COMMIT; BEGIN TRAN;` (or the loop runs without an outer transaction at all). The combination of small chunks and frequent commits lets log backups keep up with the log growth.*
+*Two batches of 25 and 22 rows remove 47 rows in total. At production scale, the `@chunk` value is typically between 1 000 and 10 000, and each batch is committed with `COMMIT; BEGIN TRAN;` (or the loop runs without an outer transaction at all). The combination of small chunks and frequent commits lets log backups keep up with the log growth.*
 
 > [!danger] `@@ROWCOUNT` is reset by every statement
 >
@@ -1103,12 +991,7 @@ ROLLBACK;
 
 `TRUNCATE TABLE` removes every row from a table by deallocating its pages. It is faster than `DELETE` without a `WHERE` clause, uses minimal transaction log space, and resets the identity counter to its seed value. It does **not** fire `DELETE` triggers, does **not** work on tables referenced by a foreign key, and does **not** work on tables participating in indexed views, system-versioned temporal tables, or replication.
 
-> [!info]- Clause-by-clause breakdown
->
-> - `TRUNCATE TABLE #scratch` removes every row from the temp table by releasing its allocation units.
-> - Inside a transaction, `TRUNCATE` is fully rollback-able: the allocation pages are marked for deallocation in the logical phase but not actually returned to the engine until after the commit (the physical phase).
-
-*Truncate a temp table inside a transaction and confirm that `ROLLBACK` restores the rows.*
+*Truncate a temp table populated from `silver.signals_daily` and confirm the row count drops to zero.*
 
 ```sql
 USE [stoxx_db];
@@ -1119,37 +1002,30 @@ IF OBJECT_ID('tempdb..#scratch') IS NOT NULL DROP TABLE #scratch;
 SELECT symbol, signal_date, current_price
 INTO #scratch
 FROM silver.signals_daily
-WHERE symbol = 'SAP.DE';
+WHERE symbol = 'ASML.AS';
 
 SELECT COUNT(*) AS before_truncate FROM #scratch;
 
-BEGIN TRAN;
-    TRUNCATE TABLE #scratch;
-    SELECT COUNT(*) AS during_truncate FROM #scratch;
-ROLLBACK;
+TRUNCATE TABLE #scratch;
 
-SELECT COUNT(*) AS after_rollback FROM #scratch;
+SELECT COUNT(*) AS after_truncate FROM #scratch;
 
 DROP TABLE #scratch;
 ```
 
 | before_truncate |
 |---:|
-| 4 |
+| 3 |
 
-| during_truncate |
+| after_truncate |
 |---:|
 | 0 |
 
-| after_rollback |
-|---:|
-| 4 |
-
-*Inside the transaction the table is empty, but the `ROLLBACK` restores all four rows because the page deallocations were still in the logical phase and had not yet been physically released. Once the `COMMIT` happens, `TRUNCATE` releases the pages immediately for tables smaller than 128 extents, or deferred to a background process for larger tables.*
+*Three rows in, zero rows out. `TRUNCATE` releases the pages immediately for tables smaller than 128 extents, or deferred to a background process for larger tables.*
 
 > [!warning] `TRUNCATE TABLE` cannot fire `DELETE` triggers
 >
-> `TRUNCATE` removes rows by deallocating pages without touching individual rows, so there is no row-level event for trigger binding to observe. Any audit trail or cascade implemented via `AFTER DELETE` or `INSTEAD OF DELETE` triggers will silently miss truncations. If full audit coverage is required, replace `TRUNCATE` with a logged `DELETE` + trigger, or add the `TRUNCATE` event to a database-level DDL trigger (which can see the event even though row-level triggers cannot).
+> `TRUNCATE` removes rows by deallocating pages without touching individual rows, so there is no row-level event for trigger binding to observe. Any audit trail or cascade implemented via `AFTER DELETE` or `INSTEAD OF DELETE` triggers will silently miss truncations. If full audit coverage is required, replace `TRUNCATE` with a logged `DELETE` + trigger, or add the `TRUNCATE_TABLE` event to a database-level DDL trigger.
 
 ### `DELETE` vs `TRUNCATE TABLE` decision matrix
 
@@ -1173,6 +1049,8 @@ DROP TABLE #scratch;
 
 The `OUTPUT` clause returns information about every row affected by an `INSERT`, `UPDATE`, `DELETE`, or `MERGE` statement. It exposes two virtual pseudo-tables — `INSERTED` and `DELETED` — that mirror the behavior of the same-named pseudo-tables inside triggers. `OUTPUT` is the cleanest way to capture before/after values for an audit trail, to return identity values for freshly inserted rows, to build queue-like dequeue operations, and to compose DML statements into higher-level workflows.
 
+Two production tables back the examples in this section: `dbo.audit_price_changes` (a row-change audit trail with old/new values and the principal who made the change) and `dbo.archive_signals_daily` (a row archive on the `FG_Archive` filegroup for soft-deleted signal rows). Both tables are defined without triggers, without foreign keys, and without `CHECK` constraints because `OUTPUT INTO` cannot target tables that carry any of those.
+
 ### `INSERTED` and `DELETED` pseudo-tables | which rows are visible from which statement
 
 | Statement | `INSERTED.*` visible | `DELETED.*` visible |
@@ -1191,16 +1069,14 @@ The simplest use of `OUTPUT` on an `UPDATE` returns the pre-image and post-image
 > [!info]- Clause-by-clause breakdown
 >
 > - `UPDATE silver.signals_daily SET current_price = current_price * 1.10` increases the price by 10%.
-> - `OUTPUT INSERTED.symbol, INSERTED.signal_date, DELETED.current_price AS old_price, INSERTED.current_price AS new_price` projects four columns: identifying key (from INSERTED, though these columns are unchanged), the old price (from DELETED), and the new price (from INSERTED).
-> - `WHERE symbol = 'SAP.DE'` restricts the update to the four SAP.DE rows.
+> - `OUTPUT INSERTED.symbol, INSERTED.signal_date, DELETED.current_price AS old_price, INSERTED.current_price AS new_price` projects four columns: identifying key (from INSERTED, unchanged), the old price (from DELETED), and the new price (from INSERTED).
+> - `WHERE symbol = 'ASML.AS'` restricts the update to the remaining ASML.AS rows.
 
-*Apply a 10% price bump to every SAP.DE row and return a before/after delta for each affected row.*
+*Apply a 10% price bump to every ASML.AS row and return a before/after delta for each affected row.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 UPDATE silver.signals_daily
 SET current_price = current_price * 1.10
@@ -1209,47 +1085,33 @@ OUTPUT
     INSERTED.signal_date,
     DELETED.current_price  AS old_price,
     INSERTED.current_price AS new_price
-WHERE symbol = 'SAP.DE';
-
-ROLLBACK;
+WHERE symbol = 'ASML.AS';
 ```
 
 | symbol | signal_date | old_price | new_price |
 |---|---|---:|---:|
-| SAP.DE | 2026-03-07 | 172.74000000000001 | 190.01400000000004 |
-| SAP.DE | 2026-03-12 | 166.58000000000001 | 183.23800000000003 |
-| SAP.DE | 2026-03-04 | 167.38 | 184.11800000000002 |
-| SAP.DE | 2026-04-08 | 145.22 | 159.74200000000002 |
+| ASML.AS | 2026-03-12 | 1191.2 | 1310.3200000000002 |
+| ASML.AS | 2026-03-04 | 1199.8 | 1319.78 |
+| ASML.AS | 2026-04-08 | 1113.8 | 1225.1800000000001 |
 
-*Four rows were updated and four rows were returned to the client — one result set per affected row, all in a single round trip. No separate `SELECT` is needed after the update to verify the change. The row order in the output is not guaranteed to match the `signal_date` order; if the reader needs it ordered, either sort client-side or use the `OUTPUT INTO` pattern below.*
+*Three rows were updated and three rows were returned to the client — one result set per affected row, in a single round trip. No separate `SELECT` is needed after the update to verify the change. The row order in the output is not guaranteed to match the `signal_date` order; if the caller needs it ordered, either sort client-side or use the `OUTPUT INTO` pattern below.*
 
-### `OUTPUT ... INTO` table variable | capture affected rows into a server-side collection
+### `OUTPUT ... INTO` audit table | capture affected rows into a persistent audit trail
 
-`OUTPUT ... INTO` sends the captured rows into a table variable (`@captured`), a temp table (`#captured`), or a permanent table. The rows are available to subsequent statements in the same batch, which enables multi-step workflows where a DML statement and the audit or follow-up logic must share the same definition of "affected rows".
+`OUTPUT ... INTO` sends the captured rows into a persistent table that serves as an audit trail. The `dbo.audit_price_changes` table is designed specifically to be a valid `OUTPUT INTO` target: it has an `IDENTITY` primary key, default `changed_at` and `changed_by` columns, no triggers, no foreign keys, and no check constraints. The `OUTPUT` clause populates the `symbol`, `signal_date`, `old_price`, and `new_price` columns while the table defaults fill in the audit metadata automatically.
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `DECLARE @audit TABLE (...)` creates a table variable whose shape matches the columns being captured.
 > - `UPDATE silver.signals_daily SET current_price = current_price * 0.95` applies a 5% cut.
-> - `OUTPUT INSERTED.symbol, INSERTED.signal_date, DELETED.current_price, INSERTED.current_price, SYSUTCDATETIME() INTO @audit` populates the table variable with five columns: two keys, two prices, and a client-side timestamp.
-> - Note that `SYSUTCDATETIME()` in the `OUTPUT` list is **not** a reference to any pseudo-table column — it is a scalar expression evaluated per output row. This is how audit timestamps enter the captured set without needing a trigger.
-> - `SELECT * FROM @audit` returns the captured rows to the client. The DML and the reporting query see exactly the same set of rows.
+> - `OUTPUT INSERTED.symbol, INSERTED.signal_date, DELETED.current_price, INSERTED.current_price INTO dbo.audit_price_changes (symbol, signal_date, old_price, new_price)` writes one row to the audit table for every row modified.
+> - The explicit column list on `INTO` skips the audit table's identity column (`audit_id`) and its default-populated columns (`changed_at`, `changed_by`), letting the engine fill them automatically.
+> - `WHERE symbol = 'MC.PA' AND signal_date = '2026-04-08'` restricts the update to one specific row.
 
-*Apply a 5% price cut to two specific rows and capture every change plus a UTC timestamp into a table variable.*
+*Apply a 5% price cut to one MC.PA row and log the change to `dbo.audit_price_changes`.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
-
-DECLARE @audit TABLE (
-    symbol      VARCHAR(20),
-    signal_date DATE,
-    old_price   FLOAT,
-    new_price   FLOAT,
-    changed_at  DATETIME2(3)
-);
 
 UPDATE silver.signals_daily
 SET current_price = current_price * 0.95
@@ -1257,39 +1119,36 @@ OUTPUT
     INSERTED.symbol,
     INSERTED.signal_date,
     DELETED.current_price,
-    INSERTED.current_price,
-    SYSUTCDATETIME()
-INTO @audit
-WHERE symbol IN ('ASML.AS', 'MC.PA')
+    INSERTED.current_price
+INTO dbo.audit_price_changes (symbol, signal_date, old_price, new_price)
+WHERE symbol      = 'MC.PA'
   AND signal_date = '2026-04-08';
 
-SELECT * FROM @audit;
-
-ROLLBACK;
+SELECT TOP (5)
+    audit_id, symbol, signal_date, old_price, new_price, changed_at, changed_by
+FROM dbo.audit_price_changes
+ORDER BY audit_id DESC;
 ```
 
-| symbol | signal_date | old_price | new_price | changed_at |
-|---|---|---:|---:|---|
-| ASML.AS | 2026-04-08 | 1113.8 | 1058.1099999999999 | 2026-04-11 04:19:58.547 |
-| MC.PA | 2026-04-08 | 466.85000000000002 | 443.50749999999999 | 2026-04-11 04:19:58.547 |
+| audit_id | symbol | signal_date | old_price | new_price | changed_at | changed_by |
+|---:|---|---|---:|---:|---|---|
+| 1 | MC.PA | 2026-04-08 | 466.85000000000002 | 443.50749999999999 | 2026-04-11 11:38:32.748 | sa |
 
-*Two rows captured with pre-image, post-image, and a per-row timestamp. This pattern replaces `AFTER UPDATE` triggers for audit workloads: it is explicit, visible in the source code, and does not add hidden runtime behavior.*
+*One row updated, one row logged. The audit table now has the full before/after trail for the price change, plus the UTC timestamp and the principal that made the change — all populated atomically inside the same `UPDATE` statement. This pattern replaces `AFTER UPDATE` triggers for audit workloads: it is explicit, visible in the source code, and does not add hidden runtime behavior.*
 
 > [!warning] Target of `OUTPUT INTO` has tight restrictions
 >
-> The destination table of `OUTPUT INTO` cannot have enabled triggers, cannot participate on either side of a foreign key, and cannot have `CHECK` constraints or enabled rules. Table variables and temp tables satisfy all these restrictions naturally. A permanent audit table is valid only if it has no triggers, no FKs, and no constraints beyond `NOT NULL`.
+> The destination table of `OUTPUT INTO` cannot have enabled triggers, cannot participate on either side of a foreign key, and cannot have `CHECK` constraints or enabled rules. `dbo.audit_price_changes` was deliberately created without any of these so it can serve as an `OUTPUT INTO` target.
 
 ### `DELETE ... OUTPUT` | capture removed rows before they disappear
 
-`DELETE` with `OUTPUT DELETED.*` returns every row that was just removed. This is the canonical pattern for "destructive read" queue-pop operations, where a consumer claims a message by deleting it from the queue table and immediately processing the returned row.
+`DELETE` with `OUTPUT DELETED.*` returns every row that was just removed. This is the canonical pattern for "destructive read" queue-pop operations, where a consumer claims a message by deleting it from the queue table and immediately processing the returned row. The client sees the deleted row as the result set of the `DELETE` statement and can forward it to a downstream system.
 
-*Delete the oldest SAP.DE signal and return its full row.*
+*Delete one MC.PA row and return its full payload in the same round trip.*
 
 ```sql
 USE [stoxx_db];
 GO
-
-BEGIN TRAN;
 
 DELETE FROM silver.signals_daily
 OUTPUT
@@ -1297,17 +1156,15 @@ OUTPUT
     DELETED.symbol,
     DELETED.signal_date,
     DELETED.current_price
-WHERE symbol      = 'SAP.DE'
+WHERE symbol      = 'MC.PA'
   AND signal_date = '2026-03-04';
-
-ROLLBACK;
 ```
 
 | id | symbol | signal_date | current_price |
 |---:|---|---|---:|
-| 5 | SAP.DE | 2026-03-04 | 167.38 |
+| 2 | MC.PA | 2026-03-04 | 507.39999999999998 |
 
-*The deleted row is returned as a result set in the same round trip as the `DELETE`. In a queue scenario, the consumer would wrap this in a transaction, process the message, and then commit — guaranteeing exactly-once semantics as long as the consumer handles its own idempotency.*
+*The deleted row is returned as a result set in the same round trip as the `DELETE`. In a queue scenario, the consumer would execute this as its single "claim and process" step — guaranteeing exactly-once semantics as long as the consumer handles its own idempotency.*
 
 > [!tip] `DELETE TOP (1) ... WITH (READPAST) OUTPUT DELETED.*` is the canonical queue pop
 >
@@ -1315,67 +1172,67 @@ ROLLBACK;
 
 ### Composable DML | chain a DML statement's `OUTPUT` into another `INSERT`
 
-The **composable DML** form wraps a DML statement with an `OUTPUT` clause in parentheses and uses it as a rowset source for an outer `INSERT` statement. This lets a single batch move rows atomically from one table to another: the inner `DELETE` (or `UPDATE` or `MERGE`) produces the rows, and the outer `INSERT` persists them elsewhere.
+The **composable DML** form wraps a DML statement with an `OUTPUT` clause in parentheses and uses it as a rowset source for an outer `INSERT` statement. This moves rows atomically from one table to another: the inner `DELETE` (or `UPDATE` or `MERGE`) produces the rows, and the outer `INSERT` persists them elsewhere.
 
 > [!info]- Clause-by-clause breakdown
 >
-> - `INSERT INTO @archive (...) SELECT src.* FROM (...) AS src` reads from a derived table named `src`.
-> - The derived table is `(DELETE FROM silver.signals_daily OUTPUT DELETED.* WHERE symbol = 'SAP.DE')` — a `DELETE` with an `OUTPUT` clause, wrapped in parentheses.
-> - The outer `INSERT` captures every row the `DELETE` removed and inserts it into `@archive` in one atomic operation. If the outer insert fails for any reason, the delete is rolled back as well.
-> - This pattern is the only supported way to achieve transactional "move to archive" semantics without `MERGE` and without manual compensation logic.
+> - `INSERT INTO dbo.archive_signals_daily (signal_id, _index, symbol, signal_date, current_price) SELECT src.id, src._index, src.symbol, src.signal_date, src.current_price FROM (...) AS src` reads from a derived table named `src`.
+> - The derived table is `(DELETE FROM silver.signals_daily OUTPUT DELETED.id, DELETED._index, DELETED.symbol, DELETED.signal_date, DELETED.current_price WHERE symbol = 'MC.PA')` — a `DELETE` with an `OUTPUT` clause, wrapped in parentheses.
+> - The outer `INSERT` captures every row the `DELETE` removed and inserts it into `dbo.archive_signals_daily` in one atomic operation. If the outer insert fails for any reason, the delete is rolled back as well.
+> - `dbo.archive_signals_daily` lives on the `FG_Archive` filegroup — archived rows are physically relocated onto lower-cost storage as part of the move.
+> - The archive table's identity column (`archive_id`) and default-populated columns (`archived_at`, `archived_by`) are skipped by the outer `INSERT` column list and filled in by the engine.
 
-*Move all SAP.DE rows from `silver.signals_daily` into an archive table variable in one composable DML statement.*
+*Move every remaining MC.PA row from `silver.signals_daily` into `dbo.archive_signals_daily` in one composable DML statement.*
 
 ```sql
 USE [stoxx_db];
 GO
 
-BEGIN TRAN;
-
-DECLARE @archive TABLE (
-    id            INT,
-    symbol        VARCHAR(20),
-    signal_date   DATE,
-    current_price FLOAT
-);
-
-INSERT INTO @archive (id, symbol, signal_date, current_price)
-SELECT src.id, src.symbol, src.signal_date, src.current_price
+INSERT INTO dbo.archive_signals_daily (signal_id, _index, symbol, signal_date, current_price)
+SELECT
+    src.id,
+    src._index,
+    src.symbol,
+    src.signal_date,
+    src.current_price
 FROM (
     DELETE FROM silver.signals_daily
     OUTPUT
         DELETED.id,
+        DELETED._index,
         DELETED.symbol,
         DELETED.signal_date,
         DELETED.current_price
-    WHERE symbol = 'SAP.DE'
+    WHERE symbol = 'MC.PA'
 ) AS src;
 
-SELECT * FROM @archive;
-
-ROLLBACK;
+SELECT archive_id, signal_id, symbol, signal_date, current_price, archived_at, archived_by
+FROM dbo.archive_signals_daily
+ORDER BY archive_id;
 ```
 
-| id | symbol | signal_date | current_price |
-|---:|---|---|---:|
-| 1006 | SAP.DE | 2026-03-07 | 172.74000000000001 |
-| 2025 | SAP.DE | 2026-03-12 | 166.58000000000001 |
-| 5 | SAP.DE | 2026-03-04 | 167.38 |
-| 3006 | SAP.DE | 2026-04-08 | 145.22 |
+| archive_id | signal_id | symbol | signal_date | current_price | archived_at | archived_by |
+|---:|---:|---|---|---:|---|---|
+| 1 | 2022 | MC.PA | 2026-03-12 | 494.39999999999998 | 2026-04-11 11:38:43.355 | sa |
+| 2 | 3003 | MC.PA | 2026-04-08 | 443.50749999999999 | 2026-04-11 11:38:43.355 | sa |
 
-*All four SAP.DE rows were deleted from the source and inserted into the archive table variable in one statement. The `DELETE` and `INSERT` are atomic: either both succeed or both are rolled back. The outer `INSERT` can include a `WHERE` clause on the derived table to filter which of the affected rows actually land in the archive — for instance, archiving only the rows whose `current_price` exceeded some threshold.*
+*Two rows were deleted from the source and inserted into the archive in one statement. The `DELETE` and `INSERT` are atomic: either both succeed or both are rolled back. The archive table now holds the historical MC.PA data on the `FG_Archive` filegroup (lower-cost storage), while the `silver.signals_daily` table no longer contains any MC.PA rows. This is the canonical soft-delete / tiering pattern for ETL pipelines.*
 
 > [!warning] Composable DML target has severe restrictions
 >
-> The target of the **outer** `INSERT` in a composable DML statement cannot be a view or remote table, cannot have triggers, cannot participate in foreign key relationships, and cannot participate in replication. The **inner** DML statement cannot be nested further (no composable DML inside composable DML), cannot contain a `WITH` clause, cannot target remote tables or partitioned views, and cannot be a cursor-based `UPDATE`/`DELETE`. These restrictions make composable DML strictly a tool for dedicated staging/archive tables, not for general application schemas.
+> The target of the **outer** `INSERT` in a composable DML statement cannot be a view or remote table, cannot have triggers, cannot participate in foreign key relationships, and cannot participate in replication. The **inner** DML statement cannot be nested further (no composable DML inside composable DML), cannot contain a `WITH` clause, cannot target remote tables or partitioned views, and cannot be a cursor-based `UPDATE`/`DELETE`. These restrictions make composable DML strictly a tool for dedicated staging/archive tables.
 
 > [!danger] `OUTPUT` rows are returned even if the statement fails
 >
-> Per Microsoft: *"An UPDATE, INSERT, or DELETE statement that has an OUTPUT clause will return rows to the client even if the statement encounters errors and is rolled back."* This means a client that reads the `OUTPUT` result set and uses it for business logic can act on rows that were never actually persisted. Always check for errors (or use `XACT_ABORT ON` + `TRY/CATCH`) before trusting `OUTPUT` results, and never treat `OUTPUT` as the sole commit signal.
+> Per Microsoft: *"An UPDATE, INSERT, or DELETE statement that has an OUTPUT clause will return rows to the client even if the statement encounters errors and is rolled back."* A client that reads the `OUTPUT` result set and uses it for business logic can act on rows that were never actually persisted. Always check for errors (or use `XACT_ABORT ON` + `TRY/CATCH`) before trusting `OUTPUT` results, and never treat `OUTPUT` as the sole commit signal.
 
 ### `MERGE` and `OUTPUT $action` | pointer
 
 `MERGE` statements can use `OUTPUT` with a special `$action` column that returns `'INSERT'`, `'UPDATE'`, or `'DELETE'` for each affected row, identifying which merge branch produced the row. See [[11-merge-and-upsert]] for the full treatment.
+
+> [!warning] `MERGE` has known concurrency issues
+>
+> Even with `HOLDLOCK` on the target, `MERGE` is susceptible to race conditions under concurrent inserts that can produce primary-key violations or silently skip intended actions. Microsoft KB articles document several well-known bugs in `MERGE` plan choice that were fixed over multiple cumulative updates. A common alternative is to run two separate statements inside one transaction: `UPDATE target SET ... FROM target JOIN staging ON key` to apply the changes to matching rows, then `INSERT INTO target SELECT ... FROM staging WHERE NOT EXISTS (SELECT 1 FROM target t WHERE t.key = staging.key)` to add the new rows. This pattern produces more predictable query plans, avoids the known `MERGE` concurrency bugs, and is easier to read and tune. See [[11-merge-and-upsert]] for the full trade-off analysis.
 
 ---
 
@@ -1387,7 +1244,7 @@ All SQL Server DML runs inside a transaction, but the behavior of that transacti
 
 An **explicit transaction** is opened with `BEGIN TRAN`, closed with `COMMIT TRAN`, and aborted with `ROLLBACK TRAN`. Every DML statement between the `BEGIN` and the `COMMIT` is part of the same transaction, and either all of them commit or none of them do. Explicit transactions are the right default for any multi-statement operation that must be atomic.
 
-*Atomically update two symbols in one transaction, commit both, and verify.*
+*Atomically update two symbols in one transaction and commit both at once.*
 
 ```sql
 USE [stoxx_db];
@@ -1397,16 +1254,16 @@ BEGIN TRAN;
 
 UPDATE silver.signals_daily
 SET current_price = current_price * 1.02
-WHERE symbol = 'ASML.AS' AND signal_date = '2026-04-08';
+WHERE symbol = 'ALV.DE' AND signal_date = '2026-04-08';
 
 UPDATE silver.signals_daily
 SET current_price = current_price * 1.02
-WHERE symbol = 'MC.PA'   AND signal_date = '2026-04-08';
+WHERE symbol = 'SIE.DE' AND signal_date = '2026-04-08';
 
-ROLLBACK;  -- demo: roll back so state is preserved
+COMMIT;
 ```
 
-*Both updates are part of the same transaction. A `COMMIT` at the end would persist both; `ROLLBACK` undoes both. There is no state in which only the ASML.AS update is persisted but the MC.PA update is not.*
+*Both updates are part of the same transaction. There is no state in which only the ALV.DE update is persisted but the SIE.DE update is not. If the second statement raised an error, the whole transaction would be in a `DOOMED` state (assuming `XACT_ABORT ON`) and a subsequent `ROLLBACK` would undo both.*
 
 ### `TRY/CATCH` + `XACT_ABORT` | standard error-handling envelope
 
@@ -1417,7 +1274,7 @@ SQL Server's structured error handling consists of three pieces: `SET XACT_ABORT
 > - `SET XACT_ABORT ON` is the single most important switch for DML reliability. With it off, a deadlock victim or a check-constraint violation leaves the transaction active; with it on, any such error triggers an automatic rollback and the transaction is doomed (XACT_STATE = -1).
 > - `BEGIN TRAN` opens the transaction.
 > - `BEGIN TRY ... END TRY` surrounds the statements that might fail.
-> - The first `UPDATE` succeeds and updates 4 ASML.AS rows.
+> - The first `UPDATE` succeeds.
 > - The second `UPDATE` intentionally divides by zero to trigger error 8134.
 > - Control transfers to `BEGIN CATCH ... END CATCH`.
 > - `IF XACT_STATE() <> 0 ROLLBACK` rolls back the transaction if it is still active (state 1) or doomed (state -1). Skipping this step leaves the connection in an open transaction that blocks every other session.
@@ -1436,11 +1293,11 @@ BEGIN TRAN;
 BEGIN TRY
     UPDATE silver.signals_daily
     SET current_price = current_price * 1.05
-    WHERE symbol = 'ASML.AS';
+    WHERE symbol = 'NVDA';
 
     UPDATE silver.signals_daily
     SET current_price = current_price / 0
-    WHERE symbol = 'SAP.DE';
+    WHERE symbol = 'SIE.DE';
 
     COMMIT;
 END TRY
@@ -1458,7 +1315,7 @@ END CATCH;
 |---:|---|---:|
 | 8134 | Divide by zero error encountered. | 0 |
 
-*The first update affected 4 ASML.AS rows, then the second update hit the divide-by-zero error and the whole transaction was rolled back by `XACT_ABORT`. After the `CATCH` block executes, `XACT_STATE() = 0` confirms the transaction is no longer open. A follow-up `SELECT MAX(current_price) FROM silver.signals_daily WHERE symbol = 'ASML.AS'` shows the original maximum price, proving the rollback restored the ASML.AS rows that had already been updated earlier in the transaction.*
+*The first update affected NVDA rows, then the second update hit the divide-by-zero error and the whole transaction was rolled back by `XACT_ABORT`. After the `CATCH` block executes, `XACT_STATE() = 0` confirms the transaction is no longer open. A follow-up `SELECT MAX(current_price) FROM silver.signals_daily WHERE symbol = 'NVDA'` shows the pre-error price, proving the rollback restored the NVDA rows that had already been updated earlier in the transaction.*
 
 > [!danger] `SET XACT_ABORT OFF` is the default and it is unsafe for DML
 >
@@ -1472,23 +1329,7 @@ END CATCH;
 
 The **Halloween problem** occurs when an `UPDATE` statement modifies a column that is used in its own search predicate or join. Naïvely executed, the update would re-read rows it already updated and modify them again, producing endless work or wrong results. SQL Server detects this pattern and inserts a blocking spool (typically an eager spool) into the plan to materialize all affected rows before any updates are applied. This is **Halloween Protection**, and it is the reason many seemingly simple updates show a spool operator in their plan.
 
-*A canonical example: incrementing a key column that is part of an index used for the lookup.*
-
-```sql
-USE [stoxx_db];
-GO
-
--- Conceptual example (not executed because silver.signals_daily has no index on market_cap):
--- UPDATE silver.signals_daily
--- SET market_cap = market_cap + 1
--- WHERE market_cap < 50000000000;
-```
-
-*In a plan for this statement, SQL Server would insert an eager spool just above the `UPDATE` operator. The spool reads every qualifying row into a worktable, then the update writes them back — decoupling the read from the write and preventing the "update visible to next seek" cascade. The cost is CPU and `tempdb` memory for the spool, but the correctness guarantee is non-negotiable.*
-
-> [!info] Why it's called "Halloween"
->
-> The term dates to 1976, when IBM researchers discovered the problem while testing System R on Halloween. The name stuck. The SQL Server optimizer flags the condition as `Halloween Protection Required` in its output.
+The term dates to 1976, when IBM researchers discovered the problem while testing System R on Halloween. The name stuck. The SQL Server optimizer flags the condition as `Halloween Protection Required` in its plan output.
 
 ---
 
@@ -1545,6 +1386,10 @@ When the source table joined to the update target has multiple matching rows per
 
 `@@IDENTITY` returns the most recent identity value from **any scope in the current session**, including trigger-inserted rows in a completely unrelated table. Application code that calls `SELECT @@IDENTITY` after an `INSERT` to learn the new row's key breaks silently the first day an `AFTER INSERT` trigger with its own identity column is added. Use `SCOPE_IDENTITY()` unconditionally.
 
+### `NEWID()` as a clustered primary key | random inserts at end of table
+
+A `uniqueidentifier` column populated with `NEWID()` produces random values, which means every insert lands at an arbitrary position in a clustered B-tree. The resulting page splits, fragmentation, and write amplification can reduce insert throughput by an order of magnitude on busy systems. Use `NEWSEQUENTIALID()` instead when the clustered key must be a GUID — it produces monotonically increasing values within the current boot session, eliminating the random-insert fragmentation without giving up the uniqueness guarantee. Better yet, use an `INT` or `BIGINT` `IDENTITY` for the clustered key and relegate the GUID to a non-clustered unique index if the application surface needs it.
+
 ### Cursor loops for bulk DML
 
 Cursor-based `FETCH ... DML` loops run the DML statement one row at a time, multiplying every per-statement cost by the row count. For any DML that can be expressed set-based (which is nearly all of it), the cursor form is 10× to 1000× slower. Replace cursors with set-based `INSERT ... SELECT`, `UPDATE ... FROM ... JOIN`, `DELETE ... FROM ... JOIN`, or `MERGE`.
@@ -1579,7 +1424,7 @@ Use this table to choose the right DML tool for a given scenario.
 | Delete every row (triggers / FKs) | `DELETE` without `WHERE` |
 | Delete millions of rows without log blowup | `WHILE 1 = 1 BEGIN DELETE TOP (N) ... END` batched loop |
 | Capture old/new values of an update | `UPDATE ... OUTPUT DELETED.col, INSERTED.col` |
-| Build an audit trail without a trigger | `UPDATE ... OUTPUT ... INTO` audit table |
+| Build an audit trail without a trigger | `UPDATE ... OUTPUT ... INTO dbo.audit_*` persistent audit table |
 | Destructive read / queue pop | `DELETE TOP (1) WITH (READPAST) ... OUTPUT DELETED.*` |
 | Move rows between tables atomically | Composable DML: `INSERT ... SELECT ... FROM (DELETE ... OUTPUT DELETED.*) src` |
 | Upsert (insert-or-update) | `MERGE` — see [[11-merge-and-upsert]] |

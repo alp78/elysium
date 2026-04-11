@@ -29,7 +29,7 @@ pre code {
   padding-bottom: 0.3em;
 }
 [saved-theme="dark"] h2 {
-  color: #db6b26 !important;
+  color: #b900b9 !important;
   font-weight: 600 !important;
 }
 [saved-theme="dark"] h3 {
@@ -251,14 +251,14 @@ mark {
   border-radius: 3px;
 }
 
-/* ── Blockquotes ─────────────────────────────────────────────── */
-[saved-theme="dark"] blockquote {
+/* ── Blockquotes (exclude callouts — they get their own per-type colors) ── */
+[saved-theme="dark"] blockquote:not(.callout) {
   border-left: 3px solid #3d59a1 !important;
   background-color: rgba(31, 35, 53, 0.5);
   color: #9aa5ce;
 }
 
-[saved-theme="light"] blockquote {
+[saved-theme="light"] blockquote:not(.callout) {
   border-left: 3px solid #5a4fcf !important;
   background-color: rgba(90, 79, 207, 0.04);
   color: #4e4a6a;
@@ -290,6 +290,7 @@ a.tag-link:hover {
 .callout {
   border-radius: 6px;
   border-width: 1px;
+  border-left: 4px solid var(--color) !important;
 }
 
 .callout[data-callout="tip"] {

@@ -220,6 +220,59 @@ document.addEventListener("nav", async () => {
     )
 
     const darkMode = document.documentElement.getAttribute("saved-theme") === "dark"
+
+    // Dark deep node fills (squares, triangles, circles, clusters) — overrides
+    // the pastel defaults that mermaid derives from --light / --secondary / --tertiary.
+    const nodeColors = darkMode
+      ? {
+          primaryColor: "#24283b",
+          primaryBorderColor: "#7aa2f7",
+          primaryTextColor: "#c0caf5",
+          secondaryColor: "#3b2f50",
+          secondaryBorderColor: "#bb9af7",
+          secondaryTextColor: "#c0caf5",
+          tertiaryColor: "#163040",
+          tertiaryBorderColor: "#2ac3de",
+          tertiaryTextColor: "#c0caf5",
+          clusterBkg: "#1a1b26",
+          clusterBorder: "#565f89",
+          nodeBorder: "#7aa2f7",
+          mainBkg: "#24283b",
+          noteBkgColor: "#3b2f50",
+          noteTextColor: "#c0caf5",
+          noteBorderColor: "#bb9af7",
+          actorBkg: "#24283b",
+          actorBorder: "#7aa2f7",
+          actorTextColor: "#c0caf5",
+          labelBoxBkgColor: "#1a1b26",
+          labelBoxBorderColor: "#565f89",
+          labelTextColor: "#c0caf5",
+        }
+      : {
+          primaryColor: "#3d59a1",
+          primaryBorderColor: "#1a1b26",
+          primaryTextColor: "#f0f0f2",
+          secondaryColor: "#5a4fcf",
+          secondaryBorderColor: "#1a1b26",
+          secondaryTextColor: "#f0f0f2",
+          tertiaryColor: "#166775",
+          tertiaryBorderColor: "#1a1b26",
+          tertiaryTextColor: "#f0f0f2",
+          clusterBkg: "#3b3950",
+          clusterBorder: "#1a1b26",
+          nodeBorder: "#1a1b26",
+          mainBkg: "#3d59a1",
+          noteBkgColor: "#5a4fcf",
+          noteTextColor: "#f0f0f2",
+          noteBorderColor: "#1a1b26",
+          actorBkg: "#3d59a1",
+          actorBorder: "#1a1b26",
+          actorTextColor: "#f0f0f2",
+          labelBoxBkgColor: "#3b3950",
+          labelBoxBorderColor: "#1a1b26",
+          labelTextColor: "#f0f0f2",
+        }
+
     const gitColors = darkMode
       ? {
           git0: "#7aa2f7",
@@ -273,14 +326,9 @@ document.addEventListener("nav", async () => {
       theme: darkMode ? "dark" : "base",
       themeVariables: {
         fontFamily: computedStyleMap["--codeFont"],
-        primaryColor: computedStyleMap["--light"],
-        primaryTextColor: computedStyleMap["--darkgray"],
-        primaryBorderColor: computedStyleMap["--tertiary"],
         lineColor: computedStyleMap["--darkgray"],
-        secondaryColor: computedStyleMap["--secondary"],
-        tertiaryColor: computedStyleMap["--tertiary"],
-        clusterBkg: computedStyleMap["--light"],
         edgeLabelBackground: computedStyleMap["--highlight"],
+        ...nodeColors,
         ...gitColors,
       },
     })

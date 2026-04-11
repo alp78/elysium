@@ -1,16 +1,16 @@
 ---
-title: "12 - Execution Plans"
+title: "13 - Execution Plans"
 tags: [sql, sql-server, tsql]
 aliases: [query execution plan, estimated plan, actual plan, graphical plan, showplan, query plan]
 description: "How to read SQL Server execution plans in SSMS: right-to-left data flow, estimated vs actual plans, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, batch mode, and Intelligent Query Processing. Includes all programmatic XML queries."
 created: 2026-03-22
-updated: 2026-04-08
+updated: 2026-04-11
 status: complete
 ---
 
 # Execution Plans
 
-> [!quote]
+> [!quote] The optimizer is the most sophisticated piece of database software
 > "The query optimizer is the most sophisticated piece of software in any database system."
 >
 > — **Michael Stonebraker**, ACM interview
@@ -73,9 +73,9 @@ flowchart TD
 
 This page mixes read-only DMV queries, session-level instrumentation, and database-scoped configuration changes. Run the setup below once in SSMS before executing the later examples so the plan cache, Query Store, and last-plan DMVs all have real `stoxx` data to inspect.
 
-### SSMS and database context
+### SQL Server | lab setup | database context and capture flags
 
-All later examples assume SQL Server 2022, database compatibility level 160, and the local `stoxx` lab database.
+Every later example in the note assumes the same baseline: SQL Server 2022 at compatibility level 160, the local `stoxx` lab database, Query Store in `READ_WRITE` mode with broad capture, `LAST_QUERY_PLAN_STATS` on, and the advanced optimizer feedback switches enabled. The four components below establish that baseline, seed a reproducible demo query into the plan cache and Query Store, expose the `session_id` lookup you need for live-plan capture, and finally walk back the capture settings when the lab session is over.
 
 #### Use the `stoxx` lab database
 
@@ -83,7 +83,7 @@ This sets the database context and verifies the database-level features that the
 
 *Set the database context and confirm the lab instance state before running the later DMV queries.*
 
-> [!info]-
+> [!info]- `USE stoxx` and diagnostic row breakdown
 >
 > This batch switches the SSMS session to the `stoxx` database and returns one diagnostic row that confirms the database-level features the rest of the note relies on.
 >
@@ -133,7 +133,7 @@ Several later sections assume Query Store is writable, one-off queries are captu
 
 *Enable the database-scoped capture and feedback features referenced throughout the note.*
 
-> [!warning]
+> [!warning] Later examples depend on these features being enabled
 >
 > Several later examples in this note will either return incomplete data or not work at all if these features are not enabled first.
 >
@@ -144,7 +144,7 @@ Several later sections assume Query Store is writable, one-off queries are captu
 > - In production, do not enable everything blindly just because the lab note does. `QUERY_CAPTURE_MODE = ALL` increases Query Store write volume and storage use, and `LAST_QUERY_PLAN_STATS = ON` adds lightweight runtime-plan capture overhead. The optimizer-feedback features are usually appropriate for modern production databases, but they should still be enabled intentionally, monitored, and validated against your workload.
 > - For a lab or troubleshooting session, enabling these settings up front is the simplest way to guarantee that every later command in this page produces observable output.
 
-> [!success]
+> [!success] Enable broadly in lab, enable narrowly in production
 >
 > Safe pattern:
 >
@@ -152,7 +152,7 @@ Several later sections assume Query Store is writable, one-off queries are captu
 > - In production, prefer enabling Query Store in `READ_WRITE` mode first, keep `QUERY_CAPTURE_MODE = AUTO` unless you specifically need ad-hoc capture, and turn on `LAST_QUERY_PLAN_STATS` only when you need last-actual-plan visibility badly enough to justify the extra overhead.
 > - If you skip this batch, expect the later sections on Query Store, `sys.dm_exec_query_plan_stats`, CE Feedback, PSP, persisted Memory Grant Feedback, and DOP Feedback to be partially or completely unavailable.
 
-> [!info]-
+> [!info]- `ALTER DATABASE` Query Store and scoped-config batch breakdown
 >
 > This batch enables the database-scoped features that later plan-analysis queries assume are already active.
 >
@@ -189,7 +189,7 @@ Many later examples retrieve plans from cache or Query Store. This query gives t
 
 *Run one tagged query three times so the plan-cache, Query Store, and `LAST_QUERY_PLAN_STATS` examples all have a known statement to inspect.*
 
-> [!info]-
+> [!info]- Tagged demo `SELECT` query breakdown
 >
 > This query seeds both the plan cache and Query Store with one stable, easy-to-find statement that later examples can target.
 >
@@ -354,7 +354,7 @@ The `sys.dm_exec_query_statistics_xml` example later in the page needs the `sess
 > ```
 >
 
-> [!info]-
+> [!info]- `sys.dm_exec_requests` live triage query breakdown
 >
 > This production-focused query surfaces live user requests with enough context to identify who is running them, what they are waiting on, how long they have been active, how much work they have already done, and which exact statement is currently in flight.
 >
@@ -465,12 +465,12 @@ Return the capture settings to lighter defaults after collecting the required pl
 > [!warning] Run cleanup only after you have captured the outputs you need
 >
 > This batch reduces future capture detail. If you run it too early, later sections that rely on broad Query Store capture or last actual plan retention may stop returning the evidence you expect. It does not delete existing Query Store rows, but it does make the environment less observant for subsequent demos.
->
+
 > [!success] Use it as an end-of-lab reset
 >
 > Keep the richer settings on while you are collecting plans, XML, waits, and feedback metadata. Run the cleanup batch only when you are done with the walkthrough or want to return the lab to a lighter baseline.
 
-> [!info]-
+> [!info]- Capture cleanup batch breakdown
 >
 > This cleanup batch reverts the extra capture overhead introduced by the setup section without deleting the data you already captured.
 >
@@ -488,6 +488,16 @@ GO
 ---
 
 ## Estimated vs. Actual Plans
+
+SQL Server exposes three different plan views depending on whether the query has already executed, is still running, or is being inspected before execution. Getting the right one for your diagnostic goal matters: estimated plans can mislead when statistics are stale, actual plans carry the runtime counters you actually need to reason about performance, and live plans animate data flow while the query is still in progress.
+
+### SQL Server | plan variants | estimated, actual, and live capture
+
+Choosing between estimated, actual, and live plans is almost always the first question when you start a performance investigation. The H4 below is a single comparison table that maps each plan variant to the SSMS shortcut or T-SQL flag that produces it and to the information it actually carries.
+
+#### Compare estimated, actual, and live plan capture options
+
+*Map each plan variant to how you produce it and what diagnostic information it contains.*
 
 | Plan type | How to get it | What it shows |
 |---|---|---|
@@ -533,7 +543,11 @@ flowchart RL
     Join --> Select
 ```
 
-### Operators, arrows, and cost tooltips
+### SQL Server | plan tree | operators, arrows, and cost tooltips
+
+Reading a SQL Server plan is a mechanical process once you know the order and the three properties that matter most on each operator. The H4 below walks that sequence end-to-end for the common shapes you will see on pipeline and dashboard queries.
+
+#### Walk the plan from data sources to final SELECT
 
 1. **Start at the far right.** These are the data access operators — where SQL Server touches tables/indexes. Look at their type:
    - **Index Seek** (good) — B-tree navigation to specific rows, O(log n). Requires [SARGable predicates](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) in the WHERE clause.
@@ -564,13 +578,15 @@ SSMS is the standard tool for interactive plan analysis, but data pipelines run 
 >
 > Query Store is a built-in flight recorder for query performance data, introduced in SQL Server 2016. When enabled (`ALTER DATABASE db SET QUERY_STORE = ON`), it persists execution plans, runtime statistics, and wait stats to disk — surviving plan cache eviction and server restarts. Query Store is required for several SQL Server 2022 [Intelligent Query Processing](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/execution-plans#intelligent-query-processing) features (CE Feedback, Memory Grant Feedback Persistence, DOP Feedback).
 
-### Capturing plans programmatically
+### SQL Server | DMV capture | programmatic plan retrieval
 
-#### sys.dm_exec_query_plan — capture from plan cache
+Pipelines run unattended, so you need ways to recover a plan after the query has finished. The three H4s below cover the three main sources: the volatile plan cache for recently executed statements, inline capture during execution, and the durable Query Store history that survives cache eviction and restarts.
+
+#### Retrieve a cached plan from the plan cache
 
 The plan cache holds compiled plans in memory. This query retrieves the plan for a specific query after it has executed. The plan cache is volatile — plans are evicted under memory pressure or after DDL changes.
 
-> [!info]-
+> [!info]- `sys.dm_exec_query_plan` plan-cache lookup breakdown
 >
 > This query searches the plan cache for the tagged demo statement and returns the cached XML plan together with averaged resource metrics from the cache metadata.
 >
@@ -625,19 +641,19 @@ _The first table is cache-level aggregate telemetry from `sys.dm_exec_query_stat
 
 > [!tip] Click the XML result in SSMS to open the graphical plan viewer.
 
-#### SET STATISTICS XML — capture live XML plan inline
+#### Capture the live actual plan inline with a session flag
 
 Wrapping a query with `SET STATISTICS XML ON/OFF` adds the full execution plan as an additional XML result set column. This is the standard method for capturing actual plans from pipeline scripts during development.
 
 > [!warning] Extra XML result set and session-scoped instrumentation
 >
 > `SET STATISTICS XML ON` changes the shape of what the session returns: every subsequent statement emits an extra XML plan result set until you turn it off. That is usually fine in SSMS, but it can confuse application code, automation, or notebooks that expect only the normal query result. It also adds overhead, so do not leave it on in busy production troubleshooting loops.
->
+
 > [!success] Use it in an isolated SSMS session and turn it off immediately after the target query
 >
 > This pattern is appropriate for labs, one-off investigations, and scripted captures where you explicitly want the actual plan XML inline with the query output.
 
-> [!info]-
+> [!info]- `SET STATISTICS XML ON` inline capture breakdown
 >
 > This batch executes the demo query and tells SQL Server to append the actual execution plan as an extra XML result set.
 >
@@ -690,11 +706,11 @@ _The first table is the business rowset, and the second table is the actual-plan
 | `key_lookup_logical_reads` | Similar to or higher than seek reads | Depends | Lookup overhead is material. | Consider a covering index if this query is important or frequent. |
 | `operators` | `Index Seek -> Clustered Index Seek` | Depends | Good selectivity, but the index does not cover all requested columns. | Fine for small row counts; risky if row count grows. |
 
-#### sys.query_store_plan — retrieve persisted plans from Query Store
+#### Retrieve persisted plan history from Query Store
 
 Query Store captures plans across restarts, making it the preferred source for historical plan analysis and regression detection. Unlike the plan cache, plans in Query Store are durable.
 
-> [!info]-
+> [!info]- `sys.query_store_plan` four-way join breakdown
 >
 > This query reads persisted plan history from Query Store and returns recent plan records for the seeded demo query.
 >
@@ -747,15 +763,15 @@ _This row is the durable Query Store version of the same query shape seen in the
 >
 > `avg_ms` and `avg_logical_io_reads` do not represent the query for all time. They represent one Query Store runtime-stats row for one plan in one interval. If the same query has multiple plans or multiple intervals, you must aggregate or compare those rows explicitly before making historical claims.
 
-### Lightweight query profiling
+### SQL Server | lightweight profiling | in-flight and last-actual plans
 
-SQL Server 2019+ enables **lightweight profiling (v3) by default** — collecting per-operator row counts for every query execution with minimal overhead (~2%). This replaces the need for `SET STATISTICS XML ON` in many production scenarios, because you can retrieve the last actual execution plan for any session without adding instrumentation to the query itself.
+SQL Server 2019+ enables **lightweight profiling (v3) by default** — collecting per-operator row counts for every query execution with minimal overhead (~2%). This replaces the need for `SET STATISTICS XML ON` in many production scenarios, because you can retrieve the last actual execution plan for any session without adding instrumentation to the query itself. The two H4s below use its two main access points: a live in-flight lookup by `session_id` and a retroactive lookup for the last actual plan of a statement that already finished.
 
-#### sys.dm_exec_query_statistics_xml — retrieve in-flight actual plan
+#### Capture the live in-flight actual plan of a running query
 
 This DMV returns the actual execution plan (with runtime statistics) for a currently running query. Call it from a separate session, passing the target session's `session_id`. No prior setup is needed on SQL Server 2019+.
 
-> [!info]-
+> [!info]- `sys.dm_exec_query_statistics_xml` in-flight plan breakdown
 >
 > This query asks SQL Server for the live actual plan of a request that is still running right now.
 >
@@ -777,11 +793,11 @@ FROM sys.dm_exec_query_statistics_xml(@session_id);
 >
 > Reuse the production `sys.dm_exec_requests` query and pick the `session_id` for the live user request you want to inspect.
 
-#### LAST_QUERY_PLAN_STATS — persist last actual plan stats
+#### Retrieve the last actual plan of a completed statement
 
 When enabled, SQL Server retains the last actual execution plan statistics for completed queries, accessible via `sys.dm_exec_query_plan_stats`. This gives you actual plans for queries that have already finished, without requiring `SET STATISTICS XML ON` during execution.
 
-> [!info]-
+> [!info]- `sys.dm_exec_query_plan_stats` last-actual-plan breakdown
 >
 > This query retrieves the last actual execution plan captured for the tagged demo statement after that statement has already finished running.
 >
@@ -829,8 +845,8 @@ _This DMV gives you the last known actual plan after execution has already finis
 > [!warning] Permissions Change in SQL Server 2022
 >
 > `sys.dm_exec_query_statistics_xml` requires `VIEW SERVER STATE` on SQL Server 2019 and earlier, but `VIEW SERVER PERFORMANCE STATE` on SQL Server 2022+.
->
-> [!success] Grant the new permission on SQL Server 2022+ instances:
+
+> [!success] Grant the new permission on SQL Server 2022+ instances
 >
 > `GRANT VIEW SERVER PERFORMANCE STATE TO [pipeline_user];`
 
@@ -868,9 +884,11 @@ flowchart RL
     style Scan fill:#3b1f2b,stroke:#f7768e,stroke-width:3px,color:#c0caf5
 ```
 
-### Interpreting and extracting cost data
+### SQL Server | plan cost | interpretation and extraction
 
-#### Estimated Operator Cost — how to interpret cost percentages
+Estimated Operator Cost percentages come from the optimizer's internal model, not from real execution. The four H4s below first translate the percentage ranges into operational thresholds, then show how to extract per-operator cost data from plan XML, how to split that cost into I/O and CPU components, and finally how to cross-check estimated cost against real `STATISTICS TIME/IO` numbers for the same query.
+
+#### Interpret Estimated Operator Cost percentage ranges
 
 | Cost range | What it means | Action |
 |---|---|---|
@@ -879,9 +897,9 @@ flowchart RL
 | 20-50% | Significant | Investigate — might benefit from an index or query rewrite |
 | 50-100% | Dominant | This operator is the bottleneck. Fix this first. |
 
-#### sys.dm_exec_query_stats + XML nodes — extract operator costs from plan
+#### Shred operator costs from cached plan XML
 
-> [!info]-
+> [!info]- Operator-cost XML shredder breakdown
 >
 > This two-step batch finds the most recent tagged demo statement and then shreds its XML plan into one row per physical operator.
 >
@@ -935,7 +953,7 @@ _These numbers come from the optimizer's cost model, not from measured runtime. 
 | `io_cost` greater than `cpu_cost` | Depends | SQL Server expects page access to dominate. | Investigate selectivity, scans, and indexing first. |
 | `cpu_cost` greater than `io_cost` | Depends | SQL Server expects computation to dominate. | Investigate sorts, hashes, and expressions first. |
 
-#### EstimateIO vs EstimateCPU — cost breakdown per operator
+#### Break down per-operator cost into I/O versus CPU
 
 Each operator's cost is split into I/O cost and CPU cost:
 
@@ -950,19 +968,19 @@ Each operator's cost is split into I/O cost and CPU cost:
 >
 > Run with `SET STATISTICS TIME ON; SET STATISTICS IO ON;` alongside the actual execution plan (Ctrl+M). Compare the reported elapsed time per statement against the plan's cost percentages — a mismatch signals stale statistics. Run `UPDATE STATISTICS table WITH FULLSCAN` to correct estimates.
 
-#### SET STATISTICS TIME/IO — get actual timing per query
+#### Capture actual timing and logical reads per statement
 
 These session-level settings report actual I/O and CPU measurements per statement — not per operator, but they validate total query-level performance against the plan's cost distribution.
 
 > [!warning] Session-scoped diagnostics with noisy output
 >
 > `SET STATISTICS TIME ON` and `SET STATISTICS IO ON` keep emitting Messages-pane diagnostics for every later statement in the same session until they are turned off. That is safe for manual troubleshooting, but it is noisy in shared scripts and can break parsers that expect clean output. The numbers are statement-level totals, not operator-level timings, so do not over-interpret them as a substitute for the actual plan.
->
+
 > [!success] Use them to validate the plan, not replace it
 >
 > Run them in SSMS or another manual session alongside the actual execution plan, capture the Messages output you care about, then turn both settings back off immediately.
 
-> [!info]-
+> [!info]- `SET STATISTICS TIME/IO ON` instrumentation breakdown
 >
 > This batch runs the demo query with both timing and I/O instrumentation enabled so SSMS writes real resource usage to the Messages pane.
 >
@@ -1023,7 +1041,11 @@ The **cardinality estimator** predicts how many rows each operator will process.
 
 **The golden rule:** Compare **Estimated Number of Rows** vs. **Actual Number of Rows** for every operator in the actual execution plan. A ratio > 10x in either direction signals a problem.
 
-### Detecting estimation errors
+### SQL Server | cardinality | detect estimation errors
+
+Cardinality estimation errors are the single most common root cause of bad plans. Detection starts in the SSMS actual plan, then moves to Query Store for historical ranking, then to plan XML for per-operator comparison of estimated and actual row counts. The three H4s below cover those three detection surfaces in that order.
+
+#### Spot bad row-count estimates in the SSMS actual plan
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1060,16 +1082,14 @@ flowchart LR
     end
 ```
 
-#### SSMS Actual Execution Plan — spot bad cardinality estimates
-
 1. Run the query with **Include Actual Execution Plan** (Ctrl+M)
 2. Hover over each operator — the tooltip shows both Estimated and Actual rows
 3. Look for **thick arrows** where you expect thin ones (or vice versa)
 4. SSMS 18+ shows a **warning icon** (yellow triangle) when estimates are off by > 10x
 
-#### sys.query_store_runtime_stats — find worst cardinality estimation errors
+#### Rank the worst cardinality regressions in Query Store
 
-> [!info]-
+> [!info]- `sys.query_store_runtime_stats` slowest-plan triage breakdown
 >
 > This query does not calculate estimate-versus-actual row mismatches directly. Instead, it pulls slow Query Store plan rows so you can open those plans and inspect their row-estimation errors manually.
 >
@@ -1108,9 +1128,9 @@ _This zero-row result is informative, not a failure. Query Store did have runtim
 | `rows_returned` | `0` | Depends | The query ran successfully, but no row met the filter. | Either the workload is healthy, the interval is quiet, or the threshold is too high. |
 | `rows_returned` | `>0` | ✅ | At least one Query Store runtime row crossed the threshold. | The returned statements are valid tuning candidates. |
 
-#### XML plan EstimateRows vs ActualRows — extract estimated vs actual per operator
+#### Shred estimated versus actual rows from cached plan XML
 
-> [!info]-
+> [!info]- `EstimateRows` vs `ActualRows` XPath breakdown
 >
 > This two-step batch finds the tagged demo statement and then extracts estimated and actual row counts from each operator in its actual execution plan.
 >
@@ -1170,9 +1190,11 @@ _The important signal here is the absence of `actual_rows`, not the operator nam
 | `actual_to_estimated_ratio` | Close to `1x` | ✅ | Estimate quality is good. | The optimizer had a reasonable row-count model. |
 | `actual_to_estimated_ratio` | `>10x` or `<0.1x` | ❌ | Large estimation error. | Expect poorer join choices or memory grants. |
 
-### Causes and fixes
+### SQL Server | CE model | causes and fixes
 
-#### Common causes of bad cardinality estimates and fixes
+Once an estimation error is identified, the next question is which CE model the database is running and whether switching back to the legacy estimator (or fixing statistics) produces a better plan. The three H4s below list the common root causes, expose the current compatibility level, and show how to force the legacy CE per statement when the default 160 model is producing a worse plan.
+
+#### Map common causes of bad estimates to their fixes
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -1183,11 +1205,11 @@ _The important signal here is the absence of `actual_rows`, not the operator nam
 | Estimates wrong on filtered data | Statistics histogram has insufficient granularity | `UPDATE STATISTICS ... WITH FULLSCAN` or filtered statistics |
 | Consistently bad on complex predicates | CE model limitation (e.g., `WHERE a = 1 OR b = 2`) | Break into UNION ALL, or use plan guides |
 
-#### sys.databases compatibility_level — legacy vs new Cardinality Estimator
+#### Confirm which CE model the database is running
 
 SQL Server has two CE models. The **legacy CE** (introduced in SQL Server 7.0) assumes full independence between predicates. The **new CE** (introduced in SQL Server 2014, compatibility level 120+) uses a partial correlation model and handles ascending keys and multi-statement TVFs better. SQL Server 2022 uses CE 160. If you're seeing bizarre estimates on upgraded databases, check which model is active:
 
-> [!info]-
+> [!info]- `sys.databases.compatibility_level` lookup breakdown
 >
 > This query asks SQL Server which compatibility level the `stoxx` database is currently using.
 >
@@ -1218,19 +1240,19 @@ _This output confirms the database-level optimizer generation for `stoxx`. `160`
 | 150 | New CE (SQL Server 2019) |
 | 160 | New CE (SQL Server 2022, recommended) |
 
-#### FORCE_LEGACY_CARDINALITY_ESTIMATION — override CE model per query
+#### Override the CE model for one statement with a query hint
 
 If the new CE gives worse estimates for a specific query, you can force the legacy model without changing the database compatibility level. You can also toggle the CE model at the database level using `ALTER DATABASE SCOPED CONFIGURATION SET LEGACY_CARDINALITY_ESTIMATION = ON`.
 
 > [!warning] Last-resort hint, not a first fix
 >
 > `FORCE_LEGACY_CARDINALITY_ESTIMATION` changes compilation behavior for that statement and can make the plan look better for one workload slice while making it worse for others. Do not jump to this hint before checking stale statistics, non-SARGable predicates, skewed data, and missing indexes. If you keep the hint permanently, document why, because it becomes a long-lived optimizer override.
->
+
 > [!success] Compare both plans side by side before deciding
 >
 > Run the same query with and without the hint, capture the actual plans plus `STATISTICS IO/TIME`, and keep the hint only if the measured outcome is consistently better on the real workload.
 
-> [!info]-
+> [!info]- `FORCE_LEGACY_CARDINALITY_ESTIMATION` hint breakdown
 >
 > This query runs one real `silver.signals_daily` lookup while forcing SQL Server to compile that single statement with the legacy cardinality estimator.
 >
@@ -1255,7 +1277,7 @@ OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 
 _This grid only confirms that the hinted query returned the expected `euro_stoxx_50` rows. The point of the hint is not the row data but the compiled plan behind it, so the real comparison is whether row estimates, join choices, or memory grants change when you run the same statement with and without the legacy CE hint._
 
-### CE Feedback (SQL Server 2022)
+### SQL Server | CE Feedback | 2022 optimizer feedback loop
 
 SQL Server 2022 introduces **Cardinality Estimation Feedback**, an Intelligent Query Processing feature that automatically detects and corrects significant CE errors at runtime. Instead of manually diagnosing estimation mismatches and applying hints, CE Feedback runs a three-phase cycle:
 
@@ -1269,15 +1291,21 @@ CE Feedback targets three specific CE model assumptions:
 - **Join containment** — switches between simple containment and base containment assumptions
 - **Row goal** — modifies the row goal optimization for TOP, EXISTS, and IN subqueries
 
+#### Enable CE Feedback at the database scope
+
+This single database-scoped switch is the only command you need to turn CE Feedback on. The enablement is silent — no rows are returned — and the resulting feedback loop only becomes visible after repeated executions of eligible queries. The prerequisites and the telemetry surfaces you use to confirm that SQL Server is applying feedback are explained in the callouts immediately below.
+
+*Enable the CE Feedback Intelligent Query Processing feature for the current database.*
+
 > [!warning] CE Feedback Requirements
 >
 > CE Feedback requires compatibility level 160 and Query Store enabled in READ_WRITE mode. If a forced plan already exists in Query Store for a query, CE Feedback is skipped for that query.
->
-> [!success] Enable CE Feedback and verify it is active:
+
+> [!success] Enable CE Feedback and verify it is active
 >
 > Run the configuration batch below after confirming that the database is already at compatibility level 160 and Query Store is writable.
 
-> [!info]-
+> [!info]- `CE_FEEDBACK = ON` enablement breakdown
 >
 > This batch enables CE Feedback for the current database and names the two telemetry surfaces you can use to confirm that SQL Server is applying feedback.
 >
@@ -1296,9 +1324,11 @@ ALTER DATABASE SCOPED CONFIGURATION SET CE_FEEDBACK = ON;
 
 SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. Instead of correlating server-wide [wait stats](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/wait-stats-analysis) with specific queries, you can see exactly what each query waited on.
 
-### Reading per-query waits
+### SQL Server | plan wait stats | per-query wait extraction
 
-#### SSMS WaitStats node — per-query wait stats in execution plans
+SQL Server records per-query waits inside the actual plan itself, not only in the server-wide `sys.dm_os_wait_stats` view. The two H4s below cover the two ways you extract those waits: interactively through the SSMS plan properties panel, and programmatically by shredding the embedded `WaitStats` XML node out of cached plans.
+
+#### Read per-query waits from the SSMS plan properties panel
 
 1. Run query with **Include Actual Execution Plan** (Ctrl+M)
 2. Right-click on the **root operator** (leftmost — `SELECT`, `INSERT`, etc.)
@@ -1334,9 +1364,9 @@ flowchart TD
     Waits --> N --> I3
 ```
 
-#### XML plan WaitStats/Wait nodes — extract per-query waits from plan cache
+#### Shred per-query waits from cached plan XML
 
-> [!info]-
+> [!info]- `WaitStats/Wait` XML shredder breakdown
 >
 > This query opens cached plan XML for the tagged demo statement and shreds the embedded `WaitStats` node into one row per wait type.
 >
@@ -1368,9 +1398,11 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 
 _A zero-row result here does not mean the query never waited; it means the matched cached plan XML did not contain embedded per-query wait nodes. This often happens on very fast statements or when the plan source is not an actual-plan capture that recorded waits._
 
-### Interpreting wait types
+### SQL Server | wait types | per-query interpretation reference
 
-#### PAGEIOLATCH, WRITELOG, CXPACKET, LCK_M — interpreting per-query waits
+Once you have per-query waits, you need to translate wait type names into operational causes. The two H4s below first map the wait types you will actually encounter on pipeline queries to their causes and fixes, then explain how to correlate per-query waits with the server-wide cumulative counters in `sys.dm_os_wait_stats`.
+
+#### Interpret the common wait types seen on pipeline queries
 
 | Wait type in plan | Meaning | Action |
 |---|---|---|
@@ -1382,7 +1414,7 @@ _A zero-row result here does not mean the query never waited; it means the match
 | `MEMORY_GRANT_QUEUE` | Query waited in the memory grant queue before it could start | Too many concurrent queries requesting sort/hash memory — reduce parallelism or add RAM |
 | `SOS_SCHEDULER_YIELD` | CPU was overloaded, query had to yield its time slice | CPU pressure — optimize the query or add vCPUs |
 
-#### sys.dm_os_wait_stats — correlation with server-wide wait stats
+#### Correlate per-query waits with server-wide cumulative waits
 
 Per-query waits tell you "this specific query waited on X." Server-wide waits (from `sys.dm_os_wait_stats`) tell you "the entire workload is bottlenecked on X." Use both:
 
@@ -1394,7 +1426,15 @@ Per-query waits tell you "this specific query waited on X." Server-wide waits (f
 
 ## Critical Plan Operators for Batch Workloads
 
-When reviewing execution plans for data pipeline queries (bronze→silver→gold MERGE operations, bulk INSERTs, aggregation jobs), certain operators have specific expectations. This table maps each operator to its expected context and the scenarios where its presence signals a problem.
+When reviewing execution plans for data pipeline queries (bronze→silver→gold MERGE operations, bulk INSERTs, aggregation jobs), certain operators have specific expectations. The same operator can be healthy on one query shape and a strong red flag on another, so the reader needs a quick reference that pairs each operator with its expected pipeline context.
+
+### SQL Server | pipeline operators | expected and red-flag reference
+
+The H4 below is a single reference table that maps the operators you will encounter most often on `stoxx`-style pipeline workloads to the query shape where they are expected and to the scenarios where their presence should trigger further investigation.
+
+#### Map plan operators to pipeline expectations and red flags
+
+*Reference table for interpreting each operator in the context of bronze/silver/gold pipeline queries.*
 
 | Operator | Expected in Pipeline | Red Flag |
 |----------|---------------------|----------|
@@ -1413,11 +1453,13 @@ When reviewing execution plans for data pipeline queries (bronze→silver→gold
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's pyodbc sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents [index seeks](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries).
 
-### Detecting and fixing implicit conversions
+### SQL Server | implicit conversions | detect and fix
 
-#### sys.dm_exec_query_plan PlanAffectingConvert — detect implicit conversions
+Implicit conversions silently break index usability and are common on pipelines that send string parameters from a Python client. The two H4s below first detect the problem server-side by scanning cached plans for the `PlanAffectingConvert` warning, then fix the root cause client-side in the pyodbc driver so the conversion never reaches SQL Server in the first place.
 
-> [!info]-
+#### Detect implicit conversions in cached plan XML
+
+> [!info]- `PlanAffectingConvert` detection query breakdown
 >
 > This query searches cached plans for implicit conversion warnings and ranks the matching statements by average logical reads.
 >
@@ -1460,15 +1502,17 @@ _This output is useful mostly as a caution about scope. The XML warning filter i
 | `avg_reads` | `481` to `1395` | Depends | Moderate to high logical I/O in this sample. | Worth inspecting if these are application queries rather than tooling queries. |
 | `avg_reads` | `>10000` | ❌ | Very heavy page-touch footprint. | If the query is real workload SQL, the conversion warning deserves urgent review. |
 
-#### pyodbc setencoding — fix implicit NVARCHAR→VARCHAR conversion
+#### Fix NVARCHAR→VARCHAR conversion at the pyodbc driver
+
+The detection query above finds implicit conversions after they have already reached the server. The root fix is to stop them ever reaching the server by telling pyodbc to send `VARCHAR` bytes when the target column is `VARCHAR`, instead of defaulting to `NVARCHAR`. The two short snippets below cover the two places this matters: the connection-level encoding setup, which affects every statement on the connection, and the per-cursor `fast_executemany` path used during bulk INSERT.
+
+*Configure the pyodbc connection encoding and enable `fast_executemany` to eliminate implicit `NVARCHAR`→`VARCHAR` conversion at the driver.*
 
 ```python
-# In your pipeline connection setup
 conn.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')
 conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
 conn.setencoding(encoding='utf-8')
 
-# Or per-cursor: use fast_executemany with explicit types
 cursor.fast_executemany = True
 cursor.executemany("INSERT INTO ...", rows)
 ```
@@ -1483,11 +1527,13 @@ cursor.executemany("INSERT INTO ...", rows)
 
 Parameter sniffing is less common in pipelines (queries use literal values, not stored procedures), but it affects parameterized queries from pyodbc.
 
-### Detecting parameter sniffing
+### SQL Server | parameter sniffing | CPU-variance detection
 
-#### sys.dm_exec_query_stats min/max worker_time — detect parameter sniffing
+Parameter sniffing shows up as the same cached statement consuming wildly different amounts of CPU across executions. The H4 below uses `sys.dm_exec_query_stats` to rank cached statements by CPU variance, which is a reliable first-pass heuristic for finding parameter-sensitive statements before deciding which mitigation to apply.
 
-> [!info]-
+#### Rank cached statements by CPU variance across executions
+
+> [!info]- Worker-time variance detection breakdown
 >
 > This query looks for cached statements whose CPU time varies dramatically between executions, which is one signal that parameter sniffing might be involved.
 >
@@ -1530,19 +1576,21 @@ _This output is a heuristic shortlist, not a verdict. A `variance_ratio` above `
 | `variance_ratio` | `>10x` | ❌ | Strong variability. | Good candidate for plan inspection, parameter review, or PSP analysis. |
 | `query_text` | Internal system or tooling SQL | Depends | The heuristic found a variable statement, but not your app workload. | Narrow the text filter before drawing application conclusions. |
 
-### Traditional mitigations
+### SQL Server | query hints | traditional PS mitigations
 
-#### OPTIMIZE FOR UNKNOWN, OPTION (RECOMPILE) — parameter sniffing mitigations
+Before SQL Server 2022 introduced PSP, the two standard mitigations were statement-level query hints: `OPTIMIZE FOR UNKNOWN` compiles a single generic plan based on average statistics, and `OPTION (RECOMPILE)` rebuilds the plan on every execution. The H4 below shows the exact syntax for both hints and explains when each one is the right trade-off.
+
+#### Apply OPTIMIZE FOR UNKNOWN and OPTION (RECOMPILE)
 
 > [!warning] Both hints trade plan quality for predictability in different ways
 >
 > `OPTIMIZE FOR UNKNOWN` can protect you from a bad sniffed parameter, but it does so by asking for a generic plan that may be mediocre for every parameter value. `OPTION (RECOMPILE)` does the opposite: it can produce an excellent plan for the current value, but it adds compile CPU every time the statement runs and prevents normal plan reuse for that statement.
->
+
 > [!success] Choose the narrowest mitigation that fits the workload
 >
 > Use `OPTIMIZE FOR UNKNOWN` when one stable reusable plan is good enough across the parameter range. Use `RECOMPILE` when executions are infrequent and per-execution plan quality matters more than compile overhead. Measure both against the unhinted version before keeping either.
 
-> [!info]-
+> [!info]- `OPTIMIZE FOR UNKNOWN` and `RECOMPILE` hint breakdown
 >
 > This block shows two different statement-level mitigations for parameter-sensitive behavior: one compiles a generic plan, and the other recompiles on every execution.
 >
@@ -1593,25 +1641,27 @@ _These two tables are only rowset previews. The first table is the statement com
 >
 > Use `OPTION (RECOMPILE)` sparingly — only on queries that run a few times per pipeline (not thousands of times in a loop). Recompilation has CPU overhead.
 
-### Parameter Sensitive Plan Optimization (SQL Server 2022)
+### SQL Server | PSP | 2022 Parameter Sensitive Plan Optimization
+
+SQL Server 2022 ships Parameter Sensitive Plan Optimization (PSP), an Intelligent Query Processing feature that lets the optimizer keep multiple cached plan variants for the same parameterized statement and select the right one at execution time based on the input parameter value. The two H4s below cover the full PSP operational lifecycle: enabling it at the database scope so eligible statements start getting multiple plan variants, and then narrowly disabling it on one specific regressing statement while leaving the database-wide setting on.
 
 SQL Server 2022 introduces **Parameter Sensitive Plan (PSP) Optimization**, a built-in solution to parameter sniffing for queries over non-uniform data distributions. Instead of caching a single plan per parameterized query, PSP creates a **dispatcher plan** that selects among multiple **plan variants** at runtime based on the actual parameter value.
 
 The dispatcher evaluates the parameter against boundary values derived from the statistics histogram, then routes execution to the cached variant optimized for that value range. For example, a query filtering on `_index` might have one variant with a Nested Loops plan for selective values (few rows) and another with a Hash Join plan for non-selective values (many rows).
 
-#### Enabling and disabling PSP
+#### Enable PSP at the database scope
 
 PSP is enabled by default at compatibility level 160. It applies automatically to eligible parameterized queries — no query hints needed. Query Store is recommended (not required) for full observability.
 
 > [!warning] Database-scoped feature with workload-wide effects
 >
 > This setting affects future compilations across the database, not just one query. PSP is usually helpful on skewed data distributions, but it can increase the number of cached plans for one statement and change how you troubleshoot plan cache behavior. If you are testing regressions, compare before and after under the same workload.
->
+
 > [!success] Make the prerequisite explicit, then validate on real skewed queries
 >
 > In this note, the command is mainly there to make the lab reproducible. In practice, keep PSP on when compatibility level 160 and parameter sniffing are both intended, then validate its effect on the parameterized statements that actually show skew.
 
-> [!info]-
+> [!info]- `PARAMETER_SENSITIVE_PLAN_OPTIMIZATION = ON` breakdown
 >
 > This statement explicitly enables Parameter Sensitive Plan Optimization for the current database.
 >
@@ -1624,19 +1674,19 @@ PSP is enabled by default at compatibility level 160. It applies automatically t
 ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SENSITIVE_PLAN_OPTIMIZATION = ON;
 ```
 
-#### DISABLE_PARAMETER_SENSITIVE_PLAN — disable PSP per query
+#### Opt one statement out of PSP with a query hint
 
 If PSP causes plan cache bloating or unexpected regressions, disable it at the query level without affecting other queries:
 
 > [!warning] PSP changes plan-cache behavior for the whole database
 >
 > Enabling PSP is usually beneficial on skewed parameterized workloads, but it allows SQL Server to keep multiple plan variants for qualifying statements. That can change memory use, troubleshooting patterns, and the number of plans you see for one query. Do not assume PSP is active just because this setting is on: `PARAMETER_SNIFFING` must also be on, compatibility level must support it, and the statement must qualify.
->
+
 > [!success] Enable globally, disable narrowly
 >
 > The preferred pattern is to keep PSP enabled at the database scope, observe whether the workload improves, and use `DISABLE_PARAMETER_SENSITIVE_PLAN` only on the specific statement that regresses.
 
-> [!info]-
+> [!info]- `DISABLE_PARAMETER_SENSITIVE_PLAN` per-query hint breakdown
 >
 > This query shows how to opt one parameterized statement out of PSP while leaving the database-wide PSP setting enabled.
 >
@@ -1666,8 +1716,8 @@ _This rowset again only proves that the statement ran and returned the intended 
 > [!warning] PSP Interactions
 >
 > PSP is automatically disabled when trace flag 4136 is active or when `PARAMETER_SNIFFING = OFF` is set at the database level. If you have either of these legacy mitigations in place, PSP will not activate even at compatibility level 160.
->
-> [!success] To use PSP, remove legacy parameter sniffing workarounds:
+
+> [!success] Remove legacy parameter sniffing workarounds to let PSP run
 >
 > `ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SNIFFING = ON;`
 
@@ -1677,13 +1727,15 @@ _This rowset again only proves that the statement ran and returned the intended 
 
 SQL Server 2022 supports **batch mode on rowstore** (no columnstore index required). This dramatically accelerates analytical queries (groupby, window functions).
 
-### Checking and enabling batch mode
+### SQL Server | batch mode | check and enable on rowstore
 
-#### ActualExecutionMode Batch vs Row — check batch mode usage
+Batch mode on rowstore processes approximately 900 rows at a time in a columnar format rather than one row at a time, dramatically accelerating window functions, aggregations, and analytical scans. The two H4s below first check which of your existing cached plans actually ran in batch mode, then show how to explicitly request batch mode on a single statement with the `ENABLE_BATCH_MODE_ON_ROWSTORE` hint.
+
+#### Check whether cached plans ran in batch mode
 
 This query identifies your most CPU-intensive gold-layer queries and retrieves their plans. In the XML plan output, look for `ActualExecutionMode="Batch"` vs `"Row"` on each operator — batch mode processes ~900 rows at a time in a columnar format, while row mode processes one row at a time.
 
-> [!info]-
+> [!info]- `ActualExecutionMode` gold-query scanner breakdown
 >
 > This query scans the plan cache for expensive cached statements whose text references `gold` tables and returns both CPU usage and plan XML so you can inspect execution mode.
 >
@@ -1723,17 +1775,17 @@ _This output is useful mainly as a gotcha. The text filter is broad enough to su
 | `execution_count` | `>1` | ✅ | Repeated cached use. | Better candidate set for identifying true high-CPU analytical queries. |
 | `total_cpu_ms` | High but tied to DDL text | Depends | CPU was consumed, but maybe by setup commands rather than analytics. | Tighten the text filter before drawing batch-mode conclusions. |
 
-#### ENABLE_BATCH_MODE_ON_ROWSTORE hint — force batch mode execution
+#### Request batch mode on one statement with a hint
 
 > [!warning] Database compatibility changes are broad, and the hint is only a request
 >
 > `ALTER DATABASE ... SET COMPATIBILITY_LEVEL = 160` affects the optimizer behavior of the entire database, not just this query. Test compatibility-level changes carefully because they can change many plans at once. Also, `ENABLE_BATCH_MODE_ON_ROWSTORE` does not guarantee batch mode; it only encourages the optimizer to consider it when the statement is eligible.
->
+
 > [!success] Test the query hint before committing to database-wide changes
 >
 > In a lab, setting compatibility level explicitly makes the prerequisite reproducible. In production, validate compatibility-level changes separately, and use the actual plan to confirm whether operators really ran in batch mode.
 
-> [!info]-
+> [!info]- `ENABLE_BATCH_MODE_ON_ROWSTORE` hint batch breakdown
 >
 > This batch ensures the database is at a compatible level for batch mode on rowstore and then runs a window-function query while explicitly asking the optimizer to consider batch mode.
 >
@@ -1774,7 +1826,11 @@ Intelligent Query Processing (IQP) is a family of automatic optimization feature
 
 The features below are the remaining IQP capabilities that directly affect how execution plans are generated and adapted. Each requires a minimum compatibility level and some require Query Store enabled in READ_WRITE mode.
 
-### IQP feature matrix
+### SQL Server | IQP | feature matrix and compatibility requirements
+
+Intelligent Query Processing spans four SQL Server releases, and each feature has its own minimum compatibility level and Query Store prerequisite. The single H4 below maps every current IQP feature to the version and settings that enable it so you can tell at a glance whether a feature is available on the target database.
+
+#### Map every IQP feature to version, compat level, and QS requirement
 
 | Feature | Version | Compat level | QS required | What it does |
 |---------|---------|-------------|-------------|-------------|
@@ -1790,13 +1846,21 @@ The features below are the remaining IQP capabilities that directly affect how e
 | PSP Optimization | SS 2022+ | 160 | Recommended | Multiple cached plan variants per parameterized statement |
 | Optimized Plan Forcing | SS 2022+ | 160 | **Yes** | Stores compilation replay hints in QS to speed up forced plan recompilation |
 
-### Adaptive Joins
+### SQL Server | Adaptive Joins | runtime join type selection
+
+Adaptive Joins are the SQL Server 2017+ IQP feature that defers the join-type decision from compile time to runtime. The H4 below explains how to read the adaptive operator in a plan and how to confirm which join strategy was actually used for a given execution via the `ActualJoinType` property in the plan XML.
+
+#### Read adaptive join behavior from the execution plan
 
 Adaptive Joins dynamically choose between Hash Match and Nested Loops at runtime. The optimizer sets an **adaptive threshold** — a row count boundary — during compilation. During execution, if the actual row count from the build input exceeds the threshold, the join executes as a Hash Match; if below, it switches to Nested Loops. Rows already read by the Hash build phase are reused, so there is no duplicate I/O.
 
 In the execution plan, an Adaptive Join appears as a single operator with three child branches: the Hash probe phase, the Nested Loops seek, and the adaptive threshold node. The `ActualJoinType` property in the plan XML shows which strategy was actually used at runtime.
 
-### Memory Grant Feedback
+### SQL Server | Memory Grant Feedback | runtime grant adjustment
+
+Memory Grant Feedback (MGF) is the IQP feature that tunes the per-query memory grant based on execution history rather than relying on the static compile-time estimate. The H4 below enables the SQL Server 2022 refinements that make MGF more stable and durable: percentile-based grant calculation and persistence through Query Store.
+
+#### Enable percentile-based and persistent memory grant feedback
 
 When the optimizer compiles a plan, it estimates how much memory the query needs for sort and hash operations (the **memory grant**). If the estimate is too low, data spills to TempDB — visible as yellow warning icons on Sort and Hash Match operators. If too high, memory is wasted and concurrent queries may queue in the `RESOURCE_SEMAPHORE` wait.
 
@@ -1808,17 +1872,17 @@ Memory Grant Feedback automatically adjusts the grant based on execution history
 
 SQL Server 2022 adds **percentile mode** (uses the 90th percentile of recent grant history plus a buffer, instead of just the last execution) and **persistence** (feedback survives plan cache eviction and server restarts via Query Store).
 
-#### Memory Grant Feedback — enable persistence and percentile mode
+*Enable percentile-grant and persistence for Memory Grant Feedback at the database scope.*
 
 > [!warning] Adaptive behavior appears only after repeated executions
 >
 > These settings do not speed up the next single execution by themselves. Memory Grant Feedback needs qualifying repeated executions before you see adjusted grants, and persistence depends on Query Store being enabled and writable. On volatile or one-off queries, you may not observe any visible effect.
->
+
 > [!success] Enable it where repeated analytical queries matter
 >
 > This is most useful on workloads where the same statements run many times with different parameter values or changing row counts. Verify the behavior with actual plans and Query Store metadata, not by assuming the feature fired.
 
-> [!info]-
+> [!info]- Memory Grant Feedback percentile and persistence breakdown
 >
 > This batch enables the two SQL Server 2022 memory-grant feedback options that make grant adjustments both more stable and more durable.
 >
@@ -1831,19 +1895,23 @@ ALTER DATABASE SCOPED CONFIGURATION SET MEMORY_GRANT_FEEDBACK_PERCENTILE_GRANT =
 ALTER DATABASE SCOPED CONFIGURATION SET MEMORY_GRANT_FEEDBACK_PERSISTENCE = ON;
 ```
 
-### DOP Feedback
+### SQL Server | DOP Feedback | runtime parallelism adjustment
+
+DOP Feedback is the SQL Server 2022 IQP feature that auto-tunes the effective degree of parallelism for individual queries when the optimizer's compile-time DOP produces skewed thread distribution or excessive `CXPACKET` waits. The H4 below enables the feature at the database scope; the actual effect becomes visible only after repeated executions of qualifying parallel statements.
+
+#### Enable DOP Feedback at the database scope
 
 DOP (Degree of Parallelism) Feedback automatically tunes the parallelism degree for individual queries based on runtime feedback. If a query's parallel execution wastes CPU due to skewed thread distribution or excessive `CXPACKET` waits, DOP Feedback reduces the DOP for subsequent executions. Feedback is persisted in Query Store.
 
 > [!warning] Parallelism may change across executions
 >
 > Once DOP Feedback is enabled, the same query can receive a different effective DOP on later executions. That is the point of the feature, but it also means troubleshooting becomes more dynamic: one execution might not match the next. As with other SQL Server 2022 feedback features, you need repeated qualifying executions before you will see an effect.
->
+
 > [!success] Observe it on stable, repeatable workloads
 >
 > Use this on workloads where the same expensive parallel statements run often enough for feedback to converge. Confirm changes in actual plans or Query Store feedback metadata instead of assuming the database-scoped setting alone changed performance.
 
-> [!info]-
+> [!info]- `DOP_FEEDBACK = ON` enablement breakdown
 >
 > This statement enables Degree of Parallelism Feedback for the current database.
 >
@@ -1863,17 +1931,27 @@ ALTER DATABASE SCOPED CONFIGURATION SET DOP_FEEDBACK = ON;
 
 ## Missing Indexes for Pipeline Queries
 
-SQL Server surfaces missing index recommendations directly in the execution plan (yellow warning icon) and stores them in DMVs. Because the real `stoxx` tables already have constraints and indexes, create disposable heap copies first, then apply the index DDL to those lab copies.
+SQL Server surfaces missing index recommendations directly in the execution plan (yellow warning icon) and stores them in DMVs. Because the real `stoxx` tables already have constraints and indexes, the lab approach is to create disposable heap copies in the `dbo` schema first, then apply representative clustered and nonclustered index DDL to those lab copies so you can observe the plan differences safely without touching the production-shaped source tables.
+
+### SQL Server | demo tables | build disposable heap copies and add indexes
+
+The two H4s below form the full missing-index lab workflow: first build a set of disposable heap copies of the bronze/silver/gold tables using `SELECT INTO`, then add representative clustered and covering nonclustered indexes so you can re-run the same queries and observe how the execution plans change.
+
+#### Build disposable heap copies of bronze, silver, and gold tables
+
+This setup batch creates five `dbo.demo_*` heap copies you can experiment on freely. It is intentionally destructive on rerun: it drops and recreates the demo tables every time so the lab starts from a clean baseline. It never touches the original source tables, which stay read-only for the duration of the batch.
+
+*Create five disposable heap copies in the `dbo` schema from the real `bronze`, `silver`, and `gold` tables.*
 
 > [!warning] Rerunnable setup that deletes previous demo copies
 >
 > This batch drops and recreates the `dbo.demo_*` tables each time it runs. That is intentional for a clean lab, but it also means any indexes, constraints, or data changes you previously added to those demo tables will be lost. Do not point this pattern at real business tables.
->
+
 > [!success] Safe lab pattern because it leaves source tables untouched
 >
 > The original `bronze`, `silver`, and `gold` tables are read only in this batch. Use the disposable `dbo.demo_*` copies for plan experiments, then drop or recreate them freely as you iterate.
 
-> [!info]-
+> [!info]- Disposable `dbo.demo_*` heap-copy batch breakdown
 >
 > This setup batch creates five disposable heap copies in `dbo` so you can test index creation commands without changing the real `bronze`, `silver`, and `gold` tables.
 >
@@ -1900,15 +1978,21 @@ DROP TABLE IF EXISTS dbo.demo_pulse_tickers;
 SELECT * INTO dbo.demo_pulse_tickers FROM bronze.pulse_tickers;
 ```
 
+#### Add representative clustered and covering nonclustered indexes
+
+With the heap copies in place, the next step is to add the specific clustered and nonclustered indexes that mirror the common lookup patterns for each table. This is the step you re-run while iterating on index designs: run the heap-copy batch above to reset, then run this batch with whichever index shape you want to test next.
+
+*Add representative clustered and covering nonclustered indexes to the `dbo.demo_*` tables.*
+
 > [!warning] Index creation changes the demo tables and can fail if the copied data is not unique
 >
 > These `CREATE UNIQUE CLUSTERED INDEX` statements assume the copied demo data is unique on the chosen key columns. If the source data contains duplicates, SQL Server will reject the index creation. Even on demo tables, index builds consume I/O and log space, so treat them as real DDL rather than as a harmless display command.
->
+
 > [!success] Good lab step because the write scope is isolated
 >
 > This is the right place to demonstrate heap-to-index plan changes: the DDL touches only the disposable `dbo.demo_*` tables, and the selected keys mirror common lookup patterns from the real `stoxx` tables.
 
-> [!info]-
+> [!info]- Demo-table index creation batch breakdown
 >
 > This batch adds representative clustered and nonclustered indexes to the disposable demo tables created immediately above.
 >
@@ -1946,7 +2030,9 @@ ON dbo.demo_pulse_tickers (_index) INCLUDE (symbol, rank, activity_score, volume
 
 These are the highest-impact, lowest-effort optimizations to apply after reading execution plans. Each addresses a common pattern seen in pipeline and dashboard workloads.
 
-### Detection and implementation queries
+### SQL Server | high-impact fixes | detection and implementation
+
+The four H4s below are the highest-impact, lowest-effort optimizations you can apply after reading execution plans for a pipeline workload. Each one pairs a detection query — something you run to find out whether the fix is needed — with the corresponding implementation command. The order follows the usual impact ranking on stoxx-style workloads: heap-to-clustered conversion, enabling row-versioned read committed, page compression, and finally statistics refresh after bulk loads.
 
 | Optimization | Effort | Impact | When to Apply |
 |-------------|--------|--------|---------------|
@@ -1957,9 +2043,9 @@ These are the highest-impact, lowest-effort optimizations to apply after reading
 | Page compression on gold tables | Medium | Medium | When buffer pool starts filling up |
 | Statistics update after loads | Low | High | Add to pipeline post-load step |
 
-#### sys.tables + sys.partitions index_id=0 — check for heap tables
+#### Detect populated heap tables with no clustered index
 
-> [!info]-
+> [!info]- Heap-table detection query breakdown
 >
 > This query lists populated user tables that currently have heap storage rather than a clustered index.
 >
@@ -1985,17 +2071,17 @@ ORDER BY p.rows DESC;
 
 _This means only one populated heap was found in the current database snapshot: `dbo.demo_pulse_tickers`, with about 40 rows. Because the row count is tiny, the immediate cost is small, but it is still a useful reminder that `index_id = 0` identifies heap storage and that larger heaps would usually be early clustered-index candidates._
 
-#### ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON — enable RCSI
+#### Enable row-versioned read committed isolation (RCSI)
 
 > [!danger] Database-wide concurrency change that needs exclusive access
 >
 > `READ_COMMITTED_SNAPSHOT ON` changes how all future read-committed statements in the database behave. Enabling it requires SQL Server to obtain exclusive access during the transition, so the command can fail while other sessions are connected. It also shifts read consistency to row versioning in `tempdb`, which increases `tempdb` usage and should be evaluated deliberately before changing a production database.
->
+
 > [!success] Enable it during a planned change window after checking `tempdb`
 >
 > Use the first `SELECT` to verify the current state, close or drain other sessions before changing the setting, and treat this as a database-level operational decision rather than a casual troubleshooting toggle.
 
-> [!info]-
+> [!info]- `READ_COMMITTED_SNAPSHOT` check and enablement breakdown
 >
 > This two-statement batch first checks the current RCSI state for `stoxx` and then enables row-versioned read committed isolation.
 >
@@ -2022,17 +2108,17 @@ _This is the prechange state check. `name = stoxx` confirms you are inspecting t
 | `is_read_committed_snapshot_on` | `0` | Depends | RCSI is off. | Good if you are demonstrating the default locking behavior before a change. |
 | `is_read_committed_snapshot_on` | `1` | ✅ | RCSI is on. | Read committed readers use row versions instead of shared locks. |
 
-#### sp_estimate_data_compression_savings — check compression savings
+#### Estimate and apply page compression on a large table
 
 > [!warning] Estimation is lightweight; rebuild is not
 >
 > `sp_estimate_data_compression_savings` is a planning step, but `ALTER INDEX ... REBUILD WITH (DATA_COMPRESSION = PAGE)` is a real maintenance operation that consumes CPU, I/O, log space, and potentially long-running locks depending on edition and options. Do not treat the estimate and the rebuild as equally safe.
->
+
 > [!success] Separate the decision from the maintenance window
 >
 > Run the estimate first, review the savings, then schedule the rebuild when the logging, blocking, and elapsed-time impact are acceptable for that table and environment.
 
-> [!info]-
+> [!info]- `sp_estimate_data_compression_savings` and `REBUILD` breakdown
 >
 > This batch first estimates the effect of PAGE compression on `gold.index_performance` and then rebuilds that object with PAGE compression enabled.
 >
@@ -2070,17 +2156,17 @@ _This procedure estimates compression savings without changing the index. PAGE c
 | `size_with_requested_compression_setting(KB)` lower than current size | ✅ | Compression is likely to save space. | Consider whether the saved memory and I/O justify the CPU tradeoff. |
 | `size_with_requested_compression_setting(KB)` higher than current size | ❌ | Compression would make the object larger. | Do not enable compression for that structure without a very specific reason. |
 
-#### sp_updatestats, UPDATE STATISTICS WITH FULLSCAN — refresh after bulk loads
+#### Refresh statistics broadly and with full scan after bulk loads
 
 > [!warning] Statistics refreshes can trigger recompiles and heavy reads
 >
 > `sp_updatestats` and manual `UPDATE STATISTICS` change optimizer metadata, which can invalidate cached plans and trigger recompilation on later executions. `FULLSCAN` in particular can be expensive on large tables because SQL Server reads the whole object to build the histogram. Do not run fullscan updates blindly on large production tables during busy periods.
->
+
 > [!success] Use the broad tool broadly, and reserve `FULLSCAN` for targeted cases
 >
 > `sp_updatestats` is the lower-effort maintenance option after general data change. Keep `UPDATE STATISTICS ... WITH FULLSCAN` for tables where estimates are materially wrong and the extra read cost is justified.
 
-> [!info]-
+> [!info]- `sp_updatestats` and `UPDATE STATISTICS WITH FULLSCAN` breakdown
 >
 > This batch shows one broad statistics refresh and two targeted high-precision statistics updates.
 >

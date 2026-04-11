@@ -1,5 +1,5 @@
 ---
-title: "15 - Blocking and Locking"
+title: "16 - Blocking and Locking"
 tags: [sql-server, tsql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
 description: "Production-focused SQL Server locking guide."
@@ -12,9 +12,37 @@ status: complete
 
 SQL Server uses locks to preserve correctness when concurrent sessions touch the same rows, pages, indexes, or metadata.
 
+> [!abstract] Scope of this page
+>
+> This page is a production triage guide for SQL Server blocking and locking. It covers the lock modes and compatibility matrix, granularity and escalation, row-versioning isolation switches, and a sequenced set of live DMV queries to identify head blockers, victims, lock inventory, chain fan-out, escalation state, and lock-wait posture. Every demo is executed against the live `stoxx` database.
+
 ## Production Triage Sequence
 
+Blocking incidents almost always look the same from the outside: one or more sessions appear stuck. The triage flow below is the fixed order this page follows — confirm lock waits first, capture the blocker and the lock inventory next, then decide whether the problem is a long transaction, an isolation mismatch, or something that belongs in a different workflow entirely.
+
+### SQL Server | blocking triage | decision flow
+
+The flowchart makes the branch polarity explicit so that a responder can jump directly to the correct investigation path without guessing.
+
+#### Route a performance complaint to the correct lock workflow
+
+The diagram routes an incoming complaint through a single yes/no check on lock waits, then into the capture steps used later on this page, and finally to the remediation branch.
+
+*Mermaid decision flow from performance complaint to remediation, branching on whether the session is lock-bound and whether a head blocker exists.*
+
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A[Performance complaint or blocked workload] --> B{Is the session waiting on a lock?}
     B --> Y1[YES]
@@ -36,6 +64,18 @@ flowchart TD
 
 ## Lock Modes That Matter In Production
 
+SQL Server exposes a long list of lock modes, but only a handful drive real production incidents. This section summarizes the modes that appear in `sys.dm_tran_locks` and wait-type names during triage, then lays out the compatibility matrix that determines which requests can coexist.
+
+### SQL Server | lock modes | production reference
+
+The table below focuses on the modes most likely to appear in triage output. Schema locks are included because DDL collisions are a recurring source of unexplained blocking.
+
+#### Inventory the lock modes seen during triage
+
+Each row names a mode, the common source that takes it, and the mode families it blocks. Use this as the quick legend when reading `request_mode` columns later on this page.
+
+*Reference table mapping SQL Server lock modes to their sources and the requests they block.*
+
 | Lock mode | Typical meaning | Common source | What it blocks |
 |---|---|---|---|
 | `S` | Shared read lock | `SELECT` under pessimistic isolation | `X`, some schema changes |
@@ -47,7 +87,15 @@ flowchart TD
 | `Sch-S` | Schema stability | Query compilation and execution | Blocks `Sch-M` only |
 | `Sch-M` | Schema modification | `ALTER TABLE`, `TRUNCATE TABLE`, index rebuild phases | Blocks nearly all concurrent access |
 
-### Lock Compatibility At A Glance
+### SQL Server | lock compatibility | matrix
+
+Compatibility is the rule the lock manager uses to decide whether a new request can be granted against the locks already held on the same resource.
+
+#### Read the compatibility matrix
+
+Rows are the requested mode; columns are the mode already held. `Yes` means the request is granted immediately; `No` means the request waits.
+
+*Compatibility matrix for the seven most relevant SQL Server lock modes.*
 
 | Requested vs existing | `S` | `U` | `X` | `IS` | `IX` | `Sch-S` | `Sch-M` |
 |---|---|---|---|---|---|---|---|
@@ -61,7 +109,17 @@ flowchart TD
 
 ## Granularity And Escalation
 
-Locks can be taken at several levels. SQL Server prefers finer granularity first, then escalates when maintaining many small locks becomes more expensive than taking a broader lock.
+Locks can be taken at several levels. SQL Server prefers finer granularity first, then escalates when maintaining many small locks becomes more expensive than taking a broader lock. The granularity chosen for a given statement drives both the concurrency ceiling and the likelihood of lock escalation later in the transaction.
+
+### SQL Server | lock granularity | reference
+
+The granularity ladder determines how much of the object a single lock covers. Understanding where escalation lands matters because a row-level blocker and an object-level blocker are fixed in very different ways.
+
+#### Map granularity levels to concurrency impact
+
+The ladder below runs from the finest (row / key) to the coarsest (database). Escalation almost always targets the object level, skipping the page level.
+
+*Reference of SQL Server lock granularities and their concurrency impact.*
 
 | Granularity | Typical resource | Operational meaning |
 |---|---|---|
@@ -71,29 +129,31 @@ Locks can be taken at several levels. SQL Server prefers finer granularity first
 | Object / table | Whole table or index | High blocking impact |
 | Database | Whole database | Usually intent or metadata-related, not normal DML scope |
 
-> [!tip]
+> [!tip] Treat escalation as a symptom, not a root cause
+>
 > Lock escalation is usually a symptom, not the primary problem. If escalation hurts, first ask why the statement touched that many rows, held the transaction that long, or used that access path.
 
 ## Database Row-Versioning State
 
-`READ COMMITTED SNAPSHOT` and `ALLOW_SNAPSHOT_ISOLATION` change whether readers must wait behind writers. This is the first database-level check because it changes the concurrency model for the whole workload.
+`READ COMMITTED SNAPSHOT` and `ALLOW_SNAPSHOT_ISOLATION` change whether readers must wait behind writers. This is the first database-level check during triage because it changes the concurrency model for the whole workload — everything else in this page assumes pessimistic `READ COMMITTED` unless explicitly noted.
 
-> [!warning]
-> Turning on row versioning changes runtime behavior for every session in the database. `READ COMMITTED SNAPSHOT` changes the meaning of plain `READ COMMITTED`, and `ALLOW_SNAPSHOT_ISOLATION` enables explicit `SNAPSHOT` transactions. Do not enable either switch casually in production.
+### SQL Server | sys.databases | row-versioning inspection
+
+The row-versioning switches live in the database catalog and can be read in a single query. Both switches are orthogonal: either, both, or neither can be enabled.
+
+#### Inspect row-versioning switches for the target database
+
+The lookup reads `sys.databases` for a named database and returns the two columns that describe its concurrency model.
+
+> [!info]- Query walkthrough | sys.databases row-versioning columns
 >
-> These changes usually help mixed read/write workloads, but they also increase TempDB version-store usage and can expose code that assumed locking reads.
-
-> [!success]
-> Consider `READ COMMITTED SNAPSHOT` when most blocking is reader-versus-writer rather than writer-versus-writer, and when the application does not depend on locking side effects from `READ COMMITTED`.
->
-> Consider `ALLOW_SNAPSHOT_ISOLATION` when specific transactions need consistent multi-statement reads without taking shared locks.
-
-> [!info]-
 > This query reads `sys.databases` for the target database and surfaces the two row-versioning switches that matter most for concurrency design.
 >
 > - `snapshot_isolation_state_desc` reports whether explicit `SET TRANSACTION ISOLATION LEVEL SNAPSHOT` transactions are possible.
 > - `is_read_committed_snapshot_on` reports whether plain `READ COMMITTED` uses row versions instead of shared locks.
 > - The combination tells you whether readers will normally queue behind writers, and whether explicit optimistic transactions are even available.
+
+*Reads the two row-versioning switches from `sys.databases` for the `stoxx` database.*
 
 ```sql
 SELECT
@@ -117,11 +177,34 @@ WHERE name = 'stoxx';
 | `is_read_committed_snapshot_on` | `0` | &#10060; | Plain `READ COMMITTED` still takes shared locks for reads. | Reader-versus-writer blocking remains part of normal runtime behavior. |
 | `is_read_committed_snapshot_on` | `1` | &#9989; | Plain `READ COMMITTED` reads row versions. | Readers no longer wait behind writers for committed data, but TempDB version-store pressure matters more. |
 
-> [!warning]
+### SQL Server | ALTER DATABASE | enable row versioning
+
+Enabling row versioning is an ALTER DATABASE action that changes runtime behavior for every future session. The two switches are independent and should be considered separately.
+
+#### Enable row versioning for reader-versus-writer contention
+
+The two statements below turn on both row-versioning switches. They are grouped because they address the same class of blocking, but each addresses a different use case.
+
+> [!warning] Row versioning changes runtime behavior for every session
+>
+> Turning on row versioning changes runtime behavior for every session in the database. `READ COMMITTED SNAPSHOT` changes the meaning of plain `READ COMMITTED`, and `ALLOW_SNAPSHOT_ISOLATION` enables explicit `SNAPSHOT` transactions. Do not enable either switch casually in production.
+>
+> These changes usually help mixed read/write workloads, but they also increase TempDB version-store usage and can expose code that assumed locking reads.
+
+> [!success] When to enable each row-versioning switch
+>
+> - Consider `READ COMMITTED SNAPSHOT` when most blocking is reader-versus-writer rather than writer-versus-writer, and when the application does not depend on locking side effects from `READ COMMITTED`.
+> - Consider `ALLOW_SNAPSHOT_ISOLATION` when specific transactions need consistent multi-statement reads without taking shared locks.
+
+> [!warning] This DDL requires a change window
+>
 > The next command changes database semantics. It requires a change window, validation of TempDB capacity, and review of application code that depends on locking reads.
 
-> [!success]
+> [!success] Row versioning is the first remediation for reader-versus-writer contention
+>
 > This is the primary database-level change to consider when blocking is dominated by reader-versus-writer contention and the application is not relying on `READ COMMITTED` locking behavior.
+
+*Enables both `READ_COMMITTED_SNAPSHOT` and `ALLOW_SNAPSHOT_ISOLATION` on the `stoxx` database.*
 
 ```sql
 ALTER DATABASE stoxx SET READ_COMMITTED_SNAPSHOT ON;
@@ -133,15 +216,26 @@ GO
 
 ## Live Blocking Snapshot
 
-This is the production query to run first when someone reports "the database is blocked". It identifies the blocking session, the blocked sessions, the current statement text, and the live lock wait.
+This is the production query to run first when someone reports "the database is blocked". It identifies the blocking session, the blocked sessions, the current statement text, and the live lock wait. Everything that follows in this page builds on the session ids captured here.
 
-> [!info]-
+### SQL Server | sys.dm_exec_requests | live blocker identification
+
+The capture query joins three DMVs: active requests, session metadata, and the SQL text cache. The combination answers four production questions simultaneously — who, where, doing what, and waiting on whom.
+
+#### Capture the blocking chain with statement text
+
+The query returns one row per live user request in the target database, ordered by elapsed time so the longest-running session appears first. The `running_statement` expression extracts the exact statement inside a multi-statement batch instead of showing the whole batch text.
+
+> [!info]- Query walkthrough | sys.dm_exec_requests blocking capture
+>
 > This query reads `sys.dm_exec_requests` for all live user requests, joins `sys.dm_exec_sessions` for workload identity, and pulls the currently executing statement from `sys.dm_exec_sql_text`.
 >
 > - `status`, `command`, `wait_type`, and `blocking_session_id` tell you whether the request is actively running, waiting on a lock, or acting as the blocker.
 > - `wait_time_ms`, `cpu_time_ms`, and `elapsed_time_ms` separate "waiting" from "working".
 > - `logical_reads`, `reads`, and `writes` show whether the request is scanning a lot or simply waiting.
 > - `running_statement` extracts only the active statement inside a larger batch, which matters in production because a session can run many statements in one batch or procedure.
+
+*Returns the live blocker/victim chain for the `stoxx` database with statement text, wait type, and timing.*
 
 ```sql
 SELECT
@@ -198,7 +292,12 @@ ORDER BY r.total_elapsed_time DESC, r.session_id;
 | `blocking_session_id` | `0` | Depends | No blocker is recorded for this request. | The request may be running, waiting on a non-blocking resource, or acting as the head blocker. |
 | `blocking_session_id` | Positive session id | &#10060; | Another session is blocking this request. | Follow that session and determine whether it is still working or just holding locks open. |
 
-> [!example]-
+#### Reproduce the blocker/victim pattern in a lab
+
+The three-window sequence below reproduces the exact blocker/victim rows shown in the result table. Run it only in a lab or a maintenance window — it intentionally creates a 25-second blocking chain.
+
+> [!example]- Disposable blocker/victim reproduction
+>
 > The following disposable demo creates the same blocker/victim pattern shown above. It is appropriate for a lab or a maintenance window, not for normal production use.
 >
 > **Setup once**
@@ -301,15 +400,26 @@ ORDER BY r.total_elapsed_time DESC, r.session_id;
 
 ## Lock Inventory For The Blocked Chain
 
-The blocking snapshot tells you who is waiting. The next query tells you which lock resource each session currently holds or is requesting.
+The blocking snapshot tells you who is waiting. The next query tells you which lock resource each session currently holds or is requesting, which is the only way to distinguish row-level contention from object-level escalation.
 
-> [!info]-
+### SQL Server | sys.dm_tran_locks | resource-level inventory
+
+`sys.dm_tran_locks` exposes every granted and pending lock request on the instance. Filtering by session id narrows the view to the blocking chain identified earlier.
+
+#### Inventory granted and pending locks for the blocking chain
+
+The query joins `sys.partitions` on the HoBT id returned by the lock manager so that object names appear inline instead of as opaque ids. Only live sessions in the chain are returned.
+
+> [!info]- Query walkthrough | sys.dm_tran_locks chain inventory
+>
 > This query reads `sys.dm_tran_locks` for the live sessions in the blocking chain and maps HoBT ids back to table names through `sys.partitions`.
 >
 > - `resource_type` tells you whether the contention is at the database, object, page, or key level.
 > - `request_mode` tells you what kind of lock is already held or being requested.
 > - `request_status` distinguishes granted locks from locks that are still waiting.
 > - `object_name` is the first lookup that tells you whether the blocking chain is happening on the table you expected.
+
+*Lists every granted and pending lock for sessions 55 and 56 with object names resolved from HoBT ids.*
 
 ```sql
 SELECT
@@ -356,15 +466,26 @@ ORDER BY tl.request_session_id, tl.resource_type, tl.request_mode;
 
 ## Waiting Tasks For The Same Chain
 
-`sys.dm_os_waiting_tasks` confirms the exact wait in progress and shows which session is the blocker.
+`sys.dm_os_waiting_tasks` confirms the exact wait in progress and shows which session is the blocker. Where `sys.dm_exec_requests` reports the current state of a request, `sys.dm_os_waiting_tasks` reports the wait event itself — including the raw `resource_description` string used by the deadlock graph and the blocked-process report.
 
-> [!info]-
+### SQL Server | sys.dm_os_waiting_tasks | scheduler-level waits
+
+The waiting-tasks DMV surfaces each wait at the scheduler level, not the request level. A request can have zero or one wait at a time, and this DMV captures that wait with its precise resource description.
+
+#### Confirm the live wait event and resource description
+
+The query isolates the two sessions already identified and returns the wait type, duration, blocker, and raw resource description. Resource descriptions are cryptic but decode directly into the lock resource and HoBT id.
+
+> [!info]- Query walkthrough | sys.dm_os_waiting_tasks chain waits
+>
 > This query reads `sys.dm_os_waiting_tasks` for the same live sessions and isolates the wait event itself.
 >
 > - `wait_type` is the scheduler-visible name of the wait.
 > - `wait_duration_ms` shows how long the current wait has been active.
 > - `blocking_session_id` is the fastest path from victim to blocker.
 > - `resource_description` exposes the locked key, page, or metadata resource when SQL Server can describe it.
+
+*Returns the current wait event and resource description for sessions 55 and 56.*
 
 ```sql
 SELECT
@@ -396,14 +517,25 @@ ORDER BY wt.session_id, wt.wait_duration_ms DESC;
 
 ## Blocking Chain Walk
 
-The recursive CTE is useful when a single blocker fans out to many victims.
+A single head blocker with a single victim is trivial to read from `sys.dm_exec_requests`. In production the same blocker frequently fans out into dozens of victims across multiple layers, and the chain shape matters more than any individual session. A recursive CTE turns the flat DMV view into an explicit parent-child chain.
 
-> [!info]-
+### SQL Server | recursive CTE | blocking chain walk
+
+The recursive anchor identifies root blockers (sessions that are not blocked by another session in the captured set). The recursive member then walks each victim's `blocking_session_id` back to the root, materializing the full path in a single column.
+
+#### Walk the blocker-to-victim chain
+
+The query scopes the CTE to one database and one session filter so that large instances do not return irrelevant chains. Depth zero is always the root; deeper rows are downstream victims.
+
+> [!info]- Query walkthrough | recursive blocking chain
+>
 > This query builds a chain from root blocker to final victim using the live blocking relationships from `sys.dm_exec_requests`.
 >
 > - Root sessions are those with `blocking_session_id = 0` or those blocked by a session outside the captured set.
 > - `chain_path` materializes the full path so you can see fan-out or deeper cascades quickly.
 > - `depth = 0` is the root blocker; larger depths are downstream victims.
+
+*Walks the blocking chain from root to victim for sessions 55 and 56 and emits an explicit chain path.*
 
 ```sql
 ;WITH req AS (
@@ -460,14 +592,25 @@ ORDER BY c.depth, c.session_id;
 
 ## Lock Escalation State
 
-The catalog tells you whether a table uses normal escalation rules, partition-aware escalation, or disabled escalation.
+The catalog tells you whether a table uses normal escalation rules, partition-aware escalation, or disabled escalation. This is not live telemetry but a design-time setting that shapes how every statement against the table will behave once escalation thresholds are reached.
 
-> [!info]-
+### SQL Server | sys.tables | escalation mode inspection
+
+Each user table has a `lock_escalation_desc` column exposing its escalation mode. Partitioned tables may be set to `AUTO` for partition-aware escalation, and a small number of hot tables may have escalation disabled entirely.
+
+#### Inspect escalation mode for candidate tables
+
+The query reads `sys.tables` joined to `sys.schemas` and filters to the tables of interest. In production, the same query can be used with a wider filter to audit all tables in a database.
+
+> [!info]- Query walkthrough | sys.tables escalation mode
+>
 > This query reads `sys.tables.lock_escalation_desc` for representative tables.
 >
 > - `TABLE` is the normal default.
 > - `AUTO` allows partition-aware escalation where appropriate.
 > - `DISABLE` prevents normal lock escalation and should be used sparingly because it can dramatically increase lock memory pressure.
+
+*Reports the lock escalation mode for the demo tables and the partitioned `eurostoxx50_ohlcv` variants.*
 
 ```sql
 SELECT
@@ -502,11 +645,23 @@ ORDER BY s.name, t.name;
 | `lock_escalation_desc` | `AUTO` | Depends | Partition-aware escalation when possible. | Useful on partitioned tables, but only if partition design and access patterns justify it. |
 | `lock_escalation_desc` | `DISABLE` | &#10060; unless justified | Escalation is disabled. | Can reduce blocking in specific cases, but increases lock count and lock-memory pressure. |
 
-> [!warning]
+### SQL Server | ALTER TABLE | disable escalation
+
+Disabling escalation is the most aggressive knob in this section. It is a table-level override that tells the lock manager never to promote row or page locks to an object lock on this specific table.
+
+#### Disable lock escalation on a specific hot table
+
+The `ALTER TABLE` syntax targets one table and changes its escalation mode. The change is online and takes effect immediately for future lock requests on the table.
+
+> [!warning] Disabling escalation trades one problem for another
+>
 > Disabling lock escalation is a specialized intervention. It can trade one blocking problem for a different scalability problem by keeping very large numbers of row or page locks in memory.
 
-> [!success]
+> [!success] Disable escalation only after proving escalation is the problem
+>
 > Consider `LOCK_ESCALATION = DISABLE` only after proving that escalation itself is the problem and that the workload can tolerate the higher lock footprint.
+
+*Disables lock escalation on a named table so row and page locks will not be promoted to object-level locks.*
 
 ```sql
 ALTER TABLE dbo.SomeHotTable
@@ -516,14 +671,25 @@ GO
 
 ## Index Operational Lock Statistics
 
-`sys.dm_db_index_operational_stats` adds historical context that live DMVs do not keep for long. It is useful for spotting hot indexes or repeated lock-promotion pressure.
+`sys.dm_db_index_operational_stats` adds historical context that live DMVs do not keep for long. It is useful for spotting hot indexes or repeated lock-promotion pressure that a snapshot of `sys.dm_tran_locks` would miss.
 
-> [!info]-
+### SQL Server | sys.dm_db_index_operational_stats | per-index lock history
+
+The operational stats DMV accumulates counters per index since the last restart. The counters of interest for locking are the lock-count, lock-wait-count, and lock-promotion columns.
+
+#### Aggregate cumulative lock activity per index
+
+The query scopes the DMV to the indexes on one table and returns both the absolute counts and the wait-time totals. A healthy index has non-zero lock counts with zero waits.
+
+> [!info]- Query walkthrough | per-index lock history
+>
 > This query reads `sys.dm_db_index_operational_stats` for the clustered and nonclustered indexes on `silver.eurostoxx50_ohlcv`.
 >
 > - `row_lock_count` and `page_lock_count` show cumulative locking activity since the last restart.
 > - `row_lock_wait_count` and `page_lock_wait_count` tell you whether those locks are actually causing waits.
 > - `index_lock_promotion_attempt_count` and `index_lock_promotion_count` indicate escalation pressure.
+
+*Returns cumulative lock-count, lock-wait, and escalation counters for each index on `silver.eurostoxx50_ohlcv`.*
 
 ```sql
 SELECT
@@ -561,14 +727,25 @@ ORDER BY i.index_id;
 
 ## Session Safety Switches
 
-Two session settings matter constantly in blocking scenarios: `LOCK_TIMEOUT` and `XACT_ABORT`.
+Two session settings matter constantly in blocking scenarios: `LOCK_TIMEOUT` and `XACT_ABORT`. Neither is a server-wide default — both are properties of the current connection, and both strongly affect whether a session exits cleanly when a blocker keeps a lock held too long.
 
-> [!info]-
+### SQL Server | @@OPTIONS | inspect session safety switches
+
+The session switches are exposed through `@@LOCK_TIMEOUT` and the bit flags in `@@OPTIONS`. Reading both in a single query confirms the safety posture of the current connection.
+
+#### Inspect the current session safety switches
+
+The query uses a bitmask against `@@OPTIONS` to translate the `XACT_ABORT` bit into a human-readable state, and returns `@@LOCK_TIMEOUT` in milliseconds.
+
+> [!info]- Query walkthrough | session safety switches
+>
 > This query reads the current session values, not a server-wide default.
 >
 > - `@@LOCK_TIMEOUT = -1` means the session waits forever.
 > - `XACT_ABORT` controls whether a runtime error aborts the full transaction or only the offending statement.
 > - These two settings strongly influence whether application code fails fast and whether it leaves transactions open after an error.
+
+*Reads the current session's `LOCK_TIMEOUT` and decodes the `XACT_ABORT` bit from `@@OPTIONS`.*
 
 ```sql
 SELECT
@@ -592,11 +769,23 @@ SELECT
 | `xact_abort_state` | `OFF` | &#10060; for multi-statement write transactions | Many runtime errors abort only the statement. | Poor error handling can leave the transaction open and keep locks alive. |
 | `xact_abort_state` | `ON` | &#9989; for most ETL and write-heavy batches | Runtime errors terminate and roll back the full transaction. | Safer default for transactional pipeline code. |
 
-> [!warning]
+### SQL Server | SET | configure safe transaction defaults
+
+Setting `LOCK_TIMEOUT` and `XACT_ABORT` at the top of a batch establishes fail-fast behavior and guarantees that a runtime error rolls back the full transaction instead of silently leaving it open.
+
+#### Configure safe transaction defaults for ETL batches
+
+The template below pairs a finite `LOCK_TIMEOUT` with `XACT_ABORT ON` and wraps the work in `TRY / CATCH` so that any error path triggers a deterministic rollback.
+
+> [!warning] Session settings persist across statements in the connection
+>
 > `SET LOCK_TIMEOUT` and `SET XACT_ABORT` are session-level settings. They do not change other sessions, but they do change the behavior of every statement that follows in the same connection.
 
-> [!success]
+> [!success] Safe default for unattended write workloads
+>
 > In application transactions and ETL batches, a short `LOCK_TIMEOUT` plus `XACT_ABORT ON` is usually safer than waiting forever behind a blocker.
+
+*Template batch setting a five-second lock timeout, enabling `XACT_ABORT`, and wrapping work in `TRY / CATCH` with a deterministic rollback.*
 
 ```sql
 SET LOCK_TIMEOUT 5000;
@@ -619,15 +808,26 @@ END CATCH;
 
 ## Lock-Related Wait Posture
 
-Wait stats tell you whether locking problems are isolated incidents or a repeated pattern since the last restart.
+Wait stats tell you whether locking problems are isolated incidents or a repeated pattern since the last restart. `sys.dm_os_wait_stats` is cumulative, so a single snapshot only answers "what has happened since boot?" — repeated snapshots answer "what is happening now?".
 
-> [!info]-
+### SQL Server | sys.dm_os_wait_stats | cumulative lock waits
+
+The DMV returns one row per wait type with its total count, total wait time, and signal-wait time. Filtering to `LCK_M_%` isolates the lock-related waits from the rest of the wait taxonomy.
+
+#### Summarize cumulative lock waits since last restart
+
+The query orders waits by total time descending so the dominant lock wait appears first. Signal wait time distinguishes waits that were immediately scheduled after becoming runnable from waits that also suffered CPU pressure.
+
+> [!info]- Query walkthrough | cumulative lock waits
+>
 > This query reads cumulative wait stats for lock waits only.
 >
 > - `waiting_tasks_count` shows how often the wait occurred.
 > - `wait_time_ms` shows the total time spent waiting.
 > - `signal_wait_time_ms` is the CPU scheduler portion after the resource became available.
 > - The key question is not "does a lock wait exist?" but "which lock wait dominates and why?"
+
+*Summarizes every lock wait type accumulated since the last instance restart.*
 
 ```sql
 SELECT
@@ -663,13 +863,17 @@ ORDER BY wait_time_ms DESC;
 | `signal_wait_time_ms` | Near zero | &#9989; | Most delay is resource wait, not CPU queueing. | The problem is locking, not scheduler starvation. |
 | `signal_wait_time_ms` | Large relative to `wait_time_ms` | &#10060; | Significant delay after the resource was available. | Locking is not the whole story; CPU pressure may also matter. |
 
-## Recommendations
+## Practical Guidance
 
-- Keep transactions as short as possible. The most common blocker is not a complex lock mode; it is a session that finished its real work and kept the transaction open.
-- Prefer narrow, indexed predicates. A precise seek reduces both lock count and lock duration.
-- Use row versioning for reader-versus-writer pressure, not as a substitute for writer discipline.
-- Treat `WAITFOR`, user interaction, remote calls, and lengthy application logic inside transactions as design bugs.
-- Use `XACT_ABORT ON` and a finite `LOCK_TIMEOUT` for unattended write workloads.
-- Investigate lock escalation by fixing access patterns first. Disabling escalation is a last-mile intervention, not a first response.
+The recommendations below consolidate the patterns that repeatedly resolve blocking incidents in practice. They are design rules, not triage steps — apply them before a blocking incident rather than after one.
+
+> [!tip] Blocking remediation checklist
+>
+> - Keep transactions as short as possible. The most common blocker is not a complex lock mode; it is a session that finished its real work and kept the transaction open.
+> - Prefer narrow, indexed predicates. A precise seek reduces both lock count and lock duration.
+> - Use row versioning for reader-versus-writer pressure, not as a substitute for writer discipline.
+> - Treat `WAITFOR`, user interaction, remote calls, and lengthy application logic inside transactions as design bugs.
+> - Use `XACT_ABORT ON` and a finite `LOCK_TIMEOUT` for unattended write workloads.
+> - Investigate lock escalation by fixing access patterns first. Disabling escalation is a last-mile intervention, not a first response.
 
 
