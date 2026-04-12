@@ -35,6 +35,9 @@ This page covers the full lifecycle: creating branches, switching between them, 
 | **Reflog** | A local log of every HEAD movement (commits, checkouts, resets, rebases). Entries expire after approximately 90 days. The reflog is the primary recovery mechanism for lost commits. |
 | **Stash** | A temporary storage stack for uncommitted changes. Stashing saves modified tracked files and staged changes, then resets the working tree to a clean state. |
 | **Worktree** | A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share the same commit history and reflog. |
+| **Interactive rebase** | A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch. The primary tool for cleaning up branch history before PR review. |
+| **Fixup commit** | A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically. |
+| **Cherry-pick** | Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch. |
 
 ## Conceptual Model
 
@@ -867,12 +870,12 @@ git log --oneline --graph -5
 
 The commits now sit on top of `f280460` (the tip of main when the rebase ran), not on top of the old branch point. The feature branch can now be fast-forward merged into main.
 
-#### Interactive rebase — edit commit history
+#### Interactive rebase — clean up branch history before PR
 
-**When to run:** before merging a feature branch, to clean up the commit history — squash fixup commits, reword messages, reorder commits, or drop accidental commits.
-**Trigger:** branch has too many small "fix typo" commits, commit messages need improvement, or commits should be reordered for logical grouping.
-**Context:** local operation that rewrites history. Opens an editor listing each commit with an action keyword. Never use interactive rebase on commits that have been pushed to a shared branch.
-**Purpose:** produce a clean, reviewable commit history before merging.
+**When to run:** before opening or updating a PR, to clean up the commit history — squash fixup commits, reword messages, reorder commits, or drop accidental commits. This is the most common senior-engineer history-cleanup workflow.
+**Trigger:** branch has accumulated WIP commits, typo fixes, debug commits, or fixup commits that should be folded before review.
+**Context:** local operation that rewrites history. Opens an editor listing each commit with an action keyword. Never use interactive rebase on commits that have been pushed to a shared branch. After rebasing a pushed personal branch, use `git push --force-with-lease`.
+**Purpose:** produce a clean, reviewable commit history that tells a coherent story for reviewers.
 
 > [!info]- Interactive rebase action keywords
 >
@@ -880,22 +883,75 @@ The commits now sit on top of `f280460` (the tip of main when the rebase ran), n
 >
 > - `pick` — use the commit as-is
 > - `reword` — use the commit but edit its message
-> - `edit` — pause the rebase at this commit so you can amend it
-> - `squash` — combine this commit with the previous one, keeping both messages
+> - `edit` — pause the rebase at this commit so you can amend it (add files, split it, etc.)
+> - `squash` — combine this commit with the previous one, keeping both messages (editor opens to merge them)
 > - `fixup` — combine this commit with the previous one, discarding this commit's message
 > - `drop` — remove the commit entirely
 >
 > Commits are listed oldest-first. Reordering the lines reorders the commits.
 
-*Interactively edit the last 3 commits.*
+*View the commits before cleanup — the branch has a fixup commit that should be folded.*
 
 ```bash
-git rebase -i HEAD~3
+git log --oneline -5
 ```
 
-> [!tip] Squash fixup commits before merging
+```text
+ba61ab0 chore: update README with pipeline docs
+4752f8d fixup! feat: add data quality checks
+7b41c1b feat: add data quality checks
+72edabc merge: integrate centralized logging module
+b948ccd feat: add centralized logging module
+```
+
+The `fixup!` prefix on `4752f8d` signals that this commit should be absorbed into `7b41c1b` (the commit whose message it matches).
+
+#### Autosquash fixup commits
+
+**When to run:** when your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages.
+**Trigger:** you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work.
+**Context:** `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag.
+**Purpose:** one-command cleanup of fixup commits without manual editor editing.
+
+*Run interactive rebase with autosquash to fold fixup commits.*
+
+```bash
+git rebase -i --autosquash HEAD~3
+```
+
+```text
+Successfully rebased and updated refs/heads/demo/rebase-cleanup.
+```
+
+*Verify the cleaned-up history — the fixup commit has been absorbed.*
+
+```bash
+git log --oneline -3
+```
+
+```text
+8b32aae chore: update README with pipeline docs
+6887984 feat: add data quality checks
+72edabc merge: integrate centralized logging module
+```
+
+Three commits reduced to two: the fixup was folded into the feature commit. The branch is now clean for PR review.
+
+> [!tip] The fixup commit workflow
 >
-> Use `fixup` instead of `squash` when you want to discard the fixup commit's message entirely and keep only the original commit's message. This produces a cleaner history than `squash`, which concatenates both messages. Name fixup commits with the `fixup!` prefix (e.g., `fixup! feat: add ESG scoring`) and use `--autosquash` to have Git automatically reorder them.
+> During development, when you spot an issue in an earlier commit:
+>
+> 1. **Fix the issue** and stage the fix: `git add <file>`
+> 2. **Create a fixup commit:** `git commit --fixup=<SHA-of-original-commit>`
+> 3. Git names it `fixup! <original message>` automatically
+> 4. **Before PR:** run `git rebase -i --autosquash HEAD~N` — fixup commits are automatically folded into their targets
+> 5. **Push:** `git push --force-with-lease` if the branch was already pushed
+>
+> This is cleaner than amending, especially when fixing commits that are not the most recent.
+
+> [!tip] Squash vs fixup
+>
+> Use `fixup` when you want to discard the fixup commit's message entirely and keep only the original commit's message. Use `squash` when both messages are meaningful and should be concatenated. In practice, `fixup` is used far more often — the fixup commit's message is usually just "fix typo" or "address review comment."
 
 #### Cancel a rebase in progress
 
@@ -985,6 +1041,50 @@ git cherry-pick 3b1c373
 ```
 
 The output shows that Git created a new commit `7dd85e2` on main with the same changes and message as the original commit `3b1c373`. The date is preserved from the original commit.
+
+#### Backport a hotfix to a release branch with traceability
+
+**When to run:** when a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge.
+**Trigger:** a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features.
+**Context:** the `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source commit for auditability. This is critical for incident response — reviewers and on-call engineers can trace the backport to the original fix.
+**Purpose:** selectively apply one commit's changes to a release branch with full traceability.
+
+*Cherry-pick a hotfix from main to the release branch with source tracing.*
+
+```bash
+git switch release/2026-Q2
+git cherry-pick -x 3c60ed4
+```
+
+```text
+[release/2026-Q2 18b043e] fix: handle NaN values in price feed
+ Date: Sun Apr 12 17:19:10 2026 +0200
+ 1 file changed, 8 insertions(+)
+ create mode 100644 src/hotfix_price_feed.py
+```
+
+*Verify the cherry-pick message includes the source reference.*
+
+```bash
+git log -1 --format="%B"
+```
+
+```text
+fix: handle NaN values in price feed
+
+(cherry picked from commit 3c60ed47aeac5fd3223cc8fc7c0bee7497444788)
+```
+
+The `(cherry picked from commit ...)` line lets anyone trace this commit back to the original fix on `main`. Without `-x`, the connection between the two commits is invisible.
+
+> [!tip] Cherry-pick workflow for incident response
+>
+> 1. **Fix the bug on main** — branch, fix, review, merge
+> 2. **Identify the fix commit SHA:** `git log --oneline -5`
+> 3. **Switch to the release branch:** `git switch release/2026-Q2`
+> 4. **Cherry-pick with traceability:** `git cherry-pick -x <SHA>`
+> 5. **Push the release branch:** `git push`
+> 6. **Tag the release patch:** `git tag -a v2026.Q2.1 -m "patch: NaN price feed fix"`
 
 > [!warning] Cherry-pick creates duplicate commits
 >
@@ -1225,6 +1325,73 @@ The following matrix summarizes when to use each integration strategy. The right
 | Branch has been pushed, others have pulled | Merge only, never rebase | Rebase would rewrite shared history |
 | PR merge on GitHub/GitLab | Squash and merge or merge commit | Platform handles the merge strategy |
 | Long-lived release branch | Merge with --no-ff | Auditability of what was included in each release |
+
+## Review-Fix Commit Hygiene
+
+When a PR receives review comments, you need to push follow-up commits to address them. The decision between pushing new commits, amending, or squashing into existing commits affects both the reviewer's experience and the final branch history quality. This section provides an explicit decision procedure for "review round 2" workflows.
+
+### When to push follow-up commits vs when to squash
+
+> [!question] Push follow-up commits or fixup+squash?
+>
+> This depends on where you are in the review cycle and your team's merge strategy:
+>
+> - **During active review (round 1, round 2):** push follow-up commits with descriptive messages like `fix: address review — validate ticker format before insert`. This lets the reviewer see exactly what changed since their last review by inspecting only the new commits, rather than re-reading the entire diff.
+> - **After final approval, before merge:** if the team uses squash-merge (recommended for feature branches), the individual commits are collapsed into one — no cleanup needed. If the team uses merge commits, consider an interactive rebase to fold fixup commits before the merge lands.
+> - **If the reviewer specifically asks for a clean history:** use `git commit --fixup=<SHA>` for each review fix, then `git rebase -i --autosquash` followed by `git push --force-with-lease` to present a clean branch. Warn the reviewer that you force-pushed so they re-fetch.
+
+### Decision procedure for updating a PR
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    Q{"Review comments<br/>received"}
+    A["Push follow-up<br/>commits"]
+    B["Fixup + rebase<br/>+ force-push"]
+
+    Q -->|"Review in progress<br/>(reviewer needs to see delta)"| A
+    Q -->|"Reviewer asked for<br/>clean history"| B
+
+    A --> M{"Merge strategy?"}
+    M -->|"Squash merge"| DONE["Merge — history<br/>auto-cleaned"]
+    M -->|"Merge commit"| REBASE["Rebase before<br/>merge if needed"]
+
+    B --> FP["git push<br/>--force-with-lease"]
+    FP --> NOTIFY["Notify reviewer<br/>to re-fetch"]
+
+    style DONE fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style A fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#292e42,stroke:#e0af68,color:#c0caf5
+```
+
+*Decision flowchart for updating a PR after review comments. During active review, push follow-up commits so the reviewer can inspect only the delta since their last review. If the team uses squash-merge, the follow-up commits are automatically collapsed on merge — no cleanup needed. If the team uses merge commits and the reviewer wants a clean branch, use `git commit --fixup` + `git rebase -i --autosquash` + `git push --force-with-lease`, then notify the reviewer to re-fetch.*
+
+### Audit-friendly vs clean history
+
+Not all branches should be cleaned up the same way. The right approach depends on what the branch contains:
+
+| Branch type | Recommended approach | Why |
+|---|---|---|
+| Feature branch (new functionality) | Squash-merge or fixup before merge | Only the final result matters on `main`. Clean history makes `git bisect` and `git log` more useful. |
+| Migration branch (schema changes) | Merge commit, keep all commits | Each migration step is an audit artifact. Squashing can obscure the order of operations and make rollbacks harder to reason about. |
+| Infrastructure / Terraform branch | Merge commit, keep all commits | "Who changed what and when" may be questioned during incidents. The full commit trail is the evidence. |
+| Hotfix branch (single commit) | Fast-forward or cherry-pick | The branch is a single commit — no cleanup needed. |
+| Refactoring branch (code moves) | Squash-merge | The intermediate states (move file, fix imports, update tests) are not individually meaningful. |
+
+> [!tip] Default recommendation
+>
+> Use squash-merge for feature branches and refactoring. Use merge commits for migration branches, infrastructure changes, and any work where auditability outweighs cleanliness. Configure this per-PR on GitHub (the merge button dropdown lets you choose each time) rather than enforcing a single strategy repository-wide.
 
 ## Operating Guidance
 

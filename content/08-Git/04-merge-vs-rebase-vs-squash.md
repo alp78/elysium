@@ -2,13 +2,7 @@
 title: "04 - Merge vs Rebase vs Squash"
 tags:
   - git
-  - merge
-  - rebase
-aliases: [merge vs rebase, rebase vs squash, git merge strategies]
-description: "Comparison of Git merge strategies — standard merge, rebase, and squash merge — with guidance on when to use each."
-created: 2026-03-22
-updated: 2026-04-05
-status: complete
+  - version-control
 ---
 
 # Merge vs Rebase vs Squash
@@ -18,40 +12,101 @@ status: complete
 >
 > — **Linus Torvalds**, Git mailing list
 
-Three strategies for integrating changes from one branch into another. Each produces a different commit history shape: a standard merge preserves branch topology with a merge commit, rebase replays commits linearly with new SHAs, and squash merge collapses all branch commits into one.
+Three strategies for integrating changes from one branch into another. Each produces a different commit history shape: a standard merge preserves branch topology with a merge commit, rebase replays commits linearly with new SHAs, and squash merge collapses all branch commits into one. Choosing the wrong strategy for your context can make history hard to read, bisect, or revert — and in the worst case, can destroy teammates' work by rewriting shared history.
 
-## Overview
+## Key Definitions
 
-The three strategies produce fundamentally different graph shapes. Choosing the wrong strategy for your context can make history hard to read, bisect, or revert.
+Every term used in this page is defined here. If a term appears in a command output or diagram, this table is the reference.
 
-### Merge vs rebase vs squash — comparison table
+| Term | Definition |
+|---|---|
+| **Merge commit** | A commit with two parent pointers — one from each branch being joined. It records the integration point where two lines of work converged. Created by `git merge` when branches have diverged. |
+| **Fast-forward** | When the target branch has not diverged from the source, Git moves the branch pointer forward to the source tip without creating a merge commit. No new commit is produced — the pointer simply advances. |
+| **Three-way merge** | The merge algorithm Git uses when branches have diverged. It compares three snapshots: the common ancestor, the tip of the current branch, and the tip of the branch being merged. The result is a new merge commit combining both diffs. |
+| **Common ancestor** | The most recent commit shared by both branches before they diverged. Git finds this automatically using `git merge-base`. It is the reference point for computing diffs during a merge or rebase. |
+| **Rebase** | Detaching commits from their original base and replaying them one by one onto a new base commit. Each replayed commit receives a new SHA because its parent pointer changes. The content (diff) is identical but the identity (hash) is not. |
+| **SHA (commit hash)** | A 40-character hexadecimal identifier computed from a commit's content, parent pointer(s), author, timestamp, and message. Changing any of these — including the parent — produces a different SHA. |
+| **History rewriting** | Any operation that changes existing commit SHAs: rebase, amend, interactive rebase, filter-branch. After rewriting, the original commits become orphaned and are retained in the reflog for approximately 90 days. |
+| **Squash merge** | Combining all commits from a branch into a single staged changeset on the target branch. The individual commits are discarded from the target's log. The branch pointer is not advanced. |
+| **Reflog** | A local log of every position HEAD and branch pointers have occupied. It records orphaned commits after rebase or amend, making recovery possible within the default 90-day expiry window. |
+| **Force push** | Overwriting a remote branch with local history that has diverged from the remote's history. Required after rebase because the rewritten SHAs no longer match the remote. `--force-with-lease` is the safe variant — it refuses if the remote has commits you have not fetched. |
+| **ort strategy** | The default merge strategy since Git 2.34, replacing the older `recursive` strategy. It handles renames, directory merges, and large repositories more efficiently. |
+| **Branch pointer** | A lightweight movable reference that points to a specific commit SHA. Creating a branch, merging, and rebasing all work by moving these pointers — no files are copied. |
+| **Orphaned commit** | A commit that is no longer reachable from any branch pointer. It still exists in the object store and can be found via `git reflog` until garbage collection removes it (default: 90 days for unreachable objects). |
+| **Merge traceability** | The ability to determine, from `git log --graph`, when a set of changes was integrated and from which branch. Standard merge preserves this via the merge commit's two parents. Rebase and squash discard it. |
 
-| Strategy | History Shape | Preserves Individual Commits? | Creates Merge Commit? | Best For |
-|----------|--------------|------|------|----------|
-| **Merge** | Non-linear (merge commits) | Yes | Yes | Feature branches where commit history is meaningful |
-| **Rebase** | Linear | Yes (replayed, new SHAs) | No | Keeping a clean, linear main branch |
-| **Squash** | Linear (single commit) | No (collapsed into one) | No | Small features or fixups where individual commits add noise |
+## Conceptual Model
 
-> [!question] Which strategy should I use?
->
-> - **Merge** — when the branch has meaningful history that reviewers or future debuggers want to see. Default for team branches and long-lived features.
-> - **Rebase** — when you want a clean, linear log and the branch is private. Rewrites SHAs, so never use on shared branches.
-> - **Squash** — when the branch has noisy "wip"/"fix typo" commits and only the end result matters. Common for small fixes and automated dependency bumps.
+Before learning the commands, understand the three graph shapes that result from each strategy. Every Git repository is a directed acyclic graph (DAG) of commits. Each strategy modifies this graph differently.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'flowchart': {'curve': 'basis'}}}%%
+flowchart TD
+    Q{"How should the<br/>branch integrate?"}
+    Q -->|"Preserve branch topology"| MERGE["Standard Merge<br/>Non-linear · Merge commit<br/>All commits visible"]
+    Q -->|"Linear history,<br/>keep individual commits"| REBASE["Rebase + FF Merge<br/>Linear · No merge commit<br/>New SHAs"]
+    Q -->|"Linear history,<br/>collapse to one commit"| SQUASH["Squash Merge<br/>Linear · Single commit<br/>Branch history discarded"]
+
+    style Q fill:#292e42,stroke:#565f89,color:#c0caf5
+    style MERGE fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style REBASE fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style SQUASH fill:#1a1b26,stroke:#e0af68,color:#c0caf5
+```
+
+*The three integration strategies produce fundamentally different graph shapes. Standard merge creates a non-linear graph with merge commits preserving branch topology. Rebase produces a linear graph by replaying commits with new SHAs. Squash merge produces a linear graph by collapsing all branch commits into a single commit.*
+
+### Merge vs rebase vs squash | comparison table
+
+| Aspect | Standard Merge | Rebase | Squash Merge |
+|---|---|---|---|
+| **History shape** | Non-linear (merge commits) | Linear | Linear (single commit) |
+| **Preserves individual commits** | Yes — all commits remain in log | Yes — replayed with new SHAs | No — collapsed into one |
+| **Creates merge commit** | Yes — two-parent commit | No | No |
+| **Changes existing SHAs** | No — existing commits untouched | Yes — every replayed commit gets a new SHA | No — original branch commits remain, but are not referenced by target |
+| **Branch traceability** | Full — merge commit records which branch was integrated | None — commits appear as if written directly on target | None — single commit, no branch record |
+| **Bisectability** | Full — each original commit is individually testable | Full — each replayed commit is individually testable | Reduced — only the single squash commit can be tested |
+| **Revert granularity** | Individual commits or the entire merge commit | Individual commits | Only the single squash commit |
+| **Requires force-push** | No | Yes — if branch was previously pushed | No |
+| **Safe on shared branches** | Yes | No — rewrites history others may have pulled | Yes |
 
 ## Standard Merge
 
-A standard merge joins two branches by creating a new **merge commit** — a commit with two parents, one from each branch. The full history of both branches is preserved: every individual commit on the feature branch remains visible in `git log --graph`. HEAD advances to the new merge commit; branch pointers are not rewritten.
+A standard merge joins two branches by creating a new **merge commit** — a commit with two parents, one from each branch. The full history of both branches is preserved: every individual commit on the feature branch remains visible in `git log --graph`. HEAD advances to the new merge commit; existing branch pointers are not rewritten.
 
-A **fast-forward merge** is a special case: if the target branch has not diverged, Git simply advances the branch pointer with no merge commit. The `--no-ff` flag forces a merge commit even when fast-forward is possible, preserving the record that a feature branch existed.
+Git uses the **ort** merge strategy (default since Git 2.34) to perform a **three-way merge**: it finds the common ancestor of the two branch tips, computes the diff from the ancestor to each tip, and combines both diffs into a single result. If the same region of a file was modified on both branches, Git reports a **merge conflict** that must be resolved manually.
 
-### git merge — merge commit
+A **fast-forward merge** is a special case: if the target branch has not diverged (no new commits since the branch was created), Git simply advances the branch pointer to the source tip without creating a merge commit. The `--no-ff` flag forces a merge commit even when fast-forward is possible, preserving the record that a feature branch existed.
+
+### git merge | three-way merge
 
 A three-way merge creates a new commit with two parent commits: the tip of the current branch and the tip of the branch being merged. Git finds the common ancestor automatically and applies both diffs. The working tree, staging area, and HEAD all advance to the new merge commit.
 
 **Before merge:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -62,12 +117,23 @@ gitGraph TB:
   commit id: "E"
 ```
 
-*Figure: Two branches have diverged — `feat/new-feature` has commits C and D, while main has advanced to E. A three-way merge is required to integrate both lines of work.*
+*Main has commits A and B, then advanced to E (adding pipeline configuration constants). The feature branch forked from B and has two commits: C (currency code validator) and D (unit tests). B is the common ancestor. Because main advanced to E independently, the branches have diverged — Git cannot fast-forward and must perform a three-way merge using snapshots B, D, and E.*
 
 **After merge:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -79,56 +145,212 @@ gitGraph TB:
   merge feature id: "M" type: HIGHLIGHT
 ```
 
-*Figure: After `git merge feat/new-feature`, commit M has two parents: E (from main) and D (from the feature branch). Both branch histories remain fully visible in `git log --graph`.*
+*After `git merge demo/merge-strategy`, Git creates merge commit M (marked green) with two parents: E (the tip of main) and D (the tip of the feature branch). Both branch histories remain fully visible in `git log --graph`. Commits C and D retain their original SHAs — nothing is rewritten. The merge commit M records exactly when and where the integration happened, providing full traceability.*
 
-#### git checkout main
+#### Switch to the receiving branch
 
-Switch to the branch that will receive the merge.
+**When to run:** Before any merge — you must be on the branch that will receive the changes.
+**Trigger:** Starting a branch integration workflow.
+**Context:** Local operation. Read-only (no commits created). Switches HEAD, working tree, and staging area.
+**Purpose:** Position HEAD on the target branch so the merge commit will be recorded there.
+
+*Switch to main before merging the feature branch.*
 
 ```bash
 git checkout main
 ```
 
-#### git merge feat/new-feature
+#### Merge the feature branch
 
-Merge the feature branch into the current branch. Git performs a three-way merge using the common ancestor, the tip of main, and the tip of the feature branch.
+**When to run:** After switching to the receiving branch, when the feature is complete and ready to integrate.
+**Trigger:** PR approval, feature completion, or scheduled integration.
+**Context:** Local state-changing operation. Creates a new merge commit on the current branch. Does not affect the remote until you push.
+**Purpose:** Integrate all commits from the feature branch into main, preserving the full commit history and branch topology.
+
+*Merge the feature branch into main using the default three-way merge strategy.*
 
 ```bash
-git merge feat/new-feature
+git merge demo/merge-strategy -m "merge: integrate currency code validator"
 ```
 
 ```text
 Merge made by the 'ort' strategy.
- src/feature.py | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ src/currency_validator.py        | 11 +++++++++++
+ tests/test_currency_validator.py | 16 ++++++++++++++++
+ 2 files changed, 27 insertions(+)
+ create mode 100644 src/currency_validator.py
+ create mode 100644 tests/test_currency_validator.py
 ```
 
-**Use when:** The branch has meaningful intermediate commits that reviewers or future debuggers will want to see.
+The output confirms the **ort** strategy was used. Two files were created with a total of 27 insertions. The merge commit has two parents — the previous tip of main and the tip of the feature branch.
+
+#### Verify the merge graph
+
+*Inspect the commit graph to confirm the merge commit has two parent lines.*
+
+```bash
+git log --oneline --graph -8
+```
+
+```text
+*   11df7ed merge: integrate currency code validator
+|\
+| * c34c0f0 test: add currency validator unit tests
+| * 72ccff9 feat: add currency code validator for price feed
+* | 54daa03 chore: add pipeline configuration constants
+|/
+* 3c60ed4 fix: handle NaN values in price feed
+*   72edabc merge: integrate centralized logging module
+|\
+| * b948ccd feat: add centralized logging module
+|/
+```
+
+The `|\` and `|/` lines show the branch topology. Commit `11df7ed` is the merge commit with two parents: `54daa03` (main's previous tip) and `c34c0f0` (feature's tip). Every individual commit on the feature branch remains visible and individually revertible.
+
+### git merge --no-ff | force merge commit
+
+When a feature branch has not diverged from main (no new commits on main since the branch was created), Git defaults to a fast-forward — it just moves the main pointer forward. The `--no-ff` flag overrides this behavior and forces a merge commit even when fast-forward is possible.
+
+This is useful for preserving the record that a feature branch existed. Without `--no-ff`, the feature commits appear as if they were made directly on main, losing the grouping context.
+
+**Before --no-ff merge:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
+gitGraph TB:
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  checkout main
+```
+
+*Main is at B. The feature branch has one commit C (US market holiday calendar). Main has not advanced — a plain `git merge` would fast-forward, moving main's pointer to C without creating a merge commit. The branch record would be lost.*
+
+**After --no-ff merge:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
+gitGraph TB:
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  checkout main
+  merge feature id: "M" type: HIGHLIGHT
+```
+
+*With `--no-ff`, Git creates merge commit M (marked green) even though fast-forward was possible. The merge commit has two parents: B (main) and C (feature). The branch topology is preserved in the graph — `git log --graph` will show the feature branch as a separate line that was merged in.*
+
+#### Force a merge commit on a non-diverged branch
+
+**When to run:** When merging a feature branch that has not diverged from main, but you want to preserve the branch topology in the log.
+**Trigger:** Team policy requires merge commits for traceability, or you want `git log --graph` to show the feature as a distinct branch.
+**Context:** Local state-changing operation. Creates a merge commit even when fast-forward would produce the same tree content.
+**Purpose:** Record the integration point and preserve the visual grouping of feature commits in the graph.
+
+*Force a merge commit for the holiday calendar branch, even though main has not diverged.*
+
+```bash
+git merge --no-ff demo/noff-merge -m "merge: add US market holiday calendar"
+```
+
+```text
+Merge made by the 'ort' strategy.
+ src/holidays.py | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+ create mode 100644 src/holidays.py
+```
+
+### git merge --ff-only | refuse non-fast-forward
+
+The `--ff-only` flag tells Git to merge only if a fast-forward is possible. If the branches have diverged, the merge is aborted. This is useful in CI/CD pipelines and automated scripts where a diverged state indicates the branch needs to be rebased first.
+
+#### Reject a merge when branches have diverged
+
+**When to run:** In CI pipelines or scripts where you want to guarantee linear history — if the branch needs a three-way merge, the script should fail and require a rebase first.
+**Trigger:** Automated merge step in a deployment pipeline.
+**Context:** Local operation. If the merge cannot fast-forward, Git exits with code 128 and no changes are made.
+**Purpose:** Enforce linear history by refusing to create merge commits.
+
+*Attempt to fast-forward merge a branch that has diverged from main.*
+
+```bash
+git merge --ff-only demo/ffonly-test
+```
+
+```text
+fatal: Not possible to fast-forward, aborting.
+```
+
+The merge was rejected because `demo/ffonly-test` branched from an earlier commit and main has advanced since then. To proceed, rebase the branch onto main first, then retry with `--ff-only`.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--no-ff` | `git merge --no-ff <branch>` | Force a merge commit even when fast-forward is possible |
-| `--ff-only` | `git merge --ff-only <branch>` | Refuse to merge if a fast-forward is not possible |
-| `--squash` | `git merge --squash <branch>` | Collapse all commits into one staged change without committing |
+| `--ff-only` | `git merge --ff-only <branch>` | Refuse to merge if fast-forward is not possible — exit with error |
+| `--squash` | `git merge --squash <branch>` | Collapse all commits into one staged change without committing (see Squash Merge section) |
 | `--abort` | `git merge --abort` | Abort an in-progress merge and restore the pre-merge state |
-| `--no-commit` | `git merge --no-commit <branch>` | Perform the merge but stop before creating the commit |
+| `--continue` | `git merge --continue` | Continue a merge after resolving conflicts (equivalent to `git commit`) |
+| `--no-commit` | `git merge --no-commit <branch>` | Perform the merge but stop before creating the commit, allowing inspection |
 | `-m` | `git merge -m "msg" <branch>` | Override the auto-generated merge commit message |
 | `--strategy` | `git merge --strategy=ort <branch>` | Specify the merge strategy (default: `ort` since Git 2.34) |
+| `--strategy-option` | `git merge -X theirs <branch>` | Pass options to the merge strategy (e.g., `theirs` to auto-resolve conflicts favoring the incoming branch) |
+| `--verify` | `git merge --verify <branch>` | Run pre-merge and commit-msg hooks (default behavior) |
+| `--no-verify` | `git merge --no-verify <branch>` | Skip pre-merge and commit-msg hooks |
+| `--stat` | `git merge --stat <branch>` | Show a diffstat after merge (default behavior) |
+| `--no-stat` | `git merge --no-stat <branch>` | Suppress the diffstat after merge |
 
 ## Rebase
 
-Rebasing detaches your commits from where they originally branched off and **replays** them one by one on top of the target branch's latest commit. Each replayed commit gets a **new SHA** — the content is the same but the parent pointer changes. The result is a clean, linear history with no merge commits, as if the feature work started after all main-branch commits were already in place.
+Rebasing detaches your commits from where they originally branched off and **replays** them one by one on top of the target branch's latest commit. Each replayed commit gets a **new SHA** — the content (diff) is identical but the parent pointer changes, which changes the hash. The result is a clean, linear history with no merge commits, as if the feature work started after all main-branch commits were already in place.
 
-Because rebase rewrites history (new SHAs), it must only be used on local or private branches. If others have already pulled the branch, the rewritten commits will conflict with their copies.
+Because rebase rewrites history (new SHAs), it must only be used on **local or private branches**. If others have already pulled the branch, the rewritten commits will diverge from their copies — their next `git pull` will see conflicting histories and produce duplicate commits or merge conflicts that are painful to untangle.
 
-### git rebase — replay commits on new base
+After rebasing, the feature branch is a direct descendant of the target branch. A subsequent `git merge` from the target will fast-forward — no merge commit is created. This is the core value proposition: rebase + fast-forward merge produces a perfectly linear history.
 
-The rebase operation moves the branch's fork point from the original common ancestor to the current tip of the target branch, then replays each commit in order. The branch pointer advances to the last replayed commit. The original commits become orphaned and are retained in the reflog for approximately 90 days.
+### git rebase | replay commits on new base
+
+The rebase operation moves the branch's fork point from the original common ancestor to the current tip of the target branch, then replays each commit in order. If any commit conflicts with the new base, Git pauses and asks you to resolve it before continuing with `git rebase --continue`. The original commits become orphaned and are retained in the reflog for approximately 90 days.
 
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -139,259 +361,603 @@ gitGraph TB:
   commit id: "E"
 ```
 
-*Figure: Feature branch forked from B; main has since advanced to E. The two branches have diverged and share B as their common ancestor.*
+*Main has advanced to E (retry decorator with exponential backoff) since the feature branch forked from the merge commit after B. The feature branch has two commits: C (market hours utility, SHA d571276) and D (market hours tests, SHA fad1518). The common ancestor is the merge commit. Both branches have diverged — a plain merge would create a merge commit. Rebase will instead replay C and D onto E.*
 
 **After rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "E"
   branch feature
-  commit id: "C'"
-  commit id: "D'"
+  commit id: "C'" type: HIGHLIGHT
+  commit id: "D'" type: HIGHLIGHT
 ```
 
-*Figure: After `git rebase main`, commits C and D have been replayed as C' and D' on top of E. The branch is now a direct descendant of main — a fast-forward merge will produce a fully linear history with no merge commit.*
+*After `git rebase main`: Git first identifies E as main's tip, then replays the feature branch's commits one at a time on top of E. C becomes C' (marked green, new SHA 4db58ad) and D becomes D' (marked green, new SHA cc230bc). The diffs are identical to the originals, but the SHAs changed because each commit now has a different parent. The original commits (d571276 and fad1518) are orphaned and visible only in the reflog. The feature branch is now a direct descendant of main — a fast-forward merge will produce a fully linear history with no merge commit.*
 
 > [!danger] Never Rebase Shared Branches
 >
-> Rebasing rewrites commit SHAs. If others have pulled your branch, the rewritten commits will diverge from their copies, causing conflicts on their next pull. Only rebase local or private branches that no one else has checked out.
-
-> [!success] Use Merge to Update a Branch Under Active Review
+> Rebasing rewrites commit SHAs. If others have pulled your branch, the rewritten commits will diverge from their copies. Their next `git pull` will attempt to merge the old history with the new one, producing duplicate commits and confusing conflicts. Only rebase branches that no one else has checked out.
 >
-> While your PR is open and teammates may have checked out your branch, use `git merge origin/main` to incorporate upstream changes. This adds a merge commit but does not rewrite any existing commits, keeping all SHA references stable.
+> - **Shared branch** = any branch that another person has fetched, checked out, or based work on.
+> - **Private branch** = a branch that exists only in your local repository, or a pushed branch that you are the sole contributor to and no one has based work on.
 
-#### git checkout feat/new-feature
+> [!success] Use Merge to Update a Shared Branch
+>
+> While your PR is open and teammates may have checked out your branch, use `git merge origin/main` to incorporate upstream changes. This adds a merge commit but does not rewrite any existing SHAs, keeping all references stable for everyone who has pulled the branch.
 
-Switch to the feature branch to rebase it onto the updated target.
+#### Switch to the feature branch
+
+**When to run:** Before rebasing — rebase operates on the currently checked-out branch.
+**Trigger:** You want to update your feature branch with the latest changes from main before opening a PR.
+**Context:** Local operation. Switches HEAD, working tree, and staging area to the feature branch.
+**Purpose:** Position HEAD on the branch whose commits will be replayed.
+
+*Switch to the feature branch that will be rebased.*
 
 ```bash
-git checkout feat/new-feature
+git checkout demo/rebase-strategy
 ```
 
-#### git rebase main
+#### Rebase onto main
 
-Replay all commits on the feature branch onto the tip of main. Git detaches each commit, applies it in order, and assigns a new SHA. Conflicts are resolved commit-by-commit with `git rebase --continue`.
+**When to run:** After fetching the latest main and switching to your feature branch.
+**Trigger:** Main has advanced since you branched, and you want a linear history without a merge commit.
+**Context:** Local history-rewriting operation. Every commit on the feature branch gets a new SHA. If the branch was previously pushed, you must force-push after rebasing. Conflicts are resolved commit-by-commit.
+**Purpose:** Replay all feature commits on top of main's latest tip, producing a linear history.
+
+*Rebase the feature branch onto the current tip of main.*
 
 ```bash
 git rebase main
 ```
 
 ```text
-Successfully rebased and updated refs/heads/feat/new-feature.
+Successfully rebased and updated refs/heads/demo/rebase-strategy.
 ```
 
-#### git checkout main
+The original commits (d571276, fad1518) have been replaced by new commits (4db58ad, cc230bc) with different SHAs but identical diffs.
 
-Switch back to main to complete the integration.
+#### Verify the rebase with reflog
 
-```bash
-git checkout main
-```
-
-#### git merge feat/new-feature — fast-forward
-
-After rebase, the feature branch is a direct descendant of main with no divergence. Git fast-forwards: it moves the main branch pointer to the tip of the feature branch. No merge commit is created.
+*The reflog preserves the original commit SHAs before the rebase, enabling recovery if needed.*
 
 ```bash
-git merge feat/new-feature
+git reflog demo/rebase-strategy
 ```
 
 ```text
-Updating a1b2c3d..e4f5g6h
-Fast-forward
- src/feature.py | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+cc230bc demo/rebase-strategy@{0}: rebase (finish): refs/heads/demo/rebase-strategy onto 290604d
+fad1518 demo/rebase-strategy@{1}: commit: test: add market hours configuration tests
+d571276 demo/rebase-strategy@{2}: commit: feat: add market hours utility for exchange scheduling
+11df7ed demo/rebase-strategy@{3}: branch: Created from main
 ```
 
-**Use when:** You want a linear history and the branch is private to you.
+The reflog shows the branch was created from main at `11df7ed`, had two commits (d571276, fad1518), and was rebased onto `290604d`. The original SHAs are recoverable with `git reset --hard fad1518` within the 90-day reflog window.
+
+#### Fast-forward merge after rebase
+
+**When to run:** After rebasing your feature branch, switch to main and merge. Because the feature is now a direct descendant, Git fast-forwards.
+**Trigger:** Rebase completed successfully — feature branch is ready to integrate.
+**Context:** Local state-changing operation. Moves main's pointer forward. No merge commit is created.
+**Purpose:** Integrate the rebased feature into main, producing a fully linear history.
+
+*Switch to main and fast-forward merge the rebased feature branch.*
+
+```bash
+git checkout main
+git merge demo/rebase-strategy
+```
+
+```text
+Updating 290604d..cc230bc
+Fast-forward
+ src/market_hours.py        | 18 ++++++++++++++++++
+ tests/test_market_hours.py |  8 ++++++++
+ 2 files changed, 26 insertions(+)
+ create mode 100644 src/market_hours.py
+ create mode 100644 tests/test_market_hours.py
+```
+
+The output says `Fast-forward` — no merge commit was created. Main's pointer moved from `290604d` directly to `cc230bc`. The resulting history is perfectly linear: every commit appears in sequence with no branch forks or merge commits.
+
+### git push --force-with-lease | safe force push after rebase
+
+If you pushed your branch to the remote before rebasing, the remote still has the old SHAs. After rebase, a regular `git push` will be rejected because the histories have diverged. You must force-push — but use `--force-with-lease`, not `--force`.
+
+`--force-with-lease` checks that the remote branch is still at the position you last fetched. If someone else pushed new commits to the branch since your last fetch, the push is rejected — protecting their work. Plain `--force` overwrites the remote unconditionally, which can destroy commits that teammates pushed.
+
+#### Force push a rebased branch safely
+
+**When to run:** After rebasing a branch that was previously pushed to the remote.
+**Trigger:** `git push` was rejected with "non-fast-forward" because the rebased SHAs differ from the remote's.
+**Context:** Remote state-changing operation. Overwrites the remote branch history. `--force-with-lease` provides a safety check against overwriting teammates' work.
+**Purpose:** Update the remote branch with the rebased history while verifying no one else has pushed to it.
+
+> [!danger] Never use --force on shared branches
+>
+> `git push --force` overwrites the remote branch unconditionally. If a teammate pushed commits after your last fetch, those commits are permanently lost from the remote. There is no confirmation prompt — the overwrite is immediate and silent.
+
+> [!success] Always use --force-with-lease
+>
+> `git push --force-with-lease` compares the remote ref to your local tracking ref. If someone else pushed commits you have not fetched, the push fails with a clear error. Fetch first, resolve any conflicts, and retry.
+
+*Force push the rebased branch with the safety lease check.*
+
+```bash
+git push --force-with-lease
+```
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--onto <newbase>` | `git rebase --onto main B feat` | Replay commits reachable from `feat` but not `B` onto `main` |
-| `-i` | `git rebase -i HEAD~N` | Interactive rebase: reorder, squash, edit, or drop commits |
-| `--continue` | `git rebase --continue` | Continue after resolving a conflict |
-| `--abort` | `git rebase --abort` | Abort the rebase and restore the original branch state |
-| `--skip` | `git rebase --skip` | Skip the current conflicting commit and continue |
-| `--autosquash` | `git rebase -i --autosquash` | Automatically apply `fixup!` and `squash!` commit messages |
-| `--no-ff` | `git rebase --no-ff` | Create a merge commit even after a successful rebase |
+| `--onto` | `git rebase --onto main A feat` | Replay commits reachable from `feat` but not from `A` onto `main` — transplant a subset of commits |
+| `-i` | `git rebase -i HEAD~N` | Interactive rebase: reorder, squash, fixup, edit, or drop the last N commits |
+| `--continue` | `git rebase --continue` | Continue replaying after resolving a conflict on the current commit |
+| `--abort` | `git rebase --abort` | Abort the rebase entirely and restore the branch to its original state |
+| `--skip` | `git rebase --skip` | Skip the current conflicting commit and continue replaying the rest |
+| `--autosquash` | `git rebase -i --autosquash` | Automatically reorder `fixup!` and `squash!` commits to match their targets |
+| `--autostash` | `git rebase --autostash` | Stash uncommitted changes before rebase, apply them after — avoids "dirty working tree" errors |
+| `--no-ff` | `git rebase --no-ff` | Force cherry-pick instead of fast-forward for commits that could be applied directly |
+| `--keep-base` | `git rebase --keep-base main` | Rebase onto the merge-base of the branch and main, preserving the fork point — useful for reformatting commits without changing the base |
+| `--update-refs` | `git rebase --update-refs` | Automatically update stacked branch pointers during rebase (Git 2.38+) |
 
 ## Squash Merge
 
 Squash merging takes all the commits on a feature branch and **condenses them into a single staged changeset** on the target branch. Unlike a standard merge, `git merge --squash` does not create the commit automatically — it stages all changes and you write one final commit message. The feature branch's individual commit history is discarded from the target's log.
 
-After a squash merge, the feature branch pointer is **not** advanced. The branch remains in its original state and should be deleted after the squash commit is made.
+After a squash merge, the feature branch pointer is **not** advanced. Git does not record any relationship between the squash commit and the original branch — there is no parent link back to the feature commits. The branch should be deleted after the squash commit is made.
 
-### git merge --squash — collapse branch into single commit
+Squash merge is the right choice when the branch contains many small, incremental, or "work in progress" commits that individually add no value to main's history. The final squash commit should have a clear, descriptive message that summarizes the entire body of work.
 
-The squash operation takes the combined diff between the common ancestor and the tip of the feature branch, applies it to the working tree and staging area of the target branch, then stops. You create the final commit with a descriptive message summarizing all the work.
+### git merge --squash | collapse branch into single commit
+
+The squash operation takes the combined diff between the common ancestor and the tip of the feature branch, applies it to the working tree and staging area of the target branch, then stops. No commit is created — the staging area contains all changes, and you create the final commit manually with a descriptive message.
 
 **Before squash merge:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feature
-  commit id: "wip 1"
-  commit id: "wip 2"
-  commit id: "wip 3"
+  commit id: "wip 1" type: REVERSE
+  commit id: "wip 2" type: REVERSE
+  commit id: "wip 3" type: REVERSE
   checkout main
 ```
 
-*Figure: Feature branch has three noisy WIP commits that add no value to the permanent history of main. Squash merge will collapse all three into a single descriptive commit.*
+*The feature branch has three noisy WIP commits (marked red): "wip: scaffold sector mapper" (af11f2e), "wip: add GICS lookup table and get_sector function" (bdb06a8), and "fix typo in sector weight calc" (72b29d6). These commits represent iterative development that is not useful in main's permanent history. Individually, they are not meaningful to bisect or revert.*
 
 **After squash merge:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
-  commit id: "feat: add" type: HIGHLIGHT
+  commit id: "S" type: HIGHLIGHT
 ```
 
-*Figure: After `git merge --squash`, the three WIP commits are replaced by a single highlighted commit on main. The feature branch pointer is not advanced and should be deleted after this step.*
+*After `git merge --squash` and `git commit`, commit S (marked green, SHA 38abae3) appears on main as a single commit containing the combined diff of all three WIP commits. The feature branch pointer was not advanced — it still points to 72b29d6. There is no parent link from S back to the feature branch, so `git log --graph` shows S as a regular single-parent commit, not a merge. The feature branch should be deleted after this step.*
 
-> [!warning] Squash loses individual commit history
+> [!warning] Squash discards individual commit history
 >
-> After a squash merge, all individual commits on the feature branch are collapsed into one. If you need to bisect or revert a specific change from within that branch, you cannot — you can only revert the entire squash commit. For branches with multiple meaningful changes, use a standard merge or rebase instead.
+> After a squash merge, all individual commits on the feature branch are collapsed into one. You lose:
+>
+> - **Bisect granularity** — `git bisect` can only identify the squash commit, not the specific change within the branch that introduced a bug.
+> - **Revert granularity** — you can only revert the entire squash commit, not a specific sub-change.
+> - **Author attribution** — if multiple people committed to the branch, only the squash committer appears in main's log.
 
-> [!success] Use Standard Merge to Preserve Meaningful Commit History
+> [!success] Use Standard Merge for Meaningful History
 >
 > For feature branches with multiple distinct commits that reviewers or future debuggers will want to inspect individually, use `git merge` (without `--squash`). Each commit remains visible in `git log --graph` and can be individually reverted or bisected.
 
-#### git checkout main
+#### Switch to the receiving branch
 
-Switch to the branch that will receive the squash commit.
+*Switch to main before performing the squash merge.*
 
 ```bash
 git checkout main
 ```
 
-#### git merge --squash feat/new-feature
+#### Stage all feature commits as a single changeset
 
-Stage the combined diff of all commits on the feature branch without creating a commit. The staging area now contains all changes ready for a single commit.
+**When to run:** When the feature branch is complete but its commit history is noisy — WIP commits, typo fixes, or iterative scaffolding that adds no value to main.
+**Trigger:** PR ready for merge, and the team policy is squash-merge for small features.
+**Context:** Local state-changing operation. Stages all changes from the feature branch but does not create a commit. HEAD is not updated until you commit manually.
+**Purpose:** Collapse all branch commits into a single staged changeset, ready for a descriptive commit message.
+
+*Squash merge the feature branch — this stages all changes without committing.*
 
 ```bash
-git merge --squash feat/new-feature
+git merge --squash demo/squash-strategy
 ```
 
 ```text
+Updating cc230bc..72b29d6
+Fast-forward
 Squash commit -- not updating HEAD
-Automatic merge went well; stopped before committing as requested
+ src/sector_mapper.py | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 src/sector_mapper.py
 ```
 
-#### git commit -m "feat: add new feature"
+The output confirms `Squash commit -- not updating HEAD`. All changes are staged but no commit exists yet. The staging area contains the combined diff of all three feature branch commits.
 
-Create the single squash commit with a descriptive message summarizing all work from the feature branch.
+#### Create the squash commit
+
+**When to run:** Immediately after `git merge --squash` — the staging area has all changes ready.
+**Trigger:** Squash merge completed successfully.
+**Context:** Local state-changing operation. Creates a single commit on main. The commit message should summarize all work from the feature branch.
+**Purpose:** Record the feature as a single, well-described commit in main's history.
+
+*Commit the squashed changes with a descriptive message.*
 
 ```bash
-git commit -m "feat: add new feature"
+git commit -m "feat: add GICS sector mapper with portfolio weight calculation"
 ```
 
 ```text
-[main f1e2d3c] feat: add new feature
- 1 file changed, 42 insertions(+)
+[main 38abae3] feat: add GICS sector mapper with portfolio weight calculation
+ 1 file changed, 19 insertions(+)
+ create mode 100644 src/sector_mapper.py
 ```
 
-**Use when:** The branch has many small "wip" or "fix typo" commits that add noise to main's history.
+#### Delete the feature branch after squash
+
+**When to run:** After the squash commit is confirmed on main.
+**Trigger:** Squash merge workflow is complete.
+**Context:** Local operation. The feature branch pointer was not advanced by the squash merge — it still points to the last WIP commit. Deleting it prevents confusion.
+**Purpose:** Clean up the stale branch reference.
+
+*Delete the feature branch locally after squash merge.*
+
+```bash
+git branch -d demo/squash-strategy
+```
+
+> [!tip] Use -D if Git refuses -d
+>
+> After a squash merge, Git may refuse `git branch -d` because it cannot detect that the branch's commits were merged (the squash commit has no parent link to the feature branch). Use `git branch -D` to force-delete the branch when you are certain the squash commit captured all changes.
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--squash` | `git merge --squash <branch>` | Stage all changes from branch without committing |
-| `--no-commit` | `git merge --no-commit <branch>` | Perform merge but stop before committing |
-| `--abort` | `git merge --abort` | Abort the merge and restore the pre-merge state |
+| `--squash` | `git merge --squash <branch>` | Stage all changes from the branch as a single changeset without committing |
+| `--no-commit` | `git merge --no-commit <branch>` | Perform the merge but stop before creating the commit |
+| `--abort` | `git merge --abort` | Abort the in-progress merge and restore the pre-merge state |
 
-## Choosing a Strategy
+## Interactive Rebase — Clean Up Before PR
 
-The right strategy depends on the type of branch, its commit quality, and whether the team values linear history over preserved context. Consistency within a team matters more than which strategy is theoretically optimal.
+Interactive rebase (`git rebase -i`) lets you rewrite the last N commits on your branch: squash multiple commits into one, reword messages, reorder commits, edit a commit's content, or drop commits entirely. This is a **local history cleanup** tool — use it on your private branch before opening a PR to present a clean, professional commit history.
 
-### Decision guide — which strategy by scenario
+Interactive rebase is different from squash merge: it gives you fine-grained control over which commits to keep, combine, or discard, whereas squash merge collapses everything into one.
 
-> [!question] Shared feature branch with multiple contributors
->
-> Use **standard merge**. Rebase would rewrite commits that teammates have already pulled. Squash would discard their individual commit attribution.
+### git rebase -i | interactive commit editing
 
-> [!question] Solo feature branch — clean history matters
->
-> Use **rebase** before merging. Replay your commits onto main's latest, then fast-forward. Result is a linear history with no merge commits.
+The interactive rebase opens a todo list of commits with an action keyword for each. The default action is `pick` (keep the commit as-is). You change the keyword to control what happens to each commit.
 
-> [!question] Branch with many fixup commits — only the result matters
->
-> Use **squash merge**. Write one descriptive commit message summarizing all the work. Delete the feature branch after. Do not use squash when you may need `git bisect` to isolate a change within that branch.
-
-> [!question] Hotfix — 1–2 commits
->
-> Either **rebase** or **squash**. Both produce a linear result. Rebase preserves the individual commits; squash collapses them into one.
-
-> [!question] Long-lived branch with many contributors (e.g., develop → main)
->
-> Use **merge**. The merge commit marks the integration point and both parent histories remain intact.
-
-| Scenario | Recommended |
-|----------|-------------|
-| Multi-commit feature with meaningful history | Merge |
-| Single developer, clean linear history preferred | Rebase |
-| Many small fixup commits, only the end result matters | Squash |
-| Hotfix with 1–2 commits | Rebase or Squash |
-| Long-lived branch with many contributors | Merge |
-| PR open and colleagues have checked out the branch | Merge (`git merge origin/main` to update) |
-
-### Interactive Rebase — Clean Up Before PR
-
-Before opening a PR, use `git rebase -i HEAD~N` to squash or reword messy WIP commits into a clean, reviewable history. This is a local operation — no shared history is affected.
+| Keyword | Effect |
+|---|---|
+| `pick` | Keep the commit as-is |
+| `reword` | Keep the commit but edit its message |
+| `edit` | Pause at this commit to amend its content |
+| `squash` | Combine this commit with the one above it, merging both messages |
+| `fixup` | Combine this commit with the one above it, discarding this commit's message |
+| `drop` | Remove this commit entirely |
 
 **Before interactive rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feature
-  commit id: "wip"
-  commit id: "fix typo"
-  commit id: "fix again"
+  commit id: "C" type: REVERSE
+  commit id: "D" type: REVERSE
+  commit id: "E" type: REVERSE
   checkout main
 ```
 
-*Figure: Feature branch with messy WIP commits before cleanup. Running `git rebase -i HEAD~3` lets you squash these into a single descriptive commit before opening a PR.*
+*Feature branch has three messy commits (marked red): C ("wip: start dag scheduler", SHA 54d4f4d), D ("wip: add imports", SHA 36482e9), and E ("fix: lint error in dag scheduler", SHA 96b7c31). These should be combined into a single clean commit before opening a PR.*
 
 **After interactive rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feature
-  commit id: "feat: auth" type: HIGHLIGHT
+  commit id: "F" type: HIGHLIGHT
   checkout main
 ```
 
-*Figure: After interactive rebase — three messy commits squashed into one clean commit. The PR now has a single descriptive entry. History is professional and bisectable.*
+*After `git rebase -i HEAD~3` with `fixup` on commits D and E: all three commits are combined into a single commit F (marked green, new SHA 7d92958). The diffs from D and E are folded into F, and their commit messages are discarded. The result is a single clean commit ready for PR review. The original commits (54d4f4d, 36482e9, 96b7c31) are orphaned and recoverable via reflog.*
+
+#### Squash messy commits with fixup
+
+**When to run:** Before opening a PR, when your branch has WIP, typo-fix, or iterative commits that should be combined.
+**Trigger:** Branch has multiple commits where only the combined result matters.
+**Context:** Local history-rewriting operation. Rewrites SHAs for all affected commits. If the branch was previously pushed, force-push is required after.
+**Purpose:** Present a clean, professional commit history for review.
+
+> [!info]- How interactive rebase with fixup works
+>
+> `git rebase -i HEAD~3` opens a todo list of the last 3 commits. Changing `pick` to `fixup` on a commit combines it with the commit above it, discarding the fixup commit's message. The todo list for this example:
+>
+> ```text
+> pick 54d4f4d wip: start dag scheduler
+> fixup 36482e9 wip: add imports
+> fixup 96b7c31 fix: lint error in dag scheduler
+> ```
+>
+> Commits 2 and 3 are folded into commit 1. The resulting single commit keeps the message "wip: start dag scheduler" (which you would then reword to something descriptive).
+
+*Before interactive rebase — three messy commits on the feature branch.*
+
+```bash
+git log --oneline -4
+```
+
+```text
+96b7c31 fix: lint error in dag scheduler
+36482e9 wip: add imports
+54d4f4d wip: start dag scheduler
+06f13ca merge: add US market holiday calendar
+```
+
+*After interactive rebase with fixup — three commits collapsed into one.*
+
+```bash
+git log --oneline -3
+```
+
+```text
+7d92958 wip: start dag scheduler
+06f13ca merge: add US market holiday calendar
+63b9cd5 feat: add US market holiday calendar for 2026
+```
+
+The three commits have been combined into a single commit `7d92958`. The original SHAs (54d4f4d, 36482e9, 96b7c31) no longer appear in the branch log but remain in the reflog for recovery.
+
+> [!tip] Use fixup commits for deferred cleanup
+>
+> Instead of amending a commit directly, create a new commit with `git commit --fixup=<target-SHA>`. Later, `git rebase -i --autosquash` will automatically place the fixup commit after its target and mark it with the `fixup` keyword. This is especially useful during code review — you can push individual fix commits for reviewers to inspect, then squash them before merging.
+
+## Choosing a Strategy
+
+The right strategy depends on the type of branch, its commit quality, whether the branch is shared, and whether the team values linear history over preserved context. Consistency within a team matters more than which strategy is theoretically optimal — document the default in your contributing guide and enforce it via branch protection rules.
+
+### Strategy decision matrix
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'flowchart': {'curve': 'basis'}}}%%
+flowchart TD
+    A{"Is the branch<br/>shared?"}
+    A -->|Yes| B["Standard Merge"]
+    A -->|No| C{"Are the individual<br/>commits meaningful?"}
+    C -->|Yes| D{"Do you want<br/>linear history?"}
+    C -->|No| E["Squash Merge"]
+    D -->|Yes| F["Rebase + FF Merge"]
+    D -->|No| B
+
+    YES1["YES"]
+    NO1["NO"]
+    YES2["YES"]
+    NO2["NO"]
+    YES3["YES"]
+    NO3["NO"]
+
+    style A fill:#292e42,stroke:#565f89,color:#c0caf5
+    style B fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#292e42,stroke:#565f89,color:#c0caf5
+    style D fill:#292e42,stroke:#565f89,color:#c0caf5
+    style E fill:#1a1b26,stroke:#e0af68,color:#c0caf5
+    style F fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style YES1 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style NO1 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+    style YES2 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style NO2 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+    style YES3 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style NO3 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+```
+
+### Scenario-to-strategy matrix
+
+| Scenario | Strategy | Rationale | Follow-up |
+|---|---|---|---|
+| Multi-commit feature with meaningful history | **Merge** | Preserves individual commits for bisect and revert. Merge commit records integration point. | `git merge --no-ff` to ensure merge commit even if fast-forward is possible. |
+| Single developer, clean linear history preferred | **Rebase** | Commits appear sequentially on main with no merge noise. Each commit remains individually testable. | `git rebase main` then `git merge --ff-only` from main. |
+| Branch with many WIP/fixup commits | **Squash** | Only the combined result matters. Eliminates noise from main's log. | `git merge --squash` then `git commit` with descriptive message. Delete branch after. |
+| Hotfix with 1–2 commits | **Rebase or Squash** | Both produce linear history. Rebase keeps individual commits; squash combines them. | For single-commit fixes, the result is identical either way. |
+| Long-lived branch (e.g., develop → main) | **Merge** | The merge commit marks the release integration point. Both parent histories remain intact for audit. | `git merge --no-ff` to preserve the branch record. |
+| PR under active review, colleagues have checked out | **Merge** | Rebase would rewrite SHAs that teammates have pulled. Squash would discard their commit attribution. | `git merge origin/main` to update. Never rebase a shared branch. |
+| Stacked PRs (PR2 depends on PR1) | **Rebase** | After PR1 merges, rebase PR2 onto main to remove the dependency. Use `--update-refs` (Git 2.38+) to maintain stacked branch pointers. | `git rebase --update-refs main` |
+| Automated dependency bump (e.g., Dependabot) | **Squash** | One commit per dependency update keeps main clean. Individual bump commits add no diagnostic value. | Configure GitHub repo to default to "Squash and merge" for bot PRs. |
+
+### Data-engineering scenarios
+
+> [!example] dbt model refactor across multiple files
+>
+> A branch touches 15 dbt model files over 8 commits (initial refactor, test fixes, schema updates, doc updates). Each commit modifies a coherent set of files.
+>
+> **Use standard merge.** The individual commits map to distinct logical changes (model logic → test updates → schema → docs). Future debugging will benefit from `git bisect` across these commits if a model breaks. The merge commit records when this refactor was integrated.
+
+> [!example] Airflow DAG migration — single logical change
+>
+> A branch has 6 commits: "wip scaffold", "add tasks", "fix import", "lint fix", "update connection_id", "add docstring". All commits modify the same `dags/etl_pipeline.py` file.
+>
+> **Use squash merge.** The individual commits are iterative development noise. A single commit with a clear message — `feat: migrate ETL pipeline to TaskFlow API` — is easier to audit and revert as a unit.
+
+> [!example] Terraform infrastructure change
+>
+> A branch modifies a Terraform module, runs `terraform plan` to verify, then updates variable defaults. Three commits, all touching the same module.
+>
+> **Use squash merge.** Infrastructure changes should be atomic in the log — either the entire change is applied or it is reverted. Partial reverts of Terraform changes are dangerous. The squash commit makes revert safe and auditable.
+
+> [!example] Database migration with generated SQL diffs
+>
+> A branch adds a migration file generated by Alembic or dbt, plus a manual data-fix script. Two distinct commits.
+>
+> **Use standard merge.** Migration files are individually significant — you need to know which migration was introduced and when. Squashing would hide the distinction between the migration definition and the data fix.
+
+### Team policy and branch protection
+
+> [!info] Enforcing a default strategy via GitHub branch protection
+>
+> GitHub allows repository admins to restrict which merge methods are available on pull requests. Under **Settings → Branches → Branch protection rules**, you can:
+>
+> - Allow only "Squash and merge" — enforces linear history with one commit per PR.
+> - Allow only "Rebase and merge" — enforces linear history preserving individual commits.
+> - Allow only "Create a merge commit" — preserves branch topology and traceability.
+> - Allow a combination — lets PR authors choose per-PR.
+>
+> **Recommendation for data-engineering teams:** allow "Squash and merge" as the default for small features and bot PRs, and "Create a merge commit" for multi-commit features and releases. Disable "Rebase and merge" on the server side to prevent accidental SHA rewrites on shared branches — developers who want linear history can rebase locally before merging.
 
 ### GitHub PR merge strategies
 
-GitHub, GitLab, and Bitbucket expose these three strategies as buttons in the pull request UI. They produce the same graph shapes as the CLI operations:
+GitHub, GitLab, and Bitbucket expose the three strategies as buttons in the pull request UI. They produce the same graph shapes as the CLI operations:
 
-- **Merge commit** — equivalent to `git merge --no-ff`: always creates a merge commit regardless of divergence.
-- **Squash and merge** — equivalent to `git merge --squash` + `git commit`: one commit on main per PR.
-- **Rebase and merge** — equivalent to `git rebase` + fast-forward: replays PR commits linearly onto main.
+| UI Button | CLI Equivalent | Result |
+|---|---|---|
+| **Create a merge commit** | `git merge --no-ff` | Always creates a merge commit, regardless of divergence |
+| **Squash and merge** | `git merge --squash` + `git commit` | One commit on main per PR |
+| **Rebase and merge** | `git rebase` + fast-forward | Replays PR commits linearly onto main |
 
-> [!info] GitHub rewrites SHAs for "Rebase and merge"
+> [!info] GitHub always rewrites SHAs for "Rebase and merge"
 >
-> Even if the PR branch is already up to date with main, GitHub's "Rebase and merge" creates new commit SHAs — it does not fast-forward in place. The result is linear history but with different SHAs than the original PR commits.
+> Even if the PR branch is already up to date with main, GitHub's "Rebase and merge" creates new commit SHAs — it does not fast-forward in place. This is by design: GitHub adds a `committer` field and timestamp that differ from the original commits. The result is linear history but with different SHAs than the original PR commits. Do not rely on SHA matching between your local branch and main after using this option.
+
+## Operating Guidance
+
+> [!abstract] Ten rules for integration strategy
+>
+> 1. **Default to merge** for team branches. It is the safest strategy and preserves the most information.
+> 2. **Rebase only private branches.** If anyone else has fetched or checked out the branch, use merge.
+> 3. **Squash for noise, not for substance.** Squash when the individual commits add no diagnostic or audit value.
+> 4. **Always use `--force-with-lease`**, never `--force`, when pushing after a rebase.
+> 5. **Clean up locally before opening a PR.** Use `git rebase -i` to squash WIP commits into meaningful units while the branch is still private.
+> 6. **Delete feature branches after merge.** Stale branches clutter the repo and create confusion about what is active.
+> 7. **Use `--no-ff` when branch topology matters.** This preserves the merge commit and the visual record of the feature branch in the graph.
+> 8. **Use `--ff-only` in CI pipelines.** If the merge cannot fast-forward, fail the pipeline and require a rebase.
+> 9. **Document the team default.** Put the preferred strategy in `CONTRIBUTING.md` and enforce it with branch protection rules.
+> 10. **Audit-heavy environments should prefer merge.** The merge commit provides a clear, immutable record of what was integrated and when.
+
+## Troubleshooting and Recovery
+
+### Recovery | undo a bad merge
+
+If a merge introduced a bug or merged the wrong branch, revert the merge commit without rewriting history.
+
+*Revert a merge commit, specifying which parent line to keep.*
+
+```bash
+git revert -m 1 <merge-commit-SHA>
+```
+
+The `-m 1` flag tells Git to keep the first parent (main's history) and reverse the changes from the second parent (the merged branch). This creates a new commit that undoes the merge without rewriting any history — safe for shared branches.
+
+### Recovery | undo a rebase
+
+If a rebase went wrong, use the reflog to find the pre-rebase state and reset.
+
+*Find the pre-rebase commit in the reflog and reset to it.*
+
+```bash
+git reflog
+git reset --hard <pre-rebase-SHA>
+```
+
+The reflog shows every position the branch pointer occupied. Find the entry before the rebase started and reset to it. All rebased commits are discarded and the branch returns to its original state.
+
+### Recovery | undo a squash merge
+
+A squash merge can be reverted like any regular commit.
+
+*Revert the squash commit to undo all changes it introduced.*
+
+```bash
+git revert <squash-commit-SHA>
+```
+
+Because the squash commit is a single-parent commit, no `-m` flag is needed. Git reverses all changes introduced by the squash and creates a new revert commit.
 
 ---
 
 ## Related
 
-- [merge conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts) — resolving conflicts that arise from any merge strategy
-- [recovery and undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — reverting a bad merge or undoing a rebase with reflog
-- [remote management](https://alp78.github.io/elysium/08-Git/git-remote-management) — force-push safely after rebase with `--force-with-lease`
+- [merge conflicts](https://alp78.github.io/elysium/08-Git/10-git-merge-conflicts) — resolving conflicts that arise from any merge strategy
+- [recovery and undo](https://alp78.github.io/elysium/08-Git/11-git-recovery-and-undo) — reverting a bad merge or undoing a rebase with reflog
+- [remote management](https://alp78.github.io/elysium/08-Git/05-git-remote-management) — force-push safely after rebase with `--force-with-lease`
+- [branching and merging](https://alp78.github.io/elysium/08-Git/03-git-branching-and-merging) — branch lifecycle, merge mechanics, and fast-forward behavior

@@ -52,6 +52,10 @@ Understanding Git's terminology is the foundation for everything else. These ter
 | **`.gitignore`** | A file listing patterns of files and directories that Git should not track. Supports glob syntax. | A "do not touch" list for Git. | Prevents secrets, build artifacts, virtual environments, and large generated files from entering the repository. |
 | **`.gitattributes`** | A file that defines per-path attributes — most importantly, line-ending normalization rules. Checked into the repository and shared with all collaborators. | A team-wide policy file for how Git handles specific file types. | The canonical solution for mixed-OS line-ending issues (safer than `core.autocrlf` alone). |
 | **Line endings (LF / CRLF)** | LF (`\n`) is the Unix/macOS line terminator. CRLF (`\r\n`) is the Windows line terminator. Mismatch between contributors causes noisy diffs that touch every line. | Different operating systems use different invisible characters to mark the end of a line. | A misconfigured team produces diffs that show every line as changed even when only one word was edited. |
+| **Commit signing** | Cryptographic signature embedded in a commit or tag, proving the author's identity. Git supports GPG and SSH signing backends. | A tamper-proof seal that says "this commit really came from me." | Many production teams require signed commits. GitHub shows a green "Verified" badge on signed commits. |
+| **Git LFS (Large File Storage)** | An extension that replaces large files with lightweight pointer files in the repository, storing actual contents on a separate LFS server. | A delivery service for big files — Git tracks a receipt, the actual parcel lives elsewhere. | Without LFS, large binaries bloat the repository and make clones slow for everyone forever. |
+| **Partial clone** | A clone that downloads only commit and tree objects, fetching file contents (blobs) on demand as they are checked out. Enabled with `--filter=blob:none`. | Downloading the table of contents without the full book — pages are fetched as you read them. | Drastically reduces initial clone time and disk usage for large repositories. |
+| **Sparse checkout** | A mode that limits which directories appear in the working tree. Files outside the sparse set are not checked out (and with partial clone, not downloaded). | Checking out only the chapters you need from a large book. | Essential for monorepo workflows where each engineer only needs a subset of the codebase. |
 
 ---
 
@@ -525,6 +529,197 @@ A success message confirms the key is recognized. If you see "Permission denied 
 | **`gh` CLI as credential helper** | Delegates to `gh auth login`. Token managed by `gh`. | Zero manual token management. `gh auth refresh` handles renewal. | Teams using the GitHub CLI. Simplest HTTPS setup. |
 | **`credential.helper store`** | **Insecure.** Plaintext file at `~/.git-credentials`. | Zero dependencies. | **Never recommended.** Only for isolated, ephemeral environments. |
 
+### Git | Authentication | commit signing
+
+Many production teams require signed commits or signed tags to prove that commits genuinely come from the claimed author and have not been tampered with. GitHub shows a green "Verified" badge next to signed commits. Git supports two signing backends: GPG (the traditional method) and SSH (simpler, available since Git 2.34).
+
+#### Sign commits with SSH key (recommended)
+
+**When to run:** once per machine, as part of identity setup.
+**Trigger:** team policy requires signed commits, or you want the "Verified" badge on GitHub.
+**Context:** uses your existing SSH key — no GPG toolchain needed. Requires Git 2.34+.
+**Purpose:** cryptographically sign every commit with your SSH key.
+
+*Configure SSH-based commit signing:*
+
+```bash
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+```
+
+The three settings:
+
+- `gpg.format ssh` — tells Git to use SSH instead of GPG for signing.
+- `user.signingkey` — points to the **public** key file. Git uses the corresponding private key (loaded in the SSH agent) to create the signature.
+- `commit.gpgsign true` — signs every commit automatically. Without this, you must pass `-S` on each `git commit`.
+
+> [!info] Upload the signing key to GitHub
+>
+> The public key must be added to GitHub **as a signing key** (not just an authentication key):
+>
+> 1. Go to **GitHub → Settings → SSH and GPG keys → New SSH key**.
+> 2. Set **Key type** to **Signing Key**.
+> 3. Paste the contents of `~/.ssh/id_ed25519.pub`.
+>
+> You can use the same key for both authentication and signing, but it must be registered separately for each purpose.
+
+#### Sign commits with GPG
+
+**When to run:** when your team or organization requires GPG signing specifically (common in regulated industries).
+**Trigger:** team policy mandates GPG-signed commits, or you need to sign tags with a GPG identity.
+**Context:** requires the GPG toolchain (`gpg` or `gpg2`) installed on the machine. More complex setup than SSH signing.
+**Purpose:** sign commits with a GPG key for organizations that require GPG-based verification.
+
+*Configure GPG-based commit signing:*
+
+```bash
+gpg --list-secret-keys --keyid-format=long
+```
+
+Find your key ID from the output (the 16-character hex string after `sec   ed25519/`), then:
+
+```bash
+git config --global user.signingkey <KEY-ID>
+git config --global commit.gpgsign true
+```
+
+> [!tip] GPG on Windows — configure the GPG program path
+>
+> Git for Windows may not find the GPG binary automatically. Set it explicitly:
+>
+> ```bash
+> git config --global gpg.program "C:/Program Files (x86)/GnuPG/bin/gpg.exe"
+> ```
+>
+> Adjust the path to match your GPG installation.
+
+#### Sign tags
+
+Tags can be signed independently of commits. Annotated tags with `-s` use the configured signing key:
+
+*Create a signed annotated tag:*
+
+```bash
+git tag -s v1.0.0 -m "Release v1.0.0"
+```
+
+*Verify a signed tag:*
+
+```bash
+git tag -v v1.0.0
+```
+
+> [!question] SSH signing vs GPG signing
+>
+> - **SSH signing** (Git 2.34+) is simpler — reuses your existing SSH key, no GPG toolchain needed, easier to configure. Recommended for most teams.
+> - **GPG signing** is the traditional method, required by some regulated organizations and open-source projects. More complex setup (key generation, keyring management, expiry handling).
+> - Both produce the "Verified" badge on GitHub. Choose based on team policy.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `gpg.format` | `git config --global gpg.format ssh` | Set signing backend to SSH (alternative: `openpgp`) |
+| `user.signingkey` | `git config --global user.signingkey <key>` | Path to SSH public key, or GPG key ID |
+| `commit.gpgsign` | `git config --global commit.gpgsign true` | Automatically sign all commits |
+| `tag.gpgsign` | `git config --global tag.gpgsign true` | Automatically sign all annotated tags |
+| `-S` | `git commit -S` | Sign a single commit (without global auto-sign) |
+| `-s` | `git tag -s <tag>` | Create a signed annotated tag |
+| `-v` | `git tag -v <tag>` | Verify a signed tag's signature |
+
+### Git | Authentication | multiple accounts on one machine
+
+Engineers often work with multiple GitHub accounts on the same machine — a personal account and one or more corporate accounts. The `~/.ssh/config` file routes SSH traffic to the correct key based on a per-host alias, and conditional includes in `~/.gitconfig` apply the correct identity automatically based on the repository's filesystem path.
+
+#### Configure SSH routing for multiple accounts
+
+**When to run:** when you have multiple GitHub accounts (personal + work) and use SSH authentication for both.
+**Trigger:** `git push` on a work repo authenticates as your personal account, or vice versa.
+**Context:** SSH uses the first matching key by default. Without explicit routing, the wrong key is offered for the wrong account.
+**Purpose:** ensure each repository authenticates with the correct GitHub account.
+
+> [!info]- Full multi-account SSH and Git identity setup
+>
+> The setup has two parts: SSH routing (which key to use) and Git identity (which name/email to embed in commits).
+>
+> **Part 1 — SSH key routing via `~/.ssh/config`:**
+>
+> Generate a separate key for each account:
+> ```bash
+> ssh-keygen -t ed25519 -C "personal@example.com" -f ~/.ssh/id_ed25519_personal
+> ssh-keygen -t ed25519 -C "alex@stockindex.example.com" -f ~/.ssh/id_ed25519_work
+> ```
+>
+> Add each public key to the corresponding GitHub account (Settings → SSH and GPG keys).
+>
+> **Part 2 — Git identity via conditional includes in `~/.gitconfig`:**
+>
+> Conditional includes automatically set the correct `user.name` and `user.email` based on the repository's filesystem path. No per-repo `--local` configuration needed.
+
+*Create `~/.ssh/config` with per-host aliases:*
+
+```text
+# Personal GitHub account
+Host github-personal
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_personal
+    IdentitiesOnly yes
+
+# Work GitHub account
+Host github-work
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_work
+    IdentitiesOnly yes
+```
+
+The `IdentitiesOnly yes` directive prevents the SSH agent from offering other keys — only the specified key is used for each host alias.
+
+*Clone repos using the host alias instead of `github.com`:*
+
+```bash
+# Personal repo
+git clone git@github-personal:alp78/my-side-project.git
+
+# Work repo
+git clone git@github-work:stockindex-corp/esg-pipeline.git
+```
+
+*For existing repos, update the remote URL to use the alias:*
+
+```bash
+git remote set-url origin git@github-work:stockindex-corp/esg-pipeline.git
+```
+
+*Create `~/.gitconfig` with conditional identity switching:*
+
+```text
+[user]
+    name = alp78
+    email = personal@example.com
+
+[includeIf "gitdir:~/work/"]
+    path = ~/.gitconfig-work
+```
+
+*Create `~/.gitconfig-work`:*
+
+```text
+[user]
+    name = Alex Perrier
+    email = alex@stockindex.example.com
+```
+
+Any repository cloned under `~/work/` automatically uses the work identity. All other repositories use the personal identity. No per-repo `--local` configuration needed.
+
+> [!warning] `gitdir:` paths must end with a trailing slash
+>
+> The `includeIf "gitdir:~/work/"` pattern must end with `/` to match all repositories under that directory. Without the trailing slash, only a repository named exactly `work` would match.
+
+> [!success] Verify the active identity per repo
+>
+> In any repository, run `git config --get user.email` to confirm the correct identity is resolved. Run `git config --list --show-scope` to see whether the value comes from `global` or an `includeIf` include.
+
 ---
 
 ## Credential Helpers
@@ -779,6 +974,9 @@ These settings form a safe, professional baseline for data engineers. Apply them
 | `core.safecrlf` | `warn` | Global | Warns if a line-ending conversion is irreversible. | Set to `true` to block irreversible conversions entirely. |
 | `core.filemode` | `false` (Windows) | Local | Ignores executable-bit changes on Windows (where the filesystem does not track them). | Only relevant on Windows. Linux/macOS should leave it at `true`. |
 | `credential.helper` | `manager` (Windows) / `osxkeychain` (macOS) | Global | Stores credentials in the OS secure keychain. | See the Credential Helpers section. |
+| `gpg.format` | `ssh` | Global | Use SSH keys for commit signing (simpler than GPG). | Requires Git 2.34+. Skip if team does not require signing. |
+| `user.signingkey` | `~/.ssh/id_ed25519.pub` | Global | Public key used for SSH commit signing. | Must be uploaded to GitHub as a **signing key**. |
+| `commit.gpgsign` | `true` | Global | Automatically sign all commits. | Skip if team does not require signing. Adds ~50ms per commit. |
 
 ### Git | config | apply recommended defaults
 
@@ -1162,6 +1360,102 @@ Cloning into '/tmp/git-lab-shallow'...
 | `--shallow-submodules` | `git clone --shallow-submodules <url>` | Shallow-clone each submodule to depth 1 |
 | `--filter=blob:none` | `git clone --filter=blob:none <url>` | Partial clone: download commit/tree objects only, fetch blobs on demand (Git 2.19+) |
 
+### Git | clone | partial clone and sparse checkout for large repos
+
+Large monorepos (thousands of files, deep directory trees, gigabytes of history) make a standard `git clone` slow and disk-heavy. Git provides two complementary features for working efficiently in these repositories:
+
+- **Partial clone** (`--filter=blob:none`) downloads only commit and tree objects during clone. File contents (blobs) are fetched on demand as you check them out. This drastically reduces initial clone time.
+- **Sparse checkout** limits which directories appear in your working tree. Files outside the sparse set are not checked out, saving disk space and reducing noise. Combined with partial clone, files outside the sparse set are never even downloaded.
+
+Together they enable a "clone the structure, check out only what you need" workflow — essential for data engineering teams working in monorepos that contain infrastructure code, multiple pipelines, shared libraries, and documentation side by side.
+
+#### Partial clone with sparse checkout
+
+**When to run:** when joining a large monorepo or setting up a new machine for a repo where you only need a subset of directories.
+**Trigger:** standard `git clone` takes too long, uses too much disk, or downloads irrelevant code.
+**Context:** requires Git 2.25+ for sparse checkout, Git 2.19+ for partial clone. The remote must support partial clone (GitHub, GitLab, and Bitbucket all do). Full history is available — only blob downloads are deferred.
+**Purpose:** get a working checkout of a large repo in seconds, with only the directories you need on disk.
+
+*Step 1 — partial clone with sparse mode:*
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/alp78/git-lab.git /tmp/git-lab-sparse
+```
+
+```text
+Cloning into 'C:/Users/aperi/AppData/Local/Temp/git-lab-sparse'...
+```
+
+This downloads commit and tree metadata but no file contents. The working tree contains only root-level files.
+
+*Step 2 — select the directories you need:*
+
+```bash
+cd /tmp/git-lab-sparse
+git sparse-checkout set src tests
+```
+
+*Step 3 — verify the sparse set:*
+
+```bash
+git sparse-checkout list
+```
+
+```text
+src
+tests
+```
+
+Only the `src/` and `tests/` directories (and root-level files) are checked out. All other directories exist in the Git history but are not materialized on disk. Git downloads blob contents for checked-out files on demand.
+
+*Add more directories later:*
+
+```bash
+git sparse-checkout add docs infra
+```
+
+*Return to full checkout:*
+
+```bash
+git sparse-checkout disable
+```
+
+> [!warning] Sparse checkout changes what's visible, not what's tracked
+>
+> Files outside the sparse set are not deleted from Git history — they are hidden from your working tree. `git log` still shows commits that touched those files. `git status` only reports on files in the sparse set. If you add a directory to the sparse set later, Git downloads and checks out its contents.
+
+> [!success] Combine with depth for maximum speed
+>
+> For CI or quick exploration, combine partial clone, sparse checkout, and shallow depth:
+>
+> ```bash
+> git clone --filter=blob:none --sparse --depth 1 https://github.com/org/monorepo.git
+> cd monorepo
+> git sparse-checkout set pipelines/esg
+> ```
+>
+> This gives you only the latest commit, only the tree structure, and only the files in `pipelines/esg/` — a 30-second setup for a 10 GB monorepo.
+
+> [!tip] Sparse checkout for data engineering monorepos
+>
+> In monorepos with multiple pipelines (`pipelines/pricing/`, `pipelines/esg/`, `pipelines/risk/`, `infra/`, `libs/`), each engineer can check out only their pipeline and shared libraries:
+>
+> ```bash
+> git sparse-checkout set pipelines/esg libs/common
+> ```
+>
+> This avoids downloading test fixtures, models, and generated artifacts from other teams' pipelines. When you need to cross-reference another pipeline, add it: `git sparse-checkout add pipelines/pricing`.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--sparse` | `git clone --sparse <url>` | Enable sparse checkout mode during clone (only root files checked out) |
+| `set` | `git sparse-checkout set <dir> [<dir>...]` | Define the directories to include in the working tree |
+| `add` | `git sparse-checkout add <dir>` | Add a directory to the existing sparse set |
+| `list` | `git sparse-checkout list` | Show the current sparse checkout directories |
+| `disable` | `git sparse-checkout disable` | Return to full working tree (all files checked out) |
+| `init` | `git sparse-checkout init --cone` | Initialize sparse checkout in cone mode (directory-based, faster) |
+| `reapply` | `git sparse-checkout reapply` | Re-apply sparse patterns after config changes |
+
 ---
 
 ## Pre-Commit Hooks — Automated Quality Gates
@@ -1417,16 +1711,122 @@ Data engineering repositories have specific setup concerns beyond standard softw
 
 #### Large files / Git LFS
 
-- **When to use:** files larger than 50 MB (GitHub's soft limit), binary assets (images, models, data files), or files that change frequently and are not diffable.
-- **Setup:**
+Git LFS (Large File Storage) replaces large files in your repository with lightweight pointer files, while storing the actual file contents on a separate LFS server. This keeps clone times fast and repository sizes manageable. For data engineering teams handling Parquet files, serialized ML models, test fixtures, or large CSV datasets, LFS is an installation-day concern — not something to discover after the first 200 MB commit is rejected.
+
+**When to use:** files larger than 50 MB (GitHub's soft limit), binary assets (images, models, data files), or files that change frequently and are not diffable.
+
+**Cost:** Git LFS requires a paid plan on GitHub for storage and bandwidth beyond the free tier (1 GB storage, 1 GB/month bandwidth per account).
+
+##### Install and verify Git LFS
+
+**When to run:** on every new machine, before cloning any repository that uses LFS-tracked files.
+**Trigger:** `git lfs version` returns "command not found," or cloned LFS files contain pointer text instead of actual data.
+**Context:** Git LFS is a separate binary that hooks into Git. On Windows, it is included with Git for Windows 2.39+. On macOS/Linux, it must be installed separately.
+**Purpose:** ensure LFS is available and initialized before touching any repository with large tracked files.
+
+*Check if Git LFS is already installed:*
+
+```bash
+git lfs version
+```
+
+```text
+git-lfs/3.7.1 (GitHub; windows amd64; go 1.25.1; git b84b3384)
+```
+
+If the command is not found, install Git LFS:
+
+*Install Git LFS on macOS:*
+
+```bash
+brew install git-lfs
+```
+
+*Install Git LFS on Debian/Ubuntu:*
+
+```bash
+sudo apt-get install git-lfs
+```
+
+*Initialize Git LFS (required once per machine):*
 
 ```bash
 git lfs install
-git lfs track "*.parquet" "*.csv.gz" "*.pkl" "*.h5"
-git add .gitattributes
 ```
 
-- **Cost:** Git LFS requires a paid plan on GitHub for storage and bandwidth beyond the free tier (1 GB storage, 1 GB/month bandwidth).
+```text
+Updated Git hooks.
+Git LFS initialized.
+```
+
+This registers the LFS clean/smudge filters in your global `~/.gitconfig` and installs the necessary Git hooks. Without this step, LFS-tracked files will appear as small pointer files instead of their actual content.
+
+##### Track file patterns with LFS
+
+**When to run:** when adding a new binary or large file type to a repository.
+**Trigger:** a new file type needs LFS tracking (e.g., adding Parquet fixtures to a test suite).
+**Context:** `git lfs track` adds patterns to `.gitattributes`. The `.gitattributes` file must be committed to share LFS tracking rules with all collaborators.
+**Purpose:** tell Git which file patterns should be stored in LFS instead of the regular object database.
+
+*Track common data engineering file types:*
+
+```bash
+git lfs track "*.parquet" "*.pkl" "*.h5"
+```
+
+```text
+Tracking "*.parquet"
+Tracking "*.pkl"
+Tracking "*.h5"
+```
+
+*Verify tracked patterns:*
+
+```bash
+git lfs track
+```
+
+```text
+Listing tracked patterns
+    *.parquet (.gitattributes)
+    *.pkl (.gitattributes)
+    *.h5 (.gitattributes)
+Listing excluded patterns
+```
+
+*Always commit `.gitattributes` after adding LFS patterns:*
+
+```bash
+git add .gitattributes
+git commit -m "chore: track parquet, pkl, h5 files with Git LFS"
+```
+
+##### Verify LFS is working in a cloned repo
+
+**When to run:** after cloning a repository that uses LFS, to confirm actual file contents were downloaded — not just pointer files.
+**Trigger:** files look wrong (small text files where large binaries are expected), or `git lfs pull` was not triggered.
+**Context:** read-only check. If LFS was not initialized before the clone, files will contain pointer text.
+**Purpose:** confirm LFS files are fully downloaded and ready to use.
+
+*Check LFS environment and endpoint:*
+
+```bash
+git lfs env
+```
+
+*If LFS files are pointer stubs, force-download the actual content:*
+
+```bash
+git lfs pull
+```
+
+> [!warning] LFS files appear as pointer text if LFS is not initialized
+>
+> If you clone a repo before running `git lfs install`, LFS-tracked files contain pointer text like `version https://git-lfs.github.com/spec/v1` instead of actual data. This silently breaks pipelines that expect real Parquet/CSV/model files.
+
+> [!success] Fix LFS pointer files after the fact
+>
+> Run `git lfs install` followed by `git lfs pull` to download the actual file contents. For CI, ensure LFS is installed in the container image and use `lfs: true` in `actions/checkout`.
 
 #### Secrets scanning
 
@@ -1530,15 +1930,18 @@ This section consolidates everything above into a step-by-step flow for setting 
 > 3. **Set identity** — `git config --global user.name` and `git config --global user.email`.
 > 4. **Choose auth method** — HTTPS with PAT (recommended) or SSH key.
 > 5. **Configure credential helper** — `credential.helper manager` (Windows), `osxkeychain` (macOS), or `gh auth setup-git`.
-> 6. **Apply recommended defaults** — `init.defaultBranch main`, `core.editor`, `pull.rebase false`, `fetch.prune true`, etc.
-> 7. **Set aliases** — `st`, `co`, `lg`, `undo`, etc.
-> 8. **Validate config** — `git config --list --show-scope` to verify all values.
-> 9. **Clone a test repo** — `git clone https://github.com/alp78/git-lab.git`.
-> 10. **Verify clone** — `git remote -v`, `git branch -a`, `git status`, `git log --oneline`.
-> 11. **Install pre-commit** — `pip install pre-commit` then `pre-commit install` in the cloned repo.
-> 12. **Run hook checks** — `pre-commit run --all-files`.
-> 13. **Create a test commit** — edit a file, `git add`, `git commit`, verify hooks run.
-> 14. **Push the test commit** — `git push` to verify authentication works end-to-end.
+> 6. **Configure commit signing** (if required) — SSH signing (`gpg.format ssh`, `user.signingkey`, `commit.gpgsign true`) or GPG signing.
+> 7. **Configure multi-account SSH** (if applicable) — create `~/.ssh/config` with per-host aliases and `includeIf` in `~/.gitconfig`.
+> 8. **Apply recommended defaults** — `init.defaultBranch main`, `core.editor`, `pull.rebase false`, `fetch.prune true`, etc.
+> 9. **Set aliases** — `st`, `co`, `lg`, `undo`, etc.
+> 10. **Install Git LFS** — `git lfs install` (verify with `git lfs version`).
+> 11. **Validate config** — `git config --list --show-scope` to verify all values.
+> 12. **Clone a test repo** — `git clone https://github.com/alp78/git-lab.git`.
+> 13. **Verify clone** — `git remote -v`, `git branch -a`, `git status`, `git log --oneline`.
+> 14. **Install pre-commit** — `pip install pre-commit` then `pre-commit install` in the cloned repo.
+> 15. **Run hook checks** — `pre-commit run --all-files`.
+> 16. **Create a test commit** — edit a file, `git add`, `git commit`, verify hooks run (and signing if configured).
+> 17. **Push the test commit** — `git push` to verify authentication works end-to-end.
 
 ---
 
@@ -1647,14 +2050,18 @@ Run this checklist after completing the onboarding sequence to verify everything
 | 4 | Default branch | `git config --get init.defaultBranch` | `main` |
 | 5 | Editor | `git config --get core.editor` | Your preferred editor |
 | 6 | Credential helper | `git config --get credential.helper` | `manager`, `osxkeychain`, or `gh` helper |
-| 7 | Auth test (HTTPS) | `gh auth status` | `✓ Logged in to github.com` |
-| 8 | Auth test (SSH) | `ssh -T git@github.com` | `Hi <user>! You've successfully authenticated` |
-| 9 | Clone works | `git clone <url>` + `git remote -v` | Remote URL matches, branch tracks `origin/main` |
-| 10 | Hooks installed | `ls .git/hooks/pre-commit` | File exists (not `.sample`) |
-| 11 | Hooks pass | `pre-commit run --all-files` | All checks pass |
-| 12 | Push works | `git push` (after a test commit) | No authentication errors |
-| 13 | Line-ending policy | `cat .gitattributes` | `* text=auto` present |
-| 14 | Secrets scanning | `pre-commit run gitleaks --all-files` | Passed (no secrets detected) |
+| 7 | Commit signing | `git config --get commit.gpgsign` | `true` (if team requires signing) |
+| 8 | Auth test (HTTPS) | `gh auth status` | `✓ Logged in to github.com` |
+| 9 | Auth test (SSH) | `ssh -T git@github.com` | `Hi <user>! You've successfully authenticated` |
+| 10 | Multi-account routing | `ssh -T git@github-work` (if configured) | Correct account authenticated |
+| 11 | Git LFS installed | `git lfs version` | Version string (e.g., `git-lfs/3.7.1`) |
+| 12 | Git LFS initialized | `git lfs env` | Endpoint and filter config present |
+| 13 | Clone works | `git clone <url>` + `git remote -v` | Remote URL matches, branch tracks `origin/main` |
+| 14 | Hooks installed | `ls .git/hooks/pre-commit` | File exists (not `.sample`) |
+| 15 | Hooks pass | `pre-commit run --all-files` | All checks pass |
+| 16 | Push works | `git push` (after a test commit) | No authentication errors |
+| 17 | Line-ending policy | `cat .gitattributes` | `* text=auto` present |
+| 18 | Secrets scanning | `pre-commit run gitleaks --all-files` | Passed (no secrets detected) |
 
 ---
 

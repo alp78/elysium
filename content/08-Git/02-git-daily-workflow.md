@@ -58,6 +58,10 @@ Every term used on this page is defined here. If a term appears in a command exp
 | **branch protection** | Rules enforced on the hosting platform that restrict direct pushes, require reviews, require passing CI, or forbid force-pushes to a branch. Typically applied to `main`. |
 | **force push** | Overwrite the remote branch with your local version, discarding any remote commits that differ. Dangerous on shared branches — can destroy teammates' work. |
 | **`--force-with-lease`** | A safer variant of force push that refuses to overwrite if the remote has commits you have not fetched. Use this instead of `--force` on personal branches after a rebase or amend. |
+| **cherry-pick** | Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch. |
+| **interactive rebase** | A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch before merging. The primary tool for cleaning up branch history before PR review. |
+| **fixup commit** | A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically. |
+| **worktree** | A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share commit history and reflog. Avoids the stash-switch-restore cycle for parallel work. |
 
 ## The Git Mental Model
 
@@ -947,6 +951,264 @@ When your feature branch is behind `main` (because teammates have merged other P
 | After rebase, need to update remote | Force push safely | `git push --force-with-lease` |
 | After amend on unpushed commit | Normal push | `git push` |
 | After amend on pushed personal branch | Force push safely | `git push --force-with-lease` |
+
+## Cleaning Up Branch History Before Review
+
+Before opening or updating a PR, senior engineers clean up their feature branch history — squashing fixup commits, rewording messages, and reordering commits so the branch tells a clear story for reviewers. Interactive rebase is the primary tool for this.
+
+### Git | rebase -i | interactive history cleanup
+
+Interactive rebase lets you edit, reorder, squash, or drop individual commits on your branch. This is the most common pre-PR history-cleanup workflow. Each commit is listed in an editor with an action keyword that tells Git what to do with it.
+
+> [!info]- Interactive rebase action keywords
+>
+> Each commit in the interactive rebase editor is listed oldest-first with an action keyword:
+>
+> - `pick` — use the commit as-is
+> - `reword` — use the commit but open the editor to change its message
+> - `edit` — pause the rebase at this commit so you can amend it (add files, split it, etc.)
+> - `squash` — combine this commit with the previous one, keeping both messages (editor opens to merge them)
+> - `fixup` — combine this commit with the previous one, discarding this commit's message
+> - `drop` — remove the commit entirely from the branch
+
+#### Clean up a feature branch before opening a PR
+
+**When to run:** after development is complete, before opening or updating a PR.
+**Trigger:** the branch has accumulated WIP commits, typo fixes, or debug commits that should not appear in the final review.
+**Context:** local operation that rewrites history. Only safe on branches where you are the sole contributor, or branches that have not been pulled by others. After rebasing, you must force-push with `--force-with-lease`.
+**Purpose:** produce a clean, reviewable commit history that tells a coherent story.
+
+*View the commits on the branch before cleanup.*
+
+```bash
+git log --oneline -5
+```
+
+```text
+ba61ab0 chore: update README with pipeline docs
+4752f8d fixup! feat: add data quality checks
+7b41c1b feat: add data quality checks
+72edabc merge: integrate centralized logging module
+b948ccd feat: add centralized logging module
+```
+
+The branch has three commits: the main feature (data quality checks), a fixup commit that should be folded into it, and a documentation update. The `fixup!` prefix signals that `4752f8d` should be absorbed into `7b41c1b`.
+
+#### Use --autosquash to automatically fold fixup commits
+
+**When to run:** when your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages.
+**Trigger:** you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work.
+**Context:** `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag.
+**Purpose:** one-command cleanup of fixup commits without manual editor editing.
+
+*Run interactive rebase with autosquash to fold fixup commits.*
+
+```bash
+git rebase -i --autosquash HEAD~3
+```
+
+```text
+Successfully rebased and updated refs/heads/demo/rebase-cleanup.
+```
+
+*Verify the cleaned-up history — the fixup commit has been absorbed.*
+
+```bash
+git log --oneline -3
+```
+
+```text
+8b32aae chore: update README with pipeline docs
+6887984 feat: add data quality checks
+72edabc merge: integrate centralized logging module
+```
+
+The three commits have been reduced to two: the fixup commit was folded into the feature commit, and the documentation update remains separate. The branch is now clean for PR review.
+
+> [!tip] The fixup commit workflow
+>
+> During development, when you spot an issue in an earlier commit:
+>
+> 1. **Fix the issue** and stage the fix: `git add <file>`
+> 2. **Create a fixup commit:** `git commit --fixup=<SHA-of-original-commit>`
+> 3. Git names it `fixup! <original message>` automatically
+> 4. **Before PR:** run `git rebase -i --autosquash HEAD~N` — fixup commits are automatically folded into their targets
+>
+> This is cleaner than amending, especially when fixing commits that are not the most recent.
+
+> [!danger] Never interactively rebase commits that have been pulled by others
+>
+> Interactive rebase rewrites commit SHAs. If anyone else has pulled your branch, their local history will diverge from yours. Only rebase branches where you are the sole contributor.
+
+> [!success] Force-push safely after interactive rebase
+>
+> After rebasing a branch you have already pushed, use `git push --force-with-lease` to update the remote. This refuses to overwrite the remote if it has commits you have not fetched — protecting against concurrent pushes.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-i` | `git rebase -i <base>` | Interactive rebase — edit, reorder, squash, or drop commits |
+| `--autosquash` | `git rebase -i --autosquash` | Automatically reorder fixup! and squash! commits |
+| `--fixup=<SHA>` | `git commit --fixup=<SHA>` | Create a fixup commit targeting the specified commit |
+| `--squash=<SHA>` | `git commit --squash=<SHA>` | Create a squash commit targeting the specified commit |
+| `--abort` | `git rebase --abort` | Cancel rebase and restore original branch state |
+| `--continue` | `git rebase --continue` | Resume rebase after resolving a conflict |
+| `--skip` | `git rebase --skip` | Skip the current conflicting commit |
+
+## Cherry-Pick for Backports and Hotfixes
+
+In real teams, engineers often need to apply a single commit from one branch to another without merging the entire branch. Cherry-pick copies a commit's diff as a new commit on the current branch. The most common use cases are backporting a bugfix to a release branch and applying a hotfix to multiple branches simultaneously.
+
+### Git | cherry-pick | copy a commit between branches
+
+#### Backport a hotfix to a release branch
+
+**When to run:** when a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge.
+**Trigger:** a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features.
+**Context:** local operation. Creates a new commit on the target branch with the same diff but a different SHA. The `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source for auditability.
+**Purpose:** selectively apply one commit's changes to a different branch.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
+gitGraph TB:
+  commit id: "A"
+  commit id: "B"
+  branch release
+  commit id: "C"
+  checkout main
+  commit id: "D" type: HIGHLIGHT
+  checkout release
+  cherry-pick id: "D"
+```
+
+*Cherry-pick backport: commit D (marked green) is a hotfix that landed on `main`. The release branch diverged at B and has its own commit C (release prep). Cherry-pick copies D's diff onto the release branch as a new commit D' with a different SHA. D' includes "(cherry picked from commit ...)" in its message when `-x` is used. The original D remains on main untouched. D' and D have identical diffs but different SHAs and different parents.*
+
+*Switch to the release branch and cherry-pick the hotfix with traceability.*
+
+```bash
+git switch release/2026-Q2
+git cherry-pick -x 3c60ed4
+```
+
+```text
+[release/2026-Q2 18b043e] fix: handle NaN values in price feed
+ Date: Sun Apr 12 17:19:10 2026 +0200
+ 1 file changed, 8 insertions(+)
+ create mode 100644 src/hotfix_price_feed.py
+```
+
+*Verify the cherry-pick message includes the source reference.*
+
+```bash
+git log -1 --format="%B"
+```
+
+```text
+fix: handle NaN values in price feed
+
+(cherry picked from commit 3c60ed47aeac5fd3223cc8fc7c0bee7497444788)
+```
+
+> [!warning] Cherry-pick creates duplicate commits
+>
+> The cherry-picked commit and the original have different SHAs but identical diffs. If both branches are later merged, Git may flag the duplicate changes as a conflict. This is especially common in data engineering repos where the same migration file appears on multiple branches.
+
+> [!success] Always use -x for traceability
+>
+> The `-x` flag appends the source commit SHA to the message. When a reviewer or incident responder sees the cherry-picked commit, they can immediately trace it back to the original fix on `main`. Without `-x`, the connection is invisible.
+
+> [!tip] Cherry-pick workflow for incident response
+>
+> 1. **Fix the bug on main** — create a branch, fix, get it reviewed, merge to main
+> 2. **Identify the fix commit SHA:** `git log --oneline -5`
+> 3. **Switch to the release branch:** `git switch release/2026-Q2`
+> 4. **Cherry-pick with traceability:** `git cherry-pick -x <SHA>`
+> 5. **Push the release branch:** `git push`
+> 6. **Tag the release patch:** `git tag -a v2026.Q2.1 -m "patch: NaN price feed fix"`
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-x` | `git cherry-pick -x <SHA>` | Append "(cherry picked from commit ...)" to the message |
+| `-n` | `git cherry-pick -n <SHA>` | Apply changes without committing (stage only) |
+| `-e` | `git cherry-pick -e <SHA>` | Edit the commit message before committing |
+| `--abort` | `git cherry-pick --abort` | Cancel cherry-pick and restore pre-operation state |
+| `--continue` | `git cherry-pick --continue` | Resume after resolving a conflict |
+| `--skip` | `git cherry-pick --skip` | Skip the current commit and continue |
+
+## Parallel-Context Work with Worktrees
+
+When you need to work on two branches simultaneously — a hotfix while mid-feature, or a code review while running a long build — `git worktree` provides a better alternative to the stash-switch-restore cycle. Each worktree is a separate directory linked to the same repository, with its own checked-out branch and index.
+
+### Git | worktree | concurrent branch checkouts
+
+#### Work on a hotfix without leaving your feature branch
+
+**When to run:** when you need to switch context to another branch but do not want to stash, commit WIP, or disrupt your current working tree.
+**Trigger:** urgent hotfix needed while you have uncommitted work on a feature branch, or you need to compare behavior across branches side-by-side.
+**Context:** local operation. Creates a new directory linked to the same `.git` directory. You cannot check out a branch that is already checked out in another worktree. All worktrees share the same commit history, reflog, and configuration.
+**Purpose:** eliminate the stash-switch-restore churn for parallel work.
+
+*Create a worktree for the release branch in a sibling directory.*
+
+```bash
+git worktree add ../git-lab-hotfix release/2026-Q2
+```
+
+```text
+Preparing worktree (checking out 'release/2026-Q2')
+HEAD is now at 18b043e fix: handle NaN values in price feed
+```
+
+*List active worktrees to see all checked-out branches.*
+
+```bash
+git worktree list
+```
+
+```text
+C:/Users/aperi/DEV/git-lab        3c60ed4 [main]
+C:/Users/aperi/DEV/git-lab-hotfix 18b043e [release/2026-Q2]
+```
+
+Now you can work in `../git-lab-hotfix` on the release branch while your feature branch remains untouched in the main directory. When done:
+
+*Remove the worktree when the parallel work is finished.*
+
+```bash
+git worktree remove ../git-lab-hotfix
+```
+
+> [!tip] When to use worktrees vs stash
+>
+> - **Stash** is good for quick context switches (< 5 minutes) — review a PR, check a config, run a single test.
+> - **Worktrees** are better for sustained parallel work — running a long build on one branch while developing on another, or comparing pipeline outputs between branches side-by-side.
+> - **Rule of thumb:** if you find yourself stashing and popping more than twice in an hour, use a worktree instead.
+
+> [!tip] Worktrees for data engineering
+>
+> Worktrees are particularly useful when:
+>
+> - Running a long `dbt build` or `pytest` suite on one branch while continuing development on another
+> - Comparing query outputs between a feature branch and `main` side-by-side
+> - Applying a hotfix to a release branch while keeping a migration-in-progress untouched
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `add` | `git worktree add <path> <branch>` | Create a new worktree for a branch |
+| `list` | `git worktree list` | List all active worktrees |
+| `remove` | `git worktree remove <path>` | Remove a worktree directory |
+| `prune` | `git worktree prune` | Clean up stale worktree metadata |
+| `--force` | `git worktree remove --force <path>` | Remove even with uncommitted changes |
 
 ## Handling Merge Conflicts
 
@@ -1927,6 +2189,61 @@ git branch --set-upstream-to=origin/feat/my-feature feat/my-feature
 > - **Squash merges** produce a clean main-branch history with one commit per PR. Preferred for feature branches with many WIP commits that clutter the log.
 > - **Recommended default:** squash-merge feature branches into main. Keep individual commits on long-lived branches and for migrations/infrastructure.
 
+### Review-Fix Commit Hygiene
+
+When a PR receives review comments, you need to push follow-up commits. The decision between pushing new commits and squashing into existing ones affects both the reviewer's experience and the final history quality.
+
+> [!question] Push follow-up commits or squash into the original?
+>
+> This depends on where you are in the review cycle:
+>
+> - **During active review (round 1, round 2):** push follow-up commits with descriptive messages like `fix: address review — validate ticker format before insert`. This lets the reviewer see exactly what changed since their last review by viewing only the new commits, rather than re-reading the entire diff.
+> - **After final approval, before merge:** if the team uses squash-merge (recommended), the individual commits are collapsed into one — no cleanup needed. If the team uses merge commits, consider an interactive rebase to fold fixup commits before the merge.
+> - **If the reviewer specifically asks for a clean history:** use `git commit --fixup=<SHA>` for each fix, then `git rebase -i --autosquash` followed by `git push --force-with-lease` to present a clean branch. Warn the reviewer that you force-pushed so they re-fetch.
+
+#### Decision procedure for "review round 2"
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    Q{"Review comments<br/>received"}
+    A["Push follow-up<br/>commits"]
+    B["Fixup + rebase<br/>+ force-push"]
+
+    Q -->|"Review in progress<br/>(reviewer needs to see delta)"| A
+    Q -->|"Reviewer asked for<br/>clean history"| B
+
+    A --> M{"Merge strategy?"}
+    M -->|"Squash merge"| DONE["Merge — history<br/>auto-cleaned"]
+    M -->|"Merge commit"| REBASE["Rebase before<br/>merge if needed"]
+
+    B --> FP["git push<br/>--force-with-lease"]
+    FP --> NOTIFY["Notify reviewer<br/>to re-fetch"]
+
+    style DONE fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style A fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#292e42,stroke:#e0af68,color:#c0caf5
+```
+
+*Decision flowchart: during active review, push follow-up commits so the reviewer can inspect only the delta. If the team uses squash-merge, the follow-up commits are automatically collapsed on merge. If the team uses merge commits and the reviewer wants a clean branch, use fixup + interactive rebase + force-push, then notify the reviewer to re-fetch.*
+
+> [!tip] Audit-friendly vs clean history — when each matters
+>
+> - **Audit-friendly** (keep all commits): preferred for database migrations, compliance-sensitive changes, infrastructure modifications, and any change where "who changed what and when" may be questioned later. The full commit trail is the evidence.
+> - **Clean history** (squash/fixup): preferred for feature work, refactoring, and changes where the development journey is not operationally relevant — only the final result matters. Clean history makes `git bisect` and `git log` more useful on `main`.
+> - **Default recommendation:** use squash-merge for feature branches, but switch to merge commits for migration branches and infrastructure changes where auditability outweighs cleanliness.
+
 ### Anti-Patterns to Avoid
 
 | Anti-pattern | Why it is harmful | What to do instead |
@@ -1994,5 +2311,12 @@ For schema migrations, pipeline rewrites, and infrastructure changes:
 | List stashes | `git stash list` |
 | Recover lost commit | `git reflog` |
 | Remove untracked files | `git clean -fd` |
+| Interactive rebase (cleanup) | `git rebase -i HEAD~N` |
+| Autosquash fixup commits | `git rebase -i --autosquash HEAD~N` |
+| Create a fixup commit | `git commit --fixup=<SHA>` |
+| Cherry-pick with traceability | `git cherry-pick -x <SHA>` |
+| Create a worktree | `git worktree add <path> <branch>` |
+| List worktrees | `git worktree list` |
+| Remove a worktree | `git worktree remove <path>` |
 | Create PR | `gh pr create --title "title"` |
 | Merge PR (squash) | `gh pr merge --squash --delete-branch` |
