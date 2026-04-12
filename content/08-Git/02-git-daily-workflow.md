@@ -457,7 +457,7 @@ gitGraph TB:
   commit id: "C"
 ```
 
-*Each `git commit` advances the branch pointer to a new snapshot node in the DAG.*
+*A linear commit history on `main`. Commit A is the initial commit, B builds on A, and C builds on B. Each commit stores a snapshot of the staged files and a pointer to its parent. The branch pointer `main` moves forward with each new commit, and `HEAD` follows it.*
 
 ### Git | commit | create a snapshot of staged changes
 
@@ -529,7 +529,7 @@ gitGraph TB:
   commit id: "C" type: REVERSE
 ```
 
-*C is the last commit — it contains a typo and needs amending.*
+*Before amend: A and B are good commits on `main`. C (marked red) is the most recent commit — its message contains a typo or it is missing a file. `HEAD` and the branch pointer both point to C.*
 
 **After amend:**
 
@@ -552,7 +552,7 @@ gitGraph TB:
   commit id: "C'" type: HIGHLIGHT
 ```
 
-*`--amend` replaces C with C' — a brand-new commit object with a different SHA.*
+*After amend: `--amend` discards C and creates C' (marked green) in its place. C' has a new SHA, the corrected message, and optionally includes newly staged files. The branch pointer now points to C'. The original C is no longer on any branch but remains recoverable via `git reflog` for ~90 days.*
 
 *Replace the last commit with a corrected version.*
 
@@ -747,7 +747,7 @@ gitGraph TB:
   commit id: "E"
 ```
 
-*Before pull --rebase: the feature branch has diverged from main — C and D were committed locally while E landed on the remote.*
+*Before pull --rebase: both branches share ancestors A and B. After branching, the feature branch added commits C and D locally. Meanwhile, a teammate pushed commit E to `main` on the remote. The two branches have diverged — they share a common base (B) but have independent commits that the other branch does not have.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -771,7 +771,7 @@ gitGraph TB:
   commit id: "D'"
 ```
 
-*After pull --rebase: C and D are replayed on top of E as C' and D' with new SHAs — clean linear history.*
+*After pull --rebase: Git first fast-forwards `main` to include E, then replays the feature branch's commits one at a time on top of E. C becomes C' and D becomes D' — the diffs are identical but the SHAs change because each commit now has a different parent. The result is a clean linear history where the feature work appears to have started after E, eliminating the divergence without a merge commit.*
 
 *Pull remote changes and rebase local commits on top.*
 
@@ -831,7 +831,7 @@ gitGraph TB:
   commit id: "F squash" type: HIGHLIGHT
 ```
 
-*C, D, E are branch commits (including a review fix); F is the single squash-merge commit that lands on main.*
+*A feature branch workflow. The branch was created from B on `main`. Commits C (initial implementation), D (refinement), and E (review fix) accumulated on the feature branch during development and code review. When the PR is approved, all three commits are squash-merged into a single commit F (marked green) on `main`. F contains the combined diff of C+D+E but appears as one clean entry in `main`'s history. The feature branch is then deleted.*
 
 ### Git | switch | create and switch branches
 
@@ -977,7 +977,7 @@ gitGraph TB:
   merge main id: "CONFLICT" type: REVERSE
 ```
 
-*Both branches modified the same lines in config.yaml — Git cannot auto-merge, producing a conflict at the merge point.*
+*A merge conflict scenario. Commit A adds `config.yaml` with `timeout_seconds: 300` and `retry_count: 3`. The feature branch is created from A and commit B changes those values to `timeout_seconds: 600` and `retry_count: 5`. Independently, commit C on `main` changes the same lines to `timeout_seconds: 900` and `retry_count: 2`. When the feature branch attempts to merge `main`, Git finds that both branches modified the same lines in the same file and cannot determine which version to keep — the merge halts at CONFLICT (marked red), requiring manual resolution before a commit can be created.*
 
 #### How conflicts happen
 
@@ -1134,7 +1134,7 @@ gitGraph TB:
   commit id: "C"
 ```
 
-*Branch added an exchange field (B) while main added a source field (C) to the same function — the rebase will conflict when replaying B on top of C.*
+*Before rebase: both branches diverged from A. The feature branch's commit B adds `"exchange": "NYSE"` to the `transform()` return dict. Meanwhile, commit C on `main` adds `"source": "yfinance"` and changes the `"currency"` line to `raw.get("currency", "USD")` in the same function at the same line range. When `git rebase main` runs, Git attempts to replay B on top of C — but B's diff context no longer matches because C changed the surrounding lines, producing a conflict.*
 
 **After rebase** (conflict resolved, commit replayed with new SHA):
 
@@ -1158,7 +1158,7 @@ gitGraph TB:
   commit id: "B'" type: HIGHLIGHT
 ```
 
-*B is replayed as B' on top of C — the resolved commit includes both the exchange and source fields.*
+*After rebase: the conflict is resolved by keeping all three fields (`currency` with dynamic lookup from C, `source` from C, and `exchange` from B). Git creates B' (marked green) — a new commit with the resolved content, parented on C instead of A. B' has a different SHA than B because its parent and tree changed. The feature branch now extends linearly from `main` with no divergence.*
 
 #### Resolve a rebase conflict step by step
 
@@ -1439,7 +1439,7 @@ gitGraph TB:
   commit id: "C" type: REVERSE
 ```
 
-*`git reset --soft HEAD~1` moves HEAD back to B. Commit C is removed from the branch but its changes remain staged. The commit survives in the reflog.*
+*Before reset: `main` points to C (marked red), which is the commit to undo. Running `git reset --soft HEAD~1` moves the branch pointer and `HEAD` back to B. Commit C is removed from the branch history — `git log` no longer shows it. However, all of C's changes remain in the staging area, ready to be re-committed with a corrected message or different file selection. The orphaned commit C still exists in the object store and is recoverable via `git reflog` for ~90 days.*
 
 #### Undo the last commit — keep changes staged
 
@@ -1490,7 +1490,7 @@ gitGraph TB:
   commit id: "revert C" type: HIGHLIGHT
 ```
 
-*`git revert` creates a new commit that is the exact inverse of C. History is preserved — C remains in the log but its changes are undone by the revert commit.*
+*A revert operation. Commits A and B are good. Commit C (marked red) introduced a bug — for example, it added a `"source"` field that breaks a downstream consumer. Running `git revert C` does not remove C from history. Instead, it creates a new commit "revert C" (marked green) that applies the exact inverse of C's diff: every line C added is deleted, every line C deleted is restored. The branch pointer advances to the revert commit. Both C and the revert remain visible in `git log`, preserving the full audit trail — critical for shared branches where rewriting history is forbidden.*
 
 #### Create a reverse commit
 

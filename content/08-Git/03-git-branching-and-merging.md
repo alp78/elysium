@@ -1,17 +1,8 @@
 ---
 title: "03 - Git Branching and Merging"
-type: concept
-category: git
-technology: [git]
 tags:
   - git
-  - branching
-aliases: [git branch, git merge, git rebase, git checkout, branching strategy, merge strategies]
-keywords: [git, branch, merge, rebase, checkout, switch, stash, feature branch, branching strategy, merge commit, fast-forward, squash merge]
-description: "Git branching and merging strategies — creating feature branches, switching branches, stashing work, merging, rebasing, and recovery techniques."
-created: 2026-03-22
-updated: 2026-04-05
-status: complete
+  - version-control
 ---
 
 # Git Branching and Merging
@@ -21,59 +12,225 @@ status: complete
 >
 > — **Linus Torvalds**, Git mailing list
 
-Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch. Understanding how branches interact with the commit DAG is essential for using Git effectively.
+Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch. Together they form the core collaboration mechanism in Git — every team workflow, from trunk-based development to Gitflow, is built on top of branching and merging primitives.
 
-A **branch** is a lightweight movable pointer to a commit. When you create a branch, Git creates a new pointer — it does not copy files. **HEAD** is a special pointer that tracks which branch (or commit) you are currently working on. The **working tree** is the set of files on disk that you edit directly. The **staging area** (also called the index) is a buffer between the working tree and the next commit — only staged changes are included when you run `git commit`. A **commit SHA** is the unique 40-character hash that identifies each commit; a commit points to its parent(s), forming a directed acyclic graph (DAG). A **merge commit** has two parents — one from each branch being joined.
+This page covers the full lifecycle: creating branches, switching between them, stashing uncommitted work, merging with different strategies, rebasing for linear history, cherry-picking individual commits, using worktrees for parallel checkouts, and recovering from mistakes. Every command is demonstrated with real outputs from the [git-lab](https://github.com/alp78/git-lab) repository.
+
+## Key Terms
+
+| Term | Definition |
+|---|---|
+| **Branch** | A lightweight movable pointer (41-byte file) that points to a commit SHA. Creating a branch does not copy files — it only creates a new pointer. |
+| **HEAD** | A special pointer that tracks which branch (or commit) you are currently working on. Normally HEAD points to a branch name; in detached HEAD state it points directly to a commit SHA. |
+| **Working tree** | The set of files on disk that you edit directly. Also called the working directory. |
+| **Staging area (index)** | A buffer between the working tree and the next commit. Only staged changes are included when you run `git commit`. |
+| **Commit SHA** | The unique 40-character hexadecimal hash that identifies each commit. A commit points to its parent(s), forming a directed acyclic graph (DAG). |
+| **DAG (Directed Acyclic Graph)** | The commit history structure. Each commit points to one or more parents, forming a graph that never loops back on itself. Branches and merges create forks and joins in this graph. |
+| **Merge base** | The most recent common ancestor commit shared by two branches. Git uses it as the reference point when performing a three-way merge. |
+| **Merge commit** | A commit with two parents — one from each branch being joined. Created by three-way merges and `--no-ff` merges. |
+| **Fast-forward** | A merge where the target branch has no new commits since the branch point. Git simply moves the branch pointer forward — no merge commit is created. |
+| **Remote-tracking branch** | A local read-only reference (e.g., `origin/main`) that mirrors the state of a branch on the remote server at the time of the last `fetch` or `pull`. |
+| **Upstream tracking branch** | The remote-tracking branch that a local branch is configured to push to and pull from. Set with `git push -u` or `git branch --set-upstream-to`. |
+| **Detached HEAD** | A state where HEAD points directly at a commit SHA instead of a branch name. New commits made in this state are not on any branch and become unreachable once you switch away. |
+| **Reflog** | A local log of every HEAD movement (commits, checkouts, resets, rebases). Entries expire after approximately 90 days. The reflog is the primary recovery mechanism for lost commits. |
+| **Stash** | A temporary storage stack for uncommitted changes. Stashing saves modified tracked files and staged changes, then resets the working tree to a clean state. |
+| **Worktree** | A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share the same commit history and reflog. |
+
+## Conceptual Model
+
+Before working with branches, it helps to understand how the five layers of Git state relate to each other. Every Git operation moves data between these layers.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    WT["Working Tree<br/>(files on disk)"]
+    IDX["Staging Area<br/>(index)"]
+    LC["Local Commits<br/>(branch pointer)"]
+    RT["Remote-Tracking<br/>(origin/main)"]
+    REM["Remote Branch<br/>(GitHub)"]
+
+    WT -->|"git add"| IDX
+    IDX -->|"git commit"| LC
+    LC -->|"git push"| REM
+    REM -->|"git fetch"| RT
+    RT -->|"git merge / rebase"| LC
+    LC -->|"checkout / switch"| WT
+
+    style WT fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style IDX fill:#292e42,stroke:#e0af68,color:#c0caf5
+    style LC fill:#292e42,stroke:#9ece6a,color:#c0caf5
+    style RT fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style REM fill:#292e42,stroke:#f7768e,color:#c0caf5
+```
+
+*The five layers of Git state. Editing files changes the working tree. `git add` moves changes to the staging area. `git commit` creates a new commit on the current branch. `git push` sends local commits to the remote. `git fetch` updates remote-tracking branches. `git merge` or `git rebase` integrates remote-tracking changes into local commits. `git switch` updates the working tree to match a different branch.*
+
+A **branch** is a 41-byte file containing a commit SHA. When you commit, Git moves the branch pointer forward to the new commit. When you create a branch, Git creates a new pointer at your current commit — no files are copied, no history is duplicated. This makes branches extremely cheap: creating, switching, and deleting branches are near-instant operations regardless of repository size.
+
+**HEAD** determines where new commits go. Normally HEAD points to a branch name (e.g., `refs/heads/main`), and when you commit, both HEAD and the branch pointer advance. In detached HEAD state, HEAD points directly to a commit SHA — new commits are created but no branch pointer tracks them.
 
 ## Branch Operations
 
-Creating, switching, and managing branches are the most frequent Git operations. Every branch is just a 41-byte file containing a commit SHA — branches are cheap to create and delete.
+Creating, switching, and managing branches are the most frequent Git operations. Every branch is just a pointer — branches are cheap to create and delete.
 
-### Creating and Switching Branches
+### Git | branch | create and switch branches
 
 A branch is an independent line of development. Creating a branch adds a new pointer at your current commit and lets you make changes without affecting other branches. Switching branches updates your working tree to match the target branch's latest commit. If you have uncommitted changes that conflict with the target branch, Git refuses to switch.
 
 > [!info] git switch vs git checkout
 >
-> Git 2.23 (August 2019) split the overloaded `git checkout` into two focused commands: `git switch` for changing branches and `git restore` for discarding file changes. The old `git checkout` still works but `switch` is safer — it refuses to switch if uncommitted changes conflict, whereas `checkout` can silently discard work when used with file paths.
+> Git 2.23 (August 2019) split the overloaded `git checkout` into two focused commands: `git switch` for changing branches and `git restore` for discarding file changes. The old `git checkout` still works but `git switch` is safer — it refuses to switch if uncommitted changes would conflict with the target branch, whereas `git checkout` can silently discard work when used with file paths. All examples in this page use the modern `git switch` command.
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C"
-  branch feat/pulse
+  branch feature
   commit id: "D"
   commit id: "E"
   checkout main
   commit id: "F"
 ```
 
-*Figure: Feature branch created at commit C. Commits D and E develop the feature while main advances to F independently. Both branches share history A-B-C. Merging will integrate D-E into main.*
+*Feature branch created at commit C. Commits D and E develop the feature while main advances to F independently. Both branches share history A→B→C. The feature branch pointer is at E, the main branch pointer is at F. The two branches have diverged — merging will be required to integrate them.*
 
-#### git switch -c — create and switch to a new branch
+#### Create and switch to a new branch
 
-Creates a new branch pointer at the current HEAD commit and switches to it in a single operation. The `-c` flag stands for "create." This is the modern equivalent of `git checkout -b`.
+**When to run:** at the start of any new unit of work — a feature, bugfix, experiment, or spike.
+**Trigger:** a new task is assigned, a bug is reported, or you want to try something without affecting main.
+**Context:** runs locally, no network operation. Creates a branch pointer at the current HEAD commit and switches to it.
+**Purpose:** isolate your changes from the main branch so that incomplete work does not affect other team members.
 
-```bash
-git switch -c feature/pulse-chart-fix
-```
-
-#### git checkout -b — create and switch (traditional)
-
-The traditional way to create and switch branches. Still works in all Git versions but `git switch -c` is preferred in Git 2.23+.
+*Create a new branch named `feature/esg-scoring` at the current HEAD commit and switch to it.*
 
 ```bash
-git checkout -b feature/pulse-chart-fix
+git switch -c feature/esg-scoring
 ```
 
-#### git switch — switch between branches
+```text
+Switched to a new branch 'feature/esg-scoring'
+```
 
-Updates the working tree and HEAD to point to the target branch. If you have staged or unstaged changes that conflict with files on the target branch, the switch is rejected.
+> [!tip] Branch naming conventions
+>
+> Most teams use a prefix convention to categorize branches at a glance:
+>
+> - `feature/` — new functionality
+> - `fix/` or `hotfix/` — bug fixes
+> - `chore/` — maintenance, dependency updates, CI changes
+> - `docs/` — documentation-only changes
+> - `experiment/` — throwaway exploratory work
+>
+> Keep branch names short and lowercase with hyphens: `feature/esg-scoring`, not `Feature/ESG_Scoring_Module_v2`. Some CI systems and shell completions break on uppercase or special characters.
+
+#### Switch between existing branches
+
+**When to run:** when you need to move to a different branch — to review a colleague's work, apply a hotfix, or return to main.
+**Trigger:** context switch between tasks, or preparing to merge.
+**Context:** local operation. Updates the working tree and HEAD. If you have uncommitted changes that conflict with files on the target branch, the switch is rejected with an error.
+**Purpose:** change the active branch so that new commits go to the correct line of development.
+
+*Switch the working tree and HEAD to point at the `main` branch.*
 
 ```bash
 git switch main
+```
+
+```text
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+```
+
+#### List local and remote branches
+
+**When to run:** to see which branches exist, which one is active, and what each branch's latest commit is.
+**Trigger:** orientation at the start of a session, before merging, or when cleaning up stale branches.
+**Context:** local operation, read-only.
+**Purpose:** identify the current branch (marked with `*`), see the latest commit on each branch, and discover remote-tracking branches.
+
+*List all local branches with their latest commit.*
+
+```bash
+git branch -v
+```
+
+```text
+  feat/add-signals       f89093f feat: add moving average function to signals
+  feature/data-validator fced9c9 feat: add data validation module
+  feature/logging-setup  b948ccd feat: add centralized logging module
+  feature/risk-metrics   9478700 feat: add Sharpe ratio calculation
+* main                   72edabc merge: integrate centralized logging module
+```
+
+*List all branches including remote-tracking branches.*
+
+```bash
+git branch -a
+```
+
+```text
+  feat/add-signals
+  feature/data-validator
+  feature/logging-setup
+  feature/risk-metrics
+* main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/feat/add-signals
+  remotes/origin/main
+```
+
+#### List merged and unmerged branches
+
+**When to run:** before cleaning up branches after a merge cycle, or to audit which feature branches still have outstanding work.
+**Trigger:** sprint cleanup, branch housekeeping, or pre-release audit.
+**Context:** local operation, read-only. Compares branch tips against the current branch.
+**Purpose:** identify which branches have been fully integrated (safe to delete) and which still contain unmerged commits.
+
+*Show branches whose commits are all reachable from the current branch (safe to delete).*
+
+```bash
+git branch --merged
+```
+
+```text
+  feature/data-validator
+  feature/logging-setup
+* main
+```
+
+*Show branches with commits not yet merged into the current branch.*
+
+```bash
+git branch --no-merged
+```
+
+```text
+  feat/add-signals
+  feature/risk-metrics
 ```
 
 > [!warning] Detached HEAD from checking out a commit
@@ -84,18 +241,31 @@ git switch main
 >
 > Create a branch before switching away: `git switch -c my-rescue-branch`. This attaches your commits to a named branch, preventing them from being garbage-collected.
 
-#### git branch — list, create, or check branches
-
-Without arguments, lists all local branches. With a name argument, creates a new branch at the current commit without switching to it. Use `-a` to include remote-tracking branches, `-v` to show each branch's latest commit.
+*Enter detached HEAD state by checking out a specific commit.*
 
 ```bash
-git branch
+git checkout f280460
 ```
 
 ```text
-  feature/pulse-chart-fix
-* main
-  hotfix/login-timeout
+Note: switching to 'f280460'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at f280460 chore: update requirements with pandas and ruff
 ```
 
 | Flag | Syntax | Description |
@@ -103,6 +273,7 @@ git branch
 | `-c` | `git switch -c <branch>` | Create a new branch and switch to it |
 | `-d` | `git switch -d <commit>` | Switch to a specific commit in detached HEAD mode |
 | `--discard-changes` | `git switch --discard-changes <branch>` | Switch and discard uncommitted changes |
+| `-` | `git switch -` | Switch to the previously checked-out branch |
 | `-a` | `git branch -a` | List all branches including remote-tracking |
 | `-v` | `git branch -v` | Show last commit on each branch |
 | `-d` | `git branch -d <branch>` | Delete branch (only if merged) |
@@ -110,13 +281,25 @@ git branch
 | `-m` | `git branch -m <old> <new>` | Rename a branch |
 | `--merged` | `git branch --merged` | List branches already merged into current branch |
 | `--no-merged` | `git branch --no-merged` | List branches not yet merged into current branch |
+| `--set-upstream-to` | `git branch --set-upstream-to=<remote>/<branch>` | Set the upstream tracking branch |
 
-### Stashing Uncommitted Work
+### Git | stash | save and restore uncommitted work
 
 A stash is a temporary storage area for uncommitted changes. When you stash, Git saves your modified tracked files and staged changes onto a stack, then reverts your working directory to a clean state matching the last commit. You can re-apply stashed changes later on the same branch or a different one. Stashing is essential when you need to switch branches mid-work without committing half-finished code.
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -131,52 +314,90 @@ gitGraph TB:
   commit id: "E"
 ```
 
-*Figure: Working on feature (commit C), you stash uncommitted changes and switch to hotfix. After committing the fix and merging it to main (D), you switch back to feature and pop the stash to resume work (commit E). Stashing lets you context-switch without half-finished commits.*
+*Working on feature (commit C), you stash uncommitted changes and switch to hotfix. After committing the fix (marked green) and merging it to main (D), you switch back to feature and pop the stash to resume work (commit E). Stashing lets you context-switch without half-finished commits polluting your history.*
 
-#### git stash push — save uncommitted changes
+#### Save uncommitted changes to the stash
 
-Saves all staged and unstaged modifications to the stash stack, then resets the working tree to the last commit. The `-m` flag adds a descriptive message to identify the stash later.
+**When to run:** when you need to switch branches but have uncommitted work that is not ready to commit.
+**Trigger:** a colleague asks for a code review, a hotfix is needed on main, or you want to `git pull` on a dirty working tree.
+**Context:** local operation. Saves staged and unstaged modifications to the stash stack, then resets the working tree to the last commit. The `-m` flag adds a descriptive message.
+**Purpose:** temporarily park incomplete work so the working tree is clean for other operations.
+
+*Stash all modified tracked files with a descriptive message.*
 
 ```bash
-git stash push -m "WIP: pulse chart refactor"
+git stash push -m "WIP: currency convert function"
 ```
 
-#### git stash list — view all stashes
+```text
+Saved working directory and index state On feature/currency-converter: WIP: currency convert function
+```
 
-Displays all entries on the stash stack. Each entry shows its index (`stash@{N}`), the branch it was created on, and the message.
+#### List all stash entries
+
+**When to run:** when you need to find a specific stash entry or see how many stashes are on the stack.
+**Trigger:** before popping or applying a stash, to confirm which entry you want.
+**Context:** local, read-only.
+**Purpose:** display all stash entries with their index, source branch, and message.
+
+*View all entries on the stash stack.*
 
 ```bash
 git stash list
 ```
 
 ```text
-stash@{0}: On feature/pulse-chart-fix: WIP: pulse chart refactor
-stash@{1}: On main: debugging auth flow
+stash@{0}: On feature/currency-converter: WIP: currency convert function
 ```
 
-#### git stash pop — restore and remove most recent stash
+#### Restore and remove the most recent stash
 
-Applies the most recent stash entry to the working tree and removes it from the stack. If the stash conflicts with current changes, the pop fails and the stash remains on the stack.
+**When to run:** after switching back to the branch where you stashed your work, or after the interrupting task is complete.
+**Trigger:** returning to a paused task.
+**Context:** local operation. Applies the stash entry to the working tree and removes it from the stack. If the stash conflicts with current changes, the pop fails and the stash remains on the stack — resolve conflicts manually and then drop the stash with `git stash drop`.
+**Purpose:** resume work from where you left off.
+
+*Pop the most recent stash entry back into the working tree.*
 
 ```bash
 git stash pop
 ```
 
-#### git stash apply — restore a specific stash without removing
+```text
+On branch feature/currency-converter
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/currency.py
 
-Applies a specific stash by index without removing it from the stack. Useful when you want to apply the same stash to multiple branches.
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (890150239f83f2ed99cc3fceec50ed1b3c1593e2)
+```
+
+#### Apply a specific stash without removing it
+
+**When to run:** when you want to apply the same stash to multiple branches, or when you want to keep the stash as a backup.
+**Trigger:** applying a stash to a branch other than where it was created, or testing whether the stash applies cleanly before committing to the pop.
+**Context:** local operation. Applies the specified stash entry but does not remove it from the stack.
+**Purpose:** re-apply saved changes without consuming the stash entry.
+
+*Apply stash entry at index 0 without removing it from the stack.*
 
 ```bash
-git stash apply stash@{2}
+git stash apply stash@{0}
 ```
 
 > [!warning] Stash skips untracked files by default
 >
-> `git stash` only saves modified tracked files. New files that have never been staged are left behind in the working tree. Switching branches after stashing can leave orphan untracked files in your working directory.
+> `git stash push` only saves modified tracked files. New files that have never been staged are left behind in the working tree. Switching branches after stashing can leave orphan untracked files in the wrong branch.
 
 > [!success] Include untracked files
 >
-> Use `git stash -u` (or `--include-untracked`) to stash untracked files too. Use `git stash -a` (or `--all`) to also include ignored files.
+> Use `git stash push -u` (or `--include-untracked`) to stash untracked files too. Use `git stash push -a` (or `--all`) to also include ignored files. For data engineering repos, this is important when you have new migration files, DAG definitions, or config files that have not yet been staged.
+
+> [!tip] Stash workflow for data engineering
+>
+> Data engineering repos often have generated artifacts (compiled dbt models, Airflow DAG bags, `.pyc` files) that should not be stashed. Use `git stash push -m "WIP: description" -- src/ tests/` to stash only specific paths, keeping generated directories untouched.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -185,29 +406,40 @@ git stash apply stash@{2}
 | `-a` | `git stash push -a` | Include untracked and ignored files |
 | `-p` | `git stash push -p` | Interactively select hunks to stash |
 | `--keep-index` | `git stash push --keep-index` | Stash unstaged changes but keep staged changes in the index |
+| `pop` | `git stash pop` | Apply and remove the most recent stash entry |
+| `apply` | `git stash apply stash@{N}` | Apply a specific stash without removing it |
 | `drop` | `git stash drop stash@{N}` | Remove a specific stash entry |
 | `clear` | `git stash clear` | Remove all stash entries |
 | `show` | `git stash show -p stash@{N}` | Show the diff of a stash entry |
+| `--` | `git stash push -- <path>` | Stash only changes in the specified path(s) |
 
-### Deleting Branches
+### Git | branch | delete branches
 
 After a branch is merged, it should be deleted to keep the branch list clean. Git offers a safe delete that checks merge status and a force delete that skips the check.
 
-#### git branch -d — safe delete (merged branches only)
+#### Safe delete a merged branch
 
-Deletes a local branch only if its commits have been merged into the current branch or its upstream. This prevents accidental loss of unmerged work.
+**When to run:** after a branch has been merged into the target branch and is no longer needed.
+**Trigger:** PR merged, feature complete, or sprint cleanup.
+**Context:** local operation. Git checks whether the branch's commits are reachable from the current branch or its upstream. If unmerged commits exist, the delete is rejected.
+**Purpose:** remove stale branch pointers without risk of losing unmerged work.
+
+*Delete a branch that has been fully merged.*
 
 ```bash
-git branch -d feature/pulse-chart-fix
+git branch -d feature/esg-scoring
 ```
 
 ```text
-Deleted branch feature/pulse-chart-fix (was 3a1b2c3).
+Deleted branch feature/esg-scoring (was 0cab331).
 ```
 
-#### git branch -D — force delete (unmerged branches)
+#### Force-delete an unmerged branch
 
-Force-deletes a branch regardless of merge status. Use this when you intentionally want to discard an experimental branch.
+**When to run:** when you intentionally want to discard an experimental or abandoned branch that was never merged.
+**Trigger:** experiment abandoned, spike completed, or duplicate branch identified.
+**Context:** local operation. Bypasses the merge check. If the branch has unmerged commits and has not been pushed to a remote, that work is only recoverable via `git reflog` for approximately 90 days.
+**Purpose:** remove a branch regardless of merge status.
 
 > [!danger] -D force-deletes without merge check
 >
@@ -215,43 +447,78 @@ Force-deletes a branch regardless of merge status. Use this when you intentional
 
 > [!success] Recover a force-deleted branch
 >
-> Find the branch tip in the reflog with `git reflog` and recreate it: `git branch recovered-branch <sha>`.
+> Find the branch tip in the reflog with `git reflog` and recreate it: `git branch recovered-branch <sha>`. The reflog retains entries for approximately 90 days by default.
+
+*Force-delete a branch regardless of merge status.*
 
 ```bash
-git branch -D experiment/abandoned-feature
+git branch -D feature/currency-converter
 ```
 
-### Working with Worktrees
+```text
+Deleted branch feature/currency-converter (was 0a2cd39).
+```
 
-`git worktree` (Git 2.5+) lets you check out multiple branches simultaneously in separate directories, all sharing the same `.git` repository. This avoids the need to stash, switch, and restore when working on a hotfix while a feature branch has uncommitted work.
+### Git | worktree | parallel working directories
 
-#### git worktree add — create a parallel working directory
+`git worktree` (Git 2.5+) lets you check out multiple branches simultaneously in separate directories, all sharing the same `.git` repository. This avoids the stash-switch-restore cycle when working on a hotfix while a feature branch has uncommitted work. Each worktree has its own checked-out branch, working tree, and index — but they share the commit history, reflog, and configuration.
 
-Creates a new working directory linked to the same repository. Each worktree has its own checked-out branch, working tree, and index — but they share the commit history, reflog, and configuration.
+> [!tip] Worktrees for data engineering
+>
+> Worktrees are particularly useful when you need to:
+>
+> - Run a long dbt build on one branch while developing on another
+> - Compare pipeline outputs between branches side-by-side
+> - Apply a hotfix to production while keeping an in-progress migration untouched
+> - Run tests on a feature branch while continuing development on a different branch
+
+#### Create a parallel working directory
+
+**When to run:** when you need to work on two branches simultaneously without stashing.
+**Trigger:** hotfix needed while mid-feature, or need to compare behavior across branches.
+**Context:** local operation. Creates a new directory linked to the same repository. You cannot check out a branch that is already checked out in another worktree.
+**Purpose:** work on multiple branches in parallel without losing context.
+
+*Create a new worktree directory for the `feature/currency-converter` branch.*
 
 ```bash
-git worktree add ../hotfix-login hotfix/login-timeout
+git worktree add ../git-lab-hotfix feature/currency-converter
 ```
 
-#### git worktree list — view active worktrees
+```text
+Preparing worktree (checking out 'feature/currency-converter')
+HEAD is now at 0a2cd39 feat: add currency converter skeleton
+```
 
-Shows all worktrees linked to the current repository, including their paths and checked-out branches.
+#### List active worktrees
+
+**When to run:** to see which worktrees are active and which branches they have checked out.
+**Trigger:** before creating a new worktree (to avoid conflicts), or during cleanup.
+**Context:** local, read-only.
+**Purpose:** display all worktree paths and their checked-out branches.
+
+*Show all worktrees linked to the current repository.*
 
 ```bash
 git worktree list
 ```
 
 ```text
-/home/user/project         3a1b2c3 [main]
-/home/user/hotfix-login    f4e5d6a [hotfix/login-timeout]
+C:/Users/aperi/DEV/git-lab        7dd85e2 [main]
+C:/Users/aperi/DEV/git-lab-hotfix 0a2cd39 [feature/currency-converter]
 ```
 
-#### git worktree remove — clean up a worktree
+#### Remove a worktree
 
-Removes a worktree directory and its administrative files. The branch remains — only the extra working directory is deleted.
+**When to run:** after the work in the extra worktree is complete.
+**Trigger:** hotfix merged, comparison done, or worktree no longer needed.
+**Context:** local operation. Removes the worktree directory and its administrative files. The branch remains — only the extra working directory is deleted.
+**Purpose:** clean up worktree directories to avoid confusion and disk usage.
+
+*Remove a worktree directory.*
 
 ```bash
-git worktree remove ../hotfix-login
+git worktree remove ../git-lab-hotfix
 ```
 
 | Flag | Syntax | Description |
@@ -261,19 +528,31 @@ git worktree remove ../hotfix-login
 | `remove` | `git worktree remove <path>` | Remove a worktree directory |
 | `prune` | `git worktree prune` | Clean up stale worktree metadata |
 | `--detach` | `git worktree add --detach <path> <commit>` | Create a worktree in detached HEAD mode |
+| `--force` | `git worktree remove --force <path>` | Remove a worktree even if it has uncommitted changes |
 
 ## Merging Strategies
 
-Merging is how completed work on one branch gets integrated into another. Git offers several merge approaches: a fast-forward merge moves the branch pointer without creating a merge commit, a three-way merge creates a merge commit with two parents, and a rebase replays commits for a linear history. The choice affects how your project history reads — merge preserves the full branching story, rebase makes it look like everyone worked sequentially.
+Merging is how completed work on one branch gets integrated into another. Git offers several merge approaches, each producing a different commit history shape. The choice affects how your project history reads, how easy it is to revert features, and how clean the DAG looks.
 
-See [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-rebase-vs-squash) for a detailed comparison of when to use each strategy. Once a branch is merged, [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) covers the PR workflow that typically wraps these merge operations. For resolving conflicts that arise during merges, see [git-merge-conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts).
+See [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/04-merge-vs-rebase-vs-squash) for a detailed strategy comparison. For resolving conflicts that arise during merges, see [git-merge-conflicts](https://alp78.github.io/elysium/08-Git/10-git-merge-conflicts).
 
-### Fast-Forward Merge
+### Git | merge | fast-forward merge
 
 A fast-forward merge occurs when the target branch (e.g., `main`) has not received any new commits since the feature branch was created. Git simply moves the `main` pointer forward to the feature branch's tip — no merge commit is created. The result is a perfectly linear history with no branching visible in `git log --graph`.
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -281,33 +560,56 @@ gitGraph TB:
   commit id: "C"
   commit id: "D"
   checkout main
-  merge feature id: "D" type: HIGHLIGHT
+  merge feature id: "ff" type: HIGHLIGHT
 ```
 
-*Figure: Fast-forward merge — main had no new commits since the branch point at B. Git simply moves the main pointer forward to D. No merge commit is created. History stays linear.*
+*Fast-forward merge: main had no new commits since the branch point at B. Git moves the main pointer forward from B to D (marked green). No merge commit is created — the history stays perfectly linear. After the merge, main and feature both point to commit D. The feature branch can be safely deleted.*
 
-#### git merge feature — fast-forward when no divergence
+#### Merge with fast-forward (default behavior)
 
-When `main` has no new commits since the branch point, `git merge` performs a fast-forward by default. The `main` pointer moves to the feature branch tip. No merge commit is created.
+**When to run:** when you want to integrate a feature branch into main and main has not diverged.
+**Trigger:** feature complete and ready to merge, no conflicting work on main.
+**Context:** local operation. Requires switching to the target branch first (`git switch main`). The merge updates the branch pointer — no new commit is created.
+**Purpose:** integrate feature work into main with a clean linear history.
+
+*Switch to main and fast-forward merge the feature branch.*
 
 ```bash
 git switch main
-git merge feature/pulse-chart-fix
+git merge feature/esg-scoring
 ```
 
 ```text
-Updating 3a1b2c3..f4e5d6a
+Updating 07a7f46..0cab331
 Fast-forward
- src/charts/pulse.ts | 42 ++++++++++++++++++++++++------------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+ src/esg_scoring.py        | 11 +++++++++++
+ tests/test_esg_scoring.py | 16 ++++++++++++++++
+ 2 files changed, 27 insertions(+)
+ create mode 100644 src/esg_scoring.py
+ create mode 100644 tests/test_esg_scoring.py
 ```
 
-### Three-Way Merge
+The output shows `Fast-forward` — Git moved the `main` pointer from `07a7f46` to `0cab331` without creating a merge commit. The diffstat shows which files changed and how many lines were added or removed.
+
+### Git | merge | three-way merge
 
 A three-way merge occurs when both branches have new commits since they diverged. Git finds the common ancestor (merge base), compares both branch tips against it, and creates a **merge commit** with two parents. This preserves the complete history of both branches, showing exactly when they diverged and when they were joined.
 
-```mermaid
+The name "three-way" refers to the three commits Git compares: the merge base (common ancestor), the tip of the current branch, and the tip of the branch being merged. Git uses the `ort` merge strategy by default (replacing the older `recursive` strategy since Git 2.34).
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -320,39 +622,143 @@ gitGraph TB:
   merge feature id: "M" type: HIGHLIGHT
 ```
 
-*Figure: Three-way merge — main advanced to F while feature developed C-D. Git creates merge commit M with two parents (F and D). The merge commit records the integration point. Both branches' full history is preserved.*
+*Three-way merge: main advanced to F while feature developed C and D independently. B is the merge base — the last commit both branches share. Git compares the state at B against the tips F and main, and C/D on feature, combining changes from both sides. The result is merge commit M (marked green), which has two parents: F (from main) and D (from feature). Both branches' full history is preserved in the DAG, making it clear when the feature started and when it was integrated.*
 
-#### git merge feature — three-way merge with merge commit
+#### Merge with three-way strategy
 
-When both branches have diverged, Git automatically performs a three-way merge. The merge commit `M` has two parents: the tip of `main` and the tip of `feature`. If the same lines were modified on both branches, Git raises a merge conflict that must be resolved manually.
+**When to run:** when both your branch and the target branch have diverged — both received new commits since the fork point.
+**Trigger:** merging a feature branch after main has received other work (other features merged, hotfixes applied).
+**Context:** local operation. If the same lines were modified on both branches, Git raises a merge conflict that must be resolved manually before the merge commit can be created.
+**Purpose:** integrate diverged branches while preserving the complete history of both.
+
+*Merge a feature branch that has diverged from main.*
 
 ```bash
 git switch main
-git merge feature/pulse-chart-fix
+git merge feature/data-validator
 ```
 
 ```text
 Merge made by the 'ort' strategy.
- src/charts/pulse.ts | 42 ++++++++++++++++++++++++------------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+ src/data_validator.py | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100644 src/data_validator.py
 ```
 
-#### git merge --no-ff — force merge commit
+*The resulting commit graph shows the merge commit joining the two branches.*
 
-Forces Git to create a merge commit even when a fast-forward is possible. This keeps the branch boundary visible in `git log --graph`, making it easier to identify which commits belonged to a feature branch.
+```bash
+git log --oneline --graph -6
+```
 
-> [!tip] Use --no-ff for feature branches
->
-> Many teams enforce `--no-ff` as a policy (via `git config merge.ff false`) so that every feature branch merge is explicitly recorded in the graph. This makes it trivial to revert an entire feature by reverting the single merge commit.
+```text
+*   6de68b1 Merge branch 'feature/data-validator'
+|\  
+| * fced9c9 feat: add data validation module
+* | baeaf6a chore: update pipeline configuration with rate limits
+|/  
+* 0cab331 test: add ESG scoring unit tests
+* 02a138c feat: add ESG scoring module skeleton
+* 07a7f46 Reapply "feat: add source field and dynamic currency"
+```
+
+The graph shows the fork at `0cab331` (where feature diverged) and the join at `6de68b1` (the merge commit). The `|\` and `|/` lines show the two branches running in parallel before merging.
+
+### Git | merge | force merge commit with --no-ff
+
+The `--no-ff` flag forces Git to create a merge commit even when a fast-forward is possible. This keeps the branch boundary visible in `git log --graph`, making it easier to identify which commits belonged to a feature branch and to revert an entire feature by reverting the single merge commit.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
+gitGraph TB:
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  checkout main
+  merge feature id: "M" type: HIGHLIGHT
+```
+
+*--no-ff merge: even though main could fast-forward to C, Git creates merge commit M (marked green) with two parents — B (from main) and C (from feature). The branch boundary is preserved in the graph. Compare this to a fast-forward merge, which would simply move the main pointer to C without any visual record of the branch.*
+
+#### Merge with explicit merge commit
+
+**When to run:** when you want to preserve the branch boundary in the commit history, even when a fast-forward is possible.
+**Trigger:** team policy requires visible merge commits, or you want the option to revert an entire feature with a single `git revert`.
+**Context:** local operation. Creates a merge commit with two parents.
+**Purpose:** maintain a visible record of when feature work was integrated.
+
+*Force a merge commit even though fast-forward is possible.*
 
 ```bash
 git switch main
-git merge --no-ff feature/pulse-chart-fix
+git merge --no-ff feature/logging-setup -m "merge: integrate centralized logging module"
 ```
 
-#### git merge --abort — cancel a merge in progress
+```text
+Merge made by the 'ort' strategy.
+ src/logger.py | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+ create mode 100644 src/logger.py
+```
 
-If a merge produces conflicts you do not want to resolve, `--abort` restores the working tree and index to the state before the merge began. No merge commit is created.
+*The graph shows the explicit merge commit preserving the branch boundary.*
+
+```bash
+git log --oneline --graph -4
+```
+
+```text
+*   72edabc merge: integrate centralized logging module
+|\  
+| * b948ccd feat: add centralized logging module
+|/  
+* 7dd85e2 feat: add volatility calculation
+* f280460 chore: update requirements with pandas and ruff
+```
+
+> [!tip] Enforce --no-ff as team policy
+>
+> Many teams enforce `--no-ff` as a default so that every feature branch merge is explicitly recorded in the graph. Set it globally with `git config --global merge.ff false` or per-repository with `git config merge.ff false`. GitHub, GitLab, and Bitbucket all create merge commits by default when merging PRs through the web UI.
+
+#### Restrict to fast-forward only
+
+**When to run:** when you want the merge to succeed only if a fast-forward is possible — failing explicitly if the branches have diverged.
+**Trigger:** CI/CD pipelines that require linear history, or when you want to confirm that a rebase was done before merging.
+**Context:** local operation. The merge is aborted if fast-forward is not possible.
+**Purpose:** enforce linear history by rejecting merges that would create a merge commit.
+
+*Attempt a fast-forward-only merge (fails if branches have diverged).*
+
+```bash
+git merge --ff-only feature/risk-metrics
+```
+
+```text
+fatal: Not possible to fast-forward, aborting.
+```
+
+The merge fails because `main` and `feature/risk-metrics` have diverged — both have commits the other does not. To make this merge possible, rebase the feature branch onto main first.
+
+#### Cancel a merge in progress
+
+**When to run:** when a merge produces conflicts you do not want to resolve right now.
+**Trigger:** unexpected conflicts, wrong branch merged, or need to discuss with the team before resolving.
+**Context:** local operation. Restores the working tree and index to the state before the merge began. No merge commit is created.
+**Purpose:** cleanly back out of a merge without leaving the repository in a conflicted state.
+
+*Abort a merge in progress and restore pre-merge state.*
 
 ```bash
 git merge --abort
@@ -368,15 +774,27 @@ git merge --abort
 | `--no-commit` | `git merge --no-commit <branch>` | Perform the merge but stop before creating the merge commit |
 | `-m` | `git merge -m "msg" <branch>` | Set the merge commit message |
 | `--stat` | `git merge --stat <branch>` | Show diffstat after merge (default) |
+| `--strategy` | `git merge -s <strategy> <branch>` | Use a specific merge strategy (ort, recursive, octopus, ours) |
 
-### Rebase (Linear History)
+### Git | rebase | linear history
 
-Rebasing takes every commit on your branch and replays them one by one on top of the target branch's latest commit. The result is a perfectly linear history — it looks like you started your work after the latest `main` commit, even if you actually started weeks ago. The trade-off: every replayed commit gets a **new SHA hash** because the parent commit has changed, which means you are rewriting history.
+Rebasing takes every commit on your branch and replays them one by one on top of the target branch's latest commit. The result is a perfectly linear history — it looks like you started your work after the latest `main` commit, even if you actually started days or weeks ago. The trade-off: every replayed commit gets a **new SHA hash** because the parent commit has changed, which means you are rewriting history.
 
 **Before rebase:**
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -387,12 +805,23 @@ gitGraph TB:
   commit id: "E"
 ```
 
-*Figure: Feature branch diverged from main at B. Commits C and D are on feature while E advanced main independently.*
+*Before rebase: feature branch diverged from main at B. Feature has commits C (add volatility calculation) and D (add Sharpe ratio). Meanwhile, main advanced to E (update requirements). The two branches share history A→B but have diverged since — C and D are based on B, not on E.*
 
 **After rebase:**
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -401,42 +830,81 @@ gitGraph TB:
   commit id: "D'" type: HIGHLIGHT
 ```
 
-*Figure: After `git rebase main` — commits C and D are replayed on top of E as C' and D' (new SHAs). History is linear. The feature branch appears to have started after E. Original C and D are orphaned.*
+*After `git rebase main`: Git first identifies the merge base (B), then replays the feature branch's commits one at a time on top of E. C becomes C' (marked green) and D becomes D' (marked green) — the diffs are identical but the SHAs change because each commit now has a different parent (C' is based on E instead of B, D' is based on C' instead of C). The result is a clean linear history where the feature work appears to have started after E, eliminating the divergence without a merge commit. The original commits C and D are orphaned and will be garbage-collected after the reflog expires (~90 days).*
 
-#### git rebase main — replay commits onto new base
+#### Rebase onto a new base
 
-Switches the base of your feature branch from the old fork point to the tip of `main`. Each commit on the feature branch is replayed in order, producing new commits with new SHAs but identical diffs. After rebasing, the feature branch can be fast-forward merged into `main`.
+**When to run:** before merging a feature branch, to ensure it applies cleanly on top of the latest main.
+**Trigger:** main has received new commits since you branched off, and you want linear history.
+**Context:** local operation that rewrites history. Must be on the feature branch. Each commit is replayed in order — if a conflict occurs, the rebase pauses and you must resolve it before continuing with `git rebase --continue`.
+**Purpose:** produce a linear history so the feature branch can be fast-forward merged into main.
+
+*Rebase the feature branch onto the tip of main.*
 
 ```bash
-git switch feature/pulse-chart-fix
+git switch feature/risk-metrics
 git rebase main
 ```
 
 ```text
-Successfully rebased and updated refs/heads/feature/pulse-chart-fix.
+Successfully rebased and updated refs/heads/feature/risk-metrics.
 ```
 
-#### git rebase -i — interactive rebase
+*Verify the linear history after rebase.*
 
-Interactive rebase lets you edit, reorder, squash, or drop individual commits before they are replayed. This is the primary tool for cleaning up commit history before merging a feature branch. Each commit is listed in an editor with an action keyword (`pick`, `squash`, `fixup`, `reword`, `edit`, `drop`).
+```bash
+git log --oneline --graph -5
+```
+
+```text
+* 9478700 feat: add Sharpe ratio calculation
+* 3b1c373 feat: add volatility calculation
+* f280460 chore: update requirements with pandas and ruff
+*   6de68b1 Merge branch 'feature/data-validator'
+|\  
+| * fced9c9 feat: add data validation module
+```
+
+The commits now sit on top of `f280460` (the tip of main when the rebase ran), not on top of the old branch point. The feature branch can now be fast-forward merged into main.
+
+#### Interactive rebase — edit commit history
+
+**When to run:** before merging a feature branch, to clean up the commit history — squash fixup commits, reword messages, reorder commits, or drop accidental commits.
+**Trigger:** branch has too many small "fix typo" commits, commit messages need improvement, or commits should be reordered for logical grouping.
+**Context:** local operation that rewrites history. Opens an editor listing each commit with an action keyword. Never use interactive rebase on commits that have been pushed to a shared branch.
+**Purpose:** produce a clean, reviewable commit history before merging.
+
+> [!info]- Interactive rebase action keywords
+>
+> Each commit in the interactive rebase editor is prefixed with an action keyword:
+>
+> - `pick` — use the commit as-is
+> - `reword` — use the commit but edit its message
+> - `edit` — pause the rebase at this commit so you can amend it
+> - `squash` — combine this commit with the previous one, keeping both messages
+> - `fixup` — combine this commit with the previous one, discarding this commit's message
+> - `drop` — remove the commit entirely
+>
+> Commits are listed oldest-first. Reordering the lines reorders the commits.
+
+*Interactively edit the last 3 commits.*
 
 ```bash
 git rebase -i HEAD~3
 ```
 
-```text
-pick a1b2c3d Add pulse chart component
-squash e4f5g6h Fix pulse chart axis labels
-pick i7j8k9l Add pulse chart unit tests
-```
-
 > [!tip] Squash fixup commits before merging
 >
-> Use `fixup` instead of `squash` when you want to discard the fixup commit's message entirely and keep only the original commit's message. This produces a cleaner history than `squash`, which concatenates both messages.
+> Use `fixup` instead of `squash` when you want to discard the fixup commit's message entirely and keep only the original commit's message. This produces a cleaner history than `squash`, which concatenates both messages. Name fixup commits with the `fixup!` prefix (e.g., `fixup! feat: add ESG scoring`) and use `--autosquash` to have Git automatically reorder them.
 
-#### git rebase --abort — cancel a rebase in progress
+#### Cancel a rebase in progress
 
-If a rebase produces conflicts you do not want to resolve, `--abort` restores the branch to its exact state before the rebase began. No commits are rewritten.
+**When to run:** when a rebase produces conflicts you do not want to resolve, or you realize you are rebasing the wrong branch.
+**Trigger:** unexpected conflicts, wrong base branch, or need to discuss with the team.
+**Context:** local operation. Restores the branch to its exact state before the rebase began. No commits are rewritten.
+**Purpose:** cleanly back out of a rebase without leaving the repository in a broken state.
+
+*Abort a rebase and restore the original branch state.*
 
 ```bash
 git rebase --abort
@@ -444,11 +912,15 @@ git rebase --abort
 
 > [!danger] Never rebase shared branches
 >
-> Rebasing rewrites commit SHAs. If others have pulled your branch and you rebase, their local copies will have different SHAs for the same changes. The next `git pull` will create duplicate commits or conflicts. This applies to any branch that has been pushed and is used by other developers.
+> Rebasing rewrites commit SHAs. If others have pulled your branch and you rebase, their local copies will have different SHAs for the same changes. The next `git pull` will create duplicate commits or conflicts. This applies to any branch that has been pushed and is used by other developers — including `main`, `develop`, `release/*`, and any branch with open PRs.
 
 > [!success] Safe rebase workflow
 >
-> Only rebase commits that have not been pushed to a shared remote. If you must update a pushed branch after rebase, use `git push --force-with-lease` — this refuses to push if the remote has commits you have not seen, preventing you from overwriting a colleague's work. Never use `git push --force` on shared branches.
+> Only rebase commits that have not been pushed to a shared remote. If you must update a pushed feature branch after rebase, use `git push --force-with-lease` — this refuses to push if the remote has commits you have not seen, preventing you from overwriting a colleague's work. Never use `git push --force` on shared branches.
+
+> [!question] When to rebase vs when to merge?
+>
+> **Rebase** when you want linear history and the branch is local or only used by you. **Merge** when the branch is shared, when you want to preserve the full branching story, or when team policy requires merge commits for auditability. For data engineering teams, dbt and Airflow DAG repos often benefit from merge commits because they make it easier to identify which feature introduced a breaking change to a model or DAG.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -459,13 +931,25 @@ git rebase --abort
 | `--skip` | `git rebase --skip` | Skip the current conflicting commit and continue |
 | `--autosquash` | `git rebase -i --autosquash` | Automatically reorder fixup! and squash! commits |
 | `--autostash` | `git rebase --autostash` | Stash uncommitted changes before rebase, re-apply after |
+| `--update-refs` | `git rebase --update-refs` | Automatically update dependent branch refs during rebase |
 
-### Cherry-Pick
+### Git | cherry-pick | copy individual commits
 
 Cherry-picking copies a single commit from one branch to another. Git applies the diff introduced by the chosen commit as a new commit on the current branch. The new commit has a different SHA but identical changes. This is useful for applying a specific fix from a development branch to a release branch without merging everything.
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -477,76 +961,182 @@ gitGraph TB:
   cherry-pick id: "D"
 ```
 
-*Figure: Cherry-pick copies commit D from feature to main as D' (new SHA, same changes). The original D remains on feature. D' is an independent commit — it has no merge relationship with D.*
+*Cherry-pick copies commit D (marked green on feature) from feature to main as a new commit D' (the cherry-pick result on main). D' has a different SHA than D but contains the exact same diff. The original D remains on feature untouched. D' is an independent commit — it has no parent relationship with D in the DAG. If the feature branch is later fully merged into main, Git may flag the duplicated changes as a conflict.*
 
-#### git cherry-pick — copy a commit to the current branch
+#### Copy a commit to the current branch
 
-Applies the changes from a specific commit (identified by SHA) as a new commit on the current branch. The original commit remains untouched on its source branch.
+**When to run:** when you need a specific commit from another branch without merging the entire branch.
+**Trigger:** a critical bugfix is on a feature branch but the feature is not ready to merge, a specific commit needs to be backported to a release branch, or a single commit from an abandoned branch needs to be preserved.
+**Context:** local operation. Requires the target commit's SHA. If the cherry-picked changes conflict with the current branch, Git pauses and you must resolve conflicts before continuing.
+**Purpose:** selectively apply one commit's changes without bringing the full branch history.
+
+*Cherry-pick a specific commit by SHA from the feature branch.*
 
 ```bash
 git switch main
-git cherry-pick f4e5d6a
+git cherry-pick 3b1c373
 ```
 
 ```text
-[main 7b8c9d0] Fix pulse chart axis labels
- Date: Sat Apr 5 10:30:00 2026 +0000
- 1 file changed, 3 insertions(+), 2 deletions(-)
+[main 7dd85e2] feat: add volatility calculation
+ Date: Sun Apr 12 16:59:09 2026 +0200
+ 1 file changed, 13 insertions(+)
+ create mode 100644 src/risk_metrics.py
 ```
+
+The output shows that Git created a new commit `7dd85e2` on main with the same changes and message as the original commit `3b1c373`. The date is preserved from the original commit.
 
 > [!warning] Cherry-pick creates duplicate commits
 >
-> The cherry-picked commit and the original have different SHAs but identical diffs. If both branches are later merged, Git may flag the duplicate changes as a conflict.
+> The cherry-picked commit and the original have different SHAs but identical diffs. If both branches are later merged, Git may flag the duplicate changes as a conflict. This is especially problematic in data engineering repos where the same migration file or DAG definition appears on multiple branches.
 
 > [!success] Avoid duplicates with rebase
 >
-> If you plan to merge the full branch later, prefer `git rebase` over cherry-picking individual commits. Rebase replays all commits and avoids the duplication problem.
+> If you plan to merge the full branch later, prefer `git rebase` over cherry-picking individual commits. Rebase replays all commits and avoids the duplication problem. If you must cherry-pick, use `git cherry-pick -x <sha>` to append "(cherry picked from commit ...)" to the message — this helps team members identify the duplicate later.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `-n` | `git cherry-pick -n <sha>` | Apply changes without committing (stage only) |
 | `-x` | `git cherry-pick -x <sha>` | Append "(cherry picked from commit ...)" to the message |
+| `-e` | `git cherry-pick -e <sha>` | Edit the commit message before committing |
 | `--abort` | `git cherry-pick --abort` | Cancel cherry-pick and restore pre-operation state |
 | `--continue` | `git cherry-pick --continue` | Resume after resolving a conflict |
+| `--skip` | `git cherry-pick --skip` | Skip the current commit and continue with the next |
+
+## Data Engineering Branch Patterns
+
+Data engineering repositories have specific branching challenges that general-purpose Git guides rarely address. Database migrations, DAG definitions, generated artifacts, and shared SQL files create situations where standard branching advice breaks down.
+
+### Migration collisions
+
+Database migration frameworks (Alembic, Flyway, dbt migrations) assign sequential version numbers or timestamps to migration files. When two branches independently create migrations, they may conflict:
+
+- **Sequential numbering (Alembic):** both branches create `V003_` — only one can win
+- **Timestamp-based (Flyway):** both branches create `V20260412_` — if timestamps collide, the second deployment fails
+- **dbt model overlap:** both branches modify the same model — `git merge` handles file conflicts, but the compiled SQL may have semantic conflicts that Git cannot detect
+
+> [!tip] Migration branching strategy
+>
+> - Assign migration numbers at merge time, not at branch creation time
+> - Use a CI check that validates migration ordering after merge
+> - For dbt, run `dbt compile` in CI on every PR to catch semantic conflicts early
+> - For Alembic, use `alembic check` (added in Alembic 1.9) to detect diverged heads
+
+### DAG conflicts in Airflow
+
+Airflow DAG files define task dependencies in Python. Two branches modifying the same DAG's task graph can merge cleanly at the file level but produce an invalid DAG at runtime (circular dependencies, missing tasks, broken sensor references).
+
+> [!warning] DAG merges can be silently broken
+>
+> Git merge resolves file-level conflicts but cannot validate DAG semantics. A merge that looks clean in `git log` may produce a broken DAG that fails at parse time or, worse, at execution time.
+
+> [!success] Validate DAGs after merge
+>
+> Run `airflow dags test <dag_id>` or `python -c "from dags.my_dag import dag"` in CI after every merge to catch import errors and circular dependencies before deployment.
+
+### Generated artifacts and large files
+
+Data pipelines often produce generated files: compiled dbt models, serialized ML models, Parquet files, or exported notebooks. These files should generally not be committed, but when they are (e.g., for reproducibility), they create large diffs and frequent merge conflicts.
+
+> [!tip] Keep generated files out of branch history
+>
+> - Add generated directories to `.gitignore` (`target/`, `dbt_packages/`, `__pycache__/`)
+> - Use Git LFS for large binary files that must be tracked (models, datasets)
+> - Use CI to generate and publish artifacts rather than committing them
+> - For notebooks, use `nbstripout` as a pre-commit hook to remove cell outputs before commit
+
+### Release and hotfix branches
+
+Data platforms with SLA-driven deployments (market-close pipelines, overnight batch jobs) need a clear release branching strategy:
+
+> [!info] Release branch workflow for data pipelines
+>
+> 1. **Cut a release branch** from main: `git switch -c release/2026-Q2`
+> 2. **Only bugfixes** go onto the release branch — new features stay on main
+> 3. **Hotfixes** branch from the release branch: `git switch -c hotfix/fix-price-feed -b release/2026-Q2`
+> 4. **Merge hotfixes** back to both the release branch and main
+> 5. **Tag the release** when deployed: `git tag -a v2026.Q2.1 -m "Q2 release patch 1"`
 
 ## Branch Recovery
 
-Git's reflog is the safety net for branch operations — it records every time HEAD moves (commits, checkouts, resets, rebases) for approximately 90 days. Even if you delete a branch or run `reset --hard`, the commits still exist in the object database and are reachable via the reflog. See [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) for comprehensive recovery workflows.
+Git's reflog is the safety net for branch operations — it records every time HEAD moves (commits, checkouts, resets, rebases) for approximately 90 days. Even if you delete a branch or run `reset --hard`, the commits still exist in the object database and are reachable via the reflog.
 
-### Undo Last Commit
+### Git | reset | undo last commit
 
 Undoing the last commit is one of the most common recovery operations. The three `reset` modes determine what happens to the changes from the undone commit: `--soft` keeps them staged, `--mixed` (default) keeps them in the working tree but unstaged, and `--hard` discards them entirely.
 
 **Before reset:**
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C" type: HIGHLIGHT
 ```
 
-*Figure: Current state — HEAD points at commit C on main. The next command will undo C.*
+*Current state: HEAD and main both point at commit C (marked green). C is the merge commit integrating the centralized logging module. The next command will undo C by moving the branch pointer backward.*
 
-**After `git reset --soft HEAD~1`** — HEAD moves back to B, commit C's changes remain staged:
+**After `git reset --soft HEAD~1`:**
 
 ```mermaid
-
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}, 'gitGraph': {'mainBranchName': 'main'}}}%%
 gitGraph TB:
   commit id: "A"
   commit id: "B" type: HIGHLIGHT
 ```
 
-*Figure: After `git reset --soft HEAD~1` — HEAD moved back to B. Commit C is removed from the branch but its changes remain staged, ready to be recommitted with a different message or combined with additional changes.*
+*After reset: HEAD and main moved back to B (marked green). Commit C is removed from the branch but still exists in the object database — it is reachable via the reflog for ~90 days. With `--soft`, C's changes remain staged in the index, ready to be recommitted. With `--mixed` (default), C's changes are in the working tree but unstaged. With `--hard`, C's changes are discarded entirely from both the index and working tree.*
 
-#### git reset --soft HEAD~1 — undo commit, keep changes staged
+#### Undo commit, keep changes staged
 
-Moves HEAD back one commit. The changes from the undone commit remain in the staging area, ready to be re-committed with a different message or combined with additional changes.
+**When to run:** when you committed too early, with the wrong message, or want to combine the last commit's changes with additional work.
+**Trigger:** immediate realization that the last commit was premature or incorrect.
+**Context:** local operation. Moves the branch pointer back one commit. The changes from the undone commit remain in the staging area. Safe to use on unpushed commits.
+**Purpose:** undo the last commit while preserving all changes for recommitting.
+
+*Move HEAD back one commit, keeping changes staged.*
 
 ```bash
 git reset --soft HEAD~1
 ```
+
+*Verify the state after reset.*
+
+```bash
+git status
+```
+
+```text
+On branch main
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   src/logger.py
+```
+
+The changes from the undone merge commit (adding `src/logger.py`) are now staged and ready to be recommitted.
 
 > [!danger] git reset --hard discards uncommitted work
 >
@@ -554,41 +1144,97 @@ git reset --soft HEAD~1
 
 > [!success] Check reflog before hard reset
 >
-> If you accidentally ran `reset --hard`, committed changes survive in the reflog for approximately 90 days: `git reflog` then `git reset --hard <sha>` to restore. Uncommitted work, however, is permanently lost.
+> If you accidentally ran `reset --hard`, committed changes survive in the reflog for approximately 90 days: `git reflog` → find the SHA → `git reset --hard <sha>` to restore. Uncommitted work, however, is permanently lost.
 
-> [!danger] git checkout -- discards uncommitted work
->
-> `git checkout -- .` permanently deletes all uncommitted changes to tracked files. Unlike `reset --hard`, this operates on individual files, not commits. There is no reflog recovery — uncommitted work was never recorded by Git.
+| Mode | Syntax | HEAD moves | Index (staging) | Working tree |
+|---|---|---|---|---|
+| `--soft` | `git reset --soft HEAD~1` | Back 1 commit | Changes stay staged | Unchanged |
+| `--mixed` | `git reset HEAD~1` | Back 1 commit | Changes unstaged | Changes preserved |
+| `--hard` | `git reset --hard HEAD~1` | Back 1 commit | Cleared | Cleared |
 
-> [!success] Stash before discarding
->
-> Use `git stash` before discarding changes. If you realize you need them back, `git stash pop` restores everything.
-
-### Recover Lost Commits from Reflog
+### Git | reflog | recover lost commits
 
 The reflog records every HEAD movement — commits, checkouts, merges, rebases, and resets. Even "deleted" commits survive here. Use `git reflog` to find the SHA of the lost commit, then create a new branch or reset to it.
 
-#### git reflog — find lost commits
+#### Find lost commits in the reflog
 
-Displays the local history of HEAD movements. Each entry shows the SHA, the action that moved HEAD, and a description.
+**When to run:** after a destructive operation (reset, rebase, branch deletion) when you need to find the SHA of a commit that is no longer on any branch.
+**Trigger:** accidental `reset --hard`, force-deleted branch, botched rebase, or any situation where commits seem to have disappeared.
+**Context:** local operation, read-only. The reflog is local to your machine — it is not pushed to remotes and is not visible to other team members.
+**Purpose:** locate the SHA of a lost commit so it can be recovered.
+
+*Display the local history of HEAD movements.*
 
 ```bash
-git reflog
+git reflog -10
 ```
 
 ```text
-f4e5d6a HEAD@{0}: reset: moving to HEAD~1
-3a1b2c3 HEAD@{1}: commit: Add pulse chart component
-7b8c9d0 HEAD@{2}: checkout: moving from feature to main
+7dd85e2 HEAD@{0}: reset: moving to HEAD~1
+72edabc HEAD@{1}: checkout: moving from rescue/detached-work to main
+f280460 HEAD@{2}: checkout: moving from f280460 to rescue/detached-work
+f280460 HEAD@{3}: checkout: moving from main to f280460
+72edabc HEAD@{4}: merge feature/logging-setup: Merge made by the 'ort' strategy.
+7dd85e2 HEAD@{5}: checkout: moving from feature/logging-setup to main
+b948ccd HEAD@{6}: commit: feat: add centralized logging module
+7dd85e2 HEAD@{7}: checkout: moving from main to feature/logging-setup
+7dd85e2 HEAD@{8}: reset: moving to HEAD
+7dd85e2 HEAD@{9}: checkout: moving from main to main
 ```
 
-#### git branch recovered — restore a lost branch
+Each line shows: the commit SHA, the reflog index (`HEAD@{N}`), the action that moved HEAD, and a description. Entry `HEAD@{0}` is the most recent movement. The reflog shows the exact sequence of operations — you can trace back through resets, checkouts, merges, and rebases to find any commit that was ever referenced by HEAD.
 
-Once you find the target SHA in the reflog, create a new branch pointing to it.
+#### Restore a lost branch from the reflog
+
+**When to run:** after finding the target SHA in the reflog.
+**Trigger:** branch was deleted (`git branch -D`), commits were lost to a reset, or a rebase went wrong.
+**Context:** local operation. Creates a new branch pointer at the specified SHA.
+**Purpose:** attach a branch name to an orphaned commit, making it reachable and safe from garbage collection.
+
+*Create a new branch pointing to a commit found in the reflog.*
 
 ```bash
-git branch recovered-feature 3a1b2c3
+git branch recovered-feature 72edabc
 ```
 
-See [git-history-and-inspection](https://alp78.github.io/elysium/08-Git/git-history-and-inspection) for advanced log and reflog inspection techniques.
+*Or reset the current branch to the recovered commit.*
 
+```bash
+git reset --hard 72edabc
+```
+
+> [!warning] Reflog entries expire
+>
+> By default, reflog entries for reachable commits expire after 90 days and entries for unreachable commits expire after 30 days. These values are configured by `gc.reflogExpire` and `gc.reflogExpireUnreachable`. After expiration, the commit objects may be garbage-collected and become permanently unrecoverable.
+
+> [!success] Extend reflog retention for critical repos
+>
+> For production-critical repositories, extend the reflog retention: `git config gc.reflogExpire 180.days` and `git config gc.reflogExpireUnreachable 90.days`. This provides a longer safety net for recovery operations.
+
+## Merge Strategy Decision Matrix
+
+The following matrix summarizes when to use each integration strategy. The right choice depends on whether the branch is shared, whether you need linear history, and whether you want to preserve the branching story.
+
+| Scenario | Recommended strategy | Why |
+|---|---|---|
+| Feature branch, linear history wanted | Rebase then fast-forward merge | Clean linear history, easy to bisect |
+| Feature branch, shared with others | Three-way merge (--no-ff) | Preserves branch boundary, safe for shared branches |
+| Feature branch, many small fixup commits | Interactive rebase then merge | Clean up history before integration |
+| Single bugfix commit needed on release | Cherry-pick with `-x` | Apply only the fix, document the source |
+| Hotfix needs to go to main AND release | Cherry-pick to both branches | Fastest path for urgent fixes |
+| Branch has been pushed, others have pulled | Merge only, never rebase | Rebase would rewrite shared history |
+| PR merge on GitHub/GitLab | Squash and merge or merge commit | Platform handles the merge strategy |
+| Long-lived release branch | Merge with --no-ff | Auditability of what was included in each release |
+
+## Operating Guidance
+
+- **Branch early, branch often.** Branches are cheap. Never work directly on `main` — even a one-line fix should go through a branch.
+- **Delete merged branches.** Use `git branch --merged` to find branches that have been integrated, then delete them. Stale branches create confusion and make `git branch -v` noisy.
+- **Rebase before merge for clean history.** If your team values linear history, rebase your feature branch onto main before merging. This makes `git bisect` and `git log` more useful.
+- **Never rebase shared branches.** If anyone else has pulled your branch, use merge instead. Rebasing shared branches creates duplicate commits and merge conflicts.
+- **Use `--force-with-lease`, never `--force`.** If you must push after a rebase, `--force-with-lease` checks that the remote has not changed since your last fetch. `--force` overwrites unconditionally and can destroy a colleague's work.
+- **Stash before switching.** If you have uncommitted work and need to switch branches, stash first with a descriptive message. Use `git stash push -u -m "description"` to include untracked files.
+- **Use worktrees for parallel work.** If you frequently context-switch between branches, `git worktree` avoids the stash-switch-restore cycle entirely.
+- **Check the reflog first.** Before panicking about lost work, run `git reflog`. Almost everything in Git is recoverable for at least 30 days.
+- **Run `git branch --no-merged` before cutting a release.** This ensures no feature work is accidentally left behind.
+- **Validate after merge in data pipelines.** File-level merge resolution does not guarantee semantic correctness. Always run `dbt compile`, `airflow dags test`, or your equivalent validation step after merging branches that touch pipeline code.
