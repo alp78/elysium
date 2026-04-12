@@ -34,6 +34,13 @@ Every term used in this page is defined here. If a term appears in a command out
 | **Branch pointer** | A lightweight movable reference that points to a specific commit SHA. Creating a branch, merging, and rebasing all work by moving these pointers — no files are copied. |
 | **Orphaned commit** | A commit that is no longer reachable from any branch pointer. It still exists in the object store and can be found via `git reflog` until garbage collection removes it (default: 90 days for unreachable objects). |
 | **Merge traceability** | The ability to determine, from `git log --graph`, when a set of changes was integrated and from which branch. Standard merge preserves this via the merge commit's two parents. Rebase and squash discard it. |
+| **Conflict markers** | Lines Git writes into a file when it cannot automatically merge a region. `<<<<<<< HEAD`, `=======`, and `>>>>>>> branch` delimit the two versions. The developer must edit the file to resolve the conflict, then stage it. |
+| **rerere** | "Reuse recorded resolution" — a Git feature that remembers how you resolved a conflict and automatically applies the same resolution if the same conflict pattern appears again. Enabled with `git config rerere.enabled true`. |
+| **zdiff3** | An enhanced conflict marker style (Git 2.35+) that shows three sections — yours, the common ancestor, and theirs — making it easier to understand what each side changed. Enabled with `git config merge.conflictstyle zdiff3`. |
+| **Merge queue** | A server-side feature (GitHub, GitLab) that serializes PR merges — each PR is tested against the accumulated changes of all PRs ahead of it in the queue, preventing broken builds on `main`. |
+| **Stacked PRs** | A workflow where PR2 depends on PR1, PR3 depends on PR2, and so on. Each PR's branch is based on the previous PR's branch rather than on `main`. |
+| **DCO (Developer Certificate of Origin)** | A lightweight mechanism for contributors to certify they have the right to submit code. Implemented via `Signed-off-by:` trailers in commit messages. Required by many open-source projects and some regulated companies. |
+| **Semi-linear merge** | A server-side merge mode (GitLab, Azure DevOps) that rebases the branch onto the target first, then creates a merge commit. Combines the benefits of rebase (up-to-date branch) with merge (traceability). |
 
 ## Conceptual Model
 
@@ -784,6 +791,181 @@ The three commits have been combined into a single commit `7d92958`. The origina
 >
 > Instead of amending a commit directly, create a new commit with `git commit --fixup=<target-SHA>`. Later, `git rebase -i --autosquash` will automatically place the fixup commit after its target and mark it with the `fixup` keyword. This is especially useful during code review — you can push individual fix commits for reviewers to inspect, then squash them before merging.
 
+## Conflict Resolution Across Strategies
+
+Merge conflicts arise when both branches modify the same region of the same file. All three strategies can produce conflicts, but the mechanics, timing, and recovery differ significantly. Understanding these differences is essential because conflict risk is one of the central tradeoffs among strategies.
+
+### Merge vs rebase vs squash | conflict handling comparison
+
+| Aspect | Standard Merge | Rebase | Squash Merge |
+|---|---|---|---|
+| **When conflicts appear** | Once, at merge time — Git compares the two branch tips against the common ancestor | Per-commit — each replayed commit can conflict independently with the new base | Once — Git computes a combined diff and applies it; conflicts reflect the aggregate difference |
+| **Conflict scope** | Full branch diff vs target — all changes from the branch are evaluated together | One commit at a time — earlier commits may conflict even if later ones would not | Aggregate diff — the same as merge, but represented as a single changeset |
+| **Abort** | `git merge --abort` restores the pre-merge state completely | `git rebase --abort` restores the branch to its exact pre-rebase state | `git merge --abort` (same as standard merge — squash uses the same merge machinery) |
+| **Continue** | Resolve all files, `git add`, then `git commit` (or `git merge --continue`) | Resolve the current commit's conflicts, `git add`, then `git rebase --continue` — repeat for each conflicting commit | Resolve all files, `git add`, then `git commit` (manual commit step) |
+| **Skip** | Not applicable — merge is a single operation | `git rebase --skip` drops the current conflicting commit and continues with the next | Not applicable |
+| **Worst case** | One round of conflict resolution | N rounds (one per conflicting commit) — long-lived branches with many commits can require repeated resolution | One round, but the aggregate diff may be larger and harder to understand than individual commit diffs |
+
+### Conflict markers explained
+
+When Git cannot automatically merge a file, it writes **conflict markers** into the file that show both versions of the conflicting region. The markers divide the file into three or four sections depending on the merge style.
+
+#### Standard merge conflict markers
+
+During a standard merge or squash merge, Git writes three-section markers:
+
+```text
+<<<<<<< HEAD
+CACHE_TTL = 120
+MAX_CONNECTIONS = 10
+=======
+CACHE_TTL = 600
+RETRY_COUNT = 3
+TIMEOUT = 30
+>>>>>>> demo/conflict-merge
+```
+
+- `<<<<<<< HEAD` — start of the version on your current branch (the branch you are merging *into*)
+- `=======` — separator between the two versions
+- `>>>>>>> demo/conflict-merge` — end of the version from the branch being merged
+
+Everything between `<<<<<<< HEAD` and `=======` is your branch's version. Everything between `=======` and `>>>>>>> branch-name` is the incoming branch's version. To resolve, delete the markers and keep the correct content (which may be a combination of both).
+
+#### Rebase conflict markers
+
+During a rebase, the sides are reversed from what you might expect:
+
+```text
+CACHE_TTL = 120
+MAX_CONNECTIONS = 10
+RETRY_COUNT = 3
+TIMEOUT = 30
+<<<<<<< HEAD
+LOG_LEVEL = "INFO"
+=======
+LOG_LEVEL = "DEBUG"
+>>>>>>> 9bf5af5 (feat: add debug log level)
+```
+
+- `<<<<<<< HEAD` — during rebase, HEAD points to the **target branch** (the branch you are rebasing *onto*), not your feature branch
+- `>>>>>>> 9bf5af5 (feat: add debug log level)` — the commit currently being replayed from your feature branch
+
+> [!warning] Rebase Reverses the Sides
+>
+> In a merge, `HEAD` is your branch and the incoming branch is "theirs." In a rebase, `HEAD` is the target branch (e.g., `main`) and "theirs" is the commit being replayed from your feature branch. This reversal confuses many developers and can lead to accidentally keeping the wrong version.
+
+> [!success] Use `--ours` and `--theirs` Carefully During Rebase
+>
+> During rebase, `--ours` refers to the target branch (main) and `--theirs` refers to the commit being replayed (your feature commit). This is the opposite of merge semantics. When in doubt, open the file and inspect the conflict markers directly rather than using `git checkout --ours` or `--theirs`.
+
+#### Three-way diff markers with diff3
+
+The default two-section conflict markers omit the common ancestor, making it harder to understand what each side changed. Enable `diff3` (or the newer `zdiff3`) to include the ancestor version:
+
+```bash
+git config --global merge.conflictstyle zdiff3
+```
+
+With `zdiff3` enabled, conflict markers show three sections:
+
+```text
+<<<<<<< HEAD
+LOG_LEVEL = "INFO"
+||||||| parent of 9bf5af5
+LOG_LEVEL = "INFO"
+=======
+LOG_LEVEL = "DEBUG"
+>>>>>>> 9bf5af5 (feat: add debug log level)
+```
+
+The `||||||| parent of ...` section shows the common ancestor version. This makes the intent of each change clear: the ancestor had `"INFO"`, HEAD kept `"INFO"`, and the incoming commit changed it to `"DEBUG"`.
+
+> [!tip] Always Use zdiff3
+>
+> `zdiff3` (Git 2.35+) is an improvement over `diff3` that automatically collapses regions where only one side changed, reducing the number of conflict markers. Set it as the default for all repositories:
+>
+> ```bash
+> git config --global merge.conflictstyle zdiff3
+> ```
+
+### Git | rerere | reuse recorded resolutions
+
+`rerere` (reuse recorded resolution) is a Git feature that records how you resolved a conflict and automatically applies the same resolution if the same conflict appears again. This is especially valuable during rebase workflows where you may encounter the same conflict multiple times — for example, when rebasing a long-lived feature branch repeatedly as main advances.
+
+#### Enable rerere
+
+```bash
+git config --global rerere.enabled true
+```
+
+#### How rerere works
+
+When rerere is enabled and a conflict occurs, Git records the pre-image (the conflicted state) and, after you resolve it, the post-image (your resolution). If the same conflict appears in a future merge or rebase, Git automatically applies the recorded resolution.
+
+During the conflict in git-lab, rerere recorded the pre-image:
+
+```text
+Recorded preimage for 'config.py'
+```
+
+After resolving and continuing the rebase, rerere stored the resolution:
+
+```text
+Recorded resolution for 'config.py'.
+```
+
+If the same conflict occurs again (e.g., when rebasing the same branch after main advances further), rerere will apply the stored resolution automatically, printing `Resolved 'config.py' using previous resolution` instead of stopping with conflict markers.
+
+> [!tip] rerere Is Especially Valuable for Rebase Workflows
+>
+> Rebase resolves conflicts commit-by-commit. If you rebase a branch with 10 commits and the first commit conflicts, you resolve it. If you later rebase again (after main advances further), the same conflict reappears. With rerere enabled, the second rebase applies your stored resolution automatically. Without rerere, you resolve the same conflict manually every time.
+
+> [!warning] rerere Can Apply Incorrect Resolutions
+>
+> If the context around a conflict changes significantly between rebases, a previously recorded resolution may produce incorrect results. Always verify the output after rerere applies a resolution. Use `git rerere forget <file>` to discard a recorded resolution that is no longer correct.
+
+> [!success] Verify and Forget Stale Resolutions
+>
+> After rerere auto-resolves a conflict, inspect the file before staging:
+>
+> ```bash
+> git diff config.py      # review the auto-applied resolution
+> git rerere forget config.py  # discard if the resolution is wrong
+> ```
+
+### Mergetool workflow
+
+For complex conflicts involving multiple regions or large files, a visual mergetool provides a three-pane view showing the base (ancestor), local (current branch), and remote (incoming branch) versions side by side.
+
+#### Configure and launch a mergetool
+
+```bash
+git config --global merge.tool vimdiff
+```
+
+When a conflict occurs, launch the configured tool:
+
+```bash
+git mergetool
+```
+
+Git opens each conflicted file in the configured editor with three panes (base, local, remote) and a fourth pane for the merged result. After resolving, save and close the editor. Git marks the file as resolved and creates a `.orig` backup of the conflicted version.
+
+> [!tip] Popular Mergetools for Data Engineers
+>
+> - **VS Code** — `git config --global merge.tool vscode` (requires `code` on PATH)
+> - **IntelliJ / PyCharm** — built-in three-way merge, launched via IDE Git integration
+> - **vimdiff** — terminal-based, available everywhere, no GUI dependency
+> - **meld** — GTK-based visual diff, good for large files
+
+> [!warning] Clean Up .orig Files After Mergetool
+>
+> `git mergetool` creates `.orig` backup files that should not be committed. Either add `*.orig` to `.gitignore` or configure Git to skip them:
+>
+> ```bash
+> git config --global mergetool.keepBackup false
+> ```
+
 ## Choosing a Strategy
 
 The right strategy depends on the type of branch, its commit quality, whether the branch is shared, and whether the team values linear history over preserved context. Consistency within a team matters more than which strategy is theoretically optimal — document the default in your contributing guide and enforce it via branch protection rules.
@@ -885,19 +1067,214 @@ flowchart TD
 >
 > **Recommendation for data-engineering teams:** allow "Squash and merge" as the default for small features and bot PRs, and "Create a merge commit" for multi-commit features and releases. Disable "Rebase and merge" on the server side to prevent accidental SHA rewrites on shared branches — developers who want linear history can rebase locally before merging.
 
-### GitHub PR merge strategies
+### Platform merge behavior — GitHub, GitLab, Bitbucket, Azure DevOps
 
-GitHub, GitLab, and Bitbucket expose the three strategies as buttons in the pull request UI. They produce the same graph shapes as the CLI operations:
+All major Git hosting platforms expose merge strategies through their pull/merge request UI, but each platform implements them differently. The CLI behavior (`git merge`, `git rebase`) is consistent everywhere — it is the **server-side** behavior that varies.
 
-| UI Button | CLI Equivalent | Result |
+#### GitHub
+
+| UI Button | CLI Equivalent | Behavior Details |
 |---|---|---|
-| **Create a merge commit** | `git merge --no-ff` | Always creates a merge commit, regardless of divergence |
-| **Squash and merge** | `git merge --squash` + `git commit` | One commit on main per PR |
-| **Rebase and merge** | `git rebase` + fast-forward | Replays PR commits linearly onto main |
+| **Create a merge commit** | `git merge --no-ff` | Always creates a merge commit, regardless of divergence. Adds a `Merge pull request #N` default message. |
+| **Squash and merge** | `git merge --squash` + `git commit` | One commit on main per PR. Concatenates all commit messages into the squash commit body by default. |
+| **Rebase and merge** | `git rebase` + fast-forward | Replays PR commits linearly onto main. |
 
-> [!info] GitHub always rewrites SHAs for "Rebase and merge"
+> [!info] GitHub Always Rewrites SHAs for "Rebase and merge"
 >
-> Even if the PR branch is already up to date with main, GitHub's "Rebase and merge" creates new commit SHAs — it does not fast-forward in place. This is by design: GitHub adds a `committer` field and timestamp that differ from the original commits. The result is linear history but with different SHAs than the original PR commits. Do not rely on SHA matching between your local branch and main after using this option.
+> Even if the PR branch is already up to date with main, GitHub's "Rebase and merge" creates new commit SHAs — it does not fast-forward in place. GitHub adds a `committer` field and timestamp that differ from the original commits. Do not rely on SHA matching between your local branch and main after using this option.
+
+> [!info] GitHub Merge Queues
+>
+> GitHub merge queues (available on Team and Enterprise plans) serialize PR merges to prevent broken builds on `main`. When enabled, PRs join a queue, are tested against the latest main + all PRs ahead in the queue, and merge only if tests pass. The merge queue uses the merge strategy configured in branch protection. This eliminates the "green PR turns red after merge" race condition.
+
+#### GitLab
+
+| UI Button | CLI Equivalent | Behavior Details |
+|---|---|---|
+| **Merge commit** | `git merge --no-ff` | Same as GitHub. Adds `See merge request !N` to the default message. |
+| **Merge commit with semi-linear history** | Rebase + `git merge --no-ff` | First rebases the branch onto target, then creates a merge commit. Ensures the branch is up to date but preserves the merge commit for traceability. |
+| **Fast-forward merge** | `git rebase` + fast-forward | Requires the branch to be rebased onto target first. No merge commit. Preserves original commit SHAs (unlike GitHub's "Rebase and merge"). |
+| **Squash commit** | `git merge --squash` + `git commit` | Collapses all commits into one. GitLab preserves the original branch reference in the squash commit message by default. |
+
+> [!info] GitLab's Semi-Linear History Is Unique
+>
+> GitLab's "semi-linear history" option rebases the branch first, then creates a merge commit. This guarantees that the merge commit's first parent always points to a commit that is on the target branch, making `git log --first-parent` produce a clean linear timeline while still preserving the merge commit for traceability. No other major platform offers this exact mode.
+
+#### Bitbucket
+
+| UI Button | CLI Equivalent | Behavior Details |
+|---|---|---|
+| **Merge commit** | `git merge --no-ff` | Always creates a merge commit. |
+| **Squash** | `git merge --squash` + `git commit` | Single commit. Bitbucket concatenates commit messages by default. |
+| **Fast-forward** | Fast-forward only | Only available if the branch is directly ahead of target. No SHA rewriting. |
+
+Bitbucket does not offer a "rebase and merge" option through the UI. Teams wanting rebase-based linear history must rebase locally before merging.
+
+#### Azure DevOps
+
+| UI Button | CLI Equivalent | Behavior Details |
+|---|---|---|
+| **Merge (no fast-forward)** | `git merge --no-ff` | Always creates a merge commit. Default strategy. |
+| **Squash merge** | `git merge --squash` + `git commit` | Single commit. Azure DevOps populates the commit message from the PR title and description. |
+| **Rebase and fast-forward** | `git rebase` + fast-forward | Rebases then fast-forwards. SHAs are rewritten (new committer timestamp). |
+| **Semi-linear merge** | Rebase + `git merge --no-ff` | Same concept as GitLab's semi-linear: rebase first, then create a merge commit. |
+
+> [!info] Azure DevOps Branch Policies
+>
+> Azure DevOps allows administrators to require a specific merge strategy at the branch policy level — more granular than GitHub's repository-level protection. Policies can enforce minimum reviewer count, linked work items, successful builds, and a specific merge type (merge, squash, rebase, or semi-linear) per target branch.
+
+#### Cross-platform comparison summary
+
+| Capability | GitHub | GitLab | Bitbucket | Azure DevOps |
+|---|---|---|---|---|
+| Merge commit | Yes | Yes | Yes | Yes |
+| Squash merge | Yes | Yes | Yes | Yes |
+| Rebase + FF | Yes (rewrites SHAs) | Yes (preserves SHAs) | No (UI) | Yes (rewrites SHAs) |
+| Semi-linear merge | No | Yes | No | Yes |
+| Merge queues | Yes (Team/Enterprise) | Yes (Premium) | No | No (use pipeline gates) |
+| Strategy enforcement | Branch protection rules | Project merge settings | Branch permissions | Branch policies |
+| Squash commit message source | Concatenated commit messages | Concatenated commit messages | Concatenated commit messages | PR title + description |
+
+## Governance, Compliance, and Attribution
+
+In regulated environments — financial services, healthcare, government contracting, SOC 2 compliance — the choice of merge strategy has implications beyond code history. Auditors and compliance officers care about who authored a change, whether it was reviewed, whether it was cryptographically signed, and whether the commit trail is immutable.
+
+### Signed commits and strategy interaction
+
+Git supports cryptographic signing of commits (GPG or SSH) to prove authorship. Each strategy interacts with signatures differently.
+
+| Strategy | Signature Behavior |
+|---|---|
+| **Standard merge** | All original commit signatures are preserved. The merge commit can be independently signed by the person performing the merge. |
+| **Rebase** | All signatures are **invalidated** — rebased commits have new SHAs, so the original signatures no longer match. The rebased commits can be re-signed, but this requires the original author's key or a team-wide re-signing policy. |
+| **Squash merge** | All original signatures are **discarded** — the squash commit is a new commit signed by whoever performs the squash. Original author signatures are lost. |
+
+> [!warning] Rebase and Squash Invalidate Commit Signatures
+>
+> If your organization requires cryptographically signed commits for audit compliance, rebase and squash both break the signature chain. Rebased commits need re-signing; squashed commits only carry the squasher's signature.
+
+> [!success] Use Standard Merge in Signature-Required Environments
+>
+> Standard merge preserves all original commit signatures intact. The merge commit itself can be additionally signed by the integrator, providing a two-layer cryptographic trail: author signed the work, integrator signed the merge.
+
+### DCO and trailer preservation
+
+The Developer Certificate of Origin (DCO) uses `Signed-off-by:` trailers in commit messages to certify that the contributor has the right to submit the code. Many open-source projects and regulated companies require DCO sign-off on every commit.
+
+| Strategy | Trailer Behavior |
+|---|---|
+| **Standard merge** | All `Signed-off-by:` trailers on individual commits are preserved. The merge commit can carry its own sign-off. |
+| **Rebase** | Trailers are preserved — the commit message (including trailers) is copied to the rebased commit. |
+| **Squash merge** | Platform-dependent. GitHub concatenates all commit messages (including trailers) into the squash commit body. GitLab and Azure DevOps do the same by default. However, if the squash message is manually edited, trailers may be accidentally removed. |
+
+> [!tip] Verify DCO Trailers After Squash
+>
+> After a squash merge, verify that all `Signed-off-by:` trailers from contributing authors appear in the final commit message. If they are missing, the commit may fail DCO checks. Platforms like GitHub provide a "co-authored-by" trailer that can be added manually:
+>
+> ```text
+> Co-authored-by: Jane Doe <jane@example.com>
+> Co-authored-by: John Smith <john@example.com>
+> ```
+
+### Multi-author attribution after squash
+
+Squash merge collapses all commits into one, which means only the person who performs the squash appears as the commit author. If multiple people contributed to the branch, their authorship is lost from `git log` and `git blame`.
+
+| Attribution Method | How It Works | Limitation |
+|---|---|---|
+| **Co-authored-by trailer** | Add `Co-authored-by:` lines to the squash commit message | GitHub renders these in the UI; `git log` shows them; `git blame` does not attribute lines to co-authors |
+| **Standard merge instead** | Use `git merge --no-ff` to preserve individual commits with their original authors | Adds a merge commit and non-linear history |
+| **Interactive rebase before squash** | Use `git rebase -i` to selectively combine commits by author, keeping one commit per contributor | Requires manual effort; partial squash |
+
+> [!warning] Squash Erases Multi-Author Attribution
+>
+> In repositories with compliance requirements for individual author tracking (SOX, SOC 2, GDPR data processor audits), squash merge may violate the attribution chain. If an auditor asks "who wrote line 42?", `git blame` on a squashed commit returns only the squasher, not the original author.
+
+> [!success] Preserve Attribution in Regulated Repositories
+>
+> Use standard merge (`git merge --no-ff`) in repositories subject to audit requirements. Each commit retains its original author, timestamp, and signature. The merge commit provides the integration timestamp and the reviewer's identity.
+
+### Merge strategy and regulated review requirements
+
+Many compliance frameworks (SOC 2 Type II, PCI DSS, HIPAA, FedRAMP) require evidence that:
+
+1. **Every change was reviewed** — at least one person other than the author approved it
+2. **The review is traceable** — the approval is linked to the specific commits that were reviewed
+3. **The trail is immutable** — the commit history cannot be rewritten after review
+
+| Requirement | Standard Merge | Rebase | Squash |
+|---|---|---|---|
+| Review linked to specific commits | Yes — reviewed commits remain intact with same SHAs | No — SHAs change after rebase; review was against different SHAs | Partially — review was against individual commits, but the merged artifact is a different (single) commit |
+| Immutable trail after merge | Yes — no history rewriting | Requires `--force-with-lease` push which does rewrite | Yes — the squash commit itself is immutable |
+| Author identity preserved | Yes | Yes (but needs re-signing) | Only the squasher's identity |
+
+> [!info] Compliance Recommendation
+>
+> For repositories subject to regulatory audit: enforce standard merge via branch protection, require signed commits, enable branch protection rules that prevent force-push to main, and require status checks (CI) plus at least one reviewer approval. This configuration is available on all four major platforms (GitHub, GitLab, Bitbucket, Azure DevOps).
+
+## Workflow Models and Strategy Selection
+
+The merge strategy you choose is not independent of your branching model. Different workflow models have strong opinions about which strategies are appropriate. Understanding these models helps you choose a default strategy that aligns with your team's branching and release practices.
+
+### Trunk-based development
+
+In trunk-based development, all engineers commit directly to `main` (or to very short-lived feature branches that merge within hours). The goal is to minimize divergence and keep `main` always deployable.
+
+**Preferred strategy:** **Squash merge** for the rare feature branches (keeps main linear), or direct commits to main (no merge needed). Rebase is acceptable for short-lived branches. Standard merge with merge commits is avoided because it adds noise to an already-linear history.
+
+**Ban consideration:** Some trunk-based teams ban long-lived feature branches entirely — if a branch lives longer than a day, it must be broken into smaller increments.
+
+### GitHub Flow
+
+GitHub Flow uses `main` as the only long-lived branch. Feature branches are created from `main`, developed, reviewed via PR, and merged back. No release branches, no develop branch.
+
+**Preferred strategy:** **Squash merge** (one commit per PR, clean `main` history) or **standard merge** (`--no-ff`, preserves feature branch topology). The choice depends on whether the team values linear history or branch traceability.
+
+**Ban consideration:** Some teams ban rebase-and-merge on the server side to prevent accidental SHA rewrites, allowing only local rebase before merge.
+
+### Release-branch model (Git Flow)
+
+Git Flow uses `main`, `develop`, `release/*`, and `hotfix/*` branches. Features merge to `develop`, releases are cut from `develop`, and hotfixes go to both `main` and `develop`.
+
+**Preferred strategy:** **Standard merge** (`--no-ff`) for all integration points — `develop` → `release/*`, `release/*` → `main`, `hotfix/*` → `main`. The merge commits serve as release markers and integration records. Squash merge for individual feature branches into `develop` is acceptable if the team prefers clean develop history.
+
+**Ban consideration:** Rebase should be banned on `develop`, `release/*`, and `main` — these are shared branches. Local rebase of feature branches before merging to `develop` is safe.
+
+### Merge queues
+
+Merge queues (GitHub, GitLab Premium) serialize PR merges to guarantee that `main` never breaks. PRs enter a queue, are rebased/tested against the accumulated changes of all PRs ahead of them, and merge only if tests pass.
+
+**Strategy interaction:** Merge queues work with any configured merge strategy (merge, squash, rebase). The queue handles the serialization; the strategy handles the history shape. The main benefit is eliminating the race condition where two PRs are independently green but break when combined.
+
+> [!tip] Merge Queues for Data-Engineering CI
+>
+> If your CI runs dbt tests, Airflow DAG validation, or Terraform plan, these checks can take minutes. Without a merge queue, two PRs can merge in quick succession and break `main` because their combined changes conflict (e.g., both modify the same dbt model). A merge queue tests each PR against all preceding changes before allowing the merge.
+
+### Stacked PRs
+
+Stacked PRs are a workflow where PR2 depends on PR1, PR3 depends on PR2, and so on. Each PR builds on the previous one's branch.
+
+**Preferred strategy:** **Rebase** with `--update-refs` (Git 2.38+). After PR1 merges, rebase PR2 onto main to remove the dependency on PR1's branch. `--update-refs` automatically updates the stacked branch pointers.
+
+**Complications:** If the platform uses squash merge for PR1, PR2's commits still reference the pre-squash SHAs. The rebase of PR2 will replay those commits, potentially causing conflicts with the squash commit that already contains the same changes. This is a known pain point — some teams avoid stacking PRs when squash merge is the default.
+
+> [!warning] Squash Merge Breaks Stacked PR Chains
+>
+> If PR1 is squash-merged, the individual commits from PR1's branch are replaced by a single squash commit on main. PR2, which was based on PR1's branch, still references the original (now-orphaned) commits. Rebasing PR2 onto main will attempt to replay those commits, often producing conflicts or duplicate changes.
+
+> [!success] Use Standard Merge or Rebase-and-Merge for Stacked PRs
+>
+> If your team regularly uses stacked PRs, configure the platform to use standard merge or rebase-and-merge (not squash) for the base PRs in a stack. This preserves the commit-level dependency chain and makes rebasing dependent PRs straightforward.
+
+### When to ban a strategy entirely
+
+| Scenario | Strategy to Ban | Reason |
+|---|---|---|
+| Regulated repository with audit requirements | Ban rebase-and-merge on server | SHA rewriting breaks the review-to-commit traceability chain |
+| Repository with mandatory commit signing | Ban rebase and squash on server | Both invalidate original signatures |
+| Team with stacked PR workflow | Ban squash on server (for base PRs) | Squash orphans dependent branch commits |
+| Monorepo with many contributors | Ban force-push to all shared branches | History rewriting in a monorepo affects everyone |
+| Open-source project with DCO | Ban squash unless trailers are preserved | Squash can lose `Signed-off-by:` trailers if messages are edited |
 
 ## Operating Guidance
 

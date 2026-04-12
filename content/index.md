@@ -3,7 +3,7 @@ title: Elysium
 ---
 
 <div style="text-align: center;">
-  <img src="/static/elysium_logo1.png" alt="Elysium" width="280" />
+  <img src="/static/elysium_logo1.png" alt="Elysium" width="320" />
 </div>
 
 ### Code and Queries

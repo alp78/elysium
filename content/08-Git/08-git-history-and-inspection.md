@@ -1,17 +1,8 @@
 ---
 title: "08 - Git History and Inspection"
-type: reference
-category: git
-technology: [git]
 tags:
   - git
-  - inspection
-aliases: [git log, git diff, git blame, git show, git history, inspect commits, git log graph]
-keywords: [git log, git diff, git blame, git show, oneline, graph, author, since, file history, commit history, diff staged, blame, who changed, inspect commit, show file at commit, bisect, shortlog]
-description: "Commands for viewing and inspecting Git history — git log with filters and graph views, git diff for staged/unstaged changes, git blame for authorship, and git show for individual commits."
-created: 2026-03-22
-updated: 2026-04-05
-status: complete
+  - version-control
 ---
 
 # Git History and Inspection
@@ -19,118 +10,507 @@ status: complete
 > [!quote]
 > "The past is never dead. It's not even past."
 >
-> — **William Faulkner**, *Requiem for a Nun* (1951)
+> --- **William Faulkner**, *Requiem for a Nun* (1951)
 
-Git's history inspection tools — `git log`, `git diff`, `git blame`, and `git show` — are essential for understanding what changed, when, and by whom. These are the commands you reach for during code review, debugging, and post-incident analysis.
+Git records every change as an immutable snapshot in a directed acyclic graph (DAG). The inspection tools --- `git log`, `git diff`, `git blame`, `git show`, `git bisect`, and `git reflog` --- let you traverse that graph to answer operational questions: what changed, who changed it, when, why, and where a regression began. These are the commands you reach for during code review, debugging, incident response, and compliance audits.
 
-## git log — The Commit Timeline
+## Key Definitions
 
-The commit log is a reverse-chronological list of every commit in the current branch's history, showing who made each change, when, and why (the commit message). Each entry includes a SHA hash, author, date, and message. The log is your primary tool for understanding how a codebase evolved over time.
+Every term used in this page is defined here. Refer back to this table when a term appears for the first time in a section.
 
-### git log — Basic Options
+| Term | Definition |
+|---|---|
+| **commit** | An immutable snapshot of the entire repository at a point in time. Each commit stores a tree (directory structure), author, committer, timestamp, message, and one or more parent commit references. |
+| **SHA (hash)** | A 40-character hexadecimal string (SHA-1) that uniquely identifies a commit, tree, or blob object. Git commands accept short prefixes (7+ characters) when unambiguous. |
+| **HEAD** | A symbolic reference pointing to the currently checked-out commit. Usually points to a branch name, which in turn points to a commit SHA. |
+| **ref** | A human-readable name that resolves to a SHA. Branches (`main`), tags (`v1.0.0`), and `HEAD` are all refs. |
+| **DAG (directed acyclic graph)** | The data structure formed by commits and their parent pointers. Each commit points backward to its parent(s), creating a graph that can branch and merge but never cycle. |
+| **range (`A..B`)** | The set of commits reachable from B but not from A. Reads as "everything B has that A does not." |
+| **symmetric difference (`A...B`)** | The set of commits reachable from either A or B, but not both. Shows what diverged on both sides since their common ancestor. |
+| **merge base** | The most recent common ancestor of two branches. Git computes it automatically when you use `...` (three-dot) notation. |
+| **diff** | A textual representation of the changes between two states --- working directory, staging area (index), commits, or branches. |
+| **unified diff** | The standard diff format showing removed lines (prefixed `-`, red) and added lines (prefixed `+`, green) with surrounding context lines. |
+| **hunk** | A contiguous block of changed lines within a unified diff, introduced by an `@@` header showing line numbers. |
+| **blame** | Line-by-line annotation of a file showing which commit last modified each line, along with the author and date. |
+| **pickaxe (`-S`)** | A `git log` filter that finds commits where the number of occurrences of a given string changed --- detecting when code was introduced or removed. |
+| **reflog** | A local-only log of every position HEAD (or a branch tip) has occupied. Records checkouts, commits, rebases, resets, and amends. Not shared via push/fetch. |
+| **bisect** | A binary-search algorithm that finds the exact commit introducing a regression by iteratively halving the commit range between a known-good and known-bad state. |
+| **patch (`-p`)** | The full diff output appended to each commit in `git log -p`, showing exactly what changed in every file. |
+| **staging area (index)** | An intermediate state between the working directory and the next commit. `git add` moves changes into the index; `git commit` snapshots the index. |
+| **working directory** | The actual files on disk. Changes here are "unstaged" until added to the index. |
 
-#### git log --oneline — compact one-line history
+## Conceptual Model
 
-Prints one line per commit: the short SHA and the commit message. The most common starting point for browsing recent history at a glance.
+Before using any inspection command, understand the three layers Git maintains and how inspection commands relate to them.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    WD["Working Directory<br/>(files on disk)"]
+    IDX["Staging Area<br/>(index)"]
+    REPO["Repository<br/>(commit history)"]
+    REF["Reflog<br/>(HEAD movement log)"]
+
+    WD -- "git diff" --> IDX
+    IDX -- "git diff --staged" --> REPO
+    WD -- "git diff HEAD" --> REPO
+    REPO -- "git log / git show" --> REPO
+    REPO -- "git blame" --> REPO
+    REPO -- "git bisect" --> REPO
+    REPO -- "records every move" --> REF
+
+    style WD fill:#292e42,stroke:#565f89,color:#c0caf5
+    style IDX fill:#292e42,stroke:#565f89,color:#c0caf5
+    style REPO fill:#292e42,stroke:#565f89,color:#c0caf5
+    style REF fill:#1a1b26,stroke:#565f89,color:#c0caf5
+```
+
+*`git diff` compares between layers. `git log`, `git show`, and `git blame` query the repository layer. `git reflog` queries the local HEAD movement log, which is never shared with remotes.*
+
+Three distinct histories exist in every Git repository:
+
+1. **Repository history** (`git log`) --- the permanent, shared DAG of commits. Pushed to remotes, visible to all collaborators.
+2. **HEAD movement history** (`git reflog`) --- a local-only, append-only log of every position HEAD has occupied. Records checkouts, rebases, resets, amends. Never leaves the local machine.
+3. **Working-tree state** (`git diff`, `git status`) --- the difference between what is on disk and what is committed. Ephemeral and local.
+
+> [!info] All inspection commands are read-only
+>
+> Every command on this page is safe to run at any time. None of them modify the working directory, the staging area, or the commit history. The only exception is `git bisect`, which temporarily checks out commits during the search --- but `git bisect reset` restores HEAD to its original position.
+
+---
+
+## git log --- Browsing Commit History
+
+`git log` traverses the commit DAG in reverse chronological order, displaying commit metadata and optionally the diff for each commit. It is the primary tool for understanding how a codebase evolved, who contributed what, and when specific changes landed.
+
+### Git | log | basic viewing options
+
+#### Display compact one-line history
+
+**When to run:** As a first step when investigating any change --- to get a quick overview of recent activity.
+**Trigger:** Starting a debugging session, reviewing what landed since last pull, or orienting in an unfamiliar repository.
+**Context:** Read-only. Runs locally. No permissions required beyond repository access.
+**Purpose:** See the most recent commits at a glance with minimal noise.
+
+The `--oneline` flag condenses each commit to a single line: the abbreviated 7-character SHA followed by the first line of the commit message. This is the most common starting point for browsing history.
+
+*Show the 15 most recent commits in compact format.*
 
 ```bash
-git log --oneline
+git log --oneline -15
 ```
 
 ```text
-a3f9c21 fix: handle null values in transform_ohlcv
-7b8d4e0 feat: add ESG score normalization pipeline
-cd97a43 refactor: extract loader into separate module
-4e2b8a1 chore: update dependencies
-1f3c7d9 docs: add API usage examples
+35c16f7 ops: set log level to INFO for production
+cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+2eff67c fix: reduce cache TTL and add connection limit
+eadb609 feat: update cache TTL and add retry settings
+5644c58 feat: update settings for production (#8)
+bb3d362 feat: add application settings
+7baef30 feat: add portfolio risk calculator (#7)
+2c8edad feat: add momentum signal module (#1)
+5b59a9b feat: add config validation utilities (#6)
+52aa8e6 feat: add Terraform VPC for data platform
+0c2ffa5 Merge pull request #4 from alp78/feat/airflow-scheduler
+349ecf7 feat: add daily OHLCV ingestion DAG
+5f142f8 Merge pull request #3 from alp78/feat/dbt-staging
+1b76f94 feat: add market hours migration (#2)
+5643d9a feat: add dbt staging model for daily prices
 ```
 
-#### git log -n — limit to N most recent commits
+Each line reads as: `<short-SHA> <commit-message-first-line>`. The `-15` flag limits output to the last 15 commits. Without `-n`, `git log` prints the entire history.
 
-Restricts output to the last N commits. Useful when you only need to review recent changes without scrolling through the full history.
+#### Display the branch DAG as an ASCII graph
+
+**When to run:** When you need to understand branch topology --- where branches diverged, where merges happened, and which commits are on which branch.
+**Trigger:** Investigating a merge conflict, understanding PR history, or verifying that a rebase produced the expected linear history.
+**Context:** Read-only. The `--all` flag includes all branches (local and remote-tracking), not just the currently checked-out branch.
+**Purpose:** Visualize the commit DAG structure including branch and merge points.
+
+> [!info]- Flag breakdown
+>
+> - `--oneline` --- one line per commit (short SHA + message)
+> - `--graph` --- draw ASCII branch/merge lines on the left
+> - `--all` --- include all branches, not just the current one
+> - `-25` --- limit to the last 25 commits
+
+*Draw the commit DAG for all branches, limited to 25 entries.*
 
 ```bash
-git log --oneline -10
-```
-
-#### git log --graph --all — ASCII branch graph
-
-Draws the commit DAG as an ASCII tree, showing all branches and their divergence and merge points. The `--all` flag includes branches not checked out locally.
-
-```bash
-git log --oneline --graph --all
+git log --oneline --graph --all -25
 ```
 
 ```text
-* a3f9c21 (HEAD -> main, origin/main) fix: handle null values
-* 7b8d4e0 feat: add ESG score normalization
-| * c1e2f3a (feat/bisect-debug) wip: bisect test
-|/
-* cd97a43 refactor: extract loader
+* 8ac272d chore: stop tracking logs directory
+* 39f91b7 mistake: accidentally commit log directory
+* 3454539 chore: stop tracking .env, restore .gitignore rule
+* acb02fc mistake: accidentally commit .env file
+* 4baa9a6 chore: update .gitignore with data-engineering patterns, add sample data
+* 35c16f7 ops: set log level to INFO for production
+*   cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+|\  
+| * eadb609 feat: update cache TTL and add retry settings
+* | 2eff67c fix: reduce cache TTL and add connection limit
+|/  
+| * 3fcc865 test: add data quality checks for pipeline
+|/  
+* 5644c58 feat: update settings for production (#8)
+| * 74d200e feat: update settings for production
+|/  
+* bb3d362 feat: add application settings
+* 7baef30 feat: add portfolio risk calculator (#7)
+* 2c8edad feat: add momentum signal module (#1)
+* 5b59a9b feat: add config validation utilities (#6)
+| * 85e45dd feat: add portfolio risk calculator
+|/  
+| * 48aa5ee feat: add config validation utilities
+|/  
+* 52aa8e6 feat: add Terraform VPC for data platform
+*   0c2ffa5 Merge pull request #4 from alp78/feat/airflow-scheduler
+|\  
+| * 349ecf7 feat: add daily OHLCV ingestion DAG
+|/  
 ```
 
-#### git log --author and --since — filter by author and date
+The `*` marks each commit. The `|`, `/`, and `\` characters draw the branch lines. Where two lines converge into a single `*`, a merge occurred (e.g., `cbcd74c`). Where a line diverges, a branch was created.
 
-Narrows the log to commits by a specific author (`--author` accepts a partial string match) within a time window. Use `--since` and `--until` to bound the date range. Useful for reviewing a teammate's contributions or auditing changes in a sprint.
+#### Filter commits by author
 
-```bash
-git log --author="alice" --since="2 weeks ago"
-```
+**When to run:** When reviewing a specific contributor's work --- for code review, sprint audits, or investigating who changed a specific area.
+**Trigger:** Preparing a review, auditing contributions, or tracing a change to its author.
+**Context:** Read-only. The `--author` flag accepts a substring match against the author name or email. Case-insensitive.
+**Purpose:** Narrow the log to commits from a specific person.
 
-#### git log -- file — history of a specific file
-
-The double dash `--` separates the branch/ref arguments from the file path, preventing ambiguity when a filename could be mistaken for a branch name. Shows only commits that touched the specified file.
-
-```bash
-git log -- path/to/file.py
-```
-
-#### git log --decorate — branch topology view
-
-Combines graph layout with branch and tag labels, showing where each branch pointer currently sits in the DAG. Limiting with `-20` keeps the output manageable for daily review.
+*Show the last 10 commits by author `alp78`.*
 
 ```bash
-git log --oneline --graph --decorate -20
-```
-
-### git log — Advanced Formats
-
-#### git shortlog -sn — commit count per author
-
-Summarises commit history grouped by author. The `-s` flag suppresses individual commit messages (showing count only), and `-n` sorts the output by commit count descending. Useful for contribution audits.
-
-```bash
-git shortlog -sn
+git log --author="alp78" --oneline -10
 ```
 
 ```text
-    42  alice
-    31  bob
-     8  charlie
+35c16f7 ops: set log level to INFO for production
+cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+2eff67c fix: reduce cache TTL and add connection limit
+eadb609 feat: update cache TTL and add retry settings
+5644c58 feat: update settings for production (#8)
+bb3d362 feat: add application settings
+7baef30 feat: add portfolio risk calculator (#7)
+2c8edad feat: add momentum signal module (#1)
+5b59a9b feat: add config validation utilities (#6)
+52aa8e6 feat: add Terraform VPC for data platform
 ```
 
-#### git log -p — commits with full diff
-
-Appends the full patch (diff) for each matching commit. Combined with a file path, this lets you see every change ever made to that file in chronological order — the most thorough tool for root-cause analysis.
+The `--author` flag matches any part of the author identity. `--author="alice"` matches `alice`, `alice@company.com`, and `Alice Smith`. Combine with `--since` and `--until` for date-bounded audits:
 
 ```bash
-git log -p -- path/to/file.py
+git log --author="alp78" --since="2026-04-01" --until="2026-04-13" --oneline
 ```
 
-#### git log --grep — search commit messages
+#### View the history of a specific file
 
-Filters the log to commits whose message matches the given pattern. Case-sensitive by default; add `-i` for case-insensitive search. Useful for finding all commits that addressed a specific issue or feature keyword.
+**When to run:** When investigating the evolution of a single file --- how it changed over time, who changed it, and why.
+**Trigger:** Debugging a regression in a specific module, reviewing the change history of a configuration file, or auditing who modified a sensitive file.
+**Context:** Read-only. The `--` separator prevents Git from confusing the file path with a branch name.
+**Purpose:** Show only commits that touched the specified file.
+
+*Show all commits that modified `config.py`.*
+
+```bash
+git log -- config.py --oneline
+```
+
+```text
+35c16f7 ops: set log level to INFO for production
+cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+2eff67c fix: reduce cache TTL and add connection limit
+eadb609 feat: update cache TTL and add retry settings
+102afc6 fix: set cache TTL to 300 seconds
+```
+
+The `--` is a safety separator: it tells Git that everything after it is a file path, not a branch name. This prevents ambiguity when a file happens to share a name with a branch.
+
+> [!tip] Track file history across renames
+>
+> By default, `git log -- file` stops following history when the file was renamed. Add `--follow` to trace the file through renames:
+>
+> ```bash
+> git log --follow -- src/pipeline.py --oneline
+> ```
+
+#### View commit count per author
+
+**When to run:** When auditing contribution distribution across the team.
+**Trigger:** Sprint retrospectives, open-source contribution reviews, or identifying domain experts for a specific area.
+**Context:** Read-only. `--all` includes all branches.
+**Purpose:** Summarize total commit count per author.
+
+`git shortlog` groups commits by author. The `-s` flag shows only the count (suppresses individual commit messages), and `-n` sorts by count descending.
+
+*Show commit count per author across all branches.*
+
+```bash
+git shortlog -sn --all
+```
+
+```text
+    70  alp78
+     9  alp
+```
+
+### Git | log | advanced filters and formats
+
+#### Search commit messages with --grep
+
+**When to run:** When you know a keyword or issue number appeared in a commit message and need to find those commits.
+**Trigger:** Looking for all commits that reference a bug fix, a ticket number, or a feature name.
+**Context:** Read-only. Case-sensitive by default; add `-i` for case-insensitive matching. The pattern is a basic regular expression.
+**Purpose:** Filter the log to commits whose message matches a pattern.
+
+*Find all commits with "fix" in the message.*
 
 ```bash
 git log --grep="fix" --oneline
 ```
 
-#### git log -S — pickaxe search
+```text
+2eff67c fix: reduce cache TTL and add connection limit
+102afc6 fix: set cache TTL to 300 seconds
+3c60ed4 fix: handle NaN values in price feed
+4b59560 fix: reduce retries and adjust schedule for market close
+3dfc084 fix: add type hints to transform function
+```
 
-Shows only commits that changed the number of occurrences of the given string in the codebase. This answers "when was this function or variable first introduced, or when was it removed?" — far more precise than grepping commit messages.
+#### Find when code was introduced or removed with -S (pickaxe)
+
+**When to run:** When you need to find the exact commit that introduced a function, variable, constant, or configuration value --- or when it was removed.
+**Trigger:** Investigating when a specific feature was added, when a deprecated function was removed, or tracing the origin of a configuration constant.
+**Context:** Read-only. `-S` searches for commits where the number of occurrences of the given string changed. This is different from `--grep`, which searches commit messages.
+**Purpose:** Identify the commit that added or removed a specific string from the codebase.
+
+> [!info] Pickaxe vs grep
+>
+> `--grep="CACHE_TTL"` finds commits whose *message* mentions `CACHE_TTL`. `-S "CACHE_TTL"` finds commits that *changed the number of occurrences* of the string `CACHE_TTL` in the actual code. Use `--grep` for message search, `-S` for code-change search.
+
+*Find commits that added or removed the string `CACHE_TTL`.*
 
 ```bash
-git log -S "deadlock" --oneline
+git log -S "CACHE_TTL" --oneline
+```
+
+```text
+bb3d362 feat: add application settings
+102afc6 fix: set cache TTL to 300 seconds
+```
+
+These two commits are the ones where `CACHE_TTL` first appeared (`102afc6`) and where it was added to a second file (`bb3d362`). Every other commit that merely changed the value (e.g., from `300` to `120`) does not appear because the count of occurrences did not change.
+
+#### View full diffs per commit with -p
+
+**When to run:** When you need to see exactly what changed in each commit, line by line --- the most thorough tool for root-cause analysis.
+**Trigger:** Investigating a regression, reviewing the full change history of a file, or auditing every modification made to a sensitive configuration.
+**Context:** Read-only. Combines well with `-- file` to limit output to a single file.
+**Purpose:** Show the complete patch (diff) for each commit.
+
+*Show the full diff for each commit that touched `config.py`.*
+
+```bash
+git log -p -- config.py -3
+```
+
+```text
+commit 35c16f79a0e95db0025818ef72708c3d92e34935
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:55:00 2026 +0200
+
+    ops: set log level to INFO for production
+
+diff --git a/config.py b/config.py
+index b695fee..dea4f7f 100644
+--- a/config.py
++++ b/config.py
+@@ -2,3 +2,4 @@ CACHE_TTL = 120
+ MAX_CONNECTIONS = 10
+ RETRY_COUNT = 3
+ TIMEOUT = 30
++LOG_LEVEL = "INFO"
+
+commit 2eff67c8ad716c2f826e5124cea8907ac14db7ca
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:54:10 2026 +0200
+
+    fix: reduce cache TTL and add connection limit
+
+diff --git a/config.py b/config.py
+index 03a0b42..18acb83 100644
+--- a/config.py
++++ b/config.py
+@@ -1 +1,2 @@
+-CACHE_TTL = 300
++CACHE_TTL = 120
++MAX_CONNECTIONS = 10
+
+commit 102afc6767649c5b5fa008b000d4d22d0e3a7d62
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:38:41 2026 +0200
+
+    fix: set cache TTL to 300 seconds
+
+diff --git a/config.py b/config.py
+new file mode 100644
+index 0000000..03a0b42
+--- /dev/null
++++ b/config.py
+@@ -0,0 +1 @@
++CACHE_TTL = 300
+```
+
+Reading bottom-to-top: `102afc6` created `config.py` with `CACHE_TTL = 300`. Then `2eff67c` changed it to `120` and added `MAX_CONNECTIONS`. Then `35c16f7` appended `LOG_LEVEL`. This gives you the complete evolutionary timeline of the file.
+
+#### Use range notation to scope history
+
+**When to run:** When you need to see only the commits between two specific points in history --- for example, what landed between two releases, or what a branch added since it diverged.
+**Trigger:** Release audits, PR reviews, or investigating what changed between a known-good state and the current state.
+**Context:** Read-only. Two-dot (`A..B`) and three-dot (`A...B`) have different meanings.
+**Purpose:** Limit log output to a specific range of commits.
+
+Two range notations exist:
+
+- **`A..B`** (two-dot) --- commits reachable from B but not from A. "What does B have that A doesn't?"
+- **`A...B`** (three-dot, symmetric difference) --- commits reachable from either A or B, but not both. "What diverged on both sides?"
+
+> [!info]- Range notation explained
+>
+> - `102afc6..35c16f7` --- shows every commit after `102afc6` up to and including `35c16f7`. This is equivalent to "what happened between these two commits."
+> - `main...feat/data-quality-checks` with `--left-right` --- shows commits unique to each side, prefixed with `<` (left/main) or `>` (right/branch).
+
+*Show all commits between `102afc6` and `35c16f7` (two-dot range).*
+
+```bash
+git log --oneline 102afc6..35c16f7
+```
+
+```text
+35c16f7 ops: set log level to INFO for production
+cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+2eff67c fix: reduce cache TTL and add connection limit
+eadb609 feat: update cache TTL and add retry settings
+5644c58 feat: update settings for production (#8)
+bb3d362 feat: add application settings
+7baef30 feat: add portfolio risk calculator (#7)
+2c8edad feat: add momentum signal module (#1)
+5b59a9b feat: add config validation utilities (#6)
+52aa8e6 feat: add Terraform VPC for data platform
+0c2ffa5 Merge pull request #4 from alp78/feat/airflow-scheduler
+349ecf7 feat: add daily OHLCV ingestion DAG
+5f142f8 Merge pull request #3 from alp78/feat/dbt-staging
+1b76f94 feat: add market hours migration (#2)
+5643d9a feat: add dbt staging model for daily prices
+```
+
+*Show the symmetric difference between `main` and a feature branch.*
+
+```bash
+git log --oneline --left-right main...feat/data-quality-checks
+```
+
+```text
+< 35c16f7 ops: set log level to INFO for production
+< cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+< 2eff67c fix: reduce cache TTL and add connection limit
+< eadb609 feat: update cache TTL and add retry settings
+> 3fcc865 test: add data quality checks for pipeline
+```
+
+Lines prefixed with `<` are commits only on `main`. Lines prefixed with `>` are commits only on the feature branch. This is the clearest way to see what each side has that the other does not.
+
+#### Use custom format strings
+
+**When to run:** When you need machine-parseable or custom-formatted log output for scripts, reports, or dashboards.
+**Trigger:** Building release notes, feeding commit data into a pipeline, or creating audit trails.
+**Context:** Read-only. The `--format` string uses `%h` (short hash), `%an` (author name), `%ad` (author date), `%s` (subject), and many other placeholders.
+**Purpose:** Control exactly which fields appear and in what format.
+
+*Show short hash, date, and subject for the last 10 commits.*
+
+```bash
+git log --format="%h %ad %s" --date=short -10
+```
+
+```text
+35c16f7 2026-04-12 ops: set log level to INFO for production
+cbcd74c 2026-04-12 merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+2eff67c 2026-04-12 fix: reduce cache TTL and add connection limit
+eadb609 2026-04-12 feat: update cache TTL and add retry settings
+5644c58 2026-04-12 feat: update settings for production (#8)
+bb3d362 2026-04-12 feat: add application settings
+7baef30 2026-04-12 feat: add portfolio risk calculator (#7)
+2c8edad 2026-04-12 feat: add momentum signal module (#1)
+5b59a9b 2026-04-12 feat: add config validation utilities (#6)
+52aa8e6 2026-04-12 feat: add Terraform VPC for data platform
+```
+
+Common format placeholders:
+
+| Placeholder | Output |
+|---|---|
+| `%H` | Full 40-character SHA |
+| `%h` | Abbreviated SHA (7 characters) |
+| `%an` | Author name |
+| `%ae` | Author email |
+| `%ad` | Author date (use `--date=short` for `YYYY-MM-DD`) |
+| `%s` | Subject (first line of commit message) |
+| `%b` | Body (remainder of commit message) |
+| `%d` | Ref names (`HEAD -> main`, `tag: v1.0.0`) |
+
+#### Filter by merge status
+
+**When to run:** When you need to see only merge commits (to understand integration points) or exclude them (to see only direct work).
+**Trigger:** Auditing merge history, understanding when branches were integrated, or reviewing only feature commits without merge noise.
+**Context:** Read-only.
+**Purpose:** Include or exclude merge commits from the log.
+
+*Show only merge commits.*
+
+```bash
+git log --merges --oneline -5
+```
+
+```text
+cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
+0c2ffa5 Merge pull request #4 from alp78/feat/airflow-scheduler
+5f142f8 Merge pull request #3 from alp78/feat/dbt-staging
+06f13ca merge: add US market holiday calendar
+11df7ed merge: integrate currency code validator
+```
+
+*Show only non-merge commits.*
+
+```bash
+git log --no-merges --oneline -10
+```
+
+```text
+35c16f7 ops: set log level to INFO for production
+2eff67c fix: reduce cache TTL and add connection limit
+eadb609 feat: update cache TTL and add retry settings
+5644c58 feat: update settings for production (#8)
+bb3d362 feat: add application settings
+7baef30 feat: add portfolio risk calculator (#7)
+2c8edad feat: add momentum signal module (#1)
+5b59a9b feat: add config validation utilities (#6)
+52aa8e6 feat: add Terraform VPC for data platform
+349ecf7 feat: add daily OHLCV ingestion DAG
 ```
 
 | Flag | Syntax | Description |
@@ -147,191 +527,509 @@ git log -S "deadlock" --oneline
 | `--stat` | `git log --stat` | Show changed files and line counts per commit |
 | `--grep` | `git log --grep="fix"` | Filter by commit message pattern |
 | `-S` | `git log -S "keyword"` | Pickaxe: commits that added or removed string |
+| `-G` | `git log -G "regex"` | Commits where the diff matches a regex |
 | `--follow` | `git log --follow -- file` | Follow renames through file history |
 | `--no-merges` | `git log --no-merges` | Exclude merge commits |
 | `--merges` | `git log --merges` | Show only merge commits |
+| `--left-right` | `git log --left-right A...B` | Mark commits with `<` (left) or `>` (right) |
+| `--diff-filter` | `git log --diff-filter=A` | Filter by change type: A=added, D=deleted, M=modified |
+| `--format` | `git log --format="%h %s"` | Custom output format |
+| `--date` | `git log --date=short` | Date format: short, iso, relative, unix |
+| `--first-parent` | `git log --first-parent` | Follow only the first parent of merges (main line) |
+| `--ancestry-path` | `git log --ancestry-path A..B` | Only commits that are ancestors of B and descendants of A |
 
 ---
 
-## git diff — What Changed
+## git diff --- Comparing Changes
 
-`git diff` compares file contents between different states: working directory vs last commit, staged changes vs last commit, or any two commits or branches. Mastering `git diff` is essential for reviewing your work before committing and for understanding what changed in a PR.
+`git diff` compares file contents between different states: working directory vs staging area, staging area vs last commit, or any two commits, branches, or tags. It is the primary tool for reviewing what you are about to commit and for understanding what changed in a branch or PR.
 
-> [!info] Two-dot vs three-dot diff
->
-> `git diff main..branch` compares the tips directly — any commits on main since the branch diverged are included. `git diff main...branch` (three dots) shows only what changed on the branch since it diverged from main — this is what you want for PR previews.
+### Git | diff | comparing layers
 
-### git diff — Comparing Changes
+#### Compare unstaged changes (working directory vs index)
 
-#### git diff — unstaged changes
+**When to run:** Before staging, to review what you have modified but not yet added.
+**Trigger:** Before running `git add`, to verify your changes are correct and complete.
+**Context:** Read-only. Compares the working directory against the staging area (index). If you have already staged everything, this shows nothing.
+**Purpose:** See what you have changed in the working tree that is not yet staged.
 
-Shows the difference between the working directory and the last commit (HEAD). This is what you have modified but not yet staged — equivalent to "what would I lose if I ran `git checkout .`?"
+*Show unstaged changes.*
 
 ```bash
 git diff
 ```
 
-#### git diff --staged — staged changes
+```text
+diff --git a/config.py b/config.py
+index bc890e4..2965d0b 100644
+--- a/config.py
++++ b/config.py
+@@ -1,5 +1,6 @@
+ CACHE_TTL = 120
+ MAX_CONNECTIONS = 10
+ RETRY_COUNT = 5
+-TIMEOUT = 30
++TIMEOUT = 60
+ LOG_LEVEL = "INFO"
++DEBUG_MODE = False
+```
 
-Shows the difference between the staging area (index) and the last commit. This is exactly what will go into the next commit when you run `git commit`. The `--cached` flag is a synonym.
+Lines prefixed with `-` (red) were removed. Lines prefixed with `+` (green) were added. Context lines (no prefix) are unchanged but shown for orientation. The `@@ -1,5 +1,6 @@` header means: the old file started at line 1 and showed 5 lines; the new file starts at line 1 and shows 6 lines.
+
+#### Compare staged changes (index vs last commit)
+
+**When to run:** After staging with `git add`, to review exactly what will go into the next commit.
+**Trigger:** Before running `git commit`, as a final review step.
+**Context:** Read-only. Compares the staging area against HEAD. The `--cached` flag is a synonym for `--staged`.
+**Purpose:** See exactly what the next commit will contain.
+
+*Show staged changes.*
 
 ```bash
 git diff --staged
 ```
 
-#### git diff main...branch — branch changes from divergence point
-
-Shows only the changes made on the current branch since it diverged from main. The three-dot syntax finds the merge base automatically, so commits that landed on main after the branch was created are excluded. Use this for PR previews.
-
-```bash
-git diff main...feat/my-branch
+```text
+diff --git a/config.py b/config.py
+index dea4f7f..bc890e4 100644
+--- a/config.py
++++ b/config.py
+@@ -1,5 +1,5 @@
+ CACHE_TTL = 120
+ MAX_CONNECTIONS = 10
+-RETRY_COUNT = 3
++RETRY_COUNT = 5
+ TIMEOUT = 30
+ LOG_LEVEL = "INFO"
 ```
 
-#### git diff HEAD~N — changes from N commits ago
+This shows that the staged change is: `RETRY_COUNT` changed from `3` to `5`. This is precisely what will be committed.
 
-Compares the working directory against the commit N steps before HEAD. Useful for reviewing the cumulative effect of recent work before deciding what to commit.
+#### Compare branch changes since divergence (three-dot diff)
+
+**When to run:** When reviewing a PR or feature branch --- to see only what the branch changed, excluding anything that happened on main after the branch was created.
+**Trigger:** PR review, pre-merge validation, or understanding the scope of a branch.
+**Context:** Read-only. The three-dot syntax (`main...branch`) automatically finds the merge base and shows only changes on the branch side.
+**Purpose:** See the effective diff of a branch as it would appear in a PR.
+
+> [!info] Two-dot vs three-dot diff
+>
+> - `git diff main..branch` compares the tips directly --- if main has new commits since the branch diverged, those show up as "removed" lines, which is usually not what you want.
+> - `git diff main...branch` (three dots) finds the merge base and shows only what changed on the branch side. This matches what GitHub/GitLab display in a PR diff.
+
+*Show what the `demo/bisect-history` branch changed since diverging from main.*
 
 ```bash
-git diff HEAD~3
+git diff --stat main...demo/bisect-history
 ```
 
-#### git diff --name-only — summary of changed files
+```text
+ dags/daily_ingest.py   |  7 +++++++
+ src/esg_scoring.py     | 28 +++++++++++++++++++---------
+ src/pipeline.py        |  1 +
+ src/utils.py           | 19 +++++++++++--------
+ tests/test_pipeline.py | 28 ++++++++++++++++++++++------
+ 5 files changed, 60 insertions(+), 23 deletions(-)
+```
 
-Lists only the filenames that differ, without showing the diff content. Combine with `--stat` to also show line-count changes. Useful for a quick overview before a full review.
+The `+` and `-` bar on the right shows the proportion of additions vs deletions per file. The summary line at the bottom gives totals.
+
+### Git | diff | scoping and output options
+
+#### List only changed filenames
+
+**When to run:** When you need a quick inventory of which files were touched, without seeing the actual changes.
+**Trigger:** Estimating the scope of a change, identifying which reviewers to assign, or feeding a file list into another tool.
+**Context:** Read-only.
+**Purpose:** Get a clean list of changed files.
+
+*List files changed on the current branch vs main.*
 
 ```bash
-git diff --name-only main...HEAD
+git diff --name-only main...demo/bisect-history
 ```
 
-### git diff — Output Interpretation
+```text
+dags/daily_ingest.py
+src/esg_scoring.py
+src/pipeline.py
+src/utils.py
+tests/test_pipeline.py
+```
 
 #### Reading a unified diff
 
-A unified diff header identifies the files being compared, their content hashes, and the changed line ranges. Lines prefixed with `-` were removed (shown in red), lines prefixed with `+` were added (shown in green), and lines with no prefix are context lines that were not changed.
+Every unified diff block has a consistent structure:
 
 ```text
-diff --git a/pipeline/load.py b/pipeline/load.py
-index 3c4a5b6..7d8e9f0 100644
---- a/pipeline/load.py         ← old version
-+++ b/pipeline/load.py         ← new version
-@@ -42,7 +42,9 @@              ← line numbers: -42 (old start), +42 (new start), 7/9 lines shown
- def load_ohlcv(data):
--    rows = []                  ← red: deleted line
-+    inserts = []               ← green: added line
-+    updates = []               ← green: added line
-     for row in data:
+diff --git a/config.py b/config.py       ← files being compared
+index dea4f7f..bc890e4 100644             ← blob hashes and file mode
+--- a/config.py                           ← old version marker
++++ b/config.py                           ← new version marker
+@@ -1,5 +1,5 @@                           ← hunk header: line ranges
+ CACHE_TTL = 120                          ← context line (unchanged)
+ MAX_CONNECTIONS = 10                     ← context line (unchanged)
+-RETRY_COUNT = 3                          ← removed line (red)
++RETRY_COUNT = 5                          ← added line (green)
+ TIMEOUT = 30                             ← context line (unchanged)
+ LOG_LEVEL = "INFO"                       ← context line (unchanged)
 ```
+
+The hunk header `@@ -1,5 +1,5 @@` reads as: "starting at line 1 in the old file, showing 5 lines; starting at line 1 in the new file, showing 5 lines." When the line counts differ, lines were added or removed.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--staged` / `--cached` | `git diff --staged` | Staged changes vs last commit |
-| `..` | `git diff main..branch` | Diff between two branch tips |
+| `..` | `git diff main..branch` | Diff between two branch tips directly |
 | `...` | `git diff main...branch` | Changes on branch since divergence (merge base) |
 | `HEAD~N` | `git diff HEAD~3` | Working directory vs N commits ago |
 | `--name-only` | `git diff --name-only` | List only filenames, no diff content |
+| `--name-status` | `git diff --name-status` | Filenames with change type (A/M/D/R) |
 | `--stat` | `git diff --stat` | Files changed with line count summary |
 | `--word-diff` | `git diff --word-diff` | Inline word-level diff instead of line-level |
-| `-w` | `git diff -w` | Ignore whitespace changes |
-| `--diff-filter` | `git diff --diff-filter=A` | Filter by change type: A=added, D=deleted, M=modified |
+| `-w` | `git diff -w` | Ignore all whitespace changes |
+| `--ignore-blank-lines` | `git diff --ignore-blank-lines` | Ignore changes that only add/remove blank lines |
+| `--diff-filter` | `git diff --diff-filter=A` | Filter by change type: A=added, D=deleted, M=modified, R=renamed |
+| `--no-renames` | `git diff --no-renames` | Disable rename detection |
+| `--color-words` | `git diff --color-words` | Word-level color diff without `[-` / `{+` markers |
+| `-U<n>` | `git diff -U5` | Show N lines of context around each change (default 3) |
 
 ---
 
-## git blame — Who Changed Each Line
+## git blame --- Tracing Authorship
 
-Blame annotates each line of a file with the commit SHA, author, and date of the last change to that line. It answers "who wrote this line and when?" — essential for understanding why code looks the way it does and for tracing decisions back to their original context.
+`git blame` annotates each line of a file with the commit SHA, author, and date of the last change to that line. It answers "who wrote this line, when, and in which commit?" --- essential for understanding why code looks the way it does and for tracing decisions back to their original context.
 
-### git blame — Annotating Files
+### Git | blame | annotating files
 
-#### git blame — basic usage
+#### Annotate an entire file
 
-Outputs the full annotated file. Each line is prefixed with the commit SHA, author, date, and line number. The `^` prefix on a SHA indicates the root commit of the repository.
+**When to run:** When you need to understand the authorship of every line in a file --- who last modified each line and when.
+**Trigger:** Investigating why a piece of code exists, finding the right person to ask about a decision, or auditing a configuration file.
+**Context:** Read-only. Shows the state of the file at HEAD by default. Use `<commit> -- <file>` to blame at a different point in history.
+**Purpose:** Map every line to its last-modifying commit, author, and date.
+
+*Annotate every line of `src/pipeline.py` with authorship.*
 
 ```bash
-git blame src/transform.py
+git blame src/pipeline.py
 ```
 
 ```text
-^cd97a43 (alice 2026-03-10 14:22:31 +0100  42) def transform_ohlcv(df):
-7b8c9d0e (bob   2026-03-12 09:15:42 +0100  43)     df = df.dropna()
+71f876ed (alp78 2026-04-12 15:35:30 +0200  1) """Stock data pipeline — daily ingestion and transformation."""
+71f876ed (alp78 2026-04-12 15:35:30 +0200  2) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  3) import logging
+71f876ed (alp78 2026-04-12 15:35:30 +0200  4) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  5) logger = logging.getLogger(__name__)
+71f876ed (alp78 2026-04-12 15:35:30 +0200  6) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  7) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  8) def fetch_prices(ticker: str) -> dict:
+71f876ed (alp78 2026-04-12 15:35:30 +0200  9)     """Fetch end-of-day prices for a given ticker."""
+71f876ed (alp78 2026-04-12 15:35:30 +0200 10)     logger.info("Fetching prices for %s", ticker)
+71f876ed (alp78 2026-04-12 15:35:30 +0200 11)     return {"ticker": ticker, "close": 42.50, "volume": 1_200_000}
+71f876ed (alp78 2026-04-12 15:35:30 +0200 12) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200 13) 
+3dfc084a (alp   2026-04-12 16:16:28 +0200 14) def transform(raw: dict[str, object]) -> dict[str, object]:
+71f876ed (alp78 2026-04-12 15:35:30 +0200 15)     """Normalize and validate raw price data."""
+71f876ed (alp78 2026-04-12 15:35:30 +0200 16)     return {
+3dfc084a (alp   2026-04-12 16:16:28 +0200 17)         "ticker": str(raw["ticker"]),
+71f876ed (alp78 2026-04-12 15:35:30 +0200 18)         "close_price": float(raw["close"]),
+71f876ed (alp78 2026-04-12 15:35:30 +0200 19)         "volume": int(raw["volume"]),
+07a7f46e (alp78 2026-04-12 16:20:09 +0200 20)         "currency": raw.get("currency", "USD"),
+07a7f46e (alp78 2026-04-12 16:20:09 +0200 21)         "source": "yfinance",
+71f876ed (alp78 2026-04-12 15:35:30 +0200 22)     }
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 23) 
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 24) 
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 25) def validate(record: dict) -> bool:
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 26)     """Validate a transformed record before loading."""
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 27)     required = {"ticker", "close_price", "volume"}
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 28)     return required.issubset(record.keys()) and record["close_price"] > 0
 ```
 
-Each line shows: `commit-sha (author date line-number) code`.
+Each line is formatted as: `commit-sha (author date line-number) code`. Reading this output:
 
-#### git blame -w — ignore whitespace changes
+- Lines 1--13 and 15--16, 18--19, 22: authored by `alp78` in commit `71f876e` (the initial pipeline skeleton).
+- Line 14, 17: modified by `alp` in commit `3dfc084` (added type hints).
+- Lines 20--21: modified by `alp78` in commit `07a7f46` (added currency and source fields).
+- Lines 23--28: added by `alp` in commit `2c8edad` (added the `validate` function).
 
-Excludes pure whitespace-only commits from attribution. Without `-w`, a commit that only reformatted indentation would appear as the "author" of every line it touched, obscuring the true logical author.
+#### Blame a specific line range
+
+**When to run:** When you only care about a specific function or block, not the entire file.
+**Trigger:** Investigating a single function's authorship, or focusing on a specific configuration block.
+**Context:** Read-only. The `-L start,end` flag restricts output to the given line range.
+**Purpose:** Narrow blame output to a specific region of the file.
+
+*Blame lines 1--5 of `config.py`.*
 
 ```bash
-git blame -w src/transform.py
+git blame -L 1,5 config.py
 ```
 
-#### git blame -C — detect lines moved from other files
+```text
+2eff67c8 (alp78 2026-04-12 17:54:10 +0200 1) CACHE_TTL = 120
+2eff67c8 (alp78 2026-04-12 17:54:10 +0200 2) MAX_CONNECTIONS = 10
+eadb6095 (alp78 2026-04-12 17:54:02 +0200 3) RETRY_COUNT = 3
+eadb6095 (alp78 2026-04-12 17:54:02 +0200 4) TIMEOUT = 30
+35c16f79 (alp78 2026-04-12 17:55:00 +0200 5) LOG_LEVEL = "INFO"
+```
 
-Traces lines that were moved or copied from other files in the same commit, attributing them to their true origin rather than the refactoring commit. Useful when a function was extracted into a new file.
+Three different commits authored these five lines: `2eff67c` set `CACHE_TTL` and `MAX_CONNECTIONS`, `eadb609` set `RETRY_COUNT` and `TIMEOUT`, and `35c16f7` added `LOG_LEVEL`. The `-L` syntax also supports function names in some languages: `git blame -L :function_name file`.
+
+#### Ignore whitespace-only changes with -w
+
+**When to run:** When a reformatting commit (indentation changes, trailing whitespace cleanup) has obscured the true logical author of each line.
+**Trigger:** After running a code formatter (black, ruff, prettier) that touched every line, making blame attribute the entire file to the formatting commit.
+**Context:** Read-only. `-w` ignores whitespace-only changes and attributes lines to the most recent commit that made a substantive change.
+**Purpose:** See the real logical author of each line, not the last formatter.
+
+*Blame `src/pipeline.py` while ignoring whitespace changes.*
 
 ```bash
-git blame -C src/transform.py
+git blame -w src/pipeline.py
+```
+
+> [!tip] Create a blame-ignore file for formatters
+>
+> If your team runs bulk formatting commits (e.g., adopting `black` or `ruff format`), create a `.git-blame-ignore-revs` file listing those commit SHAs. Then configure Git to use it:
+>
+> ```bash
+> echo "abc1234def5678" >> .git-blame-ignore-revs
+> git config blame.ignoreRevsFile .git-blame-ignore-revs
+> ```
+>
+> This permanently skips those commits in blame output without needing `-w` every time. GitHub also respects this file in its web blame view.
+
+#### Detect code moved from other files with -C
+
+**When to run:** When a function or block was extracted from one file into another (refactoring), and blame incorrectly attributes the code to the extraction commit instead of the original author.
+**Trigger:** After a refactor that moved code between files, when you need to trace the original author.
+**Context:** Read-only. `-C` searches other files in the same commit for the origin of moved lines. Use `-C -C` (repeated) for a more aggressive search across all files.
+**Purpose:** Attribute lines to their true origin, even across file moves and copies.
+
+```bash
+git blame -C src/pipeline.py
 ```
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `-w` | `git blame -w <file>` | Ignore whitespace-only changes in attribution |
-| `-C` | `git blame -C <file>` | Detect lines moved from other files |
+| `-C` | `git blame -C <file>` | Detect lines moved or copied from other files |
+| `-C -C` | `git blame -C -C <file>` | More aggressive cross-file search |
 | `-M` | `git blame -M <file>` | Detect lines moved within the same file |
 | `-L` | `git blame -L 40,60 <file>` | Restrict output to a line range |
+| `-L :func` | `git blame -L :transform <file>` | Restrict to a named function (language-dependent) |
 | `-e` | `git blame -e <file>` | Show author email instead of name |
 | `--since` | `git blame --since="1 year ago" <file>` | Ignore commits older than the given date |
+| `--ignore-rev` | `git blame --ignore-rev <sha>` | Ignore a specific commit (formatting commits) |
+| `--ignore-revs-file` | `git blame --ignore-revs-file .git-blame-ignore-revs` | Ignore all commits listed in a file |
+| `-t` | `git blame -t <file>` | Show timestamps as Unix epoch |
 
 ---
 
-## git show — Inspect a Commit
+## git show --- Inspecting Individual Objects
 
-`git show` displays the full metadata and diff for a specific commit, tag, or object. The `ref:path` syntax extends it to retrieve file content at any point in history — useful for comparing current code against a known-good version without checking out the commit.
+`git show` displays the full metadata and diff for a specific commit, tag, or blob object. The `ref:path` syntax extends it to retrieve file content at any point in history --- useful for comparing current code against a known-good version without checking out the commit.
 
-### git show — Viewing Commits and Files
+### Git | show | viewing commits and files
 
-#### git show — full commit details
+#### Display full commit details
 
-Displays the commit metadata (author, date, message) followed by the full diff of all changes in that commit. Accepts any valid ref: a short SHA, full SHA, branch name, or tag.
+**When to run:** When you need the complete picture of a specific commit --- who made it, when, what the message says, and exactly what changed.
+**Trigger:** Following up on a blame result (to see the full commit context), reviewing a specific merge, or inspecting a tagged release.
+**Context:** Read-only. Accepts any valid ref: short SHA, full SHA, branch name, tag, or symbolic ref like `HEAD`.
+**Purpose:** See the complete metadata and diff for a single commit.
 
-```bash
-git show cd97a43
-```
-
-#### git show HEAD:file — file content at a specific commit
-
-Retrieves the exact content of a file at a given commit without modifying the working directory. Useful for comparing the current version of a file against a known-good version.
+*Show the full details of commit `35c16f7`.*
 
 ```bash
-git show HEAD:src/config.py
+git show 35c16f7
 ```
 
-#### git show ref:file — content at a branch or tag
+```text
+commit 35c16f79a0e95db0025818ef72708c3d92e34935
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:55:00 2026 +0200
 
-The same `ref:path` syntax works with any branch name or tag. Use this to inspect what a file looked like at a release boundary.
+    ops: set log level to INFO for production
+
+diff --git a/config.py b/config.py
+index b695fee..dea4f7f 100644
+--- a/config.py
++++ b/config.py
+@@ -2,3 +2,4 @@ CACHE_TTL = 120
+ MAX_CONNECTIONS = 10
+ RETRY_COUNT = 3
+ TIMEOUT = 30
++LOG_LEVEL = "INFO"
+```
+
+The output has two parts: the commit header (full SHA, author, date, message) and the unified diff of every file changed in that commit. For merge commits, `git show` displays the combined diff by default; use `git show --first-parent <sha>` to see the diff against the first parent only.
+
+#### View the scope of a commit with --stat
+
+**When to run:** When you need a quick summary of which files a commit touched and how many lines changed, without the full diff.
+**Trigger:** Reviewing the impact of a commit before reading the full diff, or auditing the scope of a merge.
+**Context:** Read-only.
+**Purpose:** See file-level change summary for a commit.
+
+*Show the stat summary for commit `35c16f7`.*
 
 ```bash
-git show main:src/config.py
-git show v1.0.0:src/config.py
+git show 35c16f7 --stat
 ```
+
+```text
+commit 35c16f79a0e95db0025818ef72708c3d92e34935
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:55:00 2026 +0200
+
+    ops: set log level to INFO for production
+
+ config.py | 1 +
+ 1 file changed, 1 insertion(+)
+```
+
+#### Retrieve file content at a specific point in history
+
+**When to run:** When you need to see what a file looked like at a specific commit, branch, or tag --- without checking out that commit and disrupting your working directory.
+**Trigger:** Comparing current code against a known-good version, investigating what a config file contained at a release boundary, or extracting a file from a past state.
+**Context:** Read-only. Does not modify the working directory, staging area, or HEAD.
+**Purpose:** Retrieve the exact content of a file at any point in history.
+
+The `ref:path` syntax works with any valid ref --- commit SHA, branch name, tag, or `HEAD`.
+
+*Show `config.py` as it exists on the current HEAD.*
+
+```bash
+git show HEAD:config.py
+```
+
+```text
+CACHE_TTL = 120
+MAX_CONNECTIONS = 10
+RETRY_COUNT = 3
+TIMEOUT = 30
+LOG_LEVEL = "INFO"
+```
+
+*Show `config.py` as it existed at commit `102afc6` (the earliest version).*
+
+```bash
+git show 102afc6:config.py
+```
+
+```text
+CACHE_TTL = 300
+```
+
+This reveals that the file originally contained only one line. The current five-line version evolved through multiple commits.
+
+> [!tip] Extract a file to disk without checkout
+>
+> To save a file from a past commit without disrupting the working directory:
+>
+> ```bash
+> git show v1.0.0:src/config.py > /tmp/config_v1.py
+> ```
+>
+> This redirects the output to a temporary file for comparison or recovery.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--stat` | `git show <sha> --stat` | Summary of changed files and line counts |
 | `--name-only` | `git show <sha> --name-only` | List only changed filenames |
+| `--name-status` | `git show <sha> --name-status` | Filenames with change type (A/M/D) |
 | `-q` | `git show -q <sha>` | Suppress diff output (metadata only) |
-| `--format` | `git show --format="%H %s"` | Custom output format |
+| `--format` | `git show --format="%H %s" <sha>` | Custom output format |
 | `ref:path` | `git show HEAD:file.py` | Retrieve file content at a given ref |
+| `--first-parent` | `git show --first-parent <sha>` | For merges: diff against first parent only |
 
 ---
 
-## Finding Changes Quickly
+## git reflog --- Local HEAD Movement History
 
-These workflows combine multiple inspection commands to answer targeted questions: when a bug appeared, which files changed in a branch, or who owns a specific line of code.
+The reflog is a local-only, append-only log of every position HEAD has occupied. Every checkout, commit, rebase, reset, amend, and merge is recorded. Unlike `git log`, which shows the commit DAG (shared history), `git reflog` shows the local movement of the HEAD pointer --- it is your personal undo timeline.
 
-### When Did a Bug Appear? — git bisect
+> [!warning] Reflog is local-only and expires
+>
+> Reflog entries are never shared via `push` or `fetch`. They exist only on the machine where the action happened. By default, entries older than 90 days (for reachable commits) or 30 days (for unreachable commits) are pruned by `git gc`. Do not rely on reflog as a long-term recovery mechanism.
 
-Bisect uses binary search to find the exact commit that introduced a bug. You mark one commit as bad (current broken state) and one as good (known working state), and Git automatically checks out the midpoint. After testing each checkpoint and marking it good or bad, Git narrows the range and pinpoints the exact offending commit in O(log n) steps — far faster than checking every commit manually.
+> [!success] Extend reflog retention if needed
+>
+> For critical workstations, extend the expiry:
+>
+> ```bash
+> git config gc.reflogExpire 180.days
+> git config gc.reflogExpireUnreachable 90.days
+> ```
+
+### Git | reflog | viewing HEAD history
+
+#### Display the reflog
+
+**When to run:** When you need to find a commit that is no longer reachable from any branch --- after a bad reset, a lost branch, or a failed rebase.
+**Trigger:** "Where was HEAD before I ran that reset?", "I accidentally deleted a branch --- what was its tip?", or "I need to undo a rebase."
+**Context:** Read-only (viewing). The reflog itself is a recovery tool --- once you find the SHA, you can use `git checkout` or `git reset` to restore.
+**Purpose:** See every recent HEAD movement with timestamps.
+
+*Show the last 15 reflog entries.*
+
+```bash
+git reflog -15
+```
+
+```text
+35c16f7 HEAD@{0}: checkout: moving from main to main
+35c16f7 HEAD@{1}: checkout: moving from main to main
+35c16f7 HEAD@{2}: checkout: moving from demo/gitignore-patterns to main
+8ac272d HEAD@{3}: commit: chore: stop tracking logs directory
+39f91b7 HEAD@{4}: commit: mistake: accidentally commit log directory
+3454539 HEAD@{5}: commit: chore: stop tracking .env, restore .gitignore rule
+acb02fc HEAD@{6}: commit: mistake: accidentally commit .env file
+4baa9a6 HEAD@{7}: commit: chore: update .gitignore with data-engineering patterns, add sample data
+35c16f7 HEAD@{8}: checkout: moving from main to demo/gitignore-patterns
+35c16f7 HEAD@{9}: checkout: moving from demo/conflict-rebase to main
+96fe0bf HEAD@{10}: rebase (finish): returning to refs/heads/demo/conflict-rebase
+96fe0bf HEAD@{11}: rebase (pick): feat: add batch size setting
+39189d2 HEAD@{12}: rebase (continue): feat: add debug log level
+35c16f7 HEAD@{13}: rebase (start): checkout main
+2d828a0 HEAD@{14}: checkout: moving from main to demo/conflict-rebase
+```
+
+Each entry reads as: `<sha> HEAD@{N}: <action>: <detail>`. The `HEAD@{N}` syntax is a valid ref --- you can use it anywhere Git expects a commit reference:
+
+- `HEAD@{0}` --- current position (same as `HEAD`)
+- `HEAD@{1}` --- previous position
+- `HEAD@{5}` --- five moves ago
+
+Reading this reflog: entries 13--10 show a rebase session (start, continue, pick, finish). Entry 8 shows a branch checkout. Entries 7--3 show a series of commits on the `demo/gitignore-patterns` branch.
+
+> [!tip] Use reflog to recover from a bad reset
+>
+> If you ran `git reset --hard` and lost commits:
+>
+> 1. Run `git reflog` to find the SHA of HEAD before the reset
+> 2. Run `git reset --hard HEAD@{N}` where N is the reflog entry before the mistake
+>
+> The commits are still in the object database until `git gc` prunes them (30--90 days).
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-n` | `git reflog -15` | Limit to last N entries |
+| `--date=iso` | `git reflog --date=iso` | Show ISO timestamps instead of relative offsets |
+| `--all` | `git reflog --all` | Show reflog for all refs, not just HEAD |
+| `show <branch>` | `git reflog show main` | Show reflog for a specific branch |
+
+---
+
+## git bisect --- Finding the Commit That Broke Things
+
+`git bisect` performs a binary search through the commit history to find the exact commit that introduced a regression. You mark one commit as "bad" (current broken state) and one as "good" (known working state), and Git checks out the midpoint. After testing each midpoint and marking it good or bad, Git narrows the range in O(log n) steps --- far faster than checking every commit manually.
+
+### Git | bisect | binary search for regressions
+
+#### The bisect algorithm
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -346,122 +1044,332 @@ Bisect uses binary search to find the exact commit that introduced a bug. You ma
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    A["git bisect start<br/>bad: HEAD<br/>good: abc1234"] --> B["Git checks out midpoint"]
-    B --> C{Test passes?}
-    C -- yes --> D["git bisect good"]
-    C -- no --> E["git bisect bad"]
-    D --> F{Range > 1?}
-    E --> F
-    F -- yes --> B
-    F -- no --> G["Git reports<br/>culprit commit"]
-    G --> H["git bisect reset"]
+flowchart TD
+    A["git bisect start"] --> B["git bisect bad HEAD"]
+    B --> C["git bisect good &lt;sha&gt;"]
+    C --> D["Git checks out midpoint"]
+    D --> E{"Test the build<br/>or run the test"}
+    E --> F{"Pass?"}
+    F -- YES --> G["git bisect good"]
+    F -- NO --> H["git bisect bad"]
+    G --> I{"Range > 1<br/>commit?"}
+    H --> I
+    I -- YES --> D
+    I -- NO --> J["Git reports the<br/>first bad commit"]
+    J --> K["git bisect reset"]
+
+    style F fill:#292e42,stroke:#565f89,color:#c0caf5
+    style I fill:#292e42,stroke:#565f89,color:#c0caf5
+    style G fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style H fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
 ```
 
-> [!todo] Run a bisect session
-> 1. `git bisect start` — enter bisect mode
-> 2. `git bisect bad` — mark current commit as broken
-> 3. `git bisect good <sha>` — mark a known-good commit
-> 4. Test the checked-out commit; run `git bisect good` or `git bisect bad`
-> 5. Repeat step 4 until Git reports the culprit commit
-> 6. `git bisect reset` — return HEAD to where you started
+*The bisect algorithm halves the search space at each step. With N commits between good and bad, the culprit is found in at most ceil(log2(N)) steps. For 1,000 commits, that is 10 tests instead of 1,000.*
 
-> [!warning] Bisect fails in shallow clones
+#### Run a bisect session
+
+**When to run:** When a test, build, or behavior that used to work is now broken, and you need to find exactly which commit caused the regression.
+**Trigger:** A CI test started failing, a performance regression appeared, data output changed unexpectedly, or a pipeline that used to succeed now fails.
+**Context:** `git bisect` temporarily checks out commits during the search, so your working directory will change. **Always commit or stash any uncommitted work before starting.** `git bisect reset` at the end restores HEAD to its original position.
+**Purpose:** Identify the exact commit that introduced a regression, with minimal manual effort.
+
+> [!todo] Bisect workflow --- step by step
 >
-> `git bisect` needs the full commit history between the good and bad boundaries. Shallow clones (`--depth 1`) will error with "not a valid object" for any commit outside the shallow range. Flaky tests at a checkpoint will also mislead bisect if marked incorrectly.
+> 1. **Commit or stash** any uncommitted work
+> 2. `git bisect start` --- enter bisect mode
+> 3. `git bisect bad` --- mark the current commit (HEAD) as broken
+> 4. `git bisect good <sha>` --- mark a known-good commit (e.g., last release tag)
+> 5. Git checks out the midpoint. **Run your test.**
+> 6. If the test passes: `git bisect good`. If it fails: `git bisect bad`.
+> 7. Repeat step 5--6 until Git reports the first bad commit.
+> 8. `git bisect reset` --- return HEAD to where you started
+
+The following bisect session found the commit that increased `BATCH_SIZE` from 500 to 50,000, causing the ingestion pipeline to fail with memory errors.
+
+*Start bisect, mark current HEAD as bad and a known-good commit.*
+
+```bash
+git bisect start
+git bisect bad f44aa1a
+git bisect good b28260e
+```
+
+```text
+Bisecting: 1 revision left to test after this (roughly 1 step)
+[4527c55c86e6555dcc26f40278d5e6218206f8b4] perf: increase batch size for faster ingestion
+```
+
+Git checked out the midpoint commit `4527c55`. After testing and finding `BATCH_SIZE = 50000`, mark it as bad:
+
+```bash
+git bisect bad
+```
+
+```text
+Bisecting: 0 revisions left to test after this (roughly 0 steps)
+[25b0d16a1b64fdcc3e337836141d330fa284a8df] feat: add validated flag to transform output
+```
+
+Git checked out `25b0d16`. Testing shows `BATCH_SIZE = 500` (correct), so mark it as good:
+
+```bash
+git bisect good
+```
+
+```text
+4527c55c86e6555dcc26f40278d5e6218206f8b4 is the first bad commit
+commit 4527c55c86e6555dcc26f40278d5e6218206f8b4
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 18:21:50 2026 +0200
+
+    perf: increase batch size for faster ingestion
+
+ dags/daily_ingest.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+
+Bisect found the culprit: commit `4527c55` changed `BATCH_SIZE` from 500 to 50,000 in `dags/daily_ingest.py`. The commit message "perf: increase batch size for faster ingestion" explains the intent, but the 100x increase caused out-of-memory failures in production.
+
+*Always reset when done.*
+
+```bash
+git bisect reset
+```
+
+```text
+Previous HEAD position was 25b0d16 feat: add validated flag to transform output
+Switched to branch 'demo/bisect-history'
+```
+
+#### Automate bisect with a test script
+
+**When to run:** When you can express the pass/fail condition as a script (exit code 0 = good, non-zero = bad).
+**Trigger:** The regression is testable by a specific command (a unit test, a build, a query).
+**Context:** `git bisect run` automates the entire process --- Git checks out each midpoint and runs your script, interpreting exit codes.
+**Purpose:** Fully automate bisect without manual intervention.
+
+```bash
+git bisect start HEAD v1.0.0
+git bisect run pytest tests/test_pipeline.py -x
+```
+
+Git will run `pytest tests/test_pipeline.py -x` at each midpoint. If pytest exits 0, the commit is marked good. If it exits non-zero, the commit is marked bad. When the search completes, Git reports the first bad commit and you run `git bisect reset`.
+
+> [!warning] Bisect requires full history
+>
+> `git bisect` needs every commit between the good and bad boundaries. Shallow clones (`--depth 1`) will fail with "not a valid object" for commits outside the shallow range. Flaky tests can also mislead bisect if they produce incorrect pass/fail results at a checkpoint.
 
 > [!success] Unshallow before bisecting
 >
-> Run `git fetch --unshallow` to convert a shallow clone to a full clone, then retry bisect.
+> Convert a shallow clone to a full clone:
+>
+> ```bash
+> git fetch --unshallow
+> ```
+>
+> For flaky tests, use `git bisect run` with a wrapper script that retries N times before declaring failure.
 
-### What Files Changed in a PR? — diff summary
-
-#### git diff --name-only — list changed files
-
-Lists the names of files that differ between the current branch and main, from the divergence point. Useful for quickly understanding the scope of a PR before a full review.
-
-```bash
-git diff --name-only main...HEAD
-```
-
-```text
-pipeline/load.py
-pipeline/transform.py
-tests/test_load.py
-```
-
-#### git diff --stat — changed files with line counts
-
-Shows the same list as `--name-only` but includes a line count summary and a visual bar showing the proportion of additions vs deletions.
-
-```bash
-git diff --stat main...HEAD
-```
-
-```text
- pipeline/load.py      | 12 ++++++------
- pipeline/transform.py |  5 +++++
- tests/test_load.py    | 18 ++++++++++++++++++
- 3 files changed, 29 insertions(+), 6 deletions(-)
-```
-
-### Who Changed This? — blame + log combination
-
-#### git blame -L — blame a specific line range
-
-Restricts blame output to the given line range, making it easy to focus on a single function or block without the noise of the full file.
-
-```bash
-git blame -L 42,42 src/transform.py
-```
-
-```text
-7b8c9d0e (bob 2026-03-12 09:15:42 +0100 42)     df = df.dropna()
-```
-
-#### git show — inspect the found commit
-
-Takes the SHA from blame output and shows the full commit: message, author, and diff of every change in that commit.
-
-```bash
-git show <commit-sha>
-```
-
-#### git show --stat — what else did the commit touch
-
-Shows only the filenames and line counts changed in the commit, without the full diff. Useful for quickly understanding the scope of the blamed commit before reading the full diff.
-
-```bash
-git show <commit-sha> --stat
-```
+| Flag | Syntax | Description |
+|---|---|---|
+| `start` | `git bisect start` | Enter bisect mode |
+| `bad` | `git bisect bad [<sha>]` | Mark a commit as broken (defaults to HEAD) |
+| `good` | `git bisect good <sha>` | Mark a commit as working |
+| `reset` | `git bisect reset` | Exit bisect mode and restore HEAD |
+| `run` | `git bisect run <script>` | Automate bisect with a test script |
+| `skip` | `git bisect skip` | Skip a commit that cannot be tested (e.g., won't build) |
+| `log` | `git bisect log` | Show the bisect log (which commits were tested) |
+| `replay` | `git bisect replay <logfile>` | Replay a saved bisect session |
+| `visualize` | `git bisect visualize` | Open gitk to visualize the current bisect range |
 
 ---
 
-## Quick Reference Cheat Sheet
+## Investigation Workflows
 
-A summary of the most commonly used history and inspection commands.
+These workflows combine multiple inspection commands to answer targeted operational questions.
+
+### Git | investigation | blame-to-show drill-down
+
+The most common investigation pattern: find who changed a line, then understand the full context of that change.
+
+> [!todo] Blame-to-show workflow
+>
+> 1. Run `git blame -L <start>,<end> <file>` to find the commit SHA for the line in question
+> 2. Run `git show <sha>` to see the full commit --- message, author, and every file changed
+> 3. Run `git show <sha> --stat` to see the scope (how many files were touched)
+> 4. Run `git log --oneline <sha>~5..<sha>` to see surrounding commits for context
+
+*Step 1: Blame line 5 of `config.py` to find who set `LOG_LEVEL`.*
+
+```bash
+git blame -L 5,5 config.py
+```
+
+```text
+35c16f79 (alp78 2026-04-12 17:55:00 +0200 5) LOG_LEVEL = "INFO"
+```
+
+*Step 2: Show the full commit that introduced it.*
+
+```bash
+git show 35c16f7 --stat
+```
+
+```text
+commit 35c16f79a0e95db0025818ef72708c3d92e34935
+Author: alp78 <alexper.recovery@gmail.com>
+Date:   Sun Apr 12 17:55:00 2026 +0200
+
+    ops: set log level to INFO for production
+
+ config.py | 1 +
+ 1 file changed, 1 insertion(+)
+```
+
+The commit touched only `config.py` and added one line. The message explains the intent: setting the log level for production deployment.
+
+### Git | investigation | data-engineering case studies
+
+#### Tracing a config drift in pipeline settings
+
+**When to run:** When a pipeline configuration value changed unexpectedly and you need to trace every modification.
+**Trigger:** A pipeline starts failing with timeout or memory errors, and the configuration may have drifted from its original value.
+**Context:** Read-only investigation pattern.
+**Purpose:** Build a complete timeline of how a configuration value evolved.
+
+> [!example] Trace the evolution of CACHE_TTL
+>
+> 1. **Find when the constant was introduced:**
+>    ```bash
+>    git log -S "CACHE_TTL" --oneline
+>    ```
+>    Result: `bb3d362` and `102afc6` --- introduced in `102afc6`, added to a second file in `bb3d362`.
+>
+> 2. **View the full change history with diffs:**
+>    ```bash
+>    git log -p -- config.py
+>    ```
+>    This reveals the progression: `300` → `120` (reduced), `300` → `600` (on a parallel branch, then merged with the `120` value winning).
+>
+> 3. **Check the current blame:**
+>    ```bash
+>    git blame -L 1,1 config.py
+>    ```
+>    Shows `2eff67c` --- the commit that set the final value of `120`.
+
+#### Debugging a schema migration regression
+
+**When to run:** After a dbt model or SQL migration changes output unexpectedly.
+**Trigger:** Row counts dropped, a column disappeared, or downstream dashboards show wrong data.
+**Context:** Combine `git log -- models/`, `git diff`, and `git bisect` to isolate the change.
+**Purpose:** Find exactly which migration or model change caused the regression.
+
+> [!example] Isolate a dbt model regression
+>
+> 1. **List recent changes to dbt models:**
+>    ```bash
+>    git log --oneline -- models/ -10
+>    ```
+>
+> 2. **Compare the model file at two points:**
+>    ```bash
+>    git diff v1.0.0 HEAD -- models/staging/stg_daily_prices.sql
+>    ```
+>
+> 3. **If many commits touched the model, bisect:**
+>    ```bash
+>    git bisect start HEAD v1.0.0
+>    git bisect run dbt test --select stg_daily_prices
+>    ```
+>
+> 4. **After finding the culprit, inspect the full commit:**
+>    ```bash
+>    git show <culprit-sha>
+>    ```
+
+#### Auditing secrets exposure in history
+
+**When to run:** When a credential, API key, or secret was accidentally committed and you need to determine the scope of exposure.
+**Trigger:** A secrets scanner flagged a commit, or someone noticed a key in the codebase.
+**Context:** Read-only investigation. Actual remediation (rotating the secret, rewriting history with `git filter-repo`) is a separate operation.
+**Purpose:** Determine when the secret entered history, who committed it, and which branches contain it.
+
+> [!danger] Secrets committed to Git are compromised
+>
+> Even if you delete the file in a subsequent commit, the secret remains in Git history and can be extracted by anyone with read access to the repository. The secret must be rotated immediately --- deleting the file from the working directory does not remove it from history.
+
+> [!success] Remediation steps
+>
+> 1. **Rotate the secret immediately** --- change the API key, password, or token at the source
+> 2. Use `git log -S "<secret-value>"` to find every commit that contains the secret
+> 3. Use `git filter-repo` or BFG Repo-Cleaner to rewrite history (requires force-push and team coordination)
+> 4. Add the file pattern to `.gitignore` and set up a pre-commit hook (e.g., `detect-secrets`) to prevent recurrence
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `git log` shows nothing | Empty repository or detached HEAD on an empty commit | Run `git log --all` to check all branches. Run `git branch -a` to verify branches exist. |
+| `git log -- file` shows nothing | File was renamed and `--follow` was not used | Add `--follow`: `git log --follow -- <file>` |
+| `git diff` shows nothing | All changes are staged (or no changes exist) | Run `git diff --staged` to see staged changes |
+| `git diff --staged` shows nothing | Nothing is staged | Run `git diff` to see unstaged changes, or `git status` for an overview |
+| `git blame` shows the same commit for every line | A bulk-formatting commit touched every line | Use `git blame -w` or set up `.git-blame-ignore-revs` |
+| `git bisect` fails with "not a valid object" | Shallow clone is missing the required commits | Run `git fetch --unshallow` to fetch full history |
+| `git bisect` gives wrong results | Flaky test marked a good commit as bad (or vice versa) | Use `git bisect skip` for untestable commits. Run tests multiple times in the `bisect run` script. |
+| `git reflog` is empty or short | Entries expired (90-day default) or this is a fresh clone (no local history) | Reflog only records local actions. Expired entries cannot be recovered. |
+| `git show ref:path` fails with "does not exist" | The file did not exist at that commit, or the path is wrong | Verify the path with `git ls-tree <ref> -- <path>` |
+| `git log --graph` output is unreadable | Too many branches interleaving | Add `--first-parent` to follow only the main line, or use `gitk --all` for a GUI view |
+
+---
+
+## Operating Guidance
+
+1. **Start broad, then narrow.** Begin with `git log --oneline`, then add `--author`, `--since`, `-- file`, `-S`, or `--grep` to filter.
+2. **Use three-dot for PR reviews.** `git diff main...branch` shows what the branch changed. Two-dot includes unrelated main commits.
+3. **Combine blame and show.** Blame finds the line's commit; show reveals the full context and intent.
+4. **Automate bisect when possible.** `git bisect run <script>` eliminates human error and is faster for large ranges.
+5. **Always reset after bisect.** Forgetting `git bisect reset` leaves HEAD in a detached state at a random commit.
+6. **Use reflog as your safety net.** Before any risky operation (reset, rebase, amend), note the current `HEAD@{0}` SHA. You can always return.
+7. **Ignore formatting in blame.** Use `-w` or `.git-blame-ignore-revs` to see past whitespace-only commits.
+8. **Prefer `--stat` before `-p`.** Get the scope first, then dive into the full diff if needed.
+9. **Never rely on reflog for long-term recovery.** It expires. For important state, create a branch or tag.
+10. **Investigate before you fix.** Read the full commit (`git show`), understand the intent, check surrounding commits, and verify the fix addresses the root cause --- not just the symptom.
+
+---
+
+## Quick Reference
 
 | Command | Purpose |
-|---------|---------|
+|---|---|
 | `git log --oneline -20` | Last 20 commits, compact |
-| `git log --oneline --graph --all` | All branches visualized |
-| `git log --author="alice"` | Only alice's commits |
-| `git log -- file.py` | Commits that touched this file |
-| `git log -S "keyword"` | Commits that added/removed a string |
-| `git diff` | Unstaged changes |
-| `git diff --staged` | Staged changes (what's in next commit) |
-| `git diff main...HEAD` | All changes on your branch vs main |
-| `git blame file.py` | Who wrote each line |
-| `git show abc1234` | Full details of a commit |
+| `git log --oneline --graph --all` | All branches visualized as ASCII DAG |
+| `git log --author="alice" --since="2 weeks ago"` | Author + date filter |
+| `git log -- file.py` | Commits that touched a specific file |
+| `git log --follow -- file.py` | File history through renames |
+| `git log -S "keyword"` | Pickaxe: commits that added/removed a string |
+| `git log --grep="fix"` | Filter by commit message pattern |
+| `git log -p -- file.py` | Full diff per commit for a file |
+| `git log --format="%h %an %s"` | Custom format output |
+| `git log --merges` / `--no-merges` | Filter by merge status |
+| `git log --oneline A..B` | Commits in B but not in A |
+| `git log --left-right A...B` | Symmetric difference with side markers |
+| `git shortlog -sn --all` | Commit count per author |
+| `git diff` | Unstaged changes (working tree vs index) |
+| `git diff --staged` | Staged changes (index vs HEAD) |
+| `git diff main...HEAD` | Branch changes since divergence |
+| `git diff --name-only` / `--stat` | File list / line count summary |
+| `git blame file.py` | Who last modified each line |
+| `git blame -L 40,60 file.py` | Blame a line range |
+| `git blame -w file.py` | Blame ignoring whitespace |
+| `git show <sha>` | Full commit details + diff |
+| `git show <sha> --stat` | Commit file summary |
 | `git show HEAD:file.py` | File content at HEAD |
-
-## Related
-
-- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the daily git commands that generate history
-- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — using reflog and bisect to recover or diagnose
-- [git-common-errors](https://alp78.github.io/elysium/08-Git/git-common-errors) — shallow clone errors and bisect failure scenarios
-- [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-rebase-vs-squash) — how merge strategies affect what `git log --graph` shows
-- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — diff commands used during code review
+| `git show v1.0.0:file.py` | File content at a tag |
+| `git reflog -15` | Last 15 HEAD movements |
+| `git bisect start` / `bad` / `good` | Start binary search for regression |
+| `git bisect run <script>` | Automate bisect with a test |
+| `git bisect reset` | Exit bisect and restore HEAD |
 
 ## References
 
@@ -469,3 +1377,5 @@ A summary of the most commonly used history and inspection commands.
 - [git diff](https://git-scm.com/docs/git-diff)
 - [git blame](https://git-scm.com/docs/git-blame)
 - [git show](https://git-scm.com/docs/git-show)
+- [git bisect](https://git-scm.com/docs/git-bisect)
+- [git reflog](https://git-scm.com/docs/git-reflog)

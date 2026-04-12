@@ -2,14 +2,7 @@
 title: "06 - Pull Requests and Code Review"
 tags:
   - git
-  - github
-  - pull-requests
-  - code-review
-aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge, branch protection, CODEOWNERS, draft PR]
-description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, review rounds, data-engineering checklists, and resolving 'not mergeable' errors."
-created: 2026-03-22
-updated: 2026-04-12
-status: complete
+  - version-control
 ---
 
 # Pull Requests and Code Review
@@ -45,6 +38,13 @@ Every term used throughout this page is defined here. The table is the single so
 | **Merge commit** | A merge strategy that creates a two-parent commit joining the head and base histories. All original commits are preserved. |
 | **Rebase merge** | A merge strategy that replays each head-branch commit on top of the base, one by one, producing new SHAs. No merge commit is created. |
 | **Force-push with lease** | `git push --force-with-lease` — overwrites the remote branch only if no one else has pushed since your last fetch. The safe way to push rewritten history (e.g., after rebase). |
+| **Merge request (MR)** | GitLab's equivalent of a pull request. Same concept — different name. Azure DevOps and Bitbucket use "pull request." |
+| **Merge train** | GitLab's merge queue implementation. MRs queue up and each is tested against the accumulated state of all MRs ahead in the queue. |
+| **Semi-linear merge** | A merge strategy (GitLab, Azure DevOps) that rebases the branch first, then creates a merge commit — combining rebase benefits with merge traceability. |
+| **Review suggestion** | A GitHub feature that lets a reviewer propose exact code changes inline. The author can accept with one click, creating a commit. |
+| **RFC (Request for Comments)** | A design document proposing a significant change, reviewed and approved before implementation begins. Used for changes that affect multiple systems or require cross-team coordination. |
+| **Feature flag** | A runtime toggle that enables or disables a feature without deploying new code. Used to merge large changes behind a flag, then enable them after verification. |
+| **Break-glass** | An emergency procedure that bypasses normal review requirements (e.g., merging without approvals during a production outage). Must be followed by retroactive review. |
 
 ## Conceptual Model
 
@@ -660,6 +660,59 @@ gh pr merge 5 --rebase --delete-branch
 | `--subject` | `gh pr merge 2 --squash --subject "feat: ..."` | Override the merge commit message subject |
 | `--body` | `gh pr merge 2 --squash --body "..."` | Override the merge commit message body |
 
+## Cross-Platform PR and Review Terminology
+
+GitHub calls them **pull requests**. GitLab calls them **merge requests**. Azure DevOps calls them **pull requests**. Bitbucket calls them **pull requests**. The underlying Git mechanics are identical — the differences are in terminology, UI, policy enforcement, and platform-specific features.
+
+### Platform comparison — PR/MR terminology and behavior
+
+| Capability | GitHub | GitLab | Azure DevOps | Bitbucket |
+|---|---|---|---|---|
+| **Name** | Pull Request (PR) | Merge Request (MR) | Pull Request (PR) | Pull Request (PR) |
+| **CLI tool** | `gh pr` | `glab mr` | `az repos pr` | Bitbucket API / `bbpr` |
+| **Draft support** | Yes (`--draft`) | Yes (mark as Draft) | Yes (Draft toggle) | No native draft — use `[WIP]` prefix convention |
+| **Merge strategies** | Merge commit, Squash, Rebase | Merge commit, Squash, Fast-forward, Semi-linear | Merge commit, Squash, Rebase, Semi-linear | Merge commit, Squash, Fast-forward |
+| **Required reviewers** | Branch protection rules | Approval rules (per-project) | Branch policies (per-branch) | Branch permissions |
+| **Code owners** | `.github/CODEOWNERS` | `CODEOWNERS` (root or `docs/`) | Automatic reviewers (branch policy) | No native CODEOWNERS — use default reviewers |
+| **Merge queue** | Yes (Team/Enterprise) | Yes (Premium) | No (use pipeline gates) | No |
+| **Auto-merge** | Yes (`--auto`) | Yes (auto-merge when pipeline succeeds) | Yes (auto-complete) | No native auto-merge |
+| **Squash commit message** | Concatenated commit messages or PR title | Concatenated commit messages | PR title + description | Concatenated commit messages |
+| **Review dismissal** | Configurable (dismiss stale reviews) | Configurable (remove approvals on push) | Configurable (reset votes on push) | Configurable (reset approvals on push) |
+
+### GitLab merge request specifics
+
+GitLab MRs differ from GitHub PRs in several operationally significant ways:
+
+- **Approval rules** are more granular than GitHub — GitLab supports multiple approval groups (e.g., "2 approvals from backend team AND 1 from security") where GitHub supports only a count.
+- **Merge trains** (GitLab's merge queue) test each MR against the accumulated state of all MRs ahead in the queue, similar to GitHub's merge queue but available at the Premium tier.
+- **Semi-linear merge** rebases the MR branch onto the target first, then creates a merge commit — combining rebase benefits with merge traceability.
+- **Fast-forward merge** preserves original commit SHAs (unlike GitHub's "Rebase and merge" which rewrites SHAs).
+- **MR pipelines** run on the merge result, not just the branch — GitLab builds the merged state before actually merging, catching integration issues earlier.
+
+### Azure DevOps pull request specifics
+
+- **Branch policies** are per-branch and more configurable than GitHub's per-repository rules. Policies can require linked work items, specific merge types, build validation, and minimum reviewer counts per branch.
+- **Auto-complete** is Azure DevOps' equivalent of GitHub's auto-merge. When set, the PR merges automatically when all policies are satisfied.
+- **Required reviewers** can be set per-path using branch policies, similar to CODEOWNERS but configured through the UI rather than a file.
+- **Iteration tracking** shows which commits the reviewer has seen, making multi-round reviews easier to follow.
+
+### Bitbucket pull request specifics
+
+- **No native draft PR support** — teams use a `[WIP]` prefix convention in the PR title to signal work-in-progress.
+- **No native merge queue** — teams rely on Bitbucket Pipelines with branch-level conditions to serialize merges.
+- **Default reviewers** can be configured per-repository but lack the path-level granularity of CODEOWNERS.
+- **Fast-forward merge** is available and preserves original SHAs — useful for teams that need SHA continuity between local and remote.
+
+> [!tip] Migrating Between Platforms
+>
+> When migrating from one platform to another (e.g., GitHub → GitLab), the key operational changes are:
+>
+> - **CLI commands change** (`gh pr` → `glab mr` → `az repos pr`)
+> - **Branch protection / policy configuration** moves to a different UI and API
+> - **CODEOWNERS** syntax is similar but file location may differ
+> - **Merge strategy names** differ in the UI but produce the same Git graph shapes
+> - **Webhook and CI integration** must be reconfigured for the new platform's event model
+
 ## Branch Protection and Merge Policies
 
 Branch protection rules enforce team policies on critical branches. They prevent direct pushes, require reviews, mandate CI checks, and ensure branches are up to date before merge. These are GitHub platform features — not Git mechanics.
@@ -782,6 +835,80 @@ infra/                      @sre-team
 models/                     @analytics-team
 ```
 
+## Governance, Compliance, and Review Accountability
+
+In regulated environments (financial services, healthcare, SOC 2, PCI DSS), code review is not just a quality practice — it is an auditable control. Auditors examine who reviewed, when, whether the review was fresh at merge time, and whether bypass mechanisms were used appropriately. This section covers the governance aspects that go beyond basic branch protection.
+
+### Approval delegation and authority
+
+Not all reviewers carry equal authority in compliance contexts. Organizations must define:
+
+| Role | Authority | Platform Mechanism |
+|---|---|---|
+| **Code owner** | Required reviewer for specific paths — PR cannot merge without their approval | CODEOWNERS file (GitHub, GitLab) or branch policy (Azure DevOps) |
+| **Team lead / tech lead** | Can approve on behalf of absent team members | GitHub: add as CODEOWNERS alternate. GitLab: approval rules with group membership. |
+| **Security reviewer** | Required for PRs touching auth, crypto, secrets, or infrastructure | Add a `security` CODEOWNERS pattern for sensitive paths |
+| **Compliance officer** | May need to sign off on changes to regulated data flows | Separate approval rule or required label (`compliance-approved`) |
+| **Bot / CI service account** | Can report status checks but should not count as a human approval | Configure branch protection to require human reviewers separately from check status |
+
+> [!warning] Bot Approvals Must Not Count as Human Reviews
+>
+> If a CI bot or automation tool can approve PRs, it creates a compliance gap — a change could theoretically be authored, auto-approved, and merged without any human review. Configure branch protection to require approvals from human accounts only. On GitHub, bots' reviews are marked as `BOT` and can be excluded from approval counts.
+
+> [!success] Require CODEOWNERS Review for Compliance-Sensitive Paths
+>
+> In branch protection, enable "Require review from Code Owners." This ensures that changes to sensitive paths (migrations, infrastructure, auth) require approval from the designated owner, not just any reviewer.
+
+### Who can dismiss reviews
+
+Review dismissal is a powerful action — it removes a "request changes" block that was intentionally placed by a reviewer. Organizations should define who can dismiss reviews:
+
+- **GitHub:** Repository admins can dismiss reviews by default. Branch protection can restrict this further.
+- **GitLab:** Project maintainers can override approvals. This is configurable per-project.
+- **Azure DevOps:** Branch policy "reset votes on push" auto-dismisses, but manual dismissal requires appropriate permissions.
+
+> [!danger] Uncontrolled Review Dismissal Breaks the Audit Trail
+>
+> If anyone can dismiss a "request changes" review and merge the PR, the review gate is meaningless. In regulated repos, restrict review dismissal to repository admins or a designated compliance role.
+
+> [!success] Log and Justify Every Dismissal
+>
+> When dismissing a review, always leave a comment explaining why (e.g., "reviewer is on PTO, change verified by @alternate-reviewer"). This creates an audit trail for the dismissal decision.
+
+### Emergency and hotfix bypass policy
+
+Every team needs a documented bypass policy for emergencies — a production outage should not be blocked by a reviewer who is asleep. The bypass must be auditable.
+
+| Bypass Mechanism | How it Works | Audit Trail |
+|---|---|---|
+| **Admin override** | Admin merges without required approvals (branch protection allows admin bypass) | GitHub: "merged by admin" is logged. Visible in PR history. |
+| **Temporary rule relaxation** | Temporarily reduce required approvals from 2 to 0, merge, restore | API calls logged. Should be automated and time-limited. |
+| **Emergency branch** | Push directly to a `hotfix/*` branch with relaxed protection, merge to main after review | Commit history shows direct push. Retroactive PR/review should follow. |
+| **Break-glass procedure** | Documented process: declare emergency, merge, file post-incident review | Requires organizational documentation. PR comment or linked incident ticket. |
+
+> [!warning] Every Bypass Must Have a Retroactive Review
+>
+> An emergency bypass is not an exemption from review — it is a deferral. After the immediate fix is deployed, a follow-up review must happen. Document this in your incident response runbook.
+
+> [!success] Automate Bypass Logging
+>
+> Use a GitHub Action or webhook that detects merges without the required number of approvals and automatically opens an issue tagged `needs-retroactive-review`. This ensures no bypass is forgotten.
+
+### Merge strategy and audit compliance
+
+The choice of merge strategy has audit implications:
+
+| Audit Requirement | Merge Commit | Squash | Rebase |
+|---|---|---|---|
+| **Individual commit attribution** | Preserved — each commit retains its author | Lost — only squasher appears as author | Preserved but SHAs change |
+| **Review-to-commit traceability** | Strong — reviewed SHAs are the merged SHAs | Weak — merged SHA differs from reviewed SHAs | Weak — SHAs rewritten on merge |
+| **Branch topology in audit log** | Visible — merge commit records the branch | Not visible — linear history | Not visible — linear history |
+| **Revert granularity** | Per-commit or per-merge | Per-PR only | Per-commit |
+
+> [!info] Compliance Recommendation for Regulated Repositories
+>
+> Use **merge commit** (not squash or rebase) in repositories subject to regulatory audit. The merge commit preserves the exact SHAs that were reviewed, maintains individual author attribution, and provides a clear integration timestamp. Combined with branch protection (required reviews, signed commits, no force-push), this creates the strongest audit trail.
+
 ## Review Workflow
 
 Code review is the human gate in the PR lifecycle. This section covers how to conduct reviews effectively, handle review rounds, and manage the push-review-push cycle.
@@ -827,6 +954,84 @@ After a reviewer requests changes, the author pushes follow-up commits to addres
 > - **Resolve conversations** — after addressing a comment, click "Resolve conversation" in the GitHub UI so the reviewer can see which items are handled.
 > - **Squash on merge, not before** — keep the follow-up commits separate during review. Use `--squash` when merging to collapse them into one clean commit on main.
 
+### Review | Advanced ergonomics | senior reviewer workflows
+
+Experienced reviewers use platform features beyond basic approve/reject to manage large diffs, multi-round reviews, and generated-code-heavy PRs efficiently.
+
+#### Batch comments into a single review
+
+GitHub (and GitLab) allow reviewers to add multiple comments across files before submitting them as a single review. This is critical for two reasons: (1) the author receives one notification instead of a stream, and (2) the reviewer can control whether the overall verdict is "approve," "comment," or "request changes" after seeing the full picture.
+
+**How to batch:** In the GitHub "Files changed" tab, click the `+` button on any line to add a comment, but click "Start a review" instead of "Add single comment." Continue adding comments across files. When done, click "Review changes" at the top to submit all comments with one verdict.
+
+> [!warning] Single Comments Notify Immediately
+>
+> Clicking "Add single comment" (instead of "Start a review") sends an email notification per comment. On a PR with 10 issues, the author receives 10 emails in rapid succession. Always batch into a review.
+
+> [!success] Start a Review, Then Add Comments
+>
+> Use "Start a review" on the first comment, then add subsequent comments. Submit the batch with a single verdict when done.
+
+#### Use review suggestions for precise fixes
+
+GitHub's "suggestion" feature lets a reviewer propose exact code changes inline. The author can accept the suggestion with one click, which creates a commit applying the change. This eliminates ambiguity — the reviewer shows exactly what the code should look like, not just what is wrong.
+
+In the review comment box, use the suggestion syntax:
+
+````text
+```suggestion
+CACHE_TTL = 120  # reduced for production
+```
+````
+
+The author sees a "Commit suggestion" button that applies the change as a new commit on the PR branch.
+
+> [!tip] Batch Multiple Suggestions into One Commit
+>
+> GitHub allows grouping multiple suggestions into a single commit. Select "Add suggestion to batch" on each suggestion, then click "Commit suggestions" to apply them all as one commit. This keeps the history cleaner than one commit per suggestion.
+
+#### Use "Viewed" file tracking
+
+On large PRs, the "Viewed" checkbox on each file in the "Files changed" tab helps reviewers track progress. Marking a file as "Viewed" collapses it and persists across page reloads. This is essential for PRs touching 20+ files — without it, reviewers lose track of which files they have already inspected.
+
+> [!tip] Viewed State Persists Across Sessions
+>
+> "Viewed" status is stored per-reviewer in GitHub's backend. If you close the tab and return later, your progress is preserved. Use this to review large PRs across multiple sessions.
+
+#### Commit-by-commit vs unified diff review
+
+GitHub and GitLab offer two review modes:
+
+| Mode | When to Use | Trade-off |
+|---|---|---|
+| **Unified diff** (default) | Most PRs — see the complete state of all changes | Harder to understand the sequence of changes on large PRs |
+| **Commit-by-commit** | PRs with logical commit structure — review each commit as a separate unit | Requires the author to have clean, well-organized commits (not WIP/fixup noise) |
+
+**Commit-by-commit review** is especially valuable when:
+
+- The author used interactive rebase to organize commits logically before review
+- Each commit represents a distinct change (e.g., "add table," "add indexes," "add seeds")
+- The unified diff is too large to hold in working memory (>400 lines)
+
+> [!warning] Commit-by-Commit Breaks on Squash Merge
+>
+> If the team uses squash merge, the per-commit structure is discarded at merge time. This is fine — commit-by-commit review helps the reviewer understand the PR, even though the final merge produces a single commit. The review comments are preserved on the PR regardless of merge strategy.
+
+#### Reviewing generated-code-heavy PRs
+
+PRs that include generated code (protobuf stubs, OpenAPI clients, dbt compiled SQL, Terraform plan files, lock files) require a different review approach:
+
+1. **Verify the generator ran correctly** — check that the generated output matches the source definition. Review the source (`.proto`, `openapi.yaml`, `schema.yml`), not the generated output.
+2. **Spot-check the generated output** — look for unexpected changes, missing fields, or version-specific quirks. Do not review every line.
+3. **Mark generated files as "Viewed" immediately** — do not waste review cycles on files humans should not edit.
+4. **Use CODEOWNERS to route generated files** — assign generated-code directories to the team that owns the generator, not the consuming team.
+5. **Consider `.gitattributes`** — mark generated files with `linguist-generated=true` so GitHub collapses them by default in the diff view:
+
+```text
+*.pb.go linguist-generated=true
+**/compiled/**/*.sql linguist-generated=true
+```
+
 ### Review | Stacked PRs | sequential dependent changes
 
 Stacked PRs are a series of PRs where each builds on the previous one. PR 2 targets the branch of PR 1 instead of `main`. This pattern lets a developer break large features into reviewable pieces without waiting for each PR to merge before starting the next.
@@ -846,6 +1051,87 @@ Stacked PRs are a series of PRs where each builds on the previous one. PR 2 targ
 > [!success] Update the base after each merge
 >
 > After merging PR N, immediately run `gh pr edit <N+1> --base main` to retarget the next PR in the stack. Then rebase the remaining stacked branches: `git rebase main feat/step-2`.
+
+## Large-Change Strategy
+
+PRs over ~400 lines get slower, shallower reviews. Complex changes — schema redesigns, platform migrations, new service integrations — require deliberate decomposition strategy before the first line of code is written.
+
+### RFC and design-doc-first workflow
+
+For changes that affect multiple systems, alter public APIs, or require cross-team coordination, write a design document (RFC, ADR, or design doc) before opening any code PRs. The document should be reviewed and approved before implementation begins.
+
+> [!todo] RFC-first workflow
+>
+> 1. **Write an RFC / design doc** — describe the problem, proposed solution, alternatives considered, migration plan, and rollback strategy. Store it in the repo (`docs/rfcs/` or `docs/adrs/`) or a shared wiki.
+> 2. **Open the RFC as a PR** — this makes the design reviewable, commentable, and versioned. Reviewers approve the approach before code exists.
+> 3. **Implement in stacked PRs** — after RFC approval, break the implementation into a sequence of reviewable PRs, each referencing the RFC.
+> 4. **Link every implementation PR to the RFC** — include `RFC: #<PR-number>` in the PR description so reviewers can reference the approved design.
+
+> [!tip] When to Use RFC-First
+>
+> Use RFC-first for changes that meet any of these criteria:
+>
+> - Touch 3+ services or repositories
+> - Alter database schemas that affect multiple consumers
+> - Change authentication, authorization, or data residency
+> - Require coordinated rollout across environments
+> - Take more than 1 sprint to implement
+
+### Draft PRs for early feedback
+
+Draft PRs serve a different purpose than RFCs. An RFC discusses *what* to build and *why*. A draft PR shows *how* — early implementation for feedback on approach, API shape, or test strategy before the code is complete.
+
+| Stage | Mechanism | Purpose |
+|---|---|---|
+| **Before code** | RFC / design doc PR | Align on approach, scope, and tradeoffs |
+| **During early code** | Draft PR | Get feedback on API shape, file structure, test approach |
+| **Code complete** | Ready PR | Full review for correctness, safety, and quality |
+
+> [!info] Draft PRs Run CI
+>
+> Draft PRs run CI checks but disable the merge button. This gives the author continuous integration feedback during development without the risk of accidental merge. Convert to "Ready for review" only when the implementation is complete and tests pass.
+
+### Decomposing large changes across multiple PRs
+
+When a feature requires 1000+ lines of change, split it into a sequence of independently reviewable, independently mergeable PRs. Each PR should leave the system in a working state.
+
+> [!todo] Decomposition strategies for large changes
+>
+> - **Vertical slicing** — each PR delivers a thin, end-to-end slice of functionality (e.g., one API endpoint with its model, migration, test, and documentation). Best when each slice is independently valuable.
+> - **Horizontal layering** — first PR adds the data model and migration, second adds the business logic, third adds the API, fourth adds tests. Best when layers have minimal cross-dependencies.
+> - **Feature flag wrapping** — implement the full feature behind a flag. PR 1 adds the flag and dead-code infrastructure. PR 2 adds the feature behind the flag. PR 3 removes the flag after rollout is confirmed. Best for features that affect user-facing behavior.
+> - **Scaffolding + implementation** — PR 1 adds empty files, interfaces, and test stubs. PR 2+ fills in the implementation. Best for new services or modules where file structure should be agreed upon first.
+
+> [!example] Data Engineering: Decomposing a Schema Migration
+>
+> A large schema migration (adding 5 tables, 3 indexes, seed data, and dbt model updates) should not be a single PR:
+>
+> 1. **PR 1:** DDL for new tables (`CREATE TABLE IF NOT EXISTS ...`) — reviewable by DBA
+> 2. **PR 2:** Indexes and constraints — reviewable by DBA, can be tested for performance
+> 3. **PR 3:** Seed data and reference tables — reviewable by domain expert
+> 4. **PR 4:** dbt model updates referencing the new tables — reviewable by analytics team
+> 5. **PR 5:** Application code changes consuming the new models — reviewable by backend team
+>
+> Each PR is small, focused, and reviewable by the right specialist. Each leaves the system in a working state.
+
+> [!warning] Avoid "Part 1 of N" Without a Plan
+>
+> Splitting a PR into "Part 1," "Part 2," etc. without a decomposition plan creates confusion. Reviewers do not know what the final state looks like or whether the current PR introduces technical debt that Part 2 will fix. Always reference the RFC or design doc that shows the complete picture.
+
+> [!success] Document the PR Sequence in the First PR
+>
+> In the first PR of a multi-PR sequence, include a checklist in the description listing all planned PRs with their scope:
+>
+> ```text
+> ## PR sequence
+> - [x] PR 1: DDL for new tables (this PR)
+> - [ ] PR 2: Indexes and constraints
+> - [ ] PR 3: Seed data
+> - [ ] PR 4: dbt model updates
+> - [ ] PR 5: Application code changes
+> ```
+>
+> Update the checklist as each PR merges.
 
 ## Data-Engineering Review Checklists
 

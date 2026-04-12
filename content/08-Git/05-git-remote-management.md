@@ -35,6 +35,11 @@ Every term used in this page is defined here. Refer back to this table when a te
 | **force-push** | Overwrite the remote branch with your local history. `--force` does it unconditionally; `--force-with-lease` adds a safety check. |
 | **lease** | The last-fetched state of a remote branch. `--force-with-lease` compares the current remote tip against this lease — if they differ, someone else pushed and the force-push is rejected. |
 | **tracking branch** | A local branch configured to follow a remote-tracking branch. Enables `git pull` and `git push` without specifying the remote and branch name every time. Set with `git push -u` or `git branch --set-upstream-to`. |
+| **pushurl** | A separate URL used only for `git push`, overriding the default remote URL for writes while leaving the fetch URL unchanged. Configured with `git remote set-url --push <name> <url>`. Stored as `pushurl` in `.git/config`. |
+| **origin/HEAD** | A symbolic ref that points to the default branch of a remote (e.g., `origin/HEAD → origin/main`). Set during `git clone` and updated with `git remote set-head`. Used by commands that need to resolve "the remote's default branch" without naming it explicitly. |
+| **mirror** | A bare clone that replicates all refs (branches, tags, notes) from a source repository. Created with `git clone --mirror` and updated with `git remote update`. Used for disaster recovery and geographic distribution. |
+| **deploy key** | An SSH key pair scoped to a single repository, granting either read-only or read-write access. Used by CI bots and automation scripts. Cannot be shared across repositories on GitHub. |
+| **host alias** | An entry in `~/.ssh/config` that maps a custom hostname (e.g., `github-work`) to a real server (`github.com`) with a specific SSH key. Enables multi-account access to the same server. |
 
 ## Conceptual Model
 
@@ -276,6 +281,57 @@ git remote get-url upstream
 https://github.com/alp78/git-lab-upstream.git
 ```
 
+#### Set a separate push URL (split fetch/push)
+
+**When to run:** When you need to fetch from one server but push to a different one — common in enterprise setups where engineers read from a canonical upstream but write to a fork or a different write endpoint.
+**Trigger:** Fork workflows where `upstream` should be read-only, mirror setups where a read replica serves fetches but writes go to the primary, or CI configurations where builds fetch from a cache but push artifacts to a different remote.
+**Context:** Local config change only. No network access. Modifies the `pushurl` entry in `.git/config` for the named remote. The fetch URL remains unchanged.
+**Purpose:** Route `git fetch` and `git push` to different servers through a single remote alias.
+
+By default, a remote has one URL used for both fetch and push. `git remote set-url --push` adds a separate `pushurl` entry, overriding only the push target while leaving the fetch URL intact.
+
+*Configure the `upstream` remote to fetch from the canonical repository but push to your fork.*
+
+```bash
+git remote set-url --push upstream https://github.com/alp78/git-lab-fork.git
+```
+
+*Verify the split configuration.*
+
+```bash
+git remote -v
+```
+
+```text
+origin	https://github.com/alp78/git-lab.git (fetch)
+origin	https://github.com/alp78/git-lab.git (push)
+upstream	https://github.com/alp78/git-lab.git (fetch)
+upstream	https://github.com/alp78/git-lab-fork.git (push)
+```
+
+The `upstream` remote now fetches from the canonical repo (`git-lab.git`) but pushes to the fork (`git-lab-fork.git`). This is visible in `.git/config` as two separate entries:
+
+```text
+[remote "upstream"]
+    url = https://github.com/alp78/git-lab.git
+    pushurl = https://github.com/alp78/git-lab-fork.git
+    fetch = +refs/heads/*:refs/remotes/upstream/*
+```
+
+> [!tip] When to Use Split URLs
+>
+> - **Fork workflow with a single remote alias:** Fetch upstream changes and push to your fork under one name. Avoids needing both `origin` and `upstream` remotes.
+> - **Read replica / write primary:** Fetch from a fast internal mirror, push to the authoritative GitHub/GitLab instance.
+> - **CI with artifact push:** CI fetches source from GitHub, pushes build artifacts or generated docs to a separate registry remote.
+
+> [!warning] Split URLs Can Cause Confusion
+>
+> When fetch and push URLs differ, `git push` goes to a different server than `git fetch` retrieved from. If you forget the split configuration, you may push to the wrong destination. Always verify with `git remote -v` before the first push after configuring split URLs.
+
+> [!success] Verify Split Configuration Before First Push
+>
+> Run `git remote -v` and confirm both URLs are correct. The `(fetch)` and `(push)` lines will show different URLs when a `pushurl` is configured.
+
 #### Remove a remote
 
 **When to run:** When a remote is no longer needed — the fork relationship ended, the server was decommissioned, or the remote was added by mistake.
@@ -394,6 +450,63 @@ Some teams add remotes for deployment targets — a staging server, a production
 > git push staging main    # deploys to staging
 > git push production main # deploys to production (requires approval)
 > ```
+
+#### Mirror Remote (exact copy)
+
+A mirror remote is a complete, exact copy of another repository — all branches, tags, and refs are replicated. Mirrors are used for disaster recovery, geographic distribution, or read-only backup.
+
+```bash
+git clone --mirror https://github.com/org/repo.git repo-mirror.git
+```
+
+A mirror clone creates a bare repository (no working directory) that tracks all refs from the source. To update the mirror:
+
+```bash
+cd repo-mirror.git
+git remote update --prune
+```
+
+> [!info] Mirror vs Clone
+>
+> A regular `git clone` only creates remote-tracking branches for the remote's branches and checks out the default branch. A `git clone --mirror` copies all refs (branches, tags, notes, stash refs) exactly and configures the remote for `--mirror` push. The mirror is a bare repo — it has no working directory and is intended for replication, not development.
+
+> [!tip] Mirror for Disaster Recovery
+>
+> Schedule `git remote update --prune` as a cron job on a mirror repository to maintain an up-to-date backup. If the primary repository is lost, the mirror can be promoted to primary by changing its URL in all developers' remotes.
+
+#### Read-Only Remote
+
+A read-only remote is a remote where the user has fetch permission but not push permission. This is the default for `upstream` in fork workflows — you fetch changes from the canonical repository but cannot push to it directly.
+
+Read-only remotes are also used for:
+
+- **Vendor repositories** — tracking an external dependency's source without write access
+- **Compliance archives** — a remote that receives pushes only from a CI bot (humans have read-only access)
+- **Reference repos** — shared template repositories that teams clone from but never push to
+
+No special Git configuration is needed for a read-only remote — the access control is enforced server-side. If you accidentally try to push, Git returns `remote: Permission denied` or `remote: Repository not found` (GitHub returns "not found" for repositories where you lack push access).
+
+#### Gerrit-Style Push-for-Review
+
+Gerrit is a code review system used in Android, Chromium, and other large projects. Instead of pushing to a branch directly, developers push to a special ref that creates a code review (analogous to a pull request).
+
+```bash
+git push origin HEAD:refs/for/main
+```
+
+The `refs/for/main` ref is not a branch — it is a Gerrit review queue. Gerrit creates a change, assigns reviewers, and only merges to `main` after approval. This model enforces that **every commit is reviewed before it reaches any branch**, which is stricter than GitHub's PR model where you can push directly to branches you own.
+
+> [!info] Gerrit vs GitHub/GitLab PR Model
+>
+> | Aspect | Gerrit | GitHub / GitLab |
+> |---|---|---|
+> | Review unit | Individual commits | Entire branch (PR/MR) |
+> | Push target | `refs/for/<branch>` | Feature branch, then open PR |
+> | Review granularity | Per-commit review and scoring | Per-PR review |
+> | Merge | Submit after review scores pass | Merge button or CLI merge |
+> | Amend workflow | `git commit --amend && git push` updates the same review | New commits added to PR |
+>
+> Gerrit is common in large-scale infrastructure projects with strict per-commit review requirements. Most data-engineering teams use GitHub or GitLab PR workflows instead.
 
 ## Fetching: Download Without Merging
 
@@ -601,6 +714,97 @@ Each `[deleted]` line indicates a remote-tracking ref that was removed because t
 > ```bash
 > git fetch --prune
 > git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -d
+> ```
+
+## Default-Branch and Remote HEAD Management
+
+When a remote renames its default branch (e.g., `master` → `main`), your local clone retains the old `origin/HEAD` pointer. Commands that implicitly reference the default branch — `git clone`, `git checkout` with no arguments, and some CI tools — will target the stale name until you update the local pointer. This section covers diagnosing and fixing that mismatch, which is a common migration scenario on mature teams.
+
+### Git | remote set-head | update the default branch pointer
+
+`origin/HEAD` is a symbolic ref that tells Git which branch is the default for a remote. It is set during `git clone` and is not automatically updated when the remote changes its default branch.
+
+#### Diagnose a stale default branch pointer
+
+**When to run:** After a `master` → `main` migration on the remote, or when `git remote show origin` reports a different HEAD branch than expected.
+**Trigger:** `git clone` checks out the wrong branch, CI scripts reference `origin/HEAD` and get the old name, or `git remote show origin` shows `HEAD branch: main` but `origin/HEAD` still points to `master`.
+**Context:** `git remote show origin` queries the remote (network read). `git symbolic-ref` is local only.
+**Purpose:** Identify whether the local `origin/HEAD` pointer matches the remote's actual default branch.
+
+*Check what the remote considers its default branch.*
+
+```bash
+git remote show origin
+```
+
+The `HEAD branch: main` line in the output confirms the remote's current default. Compare this with the local pointer:
+
+*Check the local symbolic ref for origin/HEAD.*
+
+```bash
+git symbolic-ref refs/remotes/origin/HEAD
+```
+
+```text
+refs/remotes/origin/main
+```
+
+If this shows `refs/remotes/origin/master` while the remote's HEAD is `main`, the pointer is stale.
+
+#### Auto-detect and update the remote HEAD pointer
+
+**When to run:** After the remote's default branch has been renamed.
+**Trigger:** The `HEAD branch` line in `git remote show origin` does not match `git symbolic-ref refs/remotes/origin/HEAD`.
+**Context:** Network read to query the remote, then local config change. No branches are modified.
+**Purpose:** Automatically update `origin/HEAD` to match the remote's current default branch.
+
+*Let Git query the remote and update the local pointer automatically.*
+
+```bash
+git remote set-head origin --auto
+```
+
+```text
+'origin/HEAD' is unchanged and points to 'main'
+```
+
+If the pointer was stale, this output would instead say `origin/HEAD set to main`. After this command, `origin/HEAD` correctly resolves to the remote's current default branch.
+
+#### Manually set the remote HEAD pointer
+
+If `--auto` fails (e.g., network issues) or you want to override the default, set it manually:
+
+```bash
+git remote set-head origin main
+```
+
+#### Re-point local main branch after remote migration
+
+After updating `origin/HEAD`, if your local `main` branch is still tracking `origin/master`, update the tracking configuration:
+
+```bash
+git branch --set-upstream-to=origin/main main
+```
+
+> [!tip] Full master → main Migration Checklist (Local Side)
+>
+> After the remote has renamed `master` to `main`:
+>
+> 1. `git fetch origin` — download the new `main` ref
+> 2. `git remote set-head origin --auto` — update `origin/HEAD`
+> 3. `git branch -m master main` — rename local branch
+> 4. `git branch --set-upstream-to=origin/main main` — re-point tracking
+> 5. `git fetch --prune` — remove stale `origin/master` ref
+> 6. Update any CI scripts, hooks, or aliases that reference `master`
+
+> [!warning] CI and Automation May Still Reference the Old Name
+>
+> Branch name changes on the remote do not propagate to CI configuration files (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `Jenkinsfile`), pre-commit hooks, or local shell aliases. Search your repository and local config for all references to the old branch name after migration.
+
+> [!success] Search for Stale Branch References
+>
+> ```bash
+> grep -r "master" .github/ .gitlab-ci.yml Jenkinsfile Makefile 2>/dev/null
 > ```
 
 ## Deleting Remote Branches
@@ -838,6 +1042,111 @@ Remote connections use either HTTPS or SSH protocols. The choice affects how you
 > git config --global credential.helper manager
 > ```
 
+### Git | SSH config | multi-account and advanced authentication
+
+Engineers working across personal, corporate, and automation identities need distinct credentials per remote. SSH host aliases in `~/.ssh/config` solve this by mapping different hostnames to different keys, even when all remotes point to the same server (e.g., `github.com`).
+
+#### Multi-account SSH configuration
+
+When you have two GitHub accounts (e.g., personal and corporate), both resolve to `github.com`. SSH host aliases let you route each to a different key.
+
+> [!info]- ~/.ssh/config for two GitHub accounts
+>
+> ```text
+> # Personal GitHub account
+> Host github-personal
+>     HostName github.com
+>     User git
+>     IdentityFile ~/.ssh/id_ed25519_personal
+>     IdentitiesOnly yes
+>
+> # Corporate GitHub account
+> Host github-work
+>     HostName github.com
+>     User git
+>     IdentityFile ~/.ssh/id_ed25519_work
+>     IdentitiesOnly yes
+> ```
+>
+> - `Host` defines the alias used in remote URLs
+> - `HostName` is the actual server
+> - `IdentityFile` points to the private key for that identity
+> - `IdentitiesOnly yes` prevents SSH from trying other keys in the agent (critical when multiple keys are loaded)
+
+After configuring, use the host alias in remote URLs:
+
+```bash
+git remote set-url origin git@github-work:org/repo.git     # corporate
+git remote set-url personal git@github-personal:me/repo.git # personal
+```
+
+#### Conditional Git identity with includeIf
+
+To automatically set the correct Git user name and email based on the repository location, use `includeIf` in `~/.gitconfig`:
+
+> [!info]- ~/.gitconfig with conditional identity
+>
+> ```text
+> [user]
+>     name = Personal Name
+>     email = personal@email.com
+>
+> [includeIf "gitdir:~/work/"]
+>     path = ~/.gitconfig-work
+> ```
+>
+> And in `~/.gitconfig-work`:
+>
+> ```text
+> [user]
+>     name = Corporate Name
+>     email = corporate@company.com
+> ```
+>
+> Any repository cloned under `~/work/` automatically uses the corporate identity. All other repositories use the personal identity.
+
+#### Deploy keys for CI and automation
+
+Deploy keys are SSH keys scoped to a single repository, used by CI bots and automation scripts that need read (or read-write) access to one specific repository without granting access to the entire account.
+
+| Access Type | Mechanism | Scope | Use Case |
+|---|---|---|---|
+| **Deploy key (read-only)** | SSH key added to a single repo on GitHub/GitLab | One repository, read only | CI pulling source code |
+| **Deploy key (read-write)** | SSH key with write access on a single repo | One repository, read-write | CI pushing build artifacts or generated docs |
+| **Machine user** | A dedicated GitHub/GitLab account with its own SSH key | Multiple repositories | Bots that operate across repos (e.g., Dependabot-style) |
+| **GitHub App installation token** | Short-lived token from a GitHub App | Scoped to repos the app is installed on | Fine-grained, rotatable, auditable CI access |
+| **PAT (Personal Access Token)** | HTTPS token scoped by permissions | All repos the user has access to | Quick setup, but broad scope and tied to a person |
+
+> [!warning] Deploy Keys Cannot Be Shared Across Repositories
+>
+> A deploy key (SSH key pair) can only be added to one repository on GitHub. If you add the same public key to a second repository, GitHub rejects it. Each repository that needs automated access requires its own key pair.
+
+> [!success] Use GitHub App Tokens for Multi-Repo CI
+>
+> For CI pipelines that interact with multiple repositories, create a GitHub App, install it on the repositories, and generate short-lived installation tokens. These tokens are scoped, rotatable, and not tied to a person — superior to PATs for automation.
+
+#### Bot and service-account remote access patterns
+
+> [!example] Data Engineering: CI Bot Access Pattern
+>
+> A typical data-engineering CI pipeline needs:
+>
+> - **Read access** to the main repo (fetch source, dbt models, DAG definitions)
+> - **Write access** to push generated artifacts (compiled dbt docs, Airflow DAG bundles, Terraform plan outputs)
+> - **Separate identity** from any human engineer (for audit trails)
+>
+> Configure this with a machine user or GitHub App:
+>
+> ```bash
+> # CI environment — use SSH with a dedicated deploy key
+> git clone git@github.com:org/dbt-models.git
+>
+> # Or use a GitHub App installation token via HTTPS
+> git clone https://x-access-token:${GITHUB_APP_TOKEN}@github.com/org/dbt-models.git
+> ```
+>
+> The CI bot's commits should use a dedicated email (e.g., `ci-bot@company.com`) so `git blame` and audit logs distinguish automated from human changes.
+
 ## Data-Engineering Remote Patterns
 
 Data engineering teams often manage repositories that go beyond application code — dbt projects, Airflow DAG repositories, Terraform state, migration scripts, and generated artifacts all have specific remote management considerations.
@@ -948,4 +1257,11 @@ These rules summarize the operational principles for safe and effective remote m
 | Inspect tracking | `git branch -vv` |
 | Safe force-push | `git push --force-with-lease origin <branch>` |
 | Delete remote branch | `git push origin --delete <branch>` |
+| Set separate push URL | `git remote set-url --push <name> <url>` |
+| Update remote HEAD | `git remote set-head origin --auto` |
+| Check local HEAD pointer | `git symbolic-ref refs/remotes/origin/HEAD` |
+| Rename local branch | `git branch -m <old> <new>` |
+| Re-point tracking | `git branch --set-upstream-to=origin/<branch>` |
+| Clone a mirror | `git clone --mirror <url>` |
+| Update a mirror | `git remote update --prune` |
 | Switch HTTPS to SSH | `git remote set-url origin git@github.com:org/repo.git` |
