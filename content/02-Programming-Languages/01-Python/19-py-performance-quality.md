@@ -18,7 +18,7 @@ status: complete
 > [!abstract]- Summary
 >
 > **Timing & Benchmarking**
-> - `time.perf_counter()` for single-run wall-clock timing; `timeit` for multi-run micro-benchmarks with GC disabled; `%%timeit` in Jupyter for auto-calibrated runs.
+> - `time.perf_counter()` for single-run wall-clock timing; `timeit` for multi-run micro-benchmarks with GC disabled; `\%\%timeit` in Jupyter for auto-calibrated runs.
 > - Benchmark comparisons: set lookup ~2,000× faster than list scan; `.sort()` ~30% faster than `sorted()` due to in-place allocation.
 >
 > **Memory Profiling**
@@ -55,128 +55,232 @@ status: complete
 > [!note]- Glossary
 >
 > **`time.perf_counter()`**
+> - High-resolution monotonic clock in Python for measuring elapsed wall-clock time between two points in the same process.
+> - Used for one-off timing of real code paths where you need an accurate elapsed-duration measurement that is not affected by system clock changes.
 >
-> - High-resolution monotonic clock that returns fractional seconds; unaffected by NTP or DST adjustments. The correct tool for wrapping a single code block to measure elapsed wall-clock time.
-> - Pair with a `t0 = time.perf_counter()` before and `elapsed = time.perf_counter() - t0` after; multiply by 1,000 for milliseconds.
+> > [!warning] Not a benchmarking harness
+> >
+> > A single `perf_counter()` measurement is vulnerable to cache warm-up effects, OS scheduling noise, and incidental background activity. Use it for coarse timing and stage profiling, not for comparing tiny micro-optimisations.
 >
-> > [!tip] Use `perf_counter` for one-off blocks; use `timeit` when comparing two implementations.
->
-> > ---
+> ---
 >
 > **`timeit`**
+> - Python benchmarking utility that executes a statement many times and reports total elapsed time, typically with the cyclic garbage collector disabled during the timed portion.
+> - Used for reliable micro-benchmarks when comparing two small code snippets whose per-call cost is too small for one-off timing to be stable.
 >
-> - Standard-library micro-benchmark harness that disables garbage collection during measurement, runs the statement `number` times, and returns total elapsed seconds. Dividing by `number` gives the per-call average.
-> - `timeit.timeit(stmt, setup, number=N)` is the API form; `%%timeit` in Jupyter auto-calibrates `number` based on runtime.
+> > [!warning] Compare per-call cost, not raw totals
+> >
+> > `timeit` totals depend on `number=`. If two runs use different repetition counts, divide by the number of executions before comparing them.
 >
-> > [!warning] Never compare raw `timeit` totals from different `number=` settings — always normalize to per-call time before comparing.
->
-> > ---
+> ---
 >
 > **`cProfile`**
+> - Built-in deterministic profiler for CPython that instruments function calls and records how often each function runs and how much time is spent in it.
+> - Used to identify which functions dominate runtime before attempting any code changes, so optimisation effort is focused on the real bottleneck.
 >
-> - Deterministic function-call profiler built into CPython. Instruments every function call; records `ncalls` (call count), `tottime` (exclusive time inside the function), and `cumtime` (inclusive time including all sub-calls).
-> - Use `cProfile.Profile()` with `.enable()` / `.disable()`, then wrap with `pstats.Stats` to sort and filter. Sort by `cumtime` to find the root bottleneck; by `tottime` to isolate the hottest leaf function.
+> > [!info] Start with function-level profiling
+> >
+> > `cProfile` tells you which function is expensive, not necessarily which exact line inside that function is expensive. It is usually the first profiler to run, not the last.
 >
-> > [!tip] `cProfile` adds 10–30 % overhead. Use `py-spy` (sampling profiler) for attaching to a running production process with near-zero overhead.
+> ---
 >
-> > ---
+> **`pstats`**
+> - Standard-library module for sorting, filtering, and printing the profiling output produced by `cProfile`.
+> - Used to interpret profiler output by ordering the results on metrics such as cumulative time or exclusive time instead of reading an unsorted call list.
+>
+> > [!tip] Sort by `cumtime` first
+> >
+> > `cumtime` usually surfaces the root bottleneck function or call path. After that, `tottime` helps isolate the hottest leaf function doing the direct work.
+>
+> ---
+>
+> **`tottime` / `cumtime`**
+> - `tottime` is the time spent inside a function body itself, excluding time in subcalls; `cumtime` is the total time attributable to that function including the functions it called.
+> - Used to distinguish between a slow orchestrator function and a slow leaf function, which changes where the optimisation should happen.
+>
+> > [!warning] High `cumtime` does not mean the function body itself is slow
+> >
+> > A wrapper function can have very high `cumtime` simply because it calls an expensive helper. Use `tottime` to find direct local work and `cumtime` to find the expensive path.
+>
+> ---
 >
 > **`tracemalloc`**
+> - Built-in Python memory-allocation tracer that records where Python heap allocations originated, including source file and line number.
+> - Used to identify which statements or code paths are responsible for current and peak memory usage during a workload.
 >
-> - Built-in allocation tracer that records the source file and line number of every Python heap allocation. `start()` activates tracing; `take_snapshot()` captures all current allocations; `get_traced_memory()` returns `(current_bytes, peak_bytes)`.
-> - `snapshot.statistics("lineno")` groups by source line, making it easy to identify which list comprehension or dict expression dominates memory use.
+> > [!warning] Stop tracing when finished
+> >
+> > Leaving `tracemalloc` active changes later measurements in the same process and adds tracing overhead. Start it deliberately, capture what you need, then stop it.
 >
-> > [!warning] Forgetting to call `tracemalloc.stop()` leaves the tracer active, which distorts all subsequent allocation measurements in the same process.
->
-> > ---
+> ---
 >
 > **`sys.getsizeof()`**
+> - Standard-library function that returns the shallow size in bytes of one Python object.
+> - Used for quick inspection of object overhead when you need to understand the memory cost of the container itself rather than the full transitive object graph.
 >
-> - Returns the shallow byte size of a single Python object — the object's own struct plus internal bookkeeping, but not the objects it references. For a `list`, this is the pointer array; for a `dict` or `set`, this is the hash-table header and slot array.
-> - An empty `list` is 56 bytes; an empty `set` is 216 bytes; a `list` of 10,000 integers reports ~80 KB in pointers but ~2.8 MB when the `int` objects are included.
+> > [!warning] Shallow size is not total footprint
+> >
+> > For containers such as `list`, `dict`, and `set`, `sys.getsizeof()` excludes the memory occupied by the referenced elements. It is useful, but it systematically understates true heap usage for nested structures.
 >
-> > [!warning] `sys.getsizeof` systematically understates container memory. Use `tracemalloc` or `pympler.asizeof` to measure the true heap footprint including all referenced objects.
->
-> > ---
+> ---
 >
 > **`memoryview`**
+> - Zero-copy view object over a bytes-like buffer that lets Python code slice or expose binary data without allocating a new bytes object.
+> - Used to reduce copying overhead in binary-data pipelines, parsing code, and high-volume I/O paths where repeated slicing would otherwise allocate heavily.
 >
-> - Zero-copy buffer-protocol wrapper over any bytes-like object (`bytes`, `bytearray`, `array.array`, NumPy array). Slicing a `memoryview` returns another `memoryview` referencing the same underlying memory — no allocation occurs.
-> - Exposes `format` (e.g., `'B'` for unsigned byte, `'i'` for signed int) and `itemsize`. Calling `bytes(mv[a:b])` materializes the slice into a new object only when explicitly requested. C# equivalent: `Span<T>`.
+> > [!info] A view shares the original memory
+> >
+> > Slicing a `memoryview` usually produces another view onto the same underlying buffer. Convert explicitly to `bytes(...)` only when you actually need an independent copy.
 >
-> > [!warning] `memoryview` only works on contiguous, bytes-like objects. Passing a plain `list` raises `TypeError: a bytes-like object is required`.
->
-> > ---
+> ---
 >
 > **Big-O notation**
+> - Mathematical notation describing how runtime or memory growth scales as input size increases, abstracting away machine-specific constants.
+> - Used to choose the right algorithm or data structure before benchmarking, because a better complexity class usually matters more than micro-level code tuning.
 >
-> - Mathematical shorthand describing how runtime or memory scales with input size n, independent of hardware or constant factors. Common classes: O(1) constant, O(log n) logarithmic, O(n) linear, O(n log n) linearithmic, O(n²) quadratic, O(2ⁿ) exponential.
-> - Guides algorithm selection before benchmarking. Switching from O(n²) to O(n) at n=10,000 yields a 10,000× improvement that no constant-factor tuning can match.
+> > [!warning] Better asymptotics are not always faster at small input sizes
+> >
+> > Constant factors still matter. A theoretically better algorithm can lose on tiny datasets, which is why algorithmic reasoning and measurement must be used together.
 >
-> > [!tip] O(n log n) is not always faster than O(n²) — constant factors dominate at small n. Measure before concluding a theoretically better algorithm is faster for your actual input size.
+> ---
 >
-> > ---
+> **`deque`**
+> - Double-ended queue type from `collections`, optimized for appending and popping at both ends.
+> - Used when a workflow needs efficient front insertion or front removal, such as sliding windows, breadth-first search queues, or ring-buffer patterns.
 >
-> **`ruff`**
+> > [!warning] `deque` solves a different problem than `list`
+> >
+> > `deque` is excellent at both ends, but it is not a drop-in replacement for every list workload. Random indexed access and in-place middle operations are not its strength.
 >
-> - Rust-based Python linter and formatter that replaces `flake8`, `isort`, `pyflakes`, and more in a single binary. Runs 10–100× faster than the tools it supersedes. `ruff check --fix .` auto-fixes lint violations; `ruff format .` reformats code.
-> - Catches style issues, import order problems, undefined names, unused variables, and logic errors. Configurable via `ruff.toml` or `pyproject.toml`.
+> ---
 >
-> > [!tip] `ruff` is not only a formatter. Running `ruff check` without `--fix` surfaces logic errors and import issues that formatters like `black` never report.
+> **Vectorisation**
+> - Replacing explicit Python-level element-by-element loops with bulk operations executed in compiled code, typically through NumPy, Pandas, or Polars.
+> - Used to remove interpreter overhead from numeric and columnar workloads, often producing order-of-magnitude speedups on large datasets.
 >
-> > ---
+> > [!tip] Vectorise the hot path, not everything blindly
+> >
+> > Vectorisation helps when the workload is genuinely columnar or array-oriented. For tiny inputs or highly stateful branching logic, the clearest Python code may still be the right choice.
 >
-> **`mypy`**
+> ---
 >
-> - Gradual static type checker for Python that reads type annotations and reports mismatches before code runs. Supports incremental adoption — unannotated functions are treated as `Any` unless `--strict` is enabled.
-> - `--strict` enables `--disallow-untyped-defs`, `--no-implicit-optional`, `--warn-return-any`, and several other checks. A clean pass without `--strict` does not mean the code is fully typed.
+> **Garbage collector (GC)**
+> - Python memory-management system composed of reference counting plus a cyclic garbage collector for reclaiming reference cycles.
+> - Used automatically by the runtime to release unreachable objects, but it also affects benchmark behavior and pause patterns in allocation-heavy code.
 >
-> > [!warning] `mypy` and `pyright` share most inference rules but diverge on edge cases. Use `pyright` as the primary checker in VS Code and `mypy --strict` in CI; fix all errors in both.
+> > [!warning] `timeit` changes GC behavior during measurement
+> >
+> > `timeit` disables the cyclic garbage collector for the timed section by default. That makes micro-benchmarks more stable, but it can also make GC-sensitive code look better than it behaves in production.
 >
-> > ---
->
-> **`pyright`**
->
-> - Microsoft's static type checker for Python, written in TypeScript and powering the Pylance extension in VS Code. Faster inference than `mypy`; supports `reportMissingTypeArgument`, `reportUnknownVariableType`, and stricter generics handling.
-> - Configured via `pyrightconfig.json` or `pyproject.toml`. `basic` mode is the default; `strict` mode enables all checks.
->
-> > [!tip] Prefer `pyright` in VS Code for real-time feedback during editing, and `mypy --strict` in CI for enforcement — both checkers surface different edge cases and complement each other.
->
-> > ---
->
-> **GC (Garbage Collector)**
->
-> - Python's memory management layer: primary reference counting (immediate deallocation when `refcount` reaches zero) plus a cyclic garbage collector that handles reference cycles. The cyclic GC runs in generational passes (gen 0, 1, 2) and can introduce unpredictable pauses.
-> - `timeit` disables the cyclic GC during measurement to prevent pauses from inflating benchmark results. GC is automatically re-enabled when `timeit` exits.
->
-> > [!warning] Forgetting that GC is disabled inside `timeit` can cause benchmark results to appear faster than real-world runtime. For GC-sensitive comparisons, pass `gc.enable()` in the `setup` string.
->
-> > ---
+> ---
 >
 > **Generator exhaustion**
+> - One-time consumption behavior of generators and other lazy iterators: once fully iterated, they produce no values on subsequent passes.
+> - Used to explain a common correctness bug in data pipelines where a lazy iterable is accidentally consumed once and then silently reused as if it still contained data.
 >
-> - A generator object can only be iterated once. After the final `yield`, subsequent iteration returns an empty sequence immediately with no error or warning. Applies to generator expressions, `filter()`, `map()`, and any function containing `yield`.
-> - Silent exhaustion is the most common correctness bug in Python data pipelines: passing an already-consumed generator to a second consumer silently drops all data.
+> > [!danger] Reusing an exhausted generator usually fails silently
+> >
+> > A second iteration over the same generator typically yields nothing and raises no error. Materialize with `list()` or recreate the generator if multiple passes are required.
 >
-> > [!danger] Generators are not rewindable. There is no reset method. Always convert to `list()` or `tuple()` before storing a generator in a variable that will be iterated more than once.
->
-> > ---
+> ---
 >
 > **`line_profiler`**
+> - Third-party profiler that measures time spent on each individual source line inside selected functions.
+> - Used after function-level profiling has already identified the slow function and you need to pinpoint the exact line responsible.
 >
-> - Third-party profiler (`pip install line-profiler`) that measures time spent on each individual source line rather than per function. Decorated with `@profile`; run via `kernprof -l -v script.py`. Produces per-line `% Time` and `Hits` columns.
-> - Use after `cProfile` has identified a hot function to pinpoint the exact line within that function responsible for the slowdown.
+> > [!tip] Use it after `cProfile`, not instead of it
+> >
+> > Running line-level profiling across everything is usually excessive. First find the hot function, then zoom in to the hot line.
 >
-> > [!tip] Only profile representative, production-scale input data. Profiling with a toy dataset produces line timings that do not reflect the real bottleneck distribution at production row counts.
+> ---
 >
-> > ---
+> **Cyclomatic complexity**
+> - Structural metric counting the number of independent execution paths through a function, driven by branches such as `if`, `elif`, loops, and exception paths.
+> - Used as a maintainability signal because functions with many branches become harder to test exhaustively and harder to reason about safely.
 >
-> **`Polars .profile()`**
+> > [!warning] High complexity is usually a design smell, not just a style issue
+> >
+> > A complex function is harder to test, review, and modify. Reducing complexity often improves correctness and readability before it improves speed.
 >
-> - Method on a Polars `LazyFrame` that executes the lazy query plan and returns per-node timing in microseconds alongside the result DataFrame. Exposes the actual operator execution order after plan optimization.
-> - Use `.explain()` first to inspect the optimized plan without executing; use `.profile()` to measure per-node cost. Run against a representative sample (≥ 1 M rows) — small frames fit in CPU cache and do not expose memory-bandwidth bottlenecks.
+> ---
 >
-> > [!warning] `.profile()` on a small dataset underestimates production node times. Node costs that appear negligible at 10,000 rows can dominate at 10,000,000 rows once memory bandwidth is saturated.
+> **Guard clause**
+> - Early-return pattern that handles invalid or terminating conditions immediately, instead of nesting the main logic deeper inside multiple `if` blocks.
+> - Used to flatten control flow, reduce nesting, and make each branch independently readable and testable.
+>
+> > [!tip] Guard clauses improve structure more than speed
+> >
+> > Their main benefit is clarity and lower complexity, not raw runtime performance. They are a code-quality tool first.
+>
+> ---
+>
+> **`ruff`**
+> - Fast Python linter and formatter written in Rust that can replace several older style and import-order tools in one executable.
+> - Used to catch style violations, undefined names, unused imports, and many low-cost defects before code review or runtime.
+>
+> > [!info] Linting and formatting are not the same thing
+> >
+> > `ruff format` enforces code layout, while `ruff check` reports correctness and style issues. A formatter alone does not replace linting.
+>
+> ---
+>
+> **`mypy` / `pyright`**
+> - Static type checkers that analyze Python type annotations and report mismatches without executing the program.
+> - Used to turn type hints into enforceable contracts so interface mismatches, nullable mistakes, and incorrect return-type assumptions are caught before runtime.
+>
+> > [!warning] A clean run is only as strong as the configuration and annotations
+> >
+> > Weak settings or widespread untyped code allow many defects to pass through. Static checking becomes valuable only when type coverage and checker strictness are taken seriously.
+>
+> ---
+>
+> **`@overload`**
+> - Typing construct for declaring multiple static call signatures for one function implementation, allowing type checkers to infer different return types from different argument patterns.
+> - Used when one runtime function can return different shapes depending on flags or input types, and that behavior needs to be expressed precisely to static analyzers.
+>
+> > [!info] Overloads are for the type checker, not runtime dispatch
+> >
+> > The overload stubs describe the public contract, but only one real implementation executes at runtime. They improve editor and checker precision; they do not create multiple runtime functions.
+>
+> ---
+>
+> **Mutable default argument**
+> - Python function-definition pitfall where a mutable default value such as `[]` or `{}` is evaluated once at definition time and then reused across calls.
+> - Used as a core correctness concept because it causes hidden shared state between calls, producing bugs that look random until the function’s lifetime semantics are understood.
+>
+> > [!danger] The default is created once, not per call
+> >
+> > Use `None` as the default and create the mutable object inside the function body. Otherwise one caller can accidentally affect later callers through shared state.
+>
+> ---
+>
+> **Amdahl’s law**
+> - Performance principle stating that the overall speedup of a system is limited by the fraction of total time spent in the part you improve.
+> - Used to justify bottleneck-first optimisation: speeding up a non-dominant stage yields little total benefit even if that individual stage becomes much faster.
+>
+> > [!tip] Optimise the slowest meaningful stage first
+> >
+> > If one stage dominates end-to-end runtime, that stage is where engineering effort has leverage. Improving already-fast stages can look busy while producing almost no real gain.
+>
+> ---
+>
+> **`@lru_cache`**
+> - Standard-library decorator that memoizes function results so repeated calls with the same arguments return from cache instead of recomputing.
+> - Used to eliminate repeated pure-function work, especially in recursive or repeated-lookup patterns where the same inputs recur many times.
+>
+> > [!warning] Cache only deterministic, side-effect-free work
+> >
+> > Memoization is appropriate only when the function’s output depends solely on its inputs. Caching time-sensitive, I/O-bound, or side-effecting functions usually creates stale or incorrect behavior.
+>
+> ---
+>
+> **NumPy view**
+> - Array slice or reshaped object that shares the same underlying memory as another NumPy array instead of allocating a new independent buffer.
+> - Used to avoid copying large numeric arrays when the workload only needs another window or interpretation of the same data.
+>
+> > [!warning] Mutating the view mutates the source
+> >
+> > A view is fast precisely because it shares memory. Call `.copy()` when you need an independent array that can be changed safely without affecting the original.
 
 This note is the Python reference for performance measurement and code quality tooling.
 
@@ -190,13 +294,13 @@ Accurate measurement is the foundation of every performance improvement. Python 
 
 #### Measure elapsed time with perf_counter and timeit
 
-`time.perf_counter()` is used for one-off measurements; capture a start timestamp, run the work, subtract. `timeit.timeit(stmt, number=N)` runs `stmt` N times and returns total seconds. Dividing by N gives the per-iteration cost. `%%timeit` in Jupyter auto-calibrates the number of runs.
+`time.perf_counter()` is used for one-off measurements; capture a start timestamp, run the work, subtract. `timeit.timeit(stmt, number=N)` runs `stmt` N times and returns total seconds. Dividing by N gives the per-iteration cost. `\%\%timeit` in Jupyter auto-calibrates the number of runs.
 
 > [!info] Timing tools
 >
 > - `time.perf_counter()` — high-resolution monotonic wall-clock timing
 > - `timeit` — reliable micro-benchmarks (disables GC, runs N×, returns total seconds)
-> - `%%timeit` in Jupyter — auto-calibrates number of runs
+> - `\%\%timeit` in Jupyter — auto-calibrates number of runs
 > - Always warm up first (imports, caching effects) before benchmarking
 > - C# equivalent: `BenchmarkDotNet`, `Stopwatch`
 

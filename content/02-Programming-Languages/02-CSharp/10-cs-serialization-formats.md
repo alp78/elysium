@@ -52,7 +52,7 @@ status: complete
 > >
 > > Use Parquet whenever the workload is columnar (BI queries, ML feature stores, batch ETL intermediate files). Its on-disk size is typically 5–10x smaller than CSV for the same data.
 >
-> > ---
+>  ---
 >
 > **Protocol Buffers (Protobuf)**
 >
@@ -63,7 +63,7 @@ status: complete
 > >
 > > Without the `.proto` or generated classes, a Protobuf blob is opaque. Distribute the schema file or use a schema registry alongside the data.
 >
-> > ---
+>  ---
 >
 > **Apache Avro**
 >
@@ -74,7 +74,7 @@ status: complete
 > >
 > > The schema block stored in the file header is valid JSON text. The records that follow are binary-encoded. Parsing the file with a text editor will show a readable JSON header followed by unreadable binary data.
 >
-> > ---
+>  ---
 >
 > **`Parquet.Net`**
 >
@@ -85,7 +85,7 @@ status: complete
 > >
 > > Column access, schema inspection, and read options use different patterns than Python's `pyarrow.parquet`. PyArrow code does not translate directly to `Parquet.Net`.
 >
-> > ---
+>  ---
 >
 > **`Google.Protobuf`**
 >
@@ -96,7 +96,7 @@ status: complete
 > >
 > > Add `<PackageReference Include="Grpc.Tools" />` and `<Protobuf Include="*.proto" />` to the `.csproj`; MSBuild runs `protoc` automatically on every build.
 >
-> > ---
+>  ---
 >
 > **`Apache.Avro`**
 >
@@ -107,7 +107,7 @@ status: complete
 > >
 > > The generic API is suitable for tools and ad-hoc queries. For production Kafka consumers and producers, use the code-generated specific API — it avoids `GenericRecord` dynamic dispatch overhead and provides compile-time field safety.
 >
-> > ---
+>  ---
 >
 > **`MemoryMappedFile`**
 >
@@ -118,7 +118,7 @@ status: complete
 > >
 > > Memory-mapped files require that record boundaries are known in advance. Use `MemoryStream` for variable-length serialized payloads and reserve `MemoryMappedFile` for fixed-stride binary structures.
 >
-> > ---
+>  ---
 >
 > **`BinaryPrimitives`**
 >
@@ -129,7 +129,7 @@ status: complete
 > >
 > > Do not rely on `BinaryWriter`/`BinaryReader` defaults in cross-platform or network code. Use `BinaryPrimitives` methods with an explicit endianness suffix so the intent is visible in code review.
 >
-> > ---
+>  ---
 >
 > **compression codec**
 >
@@ -140,14 +140,6 @@ status: complete
 > >
 > > Use Snappy for interactive analytics (low decompression latency), Zstd level 3–6 for batch ETL files where storage cost matters, and Gzip only for archival or external data exchange where the receiving tool does not support Snappy or Zstd.
 
-This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Protocol Buffers, Avro, and binary struct layouts — with executable read/write examples and a side-by-side performance benchmark.
-
-### What this note covers
-
-- **Parquet Files** — Parquet.NET read/write, column selection, compression, schema inspection
-- **Protocol Buffers** — `.proto` definition, code generation, serialization/deserialization, nested messages
-- **Apache Avro** — schema definition, generic and specific APIs, file I/O
-- **Format Performance Benchmark** — side-by-side size and speed comparison across formats
 
 ```csharp
 using System.IO;

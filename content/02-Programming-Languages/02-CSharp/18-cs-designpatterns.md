@@ -55,7 +55,7 @@ status: complete
 > >
 > > Patterns are optional tools, not mandatory frameworks. Apply them when the problem recurs and the structure genuinely fits — not because the name sounds appropriate.
 >
-> > ---
+>  ---
 >
 > **Dependency Injection (DI)**
 > - Passing a class's dependencies in from outside (constructor, method, property) rather than creating them internally; decouples business logic from infrastructure
@@ -65,7 +65,7 @@ status: complete
 > >
 > > Registering a Scoped service as `AddSingleton` keeps the Scoped instance alive for the full application lifetime, defeating per-request isolation and causing data leaks across HTTP requests.
 >
-> > ---
+>  ---
 >
 > **`IServiceCollection`**
 > - The ASP.NET Core interface used to register services and their lifetimes before the host is built; central registration point for all DI bindings
@@ -75,7 +75,7 @@ status: complete
 > >
 > > Calling `services.AddXxx<T>()` after `builder.Build()` has no effect — the service container is already frozen. All registrations must complete before `Build()` is called.
 >
-> > ---
+>  ---
 >
 > **Singleton**
 > - A class with only one instance for the application lifetime; controls shared, expensive resources such as connection pools and configuration caches
@@ -85,7 +85,7 @@ status: complete
 > >
 > > The manual `if (_instance == null) { lock ... }` pattern can return a partially-constructed object on pre-.NET 2.0 memory models without `volatile`. Use `Lazy<T>` instead.
 >
-> > ---
+>  ---
 >
 > **`Lazy<T>`**
 > - A BCL wrapper that defers object construction until first access; thread-safe by default under `LazyThreadSafetyMode.ExecutionAndPublication`
@@ -95,7 +95,7 @@ status: complete
 > >
 > > Storing `Lazy<T>.Value` in a local variable defeats lazy initialisation — the object is constructed immediately at that assignment. Always access via the property.
 >
-> > ---
+>  ---
 >
 > **Factory**
 > - A static or injected method that creates and returns the correct concrete type based on a parameter; centralises object creation so callers never reference concrete classes
@@ -105,7 +105,7 @@ status: complete
 > >
 > > A switch expression without a `_ => throw new ArgumentException(...)` arm throws an unguarded `SwitchExpressionException` for any unknown input. Always add the fallback arm.
 >
-> > ---
+>  ---
 >
 > **Observer / event delegate**
 > - A pub/sub mechanism using C# `event Action<T>` and `+=` / `-=` operators; when the subject publishes, all registered handlers are invoked automatically
@@ -115,7 +115,7 @@ status: complete
 > >
 > > A subscriber that registers `publisher.Event += Handler` but never calls `-=` prevents the subscriber from being garbage-collected as long as the publisher lives, silently growing memory. Unsubscribe in `Dispose()` or `StopAsync`.
 >
-> > ---
+>  ---
 >
 > **Strategy**
 > - An interface defining an algorithm contract, with multiple concrete implementations injected at runtime; allows scoring, pricing, or routing rules to change without touching the calling class
@@ -125,7 +125,7 @@ status: complete
 > >
 > > Use an interface for the strategy contract unless concrete shared implementation is genuinely needed. Abstract base classes add coupling that pure interfaces avoid.
 >
-> > ---
+>  ---
 >
 > **Decorator pattern**
 > - A class that implements the same interface as the wrapped object and adds behaviour via composition; the caller is unaware of whether it holds the original or a decorated instance
@@ -135,7 +135,7 @@ status: complete
 > >
 > > C# attributes (`[Required]`, `[Authorize]`) are metadata annotations processed at compile time or via reflection. The Decorator *pattern* adds runtime behavior through wrapping — these are entirely different mechanisms.
 >
-> > ---
+>  ---
 >
 > **Repository pattern**
 > - An interface abstracting data access, with concrete implementations for SQL, in-memory, or GCS; `repo.GetPrices("ASML.AS")` works identically regardless of backend
@@ -145,7 +145,7 @@ status: complete
 > >
 > > Returning `IQueryable<T>` from a repository exposes EF Core implementation details and allows callers to append LINQ clauses that translate to SQL. Return `IReadOnlyList<T>` or `IEnumerable<T>` — the query executes inside the repository.
 >
-> > ---
+>  ---
 >
 > **DataAnnotations**
 > - `System.ComponentModel.DataAnnotations` attributes (`[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`) declare validation constraints on model properties
@@ -155,7 +155,7 @@ status: complete
 > >
 > > Decorating a property with `[Required]` does nothing on its own outside of MVC. Without an explicit `Validator.TryValidateObject` call, constraints are silently ignored. Validation must be triggered.
 >
-> > ---
+>  ---
 >
 > **`System.Reflection`**
 > - BCL namespace for inspecting types, properties, and methods at runtime via `Type`, `PropertyInfo`, `MethodInfo`, and `ConstructorInfo`
@@ -165,7 +165,7 @@ status: complete
 > >
 > > `GetProperty().GetValue()` uses late binding on every call and is 10–100× slower than direct access. Cache `PropertyInfo` objects in static fields, or compile them into typed delegates with `Expression.Lambda<Func<T, object>>()` for near-direct performance.
 >
-> > ---
+>  ---
 >
 > **`Activator.CreateInstance`**
 > - Creates an instance of a type by its `Type` object at runtime without knowing the concrete class at compile time; finds a matching constructor by parameter types

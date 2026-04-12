@@ -40,7 +40,7 @@ status: complete
 > >
 > > Opening an existing file with `'w'` destroys its content immediately. Use `'x'` (exclusive create) or check `Path.exists()` first for files that must be preserved.
 >
-> > ---
+>  ---
 >
 > **`with` statement** — Context manager that calls `close()` automatically when the block exits, even if an exception is raised.
 >
@@ -51,7 +51,7 @@ status: complete
 > >
 > > Manual `f.close()` in a `try/finally` block is verbose and error-prone. The `with` statement is the canonical Python idiom and is enforced by most linters.
 >
-> > ---
+>  ---
 >
 > **`pathlib.Path`** — Object-oriented filesystem path API that replaces `os.path` string manipulation; supports the `/` operator for joining segments.
 >
@@ -62,7 +62,7 @@ status: complete
 > >
 > > `Path.read_text()`, `Path.write_text()`, `Path.exists()`, `Path.glob()`, and `Path.stat()` cover the most common `os.path` and `os` operations in a single, chainable API.
 >
-> > ---
+>  ---
 >
 > **CSV** — Comma-Separated Values; a plain-text tabular format with no schema, no data types, and no support for nesting.
 >
@@ -73,7 +73,7 @@ status: complete
 > >
 > > The `csv` module handles quoting, escaping, and dialect differences (delimiter, line terminator, quotechar) correctly. `split(',')` silently corrupts records with embedded commas.
 >
-> > ---
+>  ---
 >
 > **JSON** — JavaScript Object Notation; a text-based, human-readable format natively supported by web APIs, configuration files, and message brokers.
 >
@@ -84,7 +84,7 @@ status: complete
 > >
 > > Subclass `json.JSONEncoder` and override `default()`, or use `orjson` which handles `datetime`, `UUID`, and `numpy` arrays natively without extra configuration.
 >
-> > ---
+>  ---
 >
 > **orjson** — High-performance JSON library backed by Rust; 3–10x faster than the standard `json` module with native support for `datetime`, `UUID`, and `numpy`.
 >
@@ -95,7 +95,7 @@ status: complete
 > >
 > > `orjson.dumps(obj)` and `orjson.loads(data)` are API-compatible with the standard library for common types. Switch by aliasing: `import orjson as json` — but note the `bytes` return type.
 >
-> > ---
+>  ---
 >
 > **YAML** — YAML Ain't Markup Language; a human-readable config format using indentation-based nesting, commonly used for CI/CD pipelines, Kubernetes manifests, and application config.
 >
@@ -106,7 +106,7 @@ status: complete
 > >
 > > Any YAML document loaded with `yaml.load()` can embed Python object constructors. Always use `yaml.safe_load()` for all external input. Reserve `yaml.load()` only for fully trusted, application-internal documents — and even then, prefer `safe_load`.
 >
-> > ---
+>  ---
 >
 > **pickle** — Python-native binary serialization that can serialize arbitrary Python objects including class instances, closures, and lambdas.
 >
@@ -117,7 +117,7 @@ status: complete
 > >
 > > `pickle.loads()` on a crafted payload can execute any Python code during deserialization. Never load pickle data from untrusted sources (external APIs, user uploads, public object storage). Use JSON or Protobuf for cross-system data exchange.
 >
-> > ---
+>  ---
 >
 > **Pydantic** — Data validation library that uses Python type hints to validate, coerce, and document structured data at runtime; v2 is backed by a Rust core.
 >
@@ -128,7 +128,7 @@ status: complete
 > >
 > > Key v2 changes: `model_validate()` replaces `parse_obj()`, `model_dump()` replaces `dict()`, and validators use `@field_validator` instead of `@validator`. Check the installed version with `pydantic.VERSION` before migrating.
 >
-> > ---
+>  ---
 >
 > **encoding** — The mapping between characters and bytes; UTF-8 is the universal default for all text data in modern systems.
 >
@@ -139,7 +139,7 @@ status: complete
 > >
 > > Python on Windows defaults to `cp1252` for `open()` calls without `encoding=`. A file written on Linux (UTF-8) and read on Windows without specifying encoding silently corrupts non-ASCII bytes. Pass `encoding='utf-8'` on every `open()` call.
 >
-> > ---
+>  ---
 >
 > **async file I/O** — Non-blocking file operations using `aiofiles`; provides `async with aiofiles.open()` compatible with `asyncio` event loops.
 >
@@ -150,7 +150,7 @@ status: complete
 > >
 > > `aiofiles` wraps synchronous file operations in `asyncio.get_event_loop().run_in_executor()`. This prevents blocking the event loop but does not achieve the same concurrency model as `io_uring` (Linux) or IOCP (Windows). For extreme throughput, consider memory-mapped files or in-process buffers.
 >
-> > ---
+>  ---
 >
 > **fsspec** — Filesystem-agnostic file access library; provides a unified `open()` / `glob()` / `ls()` API across local disk, S3, GCS, Azure Blob, HDFS, and HTTP.
 >

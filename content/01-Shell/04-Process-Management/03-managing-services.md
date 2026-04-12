@@ -33,78 +33,93 @@ status: complete
 
 > [!note]- Glossary
 >
-> **Service / Daemon** — a long-running background process (SQL Server, nginx, sshd, Docker, Airflow scheduler) that starts at boot and runs continuously without user interaction. Managed by an init system rather than by the user directly.
+> **Service / Daemon**
+> - A long-running background process managed by the operating system's service manager rather than launched manually for one interactive session.
+> - Used to run infrastructure components continuously, such as databases, web servers, schedulers, and agents, typically across reboots and user logouts.
 >
 > > [!info] Services vs one-shot commands
 > >
-> > A service is registered with the init system and restarts automatically on failure. A one-shot command runs once and exits — it is not a service even if it is long-running.
+> > A service is registered with a service manager and can usually be started, stopped, restarted, and monitored as a managed unit. A one-shot command runs once and exits, even if it runs for a long time.
 >
 > ---
 >
-> **`systemctl`** — the primary command for managing systemd services on modern Linux (Ubuntu 16+, RHEL 7+, Debian 8+). Covers the full lifecycle: `start`, `stop`, `restart`, `reload`, `enable`, `disable`, `mask`, `status`.
+> **`systemctl`**
+> - Primary command-line tool for managing `systemd` units on modern Linux systems, including starting, stopping, restarting, reloading, enabling, disabling, masking, and inspecting services.
+> - Used as the operational interface for controlling service lifecycle and checking whether a service is running now and configured to start at boot.
 >
 > > [!warning] `start` and `enable` are independent
 > >
-> > `start` runs the service now; `enable` creates the boot symlink. A service can be started but not enabled (runs now, gone after reboot) or enabled but not started (boots next reboot only). Use `systemctl enable --now` to do both.
+> > `start` affects the current runtime state; `enable` affects boot-time behavior. Use `systemctl enable --now <service>` when you need both.
 >
 > ---
 >
-> **`journalctl`** — the systemd log viewer. Reads the structured binary journal written by systemd for every unit. Supports filtering by unit (`-u`), time range (`--since`/`--until`), priority level (`-p`), and boot session (`-b`).
+> **`journalctl`**
+> - Command-line viewer for the `systemd` journal, which stores structured logs for services, the kernel, and other system components.
+> - Used to inspect service startup failures, crash loops, restart events, and recent logs without needing separate flat log files.
 >
 > > [!tip] Always filter by unit
 > >
-> > `journalctl` without `-u` dumps all system logs simultaneously, which is overwhelming. `journalctl -u <service> -f` is the systemd equivalent of `tail -f` scoped to a single service.
+> > `journalctl` without filters can be overwhelming. `journalctl -u <service> -f` is the usual way to follow logs for one service only.
 >
 > ---
 >
-> **Unit file** — a systemd configuration file (`.service`, `.timer`, `.socket`) that defines how a service is started, stopped, and managed. Located in `/lib/systemd/system/` (package defaults) or `/etc/systemd/system/` (local overrides).
+> **Unit file**
+> - A `systemd` configuration file that defines how a unit such as a service, timer, or socket should be started, ordered, stopped, and supervised.
+> - Used to declare service behavior, including the executable, restart policy, dependencies, environment, and startup conditions.
 >
 > > [!warning] Edit overrides, not package defaults
 > >
-> > Never edit files under `/lib/systemd/system/` — package upgrades overwrite them. Always create overrides in `/etc/systemd/system/` or use `systemctl edit <service>` to create drop-in files. Run `systemctl daemon-reload` after any edit.
+> > Vendor unit files usually live under `/usr/lib/systemd/system/` or `/lib/systemd/system/`, depending on the distribution. Do not edit them directly; create overrides under `/etc/systemd/system/` or use `systemctl edit <service>`, then run `systemctl daemon-reload`.
 >
 > ---
 >
-> **Service state** — a service can be `active (running)`, `inactive (dead)`, `activating`, `deactivating`, `failed`, or `masked`. Shown by `systemctl status`.
+> **Service state**
+> - Runtime or management status reported by the service manager, such as `active`, `inactive`, `failed`, `activating`, `deactivating`, or `masked`.
+> - Used to distinguish whether a service is currently running, stopped cleanly, failed during startup or runtime, or deliberately blocked from being started.
 >
 > > [!info] `inactive` does not mean broken
 > >
-> > A service can be intentionally stopped. Run `systemctl is-enabled <service>` to check whether it should be running at boot. `masked` means it is explicitly blocked from starting by any mechanism.
+> > A service can be `inactive` because it is intentionally stopped or because it is a one-shot unit that completed successfully. `masked` specifically means startup is administratively blocked.
 >
 > ---
 >
-> **OOM killer** — the Linux kernel mechanism that terminates the process with the highest `oom_score` when physical memory and swap are exhausted. Writes a `Killed process` record to the kernel ring buffer, not to the service's own journal.
+> **OOM killer**
+> - Linux kernel mechanism that terminates one or more processes when memory pressure becomes severe enough that the system cannot satisfy allocation safely.
+> - Used by the kernel as a last-resort protection mechanism to keep the whole machine alive when memory exhaustion would otherwise cause wider failure.
 >
-> > [!warning] OOM kills are invisible in service logs
+> > [!warning] OOM kills may not appear clearly in unit-scoped logs
 > >
-> > `journalctl -u <service>` shows the service stopped cleanly, which is misleading. Always cross-check with `dmesg | grep -i oom` or `journalctl -k` when a service restarts unexpectedly with no apparent error.
+> > The decisive evidence is usually in kernel logs rather than only in `journalctl -u <service>`. Cross-check with `journalctl -k` or `dmesg` when a service dies or restarts unexpectedly under memory pressure.
 >
 > ---
 >
-> **`Get-Service` / `Set-Service`** — PowerShell cmdlets wrapping the Windows Service Control Manager (SCM) API. `Get-Service` lists services and their state; `Set-Service` changes startup type; `Start-Service` / `Stop-Service` / `Restart-Service` control the runtime lifecycle.
+> **`Get-Service` / `Set-Service`**
+> - PowerShell cmdlets for interacting with the Windows Service Control Manager: `Get-Service` reads service status, while `Set-Service` changes properties such as startup type.
+> - Used for Windows service administration from scripts and shells, alongside `Start-Service`, `Stop-Service`, and `Restart-Service` for runtime control.
 >
 > > [!info] Startup type vs running state are independent on Windows
 > >
-> > A service can be set to `Automatic` but currently `Stopped`, or `Manual` but currently `Running`. `Get-Service` shows both `Status` and `StartType` as separate properties on the returned `ServiceController` object.
+> > A service can be configured for automatic startup and still be currently stopped, or configured as manual and currently running. Treat runtime status and startup configuration as separate facts.
 >
 > ---
 >
-> **`sc.exe`** — the Windows Service Control command-line tool. Lower-level than PowerShell cmdlets; required for creating, deleting, and configuring services not exposed by `*-Service` cmdlets.
+> **`sc.exe`**
+> - Native Windows Service Control command-line utility for querying, creating, deleting, and configuring services.
+> - Used when low-level service operations are needed that are awkward or unavailable through standard PowerShell service cmdlets.
 >
 > > [!warning] `sc` is a PowerShell alias for `Set-Content`
 > >
-> > Running `sc query <service>` in a PowerShell session calls `Set-Content`, not the service control tool. Always use the full name `sc.exe` in PowerShell scripts.
+> > In PowerShell, `sc` does not call the Service Control utility. Use `sc.exe` explicitly to avoid invoking the alias by mistake.
 >
 > ---
 >
-> **`Get-WinEvent`** — queries Windows Event Log, the Windows equivalent of `journalctl`. Service lifecycle events (start, stop, crash, SCM errors) land in the `System` log. Application-specific events use dedicated provider logs (e.g., `MSSQLSERVER`).
+> **`Get-WinEvent`**
+> - PowerShell cmdlet for querying Windows Event Log records from the System log and provider-specific logs.
+> - Used as the main Windows equivalent of `journalctl` for diagnosing service starts, stops, crashes, recovery actions, and related OS events.
 >
 > > [!info] Key event IDs for service diagnostics
 > >
-> > - **7036** — service state change (started or stopped)
-> > - **7034** — unexpected service termination (crash)
-> > - **7031** — service failed; SCM attempted recovery action
-> > - **2004** — resource exhaustion (Windows OOM equivalent, `Microsoft-Windows-Resource-Exhaustion-Detector` provider)
+> > `7036` records service state changes, `7034` indicates unexpected termination, `7031` indicates a service failure with Service Control Manager recovery action, and `2004` is associated with severe resource exhaustion events.
 
 Every long-running process in your infrastructure — SQL Server, Airflow, Datadog agent, Docker daemon — runs as a systemd service on Linux or a Windows Service on Windows. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 

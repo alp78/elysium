@@ -47,95 +47,95 @@ status: complete
 > - Recommendations: use `rsync -avP` for any file over 1 GB; prefer `gcloud storage` over `gsutil` for new scripts; always verify bcp import row counts against source
 > - Troubleshooting: 5 symptoms covered (rsync full-file transfer, nested directory creation, bcp binary output, sqlcmd dashes line, gcloud scp zone error)
 
-> [!abstract]- Glossary
+> [!note]- Glossary
 >
-> **`rsync`** — Robust file synchronisation tool for Linux, macOS, and WSL.
-> - Transfers only changed bytes within files (delta algorithm), preserves all metadata, supports compression (`-z`), and resumes interrupted transfers automatically with `-P`.
-> - Core flags: `-a` (archive: recursive + metadata), `-v` (verbose), `-z` (compress), `-P` (partial + progress), `-n` (dry-run), `--delete` (mirror), `--bwlimit` (KB/s cap), `-c` (checksum), `--exclude` (glob filter).
+> **`rsync`**
+> - Command-line file synchronization tool for Unix-like systems that can copy files locally or over a remote shell, comparing source and destination to avoid unnecessary transfer work.
+> - Used for reliable directory synchronization, incremental copy, metadata preservation, resumable transfers, dry runs, and controlled mirroring.
 >
 > > [!warning] Trailing slash on source changes what is copied
-> > `rsync src/ dst/` copies the **contents** of `src` into `dst`. `rsync src dst/` copies the **directory itself**, creating `dst/src/`. Combined with `--delete`, a missing trailing slash can wipe the destination. Always dry-run with `-n` first.
+> > `rsync src/ dst/` copies the contents of `src` into `dst`. `rsync src dst/` copies the directory itself, creating `dst/src/`. When combined with `--delete`, this distinction can cause destructive mistakes, so dry-run with `-n` first.
 >
 > ---
 >
-> **Delta transfer** — A transfer strategy that sends only the bytes that changed between source and destination, not entire files.
-> - `rsync` implements the rsync algorithm for byte-level delta transfer; `Robocopy` detects changed files but always copies the full file.
-> - Not supported by `scp`, `gsutil cp`, or `gcloud storage cp` — those always transfer the complete file.
+> **Delta transfer**
+> - Transfer strategy in which a synchronization tool sends only the changed portions of a file when both sides already have a related version, rather than always retransmitting the entire file.
+> - Used to reduce bandwidth and elapsed transfer time for large files that change incrementally between runs.
 >
-> > [!tip] Delta transfer impact on large incrementally-changing files
-> > A 10 GB database backup where 100 MB changed: rsync sends ~100 MB; Robocopy sends 10 GB; scp sends 10 GB. For large files that change incrementally, rsync is significantly more efficient.
->
-> ---
->
-> **`scp`** — Secure Copy Protocol; transfers files over SSH using the same key and agent authentication as `ssh`.
-> - No resume support, no delta transfer, no directory sync with metadata fidelity; for any transfer larger than a single file, prefer `rsync`.
-> - Flag gotcha: `-P` (uppercase) sets the remote port number; `-p` (lowercase) preserves timestamps and permissions — opposite of `ssh`'s convention.
->
-> > [!warning] scp -P vs -p confusion
-> > On `scp`: uppercase `-P` = port number. On `ssh`: lowercase `-p` = port number. Mixing them up is one of the most common scp mistakes.
+> > [!tip] Delta transfer impact on large incrementally changing files
+> > When both source and destination already contain comparable versions of a large file, delta transfer can reduce network usage dramatically. This benefit depends on the tool, the protocol, and whether the destination already has a matching baseline file.
 >
 > ---
 >
-> **`gcloud compute scp`** — GCP CLI command that wraps `scp` with automatic SSH key management and IAP tunnel support for Compute Engine VMs.
-> - Required for VMs behind IAP firewalls; no manual SSH key provisioning needed; `--tunnel-through-iap` routes through Identity-Aware Proxy with no public IP.
-> - `--zone` is required when the VM is not in the default gcloud zone; omitting it causes silent failures or connects to the wrong VM.
+> **`scp`**
+> - Secure copy utility that transfers files over SSH using SSH authentication and encryption.
+> - Used for straightforward one-off file copy between systems when advanced synchronization features such as delta transfer, dry-run comparison, or directory mirroring are not required.
 >
-> > [!warning] Permission errors on gcloud scp
-> > `gcloud compute scp` logs in as the OS Login user, which may lack write access to system directories. Copy to `/tmp/` first, then SSH in and `sudo mv` to the final destination.
->
-> ---
->
-> **`gsutil`** — Legacy Python-based GCP CLI for Google Cloud Storage bucket operations.
-> - Supports parallel transfer (`-m`), recursive copy (`-r`), delta sync (`rsync`), parallel composite upload (splits files over 150 MB into chunks), and server-side bucket-to-bucket copies.
-> - Maintenance mode: still works, but `gcloud storage` is the preferred replacement for new scripts.
->
-> > [!danger] gsutil rsync -d deletes destination objects permanently
-> > `gsutil rsync -d` removes GCS objects not present locally. There is no GCS trash or recycle bin. Always preview with `gsutil rsync -n` (dry-run) before running with `-d`.
+> > [!warning] `scp -P` vs `-p` confusion
+> > In `scp`, uppercase `-P` sets the remote port, while lowercase `-p` preserves modification times and modes. This differs from `ssh`, where lowercase `-p` sets the port.
 >
 > ---
 >
-> **`gcloud storage`** — Modern Go-based GCP CLI replacement for `gsutil`; same semantics with 20–94% faster execution.
-> - Resumable uploads enabled by default (no configuration needed); parallel transfers built-in; identical flag names (`cp`, `rsync`, `-r`).
-> - Prefer for all new scripts and pipelines; existing `gsutil` scripts continue to work without urgency to migrate.
+> **`gcloud compute scp`**
+> - Google Cloud CLI command that wraps SSH-based file copy to Compute Engine instances and can integrate with Google-managed SSH access flows.
+> - Used to copy files to or from GCE VMs without manually assembling the full SSH configuration, especially in environments using OS Login or IAP-based access.
 >
-> > [!tip] gsutil vs gcloud storage
-> > Both work. Use `gcloud storage` for new code — it is faster, handles large file resumption automatically, and is under active development.
->
-> ---
->
-> **`bcp`** (Bulk Copy Program) — SQL Server command-line tool for highest-throughput bulk import and export, bypassing the query engine.
-> - Three directions: `out` (full table export, fastest), `queryout` (query result export), `in` (file import). Character mode (`-c`) is required for human-readable CSV; default is native binary (`-n`), which is not portable.
-> - Silent failure risks: truncates data without error when a CSV field exceeds the target column length; returns exit code 0 even when rows are rejected. Always check the `-e` error log and compare row counts after every import.
->
-> > [!danger] bcp silently truncates and returns exit code 0 on rejection
-> > A `VARCHAR(255)` column receiving a 500-character field is silently truncated — the import reports success but data is damaged. Always run `SELECT MAX(LEN(column_name))` on staging data before import, and always inspect the `-e` error log.
+> > [!warning] Permission errors on `gcloud compute scp`
+> > The SSH login identity may not have write permission to privileged directories. A common safe pattern is copying to a user-writable path such as `/tmp` first, then moving the file with elevated privileges after login.
 >
 > ---
 >
-> **`sqlcmd` / `Invoke-Sqlcmd`** — Command-line tools for executing T-SQL queries against SQL Server and redirecting output to files.
-> - `sqlcmd` (Linux/cross-platform): produces a dashes separator line on row 2 of every CSV export; must be stripped with `sed -i '2d'` before parsing. Flags for clean CSV: `-s ","` (separator), `-W` (trim trailing spaces), `-h -1` (suppress headers).
-> - `Invoke-Sqlcmd` (PowerShell): returns PowerShell objects; pipe to `Export-Csv -NoTypeInformation` for clean, properly quoted CSV with no dashes line.
+> **`gsutil`**
+> - Legacy but still widely used Google Cloud Storage CLI, implemented in Python, for copying, listing, syncing, and managing objects in GCS.
+> - Used for bucket and object operations, including recursive copy, parallel transfer, and storage-to-storage synchronization workflows in existing scripts and operational tooling.
 >
-> > [!tip] Prefer Invoke-Sqlcmd on PowerShell
-> > `Invoke-Sqlcmd | Export-Csv` produces a clean CSV with correct quoting and no post-processing. On Linux, `sqlcmd` output always requires `sed -i '2d'` to remove the dashes separator.
->
-> ---
->
-> **`Robocopy`** (Robust File Copy) — Windows built-in directory replication tool; the closest Windows equivalent to `rsync`.
-> - Supports mirroring (`/MIR` = `/E` + `/PURGE`), restartable mode (`/Z`), multi-threaded copy (`/MT:n`, up to 128 threads), logging (`/LOG`), and bandwidth throttle via inter-packet gap (`/IPG:ms`).
-> - No delta (byte-level) transfer: copies entire changed files, not just changed bytes. No trailing-slash gotcha: always copies source contents into destination.
->
-> > [!warning] Robocopy exit codes differ from Unix conventions
-> > Codes 0–7 all indicate success or informational states; only codes 8+ are errors. Scripts checking `$LASTEXITCODE -ne 0` will treat successful copies as failures. Always check `$LASTEXITCODE -ge 8`.
+> > [!danger] `gsutil rsync -d` deletes destination objects
+> > The `-d` option removes destination objects that are not present at the source. Use `-n` first to preview actions before allowing deletions.
 >
 > ---
 >
-> **Bandwidth limiting** — A transfer option that caps network throughput to prevent saturating shared connections during production hours.
-> - `rsync --bwlimit=<KB/s>`: precise kilobytes-per-second cap. `Robocopy /IPG:<ms>`: cruder inter-packet gap in milliseconds (`/IPG:20` ≈ 3 MB/s). `scp -l <Kbit/s>`: note the unit is kilobits, not kilobytes — 8x difference from rsync.
-> - Apply during business hours on shared network links. Not applying limits during peak hours can starve production traffic.
+> **`gcloud storage`**
+> - Newer Google Cloud Storage command group in the `gcloud` CLI intended as the strategic replacement for many `gsutil` workflows.
+> - Used for modern GCS copy and sync operations in new scripts, with active development and tighter integration into the main Google Cloud CLI.
 >
-> > [!warning] scp -l uses Kbit/s, rsync --bwlimit uses KB/s
-> > `scp -l 50000` = ~6.1 MB/s (kilobits). `rsync --bwlimit=50000` = ~48.8 MB/s (kilobytes). Confusing the units produces transfers 8x faster or slower than intended.
+> > [!tip] `gsutil` vs `gcloud storage`
+> > Both remain useful, but `gcloud storage` is generally the better default for new automation unless a specific existing workflow depends on `gsutil` behavior.
+>
+> ---
+>
+> **`bcp` (Bulk Copy Program)**
+> - SQL Server command-line utility for high-throughput bulk export and import between SQL Server tables or queries and flat files.
+> - Used when speed matters more than convenience, especially for bulk data movement, staging loads, and large table export or import workflows.
+>
+> > [!danger] Always validate `bcp` results explicitly
+> > A successful process exit does not by itself guarantee that all rows loaded exactly as intended. Check row counts, inspect any error file specified with `-e`, and validate field lengths and formats before trusting the load.
+>
+> ---
+>
+> **`sqlcmd` / `Invoke-Sqlcmd`**
+> - SQL Server client tools for executing T-SQL from scripts: `sqlcmd` is the traditional command-line client, while `Invoke-Sqlcmd` is the PowerShell cmdlet form.
+> - Used to run queries non-interactively, export query results, automate administrative tasks, and integrate SQL execution into shell or PowerShell workflows.
+>
+> > [!tip] Structured PowerShell export is often cleaner
+> > `Invoke-Sqlcmd` returns objects that can be piped into `Export-Csv`, which is often more reliable for CSV generation than post-processing text output from `sqlcmd`.
+>
+> ---
+>
+> **`Robocopy`** **(Robust File Copy)**
+> - Windows command-line utility for copying and mirroring directory trees with retry logic, restartable behavior, and rich operational switches.
+> - Used as the standard Windows-native tool for large directory replication, resumable transfers, and scripted copy jobs.
+>
+> > [!warning] Robocopy exit codes do not follow the usual Unix success rule
+> > Exit codes below 8 often indicate success, partial success, or informational conditions rather than failure. Treat only 8 and above as real errors in most automation.
+>
+> ---
+>
+> **Bandwidth limiting**
+> - Transfer control mechanism that intentionally caps throughput so a copy or sync job does not consume the full available link capacity.
+> - Used to protect shared networks and production traffic during business hours while still allowing large transfers to proceed in the background.
+>
+> > [!warning] Different tools use different units and throttling models
+> > `rsync`, `scp`, and `Robocopy` do not express bandwidth control in the same way or with the same units. Always confirm the exact semantics before assuming two tools are using equivalent limits.
 
 Copying a file on a single machine is trivial. Copying 50 GB of pipeline output from a Compute Engine VM to your workstation, synchronizing a directory tree between two servers, or uploading a database backup to Cloud Storage — that is where the tool choice and flags determine whether the transfer takes 5 minutes or 5 hours, and whether a network interruption means starting over or resuming cleanly.
 

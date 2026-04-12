@@ -52,111 +52,94 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`DateTime`** — struct representing a date and time value; carries a `.Kind` property indicating `Utc`, `Local`, or `Unspecified`.
+> **`DateTime`**
+> - .NET value type representing a calendar date and time, with a `Kind` that indicates whether the value should be interpreted as `Utc`, `Local`, or `Unspecified`.
+> - Used for in-process date/time handling when the application already controls the timezone context or when working with APIs that specifically require `DateTime`.
 >
 > > [!warning] `DateTime.Now` vs `DateTime.UtcNow`
 > >
-> > `DateTime.Now` returns local server time and is timezone-dependent. Use `DateTime.UtcNow` for all storage and transmission; convert to local time only for display.
+> > `DateTime.Now` depends on the machine's local timezone and DST rules. Prefer `DateTime.UtcNow` for storage, logs, and transmission, then convert for display only when needed.
 >
-> - `.Kind` defaults to `Unspecified` when a `DateTime` is constructed without an explicit kind — comparing `Unspecified` with `Utc` produces undefined behavior.
-> - Sub-millisecond precision is available via `.Ticks` (100-nanosecond intervals since 0001-01-01) or `.AddTicks()`.
+> ---
 >
-> > ---
+> **`DateTimeOffset`**
+> - .NET value type that combines a date and time with an explicit UTC offset, making the represented instant unambiguous.
+> - Used for database storage, API contracts, and cross-system data exchange when the exact instant must remain clear even across different local timezones.
 >
-> **`DateTimeOffset`** — a `DateTime` paired with an explicit UTC offset; unambiguously identifies a single moment in time regardless of the local timezone.
->
-> > [!info] When to prefer `DateTimeOffset`
+> > [!info] Offset is not the same as timezone identity
 > >
-> > Use `DateTimeOffset` for database storage, API contracts, and any cross-timezone application where the originating offset must be preserved alongside the value.
+> > `DateTimeOffset` preserves the offset that was attached to the value, but it does not preserve the originating timezone rules such as `"Europe/Prague"` or `"America/Chicago"`.
 >
-> - `.UtcDateTime` extracts the UTC equivalent; `.LocalDateTime` converts to the host's local timezone.
-> - `ToOffset(TimeSpan)` reexpresses the same instant in a different offset without changing the underlying UTC value.
+> ---
 >
-> > ---
->
-> **`DateOnly` / `TimeOnly`** — .NET 6+ types for a date without a time component and a time without a date component, respectively.
+> **`DateOnly` / `TimeOnly`**
+> - .NET 6+ value types for representing a date without a time-of-day component and a time-of-day without a date component.
+> - Used when the domain meaning is explicitly only a calendar date or only a wall-clock time, such as birthdays, settlement dates, opening hours, or cut-off times.
 >
 > > [!info] Pre-.NET 6 fallback
 > >
-> > Before .NET 6, use `DateTime.Date` to extract the date portion and `DateTime.TimeOfDay` to extract a `TimeSpan` representing the time.
+> > Before .NET 6, developers commonly used `DateTime.Date` for the date portion and `TimeSpan` or `DateTime.TimeOfDay` for time-only values.
 >
-> - `DateOnly` difference is computed via `.DayNumber` subtraction (returns `int`, not `TimeSpan`).
-> - `TimeOnly` wraps around midnight — `14:30 + 12 hours = 02:30` — so arithmetic must account for day-boundary crossing.
+> ---
 >
-> > ---
+> **`TimeSpan`**
+> - .NET value type representing a duration measured in ticks, days, hours, minutes, seconds, and smaller fixed units.
+> - Used for elapsed time, timeouts, intervals, and differences between two date/time values.
 >
-> **`TimeSpan`** — represents a duration: days, hours, minutes, seconds, milliseconds, and ticks; does not model months or years because those vary in length.
->
-> > [!warning] No month or year arithmetic on `TimeSpan`
+> > [!warning] No month or year semantics
 > >
-> > `TimeSpan` cannot represent "one month" because months have different lengths. Use `DateTime.AddMonths()` or `DateTime.AddYears()` for calendar-aware arithmetic.
+> > `TimeSpan` models fixed-length durations only. It cannot represent calendar concepts like "one month" or "one year" because those vary in real length.
 >
-> - Produced by subtracting two `DateTime` values; access duration in different units via `.TotalDays`, `.TotalHours`, `.TotalSeconds`.
-> - Pass to `DateTime.Add(TimeSpan)` to combine multiple units in a single operation.
+> ---
 >
-> > ---
+> **`TimeZoneInfo`**
+> - .NET type that exposes timezone definitions known to the underlying operating system, including UTC offsets, daylight-saving transitions, and conversion rules.
+> - Used to convert date/time values between UTC and named local timezones correctly instead of hardcoding offsets.
 >
-> **`TimeZoneInfo`** — provides access to the system timezone database; handles DST transitions, UTC offsets, and timezone identity.
->
-> > [!info] Windows vs IANA timezone IDs
+> > [!info] Windows and Linux/macOS may use different timezone IDs
 > >
-> > Windows uses display IDs such as `"Eastern Standard Time"` and `"Tokyo Standard Time"`. Linux and macOS use IANA IDs such as `"America/New_York"`. Use `TimeZoneInfo.FindSystemTimeZoneById()` with the ID format that matches the runtime OS.
+> > Windows commonly uses IDs such as `"Eastern Standard Time"`, while Linux and macOS usually expose IANA IDs such as `"America/New_York"`. The valid ID format depends on the runtime environment.
 >
-> - `ConvertTimeFromUtc(utcDateTime, targetZone)` converts a UTC `DateTime` to the target timezone, accounting for DST.
-> - `GetSystemTimeZones()` returns all 141 Windows timezone entries as `ReadOnlyCollection<TimeZoneInfo>`.
+> ---
 >
-> > ---
+> **`Math` class**
+> - Static .NET class providing common numeric operations such as absolute value, rounding, clamping, powers, logarithms, and trigonometric functions.
+> - Used to centralize standard numeric operations instead of reimplementing arithmetic helpers manually.
 >
-> **`Math` class** — static class exposing arithmetic, rounding, power, logarithm, and trigonometric operations; all methods are overloaded for `int`, `double`, and `decimal`.
->
-> > [!warning] Banker's rounding is the default
+> > [!warning] Midpoint rounding is not "round half up" by default
 > >
-> > `Math.Round(2.5)` returns `2`, not `3`. The default midpoint rounding mode is `MidpointRounding.ToEven`, which rounds to the nearest even number. Use `MidpointRounding.AwayFromZero` for standard rounding.
+> > `Math.Round(2.5)` returns `2` with the default midpoint behavior because the default is `MidpointRounding.ToEven`. Specify the rounding mode explicitly when business rules require a different policy.
 >
-> - `Math.Clamp(value, min, max)` — constrains a value to a range; replaces manual `if`/`else` guard clauses.
-> - `Math.Log` computes the natural logarithm; `Math.Log10` and `Math.Log2` compute base-10 and base-2 logarithms.
+> ---
 >
-> > ---
+> **`Random`**
+> - .NET pseudorandom number generator for non-cryptographic randomness, with optional seeding for reproducible sequences.
+> - Used for simulations, randomized tests, sampling, shuffling, and other scenarios where unpredictability against an attacker is not required.
 >
-> **`Random`** — pseudorandom number generator; `new Random(seed)` creates a seeded instance for reproducible sequences; `Random.Shared` (.NET 6+) is a thread-safe singleton.
->
-> > [!warning] Seeding `new Random()` in tight loops
+> > [!warning] Do not use `Random` for secrets
 > >
-> > Multiple `new Random()` calls within the same clock tick receive the same seed and produce identical sequences. Use `Random.Shared` for casual use or pass an explicit seed for reproducible test data.
+> > `Random` is not a cryptographically secure generator. Use the cryptographic APIs in `System.Security.Cryptography` when generating tokens, keys, salts, or other security-sensitive values.
 >
-> - `Next(min, max)` — returns an integer in `[min, max)`; `NextDouble()` — returns a `double` in `[0.0, 1.0)`.
-> - `Shuffle(array)` (.NET 8+) — in-place Fisher-Yates shuffle; `NextBytes(buffer)` — fills a byte array with random values.
+> ---
 >
-> > ---
+> **`ILogger`**
+> - Logging abstraction from `Microsoft.Extensions.Logging` for structured, leveled application logs that can be routed to different backends.
+> - Used to emit diagnostic and operational events in a way that supports filtering by severity, structured fields, and pluggable sinks.
 >
-> **`ILogger`** — interface from `Microsoft.Extensions.Logging` for structured, leveled log output with pluggable sinks (console, Seq, ELK, GCP).
->
-> > [!warning] `Console.WriteLine` is not a logging substitute
+> > [!warning] `Console.WriteLine` is not a logging framework
 > >
-> > `Console.WriteLine` has no log levels, no timestamps, no structured fields, and no routing. Use `ILogger` with named placeholders so backends can index parameter values.
+> > `Console.WriteLine` has no levels, no structured fields, no routing, and no centralized configuration. Use `ILogger` when the output needs to be operationally useful beyond ad hoc local debugging.
 >
-> - Log levels in ascending severity: `Trace` → `Debug` → `Information` → `Warning` → `Error` → `Critical`; set the minimum via `SetMinimumLevel()`.
-> - In application code, obtain via DI (`builder.Services.AddLogging()`); in scripts and notebooks, build manually with `LoggerFactory.Create()`.
+> ---
 >
-> > ---
+> **`IConfiguration`**
+> - Configuration abstraction from `Microsoft.Extensions.Configuration` that reads settings from layered providers such as JSON files, environment variables, secrets, and command-line arguments.
+> - Used to centralize application settings and let later configuration sources override earlier ones in a controlled way.
 >
-> **`IConfiguration`** — interface from `Microsoft.Extensions.Configuration` for reading settings from layered sources (JSON files, environment variables, command-line arguments).
->
-> > [!info] Source precedence and env var override syntax
+> > [!info] Source order defines override precedence
 > >
-> > Sources are layered in the order they are added to `ConfigurationBuilder`; later sources override earlier ones. Environment variables use `__` (double underscore) as the separator for nested keys — `Pipeline__BatchSize` maps to `Pipeline:BatchSize`.
->
-> - `GetValue<T>("key", defaultValue)` — reads a typed value with a fallback if the key is absent.
-> - `GetSection("path")` navigates nested config; `Bind(object)` maps an entire config section onto a POCO class.
+> > Configuration providers are applied in the order they are added, and later providers override earlier values for the same key. Environment variables commonly use `__` to represent nested sections.
 
-.NET provides date/time types (`DateTime`, `DateOnly`, `DateTimeOffset`, `TimeSpan`), math utilities, random number generation, logging with `ILogger`, and configuration with `IConfiguration`. This note covers all common utility patterns for data engineering.
-
-### What this note covers
-
-- **Date and Time** — `DateTime`, `DateOnly`, `TimeOnly`, `DateTimeOffset`, `TimeSpan`, timezones, formatting, ISO 8601, business day calculations
-- **Math and Random** — `Math` class, rounding modes, `decimal`, `Random.Shared`, `Guid`
-- **Logging** — `ILogger`, `ILoggerFactory`, structured logging, log levels
-- **Configuration** — `IConfiguration`, `appsettings.json`, environment variable overrides, options pattern
 
 #### Imports and warning suppression
 

@@ -72,7 +72,7 @@ status: complete
 > >
 > > Static methods are called on the type (`ClassName.Method()`); instance methods are called on an object (`obj.Method()`). Confusing the two causes `CS0120` (object reference required) or unnecessary object instantiation.
 >
-> > ---
+>  ---
 >
 > **Return type**
 >
@@ -83,7 +83,7 @@ status: complete
 > >
 > > Omitting `return` in any branch of a non-void method is `CS0161` — a compile error, not a runtime surprise. Every code path must return a value of the declared type.
 >
-> > ---
+>  ---
 >
 > **ref / out / in**
 >
@@ -94,7 +94,7 @@ status: complete
 > >
 > > `out` parameters must be assigned on every code path before the method returns — `CS0177` if any path exits without assignment. `in` is only beneficial for large value types (`readonly struct`); for small types like `int`, the copy cost is negligible.
 >
-> > ---
+>  ---
 >
 > **params**
 >
@@ -105,7 +105,7 @@ status: complete
 > >
 > > Mixing `params` with optional parameters can create ambiguous overloads that the compiler cannot resolve. Keep `params` in a dedicated overload separate from optional-parameter variants.
 >
-> > ---
+>  ---
 >
 > **Optional parameter**
 >
@@ -116,7 +116,7 @@ status: complete
 > >
 > > Optional parameters reduce overload count for simple defaults but embed the default value at the call site at compile time. If the default changes in a later version, callers must be recompiled. For versioning-sensitive APIs, explicit overloads are safer.
 >
-> > ---
+>  ---
 >
 > **Func\<T\>**
 >
@@ -127,7 +127,7 @@ status: complete
 > >
 > > `Func<int>` takes no parameters and returns `int`; `Func<int, int>` takes one `int` and returns `int`; `Func<int, string, bool>` takes `int` and `string` and returns `bool`. The return type is always last.
 >
-> > ---
+>  ---
 >
 > **Action\<T\>**
 >
@@ -138,7 +138,7 @@ status: complete
 > >
 > > Use `Action<T>` when the callback performs a side effect and no return value is needed. Using `Func<T, void>` is a compile error — `void` is not a valid type argument. Always reach for `Action<T>` for void callbacks.
 >
-> > ---
+>  ---
 >
 > **Predicate\<T\>**
 >
@@ -149,7 +149,7 @@ status: complete
 > >
 > > `Predicate<T>` and `Func<T, bool>` are structurally identical but are distinct types — they cannot be assigned interchangeably without an explicit lambda wrapper. LINQ methods (`Where`, `Any`, `All`) take `Func<T, bool>`, not `Predicate<T>`.
 >
-> > ---
+>  ---
 >
 > **Lambda expression**
 >
@@ -160,7 +160,7 @@ status: complete
 > >
 > > Expression lambdas support a single expression and return implicitly. Statement lambdas wrap multiple statements in `{}` and require an explicit `return`. Keep statement lambdas under 5 lines — extract longer logic to a named method for readability and testability.
 >
-> > ---
+>  ---
 >
 > **Closure**
 >
@@ -171,7 +171,7 @@ status: complete
 > >
 > > Every closure that captures enclosing variables causes a heap allocation for a compiler-generated display class. Use `static` local functions to prevent capture and eliminate the allocation when the helper does not need enclosing state.
 >
-> > ---
+>  ---
 >
 > **Delegate**
 >
@@ -182,7 +182,7 @@ status: complete
 > >
 > > The `delegate` keyword has two meanings: (1) declare a delegate type (`delegate int Op(int a, int b)`); (2) anonymous method syntax (`delegate(int a, int b) { return a + b; }` — older style replaced by lambdas). Multicast delegates chain handlers via `+=`; only the last handler's return value survives.
 >
-> > ---
+>  ---
 >
 > **Event**
 >
@@ -193,7 +193,7 @@ status: complete
 > >
 > > A public `Action<string> OnClick;` field lets any caller invoke or reassign the entire handler list. `public event Action<string> OnClick;` limits external callers to `+=`/`-=` while keeping invocation internal. Always prefer `event` for public notification points. Use `event?.Invoke()` to skip the null check safely.
 >
-> > ---
+>  ---
 >
 > **Extension method**
 >
@@ -204,7 +204,7 @@ status: complete
 > >
 > > Extension methods require a `using` directive for the namespace of the static class. The compiler preferentially resolves instance methods before extension methods, so an extension method can never shadow a real member. Avoid extending `object` — it pollutes IntelliSense for every type in the codebase.
 >
-> > ---
+>  ---
 >
 > **Method overloading**
 >
@@ -215,7 +215,7 @@ status: complete
 > >
 > > The compiler picks the most specific matching overload. An `int` argument matches `Format(int)` before `Format(double)` via implicit widening. When no single best match exists, the compiler emits an ambiguous call error — resolve with an explicit cast at the call site or by removing the ambiguous overload.
 >
-> > ---
+>  ---
 >
 > **Local function**
 >
@@ -225,8 +225,6 @@ status: complete
 > > [!info] Static local function
 > >
 > > `static int Helper(int x) => x * 2;` declared inside a method cannot reference any enclosing variable — the compiler enforces this. Use `static` local functions for pure helpers that need no outer context; it makes the intent explicit and avoids accidental capture-induced allocations.
-
-This note covers C#'s function system in full: method definitions and return types, parameter modes (`ref`, `out`, `in`, `params`), `Func<T>`/`Action<T>` delegate types, lambda expressions, closures and captured variables, the event/delegate pattern, method overloading, and extension methods that power LINQ.
 
 ## Function Basics
 

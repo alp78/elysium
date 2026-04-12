@@ -65,7 +65,7 @@ status: complete
 > > [!tip] Blueprint vs instance
 > > The class is the mold; the object is the casting. `Dog rex = new Dog("Rex", 5)` — `Dog` is the class, `rex` is the instance. Confusing the two leads to accessing instance members via type name or vice versa.
 >
-> > ---
+>  ---
 >
 > **auto-property**
 > - Shorthand `{ get; set; }` syntax that instructs the compiler to generate a hidden backing field automatically.
@@ -74,7 +74,7 @@ status: complete
 > > [!tip] Auto-property vs public field
 > > `public string Name;` is a public field — no encapsulation, no validation hook, breaks binary compatibility if changed. `public string Name { get; set; }` is an auto-property — callers use the same syntax but the implementation can evolve.
 >
-> > ---
+>  ---
 >
 > **constructor**
 > - A special method with the same name as the class, invoked automatically when `new` allocates an instance.
@@ -83,7 +83,7 @@ status: complete
 > > [!tip] Constructor chaining
 > > Use `: this(...)` to chain overloaded constructors and avoid duplicating initialization logic. Use `: base(...)` in derived classes to initialize parent state before the child body executes.
 >
-> > ---
+>  ---
 >
 > **`ToString()`**
 > - Override of `object.ToString()` that returns a meaningful string representation of an instance.
@@ -92,7 +92,7 @@ status: complete
 > > [!tip] When to override
 > > Override `ToString()` on any class that will appear in log output or console diagnostics. A terse, readable string like `Dog(Rex, age=5)` is far more useful than `YourNamespace.Dog`.
 >
-> > ---
+>  ---
 >
 > **inheritance**
 > - A mechanism where a derived class acquires all fields, properties, and methods from a base class and can extend or override them.
@@ -101,7 +101,7 @@ status: complete
 > > [!tip] Inheritance vs composition
 > > Prefer composition (inject dependencies as constructor parameters) for HAS-A relationships. Reserve inheritance for genuine IS-A relationships where the derived type is a specialization of the base, not merely a user of it.
 >
-> > ---
+>  ---
 >
 > **`virtual`**
 > - Modifier on a base-class method (or property) that marks it as overridable by derived classes.
@@ -110,7 +110,7 @@ status: complete
 > > [!tip] Virtual by default in other languages
 > > C# methods are non-virtual by default (unlike Java/Python). You must explicitly opt in with `virtual`. If polymorphism is broken at runtime, check whether the base method is actually marked `virtual`.
 >
-> > ---
+>  ---
 >
 > **`override`**
 > - Modifier in a derived class that replaces the implementation of an inherited `virtual` (or `abstract`) method.
@@ -119,7 +119,7 @@ status: complete
 > > [!tip] `override` vs `new`
 > > Using the `new` keyword on a derived method hides the base method instead of overriding it. Polymorphism silently breaks: a `Dog` variable calls the derived method, but an `Animal` reference calls the base method. Always use `override`.
 >
-> > ---
+>  ---
 >
 > **`sealed`**
 > - Modifier that prevents a derived class from further overriding a `virtual` method, or prevents any class from inheriting a `sealed` class.
@@ -128,7 +128,7 @@ status: complete
 > > [!tip] Seal at the right level
 > > Seal a method when you have overridden it and want no further subclasses to change it. Seal a class when instantiation must always use the exact implementation (e.g., security-critical or performance-critical types). Do not seal preemptively.
 >
-> > ---
+>  ---
 >
 > **`abstract` class**
 > - A class declared with the `abstract` modifier that cannot be instantiated directly. Contains `abstract` method declarations that derived classes must implement.
@@ -137,7 +137,7 @@ status: complete
 > > [!tip] Abstract class vs interface
 > > Use an abstract class when derived types share genuine state or constructor logic (e.g., `Shape` carries a `Color` field). If there is no shared state, an interface is preferable because it supports multiple implementation.
 >
-> > ---
+>  ---
 >
 > **interface**
 > - A pure contract specifying a set of methods and properties that implementing types must provide; carries no instance state and no constructor.
@@ -146,7 +146,7 @@ status: complete
 > > [!tip] Interface-first design
 > > Depend on interfaces (`IDatabaseConnection`), not concrete classes (`SqlConnection`), so unit tests can inject fakes without a real database. Design interfaces before writing implementations.
 >
-> > ---
+>  ---
 >
 > **polymorphism**
 > - The ability of code written against a base type or interface to invoke the correct derived-type implementation at runtime without knowing the concrete type.
@@ -155,7 +155,7 @@ status: complete
 > > [!tip] Compile-time vs runtime polymorphism
 > > C# also supports compile-time polymorphism via method overloading (same name, different signatures). Runtime polymorphism via `virtual`/`override` is the OOP meaning. Both coexist; do not confuse them.
 >
-> > ---
+>  ---
 >
 > **`is` / `as`**
 > - `is` tests whether an object is of a given type and, in pattern form (`a is Dog d`), binds a typed variable in one step.
@@ -164,7 +164,7 @@ status: complete
 > > [!tip] Prefer `is` pattern over `as` + null check
 > > `if (a is Dog d) { use d; }` is more concise and safer than `var d = a as Dog; if (d != null) { use d; }`. Both are correct; `is` pattern is idiomatic C# since C# 7.
 >
-> > ---
+>  ---
 >
 > **access modifier**
 > - Keywords (`public`, `private`, `protected`, `internal`, `protected internal`, `private protected`) that control the visibility of a type or member.
@@ -173,7 +173,7 @@ status: complete
 > > [!tip] Default is private
 > > Class members default to `private` if no modifier is written. Types (classes, interfaces) default to `internal`. Make the access as restrictive as possible; widening later is non-breaking, narrowing is breaking.
 >
-> > ---
+>  ---
 >
 > **`init`-only property**
 > - A property declared with `{ get; init; }` that can be assigned only in a constructor or object initializer, never after construction completes.
@@ -182,7 +182,7 @@ status: complete
 > > [!tip] `init` vs `readonly` field
 > > `init` properties work with object initializers (`new Config { Port = 5432 }`), making them more ergonomic than readonly fields for data-transfer objects. Both enforce post-construction immutability.
 >
-> > ---
+>  ---
 >
 > **`static`**
 > - Modifier making a field, property, method, or class belong to the type itself rather than to any instance — one shared copy per type.
@@ -191,7 +191,7 @@ status: complete
 > > [!tip] Thread safety with mutable static state
 > > A mutable `static int _count` incremented without synchronization causes race conditions when multiple threads execute concurrently. Use `Interlocked.Increment(ref _count)` for atomic updates, or redesign to avoid shared mutable state entirely.
 >
-> > ---
+>  ---
 >
 > **record**
 > - An immutable reference type with compiler-generated value-based equality, `ToString`, `GetHashCode`, deconstruction, and `with`-expression support.
@@ -200,7 +200,7 @@ status: complete
 > > [!tip] Record equality vs class equality
 > > Two record instances with identical field values are `==` equal. Two class instances with identical fields are not equal by default (reference comparison). This matters in LINQ, sets, and dictionary lookups.
 >
-> > ---
+>  ---
 >
 > **`with` expression**
 > - Creates a new record instance that is a copy of the original with one or more specified properties replaced: `emp with { Salary = 110000 }`.
@@ -209,7 +209,7 @@ status: complete
 > > [!tip] `with` is records-only
 > > The `with` expression works exclusively on `record` and `record struct` types. Applying it to a plain `class` is a compile error. If you need non-destructive updates on a class, implement a manual `Clone()` or `With(...)` factory method.
 >
-> > ---
+>  ---
 >
 > **`record struct`**
 > - The value-type variant of `record` — stack-allocated, no garbage-collection overhead, same value-based equality and `with` expression as `record`.
@@ -217,8 +217,6 @@ status: complete
 >
 > > [!tip] Size threshold for `record struct`
 > > Keep `record struct` types small (16 bytes or fewer). Larger structs are copied on every assignment and method-parameter pass, which can be slower than the heap allocation they were meant to avoid.
-
-C# OOP organises code into classes, interfaces, inheritance hierarchies, and records. This page covers all core constructs with executable examples — from basic class declaration through to records and static members.
 
 ## Classes & Objects
 

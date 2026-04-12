@@ -35,7 +35,7 @@ status: complete
 > >
 > > Yield individual records from each page response so the caller receives a uniform `async for item in paginate(url)` interface regardless of underlying page size or pagination token format.
 >
-> > ---
+>  ---
 >
 > **asyncio.Semaphore**
 >
@@ -46,7 +46,7 @@ status: complete
 > >
 > > Start at `n = 3` for Twelve Data free tier (8 req/min) and `n = 5` for Finnhub. Monitor HTTP 429 responses and halve `n` if they appear; double it if latency is acceptable and no 429s are seen.
 >
-> > ---
+>  ---
 >
 > **asyncio.gather**
 >
@@ -57,7 +57,7 @@ status: complete
 > >
 > > For 50 symbols, `gather(*[fetch(s) for s in symbols])` opens 50 connections at once, exhausting rate limits and connection pools instantly.
 >
-> > ---
+>  ---
 >
 > **aiohttp**
 >
@@ -68,7 +68,7 @@ status: complete
 > >
 > > Instantiate `aiohttp.ClientSession()` at the top of the async entry point and pass it into every fetch coroutine. The session manages the connection pool automatically.
 >
-> > ---
+>  ---
 >
 > **asyncio.as_completed**
 >
@@ -79,7 +79,7 @@ status: complete
 > >
 > > When rendering live price updates, `as_completed` lets you display each quote as it arrives rather than waiting for the slowest symbol in the batch.
 >
-> > ---
+>  ---
 >
 > **asyncio.Queue**
 >
@@ -90,7 +90,7 @@ status: complete
 > >
 > > Set `asyncio.Queue(maxsize=100)` when producers can outpace consumers. Unbounded queues accumulate all items in memory before the consumer starts, defeating the purpose of streaming.
 >
-> > ---
+>  ---
 >
 > **asyncio.wait_for**
 >
@@ -101,7 +101,7 @@ status: complete
 > >
 > > `asyncio.wait_for` raises `TimeoutError` (a subclass of `asyncio.TimeoutError`). Catching `CancelledError` instead silently swallows task cancellations and hides bugs.
 >
-> > ---
+>  ---
 >
 > **subprocess**
 >
@@ -112,7 +112,7 @@ status: complete
 > >
 > > `subprocess.run(f"curl {user_url}", shell=True)` allows `user_url = "; rm -rf /"` to execute as a shell command. Use `subprocess.run(["curl", user_url])` — each list element is passed as a literal argument to `execve`, bypassing the shell entirely.
 >
-> > ---
+>  ---
 >
 > **asyncio.create_subprocess_exec**
 >
@@ -123,7 +123,7 @@ status: complete
 > >
 > > When calling `gcloud`, `bq`, or `sqlcmd` from an async pipeline, `create_subprocess_exec` keeps the event loop alive so other coroutines (heartbeats, queue consumers) continue running while the CLI executes.
 >
-> > ---
+>  ---
 >
 > **ThreadPoolExecutor**
 >
@@ -134,7 +134,7 @@ status: complete
 > >
 > > Wrap `subprocess.run()` in `pool.map(run_expr, exprs)` to issue multiple external commands in parallel. The pool size should not exceed the number of child processes you want active simultaneously.
 >
-> > ---
+>  ---
 >
 > **python-dotenv**
 >
@@ -145,7 +145,7 @@ status: complete
 > >
 > > Even a single accidental commit exposes secrets in git history permanently. Rotate any leaked keys immediately and audit access logs for the interval the key was exposed.
 >
-> > ---
+>  ---
 >
 > **Celery**
 >
@@ -156,7 +156,7 @@ status: complete
 > >
 > > Production Celery tasks should set `max_retries`, `retry_backoff`, and route failed tasks to a dead-letter queue. Silent task disappearance (broker connection lost, worker OOM) is the most common production failure mode.
 >
-> > ---
+>  ---
 >
 > **Redis Queue (RQ)**
 >
@@ -167,7 +167,7 @@ status: complete
 > >
 > > If your pipeline needs a distributed queue but does not require Celery's routing flexibility or canvas composition, RQ is operationally simpler to run and debug.
 >
-> > ---
+>  ---
 >
 > **Dask**
 >

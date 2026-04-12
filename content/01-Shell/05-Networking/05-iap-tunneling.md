@@ -41,7 +41,7 @@ status: complete
 > >
 > > IAP is a GCP-only service. The AWS equivalent is SSM Session Manager (`aws ssm start-session`); the Azure equivalent is Azure Bastion (`az network bastion tunnel`). All three proxy authenticated TCP over HTTPS without exposing the VM publicly.
 >
-> > ---
+>  ---
 >
 > **IAP tunnel**
 >
@@ -52,7 +52,7 @@ status: complete
 > >
 > > IAP closes tunnels after 10 minutes of inactivity at the proxy layer. Use `--iap-tunnel-disable-connection-check` or configure your SQL client to send TCP keepalives to avoid silent drops.
 >
-> > ---
+>  ---
 >
 > **`gcloud compute start-iap-tunnel`**
 >
@@ -63,7 +63,7 @@ status: complete
 > >
 > > Each invocation is an independent process. Run one per service (SQL Server on 1435, Airflow on 8080, PostgreSQL on 5432) in separate terminals — they do not interfere.
 >
-> > ---
+>  ---
 >
 > **`gcloud compute ssh --tunnel-through-iap`**
 >
@@ -74,7 +74,7 @@ status: complete
 > >
 > > `gcloud compute ssh` works identically on Windows (PowerShell) and Linux (bash). On Windows, `gcloud` uses the bundled `ssh.exe` from the Cloud SDK; no additional SSH client installation is needed.
 >
-> > ---
+>  ---
 >
 > **`35.235.240.0/20` (IAP source IP range)**
 >
@@ -85,7 +85,7 @@ status: complete
 > >
 > > The VM's connection table (`ss -tnp`) shows peer IPs in `10.x.x.x` or `35.235.240.0/20` — never your workstation's public IP. IAP terminates the outer tunnel at its proxy; the VM sees only internal GCP traffic.
 >
-> > ---
+>  ---
 >
 > **`roles/iap.tunnelResourceAccessor`**
 >
@@ -96,7 +96,7 @@ status: complete
 > >
 > > `gcloud projects get-iam-policy <project> --format=json | grep -A 2 tunnelResourceAccessor` — an empty result means the role is not granted.
 >
-> > ---
+>  ---
 >
 > **`--local-host-port`**
 >
@@ -107,7 +107,7 @@ status: complete
 > >
 > > Using the same local port as the remote port (e.g., `1433:1433`) fails with "address already in use" if a local SQL Server Express is installed. Always use a non-conflicting local port such as `1435`.
 >
-> > ---
+>  ---
 >
 > **`--iap-tunnel-disable-connection-check`**
 >
@@ -118,7 +118,7 @@ status: complete
 > >
 > > Add this flag to any long-running tunnel (SSMS sessions, Airflow UI, overnight queries). It has no negative side effects and is safe to include in every tunnel command.
 >
-> > ---
+>  ---
 >
 > **Cloud IAP API (`iap.googleapis.com`)**
 >

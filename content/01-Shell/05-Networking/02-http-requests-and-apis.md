@@ -29,35 +29,39 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`curl`** — a command-line tool for transferring data over HTTP, HTTPS, FTP, SFTP, and other protocols, controlled entirely by flags.
-> It supports every HTTP method, custom headers, authentication, TLS, file upload and download, and per-phase timing metrics via `-w`.
+> **`curl`**
+> - Command-line tool for transferring data over network protocols such as HTTP, HTTPS, FTP, and SFTP, with behavior controlled by command-line options.
+> - Used for scripted API calls, authenticated requests, uploads, downloads, custom headers, and low-level timing and response inspection.
 >
 > > [!warning] curl exits 0 on HTTP 4xx/5xx by default
 > >
-> > Without `-f`, a 404 or 500 response saves as a file and the script continues unaware. Use `curl -f` or check `-w '%{http_code}'` in production scripts.
+> > Without `-f`, a 404 or 500 response can still be written to a file and the script continues unaware. Use `curl -f` or inspect `-w '%{http_code}'` in production scripts.
 >
 > ---
 >
-> **HTTP method** — the verb in an HTTP request that declares the intended operation: GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (remove).
-> Every API interaction requires the correct method; an incorrect method returns `405 Method Not Allowed`. PUT replaces an entire resource; PATCH modifies specific fields only.
+> **HTTP method**
+> - Request verb that tells the server what operation the client is asking to perform, such as `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.
+> - Used to express API intent correctly; using the wrong method commonly results in `405 Method Not Allowed` or behavior different from what the caller expected.
 >
 > > [!info] PUT vs PATCH
 > >
-> > Most REST APIs use PATCH for partial updates. Sending PUT with a partial body may silently null-out unspecified fields depending on the server implementation.
+> > Most REST APIs use `PATCH` for partial updates. Sending `PUT` with only part of a resource may overwrite unspecified fields, depending on the server implementation.
 >
 > ---
 >
-> **HTTP status code** — a 3-digit number in the response indicating the outcome: 2xx (success), 3xx (redirect), 4xx (client error), 5xx (server error).
-> Codes drive retry logic: 5xx and 429 (Too Many Requests) are transient and safe to retry; 4xx are permanent client errors that retrying will not fix.
+> **HTTP status code**
+> - Three-digit response code indicating the outcome of the request: `2xx` success, `3xx` redirection, `4xx` client error, `5xx` server error.
+> - Used to drive control flow in scripts, especially for retry logic, alerting, and distinguishing permanent request errors from transient service failures.
 >
 > > [!tip] Not all non-200 codes are failures
 > >
-> > 201 (Created), 204 (No Content), and 3xx redirects are valid success responses. Treat any 2xx as success; use `-L` with curl to follow 3xx automatically.
+> > `201 Created`, `202 Accepted`, and `204 No Content` are successful responses. Treat the full `2xx` range as success unless the API contract says otherwise; use `-L` with curl to follow redirects when appropriate.
 >
 > ---
 >
-> **Bearer token** — an authentication credential sent in the `Authorization: Bearer <token>` HTTP header, standard in OAuth 2.0 and API key schemes.
-> Tokens expire and must be resolved at runtime. Never hardcode them in scripts — use `gcloud auth print-access-token` or a secret manager and inject via environment variable.
+> **Bearer token**
+> - Credential sent in the HTTP `Authorization` header as `Bearer <token>`, commonly used by OAuth 2.0 APIs and other token-based authentication schemes.
+> - Used to authenticate API requests without embedding a username and password in every call; tokens are usually short-lived and should be resolved at runtime.
 >
 > > [!danger] Hardcoded tokens leak into version control and shell history
 > >
@@ -65,57 +69,63 @@ status: complete
 >
 > ---
 >
-> **JSON (JavaScript Object Notation)** — a lightweight text format for structured data using key-value pairs and arrays: `{"key": "value", "list": [1, 2, 3]}`. The standard format for REST API request and response bodies.
-> Send JSON with curl using `-H 'Content-Type: application/json' -d '{"key":"value"}'`. Omitting the `Content-Type` header causes many APIs to reject or misparse the body.
+> **JSON (JavaScript Object Notation)**
+> - Text-based structured data format built from objects and arrays, widely used for REST API request and response bodies.
+> - Used to send and receive structured payloads in a format that both machines and humans can inspect easily.
 >
 > > [!warning] Missing Content-Type on POST requests
 > >
-> > Always set `-H 'Content-Type: application/json'` when POSTing JSON. Without it the server may parse the body as form data or return a 400 Bad Request.
+> > Always set `-H 'Content-Type: application/json'` when sending JSON. Without it, the server may reject the request or parse the body incorrectly.
 >
 > ---
 >
-> **`jq`** — a command-line JSON processor that filters, transforms, and extracts fields from JSON using a concise query language.
-> Essential for parsing API responses in shell scripts: `curl -s https://api/data | jq '.results[].name'`. Not installed by default — requires `apt install jq` on Debian/Ubuntu.
+> **`jq`**
+> - Command-line JSON processor for selecting, transforming, validating, and reformatting JSON using its own query language.
+> - Used in shell scripts to extract fields from API responses, reshape payloads, and validate that a response is valid JSON before further processing.
 >
 > > [!tip] Validate API response format before parsing
 > >
-> > If `jq` fails with a parse error, the API likely returned an HTML error page instead of JSON. Add `-v` to curl to inspect the raw response and `Content-Type` header.
+> > If `jq` fails with a parse error, the server may have returned an HTML error page or plain text instead of JSON. Add `-v` to curl to inspect the raw response and headers.
 >
 > ---
 >
-> **`wget`** — a command-line downloader optimized for file retrieval, recursive directory mirroring, and resumable transfers.
-> Unlike curl, wget writes to a local file by default and natively supports `-c` (resume), `--tries` (retry), and `-r` (recursive). Use wget when resuming large interrupted downloads; use curl for API calls and custom headers.
+> **`wget`**
+> - Command-line downloader oriented toward retrieving files and directory trees, with built-in support for resuming and recursive download workflows.
+> - Used primarily for file retrieval rather than API interaction, especially when resumable downloads or recursive mirroring are required.
 >
 > > [!tip] Choose curl for APIs, wget for file downloads
 > >
-> > wget has no equivalent to curl's `-w` timing breakdown or per-phase latency metrics. For scripted API calls with JSON bodies and custom headers, curl is the better tool.
+> > `wget` is strong for downloading files and mirrors. For scripted API calls with JSON bodies, custom headers, and response metrics, `curl` is usually the better tool.
 >
 > ---
 >
-> **`Invoke-RestMethod`** (`irm`) — the PowerShell cmdlet for making HTTP requests that automatically deserializes JSON and XML responses into .NET objects.
-> The PowerShell equivalent of curl for API interactions. Returns structured objects navigable with dot notation (`$response.records`), not raw text. Throws a terminating error on HTTP 4xx/5xx — wrap in `try/catch`.
+> **`Invoke-RestMethod` (`irm`)**
+> - PowerShell cmdlet for sending HTTP requests and automatically deserializing JSON or XML responses into .NET objects when possible.
+> - Used for API interactions in PowerShell when the caller wants structured response objects rather than raw response text.
 >
 > > [!warning] Invoke-RestMethod throws on HTTP errors
 > >
-> > Unlike curl (which exits 0 on 4xx/5xx by default), `Invoke-RestMethod` throws a terminating exception. Set `$ErrorActionPreference = 'Stop'` and use `try/catch` for reliable error handling.
+> > Unlike curl, `Invoke-RestMethod` treats many HTTP error responses as exceptions. Use `try/catch` and set `$ErrorActionPreference = 'Stop'` for predictable automation behavior.
 >
 > ---
 >
-> **`Invoke-WebRequest`** (`iwr`) — the PowerShell cmdlet that returns the raw HTTP response object including `StatusCode`, `Headers`, and `Content` as a string.
-> Preferred over `Invoke-RestMethod` for file downloads because `-OutFile` streams the body directly to disk. In PowerShell 7+, `-MaximumRetryCount` and `-RetryIntervalSec` add native retry on 429/5xx.
+> **`Invoke-WebRequest` (`iwr`)**
+> - PowerShell cmdlet that returns an HTTP response object containing status, headers, and body content, with support for saving the response directly to disk.
+> - Used when the raw response metadata matters or when downloading files with `-OutFile` is more appropriate than automatic deserialization.
 >
 > > [!info] Retry parameters require PowerShell 7+
 > >
-> > `-MaximumRetryCount` and `-RetryIntervalSec` do not exist in Windows PowerShell 5.1. Use an explicit `for` retry loop for cross-version compatibility.
+> > `-MaximumRetryCount` and `-RetryIntervalSec` are not available in Windows PowerShell 5.1. Use an explicit retry loop for cross-version compatibility.
 >
 > ---
 >
-> **TLS (Transport Layer Security)** — the cryptographic protocol that encrypts HTTP traffic over HTTPS. The handshake negotiates cipher suites and verifies the server certificate before any data is exchanged.
-> `curl`'s `time_appconnect` metric measures the TLS handshake duration. A high `time_appconnect` relative to `time_connect` indicates a slow certificate chain or missing OCSP stapling on the server.
+> **TLS (Transport Layer Security)**
+> - Cryptographic protocol used by HTTPS to provide server authentication, confidentiality, and integrity for data in transit.
+> - Used to secure HTTP communication; handshake timing can also help diagnose certificate-chain or connection-establishment problems.
 >
 > > [!tip] Inspect TLS details with curl -v
 > >
-> > `curl -v https://endpoint` prints the full TLS handshake, cipher suite, and certificate chain. Use this to diagnose certificate errors, expired certs, and SNI mismatches.
+> > `curl -v https://endpoint` prints handshake details, negotiated protocol information, and certificate information. Use it to diagnose certificate errors, expired certs, and SNI mismatches.
 
 Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the standard command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For REST API design patterns including pagination, error handling, and idempotency, see the [Data Architecture section](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
 

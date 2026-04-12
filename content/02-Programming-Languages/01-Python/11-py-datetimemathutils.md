@@ -24,212 +24,194 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`datetime`** — Object that combines a calendar date and a wall-clock time into a single value.
->
-> - The primary timestamp type in Python; created with `datetime(year, month, day, hour, minute, second)` or `datetime.now()`.
-> - Can be *naive* (no timezone info) or *aware* (carries a `tzinfo` object); the two kinds cannot be compared or subtracted directly.
+> **`datetime`**
+> - Python class representing a calendar date combined with a time of day, optionally with timezone information.
+> - Used as the standard timestamp type in Python for storing points in time, comparing timestamps, formatting them, and doing date/time arithmetic.
 >
 > > [!warning] Naive vs aware mismatch
 > >
-> > Subtracting a naive datetime from an aware one raises `TypeError`. Keep all datetimes aware throughout the pipeline; attach `timezone.utc` or a `ZoneInfo` at creation time.
+> > Comparing or subtracting a naive `datetime` and an aware `datetime` raises `TypeError`. Keep a consistent timezone model throughout the pipeline, ideally with aware UTC timestamps for storage and interchange.
 >
-> > ---
+> ---
 >
-> **Naive datetime** — A `datetime` object with `tzinfo=None`, meaning it carries no timezone information.
+> **Naive datetime**
+> - A `datetime` object whose `tzinfo` is `None`, meaning it carries no timezone or UTC-offset context.
+> - Used only when the timestamp is intentionally local and self-contained; otherwise it is a common source of ambiguity and cross-system bugs.
 >
-> - `datetime.now()` returns a naive local datetime; it is ambiguous during DST transitions and cannot be safely compared across systems.
-> - Naive datetimes are acceptable only for purely local, single-machine operations where timezone context is irrelevant.
->
-> > [!warning] Never store naive datetimes
+> > [!warning] Naive timestamps are ambiguous outside their local context
 > >
-> > Naive timestamps in a database are ambiguous: the same `2024-03-15 02:30:00` could represent two different UTC instants during a DST fallback. Always use `datetime.now(timezone.utc)` for storage.
+> > A naive value such as `2024-03-15 02:30:00` does not identify a unique instant unless the relevant timezone rules are known separately. Avoid storing naive datetimes in systems that cross machines, regions, or DST boundaries.
 >
-> > ---
+> ---
 >
-> **Aware datetime** — A `datetime` object that carries a `tzinfo` attribute, making it unambiguous in time.
+> **Aware datetime**
+> - A `datetime` object that carries timezone information through a `tzinfo` value, making it interpretable as a specific instant in time.
+> - Used for reliable comparison, arithmetic, storage, and exchange across systems operating in different timezones.
 >
-> - Created by passing `tzinfo=timezone.utc` or `tzinfo=ZoneInfo("Region/City")` to the constructor, or by calling `.replace(tzinfo=...)` on a naive instance.
-> - Aware datetimes from different timezones compare correctly because Python normalises to UTC internally.
->
-> > [!info] Attach timezone at creation, not after
+> > [!info] Attach timezone at creation when possible
 > >
-> > Prefer `datetime(2024, 3, 15, 14, 30, tzinfo=timezone.utc)` over calling `.replace()` on a naive object. Using `.replace()` on a DST-ambiguous time can attach the wrong UTC offset.
+> > Prefer creating an aware `datetime` directly, such as `datetime.now(timezone.utc)` or `datetime(..., tzinfo=ZoneInfo("Europe/Amsterdam"))`, rather than attaching timezone metadata later to a naive value whose meaning may already be ambiguous.
 >
-> > ---
+> ---
 >
-> **`timedelta`** — Represents a fixed duration expressed internally as days, seconds, and microseconds.
->
-> - Supports arithmetic with `datetime` (`dt + timedelta(days=7)`) and subtraction between two datetimes to produce a duration.
-> - `.days` returns whole days; `.total_seconds()` returns the full span as a float.
+> **`timedelta`**
+> - Python class representing a fixed duration, internally stored as days, seconds, and microseconds.
+> - Used for adding or subtracting fixed spans such as hours, days, or weeks, and for representing the result of subtracting two datetimes.
 >
 > > [!warning] No months or years
 > >
-> > `timedelta` cannot represent a month or a year because their lengths vary. Use `dateutil.relativedelta` for calendar-aware month/year offsets.
+> > `timedelta` represents fixed-length durations only. It cannot model calendar concepts such as "one month" or "one year" because those vary in real length.
 >
-> > ---
+> ---
 >
-> **`timezone.utc`** — The built-in UTC timezone singleton from `datetime.timezone`.
+> **`timezone.utc`**
+> - Built-in UTC timezone singleton provided by the `datetime` module.
+> - Used as the simplest standard-library way to create or convert aware UTC datetimes without requiring third-party timezone libraries.
 >
-> - Used as `tzinfo=timezone.utc` when creating or converting UTC datetimes; avoids importing third-party libraries for the common UTC case.
-> - All other fixed offsets can be constructed with `timezone(timedelta(hours=n))`.
->
-> > [!info] UTC is the canonical storage format
+> > [!info] UTC is the safest canonical storage basis
 > >
-> > Store all timestamps as UTC in databases, message queues, and log files. Convert to local time only at the presentation layer using `astimezone(ZoneInfo(...))`.
+> > Storing timestamps in UTC avoids daylight-saving ambiguity and makes cross-system comparison straightforward. Convert to local time only when presenting data to users or region-specific systems.
 >
-> > ---
+> ---
 >
-> **`zoneinfo.ZoneInfo`** — Built-in IANA timezone database accessor (Python 3.9+), replacing `pytz`.
+> **`zoneinfo.ZoneInfo`**
+> - Standard-library timezone class backed by the IANA timezone database, available in Python 3.9 and later.
+> - Used to represent real named timezones such as `Europe/Amsterdam` or `America/Chicago`, including their DST and historical offset rules.
 >
-> - `ZoneInfo("Europe/Amsterdam")` returns a `tzinfo` object aware of DST rules for that region; pass it to `datetime` constructors or `astimezone()`.
-> - Timezone names are case-sensitive; invalid names raise `ZoneInfoNotFoundError`.
->
-> > [!warning] Prefer `zoneinfo` over `pytz`
+> > [!warning] Prefer named zones over hardcoded offsets for civil time
 > >
-> > `pytz` requires `.localize()` for correct DST handling, which is easy to forget. `zoneinfo` follows the standard `datetime` API — pass the object directly as `tzinfo`. Use `pytz` only when targeting Python < 3.9.
+> > Fixed offsets cannot express DST transitions or historical timezone changes. Use `ZoneInfo("Region/City")` when the local civil timezone matters, not just the current offset.
 >
-> > ---
+> ---
 >
-> **`strftime` / `strptime`** — Complementary functions for converting between `datetime` objects and formatted strings.
+> **`strftime` / `strptime`**
+> - Formatting and parsing APIs for converting between `datetime` values and strings using format codes such as `%Y`, `%m`, `%d`, `%H`, `%M`, `%S`, and `%z`.
+> - Used when timestamps must be rendered in a required textual format or parsed from text that is not already ISO 8601.
 >
-> - `dt.strftime(format)` serialises a datetime to a string using format codes (`%Y`, `%m`, `%d`, `%H`, `%M`, `%S`, `%f`, etc.).
-> - `datetime.strptime(string, format)` parses a string back to a naive datetime — timezone must be attached manually afterwards if required.
->
-> > [!info] `strptime` always returns naive
+> > [!info] `strptime` is aware only if the format includes timezone data
 > >
-> > Even if the input string contains `+05:30`, `strptime` ignores it unless `%z` is in the format. Parse timezone-aware strings with `datetime.fromisoformat()` (Python 3.7+) or `dateutil.parser.parse()` for maximum flexibility.
+> > `datetime.strptime()` returns a naive `datetime` unless the format includes timezone information such as `%z`, in which case it returns an aware value with a fixed offset.
 >
-> > ---
+> ---
 >
-> **ISO 8601** — International standard timestamp format: `2024-01-15T10:30:00+00:00`.
+> **ISO 8601**
+> - International standard for unambiguous textual date and time representations, including forms such as `2024-01-15T10:30:00+00:00`.
+> - Used as the default interchange format for APIs, logs, databases, and serialized payloads because it is machine-readable and locale-independent.
 >
-> - The universal interchange format for timestamps in APIs, databases, log files, and serialisation protocols.
-> - `.isoformat()` produces it; `datetime.fromisoformat()` parses it. Python 3.11+ supports the trailing `Z` UTC marker; Python 3.7–3.10 require an explicit `+00:00` offset.
->
-> > [!warning] Naive ISO strings lose timezone context
+> > [!warning] Naive ISO strings omit timezone context
 > >
-> > `datetime(2024, 3, 15).isoformat()` returns `'2024-03-15T00:00:00'` with no offset. Any downstream system that assumes a timezone will interpret it differently. Always include the offset when exchanging timestamps.
+> > A string such as `2024-03-15T00:00:00` is still ambiguous if no offset or timezone context is included. For interchange, prefer timestamps that include `Z` or an explicit numeric offset.
 >
-> > ---
+> ---
 >
-> **`dateutil.relativedelta`** — Calendar-aware interval from the `python-dateutil` package that supports months and years.
+> **`dateutil.relativedelta`**
+> - Calendar-aware interval type from the `python-dateutil` package that can represent variable-length units such as months and years.
+> - Used when business rules depend on calendar arithmetic rather than fixed durations, such as "one month later" or "same day next year."
 >
-> - `relativedelta(months=1)` added to `datetime(2024, 1, 31)` returns `2024-02-29` (correct leap-year clamping), not a `timedelta` arithmetic error.
-> - Supports combined offsets: `relativedelta(years=1, months=2, days=3)`.
->
-> > [!info] Install separately
+> > [!info] Separate dependency
 > >
-> > `python-dateutil` is not in the standard library. Install with `pip install python-dateutil`. For projects that must avoid third-party dependencies, implement month arithmetic manually using `calendar.monthrange`.
+> > `dateutil.relativedelta` is not part of the Python standard library. Add `python-dateutil` explicitly when the project needs calendar-aware arithmetic beyond `timedelta`.
 >
-> > ---
+> ---
 >
-> **Unix timestamp** — A float representing elapsed seconds since the Unix epoch (1970-01-01 00:00:00 UTC).
+> **Unix timestamp**
+> - Numeric count of elapsed time since the Unix epoch, `1970-01-01 00:00:00 UTC`, commonly represented in seconds and sometimes in milliseconds.
+> - Used for compact storage, numeric comparison, and cross-system interchange when a single absolute point in time must be represented efficiently.
 >
-> - `.timestamp()` converts a `datetime` to a Unix timestamp; `datetime.fromtimestamp(ts, tz=timezone.utc)` converts back.
-> - Millisecond-precision timestamps (used by Kafka, JavaScript) are the Unix timestamp multiplied by 1 000.
->
-> > [!warning] Always pass `tz` when converting back
+> > [!warning] Always specify the timezone when converting back
 > >
-> > `datetime.fromtimestamp(ts)` uses the local system timezone, producing a naive datetime that differs across machines. Pass `tz=timezone.utc` to get a consistent, aware UTC datetime.
+> > `datetime.fromtimestamp(ts)` without `tz=` uses the local system timezone. Pass `tz=timezone.utc` or another explicit timezone to get consistent results across machines.
 >
-> > ---
+> ---
 >
-> **`math` module** — Standard library module providing mathematical functions beyond Python's built-in operators.
+> **`math` module**
+> - Python standard-library module providing mathematical functions and constants beyond the built-in arithmetic operators.
+> - Used for numeric transformations such as rounding control, logarithms, trigonometry, square roots, infinity checks, and NaN handling.
 >
-> - Key functions: `floor`, `ceil`, `trunc`, `sqrt`, `isqrt`, `pow`, `log`, `log10`, `log2`, `exp`, `sin`, `cos`, `atan2`, `degrees`, `radians`, `isinf`, `isnan`, `isfinite`.
-> - Constants: `math.pi`, `math.e`, `math.tau` (2π), `math.inf`, `math.nan`.
->
-> > [!warning] `round()` uses banker's rounding
+> > [!warning] `round()` is not in `math` and uses round-half-to-even
 > >
-> > Python's built-in `round(2.5)` returns `2` (rounds to even), not `3`. Use `math.floor(x + 0.5)` or `Decimal` rounding modes when you need "round half up" behaviour consistently.
+> > Python's built-in `round()` uses banker's rounding for ties. When exact decimal rounding rules matter, use `Decimal` with an explicit rounding mode instead of assuming schoolbook half-up behavior.
 >
-> > ---
+> ---
 >
-> **`Decimal`** — Fixed-precision decimal type from the `decimal` module, designed for exact base-10 arithmetic.
+> **`Decimal`**
+> - Exact base-10 decimal numeric type from Python's `decimal` module, designed to avoid binary floating-point representation error.
+> - Used for financial and other precision-sensitive calculations where tiny rounding differences from binary floats are unacceptable.
 >
-> - `Decimal('0.1') + Decimal('0.2') == Decimal('0.3')` is `True`; the equivalent float expression is `False` due to IEEE 754 representation error.
-> - Required for financial calculations (prices, rates, weights, NAV) where float rounding errors accumulate to material differences.
->
-> > [!warning] Always construct from strings, not floats
+> > [!warning] Construct from strings, not binary floats
 > >
-> > `Decimal(0.1)` inherits the float's representation error; `Decimal('0.1')` is exact. Use string literals or integer arithmetic when initialising `Decimal` values.
+> > `Decimal(0.1)` imports the inexact value already present in the float. `Decimal("0.1")` preserves the intended decimal value exactly.
 >
-> > ---
+> ---
 >
-> **`random` module** — Standard library pseudorandom number generator based on the Mersenne Twister algorithm.
->
-> - `random.seed(n)` makes the sequence reproducible; `randint(a, b)` is inclusive on both ends; `choice`, `choices`, `sample`, and `shuffle` operate on sequences. `random.Random(n)` creates an independent instance.
-> - `weights=` in `random.choices` enables non-uniform sampling without normalising to a probability distribution.
+> **`random` module**
+> - Python standard-library module providing pseudorandom number generation based on a deterministic algorithm.
+> - Used for simulation, randomized testing, sampling, shuffling, and any workflow where reproducible non-secure randomness is useful.
 >
 > > [!warning] Not cryptographically secure
 > >
-> > Mersenne Twister output is predictable given sufficient observed values. Never use `random` for passwords, API keys, session tokens, or security nonces. Use the `secrets` module instead.
+> > The `random` module is designed for statistical and simulation use, not adversarial security contexts. Do not use it for tokens, passwords, secrets, or security-sensitive identifiers.
 >
-> > ---
+> ---
 >
-> **`secrets` module** — Standard library module for cryptographically secure random generation (Python 3.6+).
+> **`secrets` module**
+> - Python standard-library module for generating cryptographically strong random values using the operating system's secure random source.
+> - Used for passwords, tokens, salts, nonces, and any value that must be unpredictable to an attacker.
 >
-> - `secrets.token_hex(n)` returns `2n` random hex characters; `secrets.token_urlsafe(n)` returns a URL-safe Base64 string; `secrets.choice(seq)` picks one element securely.
-> - Backed by the OS CSPRNG (`os.urandom`); suitable for passwords, tokens, salts, and CSRF nonces.
->
-> > [!info] `secrets` vs `random` — the rule
+> > [!info] `secrets` vs `random`
 > >
-> > Use `random` for simulations, sampling, and reproducible test data. Use `secrets` for anything that must be unpredictable to an adversary. The two modules are not interchangeable.
+> > Use `random` for reproducible or simulation-oriented randomness. Use `secrets` whenever unpredictability is a security requirement.
 >
-> > ---
+> ---
 >
-> **`logging` module** — Standard library framework for structured, levelled, routable log output.
+> **`logging` module**
+> - Python standard-library framework for structured, level-based application logging through loggers, handlers, formatters, and filters.
+> - Used to emit diagnosable runtime events with timestamps, severity, routing, and formatting that can be controlled per module or per deployment environment.
 >
-> - Five levels in ascending severity: `DEBUG` (10), `INFO` (20), `WARNING` (30), `ERROR` (40), `CRITICAL` (50). A logger only emits records at or above its configured level.
-> - Architecture: `Logger` → `Handler` (StreamHandler, FileHandler, etc.) → `Formatter`. Loggers form a dot-separated hierarchy; child loggers propagate to parents unless `propagate=False`.
->
-> > [!warning] Do not log with `print()`
+> > [!warning] `print()` is not a logging framework
 > >
-> > `print()` has no levels, no routing, no timestamps, and no way to disable per-module. In production, it mixes with application output and cannot be filtered. Use `logging.getLogger(__name__)` in every module.
+> > `print()` has no severity levels, handler routing, or central configuration. For production code, use `logging.getLogger(__name__)` and configure handlers explicitly.
 >
-> > ---
+> ---
 >
-> **`os.environ`** — Dictionary-like mapping of the current process's environment variables.
+> **`os.environ`**
+> - Dictionary-like mapping exposing the current process environment variables to Python code.
+> - Used to read required or optional runtime configuration injected from the shell, orchestrator, CI/CD system, or secret-management layer.
 >
-> - `os.environ["KEY"]` raises `KeyError` if missing (fail-fast, use for required variables); `os.environ.get("KEY", default)` returns the default silently (use for optional config).
-> - Setting `os.environ["KEY"] = value` modifies the current process only; the change does not persist after the process exits and does not propagate to the parent shell.
->
-> > [!warning] Never hardcode secrets
+> > [!warning] Changes affect the current process and its future children only
 > >
-> > Secrets (passwords, API keys, connection strings) embedded in source code are exposed in version history and diff tools. Inject them via environment variables, a secrets manager (GCP Secret Manager, AWS Secrets Manager), or CI/CD platform secrets — never as literals in code.
+> > Assigning to `os.environ` changes the environment seen by the running Python process and any child processes it starts later. It does not modify the parent shell or persist after the process exits.
 >
-> > ---
+> ---
 >
-> **`configparser`** — Standard library INI-file parser that reads `[section]` / `key = value` configuration files.
+> **`configparser`**
+> - Python standard-library parser for INI-style configuration files with sections and key-value pairs.
+> - Used when applications need simple human-editable config files and can tolerate string-oriented values with explicit conversion where needed.
 >
-> - All values are returned as strings; use `.getint()`, `.getfloat()`, `.getboolean()` for typed access with an optional `fallback=` default.
-> - `fallback=` prevents `NoSectionError` / `NoOptionError` when a key is missing, making it safe for optional configuration with defaults.
->
-> > [!info] `configparser` vs `tomllib`
+> > [!info] Values are string-based unless converted
 > >
-> > `configparser` is universally available and human-editable but string-only. `tomllib` (Python 3.11+ built-in, read-only) preserves native types (`int`, `bool`, `list`, `datetime`) without manual conversion. Prefer TOML for new projects.
+> > `configparser` reads textual configuration, so typed access usually requires methods such as `.getint()`, `.getfloat()`, or `.getboolean()` rather than assuming native types automatically.
 >
-> > ---
+> ---
 >
-> **`tomllib`** — Read-only TOML parser built into Python 3.11+, returning a plain dict with native Python types.
+> **`tomllib`**
+> - Python 3.11+ standard-library parser for TOML configuration files, returning ordinary Python data structures.
+> - Used when a project wants richer configuration typing than INI while staying within the standard library for read operations.
 >
-> - TOML natively represents `int`, `float`, `bool`, `list`, `dict`, and `datetime`; no manual type conversion is needed unlike `configparser`.
-> - Files must be opened in binary mode (`"rb"`); for writing TOML, add the third-party `tomli-w` package.
->
-> > [!info] `tomllib` is read-only by design
+> > [!info] Read-only by design
 > >
-> > The built-in module intentionally omits a writer to keep the API minimal. For full TOML read/write support use `tomli` (Python < 3.11) for reading and `tomli-w` for writing, both from the same author as the stdlib implementation.
+> > `tomllib` parses TOML but does not write it. Use a separate library if the project must generate or update TOML files programmatically.
 >
-> > ---
+> ---
 >
-> **`.env` file** — A plain-text file of `KEY=VALUE` pairs used to supply secrets and environment-specific settings for local development.
+> **`.env` file**
+> - Plain-text file conventionally containing `KEY=VALUE` entries used to supply environment variables during development or controlled runtime setup.
+> - Used to keep configuration and secrets out of source code while still making them available to the process environment through an explicit loader.
 >
-> - Loaded into `os.environ` by `python-dotenv` (`load_dotenv()`); values set this way are visible to `os.getenv()` and `os.environ` for the duration of the process.
-> - Must be listed in `.gitignore` before any secrets are added; in CI/CD and production, replace `.env` files with platform-native secret injection.
->
-> > [!danger] Never commit `.env` to version control
+> > [!danger] Never commit `.env` files containing secrets
 > >
-> > A committed `.env` exposes credentials in git history even after deletion. If a secret is accidentally committed, rotate it immediately — history scrubbing alone is insufficient because forks and mirrors may already hold the value.
+> > Once a secret is committed, it may remain recoverable from history, forks, or mirrors even after deletion. Treat committed secrets as exposed and rotate them immediately.
+
 
 Python's `datetime` module provides date/time types, `timedelta` intervals, and timezone-aware operations. This note also covers math, random number generation, logging, and configuration/environment variable management — common utility patterns for data engineering.
 ### Key terms used in this note

@@ -59,7 +59,7 @@ status: complete
 > > [!tip] ADC silent failure
 > > Setting `GOOGLE_APPLICATION_CREDENTIALS` to a non-existent path produces no startup error — authentication fails silently at the first API call.
 >
-> > ---
+>  ---
 >
 > **`StorageClient`**
 > - The `Google.Cloud.Storage.V1` client for all Cloud Storage object operations: list, upload, download, delete.
@@ -68,7 +68,7 @@ status: complete
 > > [!info] Lazy pagination
 > > `ListObjects` returns an `IEnumerable` that pages through GCS results automatically — it does not load all objects into memory at once.
 >
-> > ---
+>  ---
 >
 > **`BigQueryClient`**
 > - The `Google.Cloud.BigQuery.V2` client for running SQL queries, loading data from GCS, and managing tables.
@@ -77,7 +77,7 @@ status: complete
 > > [!warning] Long queries block
 > > For queries expected to run more than a few seconds, use `CreateQueryJob` and poll for completion instead of `ExecuteQuery`.
 >
-> > ---
+>  ---
 >
 > **`PublisherClient`**
 > - The `Google.Cloud.PubSub.V1` async publisher created with `await PublisherClient.CreateAsync(topicName)`.
@@ -86,7 +86,7 @@ status: complete
 > > [!warning] Flush before exit
 > > Always call `await publisher.ShutdownAsync(TimeSpan.FromSeconds(15))` in a `finally` block to avoid message loss on crash or graceful shutdown.
 >
-> > ---
+>  ---
 >
 > **`SubscriberServiceApiClient`**
 > - The synchronous batch-pull client for Pub/Sub, suited for scripts and notebooks.
@@ -95,7 +95,7 @@ status: complete
 > > [!tip] Production alternative
 > > In long-running services, use the streaming `SubscriberClient` instead — it manages ack deadlines automatically and delivers messages via a callback.
 >
-> > ---
+>  ---
 >
 > **`FirestoreDb`**
 > - The `Google.Cloud.Firestore` client for document-oriented operations: `SetAsync` (upsert), `UpdateAsync` (partial merge), `DeleteAsync`.
@@ -104,7 +104,7 @@ status: complete
 > > [!bug] .NET 10 Interactive incompatibility
 > > SDK reads (`GetSnapshotAsync`) and real-time listeners (`Listen`) throw a missing-assembly exception on .NET 10 Interactive due to a `Microsoft.Bcl.AsyncInterfaces` version conflict. Use the Firestore REST API as a workaround.
 >
-> > ---
+>  ---
 >
 > **`SecretManagerServiceClient`**
 > - The `Google.Cloud.SecretManager.V1` client for reading, listing, and managing secrets at runtime.
@@ -113,7 +113,7 @@ status: complete
 > > [!danger] Never log secret values
 > > Printing or logging the decoded secret payload exposes credentials in Cloud Logging and stdout. Always mask or omit the value in any output.
 >
-> > ---
+>  ---
 >
 > **`MetricServiceClient`**
 > - The `Google.Cloud.Monitoring.V3` client for writing custom time-series metrics to Cloud Monitoring.
@@ -122,7 +122,7 @@ status: complete
 > > [!tip] Retry on transient errors
 > > Cloud Monitoring `CreateTimeSeries` can return transient `Grpc.Core.StatusCode.Internal` errors. Wrap calls in a short retry loop with exponential backoff (3 attempts, 3 s × attempt).
 >
-> > ---
+>  ---
 >
 > **`TopicName` / `SubscriptionName`**
 > - Typed resource-name wrappers in `Google.Cloud.PubSub.V1` that encode `projects/{project}/topics/{topic}` and `projects/{project}/subscriptions/{sub}`.
@@ -131,7 +131,6 @@ status: complete
 > > [!info] Resource path format
 > > GCP APIs use hierarchical resource paths (`projects/*/topics/*`) as identifiers. All SDK name types parse and validate this format for you.
 
-This note covers the Google Cloud Platform .NET SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples.
 
 ## How the Pipeline Works
 

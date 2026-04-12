@@ -69,7 +69,7 @@ status: complete
 > >
 > > Use any bulk API (`fast_executemany`, `bcp`, `load_table_from_file`, `BulkWriter`) whenever inserting more than a few hundred rows. The overhead of batch setup is amortized after roughly 500 rows.
 >
-> > ---
+>  ---
 >
 > **`fast_executemany`**
 > - A `pyodbc` connection option that sends an entire array of parameter tuples to the ODBC driver in one call, eliminating per-row round-trips to SQL Server.
@@ -79,7 +79,7 @@ status: complete
 > >
 > > Omitting `fast_executemany = True` silently degrades to one insert per row. At 750K rows this is the difference between ~10 s and ~200 s.
 >
-> > ---
+>  ---
 >
 > **BCP (Bulk Copy Program)**
 > - A SQL Server command-line utility that streams CSV or native-format data directly into SQL Server page structures, bypassing the SQL parser and row-at-a-time logging.
@@ -89,7 +89,7 @@ status: complete
 > >
 > > BCP outperforms `fast_executemany` at 750K rows because it writes directly to data pages. Use `fast_executemany` for in-process pipelines where spawning a subprocess is undesirable.
 >
-> > ---
+>  ---
 >
 > **BigQuery Load Job**
 > - An asynchronous GCP job (`bigquery.LoadJobConfig`) that reads a file from local disk or a GCS URI and writes rows into a BigQuery table. Preferred over the Streaming Insert API for batch workloads.
@@ -99,7 +99,7 @@ status: complete
 > >
 > > Do not substitute streaming inserts for load jobs on large batch ETL — per-byte costs accumulate quickly. Reserve streaming inserts for low-latency, low-volume append scenarios.
 >
-> > ---
+>  ---
 >
 > **GCS staging**
 > - Uploading a file to Google Cloud Storage before triggering a BigQuery load job via `load_table_from_uri`. Required when the file exceeds the 10 GB direct-upload cap on `load_table_from_file`.
@@ -109,7 +109,7 @@ status: complete
 > >
 > > GCS staging with Parquet eliminates client-side data transfer entirely. The BigQuery service reads directly from GCS, and column pruning keeps I/O minimal even for wide tables.
 >
-> > ---
+>  ---
 >
 > **Parquet**
 > - A columnar binary file format with built-in compression (Snappy by default) and embedded schema metadata. BigQuery can read Parquet natively without schema inference.
@@ -119,7 +119,7 @@ status: complete
 > >
 > > When loading Parquet to BigQuery, set `autodetect=False` and supply an explicit `schema` in `LoadJobConfig` to catch type mismatches at load time rather than at query time.
 >
-> > ---
+>  ---
 >
 > **`BulkWriter`**
 > - A Firestore client abstraction (`firestore.Client.bulk_writer()`) that queues write operations internally and flushes in batches of up to 500 documents. Supports `set`, `update`, `delete`, and `create`.
@@ -129,7 +129,7 @@ status: complete
 > >
 > > Calling `doc_ref.set(data)` in a Python loop issues one gRPC call per document. At 75K documents this can take minutes and will hit rate limits. Always use `BulkWriter` for batch writes.
 >
-> > ---
+>  ---
 >
 > **`pandas_gbq`**
 > - A Python library wrapping the BigQuery Storage Write API; exposes a single `pandas_gbq.to_gbq(df, table_id)` call that serializes a DataFrame and uploads it to BigQuery.
@@ -139,7 +139,7 @@ status: complete
 > >
 > > `pandas_gbq` uses `tqdm` internally. Set `os.environ['TQDM_DISABLE'] = '1'` before any import to prevent progress bars from polluting notebook output and CI logs.
 >
-> > ---
+>  ---
 >
 > **`load_table_from_uri`**
 > - A `bigquery.Client` method that submits a load job reading directly from one or more GCS URIs (`gs://bucket/path/*.parquet`). No data passes through the client machine.
@@ -149,7 +149,7 @@ status: complete
 > >
 > > Omitting `write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE` on a repeated load job doubles the row count each run. Always set disposition explicitly for reproducible pipelines.
 >
-> > ---
+>  ---
 >
 > **benchmark tier**
 > - A row-count category used in this note to measure ingestion throughput across methods: **2.5K** (small / in-memory baseline), **75K** (medium / realistic daily batch), **750K** (large / full production load).
@@ -159,7 +159,7 @@ status: complete
 > >
 > > The three tiers correspond to the three benchmark CSV/Parquet files in `DATA_DIR`. Each tier file contains OHLCV rows for a synthetic equity universe generated at that scale.
 >
-> > ---
+>  ---
 >
 > **`WriteDisposition`**
 > - A BigQuery `LoadJobConfig` enum controlling what happens to existing table data before the load: `WRITE_TRUNCATE` (delete all rows first), `WRITE_APPEND` (add rows to existing data), or `WRITE_EMPTY` (fail if the table is non-empty).
@@ -169,7 +169,7 @@ status: complete
 > >
 > > Forgetting to set `write_disposition` causes silent row duplication. Use `WRITE_TRUNCATE` for all benchmark and ETL loads; reserve `WRITE_APPEND` only for intentional incremental appends.
 >
-> > ---
+>  ---
 >
 > **cross-service transfer**
 > - Moving data between two cloud services (e.g., BigQuery → SQL Server, SQL Server → Firestore) without writing to local disk. Reduces egress costs and eliminates intermediate file management.
@@ -179,7 +179,7 @@ status: complete
 > >
 > > Calling `to_dataframe()` on a 750K-row BigQuery result loads the entire result set into RAM. Use `client.list_rows(..., page_size=CHUNK_SIZE)` with a chunked insert loop for large transfers.
 >
-> > ---
+>  ---
 >
 > **`extract_table`**
 > - A `bigquery.Client` method that exports a BigQuery table to one or more GCS objects as CSV, newline-delimited JSON, or Avro. The export runs server-side; no data passes through the client.

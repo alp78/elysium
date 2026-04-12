@@ -31,8 +31,9 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`ping`** — sends ICMP echo requests to a host and records the round-trip time for each packet; the most universally available network reachability probe.
-> Confirms whether a host is alive at the IP layer (Layer 3) before investing time in TCP or application-level diagnosis.
+> **`ping`**
+> - Command-line tool that sends ICMP Echo Request packets to a host and reports whether replies are received, along with round-trip timing.
+> - Used to test basic IP-layer reachability and latency before moving to TCP-port or application-level diagnosis.
 >
 > > [!warning] ICMP is frequently blocked
 > >
@@ -40,111 +41,123 @@ status: complete
 >
 > ---
 >
-> **`traceroute`** / **`tracert`** — maps the network path hop-by-hop by sending packets with incrementing TTL values; each router that decrements TTL to zero returns an ICMP "time exceeded" message revealing its address.
-> Identifies where in the network path latency spikes or packet drops begin; essential for routing and firewall boundary diagnosis.
+> **`traceroute` / `tracert`**
+> - Route-discovery tool that maps the path to a destination hop by hop by sending packets with increasing TTL values; each router that decrements TTL to zero returns an ICMP "time exceeded" response.
+> - Used to identify where latency, routing failure, or packet loss begins along the network path.
 >
-> > [!info] UDP vs TCP probe mode
+> > [!info] Probe type differs by implementation
 > >
-> > `traceroute` defaults to UDP probes, which corporate firewalls and GCP VPC rules commonly block. Use `-T` (TCP SYN mode) to follow the same path as real application traffic.
+> > Linux `traceroute` commonly uses UDP probes by default, while Windows `tracert` uses ICMP Echo. Many firewalls treat those differently. On Linux, `traceroute -T` uses TCP SYN probes that more closely resemble real application traffic.
 >
 > ---
 >
-> **`nc`** (netcat) — a general-purpose TCP/UDP tool used here in scan mode (`-z`) to open and immediately close a connection to a remote port without sending data.
-> The primary Linux tool for verifying TCP port reachability before application-level testing; distinguishes "refused" (host alive, service not listening) from "timed out" (firewall dropping packets).
+> **`nc` (netcat)**
+> - General-purpose TCP/UDP utility that can open connections, listen for connections, transfer raw data, or in scan mode (`-z`) test whether a remote port accepts a TCP connection.
+> - Used to verify TCP port reachability before application-level testing, especially to distinguish "connection refused" from "timed out."
 >
 > > [!danger] Refused vs timed out are not equivalent
 > >
-> > "Connection refused" means the host is reachable and rejecting the probe — the service is down or on a different port. "Connection timed out" means packets are being dropped by a firewall or the host is unreachable.
+> > "Connection refused" means the host is reachable and actively rejected the connection — typically because nothing is listening on that port. "Connection timed out" usually means packets were dropped by a firewall or the host was unreachable.
 >
 > ---
 >
-> **`/dev/tcp`** — a Bash built-in pseudo-device at `/dev/tcp/<host>/<port>` that opens a TCP connection when read or written; requires no external tools.
-> Enables TCP port testing on minimal containers and Docker images where `nc` is not installed.
+> **`/dev/tcp`**
+> - Bash redirection feature that treats paths of the form `/dev/tcp/<host>/<port>` as a request to open a TCP connection, even though no real file exists on disk.
+> - Used for minimal TCP port tests in environments where `nc` or `telnet` is not installed.
 >
 > > [!info] Bash-only feature
 > >
-> > `/dev/tcp` is a Bash extension; it is not available in `sh`, `dash`, or `zsh` by default.
+> > `/dev/tcp` is a Bash extension; it is not available in POSIX `sh`, `dash`, and is not enabled by default in most other shells.
 >
 > ---
 >
-> **`dig`** — a DNS query tool that supports all record types (A, AAAA, CNAME, MX, TXT, NS, SOA) and returns structured output including TTL, authority, and additional records.
-> The scriptable standard for DNS resolution verification; `dig +short` returns only the answer for use in scripts, unlike `nslookup` whose output format varies between implementations.
+> **`dig`**
+> - DNS query tool that can request specific record types and display answer, authority, and additional sections, along with TTL and resolver details.
+> - Used for scriptable DNS validation because its output is stable and can be narrowed to exactly the records needed.
 >
-> > [!warning] `+short` may return a CNAME, not an IP
+> > [!warning] `+short` can return aliases as well as final answers
 > >
-> > When the target is an alias, `dig +short hostname` returns the CNAME target. Use `dig +short hostname A` to force A-record resolution and always receive an IP address.
+> > `dig +short hostname` may return a CNAME and then the resolved address records. Query a specific type such as `dig +short hostname A` or `dig +short hostname AAAA` when you need only final IP answers of one family.
 >
 > ---
 >
-> **`mtr`** — combines `ping` and `traceroute` into a continuously updating per-hop statistics display; accumulates loss percentage, average latency, and jitter over repeated probes.
-> Identifies bottleneck routers and sustained packet loss patterns that a single `traceroute` pass would miss.
+> **`mtr`**
+> - Network diagnostic tool that combines repeated reachability probes with hop-by-hop path discovery, producing per-hop statistics such as packet loss and average latency over time.
+> - Used to detect sustained path instability or intermittent packet loss that a single `traceroute` run may miss.
 >
 > > [!info] Install on Debian/Ubuntu
 > >
-> > `mtr` is not installed by default. Install with `apt install mtr`. Use `-r -c 10` for a non-interactive one-shot report.
+> > `mtr` is not installed by default. Install with `apt install mtr`. Use `-r -c 10` for a non-interactive report suitable for logs or tickets.
 >
 > ---
 >
-> **`ss`** — reads socket state directly from the kernel (replacing `netstat`); significantly faster on hosts with many connections.
-> Verifies that a service is actually bound to the expected port on the local machine before attempting remote connectivity tests.
+> **`ss`**
+> - Linux utility that reads socket state from kernel networking interfaces, typically via netlink, and reports listening sockets, established sessions, queues, and owning processes.
+> - Used to confirm whether a service is actually bound to the expected local port before attempting remote connectivity tests.
 >
 > > [!info] Replaces `netstat`
 > >
-> > `netstat` is deprecated on modern Linux. `ss` provides the same output via the kernel's `netlink` interface with lower overhead.
+> > `netstat` is legacy on modern Linux systems. `ss` is generally faster and more complete for current socket inspection workflows.
 >
 > ---
 >
-> **`Test-NetConnection`** — PowerShell cmdlet that combines ICMP ping, TCP port test, and traceroute; returns a structured object with `TcpTestSucceeded`, `PingSucceeded`, `RemoteAddress`, and `TraceRoute` properties.
-> The PowerShell equivalent of `ping` + `nc`; `-Port` enables TCP mode and is the primary interactive diagnostic on Windows.
+> **`Test-NetConnection`**
+> - PowerShell diagnostic cmdlet that can test basic reachability, TCP port connectivity, and optionally trace the route to a destination, returning structured output.
+> - Used on Windows as the primary interactive equivalent of combining `ping`, TCP port testing, and route checks in one command.
 >
 > > [!warning] Slow for bulk port sweeps
 > >
-> > Each `Test-NetConnection` call waits for a built-in timeout. Sweeping multiple unreachable ports can exceed 30 seconds. Use `[System.Net.Sockets.TcpClient]` with `BeginConnect`/`AsyncWaitHandle` for scripted sweeps.
+> > Each `Test-NetConnection` call waits for built-in timeout behavior. Sweeping many unreachable ports can therefore be slow; for scripted sweeps, a direct .NET socket approach is usually faster.
 >
 > ---
 >
-> **`Resolve-DnsName`** — PowerShell cmdlet that queries DNS and returns structured objects with `Name`, `Type`, `IPAddress`, and `TTL` properties.
-> The PowerShell equivalent of `dig`; `-Server` overrides the system resolver and `-Type` constrains the query to a single record type.
+> **`Resolve-DnsName`**
+> - PowerShell cmdlet that queries DNS and returns structured records containing properties such as name, type, TTL, and resolved data.
+> - Used as the PowerShell equivalent of `dig` when scripts need typed DNS results instead of parsing raw command output.
 >
 > > [!info] Structured output vs text parsing
 > >
-> > Unlike `nslookup`, `Resolve-DnsName` returns typed objects that can be filtered with `Where-Object` and piped without parsing text.
+> > Unlike `nslookup`, `Resolve-DnsName` returns objects that can be filtered, sorted, and piped directly in PowerShell without fragile text parsing.
 >
 > ---
 >
-> **`Get-NetTCPConnection`** — PowerShell cmdlet that reads TCP socket state from the OS; joined with `Get-Process` to map each socket to a process name.
-> The PowerShell equivalent of `ss -tlnp`; used on the server side to confirm a service is bound before testing remotely.
+> **`Get-NetTCPConnection`**
+> - PowerShell cmdlet that reads TCP connection and listener state from Windows, returning objects with local and remote addresses, ports, state, and owning process ID.
+> - Used on the server side to confirm that a service is listening before testing it remotely.
 >
 > > [!info] Requires joining with `Get-Process`
 > >
-> > `Get-NetTCPConnection` returns `OwningProcess` (PID) but not the process name. Use a calculated property `@{N='Process';E={(Get-Process -Id $_.OwningProcess).ProcessName}}` to display human-readable names.
+> > `Get-NetTCPConnection` returns `OwningProcess` as a PID, not a process name. Join it with `Get-Process` when a human-readable process identity is needed.
 >
 > ---
 >
-> **ICMP** (Internet Control Message Protocol) — a Layer 3 protocol used by `ping` and `traceroute` to exchange control messages; operates below TCP and UDP.
-> Verifies basic network-layer reachability; widely blocked by cloud firewalls, meaning its absence does not confirm a host is down.
+> **ICMP (Internet Control Message Protocol)**
+> - Network-layer control protocol used for diagnostic and error-reporting messages such as Echo Request, Echo Reply, Destination Unreachable, and Time Exceeded.
+> - Used by tools like `ping` and `traceroute` to test reachability and reveal path behavior independently of any specific TCP or UDP application.
 >
 > > [!warning] ICMP block does not mean host down
 > >
-> > A host can block all ICMP and still serve HTTP, SSH, and database traffic on TCP ports. Never conclude a host is unreachable from a `ping` timeout alone.
+> > A host can ignore or block ICMP and still serve HTTP, SSH, or database traffic normally. A `ping` timeout alone does not prove the host is unavailable.
 >
 > ---
 >
-> **TTL** (Time To Live) — a counter in each IP packet decremented by every router; when it reaches zero the router drops the packet and returns an ICMP "time exceeded" message. Also used in DNS records to control cache duration.
-> `traceroute` exploits IP TTL to reveal each router hop; DNS TTL controls how long resolvers cache a record before re-querying the authoritative server.
+> **TTL (Time To Live)**
+> - Context-dependent field name used in two different places: in IP packets it is a hop limit decremented by each router; in DNS records it is a cache lifetime in seconds.
+> - Used in IP networking by `traceroute` to reveal each hop, and in DNS to control how long resolvers keep an answer before querying again.
 >
 > > [!warning] Two unrelated concepts share the same abbreviation
 > >
-> > IP packet TTL (hop count, typically 64–128) and DNS TTL (cache lifetime in seconds, e.g., 300) are completely independent. Context determines which is meant.
+> > IP TTL and DNS TTL are separate mechanisms. One limits packet lifetime in transit; the other controls DNS cache duration.
 >
 > ---
 >
-> **GCP firewall rules** — VPC-level ingress/egress rules evaluated before traffic reaches a VM; stateless and enforced by the Google network fabric, not the guest OS.
-> The most common cause of "connection timed out" failures in GCP environments; must be checked with `gcloud compute firewall-rules list` when `nc` or `Test-NetConnection` times out.
+> **GCP firewall rules**
+> - Google Cloud VPC firewall rules are stateful network rules that allow or deny ingress and egress traffic based on direction, protocol, ports, source, destination, and target scope before packets reach the VM guest operating system.
+> - Used to control which traffic is allowed into or out of VM instances at the VPC level, and therefore a primary check when remote connectivity times out in GCP.
 >
-> > [!info] Stateless and invisible to the VM
+> > [!info] Enforced before guest OS firewalls
 > >
-> > GCP firewall rules drop packets silently before they reach the guest OS. The VM's own `iptables` or Windows Firewall never sees the traffic, so local firewall checks on the server are inconclusive when the GCP rule is the blocker.
+> > VPC firewall rules are evaluated in Google Cloud's virtual network path before traffic reaches the VM. A packet blocked there never reaches `iptables`, `nftables`, or Windows Firewall inside the instance, so both layers may need to be checked separately.
 
 The first question in any network debugging session is: "Can my client reach the server at all?" This seems simple, but there are multiple layers that can fail: DNS resolution, TCP routing, firewall rules, and the service itself. Working through the layers systematically turns a 2-hour debugging session into a 5-minute one.
 

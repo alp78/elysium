@@ -50,7 +50,7 @@ status: complete
 > >
 > > `TypeVar` is a development-time construct only. The interpreter ignores it at runtime — it provides no enforcement, no dispatch, and no overhead. All checking is performed by mypy or pyright during CI or IDE analysis.
 >
-> > ---
+>  ---
 >
 > **`Generic[T]`**
 > - Base class for parameterised classes: `class Stack(Generic[T])` tells the type checker to track the inner type `T` through every method.
@@ -64,7 +64,7 @@ status: complete
 > > >
 > > > Always inherit: `class Stack(Generic[T]):` and annotate the internal storage as `list[T]`.
 >
-> > ---
+>  ---
 >
 > **`bound` (TypeVar bound)**
 > - `TypeVar('T', bound=SomeClass)` restricts `T` to subtypes of `SomeClass`, enabling method calls on `T` that are only safe for that type.
@@ -74,7 +74,7 @@ status: complete
 > >
 > > `bound=X` accepts any subtype of X. `TypeVar('T', X, Y)` accepts *exactly* X or Y — nothing else, including subtypes of X. Use `bound` for "at least this interface"; use constrained form only when the set of valid types is fixed.
 >
-> > ---
+>  ---
 >
 > **`Protocol`**
 > - Structural typing interface from `typing`: any class with the required method signatures satisfies the protocol without explicit inheritance.
@@ -88,7 +88,7 @@ status: complete
 > > >
 > > > `@runtime_checkable` on the Protocol class enables `isinstance()` checks while preserving static verification.
 >
-> > ---
+>  ---
 >
 > **duck typing**
 > - Python's default polymorphism model: if an object has the right methods and attributes, it works — no base class, interface, or generic declaration required.
@@ -98,7 +98,7 @@ status: complete
 > >
 > > Adding `isinstance()` guards defeats duck typing's flexibility. Prefer structural checks (try/except `AttributeError`) or Protocol annotations in signatures.
 >
-> > ---
+>  ---
 >
 > **comprehension**
 > - Concise syntax for building collections in a single expression: `[expr for x in iter if cond]` (list), `{k: v for ...}` (dict), `{x for ...}` (set).
@@ -108,7 +108,7 @@ status: complete
 > >
 > > Beyond two levels of nesting, comprehensions become difficult to read and debug. Prefer explicit `for` loops or `itertools` combinators for complex multi-level logic.
 >
-> > ---
+>  ---
 >
 > **generator expression**
 > - Lazy comprehension using `()` instead of `[]`: `(x*2 for x in items)`. Yields items one at a time without building the full list in memory.
@@ -118,7 +118,7 @@ status: complete
 > >
 > > Once a generator is exhausted it yields nothing on re-iteration. Wrap with `list()` if multiple passes are needed: `data = list(gen_expr)`.
 >
-> > ---
+>  ---
 >
 > **`map` / `filter` / `reduce`**
 > - Functional built-ins: `map(func, iter)` applies a function to every element, `filter(pred, iter)` keeps elements where the predicate is `True`, `functools.reduce(func, iter)` folds the sequence into a single value left-to-right.
@@ -128,7 +128,7 @@ status: complete
 > >
 > > `map()` and `filter()` return iterator objects, not lists. Wrap in `list()` to force evaluation: `list(map(str, nums))`. `reduce` is in `functools` (not a built-in since Python 3).
 >
-> > ---
+>  ---
 >
 > **`itertools`**
 > - Standard library module with efficient iterator combinators: `groupby`, `chain`, `islice`, `product`, `combinations`, `permutations`, `repeat`, `cycle`.
@@ -138,7 +138,7 @@ status: complete
 > >
 > > `groupby` groups *consecutive* equal elements, not all matching elements across the sequence. Always sort by the grouping key first: `sorted(data, key=lambda x: x['dept'])`. Without sorting, the same key can appear in multiple non-adjacent groups.
 >
-> > ---
+>  ---
 >
 > **pandas**
 > - DataFrame library for tabular data analysis: mutable, row-indexed, NumPy-backed, with a massive ecosystem (scikit-learn, matplotlib, statsmodels, SQLAlchemy integration).
@@ -148,7 +148,7 @@ status: complete
 > >
 > > Modifying a column on a DataFrame slice may silently modify only a copy, not the original. Use `.copy()` to force a new DataFrame, or `.loc[row_mask, col]` for in-place assignment. The warning signals that pandas cannot determine whether the slice is a view or copy.
 >
-> > ---
+>  ---
 >
 > **Polars**
 > - High-performance DataFrame library: immutable, Rust-backed, lazy-by-default, Apache Arrow columnar format; no row index.
@@ -158,7 +158,7 @@ status: complete
 > >
 > > Polars has no row-label index. Label-based row selection with `.loc[]` does not exist. Use `.filter(pl.col('symbol') == 'ASML.AS')` for conditional row selection.
 >
-> > ---
+>  ---
 >
 > **lazy evaluation (Polars)**
 > - Polars builds a logical query plan without executing it when the API is called in lazy mode (`.lazy()`); `.collect()` triggers optimised execution.
@@ -172,7 +172,7 @@ status: complete
 > >
 > > Call `.collect()` at the end of every lazy chain when a `DataFrame` is needed: `df = lf.filter(...).group_by(...).agg(...).collect()`. Use `.lazy()` / `.collect()` as the outer boundary and keep all transformations in between lazy for automatic query optimization.
 >
-> > ---
+>  ---
 >
 > **Apache Arrow**
 > - Columnar in-memory data format used by Polars as its internal storage layer. Enables zero-copy reads between Arrow-compatible libraries and efficient Parquet/IPC I/O.
@@ -182,7 +182,7 @@ status: complete
 > >
 > > Polars uses Arrow internally; users interact with Polars DataFrames and Series, not Arrow arrays directly. Arrow becomes relevant when exchanging data with other libraries (PyArrow, DuckDB, Hugging Face Datasets) via zero-copy interop.
 >
-> > ---
+>  ---
 
 Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
 

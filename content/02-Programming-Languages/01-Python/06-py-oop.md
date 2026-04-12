@@ -77,7 +77,7 @@ status: complete
 > >
 > > `Dog` is the class (blueprint). `Dog("Rex", 5)` is an instance (a concrete object). Attributes on the class body are shared; attributes set on `self` inside `__init__` are per-instance.
 >
-> > ---
+>  ---
 >
 > **`__init__`**
 >
@@ -88,7 +88,7 @@ status: complete
 > >
 > > `def __init__(name, age)` omits `self`. Python passes the instance as the first argument automatically, so all positional args shift — `name` receives the instance and `age` receives the first caller argument, raising `TypeError`.
 >
-> > ---
+>  ---
 >
 > **`self`**
 >
@@ -99,7 +99,7 @@ status: complete
 > >
 > > Python passes the instance automatically as the first argument. The name `self` is a universally followed convention, not enforced by the language — but deviating from it breaks every linter and confuses every reader.
 >
-> > ---
+>  ---
 >
 > **`@property`**
 >
@@ -110,7 +110,7 @@ status: complete
 > >
 > > The setter must be decorated `@radius.setter`, not `@property`. A mismatched name creates a second, independent property rather than adding write access to the first.
 >
-> > ---
+>  ---
 >
 > **inheritance**
 >
@@ -121,7 +121,7 @@ status: complete
 > >
 > > Reserve inheritance for genuine IS-A relationships. If a class merely needs a capability of another, compose: `self.logger = Logger()`. Deep hierarchies (>3 levels) become brittle and hard to reason about.
 >
-> > ---
+>  ---
 >
 > **`super()`**
 >
@@ -132,7 +132,7 @@ status: complete
 > >
 > > If a child's `__init__` does not call `super().__init__()`, the parent's attributes are never set. Accessing them later raises `AttributeError` or silently produces corrupted state.
 >
-> > ---
+>  ---
 >
 > **MRO (Method Resolution Order)**
 >
@@ -143,7 +143,7 @@ status: complete
 > >
 > > `class Duck(Animal, Flyable, Swimmable)` does not simply search left to right. C3 linearization accounts for all constraints and can produce a different order. Always verify with `Duck.__mro__` before relying on dispatch order.
 >
-> > ---
+>  ---
 >
 > **duck typing**
 >
@@ -154,7 +154,7 @@ status: complete
 > >
 > > Call the method directly and let dispatch happen naturally. Reserve `isinstance()` for actual branching decisions (e.g., choosing a serialization format). Over-relying on `isinstance()` creates rigid type coupling that defeats duck typing's flexibility.
 >
-> > ---
+>  ---
 >
 > **ABC (Abstract Base Class)**
 >
@@ -165,7 +165,7 @@ status: complete
 > >
 > > `ABC` requires explicit inheritance and allows shared concrete methods. `Protocol` requires no inheritance and defines only the structural contract. Prefer `Protocol` when there is no shared code to inherit; prefer `ABC` when the base class contributes real logic.
 >
-> > ---
+>  ---
 >
 > **`Protocol`**
 >
@@ -176,7 +176,7 @@ status: complete
 > >
 > > Without `@runtime_checkable`, `isinstance(Button(), Drawable)` raises `TypeError`. Add the decorator above the Protocol class to enable runtime checks.
 >
-> > ---
+>  ---
 >
 > **mixin**
 >
@@ -187,7 +187,7 @@ status: complete
 > >
 > > Mixins assume the host class owns initialization. A mixin with `__init__` will conflict with `super()` chains and may silently skip parent constructors depending on MRO order.
 >
-> > ---
+>  ---
 >
 > **encapsulation**
 >
@@ -198,7 +198,7 @@ status: complete
 > >
 > > `_name` signals "internal — do not access from outside." `__name` applies name mangling to `_ClassName__name` to avoid subclass collisions. Neither is truly private — both are accessible if you know the mangled name. The convention is the contract.
 >
-> > ---
+>  ---
 >
 > **name mangling**
 >
@@ -209,7 +209,7 @@ status: complete
 > >
 > > `__attr` makes testing harder (you must use the mangled name) and complicates subclassing. Prefer `_attr` for internal details and reserve `__attr` for the rare case where a subclass name collision would be genuinely dangerous.
 >
-> > ---
+>  ---
 >
 > **`__slots__`**
 >
@@ -220,7 +220,7 @@ status: complete
 > >
 > > If a subclass omits `__slots__`, it reintroduces `__dict__`, negating memory savings. Use `@dataclass(slots=True)` in Python 3.10+ to generate slots automatically from field annotations.
 >
-> > ---
+>  ---
 >
 > **`@classmethod`**
 >
@@ -231,7 +231,7 @@ status: complete
 > >
 > > If the method creates instances, use `@classmethod` — `cls(...)` in the body ensures that `Manager.from_string(...)` creates a `Manager`, not an `Employee`. `@staticmethod` cannot do this because it receives no class reference.
 >
-> > ---
+>  ---
 >
 > **`@staticmethod`**
 >
@@ -242,7 +242,7 @@ status: complete
 > >
 > > If the function does not logically belong to the class, a module-level function is cleaner and avoids the false implication of class membership. `@staticmethod` is appropriate when the utility is tightly scoped to the class's domain (e.g., `Employee.is_valid_salary()`).
 >
-> > ---
+>  ---
 >
 > **`@dataclass`**
 >
@@ -253,7 +253,7 @@ status: complete
 > >
 > > `tags: list[str] = []` is rejected at class definition time because the list would be shared across all instances. Always use `field(default_factory=list)` for mutable defaults.
 >
-> > ---
+>  ---
 >
 > **`frozen=True`**
 >
@@ -264,7 +264,7 @@ status: complete
 > >
 > > To "modify" a frozen instance, use `dataclasses.replace(obj, field=new_val)` — it returns a new instance with the updated field, leaving the original unchanged.
 >
-> > ---
+>  ---
 >
 > **`field()`**
 >
@@ -275,7 +275,7 @@ status: complete
 > >
 > > Fields excluded from `__init__` with `field(init=False)` are set in `__post_init__`, which runs automatically after the auto-generated `__init__` completes — the equivalent of a secondary initialization phase.
 >
-> > ---
+>  ---
 
 Python OOP organises code into classes, inheritance hierarchies, abstract base classes, and dataclasses. This page covers all core constructs with executable examples — from basic class definition through to dataclasses and records.
 

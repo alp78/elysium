@@ -32,107 +32,122 @@ status: complete
 > - **Operations and safety** — Warnings on execution policy, `$ErrorActionPreference` defaults, and `$LASTEXITCODE` handling; recommendation table for script headers, cleanup, logging, and SQL Server operations.
 
 > [!note]- Glossary
-> **PowerShell script (`.ps1`)** — a text file containing PowerShell commands, identified by the `.ps1` extension, executed by `pwsh.exe` (PowerShell 7+) or `powershell.exe` (Windows PowerShell 5.1).
-> - **Purpose:** The standard automation unit for Windows data engineering — file processing, SQL Server interaction, Windows services, and scheduled jobs.
+>
+> **PowerShell script (`.ps1`)**
+> - A plain-text file containing PowerShell code, usually saved with the `.ps1` extension and executed by `pwsh` (PowerShell 7+) or `powershell.exe` (Windows PowerShell 5.1).
+> - The standard script unit for Windows automation: scheduled jobs, file handling, system administration, API calls, and SQL Server operations.
 > > [!warning] Execution policy blocks scripts by default
 > >
-> > Windows blocks unsigned `.ps1` files until `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` is configured; scripts that run in an interactive shell may silently fail in Task Scheduler if the policy was never set for that session.
+> > Windows may block unsigned `.ps1` files until `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` is configured; a script that works in one context can still fail under Task Scheduler if the execution context differs.
 >
 > ---
 >
-> **`$ErrorActionPreference`** — a PowerShell preference variable that controls how the runtime responds to non-terminating cmdlet errors; the default value `Continue` prints the error and keeps running.
-> - **Purpose:** Set to `Stop` at the top of every automation script to make all cmdlet errors terminating — the PowerShell equivalent of Bash `set -e`.
+> **`$ErrorActionPreference`**
+> - A PowerShell preference variable that controls how non-terminating PowerShell errors are handled. The default value, `Continue`, reports the error and keeps executing.
+> - Commonly set to `Stop` near the top of a script so cmdlet and provider errors become terminating errors that can halt execution or be caught reliably.
 > > [!warning] Does not cover native executables
 > >
-> > `$ErrorActionPreference = "Stop"` only applies to PowerShell cmdlets. Errors from `gcloud`, `python.exe`, or `sqlcmd.exe` are not terminating — check `$LASTEXITCODE` manually after every native call.
+> > `$ErrorActionPreference = 'Stop'` applies to PowerShell errors, not native process failures. Commands like `gcloud`, `python`, or `sqlcmd` can still fail without throwing; check `$LASTEXITCODE` after each native call.
 >
 > ---
 >
-> **`$LASTEXITCODE`** — an automatic variable holding the integer exit code of the most recently executed native executable; `0` means success, any non-zero value means failure.
-> - **Purpose:** The only way to detect errors from non-PowerShell processes; must be checked explicitly with `if ($LASTEXITCODE -ne 0) { throw "..." }` after every `gcloud`, `bq`, `sqlcmd`, or `python` call.
+> **`$LASTEXITCODE`**
+> - An automatic variable that stores the exit code returned by the most recently completed native executable. `0` usually means success; any non-zero value indicates failure according to that program's contract.
+> - The primary way to detect failure from non-PowerShell tools such as `gcloud`, `bq`, `sqlcmd`, `az`, or `python` inside a PowerShell script.
 > > [!info] Bash parity: `$?`
 > >
-> > In Bash, `$?` holds the same value and `set -e` automatically aborts on non-zero exit. PowerShell has no automatic equivalent for native processes — the check is always manual.
+> > In Bash, `$?` holds the exit status of the previous command. In PowerShell, `$?` and `$LASTEXITCODE` are not the same thing; `$LASTEXITCODE` is the variable you use for native executables.
 >
 > ---
 >
-> **`Set-StrictMode`** — a PowerShell cmdlet that turns uninitialized variable access, invalid property references, and bare function calls into terminating errors.
-> - **Purpose:** Use `-Version Latest` at the top of every script to catch logic bugs early; equivalent to Bash `set -u`, but broader — also catches property-access errors that Bash cannot model.
+> **`Set-StrictMode`**
+> - A PowerShell cmdlet that makes certain loose or ambiguous behaviors fail fast, including references to uninitialized variables and some invalid property or method usage.
+> - Used to surface logic defects early, especially in automation code where silent coercion or accidental null usage would otherwise go unnoticed.
 > > [!info] Scope is local only
 > >
-> > `Set-StrictMode` only affects the scope in which it is called. Functions defined before it, or dot-sourced scripts, inherit whatever mode was active when they were loaded — set it first, before any function definitions.
+> > `Set-StrictMode` affects the current scope and child scopes created afterward. Place it near the top of the script before defining functions so more of the script runs under the intended rules.
 >
 > ---
 >
-> **`try / catch / finally`** — PowerShell's structured error-handling construct: `try` wraps guarded code, `catch` handles terminating errors, and `finally` runs unconditionally for cleanup.
-> - **Purpose:** `finally` is the correct place for resource cleanup (mutex release, temp-file deletion, stream close) because it executes whether the script succeeds, fails, or is interrupted — the PowerShell equivalent of Bash `trap EXIT`.
+> **`try / catch / finally`**
+> - PowerShell's structured exception-handling construct: `try` runs guarded code, `catch` handles terminating errors, and `finally` runs cleanup code whether an error occurred or not.
+> - The standard pattern for controlled failure handling and guaranteed cleanup of temp files, locks, connections, or streams.
 > > [!warning] `catch` is bypassed by non-terminating errors
 > >
-> > `catch` only fires for terminating errors. Without `$ErrorActionPreference = "Stop"`, a cmdlet failure prints a message and execution falls through the `try` block silently — the most common source of "errors that do nothing" bugs.
+> > `catch` only handles terminating errors. Without `$ErrorActionPreference = 'Stop'` or an explicit `-ErrorAction Stop`, many cmdlet failures only emit an error record and execution continues.
 >
 > ---
 >
-> **Execution policy** — a Windows security setting (`Set-ExecutionPolicy`) that controls which PowerShell scripts are permitted to run; the default `Restricted` policy blocks all `.ps1` files.
-> - **Purpose:** Set to `RemoteSigned` at minimum to allow locally authored scripts to run without a digital signature; use `-Scope CurrentUser` to avoid requiring administrator rights.
+> **Execution policy**
+> - A PowerShell security feature that determines which scripts are allowed to run under a given scope and trust model, using policies such as `Restricted`, `RemoteSigned`, or `Bypass`.
+> - Important for script deployment and scheduled automation because a valid `.ps1` file can still be blocked before any code runs.
 > > [!info] No Bash equivalent
 > >
-> > Bash has no platform-wide execution policy. On Linux/macOS, script execution is governed entirely by the file's execute bit (`chmod +x`) — no signing or policy registry exists.
+> > Bash has no comparable platform-wide script execution policy. On Linux and macOS, execution is primarily controlled by file permissions and the selected interpreter.
 >
 > ---
 >
-> **`Import-Csv` / `Export-Csv`** — PowerShell cmdlets that parse a delimited file into an array of `PSCustomObject` rows (`Import-Csv`) or serialize PowerShell objects back to CSV format (`Export-Csv`).
-> - **Purpose:** Column access by property name (`$row.email`) rather than positional index makes scripts resilient to column reordering in source files; `Export-Csv` adds a header row automatically and handles quoting.
+> **`Import-Csv` / `Export-Csv`**
+> - PowerShell cmdlets for converting between CSV text and structured objects. `Import-Csv` reads rows into objects with named properties; `Export-Csv` writes objects back to CSV with a header row.
+> - Used to work with tabular data by column name instead of positional parsing, which makes scripts easier to read and usually more robust to column reordering.
 > > [!info] No native Bash CSV parser
 > >
-> > Bash has no equivalent of `Import-Csv`. The closest options are `awk -F,` for simple fixed-schema files or Python's `csv.DictReader` invoked from a subshell for robust, named-column parsing.
+> > Bash has no built-in CSV parser with schema-aware property access. Simple files can be handled with `awk`, but quoted fields, embedded commas, and escaping often require Python or another proper CSV parser.
 >
 > ---
 >
-> **`Invoke-RestMethod`** — a PowerShell cmdlet that sends HTTP/HTTPS requests and automatically deserializes JSON or XML responses into live PowerShell objects, eliminating manual `ConvertFrom-Json` calls.
-> - **Purpose:** Used for API polling, paginated fetching, and OAuth2 token exchange throughout this note; returned objects can be accessed by property name immediately, without re-parsing the response string.
+> **`Invoke-RestMethod`**
+> - A PowerShell cmdlet that sends HTTP or HTTPS requests and, for common response types such as JSON or XML, automatically converts the response into PowerShell objects.
+> - Commonly used for API polling, token acquisition, metadata retrieval, and paginated ingestion workflows without manual response parsing.
 > > [!info] Bash parity: `curl | jq`
 > >
-> > `curl -s URL | jq '.field'` is the idiomatic Bash equivalent. PowerShell's object is live and queryable; Bash's `jq` output is a string that must be re-parsed or re-assigned each time it is used.
+> > The common Bash pattern is `curl` for transport plus `jq` for JSON parsing. `Invoke-RestMethod` combines those steps into one object-oriented command for many API scenarios.
 >
 > ---
 >
-> **NDJSON (Newline-Delimited JSON)** — a text format where each line is a self-contained, valid JSON object; also called JSON Lines (`.jsonl`). Used by BigQuery streaming inserts, Cloud Logging exports, and most modern data tools.
-> - **Purpose:** Unlike a JSON array, NDJSON can be read and written line-by-line without loading the entire file into memory — essential for large datasets where a full `ConvertFrom-Json` parse would exhaust RAM.
+> **NDJSON (Newline-Delimited JSON)**
+> - A text format in which each line is an independent JSON value, most often one JSON object per line. It is also commonly called JSON Lines (`.jsonl`).
+> - Used for streaming and large-scale processing because records can be produced and consumed incrementally without loading an entire JSON array into memory.
 > > [!info] Bash parity: `jq -c`
 > >
-> > `jq -c '.[]' input.json` converts a JSON array to NDJSON on Linux. In PowerShell, use `ConvertTo-Json -Compress` per object inside a `foreach` loop and write each line with `[System.IO.StreamWriter]` for memory efficiency.
+> > `jq -c '.[]' input.json` is a common way to emit compact one-object-per-line output from a JSON array. In PowerShell, emit one object at a time and serialize per record to preserve streaming behavior.
 >
 > ---
 >
-> **Exponential backoff** — a retry strategy where the wait time between attempts doubles after each failure (1 s → 2 s → 4 s → 8 s), preventing a recovering service from being overwhelmed by rapid retries.
-> - **Purpose:** Implemented in the REST GET and generic retry wrappers in this note to handle transient API failures; production systems add a random jitter component to avoid thundering-herd stampedes when many clients retry simultaneously.
+> **Exponential backoff**
+> - A retry strategy in which the delay between attempts increases, typically by doubling after each failure, often with an upper limit and optional random jitter.
+> - Used to handle transient failures without overwhelming an unstable upstream service or creating synchronized retry spikes across many workers.
 > > [!info] Bash parity: identical logic
 > >
-> > Bash uses `sleep $delay` inside a `while` loop with `delay=$((delay * 2))`. The algorithm is identical; only the syntax differs — making it straightforward to port retry logic between PowerShell and Bash wrappers.
+> > The control flow differs by syntax, but the algorithm is the same in Bash, PowerShell, Python, or any other language: retry, sleep, increase delay, stop after a defined limit.
 >
 > ---
 >
-> **Mutex (named mutex)** — a system-wide synchronization primitive (`System.Threading.Mutex`) that only one process can hold at a time; used to prevent overlapping scheduled task instances.
-> - **Purpose:** The `Global\` prefix makes the mutex visible across all Windows sessions including services; without the prefix it is session-scoped and cannot prevent two logon sessions from running the same job simultaneously.
+> **Mutex (named mutex)**
+> - An operating-system synchronization primitive that allows only one holder at a time. A named mutex can be shared across processes, and sometimes across sessions, depending on how it is created.
+> - Used to prevent overlapping executions of the same scheduled task or script when concurrent runs would corrupt state or duplicate work.
 > > [!danger] File-based locks are not atomic
 > >
-> > The common Bash alternative — `[ -f /tmp/job.lock ] && exit 0; touch /tmp/job.lock` — has a race window between the existence check and the file creation. PowerShell's `Mutex.WaitOne(0)` is an OS-level atomic operation with no race.
+> > A naive lock-file pattern such as `if (Test-Path lock) { exit } ; New-Item lock` has a race between the check and the create. A mutex acquisition is an OS-level synchronization operation designed to avoid that gap.
 >
 > ---
 >
-> **`Invoke-Sqlcmd`** — a PowerShell cmdlet (from the `SqlServer` module) that executes T-SQL against SQL Server and returns results as `DataRow` objects rather than raw text.
-> - **Purpose:** Structured output enables direct piping to `Export-Csv` or property access without text parsing; requires `Install-Module SqlServer` (once per machine) before first use.
+> **`Invoke-Sqlcmd`**
+> - A cmdlet from the `SqlServer` PowerShell module that executes Transact-SQL against SQL Server and returns results as structured rows rather than plain console text.
+> - Useful when a script needs direct SQL execution with object-oriented output that can be filtered, inspected, or exported without manual text parsing.
 > > [!info] Bash parity: `sqlcmd` returns text
 > >
-> > The Bash equivalent `sqlcmd -S server -d db -Q "SELECT ..."` produces plain text output. Structured column access requires piping to `awk` or re-parsing in Python — making `Invoke-Sqlcmd` significantly more ergonomic for object-based workflows.
+> > In shell workflows, `sqlcmd` commonly emits delimited or formatted text that must be parsed afterward. `Invoke-Sqlcmd` is often more convenient when the rest of the workflow is already object-based in PowerShell.
 >
 > ---
 >
-> **Task Scheduler** — the Windows built-in job scheduler (`taskschd.msc` / `schtasks.exe`) that runs scripts at defined times, system events, or triggers; the Windows equivalent of `cron` on Linux.
-> - **Purpose:** The standard mechanism for scheduling unattended pipeline scripts on Windows; tasks run in a separate non-interactive session where missing `PATH` entries and execution policy settings are the most common causes of scripts that work interactively but fail when scheduled.
+> **Task Scheduler**
+> - The built-in Windows job scheduler that launches tasks on a time schedule or in response to specific triggers such as startup, logon, or system events.
+> - The standard Windows mechanism for running unattended scripts, recurring automation, and operational jobs outside an interactive shell session.
 > > [!warning] Non-interactive environment differs from shell
 > >
-> > Tasks run as the task-definition user, not the interactive session. Environment variables, `$env:PATH`, and execution policy must all be explicitly configured in the task definition or set in the script itself — never assume the interactive shell environment is available.
+> > Scheduled tasks often run with a different user context, environment, working directory, and profile state than an interactive terminal. A script that works manually can still fail when scheduled unless those assumptions are made explicit.
+
 
 PowerShell is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
 

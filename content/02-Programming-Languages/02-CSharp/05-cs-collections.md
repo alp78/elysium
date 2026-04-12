@@ -74,7 +74,7 @@ status: complete
 > >
 > > `Array.Resize` allocates a new array and copies all elements. Use `List<T>` for any collection that needs to grow.
 >
-> > ---
+>  ---
 >
 > **`List<T>`**
 >
@@ -85,7 +85,7 @@ status: complete
 > >
 > > On large lists (millions of items) a resize allocates a new array twice the current size and copies all elements, temporarily using up to 3× the data size in memory.
 >
-> > ---
+>  ---
 >
 > **`Dictionary<TKey, TValue>`**
 >
@@ -96,7 +96,7 @@ status: complete
 > >
 > > Changing a key's hash-contributing fields after insertion breaks the internal hash table. Use immutable or value-type keys (`string`, `int`, `record struct`).
 >
-> > ---
+>  ---
 >
 > **`HashSet<T>`**
 >
@@ -107,7 +107,7 @@ status: complete
 > >
 > > `UnionWith`, `IntersectWith`, `ExceptWith`, and `SymmetricExceptWith` all modify the target set. Copy first: `var result = new HashSet<T>(original); result.ExceptWith(other);`
 >
-> > ---
+>  ---
 >
 > **`SortedDictionary<K,V>`**
 >
@@ -118,7 +118,7 @@ status: complete
 > >
 > > Use when iterating keys in sorted order is a core requirement (e.g., range scans, ordered reports). For pure lookup, `Dictionary` is always faster.
 >
-> > ---
+>  ---
 >
 > **`SortedSet<T>`**
 >
@@ -129,7 +129,7 @@ status: complete
 > >
 > > `SortedSet<T>.GetViewBetween(lower, upper)` returns a live view of elements within a range — no copy needed. Useful for windowed queries and sliding-window ETL patterns.
 >
-> > ---
+>  ---
 >
 > **`Span<T>`**
 >
@@ -140,7 +140,7 @@ status: complete
 > >
 > > `Span<T>` is a `ref struct` — it cannot be stored in fields, captured by closures, or used in `async` methods. Use `Memory<T>` when the slice must survive an `await`.
 >
-> > ---
+>  ---
 >
 > **`Memory<T>`**
 >
@@ -151,7 +151,7 @@ status: complete
 > >
 > > Both make `ArraySegment<T>` redundant — implicit conversions exist. Use `Span<T>` for synchronous hot paths; use `Memory<T>` when async or field storage is required.
 >
-> > ---
+>  ---
 >
 > **`ReadOnlySpan<T>`**
 >
@@ -162,7 +162,7 @@ status: complete
 > >
 > > `text.AsSpan(start, length)` returns a `ReadOnlySpan<char>` view into the original string — no new string is allocated on the heap. Critical for parsers processing large volumes of text.
 >
-> > ---
+>  ---
 >
 > **`ValueTuple`**
 >
@@ -173,7 +173,7 @@ status: complete
 > >
 > > `var (x, y) = tuple` unpacks fields into separate variables. `(a, b) = (b, a)` swaps two values without a temporary variable — the compiler handles it atomically.
 >
-> > ---
+>  ---
 >
 > **`enum`**
 >
@@ -184,7 +184,7 @@ status: complete
 > >
 > > `(Color)999` compiles and runs — producing an enum value with no defined name. Always validate with `Enum.IsDefined(typeof(Color), value)` or `Enum.TryParse` when converting external input.
 >
-> > ---
+>  ---
 >
 > **`Stack<T>`**
 >
@@ -195,7 +195,7 @@ status: complete
 > >
 > > `Stack<T>.Pop()` throws `InvalidOperationException` if the collection is empty. In event-driven or concurrent code, the count can change between check and call — use `TryPop(out var item)` instead.
 >
-> > ---
+>  ---
 >
 > **`Queue<T>`**
 >
@@ -206,7 +206,7 @@ status: complete
 > >
 > > `Queue<T>.Dequeue()` throws `InvalidOperationException` if the collection is empty. Use `TryDequeue(out var item)` for safe access in concurrent or conditional flows.
 >
-> > ---
+>  ---
 >
 > **`PriorityQueue<T, TPriority>`**
 >
@@ -217,7 +217,7 @@ status: complete
 > >
 > > `PriorityQueue<T, TPriority>` does not expose a decrease-key operation. To update a priority, track items externally and use a lazy deletion pattern (mark stale entries, skip on dequeue).
 >
-> > ---
+>  ---
 >
 > **`LinkedList<T>`**
 >
@@ -228,7 +228,7 @@ status: complete
 > >
 > > `LinkedList<T>` has no indexer — accessing the nth element requires traversal from the head. For indexed access patterns use `List<T>` instead.
 >
-> > ---
+>  ---
 >
 > **`ImmutableHashSet<T>`**
 >
@@ -239,7 +239,7 @@ status: complete
 > >
 > > Every mutation allocates a new collection. For write-heavy scenarios use `ConcurrentDictionary<K,V>` or `ConcurrentBag<T>` from `System.Collections.Concurrent` instead.
 >
-> > ---
+>  ---
 >
 > **`FrozenDictionary<K,V>` / `FrozenSet<T>`**
 >
@@ -250,7 +250,7 @@ status: complete
 > >
 > > `FrozenDictionary` and `FrozenSet` are not available on .NET 6/7 or .NET Framework. Add a target-framework check before using them in libraries with broad compatibility requirements.
 >
-> > ---
+>  ---
 >
 > **O(1) / O(n) / O(log n)**
 >
@@ -260,17 +260,6 @@ status: complete
 > > [!info] Practical collection complexity reference
 > >
 > > For membership testing at scale, switching from `List<T>.Contains` (O(n)) to `HashSet<T>.Contains` (O(1)) is the single highest-impact collection change in most data engineering pipelines.
-
-C# collections cover fixed arrays, dynamic lists, dictionaries, sets, tuples, enums, and specialised structures. This page covers all core types with executable examples — from `T[]` and `List<T>` through `Span<T>`, `Dictionary`, `HashSet`, and `PriorityQueue`.
-
-### What this note covers
-
-- **Arrays and Lists** — `T[]`, `List<T>`, search, sort, shallow/deep copy, range/index operators, `Span<T>`, `Memory<T>`, `ReadOnlySpan<char>`
-- **Dictionaries** — `Dictionary<K,V>`, safe access patterns, iteration, LINQ filtering/grouping, `SortedDictionary`
-- **Sets** — `HashSet<T>`, set algebra (union, intersection, difference), data comparison patterns, `SortedSet<T>`
-- **Tuples & Enums** — `ValueTuple`, deconstruction, records as named-tuple alternative, `enum` declaration, switch/parse usage
-- **Stacks, Queues & Linked Lists** — `Stack<T>`, `Queue<T>`, `LinkedList<T>`, `PriorityQueue<T,P>`, ETL patterns
-- **Collection Comparison** — cheat sheet, decision guide, common data engineering patterns, `FrozenDictionary`/`FrozenSet`
 
 ## Arrays and Lists
 

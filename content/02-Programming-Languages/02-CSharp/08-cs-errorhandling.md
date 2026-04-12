@@ -56,7 +56,7 @@ status: complete
 > >
 > > Placing `catch (Exception)` before `catch (SqlException)` means all SQL errors are caught by the general handler and the specific retry logic never runs. Always order catch blocks from most specific subclass to most general base class.
 >
-> > ---
+>  ---
 >
 > **exception filter (`catch when`)**
 >
@@ -67,7 +67,7 @@ status: complete
 > >
 > > Side effects in a `when (...)` predicate (logging, mutations, I/O) run even when the filter returns `false` and the catch block never executes. Keep filter expressions pure — no mutations, no logging, no I/O.
 >
-> > ---
+>  ---
 >
 > **`throw` / `throw ex`**
 >
@@ -78,7 +78,7 @@ status: complete
 > >
 > > Once the original `StackTrace` is overwritten by `throw ex;`, the root cause line is permanently lost — even in a debugger. The only recovery is to reproduce the error in a fresh run.
 >
-> > ---
+>  ---
 >
 > **inner exception**
 >
@@ -89,7 +89,7 @@ status: complete
 > >
 > > `throw new PipelineException("Parse failed")` without passing `ex` discards the original `FormatException`. Downstream catch blocks and logging tools see only the wrapper message with no evidence of what actually went wrong.
 >
-> > ---
+>  ---
 >
 > **`System.Exception`**
 >
@@ -100,7 +100,7 @@ status: complete
 > >
 > > `OutOfMemoryException` and `StackOverflowException` inherit from `Exception`. Catching and swallowing them allows the process to continue in a corrupted state. Global handlers should log and re-throw, not suppress.
 >
-> > ---
+>  ---
 >
 > **custom exception**
 >
@@ -111,7 +111,7 @@ status: complete
 > >
 > > A custom exception without the three standard constructors cannot be serialized across AppDomain boundaries or wrapped by framework exception containers. At minimum, always include all three, even if the bodies simply delegate to `base(...)`.
 >
-> > ---
+>  ---
 >
 > **`IDisposable`**
 >
@@ -122,7 +122,7 @@ status: complete
 > >
 > > A `SqlConnection` not wrapped in `using` holds a pool slot open indefinitely. In a service processing thousands of requests, pool exhaustion produces `SqlException: Timeout expired` errors with no obvious database-side cause.
 >
-> > ---
+>  ---
 >
 > **`using` statement**
 >
@@ -133,7 +133,7 @@ status: complete
 > >
 > > The compiler rejects `using` on a type that does not implement `IDisposable`. For async resources, use `await using` with `IAsyncDisposable` instead.
 >
-> > ---
+>  ---
 >
 > **`using` declaration**
 >
@@ -144,7 +144,7 @@ status: complete
 > >
 > > If a `using var conn = ...` resource must be released before subsequent code in the same method (for example, to free a lock before reading the result), use the block `using (var conn = ...) { }` form to control the exact disposal boundary.
 >
-> > ---
+>  ---
 >
 > **`AggregateException`**
 >
@@ -155,7 +155,7 @@ status: complete
 > >
 > > Using `catch (AggregateException ae) { log(ae.InnerException); }` silently discards all failures after the first. Always iterate `ae.Flatten().InnerExceptions` to capture every error from the parallel run.
 >
-> > ---
+>  ---
 >
 > **error accumulation**
 >
@@ -166,7 +166,7 @@ status: complete
 > >
 > > An error accumulation pattern that collects failures but never checks the list at the end is functionally equivalent to an empty catch block. Always assert or log `errors.Count` after the processing loop.
 >
-> > ---
+>  ---
 >
 > **retry with backoff**
 >
@@ -177,7 +177,6 @@ status: complete
 > >
 > > A retry loop without a hard `maxAttempts` ceiling will retry indefinitely on a permanently failing endpoint, blocking the thread and consuming resources until the process is killed. Always set an explicit limit and re-throw after exhaustion.
 
-C# uses structured exception handling with `try`/`catch`/`finally` blocks, a class-based exception hierarchy rooted in `System.Exception`, and the `using` pattern for deterministic resource cleanup. This note covers exception catching and filtering, the built-in exception type tree, custom domain exceptions, `IDisposable`/`using`, and data-engineering patterns like error accumulation and retry with exponential backoff.
 
 ## try / catch / finally
 

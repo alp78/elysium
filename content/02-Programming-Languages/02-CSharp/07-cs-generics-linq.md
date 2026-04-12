@@ -55,7 +55,7 @@ status: complete
 > >
 > > The compiler infers `T` from the argument when possible (`First(new[] { 1, 2, 3 })` infers `int`). Specify explicitly (`First<string>(...)`) only when inference is ambiguous or you want to be explicit for readability.
 >
-> > ---
+>  ---
 >
 > **Type constraint**
 >
@@ -66,7 +66,7 @@ status: complete
 > >
 > > Adding constraints that are not needed by the generic body silently narrows the set of usable types. Apply only the constraints the body actually requires.
 >
-> > ---
+>  ---
 >
 > **`where T : new()`**
 >
@@ -77,7 +77,7 @@ status: complete
 > >
 > > `T Create<T>(Func<T> factory) => factory();` avoids the `new()` constraint entirely and gives the caller full control over how `T` is constructed.
 >
-> > ---
+>  ---
 >
 > **Covariance (`out T`)**
 >
@@ -88,7 +88,7 @@ status: complete
 > >
 > > `IEnumerable<out T>` is covariant in .NET because it only produces `T` (via `GetEnumerator`) and never consumes it. This is why a `List<string>` can be passed to a method that accepts `IEnumerable<object>`.
 >
-> > ---
+>  ---
 >
 > **Contravariance (`in T`)**
 >
@@ -99,7 +99,7 @@ status: complete
 > >
 > > `IComparer<Animal>` satisfies `IComparer<Dog>` (contravariance) — an `AnimalComparer` can sort dogs because dogs are animals. Pass a broader comparer or event handler where a narrower one is expected.
 >
-> > ---
+>  ---
 >
 > **LINQ**
 >
@@ -110,7 +110,7 @@ status: complete
 > >
 > > A LINQ query builds a description of the operation, not the result. Every call to `foreach`, `.Count()`, or `.ToList()` re-runs the pipeline from source. If the source is expensive (database, file), materialize with `.ToList()` or `.ToArray()` before enumerating more than once.
 >
-> > ---
+>  ---
 >
 > **Deferred execution**
 >
@@ -121,7 +121,7 @@ status: complete
 > >
 > > Materialize with `.ToList()` when: (1) the source collection may change between enumerations, (2) the pipeline is expensive and the result is needed more than once, (3) you need random access by index, or (4) you need to pass the result to a method expecting `IList<T>`.
 >
-> > ---
+>  ---
 >
 > **Method syntax**
 >
@@ -132,7 +132,7 @@ status: complete
 > >
 > > Break long method-syntax chains onto separate lines, one operator per line, aligned at the dot. The compiler treats the whole expression as one statement; formatting is cosmetic.
 >
-> > ---
+>  ---
 >
 > **Query syntax**
 >
@@ -143,7 +143,7 @@ status: complete
 > >
 > > The C# compiler transforms every query-syntax expression into an equivalent method-syntax call tree before compilation. The two forms produce identical IL — choose based on readability for the specific query.
 >
-> > ---
+>  ---
 >
 > **`Select`**
 >
@@ -154,7 +154,7 @@ status: complete
 > >
 > > `Select(x => new { x.Symbol, x.Close })` creates an anonymous type inferred by the compiler. Use named record or class types when the projection must cross method boundaries or be returned from a method.
 >
-> > ---
+>  ---
 >
 > **`Where`**
 >
@@ -165,7 +165,7 @@ status: complete
 > >
 > > `First(predicate)` throws `InvalidOperationException` when no element matches. Use `FirstOrDefault(predicate)` and null-check the result when an empty match is a valid outcome.
 >
-> > ---
+>  ---
 >
 > **`GroupBy`**
 >
@@ -176,7 +176,7 @@ status: complete
 > >
 > > Each `IGrouping<TKey, TElement>` is itself a deferred sequence. Calling aggregates like `.Count()`, `.Sum()`, or `.Average()` inside a `Select` after `GroupBy` enumerates the group on each call. If multiple aggregates are needed on the same group, materializing each group with `.ToList()` inside the `Select` avoids repeated enumeration.
 >
-> > ---
+>  ---
 >
 > **`Aggregate`**
 >
@@ -187,7 +187,7 @@ status: complete
 > >
 > > The overload `Aggregate(func)` uses the first element as the implicit seed. If the sequence is empty, it throws. Always provide an explicit seed unless the source is guaranteed non-empty.
 >
-> > ---
+>  ---
 >
 > **Polars.NET**
 >
@@ -199,7 +199,7 @@ status: complete
 > > - **LINQ:** natural choice for in-memory object graphs loaded from Dapper, EF Core, or any `IEnumerable<T>`. Zero extra dependencies; composes with the type system.
 > > - **Polars.NET:** better for large columnar datasets (>100 K rows), Parquet ingestion, or when vectorized aggregations and window functions need to run fast without writing LINQ workarounds.
 
-Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. This note covers generic type parameters and constraints, core LINQ operators on in-memory collections, advanced analytics queries against live SQL Server data, and a side-by-side comparison of LINQ pipelines with Polars.NET DataFrames.
+Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. 
 
 
 ```csharp

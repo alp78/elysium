@@ -62,82 +62,82 @@ status: complete
 > [!note]- Glossary
 >
 > **Process**
-> - An instance of a running program loaded into memory by the kernel, assigned a unique PID, a parent PID, memory pages, CPU time slices, and open file descriptors.
-> - Distinct from the program file on disk: one executable can produce many simultaneous processes, each with independent state and resource counters.
+> - An executing instance of a program, created and managed by the operating system, with its own PID, memory mappings, CPU scheduling state, and open resources.
+> - Used as the basic unit of execution and resource accounting when monitoring, debugging, or signalling running workloads.
 >
 > > [!info] Program vs. process
 > >
-> > A program is a static binary on disk. A process is that binary executing in memory. Confusing the two leads to errors when counting instances or targeting the correct PID for a signal.
+> > A program is the executable code or script on disk. A process is one running instance of that program in memory. One program can have many simultaneous processes.
 >
-> > ---
+> ---
 >
 > **PID (Process ID)**
-> - A unique integer assigned by the kernel at process creation, used as the target for `kill`, `strace`, `lsof -p`, and all process-scoped diagnostics.
-> - PIDs are recycled after process exit; a PID noted during an investigation may belong to a different process minutes later — always verify with `ps -p <pid> -o pid,cmd` before signalling.
+> - Integer identifier assigned by the operating system to a process for the lifetime of that process.
+> - Used to target a specific running process in tools such as `kill`, `strace`, `lsof -p`, `ps -p`, and debuggers.
 >
 > > [!warning] PIDs are reused after exit
 > >
-> > Capture the PID and the command name together. Verify both match immediately before sending any signal. A stale PID can inadvertently kill an unrelated process.
+> > A PID is unique only among currently running processes. After a process exits, the same PID may later be assigned to a different process, so always verify the command immediately before signalling.
 >
-> > ---
+> ---
 >
 > **`ps aux`**
-> - A point-in-time snapshot command reading `/proc`; flags `a` (all users), `u` (user-oriented columns including RSS/VSZ), `x` (include daemonised processes without a controlling terminal).
-> - Not a live view — the output is frozen at the moment of execution; for real-time monitoring use `htop` or `top`.
+> - Unix command that prints a point-in-time snapshot of running processes, including user, PID, CPU, memory, and command information.
+> - Used for quick process inspection, ad hoc filtering, and confirming whether a process exists before switching to deeper tools.
 >
 > > [!tip] Self-contamination bracket trick
 > >
-> > `ps aux | grep "[m]ssql"` excludes the grep process itself. The regex matches `mssql` in target command lines but not `[m]ssql` literally in the grep's own entry.
+> > `ps aux | grep "[m]ssql"` matches target command lines containing `mssql` but avoids matching the `grep` command itself.
 >
-> > ---
+> ---
 >
 > **`htop` / `top`**
-> - Interactive, real-time process monitors that poll `/proc` on a configurable interval (default 3 s for `top`); `htop` adds colour-coded CPU bar graphs, mouse support, and a built-in tree view (`F5`).
-> - `top` is present on every Linux system; `htop` requires installation (`apt install htop` / `yum install htop`) and is absent on minimal Docker images.
+> - Interactive process monitors that refresh continuously and display CPU, memory, load, and per-process activity in near real time.
+> - Used for live triage when the operator needs to see which processes are consuming CPU or memory right now and how that changes over time.
 >
 > > [!tip] Key interactive commands
 > >
-> > In both tools: `P` sorts by CPU, `M` sorts by memory. In `top`, `1` expands to per-core view — essential for spotting single-threaded bottlenecks on multi-core machines.
+> > In both tools, `P` sorts by CPU and `M` sorts by memory. In `top`, `1` expands the display to per-core CPU view, which helps reveal single-threaded bottlenecks.
 >
-> > ---
+> ---
 >
 > **RSS (Resident Set Size)**
-> - The amount of physical RAM currently held in memory for a process, reported in kilobytes by `ps aux` and in the `RES` column of `top`/`htop`; the practical measure of a process's memory footprint.
-> - Distinct from VSZ (Virtual Size), which includes shared libraries, memory-mapped files, and reserved-but-unused pages; VSZ is always larger than RSS and is not a reliable indicator of real memory pressure.
+> - Amount of a process's memory that is currently resident in physical RAM rather than merely reserved in its virtual address space.
+> - Used as the most practical single process-memory metric when comparing active memory footprint across processes.
 >
 > > [!info] RSS vs. VSZ
 > >
-> > Compare RSS values across processes to assess memory pressure. Ignore VSZ for capacity decisions — it routinely exceeds physical RAM without indicating a problem.
+> > VSZ includes the full virtual address space, which can include mapped files, shared libraries, and reserved regions that are not all resident in RAM. RSS is usually the more actionable number for memory-pressure analysis.
 >
-> > ---
+> ---
 >
 > **D state (uninterruptible sleep)**
-> - A kernel process state (`STAT` column value starting with `D`) in which the process is blocked on a low-level I/O call with interrupts disabled; signals, including `SIGKILL`, are queued but never delivered until the I/O completes.
-> - Common causes: hung NFS mount, failing disk hardware, or a kernel driver not responding to I/O commands; diagnose with `dmesg | tail -50` and look for `I/O error`, `nfs: server not responding`, or `EXT4-fs error`.
+> - Linux process state in which a task is blocked in the kernel waiting for an uninterruptible operation, most commonly storage or network-backed I/O.
+> - Used diagnostically to explain why a process appears stuck and does not respond to normal signalling.
 >
-> > [!danger] D-state processes cannot be killed — not even with SIGKILL
+> > [!danger] D-state processes cannot be removed immediately with signals
 > >
-> > Repeated kill attempts have no effect. Investigate the storage layer: check `dmesg`, verify NFS mount health, inspect disk SMART status with `smartctl -a /dev/sda`. The process exits only when the I/O resolves.
+> > Even `SIGKILL` cannot complete process termination while the task remains blocked in uninterruptible sleep. Focus on the underlying I/O problem with tools such as `dmesg`, storage diagnostics, or NFS health checks.
 >
-> > ---
+> ---
 >
 > **Load average**
-> - Three space-separated numbers reported by `uptime` and the `top` header representing the exponentially-weighted moving average of processes in the run queue (running or waiting for CPU/IO) over the last 1, 5, and 15 minutes.
-> - A load average equal to the logical CPU count means all cores are fully utilised; values persistently above the core count (`nproc`) mean processes are queuing; high load with low CPU% (`%wa` elevated in `top`) indicates an I/O bottleneck rather than CPU saturation.
+> - Three exponentially weighted moving averages over 1, 5, and 15 minutes representing the number of runnable tasks and tasks in uninterruptible sleep on Linux.
+> - Used as a high-level pressure indicator to show whether work is queueing, but only becomes meaningful when interpreted alongside CPU and I/O metrics.
 >
-> > [!warning] Load average counts I/O-waiting processes, not just CPU-bound ones
+> > [!warning] Load average includes I/O waiters, not just CPU-bound work
 > >
-> > A load of 8.0 on a 4-core machine does not prove CPU saturation. Check `%wa` in `top` and run `iostat -x 1` to distinguish CPU-bound load from I/O-bound load.
+> > A high load value does not automatically mean CPU saturation. If CPU usage is modest and I/O wait is elevated, the real bottleneck is likely storage or some other blocking I/O path.
 >
-> > ---
+> ---
 >
 > **`pstree`**
-> - Reads `/proc` and renders all processes as an indented ASCII tree showing parent-child relationships, with PIDs when invoked with `-p` and user context changes when invoked with `-u`.
-> - Not installed by default on minimal images; use `ps aux --forest` as a portable fallback that renders the same hierarchy without a separate package.
+> - Unix command that renders processes as a parent-child hierarchy, optionally including PIDs and user transitions.
+> - Used to understand process ancestry, identify which parent launched a workload, and detect orphaned or unexpectedly spawned child processes.
 >
-> > [!tip] Identify Airflow-spawned processes with pstree
+> > [!tip] Portable fallback
 > >
-> > `pstree -pu airflow` shows only the subtree owned by the `airflow` user with PIDs at every node — the fastest way to confirm whether a Python process is a scheduled DAG task or an orphaned interactive run.
+> > `pstree` may be absent on minimal systems. `ps aux --forest` is a common fallback for visualizing the same hierarchy using standard `ps` output.
 
 When an Airflow VM is slow, a query is hanging, or a runaway process is pinning the CPU — your first move is always to understand what is running. `ps aux` gives you the snapshot; `htop` gives you the real-time picture; `iostat` tells you if the disk is the bottleneck.
 

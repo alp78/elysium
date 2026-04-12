@@ -34,103 +34,103 @@ description: "Linux and PowerShell commands for monitoring memory, CPU, and disk
 
 > [!note]- Glossary
 >
-> **RSS (Resident Set Size)** — the portion of physical RAM a process is currently occupying, excluding swapped-out pages and shared library pages attributed to other processes.
-> - The most practical per-process memory metric; use it to compare workload footprint against available RAM.
-> - Linux: `ps aux` RSS column (in KB); PowerShell: `Get-Process | Select-Object WorkingSet64` (in bytes).
+> **RSS (Resident Set Size)**
+> - The portion of a process's virtual memory that is currently resident in physical RAM rather than swapped out.
+> - Used as the most practical per-process memory footprint metric when estimating how much real memory a workload is consuming right now.
 >
 > > [!info] RSS vs VSZ
 > >
-> > VSZ (Virtual Size) includes all virtual address space — shared libraries, memory-mapped files, and reserved-but-uncommitted regions — and is always much larger than RSS. VSZ is misleading for capacity planning; RSS is the actionable figure.
+> > VSZ (Virtual Size) includes the full virtual address space: mapped files, shared libraries, reserved regions, and memory that may not be resident in RAM. RSS is usually the more actionable number for capacity analysis.
 >
 > ---
 >
-> **Swap** — disk space the kernel uses as overflow storage when physical RAM is exhausted, achieved by evicting inactive memory pages from RAM to disk.
-> - High swap I/O (`si`/`so` in `vmstat`) is the problem indicator, not a non-zero swap-used value; small amounts of cold-page eviction are normal.
-> - Linux: `free -h` Swap row; Windows: page file (`pagefile.sys`), monitored via `\Memory\Pages/sec`.
+> **Swap**
+> - Disk-backed virtual memory used when the kernel moves less-active memory pages out of RAM to free physical memory for active workloads.
+> - Used to extend survivability under memory pressure, but sustained swap activity usually indicates the system does not have enough RAM for its active working set.
 >
 > > [!info] Swap I/O cost
 > >
-> > A swap read or write involves a full disk I/O — milliseconds vs nanoseconds for RAM — causing latency spikes in any workload that touches swapped pages. Reduce `vm.swappiness` (default 60) to 1–10 on database servers to delay swap onset.
+> > Accessing swapped pages is far slower than accessing RAM and can cause severe latency spikes. The real warning sign is ongoing swap-in or swap-out activity, not merely non-zero swap usage.
 >
 > ---
 >
-> **Load average** — three exponentially weighted moving averages (1-min, 5-min, 15-min) of the number of processes in runnable (`R`) or uninterruptible-wait (`D`) state.
-> - A load average above the CPU core count (from `nproc`) means processes are queuing; saturation is confirmed, not just suspected.
-> - Linux-only metric; Windows has no direct equivalent — use `\Processor(_Total)\% Processor Time` instead.
+> **Load average**
+> - Three exponentially weighted moving averages over 1, 5, and 15 minutes showing how many tasks are runnable or waiting in uninterruptible sleep on Linux.
+> - Used as a high-level pressure indicator for CPU scheduling and blocked work, especially when combined with CPU and disk metrics to determine the real bottleneck.
 >
 > > [!info] Load average includes I/O waiters
 > >
-> > Processes blocked on disk I/O (D state) count toward load average. High load with low CPU% (`us`+`sy` in `vmstat`) indicates a disk bottleneck, not a CPU bottleneck. Confirm with `%wa` in `vmstat` or `%util` in `iostat`.
+> > Load average is not a pure CPU metric. Processes stuck in uninterruptible I/O wait also contribute, so a high load value with modest CPU utilization often points to storage or network-backed I/O problems rather than CPU saturation.
 >
 > ---
 >
-> **`free`** — Linux command reporting total, used, free, shared, buff/cache, and available RAM in one table; `-h` for human-readable units.
-> - The `available` column is authoritative: it is free RAM plus reclaimable buff/cache — the actual allocation headroom for new processes.
-> - PowerShell equivalent: `Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize`.
+> **`free`**
+> - Linux command that summarizes system memory usage, including total, used, free, shared, buffer/cache, and available memory.
+> - Used for a quick view of whether the system still has practical headroom for new allocations without reclaiming aggressively or swapping.
 >
 > > [!info] "Free" vs "available"
 > >
-> > Linux uses idle RAM as a disk read cache (`buff/cache`). The `free` column appears low but is not alarming because that cache is immediately reclaimable. Always read `available`, never `free`, when assessing memory pressure.
+> > The `free` column alone is misleading because Linux uses idle RAM for page cache. The `available` column is the more useful estimate of memory that can be allocated without heavy pressure.
 >
 > ---
 >
-> **`vmstat`** — virtual memory statistics tool reporting process scheduling, memory pages, swap I/O, block I/O, and CPU time in a compact table; first output row is a since-boot average and must be ignored.
-> - Use `vmstat 1` for real-time 1-second samples; `vmstat 2 5` for five samples at 2-second intervals.
-> - PowerShell equivalent: combine `Get-Counter '\Memory\...'` and `'\Processor(_Total)\...'` counters for the same combined view.
+> **`vmstat`**
+> - Linux monitoring tool that reports process scheduling, virtual memory activity, swap I/O, block I/O, interrupts, context switches, and CPU time in a compact tabular view.
+> - Used for fast diagnosis of whether a slowdown is primarily CPU pressure, memory pressure, or I/O blocking.
 >
-> > [!info] Key vmstat columns
+> > [!info] Ignore the first row
 > >
-> > `r` — run queue length (> core count = CPU saturation). `b` — I/O-blocked processes (> 2–3 = I/O saturation). `si`/`so` — swap in/out KB/s (any non-zero = memory pressure). `wa` — CPU% waiting for I/O (> 20% = disk bottleneck). `st` — CPU% stolen by hypervisor (non-zero = VM host contention).
+> > The first `vmstat` line is a since-boot average, not a current sample. Use repeated samples such as `vmstat 1` and interpret the later rows for real-time behavior.
 >
 > ---
 >
-> **`iostat`** — I/O statistics tool (part of `sysstat` package) reading `/proc/diskstats`; `-x` flag adds latency and utilization columns.
-> - Not installed by default: `apt install sysstat` (Debian/Ubuntu) or `yum install sysstat` (RHEL/CentOS).
-> - PowerShell equivalent: `Get-Counter '\PhysicalDisk(*)\Avg. Disk sec/Read'` and `'\PhysicalDisk(*)\Avg. Disk Queue Length'`.
+> **`iostat`**
+> - Linux I/O statistics tool from the `sysstat` package that reports per-device throughput, queueing, utilization, and latency metrics.
+> - Used to confirm whether storage devices are saturated and whether latency or queue depth is the main storage-side problem.
 >
 > > [!info] Key iostat -x columns
 > >
-> > `r_await`/`w_await` — average I/O latency in ms (SSD healthy: < 5 ms; saturated: > 20 ms). `aqu-sz` — average queue depth (> 1.0 on a single device = backlog). `%util` — device busy time (> 90% = saturation; on NVMe, also monitor `aqu-sz`).
+> > `await` shows average service-plus-queue time, `aqu-sz` shows average queue depth, and `%util` shows how busy the device was during the sample interval. Interpret all three together rather than treating any one field as sufficient on its own.
 >
 > ---
 >
-> **`%wa` (I/O wait)** — the percentage of CPU time the processor spent idle while waiting for pending I/O operations; shown in `top`, `vmstat`, and `mpstat`.
-> - Values above 20% point to a storage bottleneck, not a CPU bottleneck — the CPU is idle, not overloaded.
-> - Windows equivalent: `\PhysicalDisk(*)\Avg. Disk Queue Length` rising above 2 (HDD) or 32 (NVMe) per spindle.
+> **`%wa` (I/O wait)**
+> - The percentage of CPU time spent idle while the system had at least one pending disk or block-I/O request waiting to complete.
+> - Used as a signal that the CPUs are stalled behind storage latency rather than fully occupied doing compute work.
 >
-> > [!info] %wa is a storage signal, not a CPU signal
+> > [!info] %wa is an indirect signal
 > >
-> > A high `%wa` with low `us`+`sy` means the CPU has nothing to execute — it is waiting for disk. Investigate with `iostat -x` (`%util`, `await`) and `iotop -o` (which process is generating the I/O).
+> > High `%wa` strongly suggests an I/O bottleneck, but it does not identify which device or process is responsible. Confirm with `iostat -x`, `iotop`, or platform-specific storage counters.
 >
 > ---
 >
-> **`Get-Counter`** — PowerShell cmdlet that reads Windows Performance Monitor counter paths and returns strongly typed `PerformanceCounterSample` objects at a configurable interval.
-> - Counter paths use backslash notation (e.g., `\Memory\Available MBytes`); discover available counters with `Get-Counter -ListSet *`.
-> - Linux equivalent: `vmstat` (combined), `free` (memory), `iostat` (disk), `uptime` (load average).
+> **`Get-Counter`**
+> - PowerShell cmdlet that reads Windows Performance Monitor counters and returns typed samples for memory, CPU, disk, network, and many application-specific metrics.
+> - Used as the Windows equivalent of pulling structured operational metrics from tools such as `vmstat`, `iostat`, and `free`.
 >
 > > [!info] Get-Counter key counter sets
 > >
-> > `\Processor(_Total)\% Processor Time` — overall CPU utilization. `\Memory\Available MBytes` — free + standby RAM. `\PhysicalDisk(*)\Avg. Disk sec/Read` — read latency. `\PhysicalDisk(*)\Avg. Disk Queue Length` — I/O backlog.
+> > `\Processor(_Total)\% Processor Time` shows overall CPU usage, `\Memory\Available MBytes` shows immediately available memory, and `\PhysicalDisk(*)\Avg. Disk sec/Read` plus `\PhysicalDisk(*)\Avg. Disk Queue Length` help identify storage latency and backlog.
 >
 > ---
 >
-> **PLE (Page Life Expectancy)** — SQL Server metric measuring how long, in seconds, a data page remains in the buffer pool before being evicted; healthy threshold is above 300 seconds.
-> - PLE below 60 seconds means SQL Server is rereading data from disk on nearly every cache miss, causing severe I/O saturation regardless of what `free -h` reports.
-> - Queried via `sys.dm_os_performance_counters` where `counter_name = 'Page life expectancy'` and `object_name LIKE '%Buffer Manager%'`.
+> **PLE (Page Life Expectancy)**
+> - SQL Server buffer-cache metric estimating how long, in seconds, a data page remains in the buffer pool before being evicted.
+> - Used as a trend indicator for buffer-pool churn and memory pressure inside SQL Server, especially when correlated with workload changes and physical I/O metrics.
 >
-> > [!info] PLE vs free memory
+> > [!info] Avoid the old fixed "300 seconds" rule
 > >
-> > A server where `free -h` shows 2 GB available but PLE is 30 seconds is memory-starved from SQL Server's perspective: its buffer pool is undersized for the working data set. The fix is raising `max server memory`, not adding OS-level memory.
+> > A universal threshold such as 300 seconds is outdated and often misleading. Evaluate PLE against the server's normal baseline, NUMA topology, workload pattern, and concurrent evidence such as read I/O, page reads, and memory configuration.
 >
 > ---
 >
-> **OOM killer** — Linux kernel mechanism that terminates one or more processes when available memory falls too low to satisfy an allocation request, selecting the target by OOM score (roughly proportional to memory consumption).
-> - Triggered when `available` memory (from `free -h`) approaches zero; the target may be a critical daemon such as a database process.
-> - Detect past kills with `sudo dmesg | grep -i "oom\|killed process"` or `journalctl -k`.
+> **OOM killer**
+> - Linux kernel mechanism that selects and terminates one or more processes when memory pressure becomes severe enough that the system cannot satisfy further allocations safely.
+> - Used by the kernel as a last-resort survival mechanism to keep the system running when memory exhaustion would otherwise cause a wider failure.
 >
-> > [!info] OOM killer does not discriminate
+> > [!info] OOM killer does not always kill the process that caused the problem
 > >
-> > The OOM killer targets the process with the highest OOM score at the moment of memory exhaustion, which may not be the process that caused the pressure. Protect critical daemons by setting `oom_score_adj` to `-1000` in their systemd unit file (`OOMScoreAdjust=-1000`).
+> > The kernel chooses a target based on its scoring rules at the time of exhaustion. The killed process may be the largest or least protected victim, not necessarily the original source of the pressure.
 
 Resource monitoring tells you whether performance problems are CPU-bound, memory-constrained, or I/O-limited — three different root causes requiring completely different fixes. Reading the numbers correctly is as important as knowing which commands to run.
 

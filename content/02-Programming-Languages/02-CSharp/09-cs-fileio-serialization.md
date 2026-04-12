@@ -234,7 +234,7 @@ status: complete
 > >
 > > `Encoding.Default` resolves to the OS active code page — UTF-8 on modern Linux, but a legacy Windows-1252 variant on older Windows systems. Code that works locally fails silently on a different host. Always specify `Encoding.UTF8` explicitly.
 
-C# provides multiple layers for file I/O and serialization — from `File` class convenience methods through `StreamReader`/`StreamWriter` for buffered processing, to `System.Text.Json` for structured data and `System.IO.Pipelines` for high-throughput scenarios. This note covers reading/writing files, CSV, JSON, YAML, binary serialization, async I/O, memory-mapped files, and high-performance parsing patterns.
+C# provides multiple layers for file I/O and serialization — from `File` class convenience methods through `StreamReader`/`StreamWriter` for buffered processing, to `System.Text.Json` for structured data and `System.IO.Pipelines` for high-throughput scenarios. 
 
 ## Read, Write, Append Files
 

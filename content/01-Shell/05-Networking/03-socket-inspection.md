@@ -31,74 +31,85 @@ status: complete
 > - **Troubleshooting** — symptom/cause/fix table for the four most common socket-related failures
 
 > [!note]- Glossary
-> **Socket** — an endpoint for network communication identified by the triple (IP address, port, protocol). TCP sockets are connection-oriented; UDP sockets are connectionless.
-> - A socket is not the same as a port. Port 1433 is a number; `TCP 10.132.0.2:1433` is a socket — the combination of address, port, and protocol.
+>
+> **Socket**
+> - A network communication endpoint defined by protocol plus addressing information. In practice, a TCP or UDP socket is identified by protocol, local IP address, and local port; for an active connection, the remote IP address and remote port are also part of the full socket tuple.
+> - Distinguishes the abstract idea of "a port is open" from the actual endpoint the OS tracks and applications use for communication.
 >
 > > [!info] Socket vs port
-> > `ss` output shows sockets (address + port + state), not bare port numbers. Two processes can share the same port number on different IP addresses via `SO_REUSEPORT`, which only socket-level inspection reveals.
+> >
+> > A port is just a number such as `1433`. A socket is the bound or connected endpoint that uses that port, such as `TCP 10.132.0.2:1433`. Tools like `ss` inspect sockets, not bare port numbers.
 >
 > ---
 >
-> `ss` — **socket statistics**, the modern Linux tool for reading socket state from kernel netlink data structures. Replaces the deprecated `netstat`.
-> - Shows listening ports, established connections, socket states, Recv-Q/Send-Q backlog values, and owning process names.
-> - Faster than `netstat` on busy systems because it reads kernel structures directly rather than parsing `/proc/net` files.
+> **`ss`**
+> - Modern Linux utility for inspecting socket state. It reads socket information from kernel networking interfaces and is the standard replacement for the older `netstat` tool.
+> - Used to verify which services are listening, which connections are active, which TCP states are accumulating, and which processes own those sockets.
 >
 > > [!info] Why `netstat` is deprecated
-> > `netstat` is part of the `net-tools` package, not installed by default on modern Linux distributions. `ss` ships with `iproute2`, which is always present.
+> >
+> > `netstat` belongs to the older `net-tools` package and is often absent on modern Linux systems. `ss` is part of `iproute2`, which is the standard networking toolset on current distributions.
 >
 > ---
 >
-> **LISTEN state** — a TCP socket state indicating the process is bound to a port and waiting for incoming SYN packets.
-> - A service in LISTEN state has called `bind()` and `listen()`. It is not yet handling a connection — it is waiting for one.
-> - Bind address determines reachability: `127.0.0.1` accepts only local connections; `0.0.0.0` accepts connections on all IPv4 interfaces.
+> **LISTEN state**
+> - TCP state indicating a server socket has been bound to a local address and port and is waiting for incoming connection attempts.
+> - Confirms that a service is ready to accept new TCP sessions, while also showing whether it is bound only to localhost or to broader network interfaces.
 >
 > > [!info] Bind address semantics
-> > `ss -tlnp` shows the local address in the format `<IP>:<port>`. `0.0.0.0` means all IPv4 interfaces. `[::]` means all IPv6 interfaces (and on dual-stack Linux, also IPv4 via mapped addresses).
+> >
+> > In `ss -tlnp`, the local address appears as `<IP>:<port>`. `127.0.0.1` means local-only access. `0.0.0.0` means all IPv4 interfaces. `[::]` means all IPv6 interfaces and may also cover IPv4 on dual-stack systems, depending on OS configuration.
 >
 > ---
 >
-> **ESTABLISHED state** — a TCP socket state indicating an active, fully open connection between two endpoints (SYN/SYN-ACK/ACK handshake complete).
-> - Appears in `ss` output as `ESTAB`. Each row represents one active session; multiple rows from the same remote IP with different ephemeral ports indicate multiple concurrent sessions.
-> - A high count does not automatically indicate a problem — compare against the service's configured `max_connections` or connection pool limit.
+> **ESTABLISHED state**
+> - TCP state indicating that the three-way handshake has completed and the connection is fully open for data transfer between two endpoints.
+> - Used to confirm real client-server sessions are active and to count concurrent connections rather than just checking whether a service is listening.
 >
 > > [!info] Ephemeral ports
-> > The client OS selects a random high port (typically 32768–60999 on Linux) as the source port for each new outbound connection. This is the "peer port" visible in `ss` ESTAB output.
+> >
+> > The client side usually uses a temporary high-numbered source port chosen by the OS. In `ss`, multiple `ESTAB` rows from the same remote IP but different remote ports usually indicate multiple simultaneous client sessions.
 >
 > ---
 >
-> **TIME_WAIT state** — a TCP socket state entered after a connection closes. The socket is held for 2× MSL (typically 60 seconds on Linux) to absorb delayed packets from the closed session.
-> - TIME_WAIT sockets are harmless individually. Thousands of them on a single port indicate the application opens and closes connections rapidly without pooling, risking ephemeral port exhaustion.
-> - Do not try to kill TIME_WAIT sockets — they expire automatically. Fix the connection pattern (add pooling) or enable `net.ipv4.tcp_tw_reuse` on the client side.
+> **TIME_WAIT state**
+> - TCP state retained for a short period after connection closure so delayed packets from the old session cannot be mistaken for a new one. On many Linux systems this lasts roughly 60 seconds, though the exact behavior is OS-dependent.
+> - Helps diagnose workloads that create and tear down large numbers of short-lived connections, which can consume ephemeral ports and indicate missing connection pooling.
 >
-> > [!info] Port exhaustion threshold
-> > The Linux ephemeral port range (32768–60999) provides ~28 000 ports. Each TIME_WAIT socket holds one port for 60 s. A loop creating 500 short-lived connections per second saturates the range in under a minute.
+> > [!info] TIME_WAIT is usually not a bug by itself
+> >
+> > A small or moderate number of `TIME_WAIT` sockets is normal. It becomes operationally important when the count grows very large relative to the available ephemeral port range or the expected connection pattern.
 >
 > ---
 >
-> **CLOSE_WAIT state** — a TCP socket state where the remote side has sent FIN (closed its end) but the local application has not yet closed its socket.
-> - Unlike TIME_WAIT, CLOSE_WAIT does not expire automatically — the application must call `close()` or `Dispose()` on the socket.
-> - Accumulating CLOSE_WAIT sockets on port 1433 in C# applications indicate `SqlConnection` objects are not being disposed; wrap them in `using` blocks.
+> **CLOSE_WAIT state**
+> - TCP state indicating the remote peer has closed its side of the connection, but the local application has not yet closed its own socket.
+> - Strong signal of an application-side cleanup problem, because these sockets persist until the local process explicitly closes them.
 >
 > > [!info] CLOSE_WAIT vs TIME_WAIT
-> > TIME_WAIT is OS-managed and transient. CLOSE_WAIT is application-managed and permanent until the application closes the socket. Seeing CLOSE_WAIT in `ss` output always points to an application bug.
+> >
+> > `TIME_WAIT` is a normal post-close kernel state. `CLOSE_WAIT` usually means the application received the close notification but failed to release the socket promptly.
 >
 > ---
 >
-> **Recv-Q** — the receive queue depth shown in `ss` output. For LISTEN sockets, it is the count of fully completed connections waiting to be accepted by the application's `accept()` call.
-> - A non-zero Recv-Q on a LISTEN socket means the application is not calling `accept()` fast enough and is falling behind the connection arrival rate.
-> - For ESTABLISHED sockets, Recv-Q shows bytes received by the kernel but not yet read by the application process.
+> **Recv-Q**
+> - Receive-queue value shown by `ss`. For listening sockets, it represents completed connections waiting to be accepted by the application. For established sockets, it represents bytes received by the kernel but not yet read by the process.
+> - Helps distinguish network reachability from application slowness: a growing `Recv-Q` often means the application is not accepting or reading data fast enough.
 >
 > > [!info] Send-Q for LISTEN sockets
-> > Send-Q on a LISTEN socket is the configured backlog — the maximum number of pending connections the kernel will queue before dropping new SYN packets. Controlled by the `listen()` system call and the `net.core.somaxconn` kernel parameter.
+> >
+> > For a listening socket, `Send-Q` represents the configured backlog limit: the maximum number of pending connections the kernel can queue before new attempts are refused or dropped. It is influenced by the application's `listen()` call and kernel limits such as `net.core.somaxconn`.
 >
 > ---
 >
-> `Get-NetTCPConnection` — the PowerShell cmdlet for reading TCP socket state on Windows. Returns .NET objects with `LocalAddress`, `LocalPort`, `RemoteAddress`, `RemotePort`, `State`, and `OwningProcess` properties.
-> - The PowerShell equivalent of `ss -t`. The `-State` parameter accepts named TCP states: `Listen`, `Established`, `TimeWait`, `CloseWait`, etc.
-> - Does not show UDP sockets. Use `Get-NetUDPEndpoint` for UDP.
+> **`Get-NetTCPConnection`**
+> - PowerShell cmdlet on Windows that returns TCP connection objects with properties such as `LocalAddress`, `LocalPort`, `RemoteAddress`, `RemotePort`, `State`, and `OwningProcess`.
+> - Windows-native way to inspect TCP listener and connection state in an object-oriented form, similar in purpose to `ss -t` on Linux.
 >
 > > [!info] Resolving OwningProcess to a name
-> > `OwningProcess` is a PID integer. Pipe through `Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue` to resolve it to a process name. System-level PIDs (e.g., `System`, `svchost`) may return `$null`.
+> >
+> > `OwningProcess` is a PID, not a process name. Use `Get-Process -Id <PID>` to map it to a running process when permissions and process visibility allow it.
+
 
 The most underused debugging skill in data engineering is reading socket state. When a pipeline fails with "connection refused" or "connection timed out," the answer is almost always visible in the socket table — if you know how to read it. `ss` (socket statistics) is the modern replacement for `netstat` on Linux. On Windows, `Get-NetTCPConnection` provides equivalent visibility into TCP socket state.
 

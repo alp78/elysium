@@ -69,7 +69,7 @@ status: complete
 > >
 > > Setting `BatchSize` below ~5 000 forces frequent TDS flushes and re-establishes the bulk session per batch. Use 5 000–50 000 rows per batch; `CHUNK_SIZE = 10_000` is the default in this notebook.
 >
-> > ---
+>  ---
 >
 > **`BCP` (`bcp.exe`)**
 >
@@ -80,7 +80,7 @@ status: complete
 > >
 > > Passing `-P <password>` exposes the credential in `ps aux`, Windows Event Log, and shell history. Use `-T` for Windows Integrated Authentication or inject the password from an environment variable at runtime.
 >
-> > ---
+>  ---
 >
 > **`IDataReader`**
 >
@@ -91,7 +91,7 @@ status: complete
 > >
 > > `SqlBulkCopy` maps `IDataReader` columns by ordinal position unless `ColumnMappings` are explicitly set. A wrong ordinal silently loads the wrong value into the wrong column with no error.
 >
-> > ---
+>  ---
 >
 > **BigQuery Load Job**
 >
@@ -102,7 +102,7 @@ status: complete
 > >
 > > `CreateLoadJob` or `UploadCsv` returns immediately after job submission. The job is still running on the server. Always call `job.PollUntilCompleted().ThrowOnAnyError()` before reading `OutputRows` or proceeding to downstream steps.
 >
-> > ---
+>  ---
 >
 > **`CreateLoadJob`**
 >
@@ -113,7 +113,7 @@ status: complete
 > >
 > > `CreateLoadJob` with `SourceFormat = FileFormat.Parquet` from GCS is 1.5–4× faster than CSV at large tier because Parquet's columnar encoding reduces byte transfer and enables server-side predicate pushdown.
 >
-> > ---
+>  ---
 >
 > **`WriteBatch`**
 >
@@ -124,7 +124,7 @@ status: complete
 > >
 > > A `WriteBatch` that accumulates more than 500 operations raises `InvalidArgument` when `CommitAsync()` is called. Maintain a `batchCount` counter and flush with `CommitAsync().Wait()` every 500 documents, then reset both the batch and counter. Always commit the final partial batch after the loop.
 >
-> > ---
+>  ---
 >
 > **GCS staging**
 >
@@ -135,7 +135,7 @@ status: complete
 > >
 > > If the GCS bucket and BigQuery dataset are in different regions, data is transferred cross-region, incurring egress cost and increased latency. Both must be in the same region (e.g., `europe-west1`) for efficient server-side loads.
 >
-> > ---
+>  ---
 >
 > **`WriteDisposition`**
 >
@@ -146,7 +146,7 @@ status: complete
 > >
 > > Use `WriteDisposition = WriteDisposition.WriteTruncate` in any load job that is designed to be re-runnable. Reserve `WriteAppend` only for append-only event streams where duplicates are controlled upstream.
 >
-> > ---
+>  ---
 >
 > **`CsvWriter` / `StreamWriter`**
 >
@@ -157,7 +157,7 @@ status: complete
 > >
 > > `StreamWriter` buffers writes internally. If the stream is not explicitly flushed (`writer.Flush()`) before the `using` block exits, the final buffer may not be written to disk. The `using` block calls `Dispose`, which flushes, but explicitly flushing before reading the output file prevents subtle race conditions in async contexts.
 >
-> > ---
+>  ---
 >
 > **benchmark tier**
 >
@@ -168,7 +168,7 @@ status: complete
 > >
 > > Small-tier results are dominated by connection setup and job submission latency, not throughput. The large-tier rate is the operationally meaningful figure for production capacity planning.
 >
-> > ---
+>  ---
 >
 > **NuGet package reference**
 >
@@ -179,7 +179,7 @@ status: complete
 > >
 > > Executing a cell containing `#r "nuget: PackageName"` more than once in the same kernel session raises an `InvalidOperationException` because the assembly is already loaded. If a cell needs to be re-run, restart the kernel first.
 >
-> > ---
+>  ---
 >
 > **`Microsoft.Bcl.AsyncInterfaces`**
 >
@@ -190,7 +190,7 @@ status: complete
 > >
 > > The `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` directive must appear in the NuGet restore cell that runs first, before any cell that calls `GetSnapshotAsync()` or iterates a Firestore collection asynchronously. Adding it to a later cell after the Firestore client is already initialised does not retroactively satisfy the type dependency.
 >
-> > ---
+>  ---
 >
 > **`ExecuteQuery`**
 >
@@ -200,21 +200,6 @@ status: complete
 > > [!warning] Materialising large result sets exhausts local memory
 > >
 > > `ExecuteQuery` loads all result rows into a `BigQueryResults` object in memory before iteration begins. For result sets larger than ~500 K rows, use `GetRows()` with paging (via `PageToken`) or export to GCS first and then load from there to avoid OOM on the client.
-
-This note covers C# bulk-load patterns for SQL Server, BigQuery, and Firestore in a .NET Interactive notebook, including performance benchmarking across file formats and source tiers.
-
-### What this note covers
-
-- **Setup** — NuGet package restore, assembly warning suppression, environment variables, service account auth
-- **Schema Setup** — DDL for SQL Server staging table and BigQuery dataset/table creation
-- **Local → SQL Server Ingestion** — SqlBulkCopy, BCP, and IDataReader paths with timing
-- **Local → BigQuery Ingestion** — CreateLoadJob, bq CLI, and UploadCsv/UploadParquet paths
-- **Local → Firestore Ingestion** — WriteBatch path
-- **GCS → BigQuery Ingestion** — CreateLoadJob with GCS URI for CSV, JSON, and Parquet
-- **GCS → SQL Server Ingestion** — GCS download + SqlBulkCopy pipeline
-- **Cross-Service Transfers** — BQ → SQL Server, SQL Server → BQ, SQL Server → Firestore
-- **Export** — table export to local CSV and GCS via CreateExtractJob
-- **Summary** — benchmark results table and Plotly visualisation
 
 This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Firestore across three file tiers (2.5K / 75K / 750K rows) and four source formats (CSV, JSON, Parquet, GCS). Results are persisted to JSON for cross-session comparison and visualised with Plotly.
 

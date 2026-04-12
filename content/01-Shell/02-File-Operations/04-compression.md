@@ -46,7 +46,7 @@ status: complete
 > - `Compress-Archive` silently produces a corrupt archive when any file entry exceeds 2 GB; use 7-Zip instead
 > - Over-compressing pipeline intermediates: gzip -1 vs gzip -9 is only 5–15% size difference but 5–8x slower
 
-> [!abstract]- Glossary
+> [!note]- Glossary
 >
 > **Compression algorithm**
 > - A method for encoding data more efficiently to reduce file size. Lossless algorithms (gzip, zstd, lz4) reconstruct the original data exactly; lossy algorithms (JPEG, MP3) do not.

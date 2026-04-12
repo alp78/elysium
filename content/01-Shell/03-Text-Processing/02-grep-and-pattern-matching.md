@@ -71,75 +71,83 @@ status: complete
 
 > [!note]- Glossary
 >
-> - **`grep`** — a command-line tool that reads input line by line and prints every line matching a given pattern; the name stands for "globally search for a regular expression and print."
-> - Backbone of log analysis, pipeline debugging, and code archaeology on Linux/bash systems; the starting point for all text search operations.
+> **`grep`**
+> - Command-line text-search tool that reads input line by line and prints lines matching a pattern.
+> - Used as the standard filter for log inspection, pipeline debugging, and ad hoc search in text streams and files.
 >
 > > [!info] grep reads stdin when no file is given
 > >
-> > Omitting a filename makes `grep` read from standard input, which is the standard pattern for filtering the output of other commands: `command | grep 'pattern'`.
+> > Omitting a filename makes `grep` read from standard input, which is why `command | grep 'pattern'` is such a common shell pattern.
 >
-> > ---
+> ---
 >
-> - **Regular expression (regex)** — a pattern language that uses special characters (`.` any char, `*` zero-or-more, `+` one-or-more, `[]` character class, `^` line start, `$` line end) to describe a set of strings.
-> - `grep` uses POSIX Basic Regular Expressions (BRE) by default; `grep -E` upgrades to Extended Regular Expressions (ERE) where `+`, `?`, `|`, and `()` work without backslash escaping.
+> **Regular expression (regex)**
+> - Pattern language for describing sets of strings using literals and metacharacters such as `.`, `*`, `+`, `[]`, `^`, and `$`.
+> - Used to express flexible search conditions that would be tedious or impossible with exact string matching alone.
 >
 > > [!warning] BRE vs ERE metacharacter escaping
 > >
-> > In BRE, alternation and grouping require backslashes: `\|`, `\(`, `\)`. In ERE (`grep -E`), use them bare. Mixing the two is the most common source of "pattern not matching" bugs.
+> > Plain `grep` uses POSIX Basic Regular Expressions by default, while `grep -E` uses Extended Regular Expressions. Operators such as `+`, `?`, `|`, and `()` behave differently between the two unless escaped correctly.
 >
-> > ---
+> ---
 >
-> - **`grep -E`** — enables Extended Regular Expression mode; equivalent to `egrep`. Allows `+`, `?`, `|`, and `()` without escaping.
-> - Use `-E` for the vast majority of practical patterns; reserve plain `grep` only when strict POSIX BRE compatibility is required.
+> **`grep -E`**
+> - `grep` mode that enables Extended Regular Expressions, where operators such as `+`, `?`, `|`, and `()` work without backslash escaping.
+> - Used for most practical regex searches because the pattern syntax is clearer and less cluttered than default BRE mode.
 >
-> > [!info] egrep is a deprecated alias
+> > [!info] `egrep` is a historical alias
 > >
-> > `egrep` is an older alias for `grep -E`. It still works on most systems but is deprecated in POSIX; prefer `grep -E` in scripts for portability.
+> > `egrep` is effectively the older command form of `grep -E`. Prefer `grep -E` in scripts because it is clearer and more standard going forward.
 >
-> > ---
+> ---
 >
-> - **`grep -F`** — disables regex interpretation entirely and treats the pattern as a literal fixed string; equivalent to `fgrep`.
-> - Significantly faster than regex mode for exact-string searches, and safe when the pattern contains regex metacharacters such as `.`, `*`, or `[` (e.g., IP addresses, file paths).
+> **`grep -F`**
+> - `grep` mode that disables regex interpretation and treats the search pattern as a literal fixed string.
+> - Used for exact-string searches, especially when the pattern contains regex metacharacters or when performance matters on large inputs.
 >
-> > [!danger] Unescaped dots match any character in regex mode
+> > [!danger] Unescaped dots are wildcards in regex mode
 > >
-> > `grep '10.132.0.2' access.log` matches `10X132Y0Z2` because `.` is a wildcard in regex. Use `grep -F '10.132.0.2'` or escape the dots: `grep '10\.132\.0\.2'`.
+> > `grep '10.132.0.2'` treats each `.` as "any character" unless you use `-F` or escape the dots. For literal IP addresses, file paths, and similar tokens, `grep -F` is usually safer.
 >
-> > ---
+> ---
 >
-> - **Context flags (`-A`, `-B`, `-C`)** — `-A N` prints N lines after each match, `-B N` prints N lines before, `-C N` prints N lines on both sides.
-> - Indispensable for incident investigation: error messages rarely appear alone — surrounding lines carry the stack trace, the preceding request, or the configuration that caused the failure.
+> **Context flags (`-A`, `-B`, `-C`)**
+> - `grep` options that print lines after (`-A`), before (`-B`), or around (`-C`) each match.
+> - Used during debugging and incident response to capture surrounding evidence instead of seeing matched lines in isolation.
 >
-> > [!warning] Missing context during incident response
+> > [!warning] Match-only output can hide the real cause
 > >
-> > Running `grep 'ERROR' app.log` without context flags shows the error line but not the cause. Add `-C 5` as a default during incident investigation to capture the surrounding window.
+> > The important detail is often in the lines immediately before or after the match. `-C 5` is a strong default when investigating failures in logs.
 >
-> > ---
+> ---
 >
-> - **Recursive search (`-r`, `-R`)** — `-r` descends into all subdirectories of the given path; `-R` additionally follows symbolic links.
-> - Enables searching an entire project tree or log directory with a single command instead of specifying individual files.
+> **Recursive search (`-r`, `-R`)**
+> - `grep` options for descending through directories and searching files under a path recursively; `-R` also follows symbolic links.
+> - Used to search an entire source tree, config directory, or log hierarchy without naming each file explicitly.
 >
-> > [!danger] Binary files corrupt terminal output
+> > [!danger] Recursive grep can hit binary files and special paths
 > >
-> > `grep -r` on directories containing binary files (compiled artifacts, images, archives) prints garbage characters. Add `--binary-files=without-match` to skip binaries, or switch to `rg` which skips them by default.
+> > Searching wide directory trees may produce noisy output from binaries or unexpected traversal through symlinks. Add filters such as `--binary-files=without-match`, `--include`, or `--exclude-dir` when precision matters.
 >
-> > ---
+> ---
 >
-> - **`ripgrep` (`rg`)** — a modern grep replacement written in Rust; recursively searches by default, respects `.gitignore`, skips binary files automatically, and is 5–10× faster than GNU grep on large codebases.
-> - The preferred tool for interactive code and log searching in repositories; uses Rust regex (close to PCRE) rather than POSIX, so a small number of patterns differ from `grep`.
+> **`ripgrep` (`rg`)**
+> - Modern recursive search tool optimized for speed and developer workflows, with sensible defaults such as recursive search, binary-file skipping, and `.gitignore` awareness.
+> - Used as a faster and more ergonomic alternative to recursive `grep` for interactive searching across codebases and text-heavy repositories.
 >
-> > [!info] rg regex flavor differs from grep
+> > [!info] `rg` regex behavior is not the same as POSIX grep
 > >
-> > `rg` supports PCRE features like lookahead and named capture groups natively; `grep` requires `-P` (Perl-compatible mode, not available on macOS BSD grep) for the same. Test patterns when porting between tools.
+> > `rg` uses the Rust regex engine by default, not POSIX BRE or ERE. Some constructs and edge cases differ, and PCRE2 features require the appropriate option rather than being assumed automatically.
 >
-> > ---
+> ---
 >
-> - **`Select-String`** — the PowerShell equivalent of `grep`; alias `sls`. Returns structured `MatchInfo` objects with `LineNumber`, `Line`, `Matches`, and `Filename` properties rather than plain text.
-> - Enables object-pipeline chaining downstream (e.g., filtering by `.LineNumber`, extracting `.Matches.Value`); uses .NET regex (PCRE-like) by default and is **case-insensitive by default** — the opposite of `grep`.
+> **`Select-String`**
+> - PowerShell cmdlet for searching text with .NET regular expressions and returning match objects rather than plain text lines.
+> - Used as the PowerShell equivalent of `grep` when downstream commands need structured access to the matched line, filename, line number, or capture results.
 >
-> > [!warning] Case sensitivity defaults are inverted
+> > [!warning] Case sensitivity defaults differ from `grep`
 > >
-> > `grep` is case-sensitive by default; add `-i` for case-insensitive. `Select-String` is case-insensitive by default; add `-CaseSensitive` to enforce case. Forgetting this when porting scripts causes silent match failures.
+> > `grep` is case-sensitive by default unless `-i` is added. `Select-String` is case-insensitive by default unless `-CaseSensitive` is specified, which can change results when porting shell logic to PowerShell.
 
 `grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [Python's re module](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) and [C#'s Regex class](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings), so patterns you learn here transfer directly to application code. While grep finds matches, [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing) complements it by editing the matched lines in place.
 

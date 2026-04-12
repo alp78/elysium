@@ -59,7 +59,7 @@ status: complete
 > >
 > > Use MERGE upsert on `(symbol, date)` rather than TRUNCATE + reload. A truncated Bronze table cannot be distinguished from a partial load after a failure.
 >
-> > ---
+>  ---
 >
 > **Functional core / imperative shell**
 >
@@ -70,7 +70,7 @@ status: complete
 > >
 > > If a function both transforms data and writes to SQL, it is impossible to test the transform without a live database. Split the concerns: transform returns a `pl.DataFrame`; the caller writes it.
 >
-> > ---
+>  ---
 >
 > **Pydantic DTO**
 >
@@ -81,7 +81,7 @@ status: complete
 > >
 > > `RawOHLCV` enforces positive prices, non-negative volume, and the market invariant `high >= low` via a `@model_validator`. Invalid rows are caught at Bronze ingestion — one layer, one fix.
 >
-> > ---
+>  ---
 >
 > **SHA-256 tamper detection**
 >
@@ -92,7 +92,7 @@ status: complete
 > >
 > > `compute_hash()` sorts the DataFrame columns before serializing to CSV bytes, ensuring column-order independence. The first 16 hex characters are stored in `output_hash` for space efficiency.
 >
-> > ---
+>  ---
 >
 > **Lineage tracking**
 >
@@ -103,7 +103,7 @@ status: complete
 > >
 > > A disputed Gold number is traced to its `batch_id`, which links to the Bronze rows that produced it. The stored hash proves whether those rows were modified after ingestion.
 >
-> > ---
+>  ---
 >
 > **Polars**
 >
@@ -114,7 +114,7 @@ status: complete
 > >
 > > Silver transforms use Polars expressions (`pct_change().over("symbol")`, `rolling_mean().over("symbol")`) evaluated lazily. Only `merge_silver()` converts to pandas via `.to_pandas()` for SQLAlchemy compatibility.
 >
-> > ---
+>  ---
 >
 > **Quality gate**
 >
@@ -125,7 +125,7 @@ status: complete
 > >
 > > `run_quality_gate()` accepts a list of `(bool, str)` tuples, logs each result, and raises `DataQualityError` on first failure when `fail_fast=True`. The gate results are returned as a `pl.DataFrame` for audit logging.
 >
-> > ---
+>  ---
 >
 > **SCD Type 2**
 >
@@ -136,7 +136,7 @@ status: complete
 > >
 > > `SCD2_COMPARE_COLS` tracks six attributes: `company_name`, `sector`, `industry`, `country`, `exchange`, `currency`. Any change in these triggers a new version; non-tracked fields (e.g., `market_cap`) are updated in place.
 >
-> > ---
+>  ---
 >
 > **Parquet**
 >
@@ -147,7 +147,7 @@ status: complete
 > >
 > > Gold data is pre-materialized to Parquet once per pipeline run. FastAPI reads the file at request time using `pl.read_parquet()`, avoiding repeated SQL round-trips for dashboard queries.
 >
-> > ---
+>  ---
 >
 > **FastAPI**
 >
@@ -158,7 +158,7 @@ status: complete
 > >
 > > Three endpoints: `GET /daily` returns the daily summary Parquet as JSON, `GET /profile` returns the symbol profile, `GET /health` confirms file availability. All reads are wrapped in `run_in_executor`.
 >
-> > ---
+>  ---
 >
 > **`yfinance`**
 >
@@ -169,7 +169,7 @@ status: complete
 > >
 > > Yahoo Finance does not provide a public API SLA. `fetch_with_retry()` wraps `Ticker.history()` with three attempts and exponential backoff to handle transient `ConnectionError` and `TimeoutError` failures.
 >
-> > ---
+>  ---
 >
 > **Tenacity**
 >

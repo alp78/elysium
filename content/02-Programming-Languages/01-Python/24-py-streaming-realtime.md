@@ -72,7 +72,7 @@ status: complete
 > >
 > > Long-polling reopens the HTTP connection after each response; WebSocket keeps a single persistent connection open. At >10 msg/s, the reconnect overhead of long-polling dominates.
 >
-> > ---
+>  ---
 >
 > **SSE (Server-Sent Events)**
 > - A unidirectional HTTP/1.1 stream where the server holds the connection open and pushes `text/event-stream` lines; clients cannot send data back over the same connection.
@@ -82,7 +82,7 @@ status: complete
 > >
 > > The browser `EventSource` API handles reconnection natively using the `Last-Event-ID` header. Python `httpx` clients must implement reconnect logic manually.
 >
-> > ---
+>  ---
 >
 > **Pub/Sub**
 > - A managed GCP messaging service where publishers write to named topics and subscribers pull from independent subscriptions; the two sides are fully decoupled and scale independently.
@@ -92,7 +92,7 @@ status: complete
 > >
 > > `StreamingPullFuture` maintains a persistent gRPC stream and delivers messages in real time. Synchronous pull adds one round-trip per batch and saturates above ~10 msg/s.
 >
-> > ---
+>  ---
 >
 > **Firestore listener**
 > - A real-time database subscription (`on_snapshot`) that fires a callback with ADDED / MODIFIED / REMOVED change events whenever a document or collection changes, delivered over a gRPC bidirectional stream.
@@ -102,7 +102,7 @@ status: complete
 > >
 > > Each active `on_snapshot` holds an open gRPC stream and incurs Firestore read charges. Store the unsubscribe handle and call it explicitly: `unsubscribe = col_ref.on_snapshot(cb)` → `unsubscribe()`.
 >
-> > ---
+>  ---
 >
 > **asyncio**
 > - Python's cooperative multitasking event loop (`asyncio.get_event_loop()`) for writing non-blocking I/O code using `async`/`await` syntax; a single thread interleaves I/O waits instead of blocking.
@@ -112,7 +112,7 @@ status: complete
 > >
 > > `time.sleep()` inside an `async def` blocks the entire thread. Use `await asyncio.sleep()` for yielding, and `loop.run_in_executor()` for CPU-bound or blocking I/O work.
 >
-> > ---
+>  ---
 >
 > **backpressure**
 > - The condition where a consumer cannot process messages as fast as the producer sends them; unhandled backpressure causes in-memory buffers to grow until messages are dropped or the process OOMs.
@@ -122,7 +122,7 @@ status: complete
 > >
 > > Set `subscriber.subscribe(sub_path, callback, flow_control=FlowControl(max_messages=N))` where N is bounded by available memory and processing throughput.
 >
-> > ---
+>  ---
 >
 > **at-least-once delivery**
 > - A messaging guarantee that every published message is delivered to each subscription one or more times but may be duplicated if the subscriber fails to acknowledge within the ack deadline.
@@ -132,7 +132,7 @@ status: complete
 > >
 > > Enable exactly-once delivery on the subscription (`enable_exactly_once_delivery=True`). This raises the per-message cost and is only supported on specific subscription types — verify before enabling in production.
 >
-> > ---
+>  ---
 >
 > **ack deadline**
 > - The window (in seconds) a Pub/Sub subscriber has to call `message.ack()` before the service redelivers the message to another subscriber or the same one.
@@ -142,7 +142,7 @@ status: complete
 > >
 > > A 10 s deadline with a 45 s processor causes exponential redelivery. Each redelivery competes with the original, amplifying load until the subscription backlog grows unboundedly.
 >
-> > ---
+>  ---
 >
 > **dead-letter topic**
 > - A Pub/Sub topic where messages are forwarded automatically after exceeding the maximum delivery attempt count (`max_delivery_attempts`), preventing poison-pill messages from blocking the subscription indefinitely.
@@ -152,7 +152,7 @@ status: complete
 > >
 > > Specify `dead_letter_policy=DeadLetterPolicy(dead_letter_topic=dlq_path, max_delivery_attempts=5)` when creating the subscription. The Pub/Sub service account needs `roles/pubsub.publisher` on the dead-letter topic.
 >
-> > ---
+>  ---
 >
 > **GCS Storage Transfer**
 > - A managed GCP service (`gcloud transfer jobs create`) for scheduled, resumable, audited bulk data transfers between GCS buckets, Amazon S3, Azure Blob Storage, and HTTP/HTTPS sources.
@@ -162,7 +162,7 @@ status: complete
 > >
 > > `gsutil cp` lacks checkpointing — a failed multi-TB transfer must restart from zero. The Transfer Service resumes from the last successfully transferred object.
 >
-> > ---
+>  ---
 >
 > **Dedicated Interconnect**
 > - A physical private network link between an on-premises data center and a GCP colocation facility, providing 10–100 Gbps throughput, consistent latency, and no public internet routing.

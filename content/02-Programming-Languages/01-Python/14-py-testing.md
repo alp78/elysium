@@ -81,7 +81,7 @@ status: complete
 > >
 > > Calling a test a "unit test" while it queries a real database. The moment a test opens a network connection or reads a file, it becomes an integration test — slower and environment-dependent.
 >
-> > ---
+>  ---
 >
 > **Integration test**
 >
@@ -92,7 +92,7 @@ status: complete
 > >
 > > Running integration tests on every commit. They are 100× slower than unit tests; gate them to PR builds or nightly schedules to keep commit feedback fast.
 >
-> > ---
+>  ---
 >
 > **Fixture**
 >
@@ -103,7 +103,7 @@ status: complete
 > >
 > > Defining fixtures inside the test module file. Fixtures belong in `conftest.py` so they are shared across the whole directory without explicit imports.
 >
-> > ---
+>  ---
 >
 > **conftest.py**
 >
@@ -114,7 +114,7 @@ status: complete
 > >
 > > Renaming the file. pytest discovers it specifically by the name `conftest.py`; any other name breaks auto-discovery silently.
 >
-> > ---
+>  ---
 >
 > **Parametrize**
 >
@@ -125,7 +125,7 @@ status: complete
 > >
 > > Putting all cases inside a single `assert` in a loop. A failure in row 3 masks whether rows 4–N would have passed. Parametrize reports each row independently.
 >
-> > ---
+>  ---
 >
 > **Mock / MagicMock**
 >
@@ -136,7 +136,7 @@ status: complete
 > >
 > > Mocking at the wrong layer. Always patch where the name is **used** (the consuming module), not where it is defined. `from requests import get` in `mymodule` means patch `"mymodule.get"`, not `"requests.get"`.
 >
-> > ---
+>  ---
 >
 > **patch**
 >
@@ -147,7 +147,7 @@ status: complete
 > >
 > > Patching the wrong module path — the original definition site instead of the import site in the consuming module. The real function still executes and the mock has no effect.
 >
-> > ---
+>  ---
 >
 > **side_effect**
 >
@@ -158,7 +158,7 @@ status: complete
 > >
 > > Confusing `return_value` with `side_effect`. `return_value` returns the same single value on every call. `side_effect` consumes the list in order; a `StopIteration` is raised if the list is exhausted.
 >
-> > ---
+>  ---
 >
 > **spec**
 >
@@ -169,7 +169,7 @@ status: complete
 > >
 > > Omitting `spec`. A bare `Mock()` accepts any attribute access and method call without error, so `mock.conect()` (typo) silently succeeds while the real code would fail.
 >
-> > ---
+>  ---
 >
 > **pytest.approx**
 >
@@ -180,7 +180,7 @@ status: complete
 > >
 > > Using `==` directly on floats: `assert 0.1 + 0.2 == 0.3` fails in Python. For production financial code outside tests, use `math.isclose()` for the same protection.
 >
-> > ---
+>  ---
 >
 > **pytest.raises**
 >
@@ -191,7 +191,7 @@ status: complete
 > >
 > > Not asserting the exception message with `match=`. A different exception type that is a subclass of the expected one can still pass, hiding a regression in the error path.
 >
-> > ---
+>  ---
 >
 > **scope**
 >
@@ -202,7 +202,7 @@ status: complete
 > >
 > > Using `scope="session"` for mutable objects (lists, dicts, DataFrames). Mutations from one test persist into the next, making tests order-dependent and causing intermittent failures.
 >
-> > ---
+>  ---
 >
 > **hypothesis**
 >
@@ -213,7 +213,7 @@ status: complete
 > >
 > > Applying hypothesis to every test. Reserve it for pure functions where the input domain is large and the invariant is expressible as a property. For domain-specific business logic with constrained inputs, parametrize is clearer and faster.
 >
-> > ---
+>  ---
 >
 > **pandera**
 >
@@ -224,7 +224,7 @@ status: complete
 > >
 > > Using a single schema across all medallion layers. Bronze schemas must allow NULLs and broad types (raw data is messy); silver enforces non-null on critical columns; gold schemas are strict and match downstream consumer contracts exactly.
 >
-> > ---
+>  ---
 >
 > **TDD (Test-Driven Development)**
 >

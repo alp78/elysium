@@ -43,7 +43,7 @@ status: complete
 > > [!tip] Scope after load
 > > Always call `.CreateScoped("https://www.googleapis.com/auth/cloud-platform")` after loading a `ServiceAccountCredential`; without it, the token may be missing required API scopes.
 >
-> > ---
+>  ---
 >
 > **ADC (Application Default Credentials, .NET)**
 >
@@ -53,7 +53,7 @@ status: complete
 > > [!warning] Missing env var locally
 > > Forgetting to set `GOOGLE_APPLICATION_CREDENTIALS` before running locally causes ADC to fall through to `gcloud` credentials, which may have broader or narrower permissions than the intended service account.
 >
-> > ---
+>  ---
 >
 > **`SecretManagerServiceClient`**
 >
@@ -63,7 +63,7 @@ status: complete
 > > [!info] Versioning model
 > > Secrets are immutable per version. Adding a new version does not invalidate the old one — both are accessible until explicitly disabled or destroyed. `"latest"` always resolves to the highest-numbered active version.
 >
-> > ---
+>  ---
 >
 > **`KeyManagementServiceClient`**
 >
@@ -73,7 +73,7 @@ status: complete
 > > [!warning] Direct encryption size limit
 > > Calling `kmsClient.Encrypt()` on a payload larger than 64 KiB throws `InvalidArgument`. The correct pattern for large payloads is envelope encryption: encrypt data with a local `AesGcm` DEK, then wrap the DEK with KMS.
 >
-> > ---
+>  ---
 >
 > **`AesGcm` (.NET built-in)**
 >
@@ -83,7 +83,7 @@ status: complete
 > > [!danger] Nonce reuse
 > > Reusing a nonce under the same `AesGcm` key allows an attacker to recover the plaintext from two ciphertexts. Always generate nonces with `RandomNumberGenerator.GetBytes(12)` — never use a counter unless it is guaranteed unique across all encryptions with that key.
 >
-> > ---
+>  ---
 >
 > **`SqlConnection` / `SqlClient` (`Microsoft.Data.SqlClient`)**
 >
@@ -93,7 +93,7 @@ status: complete
 > > [!tip] C# vs Python advantage
 > > Unlike Python's `pymssql` (which wraps FreeTDS), `Microsoft.Data.SqlClient` is the official Microsoft driver with full TLS 1.3 support, connection resiliency, and complete `SqlBulkCopy` functionality — no workarounds needed.
 >
-> > ---
+>  ---
 >
 > **`SqlBulkCopy`**
 >
@@ -103,7 +103,7 @@ status: complete
 > > [!warning] Silent misalignment without `ColumnMappings`
 > > Omitting `SqlBulkCopyColumnMapping` entries causes the driver to map columns by ordinal position. If the source `DataTable` and target SQL table have different column orders, values are inserted into the wrong columns with no error raised.
 >
-> > ---
+>  ---
 >
 > **`BigQueryClient`**
 >
@@ -113,7 +113,7 @@ status: complete
 > > [!info] Column-level encryption pattern
 > > BigQuery has no native column-level encryption. The pattern is: encrypt the field value with `kmsClient.Encrypt()`, store the Base64-encoded ciphertext as a `STRING` column, and decrypt in the application layer after query. The table stores opaque blobs — only callers with KMS decrypt IAM access can recover the plaintext.
 >
-> > ---
+>  ---
 >
 > **`FirestoreDb`**
 >
@@ -123,7 +123,7 @@ status: complete
 > > [!warning] `SetAsync` overwrites the entire document
 > > Calling `document.SetAsync(obj)` without `SetOptions.MergeAll` replaces every field in the document, including fields written by other processes. Use `UpdateAsync(updates)` or `SetAsync(obj, SetOptions.MergeAll)` for partial updates.
 >
-> > ---
+>  ---
 >
 > **`UrlSigner`**
 >
@@ -133,7 +133,7 @@ status: complete
 > > [!warning] Signed URL exposure risk
 > > Never log signed URLs — they grant object access to anyone who possesses them. Keep expiration times to the minimum practical window (minutes, not hours or days), and audit URL generation events with object name, expiry, and signing SA.
 >
-> > ---
+>  ---
 >
 > **`StorageClient`**
 >
@@ -143,7 +143,7 @@ status: complete
 > > [!info] CMEK vs client-side encryption
 > > CMEK encrypts the object server-side using a customer-managed KMS key; the ciphertext is managed by GCS and the key by Cloud KMS. Client-side encryption (AES-GCM before upload) encrypts the bytes before they leave the application; GCS stores an opaque blob and has no access to the plaintext under any circumstance.
 >
-> > ---
+>  ---
 >
 > **Envelope Encryption (.NET)**
 >
@@ -158,18 +158,6 @@ status: complete
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 This note demonstrates C# security operations across GCP services — encryption, certificates, identity, and secure access.
-
-### What this note covers
-
-- **Environment Setup** — NuGet package installation and environment variable / credential initialization
-- **Identity and Authentication** — service account key auth, ADC, service account impersonation, access token inspection
-- **Secret Manager** — read, create, rotate, and disable secret versions using `SecretManagerServiceClient`
-- **Cloud KMS** — symmetric encrypt/decrypt, envelope encryption with built-in `AesGcm`
-- **Cloud SQL** — SQL Server TLS connections via `SqlClient`, parameterized CRUD, SSL cert verification, `SqlBulkCopy`
-- **BigQuery** — SA-authenticated queries, column-level KMS encryption and decryption
-- **Firestore** — SA-authenticated CRUD, field-level KMS encryption
-- **Cloud Storage** — CMEK upload and verification, client-side AES-GCM encryption, signed URLs with `UrlSigner`
-- **Security Operations Audit Summary** — consolidated summary of all operations and C#-specific advantages
 
 ## Environment Setup
 

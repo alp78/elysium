@@ -31,133 +31,133 @@ status: complete
 
 > [!note]- Glossary
 >
-> **Design pattern** — A named, reusable solution to a recurring structural problem in software design, documented independent of any language.
-> - Provides a shared vocabulary so teams communicate solutions without re-describing them from scratch each time.
-> - Patterns are optional tools, not mandatory frameworks; applying one where it does not fit adds complexity rather than reducing it.
+> **Design pattern**
+> - A named, reusable design approach for a recurring software-structure problem, described at the level of intent rather than tied to one exact implementation.
+> - Used to give teams a shared vocabulary for discussing trade-offs and solutions without re-explaining the full structure every time.
 >
 > > [!tip] Patterns are a vocabulary, not a checklist
 > >
-> > Reaching for a pattern because it is well-known rather than because it solves a concrete problem is the most common misuse. Evaluate fit first.
+> > A pattern is useful only when it fits the problem. Applying one because it is famous or fashionable usually adds indirection without solving anything important.
 >
-> > ---
+> ---
 >
-> **Dependency Injection (DI)** — Passing a class's external dependencies (database connection, API client, logger) into its constructor or method from outside, rather than creating them internally.
-> - Decouples the class from concrete implementations, making it possible to substitute test doubles without modifying the class under test.
-> - In Python no framework is required — passing objects via `__init__` is sufficient. C# equivalent: `Microsoft.Extensions.DependencyInjection` constructor injection.
+> **Dependency Injection (DI)**
+> - Design approach in which an object receives the collaborators it depends on from outside, rather than constructing those collaborators internally.
+> - Used to reduce coupling, improve testability, and make it easier to substitute implementations such as mocks, fakes, or alternative backends.
 >
 > > [!tip] Inject abstractions, not concretions
 > >
-> > Type the constructor parameter as an `ABC` or `Protocol`, not as `SqlRepository`. This keeps the class substitutable for any conforming implementation.
+> > Prefer depending on an interface, `Protocol`, or abstract contract rather than a concrete implementation class. That preserves substitutability and keeps the caller decoupled from implementation details.
 >
-> > ---
+> ---
 >
-> **Singleton** — A class that guarantees only one instance is created for the lifetime of the Python process.
-> - Used for shared resources that must not be duplicated: DB connection pools, configuration managers, loggers.
-> - Implemented in Python by overriding `__new__` to return the existing instance, or more simply by placing the resource at module scope (Python's import cache makes module-level variables naturally singleton).
+> **Singleton**
+> - Pattern that restricts a class or resource to a single shared instance within a chosen scope, often a process or application runtime.
+> - Used for state or resources that should be coordinated centrally, such as a configuration object, cache, or connection pool handle.
 >
-> > [!warning] Thread-unsafe classic check
+> > [!warning] Thread safety and testability are the real risks
 > >
-> > A bare `if not cls._instance` check without a lock is not thread-safe. Two threads can both pass the check before either assigns the instance. Prefer the module-level idiom or use `threading.Lock`.
+> > Naive Singleton implementations are often unsafe under concurrency and awkward to reset in tests. In Python, a module-level shared object is usually simpler and clearer than a custom class-based Singleton.
 >
-> > ---
+> ---
 >
-> **Factory** — A function or class method that selects and instantiates the correct subclass based on a parameter, hiding concrete class names from the caller.
-> - Centralises object creation; adding a new backend means adding one class and one entry in a dispatch dict, with no changes to calling code.
-> - In Python, dict dispatch (`{"gcs": GCSClient, "s3": S3Client}[key]()`) is the idiomatic form. C# equivalent: static factory method or `IServiceProvider.GetService<T>()`.
+> **Factory**
+> - Function, method, or object whose responsibility is to create and return another object while hiding some or all construction details from the caller.
+> - Used to centralize creation logic, choose implementations dynamically, and keep callers independent of concrete class names and setup details.
 >
-> > [!warning] Business logic in the factory
+> > [!warning] A factory should not absorb unrelated business logic
 > >
-> > A factory that contains conditional business logic (e.g., `if tier == "premium": apply_discount()`) violates single responsibility. Factories create objects; all post-creation logic belongs in the caller or in the class's own `__init__`.
+> > Creation decisions belong in the factory; domain decisions usually do not. Once the factory starts owning workflow policy, pricing rules, or business branching, it stops being just a creation abstraction.
 >
-> > ---
+> ---
 >
-> **Observer / Event bus** — A publish-subscribe mechanism where a subject maintains a list of subscriber callbacks and notifies all of them when an event occurs.
-> - Decouples producers from consumers: the pipeline step that emits `"step_completed"` does not know which handlers will react.
-> - GCP equivalent: Cloud Pub/Sub (same pattern, distributed). C# equivalent: `event`/`delegate` or `IObservable<T>`.
+> **Observer / Event bus**
+> - Publish-subscribe design in which one component emits events and other components subscribe to be notified when those events occur.
+> - Used to decouple event producers from event consumers so new reactions can be added without rewriting the producer.
 >
-> > [!warning] Callbacks accumulate silently
+> > [!warning] Subscription lifecycle matters
 > >
-> > Registering the same callback on each test setup without a matching teardown causes it to fire multiple times per event. Guard with `if cb not in listeners` and call `unsubscribe` in test teardown.
+> > If listeners are registered repeatedly and never removed, the same event may trigger duplicate callbacks and memory may grow unexpectedly. Always manage subscription and teardown deliberately.
 >
-> > ---
+> ---
 >
-> **Strategy** — Encapsulating an interchangeable algorithm behind a shared interface (ABC) so the context class can delegate to it without knowing its implementation.
-> - Allows scoring, pricing, or validation rules to change at runtime by injecting a different strategy object, without modifying the context class.
-> - Python's first-class functions make lightweight strategies trivial: pass a plain function when a full ABC would be overkill.
+> **Strategy**
+> - Pattern that encapsulates interchangeable algorithms or behaviors behind a common contract so a caller can switch among them without changing its own structure.
+> - Used when a system needs runtime-selectable behavior, such as scoring rules, validation policies, or output formats.
 >
-> > [!tip] Composition over subclassing
+> > [!tip] Composition is usually cleaner than subclass proliferation
 > >
-> > Subclassing a scorer for each algorithm produces a rigid, deep hierarchy. Injecting a strategy object keeps the context class flat and the algorithms independently testable.
+> > Injecting a strategy keeps the host object stable while the algorithm varies independently. This is often easier to test and extend than creating deep subclass hierarchies.
 >
-> > ---
+> ---
 >
-> **Decorator pattern** — Wrapping an existing object or function to add behaviour (logging, caching, auth) while preserving the original interface, implemented via class composition.
-> - Distinct from Python's `@decorator` syntax, which is a language feature that may or may not implement this OOP pattern.
-> - Applied to class instances using `class Wrapper(Interface)` that holds an inner instance and delegates all calls, intercepting only the ones it needs to augment.
+> **Decorator pattern**
+> - Pattern in which one object wraps another object that implements the same conceptual interface and adds behavior before or after delegating the call.
+> - Used for cross-cutting concerns such as logging, caching, metrics, authorization, or retry behavior without modifying the wrapped class directly.
 >
-> > [!tip] Prefer decoration over subclassing for cross-cutting concerns
+> > [!tip] Distinguish the pattern from Python decorator syntax
 > >
-> > A `LoggingRepository` that wraps any `DataRepository` adds logging without modifying any existing class and can be combined with other decorators by layering wrappers.
+> > Python's `@decorator` syntax is a language feature for transforming functions or classes. It can implement the Decorator idea in some cases, but it is not identical to the classic object-wrapper pattern.
 >
-> > ---
+> ---
 >
-> **Repository pattern** — An abstraction layer over data access that exposes a domain-oriented interface (`get_prices`, `save_scores`) and hides all storage technology details behind it.
-> - Combined with DI, allows the same pipeline service to run against SQL, BigQuery, GCS, or an in-memory mock purely by injecting a different implementation.
-> - The boundary rule: no ORM model, no SQL query, and no storage-specific exception should leak through the repository interface into the domain layer.
+> **Repository pattern**
+> - Abstraction layer that exposes domain-oriented data access operations while hiding the details of the underlying storage mechanism.
+> - Used to keep domain or service logic independent of whether data comes from SQL, an API, object storage, or an in-memory test implementation.
 >
-> > [!warning] Leaking storage details through the boundary
+> > [!warning] Do not leak storage-specific details across the boundary
 > >
-> > Returning a SQLAlchemy `Row` or raising a `psycopg2.OperationalError` from a repository method forces the caller to know about the storage technology. Return plain dicts or domain models and translate exceptions to domain errors.
+> > If repository methods return ORM-specific rows or raise storage-driver-specific exceptions directly, the abstraction has failed. Translate infrastructure details into domain-friendly data and errors.
 >
-> > ---
+> ---
 >
-> **ABC (Abstract Base Class)** — A Python class that inherits from `abc.ABC` and declares one or more `@abstractmethod` methods to define a contract all subclasses must fulfil.
-> - Python raises `TypeError` at instantiation time if a subclass has not implemented every abstract method, catching missing implementations before the pipeline runs.
-> - Using `ABC` without `@abstractmethod` creates a class that looks like a contract but enforces nothing — subclasses can be instantiated with any method absent.
+> **ABC (Abstract Base Class)**
+> - Python mechanism for defining an explicit abstract contract using `abc.ABC` and `@abstractmethod`.
+> - Used when a codebase wants enforced nominal inheritance and a clear, formal interface that subclasses must implement before they can be instantiated.
 >
-> > [!tip] ABC vs Protocol
+> > [!tip] ABC vs `Protocol`
 > >
-> > `ABC` requires explicit inheritance; `Protocol` (structural subtyping) matches any class with the right method signatures without inheritance. Use `Protocol` when you cannot or do not want to force a shared base class.
+> > An ABC requires explicit inheritance. A `Protocol` supports structural subtyping, which is useful when you want interface-style compatibility without forcing a shared base class.
 >
-> > ---
+> ---
 >
-> **`__new__` vs `__init__`** — `__new__` is the static method that creates and returns the raw instance object; `__init__` is the initialiser that runs on the already-created instance to set its attributes.
-> - Singleton logic must be placed in `__new__` because it controls whether a new object is allocated at all. By the time `__init__` runs, the instance already exists, so any "return existing instance" check there has no effect.
-> - `__init__` still runs on every `Config()` call even when `__new__` returns the cached instance, so a `_initialized` guard is required to skip redundant setup.
+> **`__new__` vs `__init__`**
+> - `__new__` creates and returns the instance object; `__init__` runs after creation to initialize that instance's state.
+> - Used to explain object-construction control points, especially when implementing patterns such as Singleton or immutable object creation.
 >
-> > [!tip] Module-level singleton avoids `__new__` entirely
+> > [!warning] `__init__` does not control allocation
 > >
-> > `conn = create_connection()` at module scope is initialised once on first import and reused on every subsequent import. No `__new__`, no lock, no boilerplate.
+> > By the time `__init__` runs, the object already exists. Any logic that must decide whether a new instance should be created belongs in `__new__` or outside the class entirely.
 >
-> > ---
+> ---
 >
-> **Pydantic `BaseModel`** — A validation library class that uses Python type hints and `Field()` constraints to validate incoming data at instantiation time, raising `ValidationError` immediately on violation.
-> - Replaces manual `if` checks for input validation and integrates directly with FastAPI request/response models and dbt contract schemas.
-> - Mutable field access after construction bypasses validation; use `model_config = ConfigDict(frozen=True)` to make the model immutable if the values must not change after creation.
+> **Pydantic `BaseModel`**
+> - Pydantic base class for defining typed data models with parsing, validation, and schema generation.
+> - Used to validate input at system boundaries such as APIs, config loading, and file parsing, so downstream code can assume the data already satisfies declared constraints.
 >
-> > [!tip] Validate at the boundary, trust inside
+> > [!warning] Validation behavior depends on model configuration and operation
 > >
-> > Construct and validate the Pydantic model once at the entry point (API handler, file parser, config loader). Internal domain code receives the validated model and does not repeat the same checks.
+> > Construction is validated by default, but not every later mutation is unless configured accordingly. Know the model's configuration before assuming post-construction assignments are automatically validated.
 >
-> > ---
+> ---
 >
-> **`getattr` / `setattr`** — Built-in functions for reading and writing object attributes by string name at runtime, equivalent to C#'s `PropertyInfo.GetValue()` / `SetValue()` via `System.Reflection`.
-> - Enables reflection-based infrastructure: config loaders that map env-var names to model fields, serialisers that iterate attribute lists, plugin dispatchers that call methods by name.
-> - Use `getattr(obj, name, default)` to avoid `AttributeError` when the attribute may not exist. Never use `eval()` as a substitute — it is a remote-code-execution risk.
+> **`getattr` / `setattr`**
+> - Built-in Python functions for reading and writing object attributes dynamically by attribute name supplied as a string.
+> - Used in reflective or metadata-driven infrastructure such as serializers, plugin dispatch, configuration loaders, and generic adapters.
 >
-> > [!warning] Reflection in domain logic
+> > [!warning] Dynamic attribute access can obscure control flow
 > >
-> > `getattr`/`setattr` in domain logic obscures data flow and defeats static analysis. Restrict dynamic attribute access to infrastructure layers (config, serialisation, plugin dispatch) where the indirection is genuinely necessary.
+> > Overusing `getattr` and `setattr` inside domain logic makes code harder to trace, validate, and refactor. Keep this style mostly in infrastructure layers where the indirection is justified.
 >
-> > ---
+> ---
 >
-> **Module-level singleton** — A module-level variable that is initialised exactly once when the module is first imported, because Python's import system caches the module object and does not re-execute it on subsequent imports.
-> - Simpler and more Pythonic than a class-based Singleton: no `__new__` override, no `_initialized` guard, no locking required.
-> - The assumption that `import mymodule` always re-runs the module body is wrong; the second import returns the cached module from `sys.modules` without executing any code.
+> **Module-level singleton**
+> - Shared object created at module scope and reused through Python's module import cache, which normally executes a module once per interpreter process and then reuses it.
+> - Used as the simplest Pythonic way to hold one shared instance of configuration or infrastructure state without implementing a custom Singleton class.
 >
-> > [!tip] Preferred over class-based Singleton in most cases
+> > [!tip] Usually simpler than a class-based Singleton
 > >
-> > `_config = AppConfig()` at module scope is the idiomatic Python singleton. Use the `__new__` pattern only when you need lazy initialisation, subclassability, or explicit reset in tests.
+> > A module-level shared object avoids `__new__` tricks, repeated initialization guards, and extra boilerplate. Prefer it unless you specifically need lazy creation, explicit reset hooks, or more elaborate lifecycle control.
 
 This note documents Python design patterns and architectural idioms used in data engineering and backend development.
 

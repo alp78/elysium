@@ -34,18 +34,18 @@ status: complete
 > [!note]- Glossary
 >
 > **Bash script**
-> A text file containing a sequence of Bash commands executed by the Bash interpreter; conventionally starts with `#!/usr/bin/env bash`.
-> The standard automation language for Linux data engineering: file processing, pipeline orchestration, scheduled jobs, and deployment scripts.
+> - A plain-text file containing Bash commands that are executed by the Bash interpreter, typically starting with a shebang such as `#!/usr/bin/env bash` when meant to be run directly.
+> - The standard unit for shell automation in Linux environments: file processing, task orchestration, deployment steps, and operational glue code.
 >
 > > [!info] Bash vs sh
 > >
-> > `#!/usr/bin/env bash` invokes Bash explicitly. `#!/bin/sh` may resolve to a minimal POSIX shell (dash on Debian/Ubuntu) that lacks arrays, `[[`, and other Bash-isms, causing silent incompatibilities.
+> > `#!/usr/bin/env bash` invokes Bash explicitly. `#!/bin/sh` may resolve to a minimal POSIX shell (dash on Debian/Ubuntu) that lacks arrays, `[[`, and other Bash-specific features, causing incompatibilities.
 >
 > ---
 >
 > **Shebang (`#!`)**
-> The first line of a script (`#!/usr/bin/env bash`) that tells the OS which interpreter to use when the file is executed directly.
-> Determines whether the script runs under Bash, Python, or another interpreter — critical because the same file may behave differently under different shells.
+> - The first line of an executable script, such as `#!/usr/bin/env bash`, that tells the operating system which interpreter should run the file.
+> - Ensures the script runs under the intended interpreter, which is critical because the same script can behave differently under Bash, POSIX `sh`, Python, or another runtime.
 >
 > > [!tip] PATH-based lookup
 > >
@@ -54,8 +54,8 @@ status: complete
 > ---
 >
 > **`set -euo pipefail`**
-> A compound strict-mode directive: `-e` exits on any command error, `-u` treats unset variables as errors, `-o pipefail` makes a pipeline fail if any stage fails (not just the last).
-> Without this header, errors in the middle of a script are silently ignored and execution continues on corrupted or missing input. Every production script must start with this line.
+> - A common Bash strict-mode header that enables three safety options: `-e` exits on unhandled command failure, `-u` treats unset variables as errors, and `pipefail` makes a pipeline fail if any stage fails rather than only the last one.
+> - Reduces silent failure modes in automation by making the script stop early when inputs are missing, commands fail, or intermediate pipeline stages break.
 >
 > > [!danger] Omitting strict mode causes silent data corruption
 > >
@@ -64,8 +64,8 @@ status: complete
 > ---
 >
 > **Exit code**
-> The numeric value (0–255) a process returns to its parent. `0` = success; any non-zero value = failure.
-> Orchestrators (cron, Airflow, GitHub Actions) use exit codes to determine task success. A script that fails internally but exits `0` causes silent pipeline corruption that is difficult to diagnose.
+> - The numeric status a process returns to its parent process when it finishes. By convention, `0` means success and any non-zero value signals failure or abnormal termination.
+> - Allows schedulers, orchestrators, and calling scripts to determine whether a step succeeded and whether retries, alerts, or downstream tasks should run.
 >
 > > [!warning] Swallowed exit codes corrupt pipelines
 > >
@@ -74,8 +74,8 @@ status: complete
 > ---
 >
 > **Idempotent script**
-> A script that produces the same result whether run once or multiple times; re-running does not create duplicates, fail on completed steps, or corrupt existing output.
-> Production scripts must be idempotent because retries are common — network failures, timeouts, and scheduler restarts all trigger re-runs.
+> - A script designed so that running it multiple times produces the same end state as running it once, without duplicating effects or corrupting existing output.
+> - Essential for reliable retries in production, where jobs may be re-run after timeouts, restarts, partial failures, or scheduler recovery.
 >
 > > [!tip] Idempotency patterns
 > >
@@ -84,8 +84,8 @@ status: complete
 > ---
 >
 > **Parameter validation**
-> Checking that all required inputs (positional arguments, environment variables, files) exist and are non-empty before the script performs any side-effecting work.
-> Prevents running with missing configuration, which could produce corrupt output, overwrite wrong targets, or delete the wrong data.
+> - Checking at startup that required inputs such as positional arguments, environment variables, files, and directories are present, non-empty, and valid before the script performs side effects.
+> - Prevents the script from running with missing or wrong configuration, which can otherwise lead to bad targets, malformed output, or destructive mistakes.
 >
 > > [!info] Bash validation syntax
 > >
@@ -94,8 +94,8 @@ status: complete
 > ---
 >
 > **Logging pattern**
-> Writing timestamped diagnostic messages to `stderr` so that the script's data output on `stdout` remains clean for piping to downstream commands.
-> Enables debugging and audit trails without contaminating data streams. Standard pattern: `log() { echo "[$(date +%Y-%m-%d\ %H:%M:%S)] $*" >&2; }`.
+> - A consistent way of writing diagnostic or status messages, usually with timestamps and severity context, typically to `stderr` so they remain separate from data written to `stdout`.
+> - Makes scripts observable and debuggable without contaminating pipeline output that downstream commands are expected to parse.
 >
 > > [!warning] Mixing logs with data output breaks pipelines
 > >
@@ -104,8 +104,8 @@ status: complete
 > ---
 >
 > **Exponential backoff**
-> A retry strategy where the wait time between successive attempts doubles after each failure (e.g., 1 s → 2 s → 4 s → 8 s), up to a configurable maximum.
-> Prevents hammering a recovering service with rapid repeated requests, which would delay its recovery. Standard for API retries, database reconnects, and file transfer failures.
+> - A retry strategy in which the delay before each new attempt increases exponentially after failure, for example 1 s → 2 s → 4 s → 8 s, usually up to a maximum.
+> - Reduces pressure on unstable upstream systems and increases the chance that transient network, API, or database failures recover before the next retry.
 >
 > > [!tip] Jitter for distributed systems
 > >
@@ -114,8 +114,8 @@ status: complete
 > ---
 >
 > **Golden schema**
-> A reference file that defines the expected column names and order for a CSV or structured data file; used as the authoritative contract for incoming data.
-> Comparing incoming file headers against the golden schema catches structural drift from upstream systems before any data is processed, preventing silent schema mismatches from propagating downstream.
+> - A reference definition of the expected structure of a dataset, such as the required column names and their order in a CSV header, treated as the authoritative contract for incoming data.
+> - Allows validation of upstream files before processing so schema drift is caught immediately instead of propagating downstream as silent misalignment or bad parsing.
 >
 > > [!info] Golden schema format
 > >
@@ -124,8 +124,8 @@ status: complete
 > ---
 >
 > **NDJSON (Newline-Delimited JSON)**
-> A format where each line of a file is a complete, self-contained JSON object; also called JSON Lines (`.jsonl`).
-> Required by BigQuery streaming inserts, many modern log aggregators, and tools like `jq` for streaming processing. Unlike a JSON array, NDJSON can be processed line-by-line without loading the entire file into memory.
+> - A text format in which each line is a complete JSON object. It is also commonly called JSON Lines and often stored with a `.jsonl` extension.
+> - Enables streaming, line-by-line processing of large JSON datasets without loading the entire file into memory, which is useful for logs, ingestion pipelines, and tools like `jq`.
 >
 > > [!info] NDJSON vs JSON array
 > >
@@ -134,8 +134,8 @@ status: complete
 > ---
 >
 > **Lock file / `flock`**
-> A lock file is a sentinel file whose exclusive possession by one process prevents other processes from entering the same critical section. `flock` (from `util-linux`) is the Linux system call and CLI that acquires file locks atomically.
-> Prevents overlapping cron job executions that would cause duplicate data, race conditions, or resource exhaustion when a job runs longer than its scheduled interval.
+> - A lock file is a file used to coordinate exclusive access to a critical section. `flock` is the standard Linux command and kernel-backed locking mechanism used to acquire and hold that lock atomically.
+> - Prevents concurrent runs of the same job from overlapping, which is critical for cron jobs and batch pipelines that would otherwise duplicate work, race on files, or exhaust shared resources.
 >
 > > [!tip] `flock` vs PID files
 > >
@@ -144,8 +144,8 @@ status: complete
 > ---
 >
 > **`cron`**
-> A time-based job scheduler built into Linux/macOS that runs commands or scripts at specified intervals, defined in a `crontab` file using a five-field time expression (`minute hour day month weekday`).
-> The standard mechanism for scheduling unattended data engineering tasks — daily extracts, file SLA checks, log rotation — on servers without a full orchestration platform.
+> - A Unix time-based job scheduler that runs commands or scripts at fixed times or intervals, configured in a `crontab` using a five-field time expression (`minute hour day month weekday`).
+> - Provides lightweight unattended scheduling for recurring operational tasks such as extracts, SLA checks, cleanups, health checks, and report generation on systems without a larger orchestrator.
 >
 > > [!warning] Cron does not source shell profiles
 > >

@@ -59,8 +59,8 @@ status: complete
 > [!note]- Glossary
 >
 > **`<(cmd)`** — input process substitution
-> - Bash operator that runs `cmd` in a subshell and exposes its stdout as a readable path (`/dev/fd/N`); accepted anywhere a filename argument is expected.
-> - Eliminates temporary files when commands like `diff`, `paste`, or `comm` require two file operands — both can be live command outputs.
+> - Bash operator that runs `cmd` and exposes its stdout as a readable pseudo-file path such as `/dev/fd/N`; use it anywhere a command expects a filename argument.
+> - Commonly used with tools like `diff`, `comm`, and `paste` so they can read live command output without first writing a temporary file.
 >
 > > [!warning] Bash-only, not POSIX sh
 > >
@@ -69,8 +69,8 @@ status: complete
 > ---
 >
 > **`>(cmd)`** — output process substitution
-> - Bash operator that creates a writable `/dev/fd/N` path; data written to it is piped into `cmd`'s stdin.
-> - Used with `tee` to fan out a single input stream to multiple consumers (compress + count in one pass).
+> - Bash operator that creates a writable pseudo-file path; anything written to that path is sent to `cmd` on stdin.
+> - Commonly used with `tee` to split one stream to multiple consumers in a single pass.
 >
 > > [!info] Data flows into `>(cmd)`, not out
 > >
@@ -78,29 +78,29 @@ status: complete
 >
 > ---
 >
-> **`/dev/fd/N`** — kernel file descriptor path
-> - A virtual filesystem path the Linux kernel exposes for open file descriptors; `N` is the descriptor integer assigned at runtime.
-> - Process substitution expands to a path like `/dev/fd/63`, which is why it works wherever a filename string is accepted.
+> **`/dev/fd/N`** — file descriptor pseudo-path
+> - Special path that refers to an already-open file descriptor, where `N` is the descriptor number assigned at runtime.
+> - Process substitution often expands to a path like `/dev/fd/63`, which is why the shell can pass it to commands that accept filenames.
 >
 > > [!warning] Descriptor exists only during command execution
 > >
-> > The path disappears once the substituted command exits. Storing `/dev/fd/63` in a variable and referencing it later will return "no such file or descriptor."
+> > The path is valid only while the underlying file descriptor remains open. Storing `/dev/fd/63` in a variable and using it later often fails because the descriptor has already been closed.
 >
 > ---
 >
-> **`<<EOF`** — expanding here document
-> - Shell construct that feeds a multi-line block as stdin; shell expands `$variables` and `$(cmd)` substitutions before passing the text to the command.
-> - Used for dynamic config generation (`cat <<EOF > config.env`) and multi-command SSH sessions where variable values must be resolved at runtime.
+> **`<<EOF`** — here-document with unquoted delimiter
+> - Shell redirection that feeds a multi-line block to a command's stdin until a line containing only the delimiter is reached. `EOF` is only a conventional delimiter name; it is not special by itself.
+> - Because the delimiter is unquoted, the body is subject to shell expansion such as `$var`, `$(cmd)`, and arithmetic expansion before being passed to the command.
 >
 > > [!warning] Unintended expansion in SQL
 > >
-> > Dollar signs in SQL parameter syntax (e.g., `$1` in PostgreSQL) are expanded by the shell unless the delimiter is quoted. Use `<<'EOF'` for any SQL body.
+> > Dollar signs in SQL parameter syntax (for example `$1` in PostgreSQL) are expanded by the shell unless the delimiter is quoted. Use `<<'EOF'` for any SQL body that must be passed literally.
 >
 > ---
 >
-> **`<<'EOF'`** — literal here document
-> - Same as `<<EOF` but the quoted delimiter suppresses all shell expansion; the body is passed verbatim to the command.
-> - The safe default for embedding SQL, JSON, or any text containing dollar signs, backticks, or backslashes that must not be interpreted.
+> **`<<'EOF'`** — here-document with quoted delimiter
+> - Same redirection form as `<<EOF`, but quoting the delimiter disables shell expansion inside the body, so the text is passed verbatim.
+> - The safe default for embedding SQL, JSON, or any text containing dollar signs, backticks, or backslashes that must not be interpreted by the shell.
 >
 > > [!info] `<<-` strips leading tabs
 > >
@@ -108,33 +108,34 @@ status: complete
 >
 > ---
 >
-> **`<<<`** — here string
-> - Bash operator that feeds a single string as stdin to a command; avoids spawning an `echo` subshell, making it slightly more efficient and syntactically cleaner.
-> - Standard idiom for one-off stdin values to `jq`, `base64`, `bc`, `grep`, and `read` (including multi-variable `read first rest <<< "$line"`).
+> **`<<<`** — here-string
+> - Bash redirection that passes a single string to a command's stdin without writing a multi-line here-document.
+> - Commonly used for one-off stdin values with commands like `read`, `grep`, `jq`, `base64`, or `bc`.
 >
 > > [!warning] Bash-only
 > >
-> > `<<<` is not available in POSIX `sh`. Use `printf '%s<br>' "$val" | cmd` as the portable fallback.
+> > `<<<` is not available in POSIX `sh`. Use `printf '%s\n' "$val" | cmd` as the portable fallback.
 >
 > ---
 >
 > **`Tee-Object`** — PowerShell pipeline splitter
-> - PowerShell cmdlet that duplicates pipeline output: one copy goes to a file (`-FilePath`) or in-memory variable (`-Variable`), the other continues downstream.
-> - The closest PowerShell equivalent to `tee >(cmd)` for capturing and forwarding simultaneously without a temporary file.
+> - PowerShell cmdlet that duplicates pipeline output: one copy is written to a file (`-FilePath`) or stored in a variable (`-Variable`), while the original stream continues downstream.
+> - The closest PowerShell equivalent to `tee` when you need to capture output and still keep the pipeline flowing.
 >
 > > [!warning] Single destination only
 > >
-> > `Tee-Object` supports one output target at a time. To route to two or more consumers simultaneously, use `ForEach-Object` with inline branching logic.
+> > `Tee-Object` supports one capture target per call. To branch to multiple independent consumers, you need additional pipeline logic.
 >
 > ---
 >
 > **`@'...'@` / `@"..."@`** — PowerShell here-strings
-> - PowerShell multi-line string literals: `@'...'@` is literal (no expansion), `@"..."@` is expanding (`$var` and `$(expr)` resolved).
-> - The PowerShell equivalent of bash here documents; used for inline SQL blocks, JSON templates, and config file generation via `Invoke-Sqlcmd` or `Set-Content`.
+> - PowerShell multi-line string literals. `@'...'@` is a literal here-string with no variable or subexpression expansion; `@"..."@` is an expandable here-string where `$var` and `$(expr)` are resolved.
+> - Used for inline SQL, JSON, scripts, templates, and config text that would be awkward to express as ordinary quoted strings.
 >
 > > [!danger] Closing delimiter must be at column 0
 > >
 > > PowerShell raises a syntax error if the closing `'@` or `"@` has any leading whitespace — even a single space or tab. This applies even inside indented `if` blocks or functions.
+
 
 These features let you treat command output as files and embed multi-line strings directly in your scripts. They eliminate temporary files and make complex data pipeline scripts significantly cleaner.
 

@@ -58,111 +58,123 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`cat`** — concatenates and prints the entire file to stdout; the simplest file-display command.
-> Appropriate only for small config files and scripts; on any file over a few hundred lines use `head`, `tail`, or `less` instead.
+> **`cat`**
+> - Standard Unix command that reads one or more files and writes their contents to standard output in sequence.
+> - Used for simple file display, quick concatenation, and piping file contents into other commands when the file size is modest.
 >
 > > [!danger] `cat` on multi-GB files floods the terminal
 > >
-> > Dumping a 10 GB log to stdout freezes the terminal and can fill scroll-buffer memory. Interrupt with Ctrl+C.
+> > Dumping a very large file to stdout can make the terminal unusable and produce huge amounts of scrollback. Use `less`, `head`, or `tail` for inspection instead.
 >
-> > ---
+> ---
 >
-> **`head` / `tail`** — `head -n N` prints the first N lines of a file; `tail -n N` prints the last N lines (default 10 for both).
-> `head` is used to preview file structure and extract CSV headers; `tail` surfaces the most recent log entries without reading the full file.
+> **`head` / `tail`**
+> - Standard Unix commands that print the beginning (`head`) or end (`tail`) of a file or input stream, by lines by default.
+> - Used to inspect file structure quickly, preview headers, and view the most recent log lines without reading the whole file interactively.
 >
 > > [!info] `-c N` for byte-level inspection
 > >
-> > `head -c 100 file` reads the first 100 bytes — useful for detecting encoding markers or magic bytes without line-count assumptions.
+> > `head -c 100 file` reads the first 100 bytes rather than the first 100 lines, which is useful for checking encodings, byte-order marks, or file signatures.
 >
-> > ---
+> ---
 >
-> **`tail -f` / `tail -F`** — `tail -f` keeps the file handle open and streams new lines as they are appended; `tail -F` reopens the file by name on rotation.
-> The primary real-time monitoring tool during pipeline runs, deployments, and incident response; always prefer `-F` (capital F) in production.
+> **`tail -f` / `tail -F`**
+> - `tail -f` follows a file as new data is appended to the current file handle; `tail -F` follows by name and attempts to reopen the file after rotation or replacement.
+> - Used for live log monitoring during running jobs, deployments, and incident response, especially when logs are actively growing.
 >
 > > [!warning] `-f` follows the descriptor, not the name
 > >
-> > On log rotation a new inode is created; `tail -f` silently reads the old deleted file. Use `tail -F` to survive rotation.
+> > After log rotation, `tail -f` may keep following the old file handle and miss new writes to the replacement file. `tail -F` is usually safer for rotating logs.
 >
-> > ---
+> ---
 >
-> **`less`** — an interactive terminal pager that displays file contents one screen at a time with forward and backward search.
-> Reads large files without loading them into memory; key bindings: `/` search forward, `?` search backward, `n`/`N` next/previous match, `G` jump to end, `F` follow mode, `q` quit.
+> **`less`**
+> - Interactive terminal pager that displays file contents one screen at a time and supports scrolling and searching without requiring the whole file to be opened in an editor.
+> - Used for safe inspection of large files when the operator needs navigation, search, and controlled paging rather than raw streaming to the terminal.
 >
 > > [!info] `less +F` combines paging and follow
 > >
-> > Opens the file in follow mode with full scrollback history — use instead of `tail -f` when you also need to scroll up.
+> > `less +F file` enters follow mode similar to `tail -f`, but still lets you leave follow mode and scroll back through earlier content.
 >
-> > ---
+> ---
 >
-> **`wc`** — word-count utility; `wc -l` counts newlines, `wc -w` counts words, `wc -c` counts bytes.
-> `wc -l` is the fastest way to count rows in a CSV or lines in a log — reads sequentially without loading the file.
+> **`wc`**
+> - Standard Unix counting utility that reports line, word, byte, or character counts depending on the flags used.
+> - Used for quick size and row-count checks, especially `wc -l` for counting newline-terminated records in logs and text files.
 >
-> > [!warning] Counts newlines, not visual lines
+> > [!warning] `wc -l` counts newline characters
 > >
-> > A file without a trailing newline reports one fewer line than expected. Most Unix tools write trailing newlines; some Windows-origin files do not.
+> > `wc -l` counts line terminators, not human-visible rows in an editor. A final line without a trailing newline is therefore not counted the way many users expect.
 >
-> > ---
+> ---
 >
-> **`grep`** — searches file contents for lines matching a pattern; returns matching lines to stdout.
-> Used across every triage stage: counting errors (`-c`), locating them (`-n`), extracting context (`-B`/`-A`/`-C`), and filtering live streams (`--line-buffered`).
+> **`grep`**
+> - Command-line text-search tool that prints lines matching a given pattern from files or standard input.
+> - Used to locate errors, count matches, filter logs, and narrow large text streams to the lines relevant to an investigation.
 >
 > > [!info] `-E` enables extended regex
 > >
-> > `grep -E 'ERROR|WARN|DEADLOCK'` matches multiple keywords in a single pass — faster than running grep three times.
+> > `grep -E 'ERROR|WARN|DEADLOCK'` allows alternation and other extended regex features without extra backslashes.
 >
-> > ---
+> ---
 >
-> **`--line-buffered`** (grep flag) — flushes grep's output buffer after every matching line instead of accumulating a batch.
-> Required whenever `grep` is piped after `tail -f`; without it, output appears to freeze for minutes then arrives in one large burst.
+> **`--line-buffered`** **(grep flag)**
+> - `grep` option that flushes output line by line instead of buffering larger chunks before writing them downstream.
+> - Used when `grep` sits inside a live pipeline, such as after `tail -f`, so matching lines appear promptly instead of arriving in bursts.
 >
-> > [!danger] Silent buffering breaks live monitoring
+> > [!danger] Buffered output can break live monitoring
 > >
-> > `tail -f log | grep "ERROR"` without `--line-buffered` is useless during an incident. Add the flag every time.
+> > In pipelines that follow a growing log, buffered output can make the search appear stalled even though matches are occurring. Add `--line-buffered` when immediacy matters.
 >
-> > ---
+> ---
 >
-> **`awk`** — a line-oriented text-processing language; in log analysis the range pattern `/start/,/stop/` prints every line between two matches.
-> Used to isolate a time window from a multi-GB log file in a single streaming pass — far faster than loading the file into an editor.
+> **`awk`**
+> - Line-oriented text-processing language and tool that splits each input record into fields and applies pattern-action rules.
+> - Used in log analysis to extract columns, filter records, aggregate values, and print ranges such as everything between two marker lines.
 >
 > > [!info] `$NF` references the last field
 > >
-> > In structured log formats, `awk '{print $NF}'` extracts the last whitespace-delimited token (often an error type or component name) for counting with `sort | uniq -c`.
+> > In `awk`, `$NF` means "the last field in the current record," which is often useful for extracting trailing tokens from structured log lines.
 >
-> > ---
+> ---
 >
-> **`ripgrep` (`rg`)** — a modern grep replacement written in Rust; multi-threaded, respects `.gitignore`, defaults to recursive search.
-> 5–10x faster than `grep -r` on large codebases and log directories; preferred for all interactive recursive searches.
+> **`ripgrep` (`rg`)**
+> - Modern recursive search tool designed for speed and developer workflows, with defaults such as recursive descent, binary-file skipping, and `.gitignore` awareness.
+> - Used as a faster and more ergonomic alternative to recursive `grep` for interactive search across repositories and log trees.
 >
 > > [!warning] Not installed by default
 > >
-> > `rg` is absent from base Linux images. Install with `apt install ripgrep`. The binary is named `rg`, not `ripgrep`.
+> > `rg` is often absent from minimal Linux images and base containers. The executable name is `rg`, even though the project name is ripgrep.
 >
-> > ---
+> ---
 >
-> **`LC_ALL=C`** — sets the process locale to the POSIX C locale, disabling Unicode character-class handling for the duration of the command.
-> Removes UTF-8 processing overhead from `grep`; benchmarks show up to 4x speedup on ASCII-only log data with no impact on match correctness.
+> **`LC_ALL=C`**
+> - Per-process locale setting that forces commands to run under the POSIX C locale instead of a language-specific UTF-8 locale.
+> - Used to speed up some text-processing operations on plain ASCII-heavy data and to make character-class and sort behavior more predictable for low-level tooling.
 >
 > > [!info] Scope is per-command
 > >
-> > Prefix as `LC_ALL=C grep ...` to scope the locale change to one command only; do not export it globally in shared scripts.
+> > Prefix it as `LC_ALL=C grep ...` when you want the change limited to one command. Do not export it globally unless you want all downstream locale-sensitive behavior to change.
 >
-> > ---
+> ---
 >
-> **`Get-Content`** (PowerShell) — reads a file and returns each line as a string object; aliased `cat`, `gc`, `type`.
-> `-Head`/`-Tail` mirror `head`/`tail`; `-Wait` polls for new lines like `tail -f`; `-Raw` returns the entire file as a single string for multi-line parsing (JSON, XML).
+> **`Get-Content`** **(PowerShell)**
+> - PowerShell cmdlet that reads content from a file or stream and emits it into the pipeline, usually as one string per line unless options change that behavior.
+> - Used as the PowerShell equivalent of common file-reading patterns such as `cat`, `head`, `tail`, and follow-mode inspection.
 >
-> > [!warning] Loads entire file into memory by default
+> > [!warning] `-Raw` and some usage patterns can materialize large content in memory
 > >
-> > On multi-GB files `Get-Content` consumes all available RAM. Use `-Tail 100` or `-ReadCount 1000` to stream in manageable chunks.
+> > `Get-Content` often streams line by line, but options such as `-Raw` or collecting all output into an array can consume large amounts of memory on big files. Use `-Tail`, `-ReadCount`, or targeted reads when scale matters.
 >
-> > ---
+> ---
 >
-> **`Select-String`** (PowerShell) — searches files or pipeline input for regex patterns; returns `MatchInfo` objects with `LineNumber`, `Line`, `Filename`, and `Matches` properties.
-> Enables chained object-pipeline analysis (`Where-Object`, `Group-Object`, `.Count`) that raw text piping in bash cannot match without additional parsing.
+> **`Select-String`** **(PowerShell)**
+> - PowerShell cmdlet that searches text using .NET regular expressions and returns structured match objects rather than plain matching lines alone.
+> - Used for pattern search in files and pipelines when the result needs to flow into further PowerShell object-based analysis.
 >
-> > [!info] `.NET` regex, not POSIX
+> > [!info] .NET regex, not POSIX
 > >
-> > `Select-String` uses .NET regular expressions by default. Use `-SimpleMatch` for literal string searches equivalent to `grep -F`.
+> > `Select-String` uses .NET regular expressions. Use `-SimpleMatch` when you want literal matching behavior closer to `grep -F`.
 
 A senior data engineer reads files differently depending on context. Checking a config file means reading the whole thing. Investigating a 50GB log file means surgical extraction. Understanding a Parquet file means reading metadata, not data. Choosing the wrong tool turns a 30-second task into a server-killing operation.
 

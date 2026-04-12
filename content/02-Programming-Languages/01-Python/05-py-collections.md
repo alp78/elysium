@@ -80,7 +80,7 @@ status: complete
 > > [!warning] Membership test pitfall
 > > `in` on a list is O(n). For repeated membership checks on large data, convert to `set` first.
 >
-> > ---
+>  ---
 >
 > **`dict`**
 > - Hash-based key-value mapping with O(1) average lookup, insert, and delete; insertion-ordered since Python 3.7; keys must be hashable.
@@ -89,7 +89,7 @@ status: complete
 > > [!warning] Safe access
 > > `d[key]` raises `KeyError` if missing. Use `d.get(key, default)` for safe reads; use `d.pop(key, default)` for safe removal.
 >
-> > ---
+>  ---
 >
 > **`set`**
 > - Unordered collection of unique hashable elements; O(1) membership testing and deduplication; supports full set algebra.
@@ -98,7 +98,7 @@ status: complete
 > > [!warning] Empty set syntax
 > > `{}` creates an empty `dict`, not an empty `set`. Always use `set()` for an empty set.
 >
-> > ---
+>  ---
 >
 > **`frozenset`**
 > - Immutable variant of `set`; because it is hashable, it can serve as a dict key or an element of another `set`.
@@ -107,7 +107,7 @@ status: complete
 > > [!info] No mutating methods
 > > `frozenset` has no `add`, `remove`, or `discard`. It is entirely read-only after construction.
 >
-> > ---
+>  ---
 >
 > **`tuple`**
 > - Ordered, immutable sequence; hashable if all elements are hashable; supports indexing, slicing, and unpacking.
@@ -116,7 +116,7 @@ status: complete
 > > [!warning] Single-element syntax
 > > `(42)` is grouping parentheses, not a tuple. A single-element tuple requires a trailing comma: `(42,)`.
 >
-> > ---
+>  ---
 >
 > **`namedtuple`**
 > - Tuple subclass with named fields created via `collections.namedtuple` or `typing.NamedTuple`; immutable; supports dot-access, index access, and unpacking.
@@ -125,7 +125,7 @@ status: complete
 > > [!tip] Non-destructive update
 > > Use `instance._replace(field=value)` to produce a new instance with one field changed. The original is never mutated.
 >
-> > ---
+>  ---
 >
 > **`defaultdict`**
 > - `dict` subclass that auto-creates missing keys using a factory function (e.g., `list`, `int`, `set`) on first access.
@@ -134,7 +134,7 @@ status: complete
 > > [!warning] Silent key creation
 > > Reading `dd["missing"]` inserts the key with the factory default even if you only wanted to check existence. Use `key in dd` or `.get()` for non-mutating lookups.
 >
-> > ---
+>  ---
 >
 > **`Counter`**
 > - `dict` subclass purpose-built for counting hashable objects; supports `most_common(n)`, `total()`, and counter arithmetic (`+`, `-`).
@@ -143,7 +143,7 @@ status: complete
 > > [!warning] Negative counts
 > > `Counter` allows negative counts (from subtraction or manual assignment). Use `+counter` to strip zero and negative entries.
 >
-> > ---
+>  ---
 >
 > **`deque`**
 > - Double-ended queue from `collections`; O(1) `append`/`pop` on the right and `appendleft`/`popleft` on the left; optional `maxlen` for bounded buffers.
@@ -152,7 +152,7 @@ status: complete
 > > [!warning] List as queue is O(n)
 > > `list.pop(0)` shifts every element left on each call, degrading a queue loop to O(n²). Use `deque.popleft()`.
 >
-> > ---
+>  ---
 >
 > **`heapq`**
 > - Standard-library module providing min-heap operations (`heappush`, `heappop`, `nsmallest`, `nlargest`) on a regular Python list.
@@ -161,7 +161,7 @@ status: complete
 > > [!warning] Min-heap only
 > > `heapq` always pops the smallest element first. For max-heap behavior, store negated priority values: `heappush(h, (-priority, item))`.
 >
-> > ---
+>  ---
 >
 > **Enum**
 > - Class from the `enum` module defining a closed set of named symbolic constants; members have `.name` (string) and `.value` (assigned constant).
@@ -170,7 +170,7 @@ status: complete
 > > [!warning] Identity comparison
 > > `Color.RED == 1` is `False` for standard `Enum`. Use `IntEnum` when numeric comparison with plain integers is required.
 >
-> > ---
+>  ---
 >
 > **IntEnum**
 > - `Enum` subclass whose members are true integers — support comparison, arithmetic, and equality with `int`.
@@ -179,7 +179,7 @@ status: complete
 > > [!warning] Isolation trade-off
 > > `IntEnum` members compare equal to plain `int` values. This convenience can mask bugs where an integer from an unrelated domain compares equal to an enum member.
 >
-> > ---
+>  ---
 >
 > **shallow copy**
 > - Copies the outer container but shares references to all inner objects; produced by `list.copy()`, `lst[:]`, `dict.copy()`, `list(original)`.
@@ -188,7 +188,7 @@ status: complete
 > > [!danger] Nested mutation trap
 > > Mutating a nested object in a shallow copy also mutates the original. Use `copy.deepcopy()` for any collection containing nested mutable objects.
 >
-> > ---
+>  ---
 >
 > **deep copy**
 > - Recursively copies every nested object to produce a fully independent clone; performed by `copy.deepcopy()`.
@@ -197,7 +197,7 @@ status: complete
 > > [!warning] Performance and compatibility
 > > `deepcopy` is significantly slower than shallow copy and fails on non-picklable objects (open file handles, sockets, database connections).
 >
-> > ---
+>  ---
 >
 > **O(1) / O(n) / O(log n)**
 > - Big-O notation describing how an operation's cost scales with collection size: O(1) = constant time, O(n) = linear (proportional to size), O(log n) = logarithmic (e.g., heap operations).

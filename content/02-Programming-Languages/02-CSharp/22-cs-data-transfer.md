@@ -65,7 +65,7 @@ status: complete
 > > [!tip] Treating GCS like a filesystem
 > > Paths such as `data/2024/file.csv` are a single key string, not a nested folder. Listing with a prefix filter simulates directory listing but returns all matching objects regardless of depth.
 >
-> > ---
+>  ---
 >
 > **Blob / object**
 > - Individual file stored in GCS, identified by its full key (e.g., `data/file.csv`); every transfer operation targets one or more `Google.Cloud.Storage.V1` objects.
@@ -74,7 +74,7 @@ status: complete
 > > [!tip] Object name vs local path
 > > `storageClient.UploadObject(bucket, "reports/2024/data.csv", ...)` stores a single object whose name is the string `reports/2024/data.csv`, not a file inside a `reports/2024/` folder.
 >
-> > ---
+>  ---
 >
 > **`StorageClient`**
 > - `Google.Cloud.Storage.V1.StorageClient` singleton wrapping GCS REST/gRPC calls; the single entry point for all GCS reads and writes in this note.
@@ -83,7 +83,7 @@ status: complete
 > > [!warning] Per-call instantiation is expensive
 > > Creating a new `StorageClient` for each upload call adds measurable latency (credential fetch, TCP/TLS setup). Reuse one instance via dependency injection or a static field.
 >
-> > ---
+>  ---
 >
 > **`UploadObjectOptions`**
 > - Options struct passed to `StorageClient.UploadObject()` controlling chunk size, KMS key, and checksum behaviour.
@@ -92,7 +92,7 @@ status: complete
 > > [!tip] Recommended chunk size
 > > Set `ChunkSize = 8 * 1024 * 1024` (8 MB) or larger for any file above ~50 MB. This reduces round-trips by 32x versus the default 256 KB.
 >
-> > ---
+>  ---
 >
 > **Resumable upload**
 > - Multi-step GCS upload session that survives network interruption by resuming from the last acknowledged byte.
@@ -101,7 +101,7 @@ status: complete
 > > [!warning] Simple upload on large files
 > > Using a non-resumable (simple) upload for files >100 MB means a single dropped connection forces the entire transfer to restart from byte zero.
 >
-> > ---
+>  ---
 >
 > **`SqlBulkCopy`**
 > - `Microsoft.Data.SqlClient` class that streams a `DataTable` or `IDataReader` directly into SQL Server via TDS Bulk Load, bypassing row-by-row `INSERT` entirely.
@@ -110,7 +110,7 @@ status: complete
 > > [!warning] `FireTriggers` negates bulk throughput
 > > `SqlBulkCopyOptions.FireTriggers` executes `INSERT` triggers per row, collapsing bulk-load speed to row-by-row rates and risking `tempdb` log exhaustion at scale.
 >
-> > ---
+>  ---
 >
 > **`BigQueryClient`**
 > - `Google.Cloud.BigQuery.V2.BigQueryClient` wrapper around the BigQuery REST API; used to trigger load jobs and run queries against BigQuery tables.
@@ -119,7 +119,7 @@ status: complete
 > > [!warning] Using `InsertRows` for bulk loads
 > > `BigQueryClient.InsertRows()` is designed for low-latency append (e.g., real-time events). For GB-scale historical loads it costs ~5x more per byte and runs significantly slower than a GCS-staged load job.
 >
-> > ---
+>  ---
 >
 > **Load job**
 > - Asynchronous BigQuery server-side operation that reads Parquet/CSV/JSON from GCS and writes to a table without consuming streaming insert quota.
@@ -128,7 +128,7 @@ status: complete
 > > [!tip] Stage-then-load pattern
 > > Write the payload to GCS (even transiently), then call `BigQueryClient.CreateLoadJob()` with `WriteDisposition.WriteAppend`. Load jobs run server-side, complete in seconds for GB-scale files, and have no per-byte cost.
 >
-> > ---
+>  ---
 >
 > **`Process` / `ProcessStartInfo`**
 > - .NET types used to launch shell commands (`gcloud`, `scp`, `rsync`) from C#; drives VM-to-VM and local-to-VM transfers where the managed GCS client adds unnecessary overhead.
@@ -137,7 +137,7 @@ status: complete
 > > [!warning] Silent failures from unchecked stderr
 > > A `gcloud` process may return `ExitCode = 0` while printing partial-failure errors to `stderr`. Always redirect and assert both `ExitCode == 0` and an empty (or parsed) `StandardError`.
 >
-> > ---
+>  ---
 >
 > **`SqlBulkCopyOptions`**
 > - Flags enum controlling `SqlBulkCopy` behaviour: `TableLock`, `FireTriggers`, `CheckConstraints`, `KeepIdentity`, `KeepNulls`.
@@ -146,7 +146,7 @@ status: complete
 > > [!tip] Optimal flags for nightly batch loads
 > > Combine `TableLock | KeepNulls` for maximum throughput on staging-table loads. Add `KeepIdentity` only when the source data contains explicit identity values that must be preserved.
 >
-> > ---
+>  ---
 >
 > **zstd compression**
 > - Zstandard algorithm available via the `ZstdSharp` NuGet package, offering the best speed/ratio trade-off in these benchmarks: ~225 MB/s compress, 2.8x ratio at level 3.
@@ -155,7 +155,7 @@ status: complete
 > > [!tip] zstd vs GZip in production pipelines
 > > At level 3, zstd compresses at 2.5x the speed of `GZipStream.Optimal` while achieving a comparable ratio (2.8x vs 2.9x). For any internal pipeline not requiring cross-tool compatibility, zstd is the default choice.
 >
-> > ---
+>  ---
 >
 > **CRC32C checksum**
 > - Hash computed on each downloaded chunk to detect in-transit corruption; used as post-download verification in the production pipeline.
@@ -164,7 +164,7 @@ status: complete
 > > [!tip] Enable server-side CRC32C via `UploadObjectOptions`
 > > Set `UploadObjectOptions.Hash` to include a `CRC32C` value computed client-side before upload. GCS validates on ingest and rejects mismatched objects, catching corruption before the object is ever committed.
 >
-> > ---
+>  ---
 >
 > **`Microsoft.Data.SqlClient`**
 > - The actively maintained SQL Server client library replacing the deprecated `System.Data.SqlClient`; required for `SqlBulkCopy`, `SqlConnection`, and `SqlCommand` in modern .NET.
@@ -172,20 +172,6 @@ status: complete
 >
 > > [!warning] Mixing client library namespaces
 > > Mixing `System.Data.SqlClient` and `Microsoft.Data.SqlClient` types in the same project produces compile-time type conflicts — `SqlConnection` from one namespace is not assignable to the other. Migrate the entire project to `Microsoft.Data.SqlClient`.
-
-This note is the C# reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery.
-
-### What this note covers
-
-- **Setup** — NuGet package installation, environment variable loading, GCS/BigQuery/KMS client initialisation, shared helper definitions
-- **Upload Files from Local to GCS** — single-file, directory, and parallel upload patterns with throughput benchmarks
-- **Local → VM Transfer Benchmarks** — `gcloud compute scp` and `rsync` benchmarks for moving data to a Compute Engine instance
-- **Transfer files from VM to GCS** — `gcloud storage cp` and managed client uploads from a running VM
-- **Parallel Transfer** — multi-threaded chunked upload benchmarks isolating concurrency vs chunk-size trade-offs
-- **Download Files** — GCS to local download patterns with parallel chunk downloads
-- **Download files from VM** — pulling files from a Compute Engine instance back to local storage
-- **File Compression Benchmarks** — GZip, Brotli, Deflate, zstd throughput and ratio comparisons
-- **Production Pipeline** — end-to-end compress → split → parallel upload → download → verify → merge → decompress pipeline with cleanup
 
 ## Setup
 

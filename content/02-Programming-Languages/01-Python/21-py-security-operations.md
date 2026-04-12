@@ -68,7 +68,7 @@ status: complete
 > >
 > > Call `google.auth.default()` and inspect `type(credentials).__name__` to confirm which credential source ADC resolved to at runtime.
 >
-> > ---
+>  ---
 >
 > **Service Account Impersonation**
 >
@@ -79,7 +79,7 @@ status: complete
 > >
 > > Grant `serviceAccountTokenCreator` on a specific target SA, never at project level. Audit the binding with `gcloud iam service-accounts get-iam-policy`.
 >
-> > ---
+>  ---
 >
 > **Cloud KMS — Symmetric Encryption**
 >
@@ -90,7 +90,7 @@ status: complete
 > >
 > > Sending payloads larger than 64 KiB to `kms_client.encrypt` raises `INVALID_ARGUMENT`. Use envelope encryption for larger data.
 >
-> > ---
+>  ---
 >
 > **Envelope Encryption**
 >
@@ -101,7 +101,7 @@ status: complete
 > >
 > > Store only the KMS-wrapped DEK next to the ciphertext. A plaintext DEK in the same location eliminates the protection that envelope encryption provides.
 >
-> > ---
+>  ---
 >
 > **Secret Version**
 >
@@ -112,7 +112,7 @@ status: complete
 > >
 > > Pin to a specific version number in production deployments. Reserve `latest` for development or when an automated rotation workflow updates the consumer config immediately after each rotation.
 >
-> > ---
+>  ---
 >
 > **SSL/TLS Mutual Auth**
 >
@@ -123,7 +123,7 @@ status: complete
 > >
 > > This flag accepts any certificate without validation, leaving the connection open to man-in-the-middle attacks even though traffic is encrypted.
 >
-> > ---
+>  ---
 >
 > **Access Token**
 >
@@ -134,7 +134,7 @@ status: complete
 > >
 > > Pass the `credentials` object to client library constructors and let the library manage the refresh lifecycle. A logged token is a bearer credential valid for up to one hour.
 >
-> > ---
+>  ---
 >
 > **CMEK (Customer-Managed Encryption Key) Verification**
 >
@@ -145,7 +145,7 @@ status: complete
 > >
 > > Call `blob.reload()` after a GCS upload, or `bq_client.get_table()` after a BigQuery table creation, to confirm the `kms_key_name` field is populated before assuming CMEK is active.
 >
-> > ---
+>  ---
 >
 > **`pg8000` / `psycopg2`**
 >
@@ -156,7 +156,7 @@ status: complete
 > >
 > > `psycopg2` requires the `libpq` native library and a C compiler at build time; `pg8000` is pure Python and installs cleanly in any environment without system dependencies.
 >
-> > ---
+>  ---
 >
 > **`pyOpenSSL` / `cryptography`**
 >
@@ -167,7 +167,7 @@ status: complete
 > >
 > > The two libraries have overlapping but incompatible object models. Use `cryptography` for all new code; `pyOpenSSL` is maintained for legacy compatibility only.
 >
-> > ---
+>  ---
 >
 > **BigQuery Column-Level Encryption**
 >
@@ -178,7 +178,7 @@ status: complete
 > >
 > > KMS ciphertext is opaque — equality lookups and range scans on an encrypted column will not work. For columns that must be queried, use deterministic tokenization (HMAC or format-preserving encryption) instead.
 >
-> > ---
+>  ---
 >
 > **Firestore Field-Level Encryption**
 >
@@ -189,7 +189,7 @@ status: complete
 > >
 > > Inconsistent field-level encryption — where some documents encrypt a field and others do not — is harder to audit and easier to misconfigure than a schema-wide policy applied uniformly.
 >
-> > ---
+>  ---
 >
 > **Signed URL**
 >
@@ -200,7 +200,7 @@ status: complete
 > >
 > > The URL itself is the credential. Log only the GCS object path and the expiry timestamp. Set the shortest practical expiration — minutes for one-time downloads, not hours.
 >
-> > ---
+>  ---
 
 This note demonstrates Python-based security operations across GCP services — encryption, certificate handling, identity, and secure access patterns.
 

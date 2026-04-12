@@ -76,7 +76,7 @@ status: complete
 > >
 > > Replace `if cond: do_work() else: return` with `if not cond: return; do_work()` to reduce nesting levels.
 >
-> > ---
+>  ---
 >
 > **Ternary expression**
 >
@@ -87,7 +87,7 @@ status: complete
 > >
 > > Python puts the true-branch first: `x if cond else y`. C# puts the condition first: `cond ? x : y`. The inversion causes subtle bugs when reading Python with C# muscle memory.
 >
-> > ---
+>  ---
 >
 > **`match` / `case`**
 >
@@ -98,7 +98,7 @@ status: complete
 > >
 > > In `case cmd:`, `cmd` captures the matched value — it does not compare against an existing variable named `cmd`. Use a literal (`case "start":`) or a guard (`case c if c == expected:`) for equality tests.
 >
-> > ---
+>  ---
 >
 > **`for` loop**
 >
@@ -109,7 +109,7 @@ status: complete
 > >
 > > Adding or removing items from a list inside the loop causes skipped elements or `RuntimeError` for dicts and sets. Iterate over `items.copy()` or build a new collection with a comprehension.
 >
-> > ---
+>  ---
 >
 > **`while` loop**
 >
@@ -120,7 +120,7 @@ status: complete
 > >
 > > Forgetting to update the loop variable creates an infinite loop. Always ensure the condition progresses toward falsy, or include an explicit `break` with a timeout counter.
 >
-> > ---
+>  ---
 >
 > **`range()`**
 >
@@ -131,7 +131,7 @@ status: complete
 > >
 > > `range(5)` produces 0, 1, 2, 3, 4. To include 5, write `range(6)` or `range(1, 6)`.
 >
-> > ---
+>  ---
 >
 > **`enumerate()`**
 >
@@ -142,7 +142,7 @@ status: complete
 > >
 > > Use `for i, val in enumerate(items):` — not `for pair in enumerate(items): pair[0]`. Destructuring keeps the code readable and avoids tuple indexing noise.
 >
-> > ---
+>  ---
 >
 > **`zip()`**
 >
@@ -153,7 +153,7 @@ status: complete
 > >
 > > `zip([1,2,3], [10,20])` silently drops the `3`. If equal-length input is not guaranteed, use `itertools.zip_longest` or assert lengths match before zipping.
 >
-> > ---
+>  ---
 >
 > **`break`**
 >
@@ -164,7 +164,7 @@ status: complete
 > >
 > > Wrap nested loops in a function and use `return` to exit all levels at once — cleaner than flag variables.
 >
-> > ---
+>  ---
 >
 > **`continue`**
 >
@@ -175,7 +175,7 @@ status: complete
 > >
 > > When skipping many items, replace `if cond: continue` with a filtered comprehension or `filter()` before the loop — the intent is clearer.
 >
-> > ---
+>  ---
 >
 > **`pass`**
 >
@@ -186,7 +186,7 @@ status: complete
 > >
 > > `except Exception: pass` silently swallows all errors. At minimum log: `except Exception as e: logger.warning("Unhandled: %s", e)`.
 >
-> > ---
+>  ---
 >
 > **`for...else`**
 >
@@ -197,7 +197,7 @@ status: complete
 > >
 > > `for...else` is not about the truth value of the loop body. The `else` block runs on normal completion — suppress it only with `break`.
 >
-> > ---
+>  ---
 >
 > **Iterator protocol**
 >
@@ -208,7 +208,7 @@ status: complete
 > >
 > > A list is *iterable* (has `__iter__`) but not an *iterator* (no `__next__`). Calling `iter(my_list)` returns a fresh list iterator. A generator is both — it is its own iterator.
 >
-> > ---
+>  ---
 >
 > **Generator / `yield`**
 >
@@ -219,7 +219,7 @@ status: complete
 > >
 > > `gen = countdown(5)` does not start execution. The body runs only when `next(gen)` or a `for` loop consumes it.
 >
-> > ---
+>  ---
 >
 > **`yield from`**
 >
@@ -230,7 +230,7 @@ status: complete
 > >
 > > `yield from "hello"` yields `'h'`, `'e'`, `'l'`, `'l'`, `'o'` — not the string itself. Guard with `isinstance(item, str)` in recursive flatten functions.
 >
-> > ---
+>  ---
 >
 > **Generator expression**
 >
@@ -241,7 +241,7 @@ status: complete
 > >
 > > If you need indexing, `len()`, or multiple passes, use a list. If you only need to iterate once (e.g., `sum`, `max`, pipeline), a generator saves memory with no speed penalty for large inputs.
 >
-> > ---
+>  ---
 >
 > **List comprehension**
 >
@@ -252,7 +252,7 @@ status: complete
 > >
 > > Beyond 2 `for` clauses the comprehension becomes harder to read than explicit loops. Extract inner logic into a named function.
 >
-> > ---
+>  ---
 >
 > **Dict / Set comprehension**
 >
@@ -263,7 +263,7 @@ status: complete
 > >
 > > In a dict comprehension, if two iterations produce the same key, the last value wins without any error. Ensure keys are unique or handle collisions explicitly.
 >
-> > ---
+>  ---
 >
 > **Walrus operator (`:=`)**
 >
@@ -274,7 +274,7 @@ status: complete
 > >
 > > Walrus is most valuable in `while (line := f.readline()):` and comprehension filter reuse: `[y for x in data if (y := f(x)) > 0]`. Avoid it in straightforward `if` statements where a regular assignment reads more clearly.
 >
-> > ---
+>  ---
 >
 > **`itertools`**
 >

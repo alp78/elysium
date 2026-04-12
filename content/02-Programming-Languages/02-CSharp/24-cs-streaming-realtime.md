@@ -57,125 +57,123 @@ status: complete
 
 > [!note]- Glossary
 >
-> **`ClientWebSocket`** — the .NET built-in class (`System.Net.WebSockets`) for managing a WebSocket connection as a client.
-> - Used to connect to a WebSocket server, send frames, and receive messages over a persistent TCP connection upgraded from HTTP.
-> - Common mistake: disposing `ClientWebSocket` without calling `CloseAsync(WebSocketCloseStatus.NormalClosure, ...)` first — the server logs an abrupt TCP teardown and may not release associated resources.
+> **`ClientWebSocket`**
+> - .NET client-side WebSocket class in `System.Net.WebSockets` used to open, send on, receive from, and close a WebSocket connection.
+> - Used to maintain a persistent bidirectional connection to a WebSocket server after the initial HTTP upgrade handshake.
 >
-> > [!warning] Close before dispose
+> > [!warning] Close gracefully before dispose when possible
 > >
-> > Always wrap `CloseAsync` in a `try/finally` block so it runs on both normal and exception paths.
+> > Calling `CloseAsync(...)` before disposal gives the peer a proper WebSocket close handshake instead of an abrupt connection drop. On failure paths, still prioritize cleanup even if graceful close is not possible.
 >
-> > ---
+> ---
 >
-> **`IAsyncEnumerable<T>`** — a C# interface for asynchronous sequences that the caller consumes with `await foreach`.
-> - Models a never-ending stream of typed messages without blocking the thread between items; pairs naturally with `CancellationToken` for cooperative cancellation.
-> - Common mistake: returning `IEnumerable<T>` from a streaming method, which blocks the thread and cannot yield while awaiting I/O.
+> **`IAsyncEnumerable<T>`**
+> - C# interface representing an asynchronous sequence whose items are consumed with `await foreach`.
+> - Used to model streams of values that arrive over time without blocking a thread between items.
 >
-> > [!tip] Prefer over IObservable for simple streams
+> > [!tip] Prefer it for pull-based async streams
 > >
-> > `IAsyncEnumerable<T>` avoids Rx operator chains and integrates directly with `await foreach` and LINQ async extensions.
+> > `IAsyncEnumerable<T>` fits naturally when the consumer controls iteration with `await foreach`. It is often simpler than reactive abstractions when full Rx-style operators are not needed.
 >
-> > ---
+> ---
 >
-> **`CancellationToken`** — a struct that signals a cooperative cancellation request to any awaiting async operation.
-> - Passed into all async streaming calls so the caller can stop the stream cleanly without process termination.
-> - Common mistake: ignoring the token — the stream runs forever after the consumer disconnects, leaking threads and connections.
+> **`CancellationToken`**
+> - Struct used to signal cooperative cancellation to async operations, loops, and long-running workflows.
+> - Used to stop streaming reads, background message loops, and network operations cleanly when the caller or host is shutting down.
 >
-> > [!warning] Token omission creates uncancellable streams
+> > [!warning] Cancellation works only if you pass the token through
 > >
-> > Every infinite loop that calls `ReceiveAsync`, `ReadLineAsync`, or `ReadAsync` must accept and forward a `CancellationToken`.
+> > An infinite or long-running async loop is effectively uncancellable if the token is accepted by the outer API but never forwarded to the actual I/O calls or wait points.
 >
-> > ---
+> ---
 >
-> **`Channel<T>`** — a high-performance, thread-safe in-process queue from `System.Threading.Channels`.
-> - Decouples the WebSocket receive loop (producer) from the message processor (consumer) without manual locking; supports async `ReadAsync`/`WriteAsync` with built-in backpressure.
-> - Common mistake: substituting `ConcurrentQueue<T>`, which lacks async read and forces busy-polling.
+> **`Channel<T>`**
+> - High-performance in-process producer/consumer queue from `System.Threading.Channels` with async read and write APIs.
+> - Used to decouple message ingestion from downstream processing while supporting backpressure and avoiding manual locking.
 >
-> > [!tip] Bounded vs unbounded channels
+> > [!tip] Prefer bounded channels when memory growth matters
 > >
-> > Use `Channel.CreateBounded<T>(capacity)` when the consumer may fall behind — `WriteAsync` will apply backpressure rather than allowing unbounded memory growth.
+> > `Channel.CreateBounded<T>(...)` lets the system apply backpressure when producers outrun consumers instead of allowing unbounded queue growth.
 >
-> > ---
+> ---
 >
-> **`Google.Cloud.PubSub.V1`** — the official Google Cloud Pub/Sub client library for .NET.
-> - Exposes `PublisherClient` (batching, retry) and `SubscriberClient` (lease management, flow control, reconnection) as the recommended high-level API.
-> - Common mistake: calling `SubscriberClient.StartAsync()` without a paired `StopAsync()` at shutdown — the open gRPC stream prevents the process from exiting.
+> **`Google.Cloud.PubSub.V1`**
+> - Official Google Cloud Pub/Sub client library for .NET, providing high-level publisher and subscriber APIs on top of gRPC.
+> - Used to publish messages, consume subscriptions, and rely on library-managed batching, retries, and stream handling instead of reimplementing those concerns manually.
 >
-> > [!warning] Register StopAsync in the shutdown path
+> > [!warning] High-level clients have lifecycle responsibilities
 > >
-> > Hook `StopAsync` into `IHostedService.StopAsync` or `IAsyncDisposable.DisposeAsync` to guarantee clean shutdown.
+> > Long-lived Pub/Sub clients should be started, reused, and shut down deliberately. Leaving streaming subscribers running can delay process shutdown and leave background work active longer than intended.
 >
-> > ---
+> ---
 >
-> **at-least-once delivery** — a message delivery guarantee where each message is delivered one or more times but may be duplicated.
-> - Pub/Sub uses this model; subscribers must handle or deduplicate repeated messages by making handlers idempotent.
-> - Common mistake: assuming exactly-once delivery — duplicate messages will occur under normal redelivery conditions.
+> **At-least-once delivery**
+> - Delivery guarantee in which a message is delivered one or more times, so duplicates are possible even when the system is working as designed.
+> - Used to describe Pub/Sub-style messaging semantics where reliability is favored over a guarantee of exactly one delivery attempt.
 >
-> > [!info] Idempotency is mandatory with at-least-once delivery
+> > [!info] Idempotency is the practical requirement
 > >
-> > Design handlers so processing the same `MessageId` twice produces the same result as processing it once (e.g., upsert rather than insert).
+> > Consumers should be safe to run twice for the same logical message. Design handlers so duplicate delivery does not create duplicate side effects.
 >
-> > ---
+> ---
 >
-> **ack deadline** — the window (in seconds) a Pub/Sub subscriber has to acknowledge a message before it is redelivered.
-> - Must exceed the handler's worst-case execution time; can be extended mid-processing via `ModifyAckDeadline`.
-> - Common mistake: using the default 10 s deadline for handlers that write to SQL Server or call external APIs — these frequently exceed 10 s under load.
+> **Ack deadline**
+> - Time window during which a subscriber is expected to acknowledge a delivered Pub/Sub message before it becomes eligible for redelivery.
+> - Used to bound how long a message can remain in-flight without confirmation from the subscriber.
 >
-> > [!tip] Set AckDeadline to at least 1.5× worst-case handler time
+> > [!warning] The deadline must fit real handler latency
 > >
-> > Configure `SubscriberClientBuilder.AckDeadline = TimeSpan.FromSeconds(60)` for handlers with external I/O.
+> > If processing regularly exceeds the effective ack window and lease management is not sufficient, redelivery becomes normal behavior rather than an exceptional case.
 >
-> > ---
+> ---
 >
-> **`HttpResponseMessage` streaming** — reading an HTTP response body incrementally via `ReadAsStreamAsync()` rather than buffering it with `ReadAsStringAsync()`.
-> - Required for SSE: the body never ends until the server closes the connection, so `ReadAsStringAsync()` blocks indefinitely.
-> - Common mistake: calling `ReadAsStringAsync()` on an SSE endpoint — the call never returns while the server is alive.
+> **`HttpResponseMessage` streaming**
+> - Pattern of reading an HTTP response body incrementally from a stream instead of buffering the whole body into memory first.
+> - Used for long-lived or unbounded responses such as Server-Sent Events, large downloads, and chunked streaming APIs.
 >
-> > [!warning] ReadAsStringAsync blocks on infinite SSE streams
+> > [!warning] Full-buffer APIs do not fit infinite streams
 > >
-> > Use `await response.Content.ReadAsStreamAsync()` and wrap the result in a `StreamReader`, then call `ReadLineAsync()` in a loop.
+> > Methods such as `ReadAsStringAsync()` assume the response will finish. For open-ended event streams, read from `ReadAsStreamAsync()` and process incrementally.
 >
-> > ---
+> ---
 >
-> **Firestore `Listen()`** — the Firestore SDK method that opens a persistent gRPC stream and fires a callback on every document change in a collection or query.
-> - Fires immediately with the current snapshot, then delivers incremental `Added`/`Modified`/`Removed` change events; eliminates polling.
-> - Common mistake: not calling `StopAsync()` on the returned `FirestoreChangeListener` — the background gRPC stream runs until process exit, consuming network quota.
+> **Firestore `Listen()`**
+> - Firestore SDK operation that opens a persistent listener and invokes callbacks when documents in the watched query or collection change.
+> - Used to receive near-real-time change notifications without polling Firestore repeatedly.
 >
-> > [!warning] Always dispose FirestoreChangeListener
+> > [!warning] Listener shutdown is explicit
 > >
-> > Store the listener reference and call `await listener.StopAsync()` in a `finally` block or `DisposeAsync` implementation.
+> > The returned listener keeps background resources active until it is stopped. Hold onto the listener handle and stop it during shutdown or disposal paths.
 >
-> > ---
+> ---
 >
-> **dead-letter topic** — a Pub/Sub topic to which messages are automatically forwarded after exceeding the configured maximum delivery attempt count.
-> - Prevents a single poison-pill message from blocking the main subscription indefinitely; acts as a quarantine queue.
-> - Common mistake: not monitoring the dead-letter topic — failed messages accumulate silently with no operator alerting.
+> **Dead-letter topic**
+> - Pub/Sub topic that receives messages after they exceed the configured maximum delivery attempts on the primary subscription path.
+> - Used to quarantine poison messages so they stop cycling endlessly through the main processing path.
 >
-> > [!tip] Alert on dead-letter subscription message count
+> > [!tip] Dead-lettering is only useful if it is monitored
 > >
-> > Set a Cloud Monitoring alert on `subscription/num_undelivered_messages` for the dead-letter subscription so failures surface immediately.
+> > A dead-letter topic prevents repeated immediate failure in the main subscription, but it does not solve the underlying problem unless operators can see and inspect what landed there.
 >
-> > ---
+> ---
 >
-> **`SubscriberClient`** — the high-level Pub/Sub subscriber class that handles lease management, flow control, and automatic reconnection.
-> - Preferred over the low-level `SubscriberServiceApiClient` for production workloads; processes messages concurrently up to the configured flow-control limit.
-> - Common mistake: using `SubscriberServiceApiClient.Pull()` in a tight loop — adds one full round-trip per batch and starves under load.
+> **`SubscriberClient`**
+> - High-level .NET Pub/Sub subscriber class that manages streaming pulls, ack-deadline extension, concurrency, and reconnection behavior for you.
+> - Used as the preferred production subscriber abstraction when you want the library to handle most operational mechanics of message consumption.
 >
-> > [!info] High-level vs low-level subscriber clients
+> > [!info] High-level clients reduce operational footguns
 > >
-> > `SubscriberClient` wraps `StreamingPull` internally and manages all lease extensions automatically; `SubscriberServiceApiClient.Pull()` is synchronous pull requiring manual lease management.
+> > Lower-level pull APIs expose more control but also force you to manage leasing, flow control, and retries manually. `SubscriberClient` is usually the safer default.
 >
-> > ---
+> ---
 >
-> **`PublisherClient`** — the high-level Pub/Sub publisher class that batches and retries messages automatically.
-> - Coalesces small messages into fewer RPCs for throughput efficiency; must be reused across the application lifetime.
-> - Common mistake: constructing a new `PublisherClient` per message — it is expensive to create and will exhaust gRPC channel limits at scale.
+> **`PublisherClient`**
+> - High-level .NET Pub/Sub publisher class that batches messages and handles retry behavior under the hood.
+> - Used to publish efficiently at scale without creating a fresh gRPC publishing stack for every message.
 >
-> > [!warning] PublisherClient is not per-message
+> > [!warning] Reuse publisher instances
 > >
-> > Create one instance at startup, inject it as a singleton, and call `await pubClient.PublishAsync(...)` throughout the application lifetime.
-
-This note covers C#/.NET implementations of four streaming and transfer patterns — WebSocket, SSE, Pub/Sub, and Firestore — from sub-millisecond local TCP to managed GCP services, covering protocol mechanics, latency characteristics, and selection criteria for real-time data engineering scenarios.
+> > Creating a new `PublisherClient` per message is expensive and defeats batching benefits. Treat it as a long-lived dependency rather than a per-call object.
 
 ## Technologies Overview
 

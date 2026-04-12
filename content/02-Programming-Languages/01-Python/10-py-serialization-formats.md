@@ -40,7 +40,7 @@ status: complete
 > >
 > > The file footer must be read before any row data can be accessed. Never use Parquet for append or streaming workloads — use Avro or JSONL instead.
 >
-> > ---
+>  ---
 >
 > **Avro**
 >
@@ -51,7 +51,7 @@ status: complete
 > >
 > > The Avro schema is defined in JSON syntax, but the data payload is binary. Do not confuse the two layers when debugging serialization errors.
 >
-> > ---
+>  ---
 >
 > **Protocol Buffers (Protobuf)**
 >
@@ -62,7 +62,7 @@ status: complete
 > >
 > > Field numbers in `.proto` files are permanent identifiers encoded in the binary — changing a number breaks all existing messages. Add new fields with new numbers; never reuse retired ones.
 >
-> > ---
+>  ---
 >
 > **MessagePack**
 >
@@ -73,7 +73,7 @@ status: complete
 > >
 > > MessagePack is not self-describing — field names are still included, unlike Protobuf. It trades human readability for ~30–50% size reduction with no schema validation guarantee.
 >
-> > ---
+>  ---
 >
 > **columnar format**
 >
@@ -84,7 +84,7 @@ status: complete
 > >
 > > Reading one complete row requires touching every column file; row-based formats (Avro, CSV) are faster for transactional point-queries.
 >
-> > ---
+>  ---
 >
 > **schema evolution**
 >
@@ -95,7 +95,7 @@ status: complete
 > >
 > > Adding a field with a default value is always safe. Removing a field without a default, or changing a field's type, is a breaking change that corrupts or drops data for consumers on the old schema.
 >
-> > ---
+>  ---
 >
 > **predicate pushdown**
 >
@@ -106,7 +106,7 @@ status: complete
 > >
 > > Predicate pushdown benefits are data-dependent: fully random data with no clustering provides no skippable row groups. Sort or partition by the filter column to maximize benefit.
 >
-> > ---
+>  ---
 >
 > **compression codec**
 >
@@ -117,7 +117,7 @@ status: complete
 > >
 > > Snappy decompresses in ~200 MB/s; Zstd achieves 30–50% better compression ratios than Snappy at similar CPU cost; Gzip maximizes compression but is 3–5x slower to decompress.
 >
-> > ---
+>  ---
 >
 > **column pruning**
 >
@@ -128,7 +128,7 @@ status: complete
 > >
 > > Always pass an explicit `columns=` list when reading Parquet in production pipelines. It costs nothing to specify and can cut I/O and memory by an order of magnitude.
 >
-> > ---
+>  ---
 >
 > **Hive-style partitioning**
 >
@@ -139,7 +139,7 @@ status: complete
 > >
 > > High-cardinality columns (e.g., `user_id`) create millions of tiny files and destroy performance. Partition on low-cardinality columns like `date`, `region`, or `event_type`.
 >
-> > ---
+>  ---
 >
 > **BytesIO**
 >
@@ -150,7 +150,7 @@ status: complete
 > >
 > > Pass a `BytesIO` buffer directly to GCS `blob.upload_from_file()` or S3 `put_object(Body=...)` after serializing — avoids a disk round-trip and simplifies container deployments with read-only filesystems.
 >
-> > ---
+>  ---
 >
 > **fastavro**
 >
@@ -161,7 +161,7 @@ status: complete
 > >
 > > `fastavro` is 5–10x faster than the official `avro-python3` package and is the de-facto standard for Python Avro work. The `avro-python3` package is deprecated; prefer `fastavro` in all new code.
 >
-> > ---
+>  ---
 >
 > **pyarrow**
 >
@@ -172,7 +172,7 @@ status: complete
 > >
 > > Pass a `pa.schema()` explicitly to `pa.table()` to enforce types at construction time. Without it, Arrow infers types from Python values and may silently choose `int32` instead of `int64` for small integers.
 >
-> > ---
+>  ---
 >
 > **row group**
 >
@@ -183,7 +183,7 @@ status: complete
 > >
 > > Smaller row groups increase predicate pushdown effectiveness but add footer overhead. Larger row groups improve compression ratios. The pyarrow default (~122K rows) is a sensible starting point for most ETL workloads.
 >
-> > ---
+>  ---
 >
 > **`.proto` file**
 >
@@ -194,7 +194,7 @@ status: complete
 > >
 > > In proto3, all fields are optional and default to the zero value for their type (`""`, `0`, `false`). Protobuf omits default-value fields from the binary encoding, which means a missing field and a field set to its default are indistinguishable on the wire.
 >
-> > ---
+>  ---
 >
 > **schema registry**
 >
@@ -205,7 +205,7 @@ status: complete
 > >
 > > Confluent-compatible producers prefix each Avro/Protobuf message with a 5-byte header: `0x00` (magic byte) + 4-byte big-endian schema ID. Consumers use this ID to fetch the correct schema from the registry before deserializing.
 >
-> > ---
+>  ---
 >
 > **wire format**
 >
@@ -216,7 +216,7 @@ status: complete
 > >
 > > A Protobuf decoder reads the wire type from the tag to know how many bytes to consume for each field. Mismatched wire types (e.g., schema says `string` but writer sends `int64`) produce `DecodeError` exceptions or silent corruption.
 >
-> > ---
+>  ---
 >
 > **OHLCV**
 >
@@ -227,7 +227,7 @@ status: complete
 > >
 > > The mix of string and numeric types in OHLCV data makes it a realistic proxy for financial data lake payloads — column pruning and compression ratios measured on this schema transfer directly to production pipeline sizing.
 >
-> > ---
+>  ---
 >
 > **varint encoding**
 >
@@ -238,7 +238,7 @@ status: complete
 > >
 > > Negative `int64` values always occupy 10 bytes in standard varint encoding because the sign bit forces all high bits to 1. Use `sint64` with zigzag encoding in `.proto` if negative integers are common — it halves the size.
 >
-> > ---
+>  ---
 >
 > **descriptor pool**
 >
@@ -249,7 +249,7 @@ status: complete
 > >
 > > The descriptor-pool approach is useful for notebooks and exploratory work where compiling `.proto` files is impractical. In production services, always use `protoc`-generated `_pb2.py` modules — they are faster, type-checked, and easier to maintain.
 >
-> > ---
+>  ---
 
 This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Avro, Protocol Buffers, and MessagePack — with executable read/write examples and a side-by-side performance benchmark.
 

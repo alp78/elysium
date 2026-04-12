@@ -69,7 +69,7 @@ status: complete
 > >
 > > When starting a new .NET test project, default to xUnit. NUnit and MSTest are valid but xUnit's constructor-per-test isolation model is simpler and its ecosystem is the most actively maintained.
 >
-> > ---
+>  ---
 >
 > **`[Fact]`**
 >
@@ -80,7 +80,7 @@ status: complete
 > >
 > > A test method without `[Fact]` is never discovered by the runner — it compiles and builds cleanly but is silently skipped.
 >
-> > ---
+>  ---
 >
 > **`[Theory]` + `[InlineData]`**
 >
@@ -91,7 +91,7 @@ status: complete
 > >
 > > `[InlineData]` only accepts compile-time constants. For objects, collections, or computed values use `[MemberData]` (a static `IEnumerable<object[]>` property) or `[ClassData]` (a class implementing `IEnumerable<object[]>`).
 >
-> > ---
+>  ---
 >
 > **Moq**
 >
@@ -102,7 +102,7 @@ status: complete
 > >
 > > `new Mock<SqlConnection>()` will fail or behave unexpectedly because `SqlConnection` has no virtual members. Moq can only mock interfaces or classes with `virtual` methods.
 >
-> > ---
+>  ---
 >
 > **`Mock<T>.Setup`**
 >
@@ -113,7 +113,7 @@ status: complete
 > >
 > > If `Setup` is omitted for a called method, Moq returns `default(T)` — `null` for reference types, `0` for numerics — without any error. The test may pass for the wrong reason.
 >
-> > ---
+>  ---
 >
 > **`Mock<T>.Verify`**
 >
@@ -124,7 +124,7 @@ status: complete
 > >
 > > Skipping `Verify` means a missing dependency call (e.g., audit log never written, order never submitted) goes completely undetected — the test passes even if the critical side effect never happened.
 >
-> > ---
+>  ---
 >
 > **FluentAssertions**
 >
@@ -135,7 +135,7 @@ status: complete
 > >
 > > Choose one assertion style per project. Mixing `Assert.Equal` with FluentAssertions chains in the same file produces inconsistent failure messages and confuses reviewers.
 >
-> > ---
+>  ---
 >
 > **`IDisposable` / `IAsyncLifetime`**
 >
@@ -146,7 +146,7 @@ status: complete
 > >
 > > The constructor runs before every `[Fact]` in the class. Placing a database connection or HTTP client there spins up a new instance for each test — use `IClassFixture<T>` for shared expensive resources.
 >
-> > ---
+>  ---
 >
 > **`IClassFixture<T>`**
 >
@@ -157,7 +157,7 @@ status: complete
 > >
 > > Mutating fixture data inside a test makes all subsequent tests in the class order-dependent and non-reproducible. Fixture objects should be read-only after construction or should reset state explicitly in each test.
 >
-> > ---
+>  ---
 >
 > **`WebApplicationFactory`**
 >
@@ -168,7 +168,7 @@ status: complete
 > >
 > > The factory does not start the application until `CreateClient()` is called. Calling `CreateClient()` from a fixture constructor is the correct pattern to ensure the app is ready before any test runs.
 >
-> > ---
+>  ---
 >
 > **`dotnet test`**
 >
@@ -179,7 +179,7 @@ status: complete
 > >
 > > Always run `dotnet test` from the solution root. Running from a subdirectory may miss projects, resolve the wrong `global.json`, or produce incomplete coverage data.
 >
-> > ---
+>  ---
 >
 > **coverlet**
 >
@@ -190,7 +190,7 @@ status: complete
 > >
 > > Omitting `--collect:"XPlat Code Coverage"` causes tests to run normally but produces no coverage data — the CI step succeeds silently with zero coverage reported.
 >
-> > ---
+>  ---
 >
 > **AAA (Arrange-Act-Assert)**
 >
@@ -201,7 +201,7 @@ status: complete
 > >
 > > When Arrange and Assert blur into the same line (e.g., `Assert.Equal(expected, service.Compute(input))`), the test becomes harder to debug on failure. Capture the Act result in a named variable, then assert against it separately.
 >
-> > ---
+>  ---
 >
 > **DI Validation**
 >
@@ -211,19 +211,6 @@ status: complete
 > > [!info] When to run
 > >
 > > Add one DI validation test per microservice or API project. It requires no I/O, runs in milliseconds, and is the cheapest safety net against container misconfiguration.
-
-This note covers C# testing patterns using xUnit, Moq, and FluentAssertions.
-
-### What this note covers
-
-- **Testing Philosophy** — the testing pyramid (unit, integration, end-to-end), TDD cycle
-- **Unit Testing with xUnit** — `[Fact]`, `Assert`, test discovery, `dotnet test`
-- **Theory and InlineData** — `[Theory]`, `[InlineData]`, `[MemberData]` for parametrized tests
-- **Mocking with Moq** — `Mock<T>`, `Setup`, `Returns`, `Verify`, `Times`, interface-based mocking
-- **Test Patterns for Data Engineering** — DataFrame-style collection testing, schema assertions, FluentAssertions
-- **Integration Testing with Real Database** — `SqlClient`, transactional rollback, real DB fixtures
-- **DI Validation Testing** — `IServiceCollection` registration validation
-- **CI/CD — Running Tests in GitHub Actions** — workflow YAML, matrix builds, coverlet, artifact upload
 
 ## Testing Philosophy
 

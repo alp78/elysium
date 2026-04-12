@@ -47,7 +47,7 @@ status: complete
 > > [!tip] Not in the base runtime
 > > `System.Threading.Tasks.Dataflow` must be added via NuGet. It is not included in the standard `System.Threading.Tasks` namespace available without a package reference.
 >
-> > ---
+>  ---
 >
 > **`TransformBlock<TIn, TOut>`**
 >
@@ -57,7 +57,7 @@ status: complete
 > > [!tip] Per-stage concurrency
 > > Each `TransformBlock` has its own concurrency limit independently of other stages. Set Fetch stages higher (I/O-bound, e.g., 3–10) and CPU stages lower (e.g., 1–2) to match resource constraints.
 >
-> > ---
+>  ---
 >
 > **`ActionBlock<T>`**
 >
@@ -67,7 +67,7 @@ status: complete
 > > [!tip] Await Completion to drain
 > > After calling `headBlock.Complete()`, always `await terminalBlock.Completion` to ensure the entire pipeline has drained before the enclosing scope exits.
 >
-> > ---
+>  ---
 >
 > **`BatchBlock<T>`**
 >
@@ -77,7 +77,7 @@ status: complete
 > > [!tip] Batch size sweet spot
 > > For database bulk inserts, 500–1,000 rows per batch typically maximizes throughput while keeping per-batch memory bounded. Measure with the actual workload — small batches (10–50) reduce latency but increase per-batch overhead; large batches (1,000+) increase memory pressure and delay processing start.
 >
-> > ---
+>  ---
 >
 > **`Channel<T>`** (`System.Threading.Channels`)
 >
@@ -88,7 +88,7 @@ status: complete
 > >
 > > If `channel.Writer.Complete()` is never called, `ReadAllAsync()` on the reader blocks indefinitely — the consumer awaits an end-of-stream signal that never arrives.
 >
-> > ---
+>  ---
 >
 > **`IAsyncEnumerable<T>`**
 >
@@ -98,7 +98,7 @@ status: complete
 > > [!tip] Cancellation token on async iterators
 > > Decorate the `CancellationToken` parameter with `[EnumeratorCancellation]` so callers can pass a token via `WithCancellation()` on the `await foreach` expression, enabling cooperative cancellation mid-stream.
 >
-> > ---
+>  ---
 >
 > **`SemaphoreSlim`**
 >
@@ -109,7 +109,7 @@ status: complete
 > >
 > > If the guarded code throws an exception and `Release()` is not in a `finally` block, the semaphore slot is permanently consumed — remaining tasks will deadlock waiting for a slot that is never freed.
 >
-> > ---
+>  ---
 >
 > **`ConcurrentBag<T>`**
 >
@@ -119,7 +119,7 @@ status: complete
 > > [!tip] Use when order does not matter
 > > If result order matters, prefer `ConcurrentQueue<T>` (FIFO) or collect into a `Task<T>[]` and read results after `Task.WhenAll` via the task's `.Result` property.
 >
-> > ---
+>  ---
 >
 > **`PropagateCompletion`**
 >
@@ -129,7 +129,7 @@ status: complete
 > > [!tip] Required on every link
 > > Set `PropagateCompletion = true` on every `LinkTo` call in the chain — omitting it on any single link breaks cascade shutdown at that stage.
 >
-> > ---
+>  ---
 >
 > **`BoundedCapacity`**
 >
@@ -139,7 +139,7 @@ status: complete
 > > [!tip] Size to absorb burst, not entire dataset
 > > Set `BoundedCapacity` high enough to absorb a few seconds of upstream throughput. If too low, the pipeline stalls; if unbounded, memory pressure builds. A good starting point is 2–5× `MaxDegreeOfParallelism` of the downstream block.
 >
-> > ---
+>  ---
 >
 > **`Task.WhenAll`**
 >
@@ -149,7 +149,7 @@ status: complete
 > > [!tip] Combine with `SemaphoreSlim` for bounded concurrency
 > > `Task.WhenAll` alone gives unbounded concurrency — all tasks start simultaneously. Wrap the inner work with `SemaphoreSlim.WaitAsync()` to cap the number running at any instant.
 >
-> > ---
+>  ---
 >
 > **`Process`** (`System.Diagnostics.Process`)
 >
@@ -160,24 +160,6 @@ status: complete
 > >
 > > If the child writes more output than the OS pipe buffer (typically 4–64 KB) and the parent has not read it, the child blocks waiting for the buffer to drain while the parent is blocked on `WaitForExitAsync` — a permanent deadlock. Always read stdout and stderr asynchronously before awaiting exit.
 
-This note covers advanced parallel pipeline patterns in C# — TPL Dataflow for multi-stage pipelines, Channel-based async batching, IAsyncEnumerable for paginated APIs, rate-limited parallel ingestion, and cross-process execution.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **TPL Dataflow** | Library for building multi-stage concurrent pipelines with blocks (Transform, Action, Batch, Buffer) linked together. | High-throughput ETL: extract → transform → load with configurable parallelism and bounded buffers. | Requires NuGet package `System.Threading.Tasks.Dataflow`. Not included in the base runtime. |
-| **Channel&lt;T&gt;** | High-performance async producer-consumer queue. Bounded channels provide backpressure. | Pipeline stages communicate asynchronously with flow control. | Forgetting `writer.Complete()` — reader blocks forever. |
-| **IAsyncEnumerable&lt;T&gt;** | `async` version of `IEnumerable<T>` — yields items one at a time asynchronously with `await foreach`. | Stream paginated API responses without loading all pages into memory. | Requires C# 8+ and .NET Core 3+. |
-| **SemaphoreSlim** | Limits concurrent async operations. `SemaphoreSlim(10)` allows 10 concurrent entries. | Rate-limit API calls, cap database connections. | Not re-entrant — don't await inside a held semaphore from the same chain. |
-| **Process** | `System.Diagnostics.Process` launches external executables. | Call CLI tools, Python scripts, or shell commands from C#. | Must redirect and read stdout/stderr to prevent buffer deadlocks. |
-
-### What this note covers
-
-- **TPL Dataflow** — TransformBlock, ActionBlock, BatchBlock, linking, bounded capacity
-- **Parallel API Ingestion** — rate-limited concurrent fetches with SemaphoreSlim, Channel batching
-- **IAsyncEnumerable** — paginated API streaming with `await foreach`
-- **Cross-Process Execution** — `Process.Start`, async stdout/stderr capture
 
 ```csharp
 using System.Threading.Tasks.Dataflow;

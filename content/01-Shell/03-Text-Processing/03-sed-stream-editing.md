@@ -44,7 +44,7 @@ status: complete
 > >
 > > Because sed processes one line at a time, it handles arbitrarily large files without memory pressure — unlike tools that slurp the whole file (Python `read()`, PowerShell `Get-Content` without streaming).
 >
-> > ---
+>  ---
 >
 > **Pattern space**
 > - The working buffer that holds the current input line while sed applies commands to it.
@@ -54,7 +54,7 @@ status: complete
 > >
 > > Any text written to the pattern space during a cycle is discarded after printing. Use the hold space to persist data across lines.
 >
-> > ---
+>  ---
 >
 > **Hold space**
 > - A secondary, persistent buffer that survives across sed cycles. Commands: `h` (copy pattern → hold), `H` (append pattern → hold), `g` (copy hold → pattern), `G` (append hold → pattern), `x` (exchange the two).
@@ -64,7 +64,7 @@ status: complete
 > >
 > > Use hold space for operations like joining the next line to the current one (`N`), reversing line order, or accumulating a running header. If the script grows beyond two hold-space commands, switch to awk.
 >
-> > ---
+>  ---
 >
 > **Substitution command (`s///`)**
 > - Syntax: `s/pattern/replacement/flags`. Replaces the first match of `pattern` on each line with `replacement` by default; the `g` flag replaces all occurrences.
@@ -74,7 +74,7 @@ status: complete
 > >
 > > Without `g`, `s/old/new/` replaces only the first `old` on each line. Every other occurrence is silently left unchanged. Add `g` whenever the intent is global replacement.
 >
-> > ---
+>  ---
 >
 > **BRE vs ERE**
 > - **BRE** (Basic Regular Expressions) is the default sed regex dialect. Grouping parentheses and `|` must be escaped: `\(...\)`, `\|`.
@@ -84,7 +84,7 @@ status: complete
 > >
 > > Prefer `-E` for any non-trivial pattern — the unescaped syntax is less error-prone and matches the dialect used by `grep -E`, `awk`, and Python `re`.
 >
-> > ---
+>  ---
 >
 > **Line addressing**
 > - A prefix that restricts a command to specific lines. Forms: `5` (single line), `5,10` (range), `/pattern/` (regex match), `1~2` (every odd line, GNU only), `addr!` (negation).
@@ -94,7 +94,7 @@ status: complete
 > >
 > > `sed '10,20s/foo/bar/g'` applies the global substitution only on lines 10–20. This avoids piping through `head`/`tail` and keeps the transformation atomic.
 >
-> > ---
+>  ---
 >
 > **In-place editing (`-i`)**
 > - The `-i` flag rewrites the file on disk instead of printing to stdout. GNU sed: `sed -i 's/a/b/' file`. BSD/macOS sed: `sed -i '' 's/a/b/' file` (empty string extension required).
@@ -112,7 +112,7 @@ status: complete
 > > diff file.bak file              # verify only expected lines changed
 > > ```
 >
-> > ---
+>  ---
 >
 > **`-n` (quiet / suppress) flag**
 > - Suppresses the default print-after-every-cycle behaviour. Only lines explicitly printed with the `p` command (or `p` flag on `s`) are written to stdout.
@@ -122,7 +122,7 @@ status: complete
 > >
 > > This pattern replaces `head | tail` for extracting interior line ranges and is compatible with pipelines of arbitrary size.
 >
-> > ---
+>  ---
 >
 > **PowerShell `-replace` operator**
 > - Performs regex-based string substitution: `$string -replace 'pattern', 'replacement'`. Uses .NET regex (ERE-compatible superset).

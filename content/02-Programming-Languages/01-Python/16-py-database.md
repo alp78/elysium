@@ -65,7 +65,7 @@ status: complete
 > >
 > > Pass `":memory:"` as the path to keep the database entirely in RAM — the DB is destroyed when the connection closes, making it ideal for isolated test fixtures.
 >
-> > ---
+>  ---
 >
 > **`pyodbc`**
 >
@@ -76,7 +76,7 @@ status: complete
 > >
 > > Building SQL with `f"... WHERE id = {val}"` allows arbitrary SQL to be injected. Always use `cursor.execute(sql, (val,))` with `?` placeholders.
 >
-> > ---
+>  ---
 >
 > **Connection string**
 >
@@ -87,7 +87,7 @@ status: complete
 > >
 > > When passing a pyodbc connection string to `create_engine`, wrap it with `urllib.parse.quote_plus()` inside the `mssql+pyodbc:///?odbc_connect=...` URL scheme so special characters are handled correctly.
 >
-> > ---
+>  ---
 >
 > **Cursor**
 >
@@ -98,7 +98,7 @@ status: complete
 > >
 > > Issuing a new `execute()` on a cursor that is mid-iteration silently discards the remaining rows. Either consume the full result with `fetchall()` before re-executing, or open a second cursor.
 >
-> > ---
+>  ---
 >
 > **Parameterised query**
 >
@@ -112,7 +112,7 @@ status: complete
 > > cur.executemany("INSERT INTO trades VALUES (?,?,?,?,?,?)", rows)
 > > ```
 >
-> > ---
+>  ---
 >
 > **Transaction**
 >
@@ -123,7 +123,7 @@ status: complete
 > >
 > > If `conn.commit()` is never called, changes exist only in the session and are rolled back on disconnect. Always commit after successful DML, or use the `with conn:` context manager which auto-commits.
 >
-> > ---
+>  ---
 >
 > **SQLAlchemy**
 >
@@ -134,7 +134,7 @@ status: complete
 > >
 > > SQLAlchemy Core gives full SQL control via `text()` and `select()` constructs. The ORM adds class-to-table mapping, relationship navigation, and the `Session` unit-of-work. Use Core for bulk ETL; ORM for CRUD-heavy application logic.
 >
-> > ---
+>  ---
 >
 > **Engine**
 >
@@ -145,7 +145,7 @@ status: complete
 > >
 > > Default `pool_size=5`. Increase for high-concurrency services; keep small for ETL jobs that run one thread at a time. Setting `pool_size` above the database server's connection limit causes connection refusals.
 >
-> > ---
+>  ---
 >
 > **ORM**
 >
@@ -156,7 +156,7 @@ status: complete
 > >
 > > `session.add(obj)` stages the object in memory but does not write to the database. `session.commit()` must be called to persist. Forgetting this is the most common ORM mistake.
 >
-> > ---
+>  ---
 >
 > **`DeclarativeBase` / `mapped_column`**
 >
@@ -174,7 +174,7 @@ status: complete
 > >     id: Mapped[int] = mapped_column(primary_key=True)
 > > ```
 >
-> > ---
+>  ---
 >
 > **`Session`**
 >
@@ -185,7 +185,7 @@ status: complete
 > >
 > > Use `with Session(engine) as session:` to ensure the session is closed even if an exception is raised. Never share a single session across threads.
 >
-> > ---
+>  ---
 >
 > **`pd.read_sql`**
 >
@@ -196,7 +196,7 @@ status: complete
 > >
 > > Passing a raw `pyodbc` connection directly to `pd.read_sql` triggers `UserWarning: pandas only supports SQLAlchemy connectable`. Wrap the connection with `create_engine` or use `sqlalchemy.text()` for the query string.
 >
-> > ---
+>  ---
 >
 > **DuckDB**
 >
@@ -207,7 +207,7 @@ status: complete
 > >
 > > DuckDB's `COPY TO 'file.parquet'` exports query results to a file in the current process. SQL Server's `BCP` is a separate OS-level bulk copy utility — the two are not interchangeable.
 >
-> > ---
+>  ---
 >
 > **Polars**
 >
@@ -218,7 +218,7 @@ status: complete
 > >
 > > Calling `.to_pandas()` immediately after `scan_*` forces full materialization into a pandas DataFrame, discarding Polars' streaming and predicate-pushdown optimisations. Collect only when the result is needed for output or export.
 >
-> > ---
+>  ---
 >
 > **Connection pool**
 >

@@ -38,7 +38,7 @@ status: complete
 > >
 > > A bare `except:` silently swallows `KeyboardInterrupt` and `SystemExit`, making the process unkillable and masking all errors. Replace with `except Exception as e:` at the broadest.
 >
-> > ---
+>  ---
 >
 > **else**
 > - The `else` block executes only when no exception was raised in the `try` block — separating success-path logic from error-handling code.
@@ -48,7 +48,7 @@ status: complete
 > >
 > > Moving success-only logic into `else` makes the `try` block narrower (only the risky call) and avoids accidentally catching errors produced by the post-success code.
 >
-> > ---
+>  ---
 >
 > **finally**
 > - `finally` runs unconditionally — whether an exception occurred, was caught, or propagated — guaranteeing cleanup such as closing files and releasing locks.
@@ -58,7 +58,7 @@ status: complete
 > >
 > > If the resource does not support the `with` protocol, wrap acquisition in `try` and place `resource.close()` in `finally`. This is the explicit fallback when `@contextmanager` is not available.
 >
-> > ---
+>  ---
 >
 > **raise**
 > - `raise` (bare) re-raises the current exception with the original traceback preserved; `raise ValueError("msg")` throws a new exception; `raise NewError("msg") from e` chains it explicitly.
@@ -68,7 +68,7 @@ status: complete
 > >
 > > Inside an `except` block, `raise e` creates a new traceback starting at that line. Use bare `raise` to preserve the full stack or `raise NewError() from e` to chain with context.
 >
-> > ---
+>  ---
 >
 > **exception chaining**
 > - `raise NewError("msg") from original_error` sets `original_error` as `__cause__` on the new exception, making the full error chain visible in tracebacks and log parsers.
@@ -78,7 +78,7 @@ status: complete
 > >
 > > `__cause__` is set explicitly via `raise ... from e`; `__context__` is set implicitly when one exception is raised while another is active. Debuggers and logging frameworks display both, but `__cause__` signals intentional wrapping.
 >
-> > ---
+>  ---
 >
 > **BaseException**
 > - The root of Python's entire exception hierarchy; `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` are direct children alongside `Exception`.
@@ -88,7 +88,7 @@ status: complete
 > >
 > > `except BaseException` blocks Ctrl+C, interpreter shutdown, and generator cleanup signals. Use `except Exception` as the broadest safe catch in all application and pipeline code.
 >
-> > ---
+>  ---
 >
 > **Exception**
 > - Subclass of `BaseException` and the base for all "normal" errors: `ValueError`, `TypeError`, `KeyError`, `IndexError`, `OSError`, and their subclasses.
@@ -98,7 +98,7 @@ status: complete
 > >
 > > `except FileNotFoundError` is more precise than `except OSError` is more precise than `except Exception`. Narrow catches prevent accidental suppression of unrelated errors and make intent explicit.
 >
-> > ---
+>  ---
 >
 > **custom exception**
 > - A user-defined class inheriting from `Exception` (or a more specific built-in) that adds structured diagnostic fields — `row_number`, `column_name`, `raw_value` — for domain-specific error reporting.
@@ -108,7 +108,7 @@ status: complete
 > >
 > > Create a custom exception when the caller needs structured metadata beyond what a built-in message string provides, or when callers must distinguish pipeline-domain errors (`PipelineError`) from generic runtime errors in a type-safe `except` clause.
 >
-> > ---
+>  ---
 >
 > **context manager**
 > - An object implementing `__enter__` and `__exit__` (or decorated with `@contextmanager`), used with the `with` statement to guarantee deterministic resource cleanup.
@@ -118,7 +118,7 @@ status: complete
 > >
 > > A context manager that returns `True` from `__exit__` swallows any exception raised inside the `with` block. Return `False` (or `None`) to let exceptions propagate normally.
 >
-> > ---
+>  ---
 >
 > **`with` statement**
 > - `with resource as r:` calls `__enter__` at block entry and `__exit__` at block exit, even when an exception occurs — equivalent to C#'s `using`.
@@ -128,7 +128,7 @@ status: complete
 > >
 > > `with open(path) as f:` is shorter, safer, and harder to get wrong than a `try`/`finally` block that calls `f.close()`. Use it for files, database connections, locks, thread pools, and any object that supports the context manager protocol.
 >
-> > ---
+>  ---
 >
 > **`@contextmanager`**
 > - Decorator from `contextlib` that converts a generator function into a context manager; code before `yield` is the setup phase, code after `yield` is the teardown phase.
@@ -138,7 +138,7 @@ status: complete
 > >
 > > `@contextmanager` is idiomatic for simple, single-resource patterns. Use a full `__enter__`/`__exit__` class when the manager needs state across multiple methods, must be subclassed, or requires fine-grained control over exception suppression logic.
 >
-> > ---
+>  ---
 >
 > **ExceptionGroup**
 > - Python 3.11+ construct that bundles multiple exceptions into a single raised object: `raise ExceptionGroup("label", [e1, e2, e3])`.
@@ -148,7 +148,7 @@ status: complete
 > >
 > > `ExceptionGroup` and `except*` are not available on Python 3.10 or earlier. Guard with `if sys.version_info >= (3, 11):` and fall back to the error-accumulation list pattern for older runtimes.
 >
-> > ---
+>  ---
 >
 > **error accumulation**
 > - Pattern where each processing step appends errors to a list instead of raising immediately, so a batch pipeline completes all records before surfacing failures.
@@ -158,7 +158,7 @@ status: complete
 > >
 > > Store each row result in a typed dataclass (`ParseResult`) with an `is_valid` flag and an `error` field. After the loop, split on `is_valid` — send good records downstream, quarantine or log the bad ones, and raise if the rejection rate exceeds a threshold.
 >
-> > ---
+>  ---
 >
 > **retry with backoff**
 > - Pattern that retries a failing operation up to a fixed maximum, sleeping an increasing delay between attempts (`delay_s * attempt`) to handle transient failures such as network timeouts, rate limits, and connection resets.
