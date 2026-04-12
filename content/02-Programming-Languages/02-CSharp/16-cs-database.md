@@ -15,27 +15,219 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
+> [!abstract]- Summary
+>
+> **Setup**
+> - NuGet packages: `Microsoft.Data.SqlClient`, `Microsoft.Data.Sqlite`, `Dapper`, `Microsoft.EntityFrameworkCore`, `DuckDB.NET.Data.Full`, `Polars.NET`
+> - Shared helper: `QueryToTable(conn, sql)` wraps ADO.NET boilerplate into a `DataTable` for notebook display
+>
+> **SQLite — Lightweight Embedded Database**
+> - In-memory (`DataSource=:memory:`) and file-based; ADO.NET pattern: `SqliteConnection` / `SqliteCommand` / `SqliteDataReader`
+> - Parameterised CRUD (`@param` placeholders), transactions (`BeginTransaction` / `Commit` / `Rollback`)
+> - PRAGMA configuration: `journal_mode=WAL`, `synchronous=NORMAL`, `cache_size`, `busy_timeout`, `mmap_size`, `foreign_keys=ON`
+> - Indexes: `CREATE INDEX`, composite, unique; `EXPLAIN QUERY PLAN` for scan vs seek; `ANALYZE`, `VACUUM`, `REINDEX`, `integrity_check`
+>
+> **SQL Server**
+> - Same ADO.NET pattern with `SqlConnection` / `SqlCommand`; `@named` parameters via `AddWithValue`
+> - Full CRUD, transactions, `SqlBulkCopy` for high-volume inserts
+> - Index management: fragmentation via `sys.dm_db_index_physical_stats`; `ALTER INDEX REBUILD`/`REORGANIZE`; missing index DMVs
+> - Server metadata: `sys.tables`, `sys.schemas`, `sys.configurations`, `sys.dm_exec_sessions`
+> - ODBC provider: positional `?` parameters, compatible with `pyodbc`; comparison table vs SqlClient
+>
+> **Dapper — Micro-ORM**
+> - `Query<T>`, `QueryFirst<T>`, `QueryFirstOrDefault<T>`, `ExecuteScalar<T>`, `Execute`
+> - Parameters passed as anonymous objects `new { Symbol = "ASML.AS" }`; `WHERE IN` auto-expanded from arrays
+> - Returns `IEnumerable<T>` — full LINQ available on results; `dynamic` queries for ad-hoc use
+> - Comparison table: ADO.NET vs Dapper vs EF Core
+>
+> **Entity Framework Core — Full ORM**
+> - Entity classes → tables; `DbContext` with `DbSet<T>`, `OnConfiguring`, `OnModelCreating`
+> - `Add` / `AddRange` / `SaveChanges`; change tracking generates INSERT / UPDATE / DELETE
+> - `AsNoTracking()` for read-only queries (2–3× faster); `Include()` for eager loading navigation properties
+> - `FromSqlRaw` / `FromSqlInterpolated` escape hatch for raw SQL
+> - Migrations workflow: `dotnet ef migrations add`, `dotnet ef database update`, idempotent script generation
+>
+> **DuckDB — Embedded Analytical SQL Database**
+> - ADO.NET (`DuckDBConnection` / `DuckDBCommand`), Appender (bulk loader, 10–100× faster than INSERT), Dapper
+> - DuckDB uses `$1 $2` positional parameters; Dapper `@named` workaround requires string interpolation (safe for non-user input)
+> - `COPY TO` / `CREATE TABLE AS SELECT * FROM 'file.parquet'`; `DESCRIBE`, `SUMMARIZE`, `EXPLAIN ANALYZE`
+> - ART indexes (equality only); zone maps provide free predicate pushdown; `SET memory_limit`, `SET threads`
+> - Benchmark results: DuckDB 4–18× faster than SQL Server for GROUP BY, window functions, full scans
+>
+> **Querying Files — DuckDB SQL vs Polars.NET**
+> - DuckDB queries Parquet / CSV / JSON directly; Polars.NET uses DataFrame API with method chaining
+> - Parquet ~27× faster than CSV for aggregates in DuckDB benchmarks
+> - Decision: DuckDB for SQL/CTEs/windows; Polars.NET for DataFrame transforms and ML pipelines
+
+> [!note]- Glossary
+>
+> **ADO.NET**
+> - The foundational .NET data access layer — `SqlConnection`, `SqlCommand`, `SqlDataReader` — ships in the BCL with no extra packages.
+> - Baseline for all higher-level ORMs; used when maximum control or performance is needed.
+>
+> > [!tip] Always wrap in `using` or `await using` to return the connection to the pool; never create a new `SqlConnection` per query.
+>
+> > ---
+>
+> **Microsoft.Data.SqlClient**
+> - The current, actively maintained SQL Server driver for .NET — supersedes the legacy `System.Data.SqlClient`.
+> - Required for TLS 1.3 and Azure Active Directory authentication in .NET 6+ projects.
+>
+> > [!warning] Do not reference `System.Data.SqlClient` in new .NET 6+ code — it still compiles but misses modern security features.
+>
+> > ---
+>
+> **Microsoft.Data.Sqlite**
+> - Lightweight SQLite driver for .NET — maps closely to `System.Data.Common` ADO.NET abstractions.
+> - Used for embedded / in-memory databases in dev, testing, and local analytics.
+>
+> > [!warning] Opening `DataSource=:memory:` and then closing the connection destroys the database — keep the connection open for the lifetime of the in-memory DB.
+>
+> > ---
+>
+> **SqlConnection**
+> - ADO.NET class representing a single database connection — manages the underlying socket, protocol, and connection pool slot.
+> - Gate to all SQL Server operations; pool handles reuse automatically.
+>
+> > [!tip] Do not create a new `SqlConnection` per query — the pool reuses existing connections. `using var conn = new SqlConnection(cs)` is the correct pattern.
+>
+> > ---
+>
+> **SqlCommand**
+> - ADO.NET class for executing SQL statements or stored procedures against an open connection.
+> - Core execution object: `ExecuteReader` (result set), `ExecuteNonQuery` (rows affected), `ExecuteScalar` (single value).
+>
+> > [!danger] Never concatenate user input into `CommandText` — always use `cmd.Parameters.AddWithValue("@p", value)` to prevent SQL injection.
+>
+> > ---
+>
+> **SqlDataReader**
+> - A forward-only, read-only cursor that streams rows from a SQL result set without buffering them into memory.
+> - Most efficient way to iterate large result sets.
+>
+> > [!warning] Calling `reader.GetString(i)` on a `DBNull` column throws `InvalidCastException` — check `reader.IsDBNull(i)` first or use `reader.GetValue(i) as string`.
+>
+> > ---
+>
+> **Parameterised query**
+> - A SQL command that uses named placeholders (`@name`) instead of string interpolation.
+> - Prevents SQL injection and handles type conversion automatically.
+>
+> > [!danger] `$"WHERE id = {id}"` opens SQL injection and breaks on strings containing single quotes — always use `@param` placeholders.
+>
+> > ---
+>
+> **ExecuteNonQuery**
+> - `SqlCommand` method for INSERT, UPDATE, DELETE, and DDL — returns the number of rows affected, not a result set.
+> - The correct execution method for any write operation that does not return rows.
+>
+> > [!warning] Using `ExecuteNonQuery` for SELECT discards the result set and returns `-1`.
+>
+> > ---
+>
+> **Dapper**
+> - A micro-ORM extension on `IDbConnection` — adds `Query<T>`, `Execute`, and `QueryFirst<T>` that map SQL results to POCOs.
+> - Minimal overhead over ADO.NET (~same IL-emission performance); removes manual `reader.GetXxx` boilerplate.
+>
+> > [!tip] Use `QueryFirstOrDefault<T>` (not `Query<T>`) for single-row results — `Query<T>` loads all rows before returning the first.
+>
+> > ---
+>
+> **Entity Framework Core (EF Core)**
+> - Microsoft's full ORM — maps C# entity classes to tables, generates migrations, and translates LINQ to SQL.
+> - Standard for greenfield .NET applications; eliminates hand-written CRUD SQL.
+>
+> > [!warning] Calling `SaveChanges()` inside a loop causes N database round-trips — add all entities first, then call `SaveChanges()` once outside the loop.
+>
+> > ---
+>
+> **DbContext**
+> - The EF Core unit-of-work and identity map — tracks entity state (Added, Modified, Deleted) and flushes changes on `SaveChanges()`.
+> - Central EF Core object; one instance per request or scope in web apps.
+>
+> > [!danger] `DbContext` is not thread-safe — never share a single instance across threads. Register as scoped in ASP.NET Core DI (`AddDbContext<T>`).
+>
+> > ---
+>
+> **DbSet**
+> - An EF Core property on `DbContext` representing a mapped table — `DbSet<Stock>` → `Stocks` table.
+> - Supports `LINQ` queries, `Add`, `AddRange`, `Remove`, and `Find`.
+>
+> > [!tip] Always chain `.Where()`, `.Select()`, and `.Take()` before `.ToList()` so EF Core pushes the filter to SQL rather than loading the full table.
+>
+> > ---
+>
+> **Migration**
+> - A code-first EF Core artefact (`dotnet ef migrations add`) that scripts incremental schema changes as versioned C# classes.
+> - Keeps the database schema in sync with the C# model under version control.
+>
+> > [!warning] Running `Database.EnsureCreated()` alongside migrations causes conflicts — choose one strategy; use migrations exclusively in persistent environments.
+>
+> > ---
+>
+> **Connection string**
+> - A string encoding driver, server, database, and authentication details — in .NET apps stored under `ConnectionStrings` in `appsettings.json`.
+> - Wrong format is the most common setup failure.
+>
+> > [!danger] Never hard-code credentials in source — use environment variables, `IConfiguration`, or Azure Key Vault in production.
+>
+> > ---
+>
+> **AsNoTracking**
+> - EF Core method that disables change tracking for a query — no entity snapshots, no identity map overhead.
+> - 2–3× faster for read-only queries; use on any query that will not call `SaveChanges()`.
+>
+> > [!tip] Add `.AsNoTracking()` to every EF Core read-only query as a default — only omit it when you intend to modify and save the returned entities.
+>
+> > ---
+>
+> **Navigation property**
+> - A C# property on an EF Core entity that represents a relationship — `Stock.Prices` (one-to-many), `Price.Stock` (many-to-one).
+> - Enables joins without explicit SQL; EF Core generates the JOIN from `Include(s => s.Prices)`.
+>
+> > [!warning] Accessing a navigation property without `Include()` triggers lazy loading or returns `null`/empty — always eager-load with `Include()` for known access patterns.
+>
+> > ---
+>
+> **DuckDB.NET**
+> - .NET binding for DuckDB — `DuckDBConnection` implements `IDbConnection` supporting ADO.NET-style SQL over Parquet/CSV/JSON.
+> - In-process OLAP analytics without a separate server; columnar engine is 4–18× faster than SQL Server for analytical queries.
+>
+> > [!warning] Use `DuckDB.NET.Data.Full` NuGet package (not `DuckDB.NET.Data`) — the `Full` variant bundles the native binary; the stub alone throws `IOException` at runtime.
+>
+> > ---
+>
+> **DuckDB Appender**
+> - DuckDB bulk-loader API: `CreateAppender("table")` → `CreateRow().AppendValue(...).EndRow()` → `Close()` to flush.
+> - Bypasses SQL parsing; 10–100× faster than parameterised INSERT for bulk loads.
+>
+> > [!tip] Stream a `SqlDataReader` directly into a DuckDB Appender in one pass — no intermediate buffer needed; `Close()` on the appender flushes the batch atomically.
+>
+> > ---
+>
+> **Zone map**
+> - Per-segment min/max statistics that DuckDB maintains automatically for each column in each row group.
+> - Enables predicate pushdown: `WHERE close > 500` skips segments where `max(close) < 500` without reading data.
+>
+> > [!info] Indexes in DuckDB are optional — zone maps plus the columnar engine handle most range-scan performance without explicit `CREATE INDEX`.
+>
+> > ---
+>
+> **PRAGMA (SQLite)**
+> - A SQLite-specific command for reading or setting per-connection configuration: `journal_mode`, `synchronous`, `cache_size`, `busy_timeout`, `foreign_keys`.
+> - Set PRAGMAs immediately after `Open()` — they apply only to the current connection.
+>
+> > [!danger] Never set `PRAGMA synchronous=OFF` in production — the database can be silently corrupted if the OS crashes mid-write.
+>
+> > ---
+>
+> **LINQ to SQL (EF Core)**
+> - Language-Integrated Query expressions that EF Core translates to SQL at query execution time.
+> - Type-safe queries with IntelliSense and compile-time checking; no SQL strings required.
+>
+> > [!warning] Calling `.ToList()` before `.Where()` loads the entire table into memory before filtering — always filter server-side first.
+
 This note covers C# database access from raw ADO.NET to micro-ORM and full ORM, including embedded and analytical databases.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **ADO.NET** | The low-level .NET data access layer — `SqlConnection`, `SqlCommand`, `SqlDataReader`. Ships in the BCL; no extra packages required. | Baseline for all higher-level ORMs; used when maximum control or performance is needed. | Forgetting to dispose connections — always wrap in `using` or `await using` to return connections to the pool. |
-| **Microsoft.Data.SqlClient** | The current, actively maintained SQL Server driver for .NET — supersedes `System.Data.SqlClient`. | Use this package, not the legacy `System.Data.SqlClient`. | Referencing `System.Data.SqlClient` in .NET 6+ projects — it still works but misses TLS 1.3 and AAD support. |
-| **Microsoft.Data.Sqlite** | Lightweight SQLite driver for .NET — maps closely to `System.Data.Common` ADO.NET abstractions. | Embedded / in-memory database for dev, testing, and local analytics. | Using `DataSource=:memory:` without keeping the connection open — in-memory DB is destroyed when connection closes. |
-| **SqlConnection** | ADO.NET class that represents a single database connection. Manages the underlying socket and protocol. | Gate to all SQL Server operations. | Creating a new `SqlConnection` per query instead of relying on the connection pool — pool already handles reuse. |
-| **SqlCommand** | ADO.NET class for executing SQL statements or stored procedures against an open connection. | Core execution object: `ExecuteReader`, `ExecuteNonQuery`, `ExecuteScalar`. | Concatenating user input into `CommandText` — always use `cmd.Parameters.AddWithValue("@p", value)`. |
-| **SqlDataReader** | A forward-only, read-only cursor over a SQL result set. Rows are streamed, not buffered into memory. | Most efficient way to iterate large result sets. | Calling `reader.GetString(0)` on a `DBNull` column — check `reader.IsDBNull(i)` first or use `reader.GetValue(i) as string`. |
-| **Parameterised query** | A SQL command that uses named placeholders (`@name`) instead of string interpolation. | Prevents SQL injection; handles type conversion automatically. | Using string interpolation `$"WHERE id = {id}"` — opens SQL injection; also fails on strings with single quotes. |
-| **Dapper** | A micro-ORM extension on `IDbConnection` — adds `Query<T>`, `Execute`, and `QueryFirst<T>` methods that map SQL results to POCOs. | Minimal overhead over ADO.NET; removes boilerplate column-to-property mapping. | Using `Query<T>` for a single-row result instead of `QueryFirstOrDefault<T>` — `Query` loads all rows regardless. |
-| **Entity Framework Core (EF Core)** | Microsoft's full ORM — maps C# entity classes to tables, generates migrations, and translates LINQ to SQL. | Standard for greenfield .NET applications; eliminates hand-written CRUD SQL. | Calling `SaveChanges()` in a loop per entity — causes N round-trips. Batch: add all entities, then call `SaveChanges()` once. |
-| **DbContext** | The EF Core unit-of-work and identity-map — tracks entity state (Added, Modified, Deleted) and flushes changes on `SaveChanges()`. | Central EF Core object; one per request/scope in web apps. | Sharing a single `DbContext` across threads or requests — it is not thread-safe; inject as scoped. |
-| **Migration** | A code-first EF Core artefact (`dotnet ef migrations add`) that scripts incremental schema changes. | Keeps database schema in sync with the C# model under version control. | Running `Database.EnsureCreated()` alongside migrations — they conflict; use migrations exclusively in production. |
-| **Connection string** | A string encoding driver, server, database, and auth details. In .NET apps, typically stored in `appsettings.json` under `ConnectionStrings`. | Wrong format is the most common setup failure. | Hard-coding credentials in source — use environment variables, `IConfiguration`, or Azure Key Vault. |
-| **DuckDB.NET** | .NET binding for DuckDB — `DuckDBConnection` implements `IDbConnection` and supports ADO.NET-style SQL over Parquet/CSV. | In-process OLAP analytics without a separate server. | Forgetting that DuckDB.NET requires `DuckDB.NET.Data.Full` (not `DuckDB.NET.Data`) to include the native binaries. |
-| **ExecuteNonQuery** | `SqlCommand` method for INSERT, UPDATE, DELETE, DDL — returns rows affected, not a result set. | Any write operation that doesn't return rows. | Using `ExecuteNonQuery` for SELECT — it discards the result set and returns `-1`. |
-| **LINQ to SQL (EF Core)** | Language-Integrated Query expressions that EF Core translates to SQL at query execution time. | Type-safe queries with IntelliSense; no SQL strings. | Using `ToList()` before filtering — loads entire table into memory before the `Where` clause; filter first, then `ToList()`. |
 
 ### What this note covers
 

@@ -15,46 +15,178 @@ status: complete
 >
 > — **Bruce Schneier**, *Applied Cryptography* (1996)
 
+> [!abstract]- Summary
+>
+> **GitHub Repository & GCP Project**
+> - Creates the `alp78/security-lab` public GitHub repository used for Workload Identity Federation CI/CD demos.
+> - Creates GCP project `seclab-dev-ap-26`, sets it as the active project, and links a billing account.
+>
+> **APIs & Service Account**
+> - Enables 13 GCP service APIs: Secret Manager, KMS, Compute Engine, IAM, Cloud Storage, Artifact Registry, Certificate Manager, IAM Credentials, STS, Cloud SQL Admin, BigQuery, Firestore, and Cloud Resource Manager.
+> - Creates service account `notebook-sa`, downloads its JSON key, and binds all required IAM roles: Secret Manager Admin, KMS Encrypter/Decrypter + KMS Viewer, Storage Admin, Compute Instance Admin, Service Account Token Creator, Cloud SQL Admin, BigQuery Admin, Firestore (Datastore) Owner.
+>
+> **Cloud KMS & Secret Manager**
+> - Creates key ring `notebook-keyring` and symmetric key `notebook-encrypt-key` in `europe-west1`.
+> - Stores three secrets: `test-api-key`, `db-password`, and `db-config` (JSON). Uses a Windows-compatible temp-file workaround for secret creation.
+>
+> **Cloud Storage**
+> - Creates GCS bucket `seclab-dev-ap-26-data` and enables CMEK encryption using the KMS key.
+>
+> **Compute Engine**
+> - Provisions `notebook-vm` (e2-micro, Debian 12) with OS Login enabled, installs Python packages, and opens TCP/22 via a firewall rule.
+>
+> **Cloud SQL**
+> - Provisions the Cloud SQL service agent and grants it KMS access before instance creation.
+> - Creates `notebook-sql` (SQL Server 2022 Express, `db-custom-1-3840`) with CMEK and SSL required; authorizes the current public IP; creates the `stoxx` database.
+>
+> **Populate Data**
+> - Uploads 13 CSV/JSON/Parquet files (29.1 MB) to GCS.
+> - Bulk-loads 13 tables into Cloud SQL via `bcp` (TDS protocol).
+> - Loads OHLCV data into BigQuery bronze/silver/gold layers; writes 50 gold scores to Firestore.
+>
+> **SSH Keys, Artifact Registry & Workload Identity Federation**
+> - Generates Ed25519 SSH key and registers it via OS Login.
+> - Creates Docker repository `notebook-docker` in Artifact Registry.
+> - Creates WIF pool `github-pool` with OIDC provider `github-provider` mapped to GitHub Actions tokens; binds `notebook-sa` as `workloadIdentityUser` for the `alp78/security-lab` repository.
+>
+> **Verify Setup**
+> - End-to-end verification confirms: Secret Manager (3 secrets), KMS key enabled, VM running, GCS bucket with bronze layer, SQL instance RUNNABLE, BigQuery dataset `index_data`, Firestore `seclab-scores`, Artifact Registry `notebook-docker`, WIF pool ACTIVE.
+
+> [!note]- Glossary
+>
+> **Service Account**
+> - A GCP identity for workloads (not humans) that authenticates to Google APIs using downloaded JSON keys or ADC; cannot log in interactively.
+> - All lab scripts authenticate as `notebook-sa` rather than a personal user account.
+>
+> > [!warning] Service accounts are not user accounts
+> >
+> > Assigning human-user roles to a service account, or vice versa, produces unexpected permission denials. Service accounts use keys or metadata-server tokens; users use OAuth2 browser flows.
+>
+> ---
+>
+> **IAM Role Binding**
+> - A policy entry that grants a named role (a set of permissions) to a principal on a specific resource scope — project, folder, or individual resource.
+> - The lab binds `notebook-sa` to eight roles at project or key level to enable every API call made in the operations notebooks.
+>
+> > [!warning] Prefer resource-level bindings in production
+> >
+> > Project-level bindings grant the role across every resource in the project. Scope bindings to the specific resource (e.g., a single KMS key or bucket) where possible to limit blast radius.
+>
+> ---
+>
+> **Cloud KMS Key Ring**
+> - A logical container for one or more cryptographic keys, scoped to a single GCP location; organises key lifecycle and IAM independently of individual keys.
+> - All lab encryption keys live under `notebook-keyring` in `europe-west1`.
+>
+> > [!danger] Key rings cannot be deleted
+> >
+> > Once created, a KMS key ring is permanent — GCP provides no deletion API. A misnamed or misplaced ring persists indefinitely. Plan the name and location before provisioning.
+>
+> ---
+>
+> **KMS Crypto Key**
+> - A named key within a key ring, backed by one or more versioned key materials, used for encrypt/decrypt or sign/verify operations.
+> - `notebook-encrypt-key` is the symmetric key used to CMEK-encrypt Cloud SQL, GCS, and BigQuery resources in this lab.
+>
+> > [!warning] Key ring IAM does not propagate to individual keys
+> >
+> > Granting `cryptoKeyEncrypterDecrypter` on the key ring does not grant permissions on individual keys inside it. Bind encrypt/decrypt permissions at the key level, not the ring level.
+>
+> ---
+>
+> **CMEK**
+> - Customer-Managed Encryption Key: a Cloud KMS key that the customer owns and controls, used instead of Google-managed keys to encrypt a GCP resource's data at rest.
+> - Cloud SQL (`notebook-sql`), the GCS bucket, and BigQuery resources in this lab use CMEK; the operator can revoke access instantly by disabling the key, making all encrypted data permanently unreadable even to Google.
+>
+> > [!warning] Not all GCP resources support CMEK
+> >
+> > CMEK availability varies by service and tier. Verify compatibility before specifying `--disk-encryption-key`; some services silently ignore the flag rather than returning an error.
+>
+> ---
+>
+> **Secret Manager**
+> - A GCP-managed store for sensitive strings (passwords, tokens, API keys) with automatic versioning, IAM-gated access, and audit logging; each `add-version` creates an immutable new version.
+> - Stores `db-password`, `test-api-key`, and `db-config` (JSON); consumed by the operations notebooks at runtime rather than from environment variables or source code.
+>
+> > [!danger] Never store secrets in environment variables or code
+> >
+> > Environment variables are visible in `docker inspect`, process listings, and CI build logs. Pull secrets from Secret Manager at runtime using `secretmanager.SecretManagerServiceClient().access_secret_version(...)`.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A GCP mechanism that maps external identity tokens (e.g., GitHub Actions OIDC JWTs) to a GCP service account without requiring a downloadable JSON key file; the external token is exchanged for a short-lived GCP access token via the STS service.
+> - Enables the `alp78/security-lab` GitHub Actions workflows to authenticate to GCP as `notebook-sa` with no key stored in the repository.
+>
+> > [!warning] WIF is not service account impersonation
+> >
+> > WIF eliminates the key file entirely. Service account impersonation (`iam.serviceAccountTokenCreator`) is a separate mechanism used when one GCP identity needs to act as another — WIF is for external-to-GCP trust; impersonation is for GCP-to-GCP delegation.
+>
+> ---
+>
+> **Service Account Key**
+> - A downloadable JSON file containing the service account's private key; used by client libraries when ADC cannot resolve credentials (e.g., local development without `gcloud auth application-default login`).
+> - Required by the operations notebooks when running outside GCP infrastructure where the metadata server is unavailable.
+>
+> > [!danger] Never commit a service account key to version control
+> >
+> > The JSON file grants full project access. Committing it — even briefly — exposes it permanently via git history. Store outside the repository root, add `*.json` to `.gitignore`, and set `GOOGLE_APPLICATION_CREDENTIALS` at runtime only.
+>
+> ---
+>
+> **Cloud SQL Authorized Network**
+> - A CIDR range explicitly permitted to connect to a Cloud SQL instance over its public IP address; connections from IPs outside the allowlist are rejected before authentication.
+> - The lab patches the allowlist with the current public IP (`/32`) so the notebook host can connect directly; the Cloud SQL Auth Proxy is the preferred alternative for dynamic IPs.
+>
+> > [!warning] Avoid 0.0.0.0/0 as an authorized network
+> >
+> > An open allowlist exposes the instance to the internet, relying solely on password and certificate authentication as the barrier. Restrict to known CIDRs or use the Cloud SQL Auth Proxy to avoid public IP exposure entirely.
+>
+> ---
+>
+> **SSL/TLS Certificate**
+> - A certificate pair (server CA certificate plus client certificate and private key) used to encrypt the connection to Cloud SQL and optionally to mutually authenticate the client.
+> - `notebook-sql` is created with SSL required; the operations notebooks must present the server CA certificate to establish a connection.
+>
+> > [!danger] Never disable SSL on a public-IP Cloud SQL instance
+> >
+> > Setting `sslmode=disable` transmits credentials and query data in plaintext over the internet. Always set `sslmode=require` (or `verify-ca` / `verify-full`) in connection strings for any public-IP endpoint.
+>
+> ---
+>
+> **Workload Identity Pool**
+> - A top-level WIF resource that acts as a namespace for one or more external identity providers (OIDC, SAML, AWS); principals within the pool can be mapped to GCP service accounts.
+> - `github-pool` contains the `github-provider` OIDC provider mapping GitHub Actions tokens to GCP identities; the recommended pattern is one pool per environment (dev / staging / prod).
+>
+> > [!warning] Workload Identity Pools cannot be deleted
+> >
+> > Like KMS key rings, pools are permanent. A pool can be disabled with `gcloud iam workload-identity-pools update --disabled` but not removed. If a pool already exists from a prior run, skip creation and verify the existing pool.
+>
+> ---
+>
+> **ADC**
+> - Application Default Credentials: Google's credential resolution chain used by all GCP client libraries when no explicit credential object is passed — searches `GOOGLE_APPLICATION_CREDENTIALS` env var, then `gcloud auth application-default login` credentials, then the GCE/GKE metadata server.
+> - The operations notebooks rely on ADC when `GOOGLE_APPLICATION_CREDENTIALS` points to the downloaded SA key path; omitting this variable causes ADC to fall through to the gcloud user account, which may lack the required project roles.
+>
+> > [!warning] ADC silently falls through the resolution chain
+> >
+> > If `GOOGLE_APPLICATION_CREDENTIALS` is unset and the gcloud login account differs from `notebook-sa`, API calls succeed but are billed and audited against the wrong identity. Always verify `os.environ["GOOGLE_APPLICATION_CREDENTIALS"]` is set before running operations cells.
+>
+> ---
+>
+> **Artifact Registry**
+> - GCP's managed container and package registry, replacing the deprecated Container Registry (`gcr.io`); supports Docker images, Maven, npm, Python, and other formats with built-in vulnerability scanning and signing.
+> - The lab provisions a Docker repository (`notebook-docker`) in `europe-west1`; `gcloud auth configure-docker` registers the gcloud credential helper so `docker push/pull` authenticates automatically.
+>
+> > [!warning] Artifact Registry and Container Registry are not interchangeable
+> >
+> > Images pushed to `gcr.io` use Container Registry (backed by GCS). Images pushed to `europe-west1-docker.pkg.dev/...` use Artifact Registry. The two registries have separate IAM, vulnerability scan configs, and billing. New workloads must use Artifact Registry.
+
 > [!tip] Prerequisite Reading
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 This note provisions the full GCP security infrastructure — service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and demo data. Run every section once in order before executing any operations notebook.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Service Account | A GCP identity for workloads (not humans) that authenticates to Google APIs using keys or ADC | All lab scripts authenticate as a service account rather than a personal user | Confusing a service account with a user account; service accounts cannot log in interactively |
-| IAM Role Binding | A policy that grants a role (set of permissions) to a principal on a specific resource | Binds the lab service account to the roles it needs (KMS, SQL, BigQuery, etc.) | Binding roles at project level when resource-level bindings are safer |
-| Cloud KMS Key Ring | A logical container for one or more cryptographic keys in a specific location | Groups all lab encryption keys under a single ring for lifecycle management | Key rings cannot be deleted — plan names carefully before provisioning |
-| KMS Crypto Key | A named key within a key ring used for encrypt/decrypt operations | The actual key material used by CMEK-enabled resources and direct envelope encryption | Confusing key ring with key; the ring is the container, the key holds versions |
-| CMEK | Customer-Managed Encryption Key — a KMS key you control, used to encrypt a GCP resource at rest | Cloud SQL, BigQuery, and GCS resources in this lab use CMEK for at-rest encryption | Not every GCP resource supports CMEK; check compatibility before specifying `--kms-key` |
-| Secret Manager | GCP managed store for sensitive strings (passwords, tokens, API keys) with versioning and IAM | Stores the Cloud SQL password, API keys, and JSON config consumed by the operations notebooks | Storing secrets in plain environment variables or code instead of referencing a secret version |
-| Workload Identity Federation | Allows external identities (e.g., GitHub Actions OIDC tokens) to impersonate a GCP service account without a key file | Enables CI/CD pipelines to authenticate to GCP without managing downloadable key JSON | Confusing WIF with service account impersonation; WIF eliminates the key file entirely |
-| Service Account Key | A downloadable JSON credential file that proves identity to Google APIs | Used by the operations notebooks when ADC is unavailable (local or CI environments) | Committing the key file to source control; the key must stay out of version control |
-| Cloud SQL Authorized Network | A CIDR range allowed to connect to the Cloud SQL instance over the public IP | Lab setup opens the Compute Engine external IP so the VM can connect without the proxy | Over-broad CIDRs (e.g., `0.0.0.0/0`) expose the instance to the internet |
-| SSL/TLS Certificate | A certificate pair (server CA + client cert/key) used to encrypt and mutually authenticate Cloud SQL connections | Generated during setup and consumed by the operations notebooks for encrypted connections | Using `sslmode=disable` in connection strings — always require SSL in production |
-| Workload Identity Pool | A top-level WIF resource that groups external identity providers | Contains the GitHub provider mapping used in this lab | One pool per environment (dev/prod) is the recommended pattern |
-| ADC | Application Default Credentials — Google's credential resolution chain (`GOOGLE_APPLICATION_CREDENTIALS` → gcloud login → metadata server) | Used by client libraries when no explicit credential is passed | Not setting `GOOGLE_APPLICATION_CREDENTIALS` and assuming ADC will find the right account |
-| Artifact Registry | GCP managed container and package registry | Lab provisions a Docker repository for storing lab images | Confusing Artifact Registry with the deprecated Container Registry (`gcr.io`) |
-
-### What this note covers
-
-- **GitHub Repository** — creates or verifies the lab Git repository
-- **GCP Project** — creates the GCP project and sets it as the active project
-- **Billing** — links a billing account to the project
-- **Enable APIs** — enables all required GCP service APIs
-- **Service Account** — creates the lab service account and downloads its key
-- **IAM Role Bindings** — grants all required roles to the service account
-- **Cloud KMS** — creates the key ring and crypto keys
-- **Secret Manager** — stores the SQL password, API key, and JSON config
-- **Cloud Storage** — creates the GCS bucket used by operations notebooks
-- **Compute Engine** — provisions the lab VM with a startup script
-- **Cloud SQL** — creates the SQL Server instance with CMEK and SSL, creates the database and user
-- **Populate Data** — imports CSV data into BigQuery, Firestore, and Cloud SQL
-- **SSH Keys** — generates and registers SSH keys for VM access
-- **Artifact Registry / Workload Identity Federation / Verify Setup** — final provisioning and end-to-end verification
 
 ```python
 import itertools

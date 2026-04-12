@@ -15,20 +15,33 @@ description: "How to search, recall, and re-run previous shell commands in bash 
 >
 > — **George Santayana**, *The Life of Reason* (1905)
 
-Your shell history is a searchable log of every command you have run. In an incident at 2 AM, you do not have time to retype a complex pipeline command from memory — the speed at which you can recall and modify previous commands directly affects your response time.
-
-```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
-flowchart LR
-    A[Type command] --> B[Execute]
-    B --> C[History buffer\nHISTSIZE]
-    C --> D[History file\n~/.bash_history]
-    E[Ctrl+R / fzf] --> C
-    F[!! / !n / !string] --> C
-    G[PSReadLine\nIntelliSense] --> H[PowerShell\nhistory file]
-    B2[Run PS command] --> H
-```
-
+> [!abstract]- Summary
+>
+> Covers bash and PowerShell command history end to end — from recall mechanics and expansion operators to full retention configuration and operational safety.
+>
+> **Recall and search**
+> - View, search, and replay commands from the bash history buffer and file using `history`, `grep`, and numbered entry replay
+> - History expansion operators: `!!`, `!n`, `!-n`, `!string`, `!?string?`, `^old^new`, `$_`, `Alt+.`, and the `:p` preview modifier
+> - Interactive reverse search with `Ctrl+R`, including cancel (`Ctrl+G`) and edit-before-execute (`→`) patterns
+> - Iterative command-building workflows: recalling complex commands and modifying a single argument without retyping
+>
+> **Bash configuration**
+> - Retention: `HISTSIZE` (in-memory), `HISTFILESIZE` (on-disk), `HISTFILE` (path), `HISTIGNORE` (pattern exclusion)
+> - Deduplication and secret hygiene: `HISTCONTROL` values (`ignorespace`, `ignoredups`, `ignoreboth`, `erasedups`) and leading-space suppression
+> - Timestamps for incident reconstruction: `HISTTIMEFORMAT` with `strftime` format strings
+> - Crash resilience and multi-session safety: `histappend` and `PROMPT_COMMAND="history -a"` to flush after every command
+> - Productivity binding: arrow keys remapped to `history-search-backward` / `history-search-forward`
+>
+> **PowerShell**
+> - Session history: `Get-History` (object pipeline), `Invoke-History` / `r` alias, cross-session search via `HistorySavePath`
+> - PSReadLine: persistent history, `MaximumHistoryCount`, `HistorySaveStyle` (incremental vs exit), predictive IntelliSense, `AddToHistoryHandler` for credential filtering
+>
+> **Operations and safety**
+> - When to use: incident response, iterative command development, post-session documentation
+> - When not to use: inline credentials, repeatable multi-step automation, shared accounts or jump boxes
+> - Warnings: credential leakage into history files, `!string` executing without confirmation, concurrent session clobbering, PSReadLine saving everything by default
+> - Recommendations table: production server settings, secret hygiene, deduplication strategy, crash resilience, fast recall, cross-session search
+> - Troubleshooting: 6 failure modes covering lost history, session conflicts, disabled expansion, and PSReadLine session scope
 
 > [!note]- Glossary
 >
@@ -82,6 +95,66 @@ flowchart LR
 >
 > ---
 >
+> **`HISTFILESIZE`**
+> - An environment variable that caps the number of lines kept in `~/.bash_history` on disk. Bash truncates the file to this limit on session exit.
+> - Controls long-term retention independently of `HISTSIZE`. If smaller than `HISTSIZE`, the on-disk file discards entries that were present in memory during the session.
+>
+> > [!warning] Set both `HISTSIZE` and `HISTFILESIZE`
+> >
+> > Setting only `HISTSIZE` grows the in-memory list but the file is still capped at the default (often 500). Set `HISTFILESIZE` to at least twice `HISTSIZE` to avoid silent truncation on exit.
+>
+> ---
+>
+> **`HISTFILE`**
+> - An environment variable specifying the path to the bash history file. Defaults to `~/.bash_history`.
+> - Lets you redirect history to a custom location — useful for per-project separation or storing history on a shared volume accessible across machines.
+>
+> > [!info] Changing the path
+> >
+> > Set `export HISTFILE=~/.bash_history_work` in `.bashrc`. The new path takes effect for sessions started after the change. The old file is not deleted or merged automatically.
+>
+> ---
+>
+> **`HISTIGNORE`**
+> - An environment variable containing a colon-separated list of glob patterns. Any command matching a pattern is silently excluded from history without requiring a leading space.
+> - A surgical alternative to `HISTCONTROL=ignorespace` — permanently excludes specific command forms such as `ls:cd:exit:history` without workflow discipline around leading spaces.
+>
+> > [!warning] Glob matching is exact by default
+> >
+> > `ls` suppresses only the bare `ls` command. Use `ls*` to suppress all `ls` variants including `ls -la`. Patterns are matched against the full command line.
+>
+> ---
+>
+> **`histappend`**
+> - A bash shell option (`shopt -s histappend`) that appends the session's history to `HISTFILE` on exit rather than overwriting it.
+> - Prevents concurrent sessions from clobbering each other's history. Without it, the last session to close wins and all other sessions' entries are permanently lost.
+>
+> > [!danger] Off by default
+> >
+> > Without `histappend`, opening two terminals and closing them in sequence silently discards the first session's history. Always set `shopt -s histappend` in `.bashrc`.
+>
+> ---
+>
+> **`PROMPT_COMMAND`**
+> - A bash variable whose value is executed as a shell command before each primary prompt is displayed. Commonly set to `history -a` to flush the in-memory history to disk after every command.
+> - Combined with `histappend`, provides crash resilience: commands are persisted immediately rather than buffered until clean session exit.
+>
+> > [!info] Extending an existing value
+> >
+> > Use `PROMPT_COMMAND="history -a; $PROMPT_COMMAND"` to prepend history flushing while preserving any existing prompt hook already set by the distro or shell framework.
+>
+> ---
+>
+> **`histexpand`**
+> - A bash shell option that enables the `!`-based history expansion operators (`!!`, `!n`, `!string`, etc.). Enabled by default in interactive shells. Disabled by `set +H` or `set +o histexpand`.
+> - Must be active for all history expansion to function. When disabled, `!` characters are treated as literals and no expansion occurs.
+>
+> > [!warning] Silent no-op when disabled
+> >
+> > If history expansion operators appear to do nothing, run `set -o | grep histexpand` to check the current state. Re-enable with `set -o histexpand`.
+>
+> ---
+>
 > **History expansion**
 > - A bash feature that uses `!`-prefixed operators to recall and transform previous commands. Examples: `!!` (last command), `!n` (entry n), `!string` (last command starting with string).
 > - The fastest way to replay or modify commands without full retyping.
@@ -89,6 +162,36 @@ flowchart LR
 > > [!danger] `!string` executes immediately with no confirmation
 > >
 > > `!rm` replays your most recent `rm` command on the spot. Use `!rm:p` to print the expansion first, then `!!` to execute if correct.
+>
+> ---
+>
+> **`!?string?`**
+> - A history expansion operator that matches the most recent command containing `string` anywhere in the line, not just at the start.
+> - More flexible than `!string` (which requires a prefix match) — use it when you remember a distinctive substring from the middle of a long command.
+>
+> > [!warning] Also executes immediately
+> >
+> > Like `!string`, `!?string?` runs the matched command with no review step. Append `:p` to preview: `!?analytics?:p`.
+>
+> ---
+>
+> **`:p` modifier**
+> - A history expansion modifier appended to any `!` operator that prints the expanded command without executing it. Example: `!rm:p`.
+> - Safe inspection step before committing to a potentially destructive expansion. After reviewing, run `!!` to execute the printed command.
+>
+> > [!info] Works with all expansion forms
+> >
+> > `!!:p`, `!42:p`, `!string:p`, `!?string?:p` — the `:p` modifier is universally applicable across every history expansion operator.
+>
+> ---
+>
+> **`Alt+.` / `$_`**
+> - `Alt+.` is a readline key binding that inserts the last argument of the previous command at the cursor, interactively. `$_` is the equivalent non-interactive shell variable, expanded at command time.
+> - Avoids retyping long paths or filenames when chaining commands — `mkdir /data/pipeline && cd $_` reuses the path without repetition.
+>
+> > [!info] `Alt+.` cycles through history
+> >
+> > Pressing `Alt+.` repeatedly moves backward through the last argument of successive history entries, not just the immediately previous command.
 >
 > ---
 >
@@ -129,15 +232,71 @@ flowchart LR
 > > [!danger] PSReadLine saves everything by default
 > >
 > > Without an `AddToHistoryHandler`, every command — including those with passwords, tokens, and API keys — is written to `ConsoleHost_history.txt` in plain text. Configure the handler in your PowerShell profile.
+>
+> ---
+>
+> **`Get-History`**
+> - A PowerShell cmdlet that returns the current session's command history as objects with `Id`, `CommandLine`, `StartExecutionTime`, and `EndExecutionTime` properties.
+> - Enables filtering, sorting, and pipeline processing of in-session history — e.g., `Get-History | Where-Object CommandLine -like "*sqlcmd*"` to find specific commands.
+>
+> > [!warning] Current session only
+> >
+> > `Get-History` does not read PSReadLine's persistent file. Commands from previous sessions are invisible. Use `Get-Content (Get-PSReadLineOption).HistorySavePath` for cross-session search.
+>
+> ---
+>
+> **`Invoke-History`**
+> - A PowerShell cmdlet that re-executes a command from the in-session history list by its `Id`. Aliased as `r`. Without an ID, replays the most recent command.
+> - The PowerShell equivalent of bash's `!n` operator — replays a specific past command by number without retyping it.
+>
+> > [!info] Built-in alias `r`
+> >
+> > `r 42` is equivalent to `Invoke-History -Id 42`. The alias is available in all PowerShell sessions without additional setup.
+>
+> ---
+>
+> **`MaximumHistoryCount`**
+> - A PSReadLine option that sets the maximum number of commands saved to the persistent history file, controlled via `Set-PSReadLineOption -MaximumHistoryCount`.
+> - The PowerShell equivalent of bash's `HISTFILESIZE` — governs long-term retention in `ConsoleHost_history.txt` across all sessions.
+>
+> > [!info] Default is 4096
+> >
+> > The PSReadLine 2.x default is 4096 commands. Raise it to 50000 or more in operational environments where incident reconstruction requires weeks of history.
+>
+> ---
+>
+> **`HistorySavePath`**
+> - A PSReadLine property (read via `(Get-PSReadLineOption).HistorySavePath`) that specifies the file path where PSReadLine writes the persistent cross-session history log.
+> - Points to `ConsoleHost_history.txt` by default. Read this file directly with `Get-Content` to search across all past sessions without session-scope limitations.
+>
+> > [!info] Path is configurable
+> >
+> > Override with `Set-PSReadLineOption -HistorySavePath "C:\custom\history.txt"` in your PowerShell profile to redirect history to a shared or project-specific location.
+>
+> ---
+>
+> **`HistorySaveStyle`**
+> - A PSReadLine option controlling when commands are written to the history file. Values: `SaveIncrementally` (after each command), `SaveAtExit` (on session close), `SaveNothing` (disable persistence).
+> - `SaveIncrementally` (the PSReadLine 2.x default) provides crash resilience equivalent to bash's `PROMPT_COMMAND="history -a"` — commands reach disk immediately rather than being buffered until exit.
+>
+> > [!warning] `SaveAtExit` loses history on crash
+> >
+> > If set to `SaveAtExit`, a force-closed or crashed PowerShell session loses all commands from that session — the same risk as bash without `PROMPT_COMMAND`.
 
-## What this note covers
+Your shell history is a searchable log of every command you have run. In an incident at 2 AM, you do not have time to retype a complex pipeline command from memory — the speed at which you can recall and modify previous commands directly affects your response time.
 
-- Viewing, searching, and replaying commands from the bash history buffer and file
-- History expansion operators (`!!`, `!n`, `!string`, `^old^new`, `$_`)
-- Configuring history retention, deduplication, and timestamps in bash (`HISTSIZE`, `HISTCONTROL`, `HISTTIMEFORMAT`)
-- PowerShell equivalents: `Get-History`, `Invoke-History`, PSReadLine persistent history, and predictive IntelliSense
-- Preventing sensitive commands (credentials, secrets) from being recorded in history
-- Iterative command-building workflows using history recall
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
+flowchart LR
+    A[Type command] --> B[Execute]
+    B --> C[History buffer<br>HISTSIZE]
+    C --> D[History file<br>~/.bash_history]
+    E[Ctrl+R / fzf] --> C
+    F[!! / !n / !string] --> C
+    G[PSReadLine<br>IntelliSense] --> H[PowerShell<br>history file]
+    B2[Run PS command] --> H
+```
+
 ## Linux history tools
 
 Bash maintains a numbered in-memory list of commands (bounded by `HISTSIZE`) and periodically flushes it to `~/.bash_history` (bounded by `HISTFILESIZE`). Every interactive session reads this file on startup. Understanding how to search, replay, and configure the history list is one of the highest-leverage skills for operational work.

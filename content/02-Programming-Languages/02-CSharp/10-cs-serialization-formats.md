@@ -16,21 +16,131 @@ status: complete
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
+> [!abstract]- Summary
+>
+> **Parquet Files**
+> - `Parquet.Net` wraps Parquet's columnar binary format for C#; two APIs: low-level `DataColumn` (manual schema + column-by-column write/read) and high-level `ParquetSerializer<T>` (POCO mapping, auto-schema).
+> - Schema is embedded in the file footer — inspect row count, column names, and nullability without loading data.
+> - `MemoryStream` target enables cloud upload (GCS, S3, Azure Blob) without a temp file.
+>
+> **Protocol Buffers**
+> - Dynamic encoding uses `CodedOutputStream`/`CodedInputStream` with raw tagged fields (wire types: 0 varint, 1 64-bit, 2 length-delimited, 5 32-bit) — no `protoc` needed for notebooks.
+> - Production path: define schema in `.proto`, run `protoc --csharp_out`, commit both `.proto` and generated `.cs`; `Grpc.Tools` automates regeneration in MSBuild.
+> - gRPC service definition lives in the same `.proto`; `protoc` with `--grpc_out` generates the server base class and client stub.
+> - Savings vs JSON: ~57% smaller on a typical financial record.
+>
+> **Apache Avro**
+> - Schema defined as JSON, embedded in every file header via `DataFileWriter` — no external schema needed to decode.
+> - `GenericRecord` API (dynamic, slower) vs specific/code-gen API (typed, production); `DataFileReader` iterates records from the embedded schema.
+> - Schema evolution: add fields with defaults (safe), remove with defaults (safe), change types or field numbers (breaks consumers).
+> - For small record sets, Avro files are larger than raw Protobuf due to embedded schema overhead.
+>
+> **Format Performance Benchmark**
+> - Test data: synthetic OHLCV records at 100, 10K, and 100K row sizes.
+> - At 100K records — file size order: Parquet (1.8 MB) < CSV (5.0 MB) ≈ Avro (5.1 MB) < Protobuf (5.7 MB) < JSON (10.5 MB).
+> - Parquet wins on both size and read speed for large datasets; Protobuf is most compact per record but lacks built-in message framing for bulk reads.
+> - Decision matrix: Parquet for analytics/lakes, Avro for Kafka/streaming, Protobuf for gRPC/microservices, JSON for REST/config.
+
+> [!note]- Glossary
+>
+> **Parquet**
+>
+> - Columnar binary format that stores data column-by-column rather than row-by-row. Apache project, schema embedded in the file footer, typed and compressed per column.
+> - Enables column pruning (read only the columns needed, skip 96%+ of data in wide tables) and predicate pushdown. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB. Not streamable — files must be read or written as complete units.
+>
+> > [!tip] Parquet is the default for analytics storage
+> >
+> > Use Parquet whenever the workload is columnar (BI queries, ML feature stores, batch ETL intermediate files). Its on-disk size is typically 5–10x smaller than CSV for the same data.
+>
+> > ---
+>
+> **Protocol Buffers (Protobuf)**
+>
+> - Google's binary serialization format. `.proto` files define strongly typed schemas; `protoc` generates C# (and other language) classes. 3–10x smaller than JSON, fast binary encoding, no text overhead.
+> - Used for gRPC microservices, high-frequency trading feeds, and cross-language IPC. Schema is **not** embedded in the data — both producer and consumer must hold the `.proto` file or generated classes. Field numbers baked into the binary encoding; changing a number breaks all consumers.
+>
+> > [!warning] Schema not self-describing
+> >
+> > Without the `.proto` or generated classes, a Protobuf blob is opaque. Distribute the schema file or use a schema registry alongside the data.
+>
+> > ---
+>
+> **Apache Avro**
+>
+> - Row-based binary format with the schema (defined as JSON) embedded in every file header. Readers do not need an external schema to decode. Compact binary, comparable to Protobuf per record. Native to Kafka with Confluent Schema Registry.
+> - Supports schema evolution: add or remove fields with default values without breaking existing consumers. Changing field types or removing fields without defaults breaks compatibility. Better than Parquet for streaming; worse for columnar analytics queries.
+>
+> > [!info] Avro schema is JSON; the payload is binary
+> >
+> > The schema block stored in the file header is valid JSON text. The records that follow are binary-encoded. Parsing the file with a text editor will show a readable JSON header followed by unreadable binary data.
+>
+> > ---
+>
+> **`Parquet.Net`**
+>
+> - NuGet library (`Parquet.Net`) for reading and writing Parquet files in C# without a Python or Spark dependency.
+> - Exposes two APIs: the low-level `DataColumn` API (explicit schema definition, column-by-column I/O) and the high-level `ParquetSerializer<T>` API (POCO/record type mapping, automatic schema). Pin the NuGet version — the API has breaking changes between minor versions.
+>
+> > [!warning] API differs from PyArrow
+> >
+> > Column access, schema inspection, and read options use different patterns than Python's `pyarrow.parquet`. PyArrow code does not translate directly to `Parquet.Net`.
+>
+> > ---
+>
+> **`Google.Protobuf`**
+>
+> - Official .NET NuGet library for Protocol Buffers. Provides `CodedOutputStream`/`CodedInputStream` for dynamic (runtime) encoding, and generates strongly typed message classes when used with `protoc`.
+> - Classes produced by `protoc` expose `ToByteArray()`, `Parser.ParseFrom()`, and all property accessors. Must regenerate C# classes whenever the `.proto` schema changes; stale generated code silently misinterprets new fields.
+>
+> > [!tip] Automate regeneration with `Grpc.Tools`
+> >
+> > Add `<PackageReference Include="Grpc.Tools" />` and `<Protobuf Include="*.proto" />` to the `.csproj`; MSBuild runs `protoc` automatically on every build.
+>
+> > ---
+>
+> **`Apache.Avro`**
+>
+> - .NET NuGet library for Avro serialization. Offers two programming models: generic API (`GenericRecord` — dynamic field access, no compile-time checking, slower) and specific/code-gen API (generated typed classes, faster, production-preferred).
+> - Integrates with Kafka and Confluent Schema Registry. `DataFileWriter` embeds the schema in the file header automatically; `DataFileReader` reads it back without needing an external schema.
+>
+> > [!info] Generic vs specific API
+> >
+> > The generic API is suitable for tools and ad-hoc queries. For production Kafka consumers and producers, use the code-generated specific API — it avoids `GenericRecord` dynamic dispatch overhead and provides compile-time field safety.
+>
+> > ---
+>
+> **`MemoryMappedFile`**
+>
+> - .NET class (`System.IO.MemoryMappedFiles`) that maps a file into the process's virtual address space, enabling zero-copy random access to binary data without explicit read calls.
+> - Used for fixed-size binary records, shared memory between processes, and inter-process communication. Not suitable for variable-length records or text data because random access requires known offsets.
+>
+> > [!warning] Not suitable for variable-length records
+> >
+> > Memory-mapped files require that record boundaries are known in advance. Use `MemoryStream` for variable-length serialized payloads and reserve `MemoryMappedFile` for fixed-stride binary structures.
+>
+> > ---
+>
+> **`BinaryPrimitives`**
+>
+> - Static class in `System.Buffers.Binary` providing explicit big-endian and little-endian read/write methods for primitive types (`ReadInt32BigEndian`, `WriteInt32LittleEndian`, etc.).
+> - Prevents endianness bugs in network protocol parsing and binary file format I/O. The default `BinaryWriter` is little-endian; most network protocols (TCP, UDP payloads) use big-endian byte order.
+>
+> > [!tip] Always be explicit about endianness
+> >
+> > Do not rely on `BinaryWriter`/`BinaryReader` defaults in cross-platform or network code. Use `BinaryPrimitives` methods with an explicit endianness suffix so the intent is visible in code review.
+>
+> > ---
+>
+> **compression codec**
+>
+> - Algorithm applied on top of serialized data to reduce its on-disk or wire size. Common codecs in C# serialization: Snappy (fast compression/decompression, moderate ratio), Zstd (balanced speed and ratio), Gzip (best ratio, slower CPU).
+> - Parquet supports per-column codec selection; typical data-lake deployments use Snappy or Zstd. Choosing the wrong codec trades CPU for I/O (or vice versa): Snappy for throughput-bound workloads, Zstd for storage-cost-sensitive workloads, Gzip for maximum compression when CPU is plentiful.
+>
+> > [!tip] Default codec recommendation
+> >
+> > Use Snappy for interactive analytics (low decompression latency), Zstd level 3–6 for batch ETL files where storage cost matters, and Gzip only for archival or external data exchange where the receiving tool does not support Snappy or Zstd.
+
 This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Protocol Buffers, Avro, and binary struct layouts — with executable read/write examples and a side-by-side performance benchmark.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Parquet** | Columnar binary format — stores data by column, not by row. Apache project, widely used in data lakes. | Read only the columns you need; skip 96%+ of data in wide tables. Compressed, typed, schema-embedded. | Parquet is not streamable — you must read/write complete files. |
-| **Protocol Buffers (Protobuf)** | Google's binary serialization — smallest payload, fastest parse. `.proto` files generate strongly typed C# classes. | gRPC microservices, high-frequency trading feeds, cross-language IPC. | Schema not embedded in data — both sides must have the `.proto` file. |
-| **Apache Avro** | Row-based binary format with schema embedded in every file. Native to Kafka ecosystems. | Schema evolution, compact wire format, streaming-friendly. | Avro schema is JSON; the data format is binary. |
-| **Parquet.NET** | .NET library for reading/writing Parquet files. | Parquet I/O in C# without Python/Spark dependency. | API differs from PyArrow — column access uses index or name lookup. |
-| **Google.Protobuf** | Official .NET library for Protocol Buffers. Code-generated from `.proto` files via `protoc`. | Strongly typed, compile-time checked message classes. | Must regenerate C# classes whenever `.proto` changes. |
-| **Apache.Avro** | .NET library for Avro serialization with generic and specific (code-gen) APIs. | Kafka integration, schema registry compatibility. | Generic API uses `GenericRecord` (dynamic) — specific API uses code-generated classes (faster). |
-| **MemoryMappedFile** | Maps a file into virtual memory for zero-copy random access to binary data. | Fixed-size records, shared memory, inter-process communication. | Not suitable for variable-length records or text data. |
-| **BinaryPrimitives** | `System.Buffers.Binary` utilities for reading/writing primitives with explicit endianness. | Network protocol parsing, binary file formats. | Default `BinaryWriter` is little-endian; network protocols are often big-endian. |
-| **compression codec** | Algorithm applied to serialized data: Snappy (fast), Zstd (balanced), Gzip (small). | 2–10x size reduction with minimal CPU overhead. | Choosing the wrong codec — Snappy for speed, Zstd for balance, Gzip for max compression. |
 
 ### What this note covers
 

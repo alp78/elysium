@@ -15,35 +15,153 @@ status: complete
 >
 > — **Jim Gray**, Turing Award lecture (1998)
 
+> [!abstract]- Summary
+>
+> Python file I/O and serialization spans multiple layers: built-in `open()` for text/binary files, standard library modules (`csv`, `json`, `yaml`, `pickle`), high-performance libraries (`orjson`, `pyarrow`, `fastavro`), and cloud-native access via `fsspec`.
+>
+> - **Read / Write / Append** — `open()` with mode strings `'r'`, `'w'`, `'a'`, `'x'`; `pathlib.Path` for cross-platform path handling; temp files via `tempfile`
+> - **CSV** — `csv.reader` / `csv.writer`; `DictReader` / `DictWriter`; pandas and Polars CSV I/O
+> - **JSON** — `json.dumps` / `json.loads`; custom encoders for `datetime` and `Decimal`; `orjson` for 3–10x throughput
+> - **YAML** — `yaml.safe_load` / `yaml.dump`; config file and CI/CD manifest patterns
+> - **Serialization & Streams** — `pickle` for Python-native objects; `struct` for binary packing; Protocol Buffers, Avro, Parquet, Arrow IPC for cross-language interchange
+> - **Encoding & Decoding** — UTF-8, Base64, hex, URL encoding
+> - **Async File I/O** — `aiofiles` with `async with` for non-blocking reads/writes in async services
+> - **Schema Validation** — Pydantic v2 `BaseModel` for runtime coercion and validation at system boundaries
+> - **Cloud Storage** — `fsspec` for filesystem-agnostic access across local, S3, GCS, and Azure Blob
+
+> [!note]- Glossary
+>
+> **`open()`** — Python's built-in function for reading and writing files; mode strings (`'r'`, `'w'`, `'a'`, `'rb'`, `'wb'`) control the operation type.
+>
+> - The foundation for all text and binary file I/O in Python; always pair with a `with` statement.
+> - Common mistake: omitting `encoding='utf-8'` — the default varies by OS (Windows uses cp1252, corrupting non-ASCII characters).
+>
+> > [!warning] `'w'` mode truncates without warning
+> >
+> > Opening an existing file with `'w'` destroys its content immediately. Use `'x'` (exclusive create) or check `Path.exists()` first for files that must be preserved.
+>
+> > ---
+>
+> **`with` statement** — Context manager that calls `close()` automatically when the block exits, even if an exception is raised.
+>
+> - Prevents resource leaks: open file handles, OS-level locks, and socket connections are released reliably.
+> - Common mistake: storing the file handle in a variable and accessing it after the `with` block — the file is already closed and further reads/writes raise `ValueError`.
+>
+> > [!tip] Prefer `with` over manual `close()`
+> >
+> > Manual `f.close()` in a `try/finally` block is verbose and error-prone. The `with` statement is the canonical Python idiom and is enforced by most linters.
+>
+> > ---
+>
+> **`pathlib.Path`** — Object-oriented filesystem path API that replaces `os.path` string manipulation; supports the `/` operator for joining segments.
+>
+> - Cross-platform: `.Path` handles Windows backslashes and Unix forward slashes transparently.
+> - Common mistake: mixing `os.path` strings with `Path` objects in the same expression — they interoperate but produce inconsistent types and reduce readability.
+>
+> > [!info] `Path` replaces the full `os.path` module
+> >
+> > `Path.read_text()`, `Path.write_text()`, `Path.exists()`, `Path.glob()`, and `Path.stat()` cover the most common `os.path` and `os` operations in a single, chainable API.
+>
+> > ---
+>
+> **CSV** — Comma-Separated Values; a plain-text tabular format with no schema, no data types, and no support for nesting.
+>
+> - Universal interchange format for flat data: spreadsheet exports, database dumps, pipeline staging files, and log aggregates.
+> - Common mistake: parsing CSV manually with `split(',')` — this breaks on quoted fields that contain commas (e.g., `"Smith, John"`). Always use the `csv` module.
+>
+> > [!warning] Manual `split(',')` is not a CSV parser
+> >
+> > The `csv` module handles quoting, escaping, and dialect differences (delimiter, line terminator, quotechar) correctly. `split(',')` silently corrupts records with embedded commas.
+>
+> > ---
+>
+> **JSON** — JavaScript Object Notation; a text-based, human-readable format natively supported by web APIs, configuration files, and message brokers.
+>
+> - The default interchange format for REST APIs; also used for Kafka message payloads, GCS object metadata, and pipeline configuration.
+> - Common mistake: passing `datetime`, `Decimal`, or custom class instances to `json.dumps()` without a custom encoder — these types raise `TypeError` by default.
+>
+> > [!info] `json.dumps` requires a custom encoder for non-primitive types
+> >
+> > Subclass `json.JSONEncoder` and override `default()`, or use `orjson` which handles `datetime`, `UUID`, and `numpy` arrays natively without extra configuration.
+>
+> > ---
+>
+> **orjson** — High-performance JSON library backed by Rust; 3–10x faster than the standard `json` module with native support for `datetime`, `UUID`, and `numpy`.
+>
+> - Used on hot paths: large API response serialization, high-throughput Kafka producers, and batch export jobs where JSON encoding is a bottleneck.
+> - Common mistake: `orjson.dumps()` returns `bytes`, not `str` — call `.decode('utf-8')` when a string is required (e.g., writing to a text file or HTTP response body).
+>
+> > [!tip] Drop-in replacement for `json` on performance-sensitive paths
+> >
+> > `orjson.dumps(obj)` and `orjson.loads(data)` are API-compatible with the standard library for common types. Switch by aliasing: `import orjson as json` — but note the `bytes` return type.
+>
+> > ---
+>
+> **YAML** — YAML Ain't Markup Language; a human-readable config format using indentation-based nesting, commonly used for CI/CD pipelines, Kubernetes manifests, and application config.
+>
+> - Preferred over JSON for config files edited by humans: supports comments, multi-line strings, and anchors/aliases for DRY configuration.
+> - Common mistake: using `yaml.load()` instead of `yaml.safe_load()` — `yaml.load()` can execute arbitrary Python code embedded in the YAML document.
+>
+> > [!danger] `yaml.load()` executes arbitrary code
+> >
+> > Any YAML document loaded with `yaml.load()` can embed Python object constructors. Always use `yaml.safe_load()` for all external input. Reserve `yaml.load()` only for fully trusted, application-internal documents — and even then, prefer `safe_load`.
+>
+> > ---
+>
+> **pickle** — Python-native binary serialization that can serialize arbitrary Python objects including class instances, closures, and lambdas.
+>
+> - Used for ML model persistence (scikit-learn pipelines), inter-process communication via `multiprocessing.Queue`, and short-lived caching where schema portability is not required.
+> - Common mistake: treating pickle as a general-purpose serialization format — pickle files are Python-version-sensitive and not portable to other languages.
+>
+> > [!danger] Unpickling untrusted data executes arbitrary code
+> >
+> > `pickle.loads()` on a crafted payload can execute any Python code during deserialization. Never load pickle data from untrusted sources (external APIs, user uploads, public object storage). Use JSON or Protobuf for cross-system data exchange.
+>
+> > ---
+>
+> **Pydantic** — Data validation library that uses Python type hints to validate, coerce, and document structured data at runtime; v2 is backed by a Rust core.
+>
+> - Enforces schema at system boundaries: API request bodies, Kafka message deserialization, CSV row validation, and configuration loading.
+> - Common mistake: using Pydantic v1 `.parse_obj()` with a v2 installation — v2 uses `model_validate()` and raises `AttributeError` on the v1 API.
+>
+> > [!info] Pydantic v2 API differs significantly from v1
+> >
+> > Key v2 changes: `model_validate()` replaces `parse_obj()`, `model_dump()` replaces `dict()`, and validators use `@field_validator` instead of `@validator`. Check the installed version with `pydantic.VERSION` before migrating.
+>
+> > ---
+>
+> **encoding** — The mapping between characters and bytes; UTF-8 is the universal default for all text data in modern systems.
+>
+> - Incorrect encoding corrupts non-ASCII characters: accented names (café), currency symbols (€, ¥), CJK characters (日本語), and emoji.
+> - Common mistake: assuming ASCII — any non-English text in financial data (company names, city names, currency symbols) requires explicit UTF-8 handling at every I/O boundary.
+>
+> > [!warning] Platform default encoding is not UTF-8 on Windows
+> >
+> > Python on Windows defaults to `cp1252` for `open()` calls without `encoding=`. A file written on Linux (UTF-8) and read on Windows without specifying encoding silently corrupts non-ASCII bytes. Pass `encoding='utf-8'` on every `open()` call.
+>
+> > ---
+>
+> **async file I/O** — Non-blocking file operations using `aiofiles`; provides `async with aiofiles.open()` compatible with `asyncio` event loops.
+>
+> - Required in high-concurrency async services (FastAPI, aiohttp) where a blocking `open()` call would stall the event loop and degrade throughput.
+> - Common mistake: assuming `aiofiles` is truly async at the OS level — it offloads I/O to a thread pool internally; it prevents event loop blocking but does not provide kernel-level async I/O.
+>
+> > [!info] `aiofiles` uses a thread pool, not OS async I/O
+> >
+> > `aiofiles` wraps synchronous file operations in `asyncio.get_event_loop().run_in_executor()`. This prevents blocking the event loop but does not achieve the same concurrency model as `io_uring` (Linux) or IOCP (Windows). For extreme throughput, consider memory-mapped files or in-process buffers.
+>
+> > ---
+>
+> **fsspec** — Filesystem-agnostic file access library; provides a unified `open()` / `glob()` / `ls()` API across local disk, S3, GCS, Azure Blob, HDFS, and HTTP.
+>
+> - Enables pipeline code that runs unchanged in local development (local filesystem) and cloud deployment (GCS or S3) by swapping the URI scheme (`file://` vs `gs://` vs `s3://`).
+> - Common mistake: assuming `fsspec` handles authentication automatically — each backend requires its own credentials (`GOOGLE_APPLICATION_CREDENTIALS` for GCS, `AWS_ACCESS_KEY_ID` for S3).
+>
+> > [!tip] Use `fsspec` URIs to decouple pipeline code from storage backend
+> >
+> > Pass storage paths as URIs (`gs://bucket/path`, `s3://bucket/path`) rather than local paths. `fsspec.open(uri)` resolves the correct filesystem implementation at runtime, making the same code runnable in unit tests (local) and production (cloud) without modification.
+
 Python provides multiple layers for file I/O and serialization — from built-in `open()` for text/binary files through `csv`, `json`, `yaml`, and `pickle` modules, to high-performance libraries like `orjson`, `pyarrow`, and `fastavro`. This note covers reading/writing files, structured data formats, encoding, async I/O, schema validation with Pydantic, and cloud-native storage patterns.
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **`open()`** | Python's built-in function for reading/writing files. Mode strings (`'r'`, `'w'`, `'a'`, `'rb'`, `'wb'`) control the operation. | The foundation for all file I/O in Python. | Not specifying `encoding='utf-8'` — the default varies by OS (Windows uses cp1252). |
-| **`with` statement** | Context manager ensuring `close()` is called even if an exception occurs. | Prevents resource leaks (open file handles, dangling locks). | Accessing the file handle after the `with` block — it's already closed. |
-| **pathlib.Path** | Object-oriented API for filesystem paths — replaces `os.path` string manipulation. | Cross-platform path operations with `/` operator and method chaining. | Mixing `os.path` strings with `Path` objects — they're interoperable but inconsistent. |
-| **CSV** | Comma-Separated Values — a plain-text tabular format with no schema, no types, no nesting. | Universal interchange format for flat data (exports, imports, logs). | Not using the `csv` module — manual `split(',')` breaks on quoted fields with commas. |
-| **JSON** | JavaScript Object Notation — text-based, human-readable, widely supported for APIs and config. | The default interchange format for web APIs and configuration files. | `json.dumps` doesn't handle `datetime`, `Decimal`, or custom objects — needs a custom encoder. |
-| **orjson** | High-performance JSON library (Rust-backed) — 3–10x faster than `json` module, supports `datetime` natively. | Hot paths, large JSON payloads, API serialization. | Returns `bytes`, not `str` — decode with `.decode('utf-8')` when a string is needed. |
-| **YAML** | YAML Ain't Markup Language — human-readable config format with indentation-based nesting. | Configuration files, CI/CD pipelines, Kubernetes manifests. | `yaml.safe_load()` is safe; `yaml.load()` allows arbitrary code execution. |
-| **pickle** | Python-specific binary serialization — serializes arbitrary Python objects including classes and closures. | Caching, inter-process communication, ML model persistence. | Pickle is insecure — loading untrusted pickles executes arbitrary code. Never unpickle data from untrusted sources. |
-| **Pydantic** | Data validation library using Python type hints — validates, coerces, and documents data at runtime. | Schema enforcement at system boundaries (API input, CSV parsing, Kafka messages). | Pydantic v2 uses `model_validate()`, not v1's `parse_obj()`. |
-| **encoding** | Mapping between characters and bytes. UTF-8 is the universal default for text data. | Incorrect encoding corrupts non-ASCII characters (€, ñ, 日本語). | Assuming ASCII — any non-English text requires explicit UTF-8. |
-| **async file I/O** | `aiofiles` library provides `async with aiofiles.open()` for non-blocking file operations. | High-concurrency servers that must not block the event loop on disk I/O. | `aiofiles` runs file I/O in a thread pool — it's not truly async at the OS level. |
-| **fsspec** | Filesystem-agnostic file access — same API for local, S3, GCS, Azure Blob, and HTTP. | Write pipeline code that works unchanged across local dev and cloud deployment. | Each backend requires its own credentials/config — `fsspec` doesn't handle authentication automatically. |
-
-### What this note covers
-
-- **Read, Write, Append Files** — `open()`, `pathlib.Path`, text/binary modes, encoding, temp files
-- **CSV Files** — `csv.reader`/`csv.writer`, `DictReader`/`DictWriter`, pandas/Polars CSV I/O
-- **JSON** — `json.dumps`/`json.loads`, custom encoders, `orjson` for performance
-- **YAML** — `yaml.safe_load`/`yaml.dump`, config file patterns
-- **Serialization & Streams** — `pickle`, `struct`, Protocol Buffers, Avro, Parquet, Arrow IPC
-- **Encoding & Decoding** — UTF-8, Base64, hex, URL encoding
-- **Async File I/O** — `aiofiles`, async patterns
-- **Schema Validation** — Pydantic models for structured data validation
-- **Cloud Storage** — `fsspec` for filesystem-agnostic access
 
 ```python
 import os

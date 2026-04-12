@@ -13,8 +13,6 @@ status: complete
 
 # Defensive Scripting — The `set` Flags That Save Careers
 
-Every production script should begin with a one-line safety declaration that enables the three mechanisms preventing the most common and most dangerous categories of scripting bugs. Without it, your script is a loaded gun pointed at your data.
-
 > [!quote]
 > "The most dangerous phrase in the language is, 'We've always done it this way.'"
 >
@@ -23,6 +21,173 @@ Every production script should begin with a one-line safety declaration that ena
 > "Bash without `set -euo pipefail` is a loaded gun pointed at your data."
 >
 > — Shell scripting proverb
+
+> [!abstract]- Summary
+>
+> Covers the three bash strict-mode flags and their PowerShell equivalents — the minimum safety declarations that prevent silent data corruption in every production script.
+>
+> **Bash strict mode**
+> - `set -e`: exit immediately on any non-zero exit code
+> - `set -u`: treat unset variables as errors; prevents catastrophic empty-variable expansions
+> - `set -o pipefail`: propagate failures from any pipeline stage, not just the last command
+> - `${VAR:-default}` / `${VAR:?error}`: parameter expansions for optional and required variables under `set -u`
+>
+> **Cleanup and signal handling**
+> - `trap cleanup EXIT`: registers a function that runs on any exit (normal, error, or signal)
+> - Bash production template combining all four mechanisms with `SCRIPT_DIR`, `mktemp`, and a `log` function
+>
+> **PowerShell equivalents**
+> - `$ErrorActionPreference = 'Stop'`: equivalent of `set -e`; makes non-terminating errors terminating
+> - `Set-StrictMode -Version Latest`: equivalent of `set -u`; catches uninitialized variables and bad expressions
+> - `try/catch/finally`: equivalent of `set -e` + `trap EXIT`; `finally` runs cleanup unconditionally
+> - `$LASTEXITCODE`: must be checked manually after native executables — `$ErrorActionPreference` does not cover them
+>
+> **Operations and safety**
+> - Use in every production script running in CI/CD, cron, Airflow, or any automated context
+> - Do not use `set -euo pipefail` in interactive shells or sourced library files
+> - 4 danger/warning callouts; 1 Recommendations table (8 rows); 1 Troubleshooting table (6 rows)
+
+> [!note]- Glossary
+>
+> **`set -e`**
+> - Bash flag: exit immediately when any command returns a non-zero exit code.
+> - Prevents downstream steps from executing on bad or missing input — the single most important safety flag.
+>
+> > [!warning] Does not catch all failures
+> >
+> > Commands inside `if` conditions, before `||`, in subshells, and in command substitutions do not trigger `set -e`. These are intentional escape hatches, not bugs.
+>
+> ---
+>
+> **`set -u`**
+> - Bash flag: treat any reference to an unset variable as an immediate error.
+> - Prevents empty variables from silently expanding in destructive commands such as `rm -rf "$DIR"/*`.
+>
+> > [!danger] Empty variable in destructive command
+> >
+> > If `STAGING_DIR` is unset without `set -u`, `rm -rf "$STAGING_DIR"/*` expands to `rm -rf /*`. This failure mode has caused real-world data-center outages.
+>
+> ---
+>
+> **`set -o pipefail`**
+> - Bash flag: a pipeline's exit code becomes the exit code of the first command that fails, not the last.
+> - Without it, `failing_cmd | wc -l` exits 0 even when `failing_cmd` fails, masking the root cause.
+>
+> > [!warning] Avoid in interactive shells
+> >
+> > `pipefail` causes confusing exits on benign patterns like `grep pattern | head` (where `head` closes the pipe early with SIGPIPE). Enable it in scripts only, never in `.bashrc`.
+>
+> ---
+>
+> **`set -euo pipefail`**
+> - The combined strict-mode header: enables exit-on-error, unset-variable detection, and pipeline-failure propagation in one declaration.
+> - The recommended second line of every production bash script, immediately after the shebang.
+>
+> > [!warning] Order matters
+> >
+> > The flags only apply to commands that follow them. Placing `set -euo pipefail` after any commands means those earlier commands run without protection.
+>
+> ---
+>
+> **`trap`**
+> - Bash built-in: registers a handler (function or command) to execute when the script receives a signal or exits.
+> - `trap cleanup EXIT` is the shell equivalent of a `finally` block — cleanup runs regardless of how the script terminates.
+>
+> > [!warning] ERR trap is not inherited
+> >
+> > `trap 'handler' ERR` fires only in the main script scope. Functions and subshells do not inherit it unless `set -E` (`set -o errtrace`) is also enabled. Prefer `trap cleanup EXIT` for reliability.
+>
+> ---
+>
+> **Exit code**
+> - A numeric value (0–255) returned by every process on completion; 0 = success, any other value = failure, stored in `$?`.
+> - Every `set` flag and chaining operator (`&&`, `||`) reads exit codes to decide control flow.
+>
+> > [!info] Non-zero does not always mean error
+> >
+> > `grep` returns 1 when it finds no matches — a non-zero exit that is often intentional. With `set -e` active, use `grep pattern file || true` to allow this case without disabling the flag globally.
+>
+> ---
+>
+> **`${VAR:-default}`**
+> - Parameter expansion: returns `default` if `VAR` is unset or empty, without triggering a `set -u` error.
+> - Standard pattern for optional configuration variables that have a sensible fallback value.
+>
+> > [!info] Three related operators
+> >
+> > `:-` (unset or empty → default), `-` (unset only → default), `:?` (unset or empty → exit with error message). Confusing them is a common source of subtle bugs under strict mode.
+>
+> ---
+>
+> **`${VAR:?error message}`**
+> - Parameter expansion: exit immediately with a custom error message if `VAR` is unset or empty.
+> - Enforces required environment variables at script startup, before any destructive operations run.
+>
+> > [!danger] Place required-variable checks before first use
+> >
+> > A missing required variable caught by `:?` at line 5 is harmless. The same variable silently empty at line 50 inside a `rm -rf` or `psql` command can destroy data or connect to the wrong target.
+>
+> ---
+>
+> **`$ErrorActionPreference`**
+> - PowerShell preference variable: controls behavior when a non-terminating error occurs. Default is `Continue`.
+> - Set to `Stop` at the top of every script — the direct equivalent of `set -e`.
+>
+> > [!warning] Does not cover native executables
+> >
+> > `$ErrorActionPreference = 'Stop'` only affects PowerShell cmdlets and .NET method errors. External tools (`python.exe`, `git.exe`) return non-zero exit codes that must be checked via `$LASTEXITCODE` manually.
+>
+> ---
+>
+> **`Set-StrictMode`**
+> - PowerShell cmdlet: enforces best-practice rules including detection of uninitialized variables, uninitialized object properties, and calls to non-existent functions.
+> - `-Version Latest` enables all available checks — the PowerShell equivalent of `set -u`.
+>
+> > [!warning] Distinct from `$ErrorActionPreference`
+> >
+> > `Set-StrictMode` controls structural code rules (variable initialization, syntax). `$ErrorActionPreference` controls error propagation behavior. Both must be set; one does not substitute for the other.
+>
+> ---
+>
+> **`try/catch/finally`**
+> - PowerShell structured error handling: `try` wraps risky code, `catch` handles thrown exceptions, `finally` runs cleanup unconditionally.
+> - Equivalent of bash `set -e` + `trap EXIT`; `finally` is the right place for temp-file cleanup and connection teardown.
+>
+> > [!warning] `catch` is bypassed without `Stop`
+> >
+> > Non-terminating errors bypass `catch` entirely unless `$ErrorActionPreference = 'Stop'` is set. The `try` block will complete and `finally` will run, but the error is silently ignored.
+>
+> ---
+>
+> **`$LASTEXITCODE`**
+> - PowerShell automatic variable: holds the exit code of the most recently executed native executable.
+> - Must be checked explicitly after every call to an external tool (`python`, `git`, `dotnet`) because `$ErrorActionPreference` does not monitor native process exit codes.
+>
+> > [!danger] Silent success on external failure
+> >
+> > Without checking `$LASTEXITCODE`, a Python script that exits 1 appears to succeed inside a PowerShell pipeline. Downstream steps then operate on missing or corrupt output. Always `throw` on non-zero `$LASTEXITCODE` inside a `try` block.
+>
+> ---
+>
+> **SIGPIPE**
+> - Unix signal sent to a process when it writes to a pipe whose read end has already closed.
+> - Relevant to `set -o pipefail`: `grep pattern | head -5` causes `grep` to receive SIGPIPE once `head` has read enough lines, producing a non-zero exit that `pipefail` would treat as a failure in a script.
+>
+> > [!info] Suppress in scripts using `|| true`
+> >
+> > When intentional early-termination of a pipeline is expected (e.g., `| head`, `| first_match`), append `|| true` to the pipeline or wrap the section in `set +o pipefail` … `set -o pipefail` to avoid spurious exits.
+>
+> ---
+>
+> **`$PSScriptRoot`**
+> - PowerShell automatic variable: the directory containing the currently executing script file.
+> - Equivalent of `$(dirname "${BASH_SOURCE[0]}")` in bash; used in production templates to resolve paths relative to the script's own location, regardless of the caller's working directory.
+>
+> > [!info] Only populated in script files
+> >
+> > `$PSScriptRoot` is empty when commands are run interactively in the console. Use it only inside `.ps1` script files, not in interactive sessions or the REPL.
+
+Every production script should begin with a one-line safety declaration that enables the three mechanisms preventing the most common and most dangerous categories of scripting bugs. Without it, your script is a loaded gun pointed at your data.
 
 > [!tip] Related pattern
 >
@@ -33,41 +198,19 @@ The diagram below shows how the three bash flags and `trap` interact as a layere
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
-    A([Script starts]) --> B[set -e\nexit on command failure]
-    B --> C[set -u\nerror on unset variable]
-    C --> D[set -o pipefail\npropagate pipeline failures]
-    D --> E[trap EXIT\nguaranteed cleanup]
+    A([Script starts]) --> B[set -e<br>exit on command failure]
+    B --> C[set -u<br>error on unset variable]
+    C --> D[set -o pipefail<br>propagate pipeline failures]
+    D --> E[trap EXIT<br>guaranteed cleanup]
     E --> F([Safe execution])
 
-    B -- "command fails" --> G[[Script exits\nnon-zero]]
+    B -- "command fails" --> G[[Script exits<br>non-zero]]
     C -- "unset variable" --> G
     D -- "pipeline stage fails" --> G
     G --> E
 ```
 
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `set -e` | A bash flag that causes the script to exit immediately when any command returns a non-zero exit code. Without it, failures are silently ignored. | Prevents downstream steps from running on corrupted or missing input. The single most important safety flag for production scripts. | Assuming `set -e` catches all failures. Commands in `if` conditions, before `\|\|`, or in subshells do not trigger it. |
-| `set -u` | A bash flag that treats references to unset variables as errors, causing immediate exit. Without it, unset variables silently expand to empty strings. | Prevents the catastrophic `rm -rf "$UNSET_VAR"/*` scenario where an empty variable expands to `rm -rf /*`. | Not knowing the `${VAR:-default}` escape hatch for optional variables under `set -u`. |
-| `set -o pipefail` | A bash flag that makes a pipeline return the exit code of the first command that fails, rather than the last command. | Without it, `broken_cmd \| wc -l` reports success even when `broken_cmd` fails. | Enabling `pipefail` in interactive shells -- benign patterns like `grep pattern \| head` trigger exit-on-error when `head` closes the pipe early. |
-| `set -euo pipefail` | The combined strict mode header for bash scripts. Enables exit-on-error, unset-variable detection, and pipeline failure propagation in one line. | The recommended first line after the shebang in every production bash script. | Placing it after commands that have already run -- the flags only apply to commands that follow them. |
-| `trap` | A bash built-in that registers a handler to run when the script receives a signal or exits. | `trap cleanup EXIT` ensures temp files, lock files, and connections are always cleaned up, even on error. | Using `trap ... ERR` without `set -E` -- ERR traps are not inherited by functions or subshells by default. |
-| Exit code | A numeric value (0-255) that every process returns when it finishes. 0 means success; any other value means failure. Stored in `$?`. | Every `set` flag and chaining operator reads exit codes to decide behavior. | Assuming a script succeeded because it reached the last line. Without `set -e`, earlier failures are silently ignored. |
-| `${VAR:-default}` | A bash parameter expansion that returns `default` if `VAR` is unset or empty, without triggering a `set -u` error. | The standard way to define optional variables with fallback values in strict-mode scripts. | Confusing `:-` (unset or empty) with `-` (unset only) and `:?` (exit with error if unset). |
-| `$ErrorActionPreference` | A PowerShell preference variable controlling behavior on non-terminating errors. Default is `Continue`. Set to `Stop` for fail-fast behavior. | The PowerShell equivalent of `set -e`. Must be set to `Stop` for `try/catch` to work on non-terminating errors. | It does not affect native executables -- `$LASTEXITCODE` must be checked manually after external tools. |
-| `Set-StrictMode` | A PowerShell cmdlet that enforces rules such as detecting uninitialized variables. | The PowerShell equivalent of `set -u`. `-Version Latest` enables all available checks. | Confusing it with `$ErrorActionPreference` -- they control different things. |
-| `try/catch/finally` | PowerShell structured error handling. `try` wraps risky code, `catch` handles errors, `finally` runs cleanup unconditionally. | The PowerShell equivalent of bash `set -e` + `trap EXIT`. | Non-terminating errors bypass `catch` unless `$ErrorActionPreference = 'Stop'` is set. |
-
-## What this note covers
-
-- The three bash strict-mode flags (`set -e`, `set -u`, `set -o pipefail`) and when each triggers
-- The `${VAR:-default}` and `${VAR:?error}` parameter expansions for safe variable handling
-- The `trap` built-in for guaranteed cleanup on exit, error, or signal
-- Complete production script templates for both bash and PowerShell
-- PowerShell equivalents: `$ErrorActionPreference`, `Set-StrictMode`, `try/catch/finally`, `$LASTEXITCODE`
 ## Linux | bash | defensive scripting tools
 
 Bash provides four complementary safety mechanisms that together eliminate the most common categories of silent failure in shell scripts. They are enabled at the top of every production script and apply for the lifetime of that shell session.

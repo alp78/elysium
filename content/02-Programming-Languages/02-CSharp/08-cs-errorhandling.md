@@ -15,32 +15,169 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
+> [!abstract]- Summary
+>
+> **try / catch / finally**
+> - `try` wraps risky code; `catch` blocks handle specific exception types top-to-bottom (first match wins); `finally` guarantees cleanup whether or not an exception occurred.
+> - Exception filters (`catch (Ex ex) when (condition)`) add conditional logic without unwinding the stack.
+> - `throw;` re-throws with the original stack trace intact; `throw ex;` resets the trace — never use `throw ex;`.
+> - Exception chaining: `throw new WrapperException("msg", ex)` preserves the root cause in `InnerException`.
+>
+> **Exception Types and Hierarchy**
+> - All exceptions inherit from `System.Exception`; `SystemException` covers most built-in runtime errors.
+> - Key properties: `Message`, `StackTrace`, `InnerException` (root cause chain), `Data` (key-value diagnostic context).
+> - Hierarchical catching: `catch (IOException)` matches both `FileNotFoundException` and `DirectoryNotFoundException`.
+> - Common DE types: `FormatException` (parse failures), `KeyNotFoundException` (missing columns), `OverflowException` (checked arithmetic).
+>
+> **Custom Exceptions**
+> - Subclass `Exception` to add structured fields (`RowNumber`, `ColumnName`, `RawValue`) that built-in types lack.
+> - Always implement three standard constructors: parameterless, message-only, message+inner — required for serialization and wrapping.
+> - Chain custom exceptions (`CsvParseException` → `PipelineException`) to expose the full error path from root cause to pipeline stage.
+>
+> **Resource Cleanup**
+> - `IDisposable` exposes a single `Dispose()` method; `using (var r = ...) { }` calls it automatically at scope exit, even on exception.
+> - `using var r = ...;` (C# 8+) disposes at end of enclosing method scope, reducing nesting.
+> - `IAsyncDisposable` + `await using` covers async resources (async streams, async DB connections).
+>
+> **Data Engineering Patterns**
+> - Error accumulation: return `ParseResult` records instead of throwing; partition valid/invalid rows; route errors to dead-letter tables.
+> - `TryParse` avoids exceptions for expected bad data — orders of magnitude faster than `try/catch` per row at scale.
+> - `AggregateException` wraps parallel task failures; use `.Flatten().InnerExceptions` to inspect all errors, not just the first.
+> - Retry with exponential backoff: cap retries with `maxAttempts`, `throw` after exhaustion; use `catch when (attempt < max)` to avoid catching the final attempt.
+
+> [!note]- Glossary
+>
+> **`try` / `catch` / `finally`**
+>
+> - The foundational structured exception handling construct in C#. `try { }` encloses code that may throw; one or more `catch (ExceptionType ex) { }` blocks handle specific types in top-to-bottom order (first match wins); `finally { }` executes unconditionally whether the `try` succeeded or threw.
+> - Used for I/O operations, network calls, external data parsing, and any operation with failure modes outside the caller's control. For expected conditions such as format validation, prefer `TryParse` or null checks — exceptions carry runtime cost and obscure control flow.
+>
+> > [!warning] Catch order controls which handler fires
+> >
+> > Placing `catch (Exception)` before `catch (SqlException)` means all SQL errors are caught by the general handler and the specific retry logic never runs. Always order catch blocks from most specific subclass to most general base class.
+>
+> > ---
+>
+> **exception filter (`catch when`)**
+>
+> - `catch (Exception ex) when (condition)` adds a boolean guard to a catch block: the exception is caught only if the condition evaluates to `true`. Unlike catching and re-throwing, a `false` filter does not unwind the stack — the runtime skips the block and evaluates the next one.
+> - Enables catching the same exception type differently based on runtime context, for example distinguishing transient from permanent errors, or strict mode from lenient mode, without duplicating catch logic.
+>
+> > [!warning] Filter expressions execute before stack unwind
+> >
+> > Side effects in a `when (...)` predicate (logging, mutations, I/O) run even when the filter returns `false` and the catch block never executes. Keep filter expressions pure — no mutations, no logging, no I/O.
+>
+> > ---
+>
+> **`throw` / `throw ex`**
+>
+> - `throw;` (bare) re-throws the active exception while preserving the original `StackTrace` intact — the trace still points to the actual error origin. `throw ex;` re-throws an exception object and resets `StackTrace` to the current line, destroying the information needed to locate the original fault.
+> - Use bare `throw;` to propagate an exception up the call stack after partial handling. Use `throw new WrapperException("context", ex)` to add domain context while keeping the root cause accessible via `InnerException`. Never use `throw ex;`.
+>
+> > [!danger] `throw ex;` destroys the stack trace
+> >
+> > Once the original `StackTrace` is overwritten by `throw ex;`, the root cause line is permanently lost — even in a debugger. The only recovery is to reproduce the error in a fresh run.
+>
+> > ---
+>
+> **inner exception**
+>
+> - The `InnerException` property on `System.Exception` holds a reference to the original exception that caused the current one. Set it by passing the caught exception as the second constructor argument: `throw new PipelineException("msg", ex)`. The chain can be arbitrarily deep and is traversed by `ex.InnerException?.InnerException` or by iterating with `GetBaseException()`.
+> - Essential for domain-specific wrapping: a `CsvParseException` wrapping a `FormatException` tells the caller both that the pipeline parse step failed and which low-level format violation caused it. Omitting the inner exception loses the root cause.
+>
+> > [!warning] Omitting the inner exception loses the root cause
+> >
+> > `throw new PipelineException("Parse failed")` without passing `ex` discards the original `FormatException`. Downstream catch blocks and logging tools see only the wrapper message with no evidence of what actually went wrong.
+>
+> > ---
+>
+> **`System.Exception`**
+>
+> - The root base class for all exception types in .NET. Key instance properties: `Message` (human-readable description), `StackTrace` (call chain at the point of throw), `InnerException` (chained cause), `Data` (`IDictionary` of arbitrary key-value diagnostic context). All custom and built-in exceptions inherit these.
+> - `catch (Exception)` matches the entire hierarchy including critical runtime errors like `OutOfMemoryException` and `StackOverflowException` that should almost never be handled at the application level. Use specific types in production catch blocks; reserve `catch (Exception)` for top-level global handlers only.
+>
+> > [!danger] `catch (Exception)` catches unrecoverable runtime errors
+> >
+> > `OutOfMemoryException` and `StackOverflowException` inherit from `Exception`. Catching and swallowing them allows the process to continue in a corrupted state. Global handlers should log and re-throw, not suppress.
+>
+> > ---
+>
+> **custom exception**
+>
+> - A user-defined class that inherits from `Exception` (or a subclass) and adds structured domain-specific properties such as `RowNumber`, `ColumnName`, `PipelineName`, or `Stage`. Enables precise catching (`catch (CsvParseException)`) that is impossible with generic built-in types.
+> - Always implement the three standard constructors: parameterless `()`, message-only `(string message)`, and message-plus-inner `(string message, Exception inner)`. These are required for `XmlSerializer`, binary serialization, and proper wrapping by higher-level exception types.
+>
+> > [!warning] Missing standard constructors breaks serialization and wrapping
+> >
+> > A custom exception without the three standard constructors cannot be serialized across AppDomain boundaries or wrapped by framework exception containers. At minimum, always include all three, even if the bodies simply delegate to `base(...)`.
+>
+> > ---
+>
+> **`IDisposable`**
+>
+> - A .NET interface with a single method `void Dispose()`. Implemented by classes that hold unmanaged resources — file handles, database connections, network sockets, GDI handles — to provide deterministic release. Without `Dispose()`, the resource remains allocated until the garbage collector finalizes the object, which may be indefinitely delayed in a long-running service.
+> - The `using` statement and `using` declaration are the standard consumers of `IDisposable`. When implementing `IDisposable`, guard against double-dispose with a `_disposed` flag and throw `ObjectDisposedException` on method calls after disposal.
+>
+> > [!danger] Undisposed resources cause connection pool exhaustion
+> >
+> > A `SqlConnection` not wrapped in `using` holds a pool slot open indefinitely. In a service processing thousands of requests, pool exhaustion produces `SqlException: Timeout expired` errors with no obvious database-side cause.
+>
+> > ---
+>
+> **`using` statement**
+>
+> - `using (var resource = new T()) { body }` — a syntactic construct that guarantees `resource.Dispose()` is called at the closing brace, even if an exception is thrown inside the body. Equivalent to `try { body } finally { resource?.Dispose(); }`.
+> - Works with any type that implements `IDisposable`. The resource variable is scoped to the block and cannot be used after the closing brace. Use for `StreamReader`, `SqlConnection`, `HttpClient` (when not DI-managed), transactions, and any other resource with a bounded lifetime.
+>
+> > [!warning] `using` only works with `IDisposable` types
+> >
+> > The compiler rejects `using` on a type that does not implement `IDisposable`. For async resources, use `await using` with `IAsyncDisposable` instead.
+>
+> > ---
+>
+> **`using` declaration**
+>
+> - `using var resource = new T();` (C# 8+) — disposes `resource` when it goes out of scope at the end of the enclosing block or method, not at an explicit closing brace. Reduces nesting for single-resource patterns compared to the block form.
+> - The disposal point is the end of the enclosing scope, not the line where `using var` appears. If the resource must be disposed before the end of the method (e.g., to release a lock or close a file before subsequent code reads it), use the block form instead.
+>
+> > [!warning] Disposal occurs at end of enclosing scope, not at the `using` line
+> >
+> > If a `using var conn = ...` resource must be released before subsequent code in the same method (for example, to free a lock before reading the result), use the block `using (var conn = ...) { }` form to control the exact disposal boundary.
+>
+> > ---
+>
+> **`AggregateException`**
+>
+> - An exception container produced by `Task.WaitAll`, `Task.WhenAll`, and `Parallel.ForEach` when multiple concurrent operations fail. Holds a collection of individual exceptions in `InnerExceptions` (plural `IReadOnlyCollection<Exception>`). `InnerException` (singular) holds only the first entry — never use the singular property when multiple failures are possible.
+> - `await Task.WhenAll(tasks)` unwraps `AggregateException` and throws the first inner exception directly; the full list is still accessible on the faulted task via `task.Exception!.Flatten().InnerExceptions`. `.Flatten()` unwraps nested `AggregateException` instances that arise when tasks themselves throw `AggregateException`.
+>
+> > [!warning] `InnerException` exposes only the first failure
+> >
+> > Using `catch (AggregateException ae) { log(ae.InnerException); }` silently discards all failures after the first. Always iterate `ae.Flatten().InnerExceptions` to capture every error from the parallel run.
+>
+> > ---
+>
+> **error accumulation**
+>
+> - A pipeline pattern where processing continues through all input records and failures are collected into a list or result type rather than thrown immediately. At the end of the run, valid records are routed to output and failures are routed to a dead-letter table or reported in aggregate.
+> - Implemented with a `ParseResult` record or similar discriminated type that carries both the parsed value and an optional error string. Avoids the overhead of `try/catch` per row — `TryParse` and conditional checks are orders of magnitude faster at scale.
+>
+> > [!warning] Forgetting to inspect the error list silently swallows failures
+> >
+> > An error accumulation pattern that collects failures but never checks the list at the end is functionally equivalent to an empty catch block. Always assert or log `errors.Count` after the processing loop.
+>
+> > ---
+>
+> **retry with backoff**
+>
+> - A resilience pattern that re-attempts a failing async operation up to `maxAttempts` times, with an increasing delay (`delayMs * attempt`) between retries to avoid hammering a recovering service. Transient failures — network timeouts, connection resets, rate-limit responses — are candidates; permanent failures (invalid credentials, schema mismatch) should not be retried.
+> - Implemented with `catch (Exception ex) when (attempt < maxAttempts)` so the final attempt is not caught and propagates naturally. Always `throw` after exhaustion rather than returning a default — silent fallback masks systematic failures.
+>
+> > [!danger] Retry without a maximum causes infinite loops
+> >
+> > A retry loop without a hard `maxAttempts` ceiling will retry indefinitely on a permanently failing endpoint, blocking the thread and consuming resources until the process is killed. Always set an explicit limit and re-throw after exhaustion.
+
 C# uses structured exception handling with `try`/`catch`/`finally` blocks, a class-based exception hierarchy rooted in `System.Exception`, and the `using` pattern for deterministic resource cleanup. This note covers exception catching and filtering, the built-in exception type tree, custom domain exceptions, `IDisposable`/`using`, and data-engineering patterns like error accumulation and retry with exponential backoff.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **try / catch / finally** | `try { }` wraps risky code; `catch (ExceptionType ex) { }` handles specific types; `finally { }` guarantees cleanup. | The primary mechanism for handling errors in C#. | `catch (Exception)` catches too broadly — prefer specific types like `IOException`, `ArgumentException`. |
-| **exception filter** | `catch (Exception ex) when (ex.Message.Contains("timeout"))` — adds a condition without unwinding the stack. | Catch only specific sub-cases without a broad catch. | The filter runs before the stack unwinds — side effects in the filter are evaluated even if the catch doesn't execute. |
-| **throw** | `throw;` re-throws the current exception preserving the stack trace. `throw ex;` resets it. | Propagate errors up the call stack. | `throw ex;` destroys the original stack trace — always use bare `throw;` to re-throw. |
-| **inner exception** | `throw new PipelineException("msg", ex)` — wraps the original exception as `InnerException`. | Preserve the original error context when wrapping in domain-specific exceptions. | Forgetting to pass the inner exception — loses the root cause information. |
-| **System.Exception** | Base class for all exceptions in .NET. Properties: `Message`, `StackTrace`, `InnerException`, `Data`. | Understanding the exception hierarchy and what `catch (Exception)` catches. | Catching `Exception` also catches `OutOfMemoryException` and `StackOverflowException` — these should rarely be handled. |
-| **custom exception** | User-defined exception class inheriting from `Exception` with three standard constructors. | Domain-specific error types for pipelines, APIs, and business logic. | Not implementing the three standard constructors (parameterless, message, message+inner) — breaks serialization and wrapping. |
-| **IDisposable** | Interface with a single `Dispose()` method for deterministic resource cleanup. | Release unmanaged resources (files, connections, handles) immediately, not when the GC runs. | Forgetting to call `Dispose()` — the resource stays open until GC finalizes it (if ever). |
-| **using statement** | `using (var conn = new SqlConnection(cs)) { }` — calls `Dispose()` at the end, even if an exception occurs. | Equivalent to Python's `with` statement — guarantees resource cleanup. | `using` only works with `IDisposable` types. |
-| **using declaration** | `using var conn = new SqlConnection(cs);` — disposes at the end of the enclosing scope (C# 8+). | Reduces nesting for single-resource cleanup. | The resource is disposed when the variable goes out of scope — not at the `using` line. |
-| **AggregateException** | Exception container used by `Task.WaitAll` and `Parallel.ForEach` to collect multiple exceptions from concurrent operations. | ETL pipelines processing items in parallel — collect all failures instead of losing all but the first. | `AggregateException.InnerExceptions` (plural) contains the individual errors — `InnerException` (singular) is just the first one. |
-| **error accumulation** | Pattern where errors are collected into a list during processing, then reported or raised at the end. | Process all records/files and report all failures, not just the first one. | Forgetting to check the error list at the end — errors are silently swallowed. |
-| **retry with backoff** | Pattern that retries a failing operation with increasing delays between attempts. | Transient failures in network calls, database connections, and API requests. | Infinite retries without a maximum — always set a retry limit and throw after exhaustion. |
-
-### What this note covers
-
-- **try / catch / finally** — basic exception handling, multiple catch blocks, exception filters, throw and re-throw, exception chaining
-- **Exception Types and Hierarchy** — built-in hierarchy tree, common .NET exception types
-- **Custom Exceptions** — domain-specific exception classes, pipeline error hierarchies, standard constructor patterns
-- **Resource Cleanup** — `IDisposable`, `using` statement/declaration, `IAsyncDisposable`, `await using`
-- **Data Engineering Patterns** — error accumulation, safe parse helpers, retry with exponential backoff
 
 ## try / catch / finally
 

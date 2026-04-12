@@ -51,7 +51,7 @@ flowchart TD
     START([Row identity decision]) --> Q1{Does a small,<br/>stable, business-<br/>unique attribute<br/>exist?}
     Q1 -->|YES| Y1[YES]
     Q1 -->|NO| N1[NO]
-    Y1 --> Q2{Is it\na single\ncolumn?}
+    Y1 --> Q2{Is it<br/>a single<br/>column?}
     Q2 -->|YES| Y2[YES]
     Q2 -->|NO| N2[NO]
     Y2 --> NAT["Natural single-column PK<br/>(ISO country code,<br/>instrument ISIN)"]
@@ -574,15 +574,15 @@ A `SEQUENCE` is a schema-bound, table-independent numeric generator introduced i
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    START([Surrogate generator choice]) --> Q1{Numbering\nshared across\nmultiple tables?}
+    START([Surrogate generator choice]) --> Q1{Numbering<br/>shared across<br/>multiple tables?}
     Q1 -->|YES| Y1[YES]
     Q1 -->|NO| N1[NO]
     Y1 --> SEQ1["SEQUENCE<br/>NEXT VALUE FOR across tables"]
-    N1 --> Q2{Need value\nBEFORE insert\nstatement?}
+    N1 --> Q2{Need value<br/>BEFORE insert<br/>statement?}
     Q2 -->|YES| Y2[YES]
     Q2 -->|NO| N2[NO]
     Y2 --> SEQ2["SEQUENCE<br/>store NEXT VALUE FOR in a variable"]
-    N2 --> Q3{Need bulk range\nallocation or\nCYCLE?}
+    N2 --> Q3{Need bulk range<br/>allocation or<br/>CYCLE?}
     Q3 -->|YES| Y3[YES]
     Q3 -->|NO| N3[NO]
     Y3 --> SEQ3["SEQUENCE<br/>sp_sequence_get_range or CYCLE"]

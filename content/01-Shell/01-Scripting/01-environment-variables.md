@@ -12,40 +12,243 @@ updated: 2026-04-03
 status: complete
 ---
 
-# Environment Variables — Configuration Without Code
-
-Environment variables are the standard mechanism for passing configuration to processes without hardcoding values in source code. Every production system you operate — databases, orchestrators, cloud CLIs, Docker containers — reads environment variables for credentials, connection strings, feature flags, and runtime parameters.
+# Environment Variables
 
 > [!quote]
 > "Explicit is better than implicit."
 >
 > — **Tim Peters**, The Zen of Python
 
-## Key terms used in this note
+> [!abstract]- Summary
+>
+> How environment variables propagate through process hierarchies in bash and PowerShell, covering every stage from in-memory assignment through session persistence, template substitution, and secure credential injection.
+>
+> **Propagation model**
+> - Fork + exec snapshot: a child receives a one-time copy of the parent's exported environment at launch — no live sync, no back-propagation
+> - Shell-local variables (no `export`) are invisible to child processes; only exported variables reach them
+> - Environment is strings-only; total size capped at ~32 KiB on Linux (`ARG_MAX`) and 32,767 chars per variable on Windows
+>
+> **Linux tools**
+> - View: `env` (all exported vars), `printenv` (specific vars), `env -i` (empty environment), `env -u` (exclude a var)
+> - Set and propagate: `export VAR=value`; inline `VAR=value command` for single-command scope; `export -n` to revoke; `export -p` to dump all
+> - Remove: `unset VAR` (removes from both shell and export list); `unset -f` for functions
+> - Persist (user): append `export` lines to `~/.bashrc` (interactive shells) or `~/.profile` / `~/.bash_profile` (login shells); `source` to reload
+> - Persist (system): write `KEY=value` to `/etc/environment`; no `export` keyword; requires root; applies to all users and systemd services
+> - Load from file: `source .env` (exports into current shell); `env $(grep -v '^#' .env | xargs) command` (scoped to command only)
+> - Template substitution: `envsubst < template > output`; restrict to specific variables with `envsubst '$A,$B'`
+>
+> **PowerShell tools**
+> - View: `Get-ChildItem Env:` (all); `$env:NAME` (specific); `Where-Object` for pattern filtering; `[bool]$env:NAME` to check existence
+> - Set (session): `$env:VAR = "value"` — equivalent to `export`; children inherit it; disappears when session ends
+> - Remove (session): `Remove-Item Env:VAR`; wrap in `try/finally` to guarantee cleanup around a command
+> - Persist (user): `[Environment]::SetEnvironmentVariable("VAR", "value", "User")` → writes to `HKCU:\Environment`
+> - Persist (system): `[Environment]::SetEnvironmentVariable("VAR", "value", "Machine")` → registry, requires Administrator
+> - Persist via profile: add `$env:VAR = "value"` to `$PROFILE`; `. $PROFILE` to reload in current session
+> - Load from `.env`: manual `ForEach-Object` parser or `Set-PsEnv` module from PSGallery
+>
+> **Secure credential handling**
+> - Linux pattern: resolve at runtime from GCP Secret Manager or a file → `export` → use → `unset` immediately
+> - PowerShell pattern: same sequence with `Remove-Item Env:` cleanup; use `try/finally` to guarantee removal on error
+> - Process environment is safer than CLI arguments (`ps aux` exposes args to all users) but not safe at rest; use a secret manager for long-lived secrets
+>
+> **Operations and safety**
+> - When to use: runtime configuration varying by environment, credentials as a transient handoff from a secret manager, 12-factor apps, CI/CD pipelines
+> - When not to use: structured/large config (use config files + file-path pointer), multi-line or binary data, long-lived secrets, cross-process sharing, anything that must survive a reboot without explicit setup
+> - Warnings: secrets in CLI args visible to all users; exported vars inherited by all children; `.env` files must never be committed; cron/systemd/Task Scheduler have minimal environments; common name collisions (`PATH`, `HOME`, `USER`)
+> - Recommendations table: 9 scenarios covering setting, scoping, persisting (user + system), loading `.env`, secret injection, `envsubst` templating, debugging, and naming conventions
+> - Troubleshooting: 7 failure modes covering missing vars in scripts/cron/containers, stale child values, unexpected persistence from startup files, CI environment mismatches, `envsubst` literal placeholders, `ARG_MAX` exhaustion, and PowerShell registry/session mismatch
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Environment variable | A named value stored in a process's memory that any program running inside that process can read. Think of it as a sticky note attached to every program you launch. | Every tool in this note — `export`, `$env:`, `.env` files — creates, reads, or removes environment variables. | Confusing environment variables (visible to child processes) with shell-local variables (visible only in the current shell session). |
-| Shell-local variable | A variable that exists only inside the current shell session. It is never passed to child processes unless explicitly exported. | Explains why `MY_VAR="value"` without `export` does not work when you run a Python script or Docker command. | Assuming all variables are automatically inherited by child processes — they are not unless exported. |
-| Export | The act of marking a shell variable so that a copy of it is included in the environment of every child process the shell spawns. | On Linux, `export VAR=value` is the mechanism; on PowerShell, assigning to `$env:VAR` automatically exports. | Thinking you need to run `export` every time you change the value — you only need to export once per variable name per session. |
-| Child process | Any program launched from the current shell. When bash runs `python3 script.py`, the Python interpreter is a child process of bash. | Environment variables propagate from parent to child, not from child to parent and not between siblings. | Expecting a variable set inside a child process (e.g., inside a script) to be visible back in the parent shell. |
-| Fork + exec | The two-step Unix mechanism for launching a new process: `fork` creates a copy of the parent, `exec` replaces that copy with the new program. The child receives a snapshot of the parent's exported environment at fork time. | Explains why environment changes in the parent after a child starts do not reach that child. | Assuming live synchronization between parent and child environments — each child gets a one-time copy. |
-| `.bashrc` | A shell startup file sourced (executed) every time a new interactive non-login bash session opens — i.e., every new terminal window or tab. | The standard place to persist environment variables for interactive work on Linux. | Confusing `.bashrc` (non-login shells) with `.profile` / `.bash_profile` (login shells — SSH, console). |
-| `.profile` / `.bash_profile` | Shell startup files sourced only for login shells — SSH sessions, console logins, or shells started with `--login`. | If you only add variables to `.bashrc`, they will be missing from SSH sessions unless `.profile` also sources `.bashrc`. | Placing exports only in `.bash_profile` and wondering why they are absent in local terminal windows. |
-| `.env` file | A plain-text file listing `KEY=value` pairs, one per line, used to store configuration outside source code. Popularized by the 12-factor app methodology. | Standard pattern for keeping credentials and connection strings out of code and out of shell startup files. | Assuming `.env` files are loaded automatically — they are not; you must explicitly `source` them or use a tool like `dotenv`. |
-| `envsubst` | A GNU utility that replaces `$VAR` / `${VAR}` placeholders in a template file with the current values of those environment variables. | Used in CI/CD pipelines and Docker entrypoints to generate config files from templates at deploy time. | Forgetting to export the variables before running `envsubst` — it only sees exported variables, not shell-local ones. |
-| `Env:` PSDrive | A virtual filesystem in PowerShell where each environment variable appears as a "file." Accessed with `Get-ChildItem Env:`, `$env:NAME`, `Set-Item Env:NAME`. | The PowerShell equivalent of the Linux `env` / `export` pattern. | Confusing session-scoped `$env:VAR` assignments (lost when the terminal closes) with registry-persisted variables set via `[System.Environment]::SetEnvironmentVariable`. |
-| `$PROFILE` | The path to the current user's PowerShell profile script, executed on every new PowerShell session. Analogous to `~/.bashrc`. | The simplest way to persist environment variables across PowerShell sessions without touching the Windows registry. | The file may not exist by default — you must create it with `New-Item -Path $PROFILE -Force` before adding content. |
-| Secret / credential | A sensitive value — password, API key, token, connection string — that must never be exposed in logs, command-line arguments, or version control. | The "Secure Credential Handling" section covers injection patterns that keep secrets out of `ps aux` and git history. | Passing credentials as command-line flags (visible to all users via `ps aux` on Linux or `Get-WmiObject Win32_Process` on Windows). |
-| Process environment limit | The total size of all environment variables for a single process is capped at approximately 32 KiB on most Linux kernels (the exact limit depends on `ARG_MAX` minus argument length). Windows has a per-variable limit of 32,767 characters. | If you pack too many or too-large values into the environment, process creation fails silently or with cryptic errors. | Storing large configuration blobs (JSON payloads, certificates) directly in environment variables instead of pointing to a file or secret manager. |
+> [!note]- Glossary
+>
+> **`Environment variable`**
+> - A named string value stored in a process's memory, readable by any program running inside that process.
+> - Every tool in this note — `export`, `$env:`, `.env` files, `envsubst` — creates, reads, or removes environment variables; understanding what they are and where they live is the prerequisite for all other sections.
+>
+> > [!warning] Not the same as a shell-local variable
+> >
+> > A variable assigned without `export` (bash) exists only in the current shell and is invisible to any child process. The distinction between "in the environment" and "in the shell" is the root cause of the most common class of bugs this note addresses.
+>
+> ---
+>
+> **`Shell-local variable`**
+> - A variable that exists only inside the current shell session and is never copied into the environment of child processes unless explicitly exported.
+> - Explains why `MY_VAR="value"` without `export` silently fails when a Python script, Docker command, or cron job tries to read it.
+>
+> > [!warning] No automatic inheritance
+> >
+> > There is no setting that makes all shell variables automatically propagate. Inheritance requires an explicit `export` (bash) or an `$env:` assignment (PowerShell). Assuming propagation without export is the single most common environment variable mistake.
+>
+> ---
+>
+> **`export`**
+> - The bash built-in that marks a shell variable for inclusion in the environment copied to every child process the shell spawns.
+> - On Linux, `export VAR=value` is the primary mechanism for making variables visible to subprocesses; PowerShell does this implicitly when you assign to `$env:VAR`.
+>
+> > [!info] `export` is not required on reassignment
+> >
+> > Once a variable name has been exported in a session (`export DB_HOST=...`), subsequent reassignments (`DB_HOST=new_value`) are automatically reflected in future children. You only need to call `export` again after `export -n` has removed the export attribute.
+>
+> ---
+>
+> **`Child process`**
+> - Any program launched from the current shell — a Python script, a Docker command, a cron job, a subshell.
+> - Environment variables propagate from parent to child at launch time; they do not propagate from child to parent, nor between siblings.
+>
+> > [!info] One-way, point-in-time propagation
+> >
+> > A child receives a snapshot of the parent's exported environment at the moment of `fork`. Changes the parent makes after that point — and all changes the child makes — are invisible to the other. There is no shared live state.
+>
+> ---
+>
+> **`fork + exec`**
+> - The two-step Unix mechanism for launching a process: `fork` duplicates the parent process (including its exported environment), then `exec` replaces that copy with the target program.
+> - Explains the snapshot behavior: the child's environment is fixed at `fork` time; subsequent changes in the parent do not reach the already-running child.
+>
+> > [!warning] Environment changes don't backfill running children
+> >
+> > If you `export DB_HOST=new_value` after a child has already started, that child still sees the old value. You must restart the child to pick up the change. This is frequently surprising in long-running pipelines or daemonized processes.
+>
+> ---
+>
+> **`env` / `printenv`**
+> - GNU utilities for inspecting the exported process environment: `env` lists all variables; `printenv` accepts names as arguments to print specific values.
+> - The authoritative way to check what a child process will actually see — unlike `echo $VAR`, which also resolves shell-local variables, `env` shows only what is in the exported environment.
+>
+> > [!info] `env -i` for clean-slate testing
+> >
+> > `env -i command` runs a command with a completely empty environment. This is invaluable for reproducing CI or cron failures locally, where the process starts without your shell startup files.
+>
+> ---
+>
+> **`unset`**
+> - A bash built-in that removes a variable from both the shell's local variable table and the export list; after `unset`, the variable does not exist in the current shell or in any new child processes.
+> - The correct cleanup tool after injecting a credential into the environment — `unset SA_PASSWORD` ensures the secret is not inherited by subsequent commands in the same session.
+>
+> > [!warning] `unset` is session-only
+> >
+> > `unset` does not modify startup files. If the variable is defined in `~/.bashrc`, `/etc/environment`, or the Windows registry, it will reappear in every new terminal. Remove the definition from the startup file to make the deletion permanent.
+>
+> ---
+>
+> **`source` / `.`**
+> - A shell built-in that executes a file in the current shell context rather than in a child process, making all variable assignments and `export` calls take effect immediately in the calling shell.
+> - Required to reload `~/.bashrc` or load a `.env` file into the current session; running `bash .env` would load the file in a child shell and the variables would not be visible in the parent.
+>
+> > [!danger] Sourcing executes arbitrary shell code
+> >
+> > `source .env` does not just read key-value pairs — it executes every line as a shell command. A malicious or malformed `.env` file can delete files, exfiltrate data, or escalate privileges. Only source files you control.
+>
+> ---
+>
+> **`.bashrc`**
+> - A shell startup file sourced by bash for every new interactive non-login session — every new terminal window or tab opened in a desktop environment.
+> - The standard location for user-scoped environment variable persistence on Linux interactive workstations.
+>
+> > [!warning] Not sourced by cron, SSH, or non-interactive scripts
+> >
+> > Cron jobs, SSH sessions (which use `.profile`), and scripts run with `bash script.sh` do not source `.bashrc`. Variables defined only here will be silently absent in those contexts — define them in the job itself or in `.profile` instead.
+>
+> ---
+>
+> **`.profile` / `.bash_profile`**
+> - Shell startup files sourced only for login shells: SSH sessions, console logins, and shells started with `--login`.
+> - The correct place for environment variables that must also be present in SSH sessions and systemd user services, which do not source `.bashrc`.
+>
+> > [!info] Standard cross-shell pattern
+> >
+> > Put all `export` lines in `~/.bashrc` and add `[ -f ~/.bashrc ] && source ~/.bashrc` to `~/.profile`. This single pattern covers both login and non-login shells without duplicating variable definitions.
+>
+> ---
+>
+> **`/etc/environment`**
+> - A system-wide plain-text file (`KEY=value` syntax, no `export` keyword) read by PAM at login time, before any shell startup files.
+> - Affects every user, every shell (bash, zsh, fish), and every PAM-authenticated systemd service on the machine; the correct place for machine-wide proxy settings, default locale, or shared API endpoints.
+>
+> > [!info] Not shell syntax — no `export`, no expansion
+> >
+> > `/etc/environment` is parsed by PAM, not by bash. Shell features like `$HOME`, command substitution, and quoting rules do not apply. Write literal values only: `HTTP_PROXY=http://proxy.corp:3128`.
+>
+> ---
+>
+> **`.env` file**
+> - A plain-text file listing `KEY=value` pairs, one per line, used to store application configuration outside source code and outside shell startup files. Popularized by the 12-factor app methodology.
+> - Standard pattern for keeping credentials and connection strings out of scripts; not auto-loaded by any tool — must be explicitly sourced (bash) or parsed (PowerShell).
+>
+> > [!danger] Never commit to version control
+> >
+> > `.env` files contain credentials and secrets. Even one accidental commit exposes them permanently — git history preserves file contents after deletion. Add `.env` to `.gitignore` before the first commit. If already committed, rotate every credential it contained.
+>
+> ---
+>
+> **`envsubst`**
+> - A GNU `gettext` utility that replaces `$VAR` and `${VAR}` placeholders in a template file with the current values of those exported environment variables, writing the result to stdout.
+> - Standard tool in CI/CD pipelines and Docker entrypoints for generating environment-specific config files (YAML, JSON, NGINX configs) from a single template at deploy time.
+>
+> > [!warning] Only sees exported variables
+> >
+> > `envsubst` reads the process environment, not shell-local variables. An un-exported variable leaves its `$PLACEHOLDER` unchanged in the output with no error. Always export variables before piping to `envsubst`.
+>
+> ---
+>
+> **Process environment limit / `ARG_MAX`**
+> - The kernel-enforced ceiling on the combined size of all environment variables plus command-line arguments passed to `exec()`: approximately 32 KiB for the environment portion on most Linux kernels, and 32,767 characters per individual variable on Windows.
+> - If variables accumulate (e.g., a pipeline stage appending to PATH repeatedly), or a large JSON blob is stuffed into an env var, process creation fails — often with a cryptic `Argument list too long` or silent failure.
+>
+> > [!warning] Large values silently break process launches
+> >
+> > There is no warning at the point of assignment — the error surfaces only when a new process is spawned and the combined size exceeds the limit. Store large payloads in a file and point an env var at the path; never embed certificates, JSON configs, or base64 blobs directly in variables.
+>
+> ---
+>
+> **`Env:` PSDrive / `$env:`**
+> - A PowerShell virtual filesystem (`Env:`) where each environment variable is a provider item; `$env:NAME` is the shorthand syntax for reading or writing individual variables. Both access the current process environment.
+> - The PowerShell equivalent of bash's `export` + `$VAR` pattern; assigning `$env:VAR = "value"` exports the variable into the process environment so child processes inherit it.
+>
+> > [!warning] Session-scoped — not persisted to registry
+> >
+> > `$env:VAR = "value"` lasts only for the current terminal session. It writes to the process memory, not to the Windows registry. New PowerShell windows will not see the change. Use `[System.Environment]::SetEnvironmentVariable` for persistence.
+>
+> ---
+>
+> **`[System.Environment]::SetEnvironmentVariable`**
+> - A .NET class method that writes environment variables to the Windows registry: `"User"` scope → `HKCU:\Environment`; `"Machine"` scope → `HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`.
+> - The PowerShell equivalent of appending to `~/.bashrc` or writing to `/etc/environment` — the change survives terminal restarts and applies to all new processes in the specified scope.
+>
+> > [!warning] Running sessions don't pick up registry changes
+> >
+> > `SetEnvironmentVariable` modifies the registry, but the current session's process environment is already loaded in memory. The new value is not visible via `$env:VAR` until you open a new terminal. Read it directly with `[Environment]::GetEnvironmentVariable("VAR", "User")` in the current session.
+>
+> ---
+>
+> **`$PROFILE`**
+> - An automatic PowerShell variable that holds the path to the current user's profile script (`Microsoft.PowerShell_profile.ps1`), sourced on every new PowerShell session — the PowerShell equivalent of `~/.bashrc`.
+> - The simplest way to persist `$env:` assignments across PowerShell sessions without touching the registry; reload in the current session with `. $PROFILE`.
+>
+> > [!warning] The file may not exist by default
+> >
+> > `$PROFILE` contains the path where the file should live, but PowerShell does not create it automatically. Writing to it with `Add-Content` before creating it will fail. Run `New-Item -Path $PROFILE -ItemType File -Force` first.
+>
+> ---
+>
+> **`Set-PsEnv`**
+> - A community PowerShell module (PSGallery) that parses a `.env` file and loads its `KEY=value` pairs into the current session's `$env:` namespace, providing the same ergonomics as `source .env` in bash.
+> - Eliminates the need to write a manual `ForEach-Object` parser; install once per machine with `Install-Module -Name Set-PsEnv -Scope CurrentUser`, then call `Set-PsEnv` in any session or add it to `$PROFILE`.
+>
+> > [!info] Equivalent to `source .env` for PowerShell
+> >
+> > `Set-PsEnv` reads the `.env` file in the current directory by default. It sets variables in `"Process"` scope — visible to the current session and its children, but not persisted to the registry. Exactly the PowerShell analogue of bash `source .env`.
+>
+> ---
+>
+> **Secret / credential**
+> - A sensitive value — password, API key, token, or connection string — that must never appear in logs, command-line arguments, version control, or terminal scrollback.
+> - The "Secure Credential Handling" section exists entirely to address this term: every injection pattern (GCP Secret Manager, file descriptor, `try/finally` cleanup) is a mechanism to keep credentials out of visible surfaces.
+>
+> > [!danger] CLI arguments expose secrets to all users
+> >
+> > On Linux, `ps aux` lists full argument strings of every running process, visible to all logged-in users. On Windows, `Get-WmiObject Win32_Process` does the same. Passing `-P 'MyPassword'` to any command exposes that secret system-wide for the duration of the process. Use environment variables or file descriptors instead.
 
-## What this note covers
-
-- How environment variables propagate through process hierarchies (the fork + exec snapshot model)
-- Linux tools for viewing, setting, persisting, and removing environment variables (`env`, `printenv`, `export`, `unset`, `.bashrc`, `.env`, `envsubst`)
-- PowerShell equivalents (`$env:`, `Env:` PSDrive, `[System.Environment]`, `$PROFILE`, `.env` loading)
-- Secure credential injection patterns for both platforms (GCP Secret Manager, file descriptors, cleanup)
-- When to use environment variables vs. config files, secret managers, or other mechanisms
+Environment variables are the standard mechanism for passing configuration to processes without hardcoding values in source code. Every production system you operate — databases, orchestrators, cloud CLIs, Docker containers — reads environment variables for credentials, connection strings, feature flags, and runtime parameters.
 
 ## The Propagation Model
 

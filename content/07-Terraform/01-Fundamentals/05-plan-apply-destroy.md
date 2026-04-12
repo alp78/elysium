@@ -55,9 +55,9 @@ flowchart TD
     C --> D{Changes detected?}
     D -- No --> E["No changes. Infrastructure is up-to-date."]
     D -- Yes --> F["Apply: create / update / destroy"]
-    F --> G{"All resources\nsucceeded?"}
+    F --> G{"All resources<br/>succeeded?"}
     G -- Yes --> H["Update state file"]
-    G -- No --> I["Partial state written\nFix error and re-apply"]
+    G -- No --> I["Partial state written<br/>Fix error and re-apply"]
     H --> J["Apply complete"]
 
     style A fill:#292e42,stroke:#565f89,color:#c0caf5

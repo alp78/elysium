@@ -1,5 +1,5 @@
 ---
-title: "02 - Killing Processes"
+title: "Killing Processes — Graceful, Then Forceful"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -14,34 +14,144 @@ status: complete
 
 # Killing Processes — Graceful, Then Forceful
 
-When a pipeline process is stuck — an infinite loop, a hanging database connection, a deadlocked worker — you need to terminate it. The order of escalation matters: graceful first (let the process clean up), forceful only as a last resort. `kill -9` without trying SIGTERM first causes data corruption, orphaned lock files, and unrolled transactions.
-
 > [!quote]
 > "If SIGTERM is asking a process to leave the building, SIGKILL is the operating system dropping a concrete block on it."
 >
 > — Unix sysadmin proverb
 
+> [!abstract]- Summary
+>
+> Process termination in Linux and PowerShell follows a fixed escalation hierarchy: SIGTERM first, SIGKILL only as a last resort. Skipping graceful shutdown causes data corruption, orphaned locks, and database recovery overhead.
+>
+> - **Unix signal hierarchy** — SIGTERM (graceful, signal 15), SIGKILL (forced, signal 9), SIGHUP (reload config, signal 1), and their behavioral differences
+> - **Linux kill, pkill, killall tools** — kill by PID with `kill`, by name or pattern with `pkill -f`, by name with `killall`; process group termination with negative PGID
+> - **SIGTERM → strace → SIGKILL escalation sequence** — the three-stage procedure: request gracefully, diagnose with `strace -p`, force only after confirming stuck; post-kill lock file and shared memory cleanup
+> - **PowerShell Stop-Process tools** — `Stop-Process -Id`/`-Name`/`-Force`, filtering by `CommandLine` with `Get-Process | Where-Object` to avoid collateral kills
+> - **Operations and safety** — when not to use kill (database processes, D-state, automated kill loops), post-SIGKILL cleanup checklist, PID reuse verification
 
-## Key terms used in this note
+> [!note]- Glossary
+>
+> **Signal** — a software notification sent by the kernel or another process to instruct a target process to terminate, pause, resume, or perform a defined action.
+>
+> - Every `kill`, `pkill`, and `Stop-Process` invocation works by delivering a numbered signal to the target.
+> - The process may catch, block, or ignore most signals; only SIGKILL (9) and SIGSTOP (19) cannot be intercepted.
+>
+> > [!info] Signal delivery
+> >
+> > The kernel queues the signal in the process's `task_struct`. The process handles it at the next safe preemption point — which means delivery is not instantaneous and a short wait after `kill <PID>` is always correct.
+>
+> > ---
+>
+> **SIGTERM (15)** — the default signal sent by `kill <PID>` with no flag; asks the process to terminate gracefully.
+>
+> - The process receives the signal, can run registered cleanup handlers (flush buffers, close connections, commit or rollback transactions), and exits with a clean status code.
+> - Always use SIGTERM first and wait 10–30 seconds before escalating; jumping straight to SIGKILL is the most common operator error.
+>
+> > [!info] SIGTERM is a request, not a guarantee
+> >
+> > A process can catch SIGTERM and ignore it, or take arbitrarily long to finish cleanup. If the process does not exit within the timeout, diagnose with `strace -p <PID>` before sending SIGKILL.
+>
+> > ---
+>
+> **SIGKILL (9)** — a forceful termination signal that the process cannot catch, block, or ignore; the kernel removes the process immediately with no cleanup.
+>
+> - Required as a last resort when a process does not respond to SIGTERM — stuck in an infinite loop, blocked on a syscall, or explicitly ignoring signals.
+> - SIGKILL leaves open files potentially half-written, lock files unreleased, shared memory segments orphaned, and database transactions uncommitted — manual cleanup is always required afterward.
+>
+> > [!danger] Never use SIGKILL on database engine processes
+> >
+> > Sending `kill -9` to a running SQL Server, PostgreSQL, or MySQL process bypasses the engine's shutdown sequence. The database must perform crash recovery on next start, which can take minutes and may lose uncommitted transactions. Use the engine's native shutdown command instead.
+>
+> > ---
+>
+> **SIGHUP (1)** — historically "hang up" (terminal disconnected); reinterpreted by most Unix daemons as an instruction to reload configuration without restarting.
+>
+> - `kill -1 <PID>` or `kill -HUP <PID>` triggers a live config reload in `nginx`, `sshd`, `rsyslog`, and similar long-running services.
+> - SIGHUP does not mean terminate for daemons — confusing it with a kill signal is a common mistake that causes unexpected service restarts.
+>
+> > [!tip] Prefer systemctl reload over kill -HUP
+> >
+> > On systemd systems, `systemctl reload <service>` is safer than `kill -HUP <PID>` — it validates the new config before applying it and logs the reload event to the journal.
+>
+> > ---
+>
+> **`kill`** — a shell built-in and standalone binary that sends a signal to a process identified by its PID.
+>
+> - Default signal is SIGTERM (15); `kill -9 <PID>` sends SIGKILL; `kill -l` lists all signal names and numbers.
+> - `kill` does not mean "force terminate" — without `-9` the process can catch and ignore the signal.
+>
+> > [!info] kill requires a PID — use pgrep or ps to find it first
+> >
+> > Run `pgrep -af "<pattern>"` or `ps -p <PID> -o pid,cmd` to confirm PID identity immediately before killing; PIDs are reused and a stale PID may now belong to a different process.
+>
+> > ---
+>
+> **`pkill`** — sends a signal to all processes whose name or full command line matches a given pattern, without requiring a PID lookup.
+>
+> - `-f` matches against the full command-line string (e.g., `pkill -f "python run_pipeline"`), not just the first 15 characters of the process name; always prefer `-f` for precision.
+> - Without `-f`, `pkill python` kills every Python process on the system — the most common collateral-kill mistake.
+>
+> > [!warning] Preview before killing with pkill
+> >
+> > Run `pgrep -af "<pattern>"` first to list all processes that would match. Only proceed with `pkill -f` after confirming the list is exactly the intended targets.
+>
+> > ---
+>
+> **`killall`** — sends a signal to all processes sharing an exact command name; behavior differs across Unix variants.
+>
+> - On Linux, `killall python3` kills every process named `python3`. On Solaris/BSD, `killall` with no arguments kills all processes owned by the current user.
+> - Prefer `pkill -f` over `killall` in any script that may run on both Linux and macOS/BSD to avoid platform-specific mass-kill behavior.
+>
+> > [!warning] killall is not portable — prefer pkill -f in scripts
+> >
+> > The safest cross-platform replacement is `pkill -f "<exact-name>"`, which behaves consistently on Linux, macOS, and most BSD variants.
+>
+> > ---
+>
+> **`Stop-Process`** — the PowerShell cmdlet for terminating processes; accepts `-Id` (PID), `-Name`, or pipeline input from `Get-Process`.
+>
+> - Without `-Force` it sends a WM_CLOSE message (a polite close request, roughly equivalent to SIGTERM for Windows GUI processes). With `-Force` it calls `TerminateProcess`, equivalent to SIGKILL — no cleanup occurs.
+> - `Stop-Process` does not send Unix-style POSIX signals; it uses the Windows process termination API, so there is no concept of SIGHUP or SIGINT on this path.
+>
+> > [!info] Use Stop-Service for Windows services, not Stop-Process
+> >
+> > `Stop-Process` on a Windows service process bypasses the Service Control Manager, preventing clean shutdown. Use `Stop-Service -Name "<service>"` so the SCM can issue a SERVICE_CONTROL_STOP and wait for the service to drain.
+>
+> > ---
+>
+> **Graceful shutdown** — a termination sequence where the process receives advance notice (SIGTERM or WM_CLOSE), completes in-flight work, flushes write buffers, closes connections, releases locks, and exits with a clean status code.
+>
+> - The preferred method for database workers, pipeline executors, and web servers; avoids data corruption, stale lock files, and forced DB recovery.
+> - Allow at least 10–30 seconds after SIGTERM before concluding the process has not responded; many applications need time to drain open connections and flush pending writes.
+>
+> > [!tip] Set an explicit timeout when scripting SIGTERM escalation
+> >
+> > Use `kill <PID>; sleep 30; kill -0 <PID> 2>/dev/null && kill -9 <PID>` to send SIGTERM, wait 30 seconds, check if the process is still alive, and only then send SIGKILL.
+>
+> > ---
+>
+> **Process group (PGID)** — a collection of related processes that share a common process group ID; a bash script and all the subprocesses it spawns typically share one PGID.
+>
+> - Sending a signal to `-<PGID>` (negative PID syntax) delivers it to every member of the group simultaneously, avoiding orphaned child processes after the parent is killed.
+> - Find the PGID with `ps -o pid,pgid,cmd -p <PID>`; the parent and all children should show the same PGID value.
+>
+> > [!info] Killing a process without its group leaves orphan children
+> >
+> > If you kill only the parent bash script, its child processes (`python ingest.py`, `python transform.py`) keep running. Use `kill -- -<PGID>` to terminate the entire group in one command.
+>
+> > ---
+>
+> **D-state (uninterruptible sleep)** — a kernel process state where the process is blocked waiting for an I/O operation (disk, NFS, network block device) to complete and cannot be interrupted by any signal, including SIGKILL.
+>
+> - A process in D state cannot be killed; it will exit the state and become killable only when the underlying I/O resolves or the kernel detects a timeout.
+> - Investigate the I/O subsystem with `dmesg`, check NFS mount health, or inspect disk health with `smartctl` rather than repeatedly sending `kill -9`.
+>
+> > [!danger] kill -9 has no effect on D-state processes
+> >
+> > The kernel queues the SIGKILL but cannot deliver it while the process is in uninterruptible sleep. The process will only die after the blocking I/O operation resolves. Repeated kill attempts are harmless but useless — focus on diagnosing and resolving the I/O issue.
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Signal | A software notification sent to a process by the kernel or another process. Signals tell a process to terminate, pause, resume, or perform a specific action. | Every kill command works by sending a signal. Understanding signal types determines whether the process gets a chance to clean up or is terminated immediately. | Assuming `kill` always kills. `kill` sends SIGTERM by default (a polite request). The process can catch and ignore it. Only SIGKILL (9) is guaranteed to terminate. |
-| SIGTERM (15) | The default signal sent by `kill`. Asks the process to terminate gracefully -- close files, flush buffers, release locks, and exit cleanly. | Always try SIGTERM first. It gives the application a chance to clean up (commit transactions, close database connections, write final log entries). | Jumping straight to SIGKILL. A process killed with SIGKILL cannot flush buffers, close files, or release locks -- this can corrupt data, leave stale lock files, or cause database recovery on restart. |
-| SIGKILL (9) | A forceful signal that the process cannot catch, block, or ignore. The kernel terminates the process immediately with no cleanup. | The last resort when a process does not respond to SIGTERM. Required for stuck processes, infinite loops, and resource-hogging runaway jobs. | Using SIGKILL on database processes. The database must recover from an unclean shutdown, which can take minutes and may lose uncommitted transactions. |
-| SIGHUP (1) | Historically: "hang up" (terminal disconnected). Many daemons interpret SIGHUP as a signal to reload their configuration files without restarting. | Used to reload `nginx`, `sshd`, `rsyslog`, and other long-running services without downtime. | Confusing SIGHUP as a kill signal. For daemons, SIGHUP typically means "reload config," not "terminate." |
-| `kill` | A shell command that sends a signal to a process by PID. Default signal is SIGTERM (15). Syntax: `kill [-signal] <PID>`. | The primary command for terminating processes. Always requires a PID. | `kill` does not mean "force terminate." Without `-9`, it sends SIGTERM, which can be caught and ignored by the process. |
-| `pkill` / `killall` | Commands that send signals to processes by name pattern rather than by PID. `pkill` matches a regex; `killall` matches an exact command name. | Convenient when you know the process name but not the PID. | `killall` behaves differently on different Unix variants. On Solaris, `killall` kills ALL processes. On Linux, it kills by name. Prefer `pkill` for portability. |
-| `Stop-Process` (PS) | The PowerShell cmdlet for terminating processes. Accepts `-Id` (PID), `-Name`, or pipeline input from `Get-Process`. Sends a termination request to the process. | The PowerShell equivalent of `kill`. Works with both native and .NET processes. | `Stop-Process` does not send Unix-style signals. It calls the Windows `TerminateProcess` API, which is equivalent to SIGKILL (no graceful shutdown for most processes). |
-| Graceful shutdown | A termination sequence where the process receives advance notice (SIGTERM), completes in-flight work, flushes buffers, closes connections, and exits with a clean status code. | The preferred termination method for database processes, pipeline workers, and web servers to avoid data corruption and stale locks. | Impatience. Wait at least 10-30 seconds after SIGTERM before escalating to SIGKILL. Many applications need time to drain connections and flush writes. |
+When a pipeline process is stuck — an infinite loop, a hanging database connection, a deadlocked worker — you need to terminate it. The order of escalation matters: graceful first (let the process clean up), forceful only as a last resort. `kill -9` without trying SIGTERM first causes data corruption, orphaned lock files, and unrolled transactions.
 
-## What this note covers
-
-- Unix signal hierarchy: SIGTERM (graceful) vs SIGKILL (forced) vs SIGHUP (reload)
-- Killing by PID with `kill`, by name with `pkill` and `killall`
-- The safe escalation pattern: SIGTERM first, wait, then SIGKILL only if needed
-- PowerShell equivalents: `Stop-Process`, `Get-Process | Stop-Process`
-- Special cases: zombie processes, D-state processes, processes ignoring SIGTERM
 ## Linux kill, pkill, killall tools
 
 Linux provides three main tools for process termination: `kill` sends signals by PID, `pkill` matches by name or full command-line pattern, and `killall` targets all processes sharing a given name. The section below covers each tool, the correct escalation sequence, and post-kill cleanup.
@@ -49,15 +159,15 @@ Linux provides three main tools for process termination: `kill` sends signals by
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
-    A([Process stuck]) --> B[Send SIGTERM\nkill PID]
-    B --> C{Responded\nwithin 30s?}
+    A([Process stuck]) --> B[Send SIGTERM<br>kill PID]
+    B --> C{Responded<br>within 30s?}
     C -- Yes --> D([Process exited cleanly])
-    C -- No --> E[Diagnose with\nstrace -p PID]
-    E --> F{Confirmed\nstuck in syscall?}
+    C -- No --> E[Diagnose with<br>strace -p PID]
+    E --> F{Confirmed<br>stuck in syscall?}
     F -- Unblocked --> D
-    F -- Still stuck --> G[Send SIGKILL\nkill -9 PID]
+    F -- Still stuck --> G[Send SIGKILL<br>kill -9 PID]
     G --> H[Process force-terminated]
-    H --> I[Manual cleanup:\nlock files, shared memory,\nDB transaction state]
+    H --> I[Manual cleanup:<br>lock files, shared memory,<br>DB transaction state]
     I --> J([Done])
 ```
 

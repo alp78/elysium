@@ -1,5 +1,5 @@
 ---
-title: "23 - Data Ingestion - C#"
+title: "23 - Data Ingestion — SQL Server, BigQuery, Firestore"
 tags: [csharp, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion CSharp, SQL Server Bulk Insert, BigQuery Load]
 description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23-py-data-ingestion](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/23-py-data-ingestion) for the Python equivalent."
@@ -15,25 +15,193 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
+> [!abstract]- Summary
+>
+> **Setup**
+> - NuGet restore for `Microsoft.Data.SqlClient`, `Google.Cloud.BigQuery.V2`, `Google.Cloud.Firestore`, `Google.Cloud.Storage.V1`, `Parquet.Net`, `Plotly.NET`, and helpers; assembly-warning suppression via reflection on `.NET Interactive`'s `CSharpKernel`.
+> - Environment loaded from `.env`; project constants (`PROJECT_ID`, `BUCKET_NAME`, `BQ_DATASET`, `FIRESTORE_DB`) set once and reused across all sections.
+> - Benchmark infrastructure: three file tiers (2.5 K / 75 K / 750 K rows, CSV + JSON + Parquet), `BenchIngest` timing helper, results persisted to `ingestion_results_cs.json` for cross-session comparison.
+>
+> **Schema Setup**
+> - SQL Server: `dbo.ohlcv_bench` created with `NVARCHAR` columns (type coercion deferred to the medallion pipeline).
+> - BigQuery: `index_data.ohlcv_bench` created via `GetOrCreateTable` with a fully typed schema (`Int64`, `Float64`, `Date`, `Bool`).
+>
+> **Local → SQL Server Ingestion**
+> - `ExecuteNonQuery` row-by-row INSERT: ~39 rows/s over TLS — baseline only, impractical beyond a few hundred rows.
+> - `SqlBulkCopy` (CSV): streams via TDS bulk-insert protocol; 7 K → 35 K rows/s across tiers.
+> - `bcp` CLI: native TDS bulk load, no managed layer; 5 K → 36 K rows/s; marginally faster than `SqlBulkCopy` at large tier.
+> - JSON → `SqlBulkCopy`: Newtonsoft parse overhead adds ~1–2 s vs CSV at 75 K; throughput equivalent at large tier.
+> - Parquet → `SqlBulkCopy`: columnar read with Parquet.Net; 13 K → 36 K rows/s; smallest file size advantage.
+>
+> **Local → BigQuery Ingestion**
+> - `UploadCsv` / `UploadJson` / `UploadParquet`: HTTPS streaming to BigQuery Jobs API; Parquet fastest at 87 K rows/s (large tier); CSV/JSON plateau at ~24–31 K rows/s.
+> - `bq` CLI: wraps the same API; similar throughput to `UploadCsv`.
+>
+> **Local → Firestore Ingestion**
+> - `WriteBatch` (500-doc limit per gRPC commit): ~400 rows/s flat across all tiers; no `BulkWriter` equivalent in the C# SDK.
+>
+> **GCS → BigQuery Ingestion**
+> - `CreateLoadJob` with GCS URI: server-side load over Google's internal network; CSV 71 K rows/s, Parquet 136 K rows/s at large tier — fastest BQ ingestion path overall.
+>
+> **GCS → SQL Server Ingestion**
+> - Two-hop: GCS download to `MemoryStream` → `SqlBulkCopy`; throughput equivalent to local CSV bulk copy (~34 K rows/s at large tier).
+>
+> **Cross-Service Transfers**
+> - SQL → BQ: `SqlDataReader` → CSV `MemoryStream` → `UploadCsv`; 22 K rows/s at large tier.
+> - BQ → SQL: `ExecuteQuery` → `DataTable` → `SqlBulkCopy`; 8.9 K rows/s at large tier (BQ query latency dominates).
+> - SQL → Firestore: `SqlDataReader` → `WriteBatch`; ~325 rows/s flat (gRPC batch commit ceiling).
+>
+> **Export**
+> - SQL Server → CSV: `SqlDataReader` + `StreamWriter`; 79 K rows/s at large tier.
+> - BigQuery → GCS: `CreateExtractJob` server-side; 49 K rows/s at large tier.
+>
+> **Summary**
+> - Benchmark results loaded from persisted JSON; rendered as Polars DataFrames and four Plotly bar charts grouped by SQL Server, BigQuery, Firestore, cross-service, and export categories.
+
+> [!note]- Glossary
+>
+> **`SqlBulkCopy`**
+>
+> - .NET class (`Microsoft.Data.SqlClient`) that streams rows into SQL Server using the TDS bulk-insert protocol, bypassing per-row SQL parsing and plan-cache lookups.
+> - Purpose: the fastest managed path for local-to-SQL ingestion; avoids one network round-trip per row.
+>
+> > [!warning] Small `BatchSize` negates the throughput gain
+> >
+> > Setting `BatchSize` below ~5 000 forces frequent TDS flushes and re-establishes the bulk session per batch. Use 5 000–50 000 rows per batch; `CHUNK_SIZE = 10_000` is the default in this notebook.
+>
+> > ---
+>
+> **`BCP` (`bcp.exe`)**
+>
+> - SQL Server command-line utility for bulk import/export that operates via OS-level file streaming and the native TDS bulk-insert protocol, bypassing the .NET managed driver and SQL parser entirely.
+> - Purpose: marginally faster than `SqlBulkCopy` at large tier and requires no in-memory `DataTable` allocation — preferred for very large flat-file loads when `bcp` is on `PATH`.
+>
+> > [!warning] Credentials in CLI arguments are visible in process listings
+> >
+> > Passing `-P <password>` exposes the credential in `ps aux`, Windows Event Log, and shell history. Use `-T` for Windows Integrated Authentication or inject the password from an environment variable at runtime.
+>
+> > ---
+>
+> **`IDataReader`**
+>
+> - .NET interface (`System.Data`) that exposes a forward-only, read-once row cursor for streaming tabular data without loading the full dataset into memory.
+> - Purpose: allows `SqlBulkCopy.WriteToServer(IDataReader)` to pull rows directly from any streaming source (e.g., a `SqlDataReader` or a custom reader), keeping memory footprint constant regardless of row count.
+>
+> > [!warning] Incorrect column ordinals cause silent mis-mapping
+> >
+> > `SqlBulkCopy` maps `IDataReader` columns by ordinal position unless `ColumnMappings` are explicitly set. A wrong ordinal silently loads the wrong value into the wrong column with no error.
+>
+> > ---
+>
+> **BigQuery Load Job**
+>
+> - Asynchronous GCP server-side job that ingests a file — from a local stream via HTTPS or from a GCS URI over Google's internal network — into a BigQuery table.
+> - Purpose: preferred over streaming inserts (`InsertRows`) for large batches; load jobs have no per-byte cost and are idempotent when `WriteDisposition` is set to `WRITE_TRUNCATE`.
+>
+> > [!warning] Load jobs run asynchronously — always poll for completion
+> >
+> > `CreateLoadJob` or `UploadCsv` returns immediately after job submission. The job is still running on the server. Always call `job.PollUntilCompleted().ThrowOnAnyError()` before reading `OutputRows` or proceeding to downstream steps.
+>
+> > ---
+>
+> **`CreateLoadJob`**
+>
+> - `BigQueryClient` method that starts a BigQuery load job from a GCS URI (e.g., `gs://bucket/path/file.csv`), triggering a server-side ingest without transferring data through the local machine.
+> - Purpose: the standard production pattern for data-lake pipelines — BigQuery reads directly from GCS over Google's internal network, achieving the highest throughput (136 K rows/s for Parquet at large tier in this benchmark).
+>
+> > [!tip] Prefer GCS Parquet for maximum BQ ingestion speed
+> >
+> > `CreateLoadJob` with `SourceFormat = FileFormat.Parquet` from GCS is 1.5–4× faster than CSV at large tier because Parquet's columnar encoding reduces byte transfer and enables server-side predicate pushdown.
+>
+> > ---
+>
+> **`WriteBatch`**
+>
+> - Firestore client class (`Google.Cloud.Firestore`) that accumulates up to 500 document write operations (`Set`, `Update`, `Delete`) and commits them atomically in a single gRPC call via `CommitAsync()`.
+> - Purpose: avoids per-document HTTP calls; Firestore enforces a 1 write/document/second rate limit on individual writes, so batching is mandatory for any real volume.
+>
+> > [!warning] Exceeding 500 operations per batch throws at commit time
+> >
+> > A `WriteBatch` that accumulates more than 500 operations raises `InvalidArgument` when `CommitAsync()` is called. Maintain a `batchCount` counter and flush with `CommitAsync().Wait()` every 500 documents, then reset both the batch and counter. Always commit the final partial batch after the loop.
+>
+> > ---
+>
+> **GCS staging**
+>
+> - The pattern of uploading a local file to Google Cloud Storage before triggering a BigQuery load job via a `gs://` URI, decoupling the local upload from the BQ ingest step.
+> - Purpose: required when using `CreateLoadJob` with a URI; also enables parallel or scheduled BQ loads without keeping the local process running.
+>
+> > [!warning] Bucket region must co-locate with the BigQuery dataset
+> >
+> > If the GCS bucket and BigQuery dataset are in different regions, data is transferred cross-region, incurring egress cost and increased latency. Both must be in the same region (e.g., `europe-west1`) for efficient server-side loads.
+>
+> > ---
+>
+> **`WriteDisposition`**
+>
+> - BigQuery load job option (enum: `WriteTruncate`, `WriteAppend`, `WriteEmpty`) that controls whether an existing destination table is truncated, appended to, or causes the job to fail if data already exists.
+> - Purpose: must be set explicitly for reproducible benchmarks and idempotent pipeline runs; omitting it defaults to `WriteAppend`, silently accumulating duplicate rows on re-runs.
+>
+> > [!tip] Always set `WriteTruncate` in benchmark and idempotent ETL jobs
+> >
+> > Use `WriteDisposition = WriteDisposition.WriteTruncate` in any load job that is designed to be re-runnable. Reserve `WriteAppend` only for append-only event streams where duplicates are controlled upstream.
+>
+> > ---
+>
+> **`CsvWriter` / `StreamWriter`**
+>
+> - .NET `System.IO.StreamWriter` used in the Export section to serialise SQL Server result sets to a delimited text file by writing a header row and one comma-joined value row per `SqlDataReader` iteration.
+> - Purpose: the simplest streaming export path from SQL Server to local CSV — memory footprint is O(1) per row because rows are written and discarded immediately rather than materialised into a `DataTable`.
+>
+> > [!warning] Not flushing before close discards buffered rows
+> >
+> > `StreamWriter` buffers writes internally. If the stream is not explicitly flushed (`writer.Flush()`) before the `using` block exits, the final buffer may not be written to disk. The `using` block calls `Dispose`, which flushes, but explicitly flushing before reading the output file prevents subtle race conditions in async contexts.
+>
+> > ---
+>
+> **benchmark tier**
+>
+> - Row-count category used to measure ingestion throughput at three scales: small (2 500 rows, ~190 KB CSV), medium (75 000 rows, ~5.7 MB CSV), large (750 000 rows, ~57 MB CSV).
+> - Purpose: reveals which methods scale linearly and where bottlenecks emerge — methods that look fast at small tier (e.g., `ExecuteNonQuery`) collapse at large tier; columnar formats (Parquet, GCS load jobs) improve with scale.
+>
+> > [!tip] Test at the largest tier that represents production volume
+> >
+> > Small-tier results are dominated by connection setup and job submission latency, not throughput. The large-tier rate is the operationally meaningful figure for production capacity planning.
+>
+> > ---
+>
+> **NuGet package reference**
+>
+> - `.NET Interactive` directive (`#r "nuget: PackageName"` or `#r "nuget: PackageName, Version"`) that triggers NuGet restore and assembly load within the running kernel session.
+> - Purpose: required to use Google Cloud, `SqlClient`, Parquet, Plotly, and async helper libraries in the notebook without a separate project file or `dotnet restore` step.
+>
+> > [!warning] Loading the same package twice causes assembly conflicts
+> >
+> > Executing a cell containing `#r "nuget: PackageName"` more than once in the same kernel session raises an `InvalidOperationException` because the assembly is already loaded. If a cell needs to be re-run, restart the kernel first.
+>
+> > ---
+>
+> **`Microsoft.Bcl.AsyncInterfaces`**
+>
+> - NuGet compatibility shim that backfills the `IAsyncEnumerable<T>` and `IAsyncDisposable` interfaces for .NET targets that predate their introduction in .NET Standard 2.1 / .NET Core 3.0.
+> - Purpose: required by the Firestore async collection delete helper (`FsDeleteCollection`) in this notebook — without it, iterating `snapshot.Documents` asynchronously raises a runtime `TypeLoadException`.
+>
+> > [!warning] Load before any cell that uses async Firestore enumeration
+> >
+> > The `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` directive must appear in the NuGet restore cell that runs first, before any cell that calls `GetSnapshotAsync()` or iterates a Firestore collection asynchronously. Adding it to a later cell after the Firestore client is already initialised does not retroactively satisfy the type dependency.
+>
+> > ---
+>
+> **`ExecuteQuery`**
+>
+> - `BigQueryClient` method that synchronously runs a SQL query against BigQuery and returns a `BigQueryResults` object, which is then iterated row-by-row via `foreach`.
+> - Purpose: used in the BQ → SQL Server cross-service transfer to pull query results into a `DataTable` for `SqlBulkCopy`; also used to create or replace temporary tables for the export benchmark.
+>
+> > [!warning] Materialising large result sets exhausts local memory
+> >
+> > `ExecuteQuery` loads all result rows into a `BigQueryResults` object in memory before iteration begins. For result sets larger than ~500 K rows, use `GetRows()` with paging (via `PageToken`) or export to GCS first and then load from there to avoid OOM on the client.
+
 This note covers C# bulk-load patterns for SQL Server, BigQuery, and Firestore in a .NET Interactive notebook, including performance benchmarking across file formats and source tiers.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **SqlBulkCopy** | .NET class that streams rows into SQL Server using the TDS bulk-load protocol | Fastest managed path for local-to-SQL; avoids per-row round-trips | Setting a very small `BatchSize` negates the performance benefit — use 5 000–50 000 |
-| **BCP (bcp.exe)** | SQL Server command-line utility for bulk import/export via OS-level file streaming | Fastest overall SQL ingestion; bypasses the managed driver entirely | Requires `bcp` on PATH and correct format-file or `-c` flag; auth flags differ by environment |
-| **IDataReader** | .NET interface that exposes a forward-only row cursor for streaming reads | Allows `SqlBulkCopy` to pull rows without loading the full dataset into memory | Implementing it incorrectly (wrong column ordinals) silently maps wrong values |
-| **BigQuery Load Job** | Asynchronous GCP job that ingests a file from local disk or GCS into a BQ table | Preferred over streaming inserts for large batches; no per-row cost | Confusing with `InsertRows` (streaming insert) — load jobs have a quota, streaming has per-byte cost |
-| **CreateLoadJob** | `BigQueryClient` method that starts a load job from a local stream or GCS URI | Primary bulk ingestion API for the Google.Cloud.BigQuery.V2 library | Not polling `job.PollUntilCompletedAsync()` — the job runs asynchronously; you must wait for it |
-| **WriteBatch** | Firestore client class that accumulates up to 500 document writes and commits atomically | Avoids per-document HTTP calls; Firestore enforces 1 write/doc/sec without batching | Forgetting to call `CommitAsync()` — documents are queued client-side and never sent |
-| **GCS staging** | Uploading a file to Google Cloud Storage before triggering a BigQuery load | Required for files that exceed the direct-upload limit or when using `CreateLoadJob` with a URI | Uploading to the wrong bucket region — BQ and GCS must be co-located |
-| **WriteDisposition** | BigQuery job option controlling whether to truncate, append, or error on existing data | Must be set explicitly for reproducible benchmarks | Omitting it causes accidental data duplication across re-runs |
-| **CsvWriter / StreamWriter** | .NET classes for writing delimited text files line by line | Used in the Export section to serialise SQL Server result sets to local CSV | Not flushing the stream before closing — last buffer may be lost |
-| **benchmark tier** | Row-count category (2.5K / 75K / 750K) used to measure ingestion throughput | Reveals which method scales and where bottlenecks emerge | Testing only small files and assuming results hold at 750K rows |
-| **NuGet package reference** | `#r "nuget: PackageName"` directive in .NET Interactive that restores and loads a library | Required to use Google Cloud, SqlClient, and async helpers in the notebook | Loading the same package twice in different cells causes assembly conflicts |
-| **Microsoft.Bcl.AsyncInterfaces** | Compatibility shim for `IAsyncEnumerable` on older .NET targets | Required for Firestore async collection delete in .NET Interactive | Forgetting to load it before using async Firestore enumeration causes runtime errors |
-| **ExecuteQuery** | `BigQueryClient` method that runs a SQL query and returns results as `BigQueryResults` | Used for cross-service transfers: BQ → SQL Server | Materialising very large result sets — use `GetRows()` paging for 750K+ rows |
 
 ### What this note covers
 

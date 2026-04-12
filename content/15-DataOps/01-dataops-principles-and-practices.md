@@ -434,22 +434,22 @@ DataOps is 20% tooling and 80% culture. The tools are the easy part. The hard pa
 
 ```mermaid
 flowchart LR
-    A([Business Need]) --> B[Define\nData Contract]
-    B --> C[Design\nPipeline]
-    C --> D[Develop\nLocally]
-    D --> E{CI Tests\nPass?}
+    A([Business Need]) --> B[Define<br/>Data Contract]
+    B --> C[Design<br/>Pipeline]
+    C --> D[Develop<br/>Locally]
+    D --> E{CI Tests<br/>Pass?}
     E -- No --> D
-    E -- Yes --> F[Deploy to\nStaging]
-    F --> G{Staging\nQuality Gates?}
+    E -- Yes --> F[Deploy to<br/>Staging]
+    F --> G{Staging<br/>Quality Gates?}
     G -- No --> D
-    G -- Yes --> H[Deploy to\nProduction]
-    H --> I[Monitor\n& Observe]
-    I --> J{Anomaly\nDetected?}
-    J -- Yes --> K[Investigate\n& Fix]
+    G -- Yes --> H[Deploy to<br/>Production]
+    H --> I[Monitor<br/>& Observe]
+    I --> J{Anomaly<br/>Detected?}
+    J -- Yes --> K[Investigate<br/>& Fix]
     K --> D
-    J -- No --> L[SPC\nBaseline Update]
+    J -- No --> L[SPC<br/>Baseline Update]
     L --> I
-    H --> M([Stakeholder\nFeedback])
+    H --> M([Stakeholder<br/>Feedback])
     M --> A
 
     style A fill:#4CAF50,color:#fff

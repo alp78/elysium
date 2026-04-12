@@ -3820,10 +3820,10 @@ Polars' `scan_*` functions return a `LazyFrame` that does **not** read data unti
 }}}%%
 flowchart LR
     subgraph Eager["Eager: read_parquet"]
-        E1["Read ALL rows\nand columns"] --> E2["Filter in\nmemory"] --> E3["Select\ncolumns"]
+        E1["Read ALL rows<br/>and columns"] --> E2["Filter in<br/>memory"] --> E3["Select<br/>columns"]
     end
     subgraph Lazy["Lazy: scan_parquet"]
-        L1["Build\nquery plan"] --> L2["Optimizer:\npushdown"] --> L3["Read ONLY\nneeded data"]
+        L1["Build<br/>query plan"] --> L2["Optimizer:<br/>pushdown"] --> L3["Read ONLY<br/>needed data"]
     end
     style Eager fill:#292e42,stroke:#565f89
     style Lazy fill:#1a1b26,stroke:#565f89

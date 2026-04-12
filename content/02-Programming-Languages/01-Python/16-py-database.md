@@ -15,36 +15,221 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
+> [!abstract]- Summary
+>
+> **SQLite — Built-in Embedded Database**
+> - `sqlite3.connect()` opens a file or in-memory DB; `conn.row_factory = sqlite3.Row` enables dict-like access.
+> - `cursor.execute(sql, params)` with `?` placeholders is the only safe parameterisation pattern.
+> - `executemany()` bulk-inserts a list of tuples; `conn.commit()` persists all DML.
+> - Context manager (`with conn:`) auto-commits on success and rolls back on exception.
+> - `cursor.fetchmany(n)` streams large result sets without loading all rows into memory.
+>
+> **SQL Server via pyodbc**
+> - ODBC connection strings encode driver, server, database, and auth; `Trusted_Connection=yes` and explicit credentials are mutually exclusive.
+> - `cursor.execute(sql, params)` uses `?` placeholders; `cursor.executemany()` bulk-inserts.
+> - `autocommit=False` (default) means all DML must be followed by `conn.commit()` or `conn.rollback()`.
+> - `cursor.fast_executemany = True` enables bulk-insert mode for large payloads.
+>
+> **pandas Integration**
+> - `pd.read_sql(query, conn)` returns a DataFrame directly from a connection or SQLAlchemy engine.
+> - `df.to_sql(table, engine, if_exists=...)` writes a DataFrame to a database table.
+> - Chunked reads via `chunksize` parameter avoid memory overload on large result sets.
+> - SQLAlchemy engines are preferred over raw connections for `pd.read_sql` to avoid deprecation warnings.
+>
+> **SQLAlchemy ORM**
+> - `create_engine(url)` creates the central engine with a connection pool; create once and share.
+> - `DeclarativeBase` + `mapped_column` is the SQLAlchemy 2.0 pattern for defining ORM models.
+> - `Session` is the unit-of-work context: `session.add()` stages objects; `session.commit()` persists them.
+> - `session.execute(select(Model))` queries via ORM; `text()` wraps raw SQL for engine-level execution.
+> - Relationships are declared with `relationship()` and navigated as Python attributes.
+>
+> **DuckDB — Embedded OLAP Engine**
+> - `duckdb.connect()` opens an in-process analytical database; no server required.
+> - DuckDB queries Parquet, CSV, and JSON files directly via `read_parquet()`, `read_csv()`, `read_json()`.
+> - Results convert to pandas with `.df()` or to Polars with `.pl()`; `COPY TO` exports files.
+> - Columnar execution and vectorised I/O make DuckDB faster than pandas for analytical aggregations.
+>
+> **Querying Files — DuckDB vs Polars vs Pandas**
+> - All three can read Parquet, CSV, and JSON; DuckDB uses SQL syntax, Polars uses method chaining, pandas uses `read_*` functions.
+> - Polars lazy evaluation (`scan_parquet`) defers work until `.collect()`; avoids loading full files.
+> - DuckDB is optimal for ad-hoc SQL over multiple files; Polars for typed pipeline transforms; pandas for compatibility with the broader ecosystem.
+
+> [!note]- Glossary
+>
+> **`sqlite3`**
+>
+> - Python's built-in module for SQLite — a file-based (or in-memory) relational database that requires no server process.
+> - Use for local development, unit tests, embedded caches, and prototyping; switch to SQL Server or PostgreSQL when concurrent writes or row-level locking are needed.
+>
+> > [!tip] In-memory mode
+> >
+> > Pass `":memory:"` as the path to keep the database entirely in RAM — the DB is destroyed when the connection closes, making it ideal for isolated test fixtures.
+>
+> > ---
+>
+> **`pyodbc`**
+>
+> - Python ODBC bridge library that connects to SQL Server and any other ODBC-compliant database via a driver registered in the OS.
+> - The primary SQL Server access method in this vault; always use `?` placeholders in `execute()` — never f-strings.
+>
+> > [!danger] SQL injection via string formatting
+> >
+> > Building SQL with `f"... WHERE id = {val}"` allows arbitrary SQL to be injected. Always use `cursor.execute(sql, (val,))` with `?` placeholders.
+>
+> > ---
+>
+> **Connection string**
+>
+> - A string encoding the ODBC driver name, server address, database name, and authentication details needed to open a connection.
+> - The most common setup failure is format mismatch; `Trusted_Connection=yes` (Windows auth) and explicit `UID`/`PWD` credentials are mutually exclusive.
+>
+> > [!info] URL-encoded connection strings for SQLAlchemy
+> >
+> > When passing a pyodbc connection string to `create_engine`, wrap it with `urllib.parse.quote_plus()` inside the `mssql+pyodbc:///?odbc_connect=...` URL scheme so special characters are handled correctly.
+>
+> > ---
+>
+> **Cursor**
+>
+> - A database cursor object returned by `conn.cursor()` that sends SQL to the server and buffers the result set locally.
+> - The main interface for executing queries and reading rows; do not reuse a cursor while iterating its previous result — call `fetchall()` first or open a new cursor.
+>
+> > [!warning] Cursor reuse during iteration
+> >
+> > Issuing a new `execute()` on a cursor that is mid-iteration silently discards the remaining rows. Either consume the full result with `fetchall()` before re-executing, or open a second cursor.
+>
+> > ---
+>
+> **Parameterised query**
+>
+> - A query using `?` (pyodbc/sqlite3) or `:name` / `%s` placeholders instead of string interpolation to bind values to SQL statements.
+> - Prevents SQL injection and avoids type-conversion bugs; the driver handles quoting, escaping, and type binding automatically.
+>
+> > [!success] Safe parameterisation pattern
+> >
+> > ```python
+> > cur.execute("SELECT * FROM trades WHERE ticker = ?", (ticker,))
+> > cur.executemany("INSERT INTO trades VALUES (?,?,?,?,?,?)", rows)
+> > ```
+>
+> > ---
+>
+> **Transaction**
+>
+> - A unit of work (`BEGIN` → DML → `COMMIT` or `ROLLBACK`) that is atomic: either all statements succeed or none take effect.
+> - Required for data integrity when modifying multiple rows across one or more tables; `conn.commit()` must be called explicitly when `autocommit=False`.
+>
+> > [!warning] Silent data loss without commit
+> >
+> > If `conn.commit()` is never called, changes exist only in the session and are rolled back on disconnect. Always commit after successful DML, or use the `with conn:` context manager which auto-commits.
+>
+> > ---
+>
+> **SQLAlchemy**
+>
+> - Python's most widely used database toolkit — provides a Core expression language for SQL construction and an ORM layer for object-oriented access on top of raw connections.
+> - Abstracts over multiple database engines via dialect plugins; a single codebase can target SQLite, SQL Server, PostgreSQL, and BigQuery without changing application logic.
+>
+> > [!info] Core vs ORM
+> >
+> > SQLAlchemy Core gives full SQL control via `text()` and `select()` constructs. The ORM adds class-to-table mapping, relationship navigation, and the `Session` unit-of-work. Use Core for bulk ETL; ORM for CRUD-heavy application logic.
+>
+> > ---
+>
+> **Engine**
+>
+> - A SQLAlchemy `Engine` object that owns the connection pool and the dialect for a specific database URL — the central, long-lived object in SQLAlchemy applications.
+> - Create once at application startup and share across the codebase; creating a new `Engine` per query discards the connection pool and causes significant overhead.
+>
+> > [!tip] Pool sizing guidance
+> >
+> > Default `pool_size=5`. Increase for high-concurrency services; keep small for ETL jobs that run one thread at a time. Setting `pool_size` above the database server's connection limit causes connection refusals.
+>
+> > ---
+>
+> **ORM**
+>
+> - Object-Relational Mapper — maps Python classes to database tables so application code queries and modifies data via Python objects rather than raw SQL strings.
+> - Reduces boilerplate for CRUD operations and enforces schema as code; the trade-off is that complex analytical queries are often clearer as raw SQL via `text()` or Core.
+>
+> > [!warning] Unstaged ORM writes
+> >
+> > `session.add(obj)` stages the object in memory but does not write to the database. `session.commit()` must be called to persist. Forgetting this is the most common ORM mistake.
+>
+> > ---
+>
+> **`DeclarativeBase` / `mapped_column`**
+>
+> - SQLAlchemy 2.0 API for defining ORM models as Python classes with typed, annotated columns using `Mapped[type]` and `mapped_column()`.
+> - Replaces the legacy `Base = declarative_base()` + `Column()` pattern from SQLAlchemy 1.x; the two styles mix poorly in fully typed code.
+>
+> > [!info] v1 vs v2 model syntax
+> >
+> > ```python
+> > # v1 (legacy)
+> > class Trade(Base):
+> >     id = Column(Integer, primary_key=True)
+> > # v2 (current)
+> > class Trade(Base):
+> >     id: Mapped[int] = mapped_column(primary_key=True)
+> > ```
+>
+> > ---
+>
+> **`Session`**
+>
+> - A SQLAlchemy `Session` is a short-lived unit-of-work context for ORM operations: load objects, make changes, commit or roll back, then close.
+> - All ORM writes go through a session; keep sessions short-lived — a session that spans a long request accumulates identity-map state and memory pressure.
+>
+> > [!tip] Context-manager pattern
+> >
+> > Use `with Session(engine) as session:` to ensure the session is closed even if an exception is raised. Never share a single session across threads.
+>
+> > ---
+>
+> **`pd.read_sql`**
+>
+> - Pandas function that executes a SQL query string against a connection or SQLAlchemy engine and returns the result as a `DataFrame`.
+> - The simplest bridge between SQL and DataFrame workflows; pass a SQLAlchemy engine (not a raw `pyodbc` connection) to avoid `RemovedIn20Warning` deprecation errors in pandas 2.x.
+>
+> > [!warning] Raw connection deprecation in pandas 2.x
+> >
+> > Passing a raw `pyodbc` connection directly to `pd.read_sql` triggers `UserWarning: pandas only supports SQLAlchemy connectable`. Wrap the connection with `create_engine` or use `sqlalchemy.text()` for the query string.
+>
+> > ---
+>
+> **DuckDB**
+>
+> - An in-process analytical SQL database optimised for OLAP workloads — columnar execution, vectorised I/O, no server process required.
+> - Reads Parquet, CSV, and JSON files directly without importing them first; integrates with pandas via `.df()` and Polars via `.pl()`.
+>
+> > [!info] DuckDB vs SQL Server `BCP`
+> >
+> > DuckDB's `COPY TO 'file.parquet'` exports query results to a file in the current process. SQL Server's `BCP` is a separate OS-level bulk copy utility — the two are not interchangeable.
+>
+> > ---
+>
+> **Polars**
+>
+> - A DataFrame library written in Rust with lazy evaluation, columnar in-memory format, and native Parquet/CSV/JSON scanning — significantly faster than pandas for analytical transforms on large files.
+> - Used alongside DuckDB for in-memory analytics; `scan_parquet()` / `scan_csv()` build a lazy query plan; `.collect()` triggers execution.
+>
+> > [!warning] Premature `.to_pandas()` defeats lazy evaluation
+> >
+> > Calling `.to_pandas()` immediately after `scan_*` forces full materialization into a pandas DataFrame, discarding Polars' streaming and predicate-pushdown optimisations. Collect only when the result is needed for output or export.
+>
+> > ---
+>
+> **Connection pool**
+>
+> - A SQLAlchemy-managed cache of open database connections reused across queries, eliminating the per-request cost of establishing a new TCP connection and authenticating.
+> - Critical for performance in web services and ETL loops; default `pool_size=5` with `max_overflow=10`; size it to match the worker thread count, not higher.
+>
+> > [!tip] Pool exhaustion signal
+> >
+> > If queries queue or time out under load, check `engine.pool.status()`. A `checked out` count equal to `pool_size + max_overflow` means the pool is exhausted — increase `pool_size` or reduce connection hold time.
+
 This note covers Python database access from raw SQL to full ORM, including embedded and analytical databases and pandas integration.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **sqlite3** | Python's built-in module for SQLite — a file-based (or in-memory) relational database requiring no server. | Ideal for local dev, testing, and embedded workloads. | Forgetting `conn.commit()` after DML — changes are not persisted until committed. |
-| **pyodbc** | Python ODBC bridge library used to connect to SQL Server and other ODBC-compliant databases. | Primary way to query SQL Server from Python in this vault. | Passing an f-string with user input into `execute()` — always use parameterised queries with `?` placeholders. |
-| **Connection string** | A string that encodes driver, server, database, and authentication details needed to open a connection. | Wrong format is the most common setup failure. | Mixing `Trusted_Connection=yes` (Windows auth) with explicit username/password — they are mutually exclusive. |
-| **Cursor** | A database cursor object returned by `conn.cursor()` that executes SQL and buffers rows. | The main interface for sending SQL and reading results. | Reusing a cursor while iterating over its previous result set — always `fetchall()` first or open a new cursor. |
-| **Parameterised query** | A query using `?` (pyodbc) or `:name` / `%s` placeholders instead of string interpolation. | Prevents SQL injection; also avoids type-conversion bugs. | Using f-strings or `%` formatting to inject values — opens SQL injection vulnerabilities. |
-| **Transaction** | A unit of work (`BEGIN` → DML → `COMMIT` or `ROLLBACK`) that is atomic — all-or-nothing. | Required for data integrity when modifying multiple rows. | Not calling `conn.commit()` — changes exist in session only and are lost on disconnect. |
-| **SQLAlchemy** | Python's most popular database toolkit — provides a Core (expression language) and ORM layer on top of raw connections. | Abstracts over multiple engines; enables ORM-style table mapping. | Using SQLAlchemy `text()` but forgetting `:param` named bind parameters — positional `%s` syntax is engine-specific. |
-| **Engine** | A SQLAlchemy `Engine` object that manages a connection pool and dialect for a specific database URL. | Central object in SQLAlchemy — created once, shared across the app. | Creating a new `Engine` per query — expensive; connection pool is discarded each time. |
-| **ORM** | Object-Relational Mapper — maps Python classes to database tables so you can query via objects rather than SQL strings. | Reduces boilerplate; enforces schema as code. | Forgetting to `session.commit()` after `session.add()` — objects are staged but not written. |
-| **DeclarativeBase / mapped_column** | SQLAlchemy 2.0 API for defining ORM models as Python dataclasses with typed columns. | Replaces legacy `Base = declarative_base()` pattern. | Using `Column` (v1 style) instead of `mapped_column` (v2) — they mix-match poorly in typed code. |
-| **Session** | A SQLAlchemy `Session` is a short-lived transaction context for ORM operations — query, add, commit, close. | Unit of work pattern; all ORM writes go through a session. | Keeping sessions open too long — sessions accumulate changes and memory; close after each unit of work. |
-| **pd.read_sql** | Pandas function that executes a SQL query and returns the result as a DataFrame. | Bridges SQL and DataFrame workflows; simplest way to get query results into pandas. | Passing a raw string to engines that require `sqlalchemy.text()` — triggers a `RemovedIn20Warning`. |
-| **DuckDB** | An in-process analytical SQL database optimised for OLAP — reads Parquet, CSV, JSON directly. | High-performance analytics without a server; integrates with pandas and Polars. | Confusing DuckDB's `COPY TO` (exports file) with SQL Server's `BCP` (bulk copy program). |
-| **Polars** | A DataFrame library written in Rust — lazy evaluation, columnar memory, fast scan of Parquet/CSV files. | Used alongside DuckDB for in-memory analytics in this note. | Calling `.to_pandas()` immediately — defeats Polars' lazy evaluation; collect only when needed. |
-| **Connection pool** | A SQLAlchemy-managed cache of open connections reused across requests, avoiding repeated connect overhead. | Critical for performance in web services and ETL loops. | Setting `pool_size` too high — can exhaust database server connection limits. |
-
-### What this note covers
-
-- **SQLite** — built-in embedded database: connect, execute, parameterised queries, transactions, in-memory DB
-- **SQL Server via pyodbc** — ODBC connection strings, cursors, parameterised queries, transactions, bulk insert
-- **pandas Integration** — `pd.read_sql`, `to_sql`, chunked reads, engine patterns
-- **SQLAlchemy ORM** — `Engine`, `Session`, `DeclarativeBase`, `mapped_column`, CRUD, relationships
-- **DuckDB** — embedded OLAP engine: SQL over Parquet/CSV/JSON, pandas/Polars round-trips
-- **Querying Files** — DuckDB SQL vs Polars vs Pandas comparison for Parquet, CSV, and JSON
 
 ```python
 import sqlite3

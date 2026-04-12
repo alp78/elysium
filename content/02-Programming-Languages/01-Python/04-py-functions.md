@@ -16,38 +16,220 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
+> [!abstract]- Summary
+>
+> **Function Basics**
+> - `def name(params): body` defines a function; implicit `return None` when no `return` is present.
+> - Functions are first-class objects: assign to variables, pass as arguments, return from other functions, store in dicts.
+> - Docstrings are triple-quoted strings as the first statement — accessible via `help()` and `__doc__`.
+> - Higher-order patterns: closures, callbacks, strategy dispatch, pipelines via `functools.reduce`, dependency injection.
+>
+> **Parameters**
+> - Parameter order: required → `*args` → keyword-only → `**kwargs`.
+> - Mutable defaults (`def f(lst=[])`) share state across calls — use the `None` sentinel pattern.
+> - `/` enforces positional-only parameters (Python 3.8+); `*` enforces keyword-only parameters.
+> - `*seq` unpacks a sequence to positional args at the call site; `**dict` unpacks a dict to keyword args.
+>
+> **Lambda Expressions**
+> - `lambda params: expr` — one expression, implicit return, no statements, no docstring.
+> - Primary use: inline `key=` for `sorted`, `map`, `filter`, and short callbacks.
+> - Late-binding pitfall: lambdas in loops capture the variable, not its value — fix with default argument `lambda i=i: i`.
+>
+> **Closures & Scope**
+> - LEGB resolution order: Local → Enclosing → Global → Built-in.
+> - `nonlocal` rebinds a variable in the nearest enclosing scope; without it, assignment creates a local shadow.
+> - Closure factories return independent functions with encapsulated state — replaces simple classes for counters and validators.
+>
+> **Decorators**
+> - `@decorator` is sugar for `func = decorator(func)`; always apply `@functools.wraps(func)` to the inner wrapper.
+> - Decorator stacks apply bottom-up: `@a @b def f()` → `f = a(b(f))`.
+> - Parameterized decorators require three nesting levels: factory → decorator → wrapper.
+> - Built-in decorators: `@property`, `@staticmethod`, `@classmethod`, `@lru_cache`.
+> - `functools.partial` freezes arguments; `functools.singledispatch` dispatches by argument type.
+>
+> **Type Hints**
+> - Annotations (`def f(x: int) -> str:`) are not enforced at runtime — use `mypy` or `pydantic` for checking.
+> - `Optional[T]` = `T | None`; `Callable[[int], str]` describes a function's signature.
+> - `__annotations__` stores hints as a dict — used by Pydantic, FastAPI, and dataclasses for runtime validation.
+>
+> **Operations & Safety**
+> - Never use mutable defaults (`list`, `dict`, `set`) — always use the `None` sentinel pattern.
+> - Always add `@functools.wraps(func)` to every decorator wrapper to preserve `__name__`, `__doc__`, and `__annotations__`.
+> - Closures in loops capture the variable reference, not the value — bind with default arguments or `functools.partial`.
+> - Type hints are documentation only at runtime; run `mypy` for static checking.
+> - `@lru_cache` requires hashable arguments — convert lists to tuples, dicts to `frozenset(d.items())`.
+
+> [!note]- Glossary
+>
+> **`def`**
+> - Keyword that defines a named function, creating a function object bound to the given name in the current scope.
+> - Used to declare reusable, named blocks of logic with docstrings, parameter signatures, and explicit return values.
+>
+> > [!tip] Colon is mandatory
+> >
+> > `def greet(name)` raises `SyntaxError` — the colon after the parameter list is required: `def greet(name):`.
+>
+> ---
+>
+> **First-class function**
+> - Functions are objects that can be assigned to variables, passed as arguments, returned from other functions, and stored in data structures.
+> - Enables higher-order patterns: callbacks, strategy dispatch, pipelines, and dependency injection without any type ceremony.
+>
+> > [!warning] Invoke vs pass
+> >
+> > `apply(greet)` passes the function reference. `apply(greet())` invokes it first and passes the return value — a common source of `TypeError: 'str' object is not callable`.
+>
+> ---
+>
+> **`return`**
+> - Exits the function and sends a value back to the caller; a function without `return` implicitly returns `None`.
+> - Required to produce output from computation; omitting it in a value-producing function is a silent bug.
+>
+> > [!warning] Silent None return
+> >
+> > Forgetting `return` means the caller receives `None`. A common symptom: `result = my_func(x)` followed by `TypeError: 'NoneType' object is not iterable`.
+>
+> ---
+>
+> **Docstring**
+> - A triple-quoted string (`"""..."""`) as the first statement in a function, class, or module body — accessible via `help()` and `func.__doc__`.
+> - Provides built-in, toolchain-accessible documentation; frameworks like Sphinx and mkdocs generate API docs from docstrings.
+>
+> > [!warning] Position matters
+> >
+> > Any code placed before the triple-quoted string prevents it from being recognized as a docstring — it becomes an unreachable string literal instead.
+>
+> ---
+>
+> **`*args`**
+> - Collects all extra positional arguments into a tuple named `args` inside the function.
+> - Used to accept a variable number of positional arguments without requiring the caller to build a list explicitly.
+>
+> > [!info] args is a tuple
+> >
+> > `args` is immutable — `args.append(x)` raises `AttributeError`. Convert with `list(args)` if mutation is needed.
+>
+> ---
+>
+> **`**kwargs`**
+> - Collects all extra keyword arguments into a dict named `kwargs` inside the function.
+> - Used in decorators, wrapper functions, and config builders where the set of keyword parameters is not known in advance.
+>
+> > [!warning] No duplicate keyword arguments
+> >
+> > Passing the same keyword argument twice at the call site — e.g., `f(x=1, x=2)` — raises `TypeError` immediately; `**kwargs` does not silently overwrite.
+>
+> ---
+>
+> **Default argument**
+> - A parameter with a preset value (`def f(x=10)`) that the caller may omit; evaluated once at function definition time, not on each call.
+> - Used for optional parameters with sensible fallbacks; mutable defaults are a well-known Python trap.
+>
+> > [!danger] Mutable default is shared state
+> >
+> > `def f(lst=[])` creates one list object at definition time shared across all calls. Use the `None` sentinel: `def f(lst=None): if lst is None: lst = []`.
+>
+> ---
+>
+> **Keyword-only argument**
+> - Parameters declared after a bare `*` in the signature must be passed by name at the call site — positional passing raises `TypeError`.
+> - Used to enforce explicit, self-documenting call sites for boolean flags and configuration parameters.
+>
+> > [!tip] Positional-only with /
+> >
+> > Parameters before `/` (Python 3.8+) are positional-only — callers cannot use their names, allowing safe internal renames without breaking callers.
+>
+> ---
+>
+> **Lambda**
+> - An anonymous single-expression function: `lambda params: expression` — no statements, no docstring, implicit return.
+> - Used as inline callbacks for `sorted(key=...)`, `map`, `filter`, and short higher-order function arguments.
+>
+> > [!warning] Lambda anti-patterns
+> >
+> > Assigning a lambda to a variable (`square = lambda x: x**2`) is equivalent to a `def` but loses the name in tracebacks. Complex lambdas with multiple conditions are harder to read and debug than a named function.
+>
+> ---
+>
+> **Closure**
+> - An inner function that captures variables from the enclosing scope by reference; the captured variables persist after the outer function returns.
+> - Used for factory functions, parameterized callbacks, state encapsulation, and the decorator pattern.
+>
+> > [!danger] Late-binding in loops
+> >
+> > Closures capture the variable itself, not its value at definition time. `[lambda: i for i in range(3)]` produces `[2, 2, 2]`. Fix: `[lambda i=i: i for i in range(3)]`.
+>
+> ---
+>
+> **LEGB rule**
+> - Python's name resolution order: Local → Enclosing → Global → Built-in; the first scope where the name is found wins.
+> - Understanding LEGB is required to predict which variable a name refers to when the same name exists in multiple scopes.
+>
+> > [!warning] Shadowing built-ins
+> >
+> > `list = [1, 2]` at module level overrides the built-in `list` type for the rest of the module. Avoid reusing built-in names (`list`, `dict`, `id`, `type`, `input`) as variable names.
+>
+> ---
+>
+> **`nonlocal`**
+> - Declares that a name in an inner function refers to the nearest enclosing (non-global) scope's variable, enabling rebinding from the inner function.
+> - Required to modify closure state (e.g., counters, accumulators) from within a nested function without creating a local shadow.
+>
+> > [!info] nonlocal vs global
+> >
+> > `nonlocal` targets the nearest enclosing function scope. `global` targets module-level scope. Prefer `nonlocal` for closure state; avoid `global` — it creates implicit coupling across call sites.
+>
+> ---
+>
+> **Decorator**
+> - A callable that receives a function and returns a modified version; `@decorator` above `def f()` is syntactic sugar for `f = decorator(f)`.
+> - The Pythonic mechanism for cross-cutting concerns: timing, logging, retry, caching, and authentication applied without modifying source code.
+>
+> > [!warning] Missing @functools.wraps
+> >
+> > Without `@functools.wraps(func)` on the wrapper, the decorated function loses its `__name__`, `__doc__`, and `__annotations__`. `help()`, logging, and tracebacks show the wrapper, not the original.
+>
+> ---
+>
+> **`functools.wraps`**
+> - A decorator applied to a wrapper function that copies `__name__`, `__doc__`, `__annotations__`, and `__wrapped__` from the wrapped function to the wrapper.
+> - Preserves function identity through the decoration layer so that debugging tools, `help()`, and introspection see the original function's metadata.
+>
+> > [!tip] Inspect the original through __wrapped__
+> >
+> > `@functools.wraps` sets `wrapper.__wrapped__ = func`. Access the original unwrapped function via `decorated_func.__wrapped__` for testing or inspection.
+>
+> ---
+>
+> **`functools.lru_cache`**
+> - A memoization decorator that caches return values keyed by arguments using a least-recently-used eviction strategy; `@cache` (Python 3.9+) is unbounded.
+> - Eliminates redundant computation for pure functions with repeated inputs — common use cases: Fibonacci, expensive lookups, recursive algorithms.
+>
+> > [!danger] Unhashable arguments crash lru_cache
+> >
+> > Passing a `list` or `dict` as an argument raises `TypeError: unhashable type`. Convert to `tuple` or `frozenset(d.items())` before calling the cached function.
+>
+> ---
+>
+> **Type hint**
+> - An annotation (`def f(x: int) -> str:`) that declares expected parameter and return types; stored in `__annotations__` but not enforced at runtime.
+> - Enables IDE autocompletion, static analysis with `mypy`/`pyright`, and runtime validation by frameworks like Pydantic and FastAPI.
+>
+> > [!warning] Hints are not enforcement
+> >
+> > Python does not raise errors for type mismatches at runtime. Run `mypy` for static checking or use `pydantic`/`beartype` for runtime validation if correctness guarantees are required.
+>
+> ---
+>
+> **Higher-order function**
+> - A function that accepts other functions as arguments or returns a function as its result.
+> - The foundation of `map`, `filter`, `sorted(key=...)`, decorator factories, and the strategy pattern — decouples algorithms from their consumers.
+>
+> > [!warning] Call vs pass
+> >
+> > `sorted(data, key=len)` passes the function reference. `sorted(data, key=len())` calls `len()` with no arguments immediately, raising `TypeError`. No parentheses when passing a function as a `key` argument.
+
 This note covers Python's function system in full: definition and first-class usage, flexible parameter modes (`*args`, `**kwargs`, defaults, keyword-only), lambda expressions, closures and scope rules (LEGB), the decorator pattern for cross-cutting concerns, and type hints for static analysis.
-
-### Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **First-class function** | Functions are objects — assign to variables, pass as arguments, return from other functions, store in dicts. | Higher-order patterns, callbacks, strategy dispatch. | Calling `func` (with parens) vs passing `func` (without parens) — parens invoke, no parens pass the reference. |
-| **def** | Keyword that defines a named function. Creates a function object bound to the given name. | Reusable named blocks of logic. | Forgetting the colon: `def greet(name)` is a syntax error — needs `def greet(name):`. |
-| **return** | Exits the function and sends a value back to the caller. Without `return`, functions return `None`. | Produce output from computation. | Forgetting `return` — function does work but caller gets `None`. |
-| **Docstring** | Triple-quoted string as the first statement in a function. Accessible via `help()` and `__doc__`. | Built-in documentation for functions, classes, modules. | Placing code before the docstring — it becomes a regular string, not a docstring. |
-| **\*args** | Collects extra positional arguments into a tuple. | Accept variable number of positional arguments. | Modifying `args` — it's a tuple (immutable). Convert to list if needed. |
-| **\*\*kwargs** | Collects extra keyword arguments into a dict. | Accept variable number of named arguments. | Passing duplicate keyword arguments — raises `TypeError`. |
-| **Default argument** | Parameter with a preset value: `def f(x=10)`. Caller can omit it. | Optional parameters with sensible defaults. | Mutable defaults (`def f(lst=[])`) are shared across calls — use `None` sentinel. |
-| **Keyword-only argument** | Parameters after `*` in the signature must be passed by name. | Force explicit naming for clarity and safety. | Forgetting `*` separator — parameters remain positional. |
-| **Lambda** | Anonymous function: `lambda args: expression`. Single expression, no statements. | Short callbacks for `map`, `filter`, `sorted`, LINQ-style chains. | Trying to use statements (assignment, `if/else` block) — lambdas are expression-only. |
-| **Closure** | Inner function that captures variables from the enclosing scope. The captured variables persist after the outer function returns. | Factories, callbacks, partial application, state encapsulation. | Late binding — closures capture the *variable*, not its value at definition time. Loop closures all share the same variable. |
-| **LEGB rule** | Python's scope resolution order: Local → Enclosing → Global → Built-in. | Understand which variable a name refers to. | Shadowing built-ins (`list = [1,2]`) — overrides the built-in `list` type. |
-| **nonlocal** | Keyword that rebinds a variable in the nearest enclosing (non-global) scope. | Modify closure state from an inner function. | Confusing `nonlocal` with `global` — `global` targets module scope, `nonlocal` targets enclosing function scope. |
-| **Decorator** | A function that wraps another function: `@decorator` above `def`. Receives the function, returns a modified version. | Cross-cutting concerns: logging, timing, caching, authentication, retry. | Forgetting `@functools.wraps(func)` — the wrapper loses the original function's `__name__` and `__doc__`. |
-| **functools.wraps** | Decorator that copies metadata (`__name__`, `__doc__`, `__annotations__`) from the wrapped function to the wrapper. | Preserve identity of decorated functions for debugging and inspection. | Omitting it — `help(func)` shows the wrapper's docstring, not the original's. |
-| **functools.lru_cache** | Built-in memoization decorator that caches function results based on arguments. | Avoid redundant computation for pure functions with repeated inputs. | Caching functions with mutable arguments (dicts, lists) — they aren't hashable. |
-| **Type hint** | Annotations like `def f(x: int) -> str:` that describe expected types. Not enforced at runtime. | IDE support, documentation, static analysis with `mypy`. | Thinking type hints are enforced — they are not. Use `mypy` or `beartype` for runtime checking. |
-| **Higher-order function** | A function that takes other functions as arguments or returns a function. | `map`, `filter`, `sorted(key=...)`, decorator factories, strategy pattern. | Accidentally calling the function instead of passing it: `sorted(data, key=len())` vs `sorted(data, key=len)`. |
-
-### What this note covers
-
-- **Function Basics** — `def`, `return`, docstrings, first-class usage, higher-order patterns, `map`/`filter`/`reduce`
-- **Parameters** — positional, keyword, `*args`/`**kwargs`, defaults (mutable pitfall), keyword-only, positional-only (Python 3.8+)
-- **Lambda Expressions** — syntax, use cases with `sorted`/`map`/`filter`, limitations, `functools.partial`
-- **Closures & Scope** — LEGB rule, `nonlocal`, `global`, closure factories, late-binding pitfall
-- **Decorators** — basic pattern, `@functools.wraps`, parameterized decorators, stacking, class decorators, built-in decorators (`@property`, `@staticmethod`, `@classmethod`, `@lru_cache`)
-- **Type Hints** — basic annotations, `Optional`, `Union`, `Callable`, generics, `TypeAlias`
 
 ## Function Basics
 
@@ -657,9 +839,9 @@ global
 }}}%%
 flowchart TD
     A["Name lookup: x"] --> B["Local scope"]
-    B -->|Not found| C["Enclosing scope\n(nonlocal)"]
-    C -->|Not found| D["Global scope\n(module level)"]
-    D -->|Not found| E["Built-in scope\n(len, print, etc.)"]
+    B -->|Not found| C["Enclosing scope<br>(nonlocal)"]
+    C -->|Not found| D["Global scope<br>(module level)"]
+    D -->|Not found| E["Built-in scope<br>(len, print, etc.)"]
     E -->|Not found| F["NameError"]
     B -->|Found| G["Use local x"]
     C -->|Found| H["Use enclosing x"]

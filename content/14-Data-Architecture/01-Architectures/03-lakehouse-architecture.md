@@ -55,11 +55,11 @@ The lakehouse resolves both sets of problems by separating storage from compute 
 
 ```mermaid
 flowchart TD
-    engines["QUERY ENGINES\nSpark | Trino | Presto | DuckDB | BigQuery | Athena"]
-    format["OPEN TABLE FORMAT LAYER\nDelta Lake | Apache Iceberg | Apache Hudi\nMetadata: catalogs, manifests, snapshots, txn log"]
-    storage["OBJECT STORAGE\nGoogle Cloud Storage | Amazon S3 | ADLS Gen2\nParquet files — cheap, durable, open"]
+    engines["QUERY ENGINES<br/>Spark | Trino | Presto | DuckDB | BigQuery | Athena"]
+    format["OPEN TABLE FORMAT LAYER<br/>Delta Lake | Apache Iceberg | Apache Hudi<br/>Metadata: catalogs, manifests, snapshots, txn log"]
+    storage["OBJECT STORAGE<br/>Google Cloud Storage | Amazon S3 | ADLS Gen2<br/>Parquet files — cheap, durable, open"]
 
-    engines -->|"reads/writes via\nopen table format API"| format
+    engines -->|"reads/writes via<br/>open table format API"| format
     format -->|"physical files"| storage
 
     style engines fill:#1a1a2e,stroke:#22d3ee,color:#fff
@@ -161,10 +161,10 @@ The [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architectur
 
 ```mermaid
 flowchart LR
-    src["Raw Sources\nAPIs, DBs, Files"]
-    bronze["Bronze Layer\nRaw, schema-on-write\nIceberg / Delta on GCS"]
-    silver["Silver Layer\nCleaned, deduplicated\nIceberg / Delta on GCS"]
-    gold["Gold Layer\nAggregated, business-ready\nIceberg / Delta on GCS"]
+    src["Raw Sources<br/>APIs, DBs, Files"]
+    bronze["Bronze Layer<br/>Raw, schema-on-write<br/>Iceberg / Delta on GCS"]
+    silver["Silver Layer<br/>Cleaned, deduplicated<br/>Iceberg / Delta on GCS"]
+    gold["Gold Layer<br/>Aggregated, business-ready<br/>Iceberg / Delta on GCS"]
 
     src --> bronze --> silver --> gold
 
@@ -197,14 +197,14 @@ BigLake is Google's lakehouse governance layer. It consists of:
 #### GCP Lakehouse Stack
 ```mermaid
 flowchart BT
-    write["Dataflow / Dataproc / Spark\nWrites new data"]
-    gcs["Google Cloud Storage\nParquet + Iceberg metadata"]
-    catalog["BigLake Metastore\nCatalog: databases, tables, schemas"]
-    bq["BigQuery\nSQL queries, BI"]
+    write["Dataflow / Dataproc / Spark<br/>Writes new data"]
+    gcs["Google Cloud Storage<br/>Parquet + Iceberg metadata"]
+    catalog["BigLake Metastore<br/>Catalog: databases, tables, schemas"]
+    bq["BigQuery<br/>SQL queries, BI"]
 
     write --> gcs
     gcs --> catalog
-    catalog -->|"BigLake tables\n(external tables pointing at GCS)"| bq
+    catalog -->|"BigLake tables<br/>(external tables pointing at GCS)"| bq
 
     style write fill:#1a1a2e,stroke:#9ece6a,color:#fff
     style gcs fill:#1a1a2e,stroke:#e0af68,color:#fff

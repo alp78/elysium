@@ -1022,13 +1022,13 @@ Embed assertions inside data pipelines to catch issues early. If any assertion f
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#a9b1d6", "primaryBorderColor": "#3b4261", "lineColor": "#7aa2f7", "secondaryColor": "#24283b", "tertiaryColor": "#1a1b26", "background": "#1a1b26", "mainBkg": "#24283b", "nodeBorder": "#3b4261", "clusterBkg": "#1a1b26", "titleColor": "#a9b1d6", "edgeLabelBackground": "#1a1b26", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#24283b"}}}%%
 flowchart LR
-    A[read_parquet] --> B[.pipe\nassert_row_count]
-    B --> C[.pipe\nassert_no_nulls]
-    C --> D[.pipe\nassert_unique]
-    D --> E[.pipe\nassert_positive]
-    E --> F[.filter\nsymbol]
+    A[read_parquet] --> B[.pipe<br/>assert_row_count]
+    B --> C[.pipe<br/>assert_no_nulls]
+    C --> D[.pipe<br/>assert_unique]
+    D --> E[.pipe<br/>assert_positive]
+    E --> F[.filter<br/>symbol]
     F --> G[result]
-    B -- AssertionError --> X[pipeline\nstops]
+    B -- AssertionError --> X[pipeline<br/>stops]
     C -- AssertionError --> X
     D -- AssertionError --> X
     E -- AssertionError --> X

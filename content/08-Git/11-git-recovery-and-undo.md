@@ -55,16 +55,16 @@ Before reaching for any undo command, identify **where the mistake lives**. Git 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    START["Where is the mistake?"] --> WT["Working tree\n(unstaged edits)"]
-    START --> IDX["Staging area\n(staged but not committed)"]
-    START --> LOCAL["Local commits\n(committed but not pushed)"]
-    START --> REMOTE["Pushed to remote\n(visible to others)"]
-    START --> RELEASE["Merged / released\n(in production history)"]
+    START["Where is the mistake?"] --> WT["Working tree<br/>(unstaged edits)"]
+    START --> IDX["Staging area<br/>(staged but not committed)"]
+    START --> LOCAL["Local commits<br/>(committed but not pushed)"]
+    START --> REMOTE["Pushed to remote<br/>(visible to others)"]
+    START --> RELEASE["Merged / released<br/>(in production history)"]
 
     WT --> WT_FIX["git restore"]
     IDX --> IDX_FIX["git restore --staged"]
     LOCAL --> LOCAL_FIX["git reset / git commit --amend"]
-    REMOTE --> REMOTE_FIX["git revert\n(safe for shared branches)"]
+    REMOTE --> REMOTE_FIX["git revert<br/>(safe for shared branches)"]
     RELEASE --> RELEASE_FIX["git revert + new release tag"]
 
     style WT fill:#1f3b2d,stroke:#73d13d,color:#c0caf5

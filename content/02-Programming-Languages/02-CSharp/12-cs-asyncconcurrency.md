@@ -8,37 +8,233 @@ updated: 2026-04-04
 status: complete
 ---
 
-# 12. Async & Concurrency - C#
+# Async and Concurrency - C#
 
-> [!quote]
+> [!quote] Herb Sutter on concurrency
 > "Everybody who learns concurrency thinks they understand it, ends up finding mysterious races they thought weren't possible, and discovers that they didn't actually understand it yet after all."
 >
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)
 
+> [!abstract]- Summary
+>
+> **Async and Await** — `async Task` / `async Task<T>` declare asynchronous methods; `await` suspends execution and releases the thread back to the pool until the operation completes. `Task.WhenAll` fans out multiple independent tasks concurrently; `Task.WhenAny` races them and returns the first to finish. Error propagation wraps in `AggregateException` on `WhenAll` failure.
+>
+> **Async Patterns** — `CancellationToken` / `CancellationTokenSource` provide cooperative cancellation; call `ThrowIfCancellationRequested()` at checkpoints and pass the token to every awaited call. `SemaphoreSlim` rate-limits concurrent async operations via `WaitAsync()` / `Release()` in a `try/finally` guard. Retry with exponential backoff handles transient failures. `Channel<T>` (bounded or unbounded) implements async producer-consumer pipelines with backpressure; producers call `WriteAsync`, consumers iterate `ReadAllAsync` with `await foreach`. `IAsyncEnumerable<T>` streams results lazily with `yield return`; `[EnumeratorCancellation]` wires cancellation directly to the generator. `ValueTask<T>` avoids heap allocation on hot synchronous paths. `TaskCompletionSource<T>` bridges callback-based APIs into `Task`-based async.
+>
+> **Tasks and Parallelism** — `Task.Run` offloads CPU-bound work to the thread pool; C# has no GIL so threads execute truly in parallel. `Parallel.ForEach` partitions collections across threads with optional `MaxDegreeOfParallelism`; `Parallel.ForEachAsync` (.NET 6+) supports async lambdas for I/O-bound parallel iteration. PLINQ (`AsParallel().WithDegreeOfParallelism(N)`) applies parallel LINQ operators to large collections.
+>
+> **Threading and Concurrency** — `Thread` creates OS threads; `.Start()` begins execution, `.Join()` blocks until completion. Raw `counter++` is a race condition — use `lock (obj) { }` for mutual exclusion or `Interlocked.Increment(ref counter)` for lock-free atomic operations. `ConcurrentDictionary` provides thread-safe key-value aggregation via `AddOrUpdate` / `GetOrAdd`. `BlockingCollection` is the synchronous (thread-based) producer-consumer queue.
+>
+> **Advanced Synchronization** — `ReaderWriterLockSlim` allows multiple concurrent readers and one exclusive writer; not async-safe (use `SemaphoreSlim(1,1)` for async mutual exclusion). `ManualResetEventSlim` acts as a gate — `Set()` unblocks all waiting threads simultaneously. `CountdownEvent(N)` blocks until `N` `Signal()` calls decrement the counter to zero. `Barrier(N)` synchronizes N participants at a phase checkpoint before any can advance. `PeriodicTimer` (.NET 6+) provides async-safe periodic ticking via `WaitForNextTickAsync()`.
+
+> [!note]- Glossary
+>
+> **`async` / `await`** — keywords that declare and drive asynchronous methods in C#.
+> - `async Task` marks a method as asynchronous, transforming it so `await` expressions compile correctly; the method returns a `Task` that the caller can observe. `await` suspends the current method at the awaited expression, releases the thread back to the thread pool, and resumes execution on a continuation when the awaited operation completes.
+> - Never use `async void` outside UI event handlers — it makes exceptions unobservable and can crash the process.
+>
+> > [!tip] Use `async Task` everywhere
+> > Declare all async methods as `async Task` or `async Task<T>`. Reserve `async void` only for UI event handlers where the framework mandates it.
+>
+> > ---
+>
+> **`Task` / `Task<T>`** — the fundamental unit of asynchronous work in .NET.
+> - `Task` represents an operation with no return value; `Task<T>` carries a typed result. Both expose status (running, completed, faulted, cancelled) and support continuation chaining via `await`.
+> - Never access `.Result` or call `.Wait()` on a `Task` from a synchronization context — it deadlocks because the continuation needs the blocked thread to resume.
+>
+> > [!danger] `.Result` deadlocks in sync contexts
+> > If you must call async code from a sync entry point, use `Task.Run(() => MyMethodAsync()).GetAwaiter().GetResult()` to escape the synchronization context.
+>
+> > ---
+>
+> **`Task.WhenAll`** — combines multiple tasks into one that completes when all inputs finish.
+> - Accepts an array or `IEnumerable<Task>` and starts all tasks concurrently; total wall-clock time equals the slowest individual task. Returns an array of results for `Task<T>` inputs.
+> - If any task faults, the combined task's `.Exception` is an `AggregateException`; iterate `.Flatten().InnerExceptions` to inspect all failures.
+>
+> > [!warning] All errors wrapped in `AggregateException`
+> > Catch the `await`, then loop over `task.Exception!.Flatten().InnerExceptions` — a plain `catch (Exception ex)` only exposes the first error.
+>
+> > ---
+>
+> **`Task.WhenAny`** — returns the first task in a set to complete.
+> - Useful for racing replica endpoints or implementing fallback timeouts. The remaining tasks continue running in the background; cancel them with a shared `CancellationToken` to avoid wasted work.
+> - `await` the returned task a second time to unwrap the result or rethrow any exception from the winner.
+>
+> > [!tip] Always cancel losers
+> > Pass a shared `CancellationTokenSource` to all competitor tasks and call `cts.Cancel()` after `WhenAny` returns, otherwise background tasks keep running and consuming resources.
+>
+> > ---
+>
+> **`CancellationToken`** — a cooperative cancellation signal passed through the async call chain.
+> - Created via `CancellationTokenSource`; the source controls when cancellation fires (`CancelAfter(TimeSpan)` for timeouts, `Cancel()` for manual triggers). The called code must actively check `token.ThrowIfCancellationRequested()` or pass the token to every awaited call — it is never forcibly killed.
+> - `OperationCanceledException` is the expected outcome when a token fires; catch it at the boundary that owns the cancellation policy.
+>
+> > [!warning] Cancellation is cooperative, not preemptive
+> > A running SQL query or HTTP call will not stop until it returns. Call `ct.ThrowIfCancellationRequested()` at logical checkpoints between stages and pass `ct` to `Task.Delay`, `HttpClient.GetAsync`, and all other awaitable APIs.
+>
+> > ---
+>
+> **`SemaphoreSlim`** — a lightweight counting semaphore for limiting concurrent async operations.
+> - `SemaphoreSlim(N)` allows up to N concurrent entries. `await sem.WaitAsync()` decrements the count (blocks if zero); `sem.Release()` increments it. Always call `Release()` in a `finally` block to prevent permanent starvation on exceptions.
+> - Not re-entrant — calling `await WaitAsync()` twice from the same async call chain without releasing will deadlock.
+>
+> > [!danger] Release in `finally` or deadlock is permanent
+> > Wrap every `WaitAsync` / `Release` pair in `try { ... } finally { sem.Release(); }`. An unhandled exception that skips `Release` starves all other waiters indefinitely.
+>
+> > ---
+>
+> **`Channel<T>`** — a high-performance async producer-consumer queue from `System.Threading.Channels`.
+> - `Channel.CreateBounded<T>(N)` creates a channel with backpressure (producer blocks when N items are buffered); `CreateUnbounded<T>()` has no buffer limit. Producers call `await writer.WriteAsync(item)` and must call `writer.Complete()` when done. Consumers iterate `await foreach (var item in reader.ReadAllAsync())`.
+> - Multiple consumers can read from the same channel; each item is delivered to exactly one consumer.
+>
+> > [!danger] Forgetting `writer.Complete()` blocks readers forever
+> > `ReadAllAsync()` never returns until the writer signals completion. Always call `channel.Writer.Complete()` (or `TryComplete(exception)`) in a `finally` block at the end of the producer.
+>
+> > ---
+>
+> **`IAsyncEnumerable<T>`** — an async streaming interface that yields items one at a time without loading the full result set.
+> - Implemented with `async` + `yield return`; consumed with `await foreach`. Essential for paginated API responses, large database result sets, or unbounded event streams. `break` inside `await foreach` disposes the enumerator cleanly.
+> - The `[EnumeratorCancellation]` attribute on the generator's `CancellationToken` parameter wires `.WithCancellation(ct)` from the consumer directly into the generator body.
+>
+> > [!tip] Use `[EnumeratorCancellation]` for graceful stream termination
+> > Decorate the generator's `ct` parameter with `[EnumeratorCancellation]` and pass the token to every `await Task.Delay(ms, ct)` call so the stream stops immediately on cancellation rather than waiting for the next yield.
+>
+> > ---
+>
+> **`ValueTask<T>`** — a `readonly struct` that avoids heap allocation when a method frequently completes synchronously.
+> - Wraps either a raw `TResult` (sync path, zero allocation) or a `Task<T>` (async path). Most valuable on hot paths such as cache lookups or buffered reads where the sync branch dominates. Default to `Task<T>` for all other cases.
+> - A `ValueTask<T>` must be awaited exactly once; calling `.AsTask()` more than once or reading `.Result` before completion is undefined behavior.
+>
+> > [!danger] `ValueTask<T>` can only be consumed once
+> > If you need to await the same result from multiple call sites, call `.AsTask()` once and share the resulting `Task<T>`. Never await a `ValueTask<T>` more than once or store it for later use.
+>
+> > ---
+>
+> **`TaskCompletionSource<T>`** — a bridge that exposes a `Task<T>` whose completion you control manually.
+> - Create a `tcs`, expose `tcs.Task` to callers, and later call `SetResult`, `SetException`, or `SetCanceled` from a callback, event handler, or external trigger. Standard pattern for wrapping callback-based (APM) or event-based (EAP) APIs into modern async code.
+> - Prefer `TrySetResult` / `TrySetException` / `TrySetCanceled` when multiple completion paths may race — the `Try` variants return `false` if the task is already completed, avoiding `InvalidOperationException`.
+>
+> > [!tip] Use `TrySet*` variants when multiple events may fire
+> > When wrapping event-based APIs where success, error, and cancellation can all fire, use `TrySetResult`, `TrySetException`, and `TrySetCanceled`. The non-`Try` variants throw if the TCS is already resolved.
+>
+> > ---
+>
+> **`Task.Run`** — schedules a delegate on the thread pool and returns a `Task`.
+> - Use for CPU-bound work that would block the calling thread. Each call consumes a thread pool thread; combine with `Task.WhenAll` for parallel fan-out. C# has no GIL, so multiple threads execute truly in parallel on separate cores.
+> - Do not use `Task.Run` for I/O-bound work — async/await does not need a thread while waiting and is the correct choice.
+>
+> > [!warning] `Task.Run` is for CPU work, not I/O
+> > Using `Task.Run` to call async I/O wastes a thread pool thread during the wait. Use `async`/`await` directly for I/O-bound operations.
+>
+> > ---
+>
+> **`Parallel.ForEach` / `Parallel.ForEachAsync`** — partitions a collection and processes items in parallel using the thread pool.
+> - `Parallel.ForEach` blocks the calling thread until all iterations complete; `Parallel.ForEachAsync` (.NET 6+) accepts async lambdas and does not block. Both accept `ParallelOptions { MaxDegreeOfParallelism = N }` to cap thread usage.
+> - Use for CPU-bound collection processing (hashing, parsing, transformation). Do not use `Parallel.ForEach` with I/O-bound or async work — `Parallel.ForEachAsync` or `Task.WhenAll` is correct for I/O.
+>
+> > [!warning] `Parallel.ForEach` does not understand `async`
+> > An `async` lambda passed to `Parallel.ForEach` returns `async void`, silently losing exceptions. Use `Parallel.ForEachAsync` or `Task.WhenAll` for async work.
+>
+> > ---
+>
+> **PLINQ** — Parallel LINQ; extends standard LINQ with parallel execution via `AsParallel()`.
+> - `source.AsParallel().WithDegreeOfParallelism(N)` partitions data and runs Where/Select/etc. across N threads. Most effective on collections of 100K+ items where per-item CPU work is non-trivial.
+> - PLINQ can reorder results — use `AsOrdered()` if result ordering matters, but this reduces parallelism.
+>
+> > [!tip] Benchmark before committing to PLINQ
+> > For small collections or simple operations, PLINQ's partitioning overhead exceeds the speedup. Always measure sequential vs parallel time before defaulting to `AsParallel()`.
+>
+> > ---
+>
+> **`Thread`** — an OS-level thread created explicitly with `new Thread(method)`.
+> - `.Start()` begins execution; `.Start(state)` passes a parameter. `.Join()` blocks the caller until the thread exits. `IsBackground = true` marks the thread as a daemon that terminates when the main thread exits.
+> - In modern C#, prefer `Task.Run` for short-lived CPU work — raw threads have higher creation overhead and are harder to coordinate. Use `Thread` only when you need explicit priority, apartment state, or a dedicated long-running loop.
+>
+> > [!tip] Prefer `Task.Run` over `new Thread` for short work
+> > The thread pool reuses threads, avoids OS creation cost, and integrates with `Task` / `await`. Create raw `Thread` objects only for dedicated, long-running background workers.
+>
+> > ---
+>
+> **`lock` / `Monitor`** — mutual exclusion primitive that serializes access to a critical section.
+> - `lock (obj) { }` is syntactic sugar for `Monitor.Enter(obj)` / `Monitor.Exit(obj)`. Only one thread can hold the lock at a time; all others block at the `lock` statement until it is released.
+> - Always lock on a private `object` instance — never on `this`, `typeof(T)`, or string literals, which may be held by external code and cause deadlocks.
+>
+> > [!danger] Never lock on `this` or public objects
+> > External callers may independently lock on the same reference, creating an uncontrolled deadlock surface. Use a dedicated `private readonly object _lock = new();` field.
+>
+> > ---
+>
+> **`Interlocked`** — lock-free atomic operations implemented with CPU compare-and-swap instructions.
+> - `Interlocked.Increment(ref counter)` atomically reads, increments, and writes a 32- or 64-bit integer in a single indivisible CPU instruction. Also provides `Decrement`, `Add`, `Exchange`, and `CompareExchange`.
+> - Only operates on single values — compound operations (read-check-write sequences) still require a `lock` or a higher-level concurrent type.
+>
+> > [!tip] `Interlocked` is faster than `lock` for simple counters
+> > `Interlocked.Increment` avoids kernel-mode transitions and is the lowest-overhead option for integer counters and boolean flags. Use `lock` when the critical section spans multiple statements.
+>
+> > ---
+>
+> **`ConcurrentDictionary<TKey, TValue>`** — a thread-safe dictionary from `System.Collections.Concurrent`.
+> - Uses internal lock striping so concurrent writes to different keys do not block each other. `AddOrUpdate(key, addValue, updateFactory)` atomically inserts or updates a key; `GetOrAdd(key, factory)` atomically inserts only if the key is absent.
+> - Compound operations (read-check-then-add) are not atomic end-to-end. The `updateFactory` delegate in `AddOrUpdate` may be called multiple times under contention — keep it pure (no I/O, no side effects).
+>
+> > [!danger] `AddOrUpdate` delegates may execute more than once
+> > The update factory is optimistic — if two threads contend on the same key, the factory runs on both and one result is discarded. Never perform I/O or writes inside the delegate.
+>
+> > ---
+>
+> **`BlockingCollection<T>`** — synchronous producer-consumer queue backed by `IProducerConsumerCollection<T>`.
+> - `Add(item)` blocks if the bound is reached; `Take()` blocks if the collection is empty. `GetConsumingEnumerable()` provides a `foreach`-friendly consumer loop that terminates when `CompleteAdding()` is called.
+> - Prefer `Channel<T>` in async codebases — `BlockingCollection` blocks OS threads, which is wasteful in async contexts.
+>
+> > [!tip] Use `Channel<T>` for async, `BlockingCollection` for threads
+> > `BlockingCollection` is the correct choice only when the consumer code is synchronous (thread-based). Mixing it with `async`/`await` blocks thread pool threads unnecessarily.
+>
+> > ---
+>
+> **`ReaderWriterLockSlim`** — a synchronization primitive optimized for read-heavy workloads.
+> - `EnterReadLock()` allows multiple threads to hold simultaneous read locks; `EnterWriteLock()` grants exclusive access and blocks all readers and writers. `UpgradeableReadLock` promotes a reader to writer without releasing. Lighter than `ReaderWriterLock` (no OS kernel object).
+> - Not async-safe — the lock is thread-affine; holding it across an `await` continuation (which may resume on a different thread) corrupts the lock state. Use `SemaphoreSlim(1, 1)` for async mutual exclusion.
+>
+> > [!warning] Not safe to hold across `await`
+> > If your critical section contains any `await` expression, use `SemaphoreSlim(1, 1)` instead. `ReaderWriterLockSlim` requires the same thread to release the lock that acquired it.
+>
+> > ---
+>
+> **`ManualResetEventSlim`** — a lightweight gate that unblocks all waiting threads simultaneously.
+> - Initialized to `false` (closed). `gate.Wait()` blocks any thread that calls it. `gate.Set()` opens the gate and releases all waiters at once. `Reset()` closes it again.
+> - Useful for holding worker threads at a starting line until a controller signals initialization is complete.
+>
+> > [!tip] Use for broadcast signaling, not single-consumer handoff
+> > `ManualResetEventSlim.Set()` releases all waiters simultaneously. For single-consumer handoff (one waiter at a time), use `SemaphoreSlim(0, 1)` or `Channel<T>` instead.
+>
+> > ---
+>
+> **`CountdownEvent`** — blocks until a counter reaches zero via repeated `Signal()` calls.
+> - `new CountdownEvent(N)` initializes the count to N. Each `Signal()` decrements by 1; `Wait()` blocks until the count is 0. Supports `AddCount()` to increment after construction for dynamic participant sets.
+> - Once the count reaches 0 the event is set permanently (it does not auto-reset); call `Reset()` to reuse it for another round.
+>
+> > [!tip] Use when the main thread waits for N workers
+> > `CountdownEvent` is the idiomatic primitive for "wait until all N components have finished their initialization step" — cleaner than managing N separate `ManualResetEventSlim` gates.
+>
+> > ---
+>
+> **`Barrier`** — synchronizes N participants at a phase checkpoint; all must arrive before any can advance.
+> - `new Barrier(N, postPhaseCallback)` blocks each participant at `SignalAndWait()` until all N have signaled. The optional `postPhaseCallback` runs between phases — useful for logging or aggregate state checks.
+> - Useful for phased data pipelines where all partition workers must complete extraction before any can begin transformation.
+>
+> > [!tip] Barrier vs `Task.WhenAll`
+> > `Task.WhenAll` is a one-shot wait; `Barrier` supports multiple sequential phases with the same set of participants. Use `Barrier` when workers cycle through repeated phases, `Task.WhenAll` for a single synchronization point.
+>
+> > ---
+>
+> **`PeriodicTimer`** — async-friendly scheduled timer introduced in .NET 6.
+> - `new PeriodicTimer(interval)` combined with `await timer.WaitForNextTickAsync(ct)` in a `while` loop provides drift-free ticking without blocking a thread between ticks. Cancelling the token causes `WaitForNextTickAsync` to throw `OperationCanceledException`, cleanly exiting the loop.
+> - Unlike `System.Timers.Timer` (callback-based, can fire overlapping callbacks) or `Task.Delay` in a loop (accumulates drift), `PeriodicTimer` never overlaps ticks and respects cancellation natively.
+>
+> > [!tip] Prefer `PeriodicTimer` over `Task.Delay` loops in .NET 6+
+> > `Task.Delay(interval)` in a `while` loop accumulates drift because it does not account for the time spent in the loop body. `PeriodicTimer` fires at consistent wall-clock intervals regardless of processing time.
+
 C# provides `async`/`await` for I/O-bound concurrency, `Task.Run` and `Parallel.ForEach` for CPU-bound parallelism, `Channel<T>` for producer-consumer pipelines, and a rich set of synchronization primitives. No GIL — threads provide true CPU parallelism. This note covers async fundamentals, task parallelism, threading, and synchronization.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **async / await** | `async Task` declares an async method; `await` pauses it until the awaited task completes, freeing the thread. | Write concurrent I/O code that reads sequentially but executes concurrently. | `async void` — only for event handlers. Use `async Task` for everything else. |
-| **Task / Task&lt;T&gt;** | Represents an asynchronous operation. `Task` for no return value; `Task<T>` for a result. | The fundamental unit of async work in .NET. | `Task.Result` blocks the calling thread — use `await` instead to avoid deadlocks. |
-| **Task.WhenAll** | Runs multiple tasks concurrently and completes when all finish. | Fan-out pattern — launch N concurrent requests and collect all results. | If any task throws, `WhenAll` wraps errors in `AggregateException`. |
-| **CancellationToken** | Cooperative cancellation mechanism — pass a token to async methods; signal cancellation from the caller. | Cancel long-running operations gracefully (timeouts, user cancellation). | Ignoring the token in your method body — cancellation only works if you check `token.ThrowIfCancellationRequested()`. |
-| **SemaphoreSlim** | Limits concurrent access to a resource. `SemaphoreSlim(10)` allows 10 concurrent entries. | Rate-limit API calls, cap database connections, control resource contention. | `SemaphoreSlim` is not re-entrant — don't `await WaitAsync()` twice on the same semaphore from the same call chain. |
-| **Channel&lt;T&gt;** | High-performance async producer-consumer queue. Bounded channels provide backpressure. | Pipeline stages: extract → transform → load with async support and backpressure. | Forgetting to call `writer.Complete()` — the reader blocks forever waiting for more items. |
-| **Parallel.ForEach** | Partitions a collection across thread pool threads for CPU-bound parallel processing. | Data transformation, hashing, parsing large collections. | Using `Parallel.ForEach` for I/O — use `Task.WhenAll` instead. |
-| **lock / Monitor** | `lock (obj) { }` ensures only one thread enters the critical section at a time. | Protect shared mutable state from race conditions. | Locking on `this` or a public object — use a private `object _lock = new()`. |
-| **ConcurrentDictionary** | Thread-safe dictionary from `System.Collections.Concurrent`. | Shared state in multi-threaded code without explicit locking. | Compound operations (check-then-add) are not atomic — use `GetOrAdd` or `AddOrUpdate`. |
-| **Interlocked** | Lock-free atomic operations: `Increment`, `Decrement`, `CompareExchange`. | High-performance counters and flags without lock contention. | Only works on single values — compound operations still need `lock`. |
-
-### What this note covers
-
-- **Async and Await** — `async Task`, `await`, `Task.WhenAll`, `Task.WhenAny`, `ValueTask`, error handling
-- **Async Patterns** — `CancellationToken`, `SemaphoreSlim`, timeouts, `IAsyncEnumerable`, `Channel<T>`
-- **Tasks and Parallelism** — `Parallel.ForEach`, PLINQ, `Task.Run`, `MaxDegreeOfParallelism`
-- **Threading and Concurrency** — `Thread`, `lock`, `ConcurrentDictionary`, `Interlocked`, `BlockingCollection`
-- **Advanced Synchronization** — `ReaderWriterLockSlim`, `Barrier`, `CountdownEvent`, `ManualResetEventSlim`, `PeriodicTimer`
 
 ```csharp
 using System.Diagnostics;

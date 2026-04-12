@@ -59,11 +59,11 @@ Before running any remote commands, understand the relationship between your wor
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    WD["Working Directory\n(files on disk)"]
-    IDX["Staging Area / Index\n(git add)"]
-    LOCAL["Local Branches\n(main, feature/*)"]
-    RTB["Remote-Tracking Branches\n(origin/main, upstream/main)"]
-    REMOTE["Remote Server\n(GitHub / GitLab)"]
+    WD["Working Directory<br/>(files on disk)"]
+    IDX["Staging Area / Index<br/>(git add)"]
+    LOCAL["Local Branches<br/>(main, feature/*)"]
+    RTB["Remote-Tracking Branches<br/>(origin/main, upstream/main)"]
+    REMOTE["Remote Server<br/>(GitHub / GitLab)"]
 
     WD -->|"git add"| IDX
     IDX -->|"git commit"| LOCAL
@@ -380,8 +380,8 @@ When you fork a repository on GitHub, your fork becomes `origin`. The original r
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    UP["upstream/main\n(original repo)"] -->|"git fetch upstream\n+ git merge"| LOCAL["local main\n(synced)"]
-    LOCAL -->|"git push origin main"| ORIGIN["origin/main\n(your fork)"]
+    UP["upstream/main<br/>(original repo)"] -->|"git fetch upstream<br/>+ git merge"| LOCAL["local main<br/>(synced)"]
+    LOCAL -->|"git push origin main"| ORIGIN["origin/main<br/>(your fork)"]
     ORIGIN -->|"Pull Request"| UP
 ```
 
@@ -421,7 +421,7 @@ The simplest model: one remote (`origin`) shared by all team members. Everyone p
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    DEV1["Developer A"] -->|push / pull| ORIGIN["origin\n(shared repo)"]
+    DEV1["Developer A"] -->|push / pull| ORIGIN["origin<br/>(shared repo)"]
     DEV2["Developer B"] -->|push / pull| ORIGIN
     DEV3["CI Bot"] -->|push / pull| ORIGIN
 ```

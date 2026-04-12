@@ -12,11 +12,20 @@ GCP platform essentials from gcloud CLI structure and authentication through nam
 ```mermaid
 mindmap
   ((Platform Foundations))
+    (CLI setup)
     (authentication)
     (configurations)
     (output formatting)
     (projects and APIs)
 ```
+
+> [!abstract]- [[00-gcloud-cli-setup]]
+>
+> - [Installation methods](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup#installation)
+> - [Initialization and gcloud init](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup#initialization)
+> - [Component management](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup#component-management)
+> - [Version and diagnostics](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup#version-and-diagnostics)
+> - [Shell completion](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup#shell-completion)
 
 > [!abstract]- [[02-gcloud-authentication]]
 >

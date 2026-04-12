@@ -15,35 +15,183 @@ status: complete
 >
 > — **Greg Brockman**
 
+> [!abstract]- Summary
+>
+> **HTTP Clients (`requests` / `httpx`)**
+> - `requests`: synchronous HTTP library; covers GET, POST, PUT, DELETE; no default timeout — always pass `timeout=`; use `Session()` for connection reuse and shared headers.
+> - `httpx`: drop-in replacement adding async support, HTTP/2, and enforced timeouts; `Client()` for pooling, `AsyncClient()` for concurrent calls with `asyncio.gather()`.
+> - `raise_for_status()` raises on 4xx/5xx; equivalent to C# `EnsureSuccessStatusCode()`.
+> - Headers passed via `headers=` dict; Bearer tokens loaded from env vars, never hardcoded.
+>
+> **REST API Patterns for Data Engineering**
+> - Pagination: loop until exhausted, guard with `max_pages`, use cursor-based when available.
+> - Retry with exponential backoff: `delay = base * 2 ** attempt`; honour `Retry-After` on 429.
+> - Bulk POST: batch 100–1000 records per request to reduce round trips by orders of magnitude.
+>
+> **Building a REST API (FastAPI)**
+> - Pydantic `BaseModel` subclasses define request/response shapes; FastAPI validates before handler runs.
+> - Route decorators: `@app.get`, `@app.post`, `@app.delete`; `HTTPException` returns structured error responses.
+> - `uvicorn` serves the ASGI app; auto-generates Swagger docs at `/docs`; `422` returned on validation failure.
+> - C# mapping: `FastAPI` → ASP.NET Minimal APIs; `@app.get` → `app.MapGet()`; `HTTPException` → `Results.NotFound()`; `uvicorn` → Kestrel.
+>
+> **Pydantic — Data Validation**
+> - `Field()` constraints: `gt=0`, `max_length`, `pattern`, `Literal`, `Enum` restrict values at schema level.
+> - `@field_validator`: single-field custom rules (format, normalization); `@model_validator(mode="after")`: cross-field rules (`end_date > start_date`).
+> - Nested models validated recursively; `model_dump(by_alias=True)` produces camelCase for external APIs.
+> - `frozen=True`: immutable config; `strict=True`: disables coercion — critical for financial data.
+> - `model_json_schema()` generates OpenAPI schema; FastAPI uses it to build Swagger docs automatically.
+
+> [!note]- Glossary
+>
+> **`requests`** — synchronous Python HTTP library; the standard choice for simple scripts and one-off API calls.
+> - Covers every HTTP verb via `requests.get/post/put/delete`; `params=` builds query strings, `json=` serializes body and sets `Content-Type` automatically.
+> - C# equivalent: `HttpClient` used synchronously; unlike `HttpClient`, `requests` has no default timeout — omitting `timeout=` will block the caller indefinitely.
+>
+> > [!warning] No default timeout
+> >
+> > `requests.get(url)` blocks forever if the server is slow or unresponsive. Always pass `timeout=(connect_s, read_s)`.
+>
+> > ---
+>
+> **`httpx`** — modern Python HTTP library with both sync and async support, HTTP/2, and enforced default timeouts.
+> - Drop-in replacement for `requests`; `httpx.Client()` pools connections across requests; `httpx.AsyncClient()` enables concurrent calls with `await`.
+> - C# equivalent: `HttpClient` (sync) or `HttpClient` with `async/await` (async); unlike `requests`, `httpx` enforces a 5-second default timeout.
+>
+> > [!tip] Prefer `httpx` in production pipelines
+> >
+> > `httpx` is preferable over `requests` in any pipeline making more than one HTTP call, because connection pooling, enforced timeouts, and async support are available out of the box.
+>
+> > ---
+>
+> **`AsyncClient`** — `httpx` client class for async/await usage; enables concurrent HTTP calls without threading.
+> - Used inside `async def` functions; `async with httpx.AsyncClient() as client:` manages lifecycle; combine with `asyncio.gather()` to fire multiple requests concurrently.
+> - Not interchangeable with `httpx.Client`; using `AsyncClient` in a synchronous context raises `RuntimeError`.
+>
+> > [!warning] Client lifecycle
+> >
+> > Always use `AsyncClient` as an async context manager (`async with`). Using it outside the `async with` block raises `RuntimeError: client is not open`.
+>
+> > ---
+>
+> **ASGI** — Asynchronous Server Gateway Interface; the protocol that FastAPI (via Starlette) implements to handle async HTTP and WebSocket connections.
+> - Successor to WSGI (used by Flask and Django in sync mode); ASGI is required for async route handlers and WebSocket support.
+> - C# equivalent: ASP.NET Core's Kestrel server, which handles async I/O natively.
+>
+> > [!info] ASGI vs WSGI
+> >
+> > WSGI (Flask, Django sync) processes one request at a time per worker; ASGI allows a single worker to handle many concurrent connections via `async/await`, reducing thread overhead under I/O-bound load.
+>
+> > ---
+>
+> **FastAPI** — modern async Python web framework built on Starlette and Pydantic; produces REST APIs with automatic request validation and Swagger docs.
+> - Route handlers are decorated with `@app.get/post/delete`; return a plain dict or a Pydantic model — not a `Response` object.
+> - C# equivalent: ASP.NET Minimal APIs (`app.MapGet`, `app.MapPost`); FastAPI's auto-validation maps to model binding with `[ApiController]`.
+>
+> > [!tip] Thin handlers, fat models
+> >
+> > Keep route handler functions thin: validate with Pydantic, delegate logic to a service function, return the response. Business logic inside the handler makes testing harder.
+>
+> > ---
+>
+> **Pydantic `BaseModel`** — base class for Pydantic data models; defines typed fields that are validated and coerced on construction.
+> - FastAPI uses `BaseModel` subclasses to validate request bodies automatically before the handler runs, and to generate 422 responses on invalid input.
+> - C# equivalent: a `record` type with `[Required]` and `[Range]` DataAnnotations; Pydantic is more expressive and validates at runtime rather than only at the framework level.
+>
+> > [!warning] `BaseModel` vs plain dataclass
+> >
+> > Pydantic does not validate plain Python `dataclass` types. Only classes that inherit from `BaseModel` receive automatic validation, coercion, and JSON schema generation.
+>
+> > ---
+>
+> **`HTTPException`** — FastAPI's mechanism for returning HTTP error responses with a structured `{"detail": "..."}` body.
+> - Raised inside a route handler with `raise HTTPException(status_code=404, detail="...")`. FastAPI converts it to the correct HTTP response automatically.
+> - C# equivalent: `Results.NotFound()`, `Results.Conflict()` in Minimal APIs; raising a plain Python `Exception` instead returns an unstructured 500 with no useful body.
+>
+> > [!warning] Plain `Exception` returns 500
+> >
+> > Raising `raise Exception("not found")` inside a FastAPI handler produces a generic 500 response. Always use `raise HTTPException(status_code=..., detail=...)` for any expected error condition.
+>
+> > ---
+>
+> **`raise_for_status()`** — method on `requests` and `httpx` response objects that raises `HTTPError` for 4xx and 5xx status codes.
+> - Equivalent to C# `HttpResponseMessage.EnsureSuccessStatusCode()`; prevents silent failures where a failed response is processed as if it were successful.
+> - Call after every request in production pipelines; checking `status_code == 200` manually is error-prone and misses 201, 204, and all 4xx/5xx variants.
+>
+> > [!warning] Silent failures without `raise_for_status()`
+> >
+> > Omitting `raise_for_status()` means a 404 or 500 response is silently passed to `resp.json()`, which may return an error payload that the pipeline processes as valid data.
+>
+> > ---
+>
+> **Retry with backoff** — pattern of retrying a failed HTTP request after an exponentially increasing delay: `delay = base * 2 ** attempt`.
+> - Essential for rate-limited or transiently failing APIs; use `tenacity` or a manual loop; always cap the maximum delay (e.g., 60 s) to avoid indefinite stalls.
+> - Retrying immediately in a loop (`while True: request()`) exhausts the rate limit faster; the `Retry-After` header on 429 responses should override the backoff delay when present.
+>
+> > [!tip] Honour `Retry-After`
+> >
+> > Always read `resp.headers.get("Retry-After")` before applying the default backoff. Financial data APIs (e.g., Twelve Data, Alpha Vantage) set this header explicitly; ignoring it leads to repeated bans.
+>
+> > ---
+>
+> **429 Too Many Requests** — HTTP status code indicating the client has exceeded the API's rate limit.
+> - The response includes a `Retry-After` header specifying the number of seconds to wait before the next request; ignoring it and using a fixed sleep causes repeated 429s.
+> - C# equivalent: same HTTP status; `HttpResponseMessage.Headers` exposes `Retry-After` via `RetryConditionHeaderValue`.
+>
+> > [!warning] Fixed sleep ignores `Retry-After`
+> >
+> > Using `time.sleep(1)` on every 429 ignores the server's actual cooldown window. Read `int(resp.headers.get("Retry-After", default_delay))` and sleep that value.
+>
+> > ---
+>
+> **Pagination** — strategy for retrieving large datasets across multiple API responses, each returning a bounded page of records.
+> - Two main schemes: offset/limit (`?page=1&per_page=100`) and cursor-based (`?cursor=<token>`); cursor-based is safer under concurrent writes because it avoids the duplicate-record problem of offset pagination.
+> - Always guard pagination loops with a `max_pages` sentinel to prevent infinite loops if the API's termination signal is missing or malformed.
+>
+> > [!warning] Unbounded pagination loop
+> >
+> > A `while True` loop with no `max_pages` guard hangs indefinitely if the API never returns an empty page or omits the `next` cursor. Add `if page >= max_pages: break` as a safety valve.
+>
+> > ---
+>
+> **Bearer token** — authentication credential passed in the `Authorization: Bearer <token>` HTTP request header; the standard OAuth 2.0 and API key authentication method.
+> - Tokens are typically JWT (JSON Web Tokens) or opaque strings issued by an identity provider; they must be refreshed before expiry.
+> - C# equivalent: `request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token)`; in both languages, tokens must be loaded from environment variables or a secrets manager — never hardcoded.
+>
+> > [!danger] Hardcoded credentials
+> >
+> > A Bearer token committed to source control is a permanent security liability even after rotation — the token exists in git history. Always load from `os.environ["API_TOKEN"]` or a vault.
+>
+> > ---
+>
+> **`uvicorn`** — ASGI server used to run FastAPI applications; not a development-only tool — suitable for production behind a reverse proxy (e.g., nginx).
+> - Start with `uvicorn app:app --reload` during development; `--reload` is a dev flag only. In production omit it and set `--workers` for multi-process deployment.
+> - C# equivalent: Kestrel (ASP.NET Core's built-in HTTP server); running `python app.py` directly does not start an ASGI server — the app object is never served.
+>
+> > [!warning] `python app.py` does not start the server
+> >
+> > Instantiating `FastAPI()` and running `python app.py` does nothing unless the file explicitly calls `uvicorn.run(app, ...)`. Always start via `uvicorn module:app`.
+>
+> > ---
+>
+> **Connection pooling** — reusing existing TCP connections across multiple HTTP requests to the same host, avoiding the overhead of a new TLS handshake per request.
+> - `requests.Session()` and `httpx.Client()` both pool connections automatically when used as context managers; creating a new client per request in a loop bypasses pooling entirely.
+> - C# equivalent: a long-lived `HttpClient` instance or `IHttpClientFactory` registered in DI — the same principle applies: one client shared across requests.
+>
+> > [!warning] New client per request kills throughput
+> >
+> > Instantiating `httpx.Client()` inside a loop creates and tears down a TCP connection on every iteration. For 1,000 requests, that is 1,000 handshakes instead of one. Instantiate once and reuse.
+>
+> > ---
+>
+> **422 Unprocessable Entity** — HTTP status code FastAPI returns automatically when the request body fails Pydantic validation.
+> - The response body is `{"detail": [...]}` where each element describes one failed constraint (field path, error type, message); no handler code is required — FastAPI generates it from the model definition.
+> - Distinct from 400 Bad Request: 400 means the request is syntactically malformed (e.g., invalid JSON); 422 means the JSON parsed successfully but the values failed schema constraints.
+>
+> > [!info] 422 vs 400
+> >
+> > FastAPI reserves 400 for manually raised `HTTPException(status_code=400, ...)`. The automatic Pydantic validation path always produces 422. Clients should handle both codes when calling FastAPI endpoints.
+
 This note covers Python web and API patterns using `requests`, `httpx`, FastAPI, and Pydantic.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `requests` | Synchronous Python HTTP library | Default for simple scripts and one-off API calls | No built-in timeout — always pass `timeout=` or it hangs forever |
-| `httpx` | HTTP library with sync and async support | Use in async pipelines and production services | Forgetting to close the client; use `async with` or `with` |
-| `AsyncClient` | `httpx` client for async/await usage | Enables concurrent HTTP calls without threading | Must be used inside an `async def`; not interchangeable with sync `Client` |
-| ASGI | Asynchronous Server Gateway Interface | Protocol that FastAPI and Starlette implement | Confused with WSGI (Flask/Django sync); ASGI required for async endpoints |
-| FastAPI | Modern async Python web framework | Used to build REST APIs with automatic validation and docs | Route handlers return plain dicts or Pydantic models, not `Response` objects |
-| Pydantic `BaseModel` | Data validation class for request/response shapes | FastAPI uses it for auto-validation and 422 error generation | Forgetting to inherit from `BaseModel`; using a plain dataclass instead |
-| `HTTPException` | FastAPI's mechanism for returning HTTP error responses | Standard way to return 404, 409, etc. from a handler | Raising a plain Python `Exception` instead, which returns 500 |
-| `raise_for_status()` | `requests`/`httpx` method that raises on 4xx/5xx | Prevents silent failures on failed API calls | Forgetting to call it; checking `status_code` manually and missing edge cases |
-| Retry with backoff | Pattern of retrying a failed request after an increasing delay | Required for rate-limited or flaky APIs | Retrying immediately in a loop without delay, causing faster rate-limit exhaustion |
-| 429 Too Many Requests | HTTP status indicating rate limit exceeded | Must be handled explicitly; response includes `Retry-After` header | Ignoring the `Retry-After` header and using a fixed sleep interval |
-| Pagination | Strategy for retrieving large datasets in pages | Prevents memory overload and API timeouts | Assuming all data fits in one response; not handling `next` cursors or empty pages |
-| Bearer token | Auth credential passed in `Authorization: Bearer <token>` header | Standard OAuth 2.0 / API key authentication method | Hardcoding tokens in source code instead of loading from environment |
-| `uvicorn` | ASGI server used to run FastAPI apps | Required to serve FastAPI; not a dev-only tool | Running `python app.py` directly instead of `uvicorn app:app` |
-| Connection pooling | Reusing open TCP connections across requests | Reduces latency; critical in high-throughput pipelines | Creating a new `httpx.Client` per request in a loop |
-| 422 Unprocessable Entity | HTTP status FastAPI returns when request body fails Pydantic validation | Automatic — no handler code needed if models are correct | Confusing with 400 Bad Request; FastAPI uses 422 specifically for validation errors |
-
-### What this note covers
-
-- HTTP clients with `requests` and `httpx` (sync and async)
-- REST API patterns for data engineering (pagination, retry, bulk POST, rate limiting)
-- Building a REST API with FastAPI (routes, Pydantic models, error handling)
-- Data validation with Pydantic (field types, validators, nested models)
-- Summary quick-reference table
 
 ## HTTP Clients & REST API Calls
 
@@ -1206,33 +1354,6 @@ use aliases for public APIs, freeze config models, enable strict mode for financ
 | Return `model_dump(by_alias=True)` in responses | Consistent JSON output matching API contract |
 | Never expose internal field names in APIs | Aliases decouple internal naming from public API |
 | Generate JSON schema for documentation | Swagger/OpenAPI docs auto-generated from models |
-
-## Summary
-
-> [!abstract]- Quick Reference
->
-> **HTTP Clients**
-> | Pattern | Description |
-> |---|---|
-> | `requests.get(url, params=...)` | Sync GET |
-> | `requests.post(url, json=...)` | Sync POST with JSON body |
-> | `resp.json()` | Parse JSON response |
-> | `resp.raise_for_status()` | Raise on 4xx/5xx |
-> | `httpx.AsyncClient()` | Async client for concurrent calls |
-> | `httpx.Client(base_url=...)` | Connection pooling |
->
-> **FastAPI**
-> | Pattern | Description |
-> |---|---|
-> | `@app.get("/path")` | Define GET endpoint |
-> | `@app.post("/path", status_code=201)` | Define POST endpoint |
-> | `Trade(BaseModel)` | Pydantic model for validation |
-> | `HTTPException(status_code=404)` | Return error response |
-> | `uvicorn main:app --reload` | Run the server |
->
-> **REST Patterns:** pagination (offset/limit, cursor-based), retry + backoff, rate limit handling (429 + Retry-After), bulk POST
->
-> **C# Equivalents:** `requests`/`httpx` → `HttpClient` | `FastAPI` → ASP.NET Minimal APIs | `Pydantic` → `record` + DataAnnotations | `uvicorn` → Kestrel | `@app.get` → `app.MapGet()` | `HTTPException` → `Results.NotFound()`
 
 ## Warnings
 

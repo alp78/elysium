@@ -258,17 +258,17 @@ For teams that need more control than managed services provide, or want to minim
 ```mermaid
 flowchart TD
     subgraph VM["GCE VM (e2-standard-4 or larger)"]
-        SCH[Scheduler\nsystemd]
-        WEB[Webserver\nsystemd]
-        EXE[LocalExecutor\nsubprocess]
-        DB[(Cloud SQL\nPostgreSQL)]
+        SCH[Scheduler<br/>systemd]
+        WEB[Webserver<br/>systemd]
+        EXE[LocalExecutor<br/>subprocess]
+        DB[(Cloud SQL<br/>PostgreSQL)]
 
         SCH --> EXE
         WEB --> EXE
         EXE --> DB
     end
 
-    GCS[(GCS Bucket\nDAG sync, logs)]
+    GCS[(GCS Bucket<br/>DAG sync, logs)]
     VM --> GCS
 
     style VM fill:#1a1a2e,stroke:#7aa2f7,color:#fff

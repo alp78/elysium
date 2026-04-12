@@ -8,44 +8,233 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 09. File I/O & Serialization - C#
+# File I/O and Serialization - C#
 
 > [!quote]
 > "Tape is dead. Disk is tape. Flash is disk. RAM locality is king."
 >
 > — **Jim Gray**, Turing Award lecture (1998)
 
+> [!abstract]- Summary
+>
+> **Read, Write, Append Files**
+> - `File` class static methods (`ReadAllText`, `WriteAllText`, `ReadAllLines`, `AppendAllText`, `ReadAllBytes`, `WriteAllBytes`) for one-shot operations on small files — entire content loaded into memory.
+> - `StreamReader` / `StreamWriter` for buffered, line-by-line processing of large files; wrap in `using` to guarantee disposal.
+> - `File.AppendAllText` and `StreamWriter(append: true)` for non-truncating appends.
+> - `Path` and `Directory` static helpers for cross-platform path manipulation and file listing.
+>
+> **CSV Files**
+> - Manual `string.Split(',')` and `StreamWriter` for controlled internal data with no quoted commas.
+> - RFC 4180-compliant quoting via a `CsvQuote` helper; `ReadCsvAsDict` pattern for named-column access.
+> - Pipe (`|`) and tab delimiters parsed identically by substituting the delimiter character.
+> - `StringWriter` for building CSV payloads in memory without disk I/O.
+> - `CsvHelper` NuGet package for production CSV: quoted commas, type mapping via `record`, `GetRecords<T>()` lazy streaming, `CsvWriter` for output.
+>
+> **JSON**
+> - `System.Text.Json` (`JsonSerializer.Serialize` / `Deserialize`) with `JsonSerializerOptions` configured once and reused — `WriteIndented`, `PropertyNamingPolicy`, `DefaultIgnoreCondition`.
+> - `[JsonPropertyName]` attributes map PascalCase C# properties to snake_case JSON keys; `WhenWritingNull` suppresses optional fields.
+> - `JsonDocument.Parse` for schema-unknown or dynamic JSON without defining a class.
+> - JSON Lines (JSONL): one `Serialize` per line, one `JsonDocument.Parse` per line — standard for BigQuery exports and Kafka.
+> - `Utf8JsonWriter` for zero-allocation token-level JSON writing directly to a stream.
+> - Comparison with Newtonsoft.Json: `JObject`, `JsonPath`, richer converters — legacy use only; new code targets `System.Text.Json`.
+>
+> **YAML**
+> - `YamlDotNet` NuGet package; `DeserializerBuilder` / `SerializerBuilder` with `UnderscoredNamingConvention`.
+> - Multi-document YAML (`---` separator) parsed via `YamlStream.Load()`.
+> - Format comparison table: JSON vs YAML by comments, quoting, readability, use case, C# package, security, multi-document.
+>
+> **Serialization, Deserialization, and Streams**
+> - `System.IO` stream hierarchy: abstract `Stream` base → `FileStream`, `MemoryStream`, `NetworkStream`, `GZipStream`, `BufferedStream` → text/binary wrappers.
+> - `MemoryStream` for in-memory byte buffers; wrap with `StreamWriter(leaveOpen: true)` to build CSV/JSON for cloud upload.
+> - `StringWriter` / `StringReader` for text content without disk I/O.
+> - `BinaryWriter` / `BinaryReader` for compact primitive serialization; read order must exactly match write order; little-endian by default.
+> - `FileStream` for byte-level random access with explicit seek (`SeekOrigin`), mode (`FileMode`), and access (`FileAccess`).
+>
+> **Async File I/O**
+> - Async counterparts for every I/O method (`ReadAllTextAsync`, `WriteAllTextAsync`, `ReadLineAsync`, `WriteLineAsync`, `FlushAsync`); always `await`, never `.Result` or `.Wait()`.
+> - `await using` for `IAsyncDisposable` resources (`StreamWriter`); pass `CancellationToken` throughout for graceful shutdown.
+>
+> **Advanced JSON Patterns**
+> - Source generators (`[JsonSerializable]` on a `partial JsonSerializerContext`) for reflection-free, AOT-compatible, 2–5x faster serialization.
+> - `Utf8JsonReader` for forward-only, zero-allocation token parsing over `ReadOnlySpan<byte>` — constant memory regardless of JSON document size.
+>
+> **Memory-Mapped Files**
+> - `MemoryMappedFile.CreateFromFile` maps a file into virtual address space; OS pages data on demand — no full load.
+> - `CreateViewAccessor(offset, length)` opens a window at a specific byte offset.
+> - Named MMFs (`CreateNew` / `OpenExisting`) enable inter-process shared memory without serialization.
+>
+> **System.IO.Pipelines**
+> - `Pipe` provides a producer-consumer byte buffer with built-in backpressure; `PipeWriter.GetMemory` borrows from pool, `PipeReader.ReadAsync` returns `ReadOnlySequence<byte>` zero-copy.
+> - Used internally by ASP.NET Core (Kestrel); not for simple file reads.
+>
+> **High-Performance Parsing**
+> - `ReadOnlySpan<char>` with `IndexOf` + `Slice` for zero-allocation CSV field extraction; allocates only at final `ToString()`.
+>
+> **Encoding and Decoding**
+> - UTF-8 (`Encoding.UTF8`): variable-length, ASCII-compatible, internet standard — always specify explicitly.
+> - ASCII: 7-bit lossy — silently replaces non-ASCII characters (`€` → `?`).
+> - UTF-16 (`Encoding.Unicode`): C# internal format, ~2x size of UTF-8 for ASCII-heavy text.
+> - Latin-1 (`Encoding.Latin1`): single-byte Western European legacy encoding; found in mainframe feeds.
+> - BOM: 3-byte UTF-8 preamble (`0xEF, 0xBB, 0xBF`) detected via `GetPreamble()`.
+> - Base64: `Convert.ToBase64String` / `FromBase64String`; ~33% size overhead; URL-safe variant replaces `+`/`/` with `-`/`_`.
+> - Hex: `Convert.ToHexString` / `FromHexString` (.NET 5+); exactly 2x size; standard for hash digests.
+> - URL encoding: `Uri.EscapeDataString` (spaces → `%20`, modern REST APIs); `WebUtility.UrlEncode` (spaces → `+`, HTML form legacy).
+
+> [!note]- Glossary
+>
+> **`File` class**
+>
+> - Static utility class in `System.IO` providing one-shot methods (`ReadAllText`, `WriteAllText`, `ReadAllLines`, `AppendAllText`, `ReadAllBytes`, `WriteAllBytes`) that open, operate, and close a file in a single call.
+> - Appropriate for small files (configs, manifests, metadata) where the entire content fits in memory; unsuitable for multi-GB files because the full content is loaded into a managed byte or string buffer.
+>
+> > [!warning] Whole-file load limit
+> >
+> > `ReadAllText` and `ReadAllLines` allocate a single string or array holding the entire file. For files larger than available working-set memory, this causes `OutOfMemoryException`. Use `StreamReader.ReadLine()` instead.
+>
+> ---
+>
+> **`StreamReader` / `StreamWriter`**
+>
+> - Buffered text wrappers over any `Stream` that read or write one line at a time, keeping only the current line in managed memory regardless of file size.
+> - The default internal buffer is 4 KB; `StreamWriter` holds writes in that buffer and flushes to disk in batches, making it more efficient than repeated `File.AppendAllText` calls for many small writes.
+>
+> > [!warning] Dispose obligation
+> >
+> > Forgetting to call `Dispose()` on a `StreamWriter` can leave the final buffer unflushed — data is silently lost. Always wrap in `using` or `await using`.
+>
+> ---
+>
+> **`FileStream`**
+>
+> - Low-level concrete `Stream` implementation for byte-level file access with explicit control over `FileMode` (Create, Open, Append), `FileAccess` (Read, Write, ReadWrite), and seek position.
+> - Required for random-access patterns (reading at a specific byte offset with `Seek`), binary protocol I/O, and as the backing stream for `BinaryReader`/`BinaryWriter`.
+>
+> > [!warning] Flush or lose data
+> >
+> > `FileStream` buffers writes internally. If `Flush()` or `Dispose()` is not called — or if the process crashes before the buffer drains — buffered bytes are never written to disk. Always use `using`.
+>
+> ---
+>
+> **`using` statement**
+>
+> - C# deterministic resource cleanup: `using var reader = new StreamReader(path);` calls `Dispose()` on the variable at the end of its enclosing scope, even if an exception is thrown.
+> - Equivalent to Python's `with open(...) as f:` pattern; the older `using (var x = ...) { }` block form and the modern declaration form (`using var x = ...;`) both guarantee disposal.
+>
+> > [!warning] Post-dispose access
+> >
+> > Accessing a stream or reader after its `using` scope ends throws `ObjectDisposedException`. Capture the result (e.g., the string content) inside the scope, not after it.
+>
+> ---
+>
+> **`System.Text.Json`**
+>
+> - The built-in, high-performance JSON library shipped with .NET Core 3.0+ (`System.Text.Json` namespace). Provides `JsonSerializer` for typed serialization, `JsonDocument` for read-only DOM traversal, and `Utf8JsonReader`/`Utf8JsonWriter` for streaming token-level access.
+> - Default choice for all new .NET code: no NuGet dependency, lower allocation than Newtonsoft.Json, source-generator support for AOT and Native AOT scenarios.
+>
+> > [!warning] Case-sensitive by default
+> >
+> > Property matching is case-sensitive unless `PropertyNameCaseInsensitive = true` is set in `JsonSerializerOptions`. JSON from external APIs with inconsistent casing will fail to deserialize silently (fields remain `null` or default).
+>
+> ---
+>
+> **`JsonSerializerOptions`**
+>
+> - Configuration object for `System.Text.Json` controlling naming policy (`JsonNamingPolicy.SnakeCaseLower`, `CamelCase`), indentation (`WriteIndented`), null handling (`DefaultIgnoreCondition`), encoding (`Encoder`), and custom converters.
+> - Must be constructed once and reused — constructing a new instance per serialization call is expensive because the internal type cache is rebuilt each time.
+>
+> > [!warning] Per-call construction cost
+> >
+> > `new JsonSerializerOptions { ... }` inside a hot loop regenerates the internal reflection or source-gen cache on every call, adding significant per-request overhead. Assign to a `static readonly` field or a DI singleton.
+>
+> ---
+>
+> **`Newtonsoft.Json`**
+>
+> - Third-party JSON library (NuGet: `Newtonsoft.Json`, a.k.a. Json.NET) that was the de facto .NET JSON standard before `System.Text.Json` shipped. Provides `JObject`/`JArray` for dynamic DOM access, `JsonPath` querying, and richer polymorphic converter support.
+> - Use only for existing codebases that depend on it or for scenarios not yet supported by `System.Text.Json` (e.g., complex inheritance hierarchies, `JsonPath`). Newtonsoft allocates more and serializes slower than the built-in library.
+>
+> > [!warning] Migrate for new code
+> >
+> > Newtonsoft.Json is not AOT-compatible and has higher memory overhead. New projects should use `System.Text.Json`. Migrate legacy code incrementally — the two libraries have subtle behavioral differences around `null`, `DateTime`, and `long` handling.
+>
+> ---
+>
+> **CSV (Comma-Separated Values)**
+>
+> - Plain-text tabular format where fields are separated by commas (or another delimiter) and rows by newlines. C# has no built-in CSV library — simple cases use `StreamWriter` + `string.Split(',')`, production cases use the `CsvHelper` NuGet package.
+> - Per RFC 4180, fields containing commas, double quotes, or newlines must be enclosed in double quotes, with internal double quotes escaped as `""`.
+>
+> > [!warning] Manual Split breaks on quoted commas
+> >
+> > `line.Split(',')` splits on every comma, including those inside quoted fields (e.g., `"Smith, John"` becomes two fields). Use `CsvHelper` for any data that may contain commas within values.
+>
+> ---
+>
+> **YAML (YAML Ain't Markup Language)**
+>
+> - Indentation-based human-readable configuration format supporting comments (`#`), anchors (`&`/`*`), multi-line strings (`|` literal, `>` folded), and multiple documents per file (`---` separator).
+> - C# parses YAML via the `YamlDotNet` NuGet package. Standard format for dbt model configs, Airflow DAGs, Kubernetes manifests, and Docker Compose files.
+>
+> > [!warning] Type coercion pitfalls
+> >
+> > YAML's implicit typing converts bare `yes`/`no`/`true`/`false`/`null` and numeric strings automatically, which can corrupt data (a field value `"yes"` becoming boolean `true`). Always quote ambiguous scalar values and test complex documents against the exact `YamlDotNet` version in use.
+>
+> ---
+>
+> **`BinaryReader` / `BinaryWriter`**
+>
+> - Wrappers over any `Stream` that serialize and deserialize C# primitive types (`int`, `double`, `bool`, `string`) in compact binary format. `BinaryWriter` writes each type in its fixed byte representation (4 bytes for `int`, 8 bytes for `double`, 1 byte for `bool`; strings are length-prefixed).
+> - The reader must call the exact typed method matching each field in the exact write order — there is no self-describing schema; any mismatch silently corrupts all subsequent reads.
+>
+> > [!warning] Endianness and read-order coupling
+> >
+> > `BinaryWriter` uses little-endian byte order. Many network protocols and binary file formats expect big-endian — manually reverse bytes when interoperating. Read order is tightly coupled to write order; adding a field to the writer without updating the reader corrupts the entire stream from that point onward.
+>
+> ---
+>
+> **`MemoryMappedFile`**
+>
+> - OS-level mechanism (`System.IO.MemoryMappedFiles`) that maps a file's byte range directly into the process's virtual address space. The OS pages only the accessed regions into RAM on demand — the full file is never loaded.
+> - Use for very large files (multi-GB data lake exports), random-access read patterns, and inter-process communication via named MMFs. Not beneficial for small files or purely sequential reads (where `StreamReader` has less overhead).
+>
+> > [!warning] Manual flush required
+> >
+> > Writes to a memory-mapped view are not automatically persisted to disk. Call `accessor.Flush()` before disposing the `MemoryMappedFile` or the changes may be lost on process exit.
+>
+> ---
+>
+> **`System.IO.Pipelines`**
+>
+> - High-performance I/O framework (`System.IO.Pipelines` namespace) providing a `Pipe` object whose `PipeWriter` end borrows buffers from a shared pool and whose `PipeReader` end consumes them zero-copy. Built-in backpressure: if the consumer falls behind, `FlushAsync` on the writer blocks automatically.
+> - Used internally by ASP.NET Core (Kestrel) for HTTP request parsing. Appropriate for network protocol parsers and high-throughput streaming pipelines; significant API complexity makes it overkill for straightforward file reads.
+>
+> > [!warning] Not for simple file I/O
+> >
+> > The `PipeReader`/`PipeWriter` API requires careful `AdvanceTo` bookkeeping to release buffer segments. Incorrect `consumed`/`examined` positions leak memory or stall the pipe indefinitely. Use `StreamReader` for file I/O and reserve pipelines for genuine high-throughput scenarios.
+>
+> ---
+>
+> **`Span<T>` parsing (`ReadOnlySpan<char>` / `Utf8JsonReader`)**
+>
+> - Stack-allocated slice types that provide a zero-allocation view over an existing array, string, or memory region. `ReadOnlySpan<char>.Slice` and `IndexOf` parse substrings without allocating intermediate strings; `Utf8JsonReader` walks JSON tokens over `ReadOnlySpan<byte>` with constant memory.
+> - Eliminates heap allocations in hot parsing paths (high-throughput CSV ingestion, real-time JSON extraction). `double.Parse(span)` and `int.TryParse(span)` accept spans directly — no `ToString()` required until the final value must be stored.
+>
+> > [!warning] Stack-only constraint
+> >
+> > `Span<T>` and `ReadOnlySpan<T>` are `ref struct` types — they cannot be used as fields in classes, stored in arrays, or referenced across `await` boundaries. Use `Memory<T>` when the slice must survive a suspension point in an async method.
+>
+> ---
+>
+> **Encoding**
+>
+> - The mapping between Unicode code points and byte sequences. `Encoding.UTF8` is the internet standard: ASCII characters occupy 1 byte, code points above U+007F use multi-byte sequences (2–4 bytes). `Encoding.ASCII` is 7-bit lossy — non-ASCII characters are silently replaced with `?`. `Encoding.Unicode` is UTF-16, C#'s internal string format (~2x UTF-8 size for ASCII text). `Encoding.Latin1` is ISO 8859-1, a single-byte Western European legacy encoding common in mainframe feeds.
+> - Always pass an encoding explicitly to `StreamReader`, `StreamWriter`, `File.ReadAllText`, and `File.WriteAllText`. Relying on `Encoding.Default` produces platform-dependent behavior and is a source of mojibake in cross-system pipelines.
+>
+> > [!danger] Never use `Encoding.Default`
+> >
+> > `Encoding.Default` resolves to the OS active code page — UTF-8 on modern Linux, but a legacy Windows-1252 variant on older Windows systems. Code that works locally fails silently on a different host. Always specify `Encoding.UTF8` explicitly.
+
 C# provides multiple layers for file I/O and serialization — from `File` class convenience methods through `StreamReader`/`StreamWriter` for buffered processing, to `System.Text.Json` for structured data and `System.IO.Pipelines` for high-throughput scenarios. This note covers reading/writing files, CSV, JSON, YAML, binary serialization, async I/O, memory-mapped files, and high-performance parsing patterns.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **File class** | Static convenience methods (`File.ReadAllText`, `File.WriteAllLines`) for simple one-shot file operations. | Quick reads/writes for small files — configs, metadata, manifests. | Loads entire file into memory — unsuitable for files larger than available RAM. |
-| **StreamReader / StreamWriter** | Buffered, line-by-line text file processing for large files. | Process files that don't fit in memory, or when line-by-line logic is needed. | Forgetting to dispose — always wrap in `using`. |
-| **FileStream** | Low-level stream for binary file access with configurable buffer size. | Binary data, random access, memory-mapped file backing. | Not calling `Flush()` or `Dispose()` — data may be buffered and never written. |
-| **`using` statement** | `using var reader = new StreamReader(path);` — disposes at scope end, even on exception. | Equivalent to Python's `with` — guarantees resource cleanup. | Accessing the disposed resource after the `using` scope — throws `ObjectDisposedException`. |
-| **System.Text.Json** | Built-in high-performance JSON library (no external dependency). Source-generated serializers available. | Default choice for JSON in .NET 6+ — fast, low-allocation, AOT-friendly. | Case-sensitive by default — use `JsonSerializerOptions { PropertyNameCaseInsensitive = true }` for web APIs. |
-| **JsonSerializerOptions** | Configuration for `System.Text.Json` — case sensitivity, naming policy, converters, indentation. | Customize serialization behavior for APIs, configs, and interop. | Creating a new `JsonSerializerOptions` per call is expensive — cache and reuse. |
-| **Newtonsoft.Json** | Third-party JSON library (Json.NET) — the legacy standard with broader feature set. | Existing codebases, complex scenarios (polymorphism, JToken queries) not yet supported by STJ. | Newtonsoft is slower and allocates more than `System.Text.Json` — migrate for new code. |
-| **CSV** | Comma-Separated Values — plain-text tabular format. C# has no built-in CSV library. | Data exchange, imports, exports, logs. | Manual `string.Split(',')` breaks on quoted fields — use a library like CsvHelper. |
-| **YAML** | Human-readable configuration format. C# uses `YamlDotNet` library. | Configuration files, CI/CD pipelines, Kubernetes manifests. | `YamlDotNet` doesn't support all YAML features — test complex documents. |
-| **BinaryReader / BinaryWriter** | Read/write primitive types in binary format from/to a stream. | Binary file formats, protocol parsing, compact data storage. | Endianness — `BinaryWriter` uses little-endian; network protocols often expect big-endian. |
-| **MemoryMappedFile** | Maps a file directly into virtual memory for random-access without loading it all. | Very large files (multi-GB), concurrent reads, inter-process communication. | Memory-mapped files don't automatically sync — call `Flush()` to persist changes. |
-| **System.IO.Pipelines** | High-performance I/O framework using `PipeReader`/`PipeWriter` for streaming data. | Network protocols, high-throughput parsers, zero-copy processing. | Complex API — overkill for simple file I/O. Use only for truly high-throughput scenarios. |
-| **Span&lt;T&gt; parsing** | Zero-allocation parsing using `ReadOnlySpan<char>` and `Utf8JsonReader`. | Eliminating heap allocations in hot parsing paths. | Stack-only — cannot be used in async methods or stored in fields. |
-| **encoding** | Mapping between characters and bytes. `Encoding.UTF8` is the universal default. | Incorrect encoding corrupts non-ASCII characters. | `File.ReadAllText` defaults to UTF-8, but some legacy files use other encodings. |
-
-### What this note covers
-
-- **Read, Write, Append Files** — `File` class, `StreamReader`/`StreamWriter`, binary I/O, temp files
-- **CSV Files** — manual parsing, CsvHelper library, LINQ-based CSV processing
-- **JSON** — `System.Text.Json`, `JsonSerializerOptions`, Newtonsoft.Json, custom converters
-- **YAML** — `YamlDotNet` deserialization and serialization
-- **Serialization & Streams** — `BinaryReader`/`BinaryWriter`, Protocol Buffers, Parquet, Arrow
-- **Async File I/O** — `ReadAllTextAsync`, `StreamReader` async patterns
-- **Advanced Patterns** — memory-mapped files, `System.IO.Pipelines`, `Span<T>` parsing
-- **Encoding & Decoding** — UTF-8, Base64, hex, URL encoding
 
 ## Read, Write, Append Files
 

@@ -835,13 +835,13 @@ Starting from the integration direction narrows the choice space immediately.
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A{"Inbound ingestion\nfrom external party?"} -->|Yes| B{"Do you control\nthe protocol?"}
-    A -->|No — internal| C{"Primary\nrequirement?"}
-    B -->|No| D["Use what the external\nparty provides\nREST · SFTP · FIX · WebSocket"]
-    B -->|Yes| E["→ See By Use Case\ntable above"]
+    A{"Inbound ingestion<br/>from external party?"} -->|Yes| B{"Do you control<br/>the protocol?"}
+    A -->|No — internal| C{"Primary<br/>requirement?"}
+    B -->|No| D["Use what the external<br/>party provides<br/>REST · SFTP · FIX · WebSocket"]
+    B -->|Yes| E["→ See By Use Case<br/>table above"]
     C -->|Low latency / high throughput| F["gRPC or WebSocket"]
-    C -->|File-based batch exchange| G["SFTP or\nCloud Storage"]
-    C -->|Async decoupling| H["Cloud Pub/Sub\nor AMQP"]
+    C -->|File-based batch exchange| G["SFTP or<br/>Cloud Storage"]
+    C -->|Async decoupling| H["Cloud Pub/Sub<br/>or AMQP"]
     C -->|Flexible consumer queries| I["GraphQL"]
     C -->|Continuous data stream| J["WebSocket · SSE · MQTT"]
 ```
@@ -922,7 +922,7 @@ A typical financial data platform runs three parallel ingestion paths from excha
 }}}%%
 flowchart LR
     EX["Exchange / Broker"]
-    DV["Data Vendors\nBloomberg · Refinitiv · ICE"]
+    DV["Data Vendors<br/>Bloomberg · Refinitiv · ICE"]
     BQ["BigQuery"]
 
     EX -->|FIX drop-copy| FE["FIX Engine"] --> ED["Execution DB"] -->|batch| BQ
@@ -950,11 +950,11 @@ On GCP, Cloud Pub/Sub acts as the protocol normalisation layer — REST, MQTT, a
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["External APIs\nREST"] -->|Cloud Functions| PS["Cloud Pub/Sub"]
-    B["IoT Devices\nMQTT"] -->|Managed MQTT Broker| PS
-    C["Webhooks\nHTTP POST"] -->|Cloud Run| PS
-    PS --> DF["Dataflow\ntransform"]
-    DF --> BQ["BigQuery\nanalytical store"]
+    A["External APIs<br/>REST"] -->|Cloud Functions| PS["Cloud Pub/Sub"]
+    B["IoT Devices<br/>MQTT"] -->|Managed MQTT Broker| PS
+    C["Webhooks<br/>HTTP POST"] -->|Cloud Run| PS
+    PS --> DF["Dataflow<br/>transform"]
+    DF --> BQ["BigQuery<br/>analytical store"]
 ```
 
 ### Internal Service Mesh
@@ -977,9 +977,9 @@ Internal services use different protocols for each interaction pattern: gRPC for
 flowchart LR
     DP["Data Platform Services"]
     DP -->|gRPC — low latency, schema-enforced| FS["Feature Serving API"]
-    DP -->|SSE — streaming| PS["Pipeline Status\nDashboard"]
+    DP -->|SSE — streaming| PS["Pipeline Status<br/>Dashboard"]
     DP -->|GraphQL — flexible| DQ["Ad-hoc Data Queries"]
-    DP -->|REST| ORC["Pipeline Orchestration\nAirflow / Composer API"]
+    DP -->|REST| ORC["Pipeline Orchestration<br/>Airflow / Composer API"]
 ```
 
 ---

@@ -116,9 +116,9 @@ flowchart LR
     A["ScanParquet(path)"] -->|"LazyFrame — no data read"| B["Build query plan"]
     B --> C[".Filter(Col(...))"]
     C --> D[".Select(Col(...))"]
-    D --> E[".Sort / .GroupBy\n.WithColumns"]
+    D --> E[".Sort / .GroupBy<br/>.WithColumns"]
     E -->|"Optimizer rewrites plan"| F[".Collect()"]
-    F --> G["DataFrame\n(materialized)"]
+    F --> G["DataFrame<br/>(materialized)"]
 
     style A fill:#1f2335,stroke:#7aa2f7,color:#c0caf5
     style B fill:#1f2335,stroke:#7aa2f7,color:#c0caf5

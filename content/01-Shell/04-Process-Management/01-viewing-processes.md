@@ -12,37 +12,135 @@ updated: 2026-04-03
 status: complete
 ---
 
-# Viewing Processes — Understanding What Is Running
-
-When an Airflow VM is slow, a query is hanging, or a runaway process is pinning the CPU — your first move is always to understand what is running. `ps aux` gives you the snapshot; `htop` gives you the real-time picture; `iostat` tells you if the disk is the bottleneck.
+# Viewing Processes
 
 > [!quote]
 > "You can have a second computer once you've shown you know how to use the first one."
 >
 > — **Paul Barham**
 
+> [!abstract]- Summary
+>
+> Linux and PowerShell tools for inspecting running processes, diagnosing resource saturation, and identifying I/O bottlenecks — from point-in-time snapshots to real-time monitoring and container stats.
+>
+> **Linux process viewing tools**
+> - `ps aux` produces a point-in-time snapshot of all processes with PID, user, CPU%, RSS, and state columns; pipe through `grep`, `sort`, or `head` for targeted output.
+> - `pgrep` returns PIDs by name or attribute; `-f` matches the full command line, making it more scriptable than `ps | grep`.
+> - `pstree -p` renders the parent-child hierarchy with PIDs; critical for identifying whether a runaway Python process was spawned by Airflow, a shell, or a system service.
+> - `top` refreshes every 3 seconds with system-wide load, CPU breakdown, and per-process stats; interactive keys `P`/`M` sort by CPU/memory, `1` expands per-core view.
+> - `htop` adds colour, mouse support, and a built-in tree view (`F5`) to `top`; requires `apt install htop` on minimal images.
+> - `iostat -xz` samples per-device disk latency (`await`) and throughput; `await` above 20 ms with `%util` above 80% confirms disk saturation, not CPU.
+> - `docker stats --no-stream` gives a one-shot snapshot of CPU, RSS, network, and block I/O per container; true RSS requires reading `memory.stat` inside the cgroup.
+> - D-state processes (`STAT` column starting with `D`) cannot be killed with any signal, including SIGKILL; diagnose the storage layer with `dmesg` rather than retrying kills.
+>
+> **PowerShell process management tools**
+> - `Get-Process` returns typed `System.Diagnostics.Process` objects; `WorkingSet64` is the Windows RSS equivalent; `CPU` is cumulative seconds, not an instantaneous percentage.
+> - `Get-CimInstance Win32_Process` provides cross-user process visibility without elevation; `GetOwner()` resolves the owning account for each process.
+> - `Get-CimInstance Win32_OperatingSystem` exposes total RAM, free RAM, and `LastBootUpTime`; subtract from `Get-Date` for a `TimeSpan` uptime equivalent.
+> - Windows has no direct load-average equivalent; `\System\Processor Queue Length` from `Get-Counter` serves as a proxy — values above 2 per logical core indicate CPU saturation.
+>
+> **When to use process viewing tools**
+> - Use for diagnosing slow systems, identifying stuck or D-state processes, pre-kill PID verification, capacity planning, and container resource accounting.
+>
+> **When not to use process viewing tools**
+> - Avoid for historical analysis, automated alerting, and application-level profiling; use monitoring agents (Datadog, Prometheus) and language profilers instead.
+>
+> **Warnings**
+> - D-state processes ignore SIGKILL; investigate storage rather than looping kill attempts.
+> - PIDs are reused — always verify identity with `ps -p <pid> -o pid,cmd` before signalling.
+> - Load average includes I/O-waiting processes; high load with low CPU% points to disk, not compute.
+> - VSZ is not actual memory consumption; use RSS for real memory pressure assessment.
+>
+> **Recommendations**
+> - Quick snapshot: `ps aux --sort=-%cpu | head -20`; real-time: `htop`; process tree: `pstree -p`; disk saturation: `iostat -xz 1`.
+>
+> **Troubleshooting**
+> - High load with low CPU%: check `%wa` in `top` and confirm disk saturation with `iostat -x 1`.
+> - D-state processes: inspect `dmesg` for disk or NFS errors; force-unmount with `umount -lf` for NFS hangs.
+> - Zombie processes: kill the parent; if parent is PID 1, reboot.
 
-## Key terms used in this note
+> [!note]- Glossary
+>
+> **Process**
+> - An instance of a running program loaded into memory by the kernel, assigned a unique PID, a parent PID, memory pages, CPU time slices, and open file descriptors.
+> - Distinct from the program file on disk: one executable can produce many simultaneous processes, each with independent state and resource counters.
+>
+> > [!info] Program vs. process
+> >
+> > A program is a static binary on disk. A process is that binary executing in memory. Confusing the two leads to errors when counting instances or targeting the correct PID for a signal.
+>
+> > ---
+>
+> **PID (Process ID)**
+> - A unique integer assigned by the kernel at process creation, used as the target for `kill`, `strace`, `lsof -p`, and all process-scoped diagnostics.
+> - PIDs are recycled after process exit; a PID noted during an investigation may belong to a different process minutes later — always verify with `ps -p <pid> -o pid,cmd` before signalling.
+>
+> > [!warning] PIDs are reused after exit
+> >
+> > Capture the PID and the command name together. Verify both match immediately before sending any signal. A stale PID can inadvertently kill an unrelated process.
+>
+> > ---
+>
+> **`ps aux`**
+> - A point-in-time snapshot command reading `/proc`; flags `a` (all users), `u` (user-oriented columns including RSS/VSZ), `x` (include daemonised processes without a controlling terminal).
+> - Not a live view — the output is frozen at the moment of execution; for real-time monitoring use `htop` or `top`.
+>
+> > [!tip] Self-contamination bracket trick
+> >
+> > `ps aux | grep "[m]ssql"` excludes the grep process itself. The regex matches `mssql` in target command lines but not `[m]ssql` literally in the grep's own entry.
+>
+> > ---
+>
+> **`htop` / `top`**
+> - Interactive, real-time process monitors that poll `/proc` on a configurable interval (default 3 s for `top`); `htop` adds colour-coded CPU bar graphs, mouse support, and a built-in tree view (`F5`).
+> - `top` is present on every Linux system; `htop` requires installation (`apt install htop` / `yum install htop`) and is absent on minimal Docker images.
+>
+> > [!tip] Key interactive commands
+> >
+> > In both tools: `P` sorts by CPU, `M` sorts by memory. In `top`, `1` expands to per-core view — essential for spotting single-threaded bottlenecks on multi-core machines.
+>
+> > ---
+>
+> **RSS (Resident Set Size)**
+> - The amount of physical RAM currently held in memory for a process, reported in kilobytes by `ps aux` and in the `RES` column of `top`/`htop`; the practical measure of a process's memory footprint.
+> - Distinct from VSZ (Virtual Size), which includes shared libraries, memory-mapped files, and reserved-but-unused pages; VSZ is always larger than RSS and is not a reliable indicator of real memory pressure.
+>
+> > [!info] RSS vs. VSZ
+> >
+> > Compare RSS values across processes to assess memory pressure. Ignore VSZ for capacity decisions — it routinely exceeds physical RAM without indicating a problem.
+>
+> > ---
+>
+> **D state (uninterruptible sleep)**
+> - A kernel process state (`STAT` column value starting with `D`) in which the process is blocked on a low-level I/O call with interrupts disabled; signals, including `SIGKILL`, are queued but never delivered until the I/O completes.
+> - Common causes: hung NFS mount, failing disk hardware, or a kernel driver not responding to I/O commands; diagnose with `dmesg | tail -50` and look for `I/O error`, `nfs: server not responding`, or `EXT4-fs error`.
+>
+> > [!danger] D-state processes cannot be killed — not even with SIGKILL
+> >
+> > Repeated kill attempts have no effect. Investigate the storage layer: check `dmesg`, verify NFS mount health, inspect disk SMART status with `smartctl -a /dev/sda`. The process exits only when the I/O resolves.
+>
+> > ---
+>
+> **Load average**
+> - Three space-separated numbers reported by `uptime` and the `top` header representing the exponentially-weighted moving average of processes in the run queue (running or waiting for CPU/IO) over the last 1, 5, and 15 minutes.
+> - A load average equal to the logical CPU count means all cores are fully utilised; values persistently above the core count (`nproc`) mean processes are queuing; high load with low CPU% (`%wa` elevated in `top`) indicates an I/O bottleneck rather than CPU saturation.
+>
+> > [!warning] Load average counts I/O-waiting processes, not just CPU-bound ones
+> >
+> > A load of 8.0 on a 4-core machine does not prove CPU saturation. Check `%wa` in `top` and run `iostat -x 1` to distinguish CPU-bound load from I/O-bound load.
+>
+> > ---
+>
+> **`pstree`**
+> - Reads `/proc` and renders all processes as an indented ASCII tree showing parent-child relationships, with PIDs when invoked with `-p` and user context changes when invoked with `-u`.
+> - Not installed by default on minimal images; use `ps aux --forest` as a portable fallback that renders the same hierarchy without a separate package.
+>
+> > [!tip] Identify Airflow-spawned processes with pstree
+> >
+> > `pstree -pu airflow` shows only the subtree owned by the `airflow` user with PIDs at every node — the fastest way to confirm whether a Python process is a scheduled DAG task or an orphaned interactive run.
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Process | An instance of a running program. Each process has a PID (process ID), a parent process, memory allocation, CPU time, and file descriptors. | Every command you run creates a process. Understanding processes is required for diagnosing performance issues and killing stuck workloads. | Confusing a process with a program. A program is a file on disk; a process is that program loaded into memory and executing. One program can have many processes. |
-| PID (Process ID) | A unique integer assigned by the kernel to each running process. Used to identify, signal, and kill specific processes. | Every diagnostic and kill command requires the PID to target the correct process. | PIDs are reused after a process exits. A PID you noted 10 minutes ago may now belong to a different process. Always verify before killing. |
-| `ps aux` | A snapshot of all running processes showing PID, user, CPU%, memory%, command, and state. `a` = all users, `u` = user-oriented format, `x` = include processes without a controlling terminal. | The universal first command for process investigation. Works on every Linux system. | `ps aux` is a snapshot, not live. For real-time monitoring, use `htop` or `top`. |
-| `htop` / `top` | Interactive, real-time process monitors showing CPU, memory, and I/O usage updated every 1-2 seconds. `htop` is the modern, color-coded version with mouse support. | Real-time view of system load. Essential during incidents to identify resource hogs. | `top` is installed everywhere; `htop` requires installation (`apt install htop`). Both show the same data with different interfaces. |
-| RSS (Resident Set Size) | The amount of physical RAM a process is currently using, in kilobytes. Does not include swapped-out memory or shared library pages counted elsewhere. | The most practical measure of a process memory footprint. High RSS indicates a memory-hungry process. | Confusing RSS with VSZ. VSZ (Virtual Size) includes all virtual memory (shared libs, mapped files, reserved pages) and is always larger than RSS. |
-| D state (uninterruptible sleep) | A process state where the process is waiting for I/O (usually disk) and cannot be interrupted by signals -- not even SIGKILL. | A process in D state cannot be killed. It indicates an I/O bottleneck (slow disk, NFS hang, or failing storage). | Trying to `kill -9` a D-state process -- it has no effect. The process will only exit when the I/O completes or the kernel times out. |
-| Load average | Three numbers shown by `uptime` and `top` representing the average number of processes in the run queue over the last 1, 5, and 15 minutes. | A load average above the CPU count indicates CPU saturation. A load of 4.0 on a 4-core machine means all cores are busy. | Load average includes processes waiting for I/O (D state), not just CPU-bound processes. High load with low CPU% usually means disk I/O bottleneck. |
-| `pstree` | Displays running processes as an indented tree showing parent-child relationships. | Identifies which parent spawned a runaway child process, and helps understand process hierarchies in Docker and systemd environments. | Not installed by default on minimal images. Use `ps --forest` as a fallback. |
+When an Airflow VM is slow, a query is hanging, or a runaway process is pinning the CPU — your first move is always to understand what is running. `ps aux` gives you the snapshot; `htop` gives you the real-time picture; `iostat` tells you if the disk is the bottleneck.
 
-## What this note covers
-
-- Viewing all running processes with `ps aux` and interpreting the output columns
-- Real-time monitoring with `htop` and `top`
-- Process tree visualization with `pstree`
-- Understanding process states: running, sleeping, D state (uninterruptible sleep), zombie
-- Load average interpretation and CPU saturation detection
-- PowerShell equivalents: `Get-Process`, `Get-CimInstance`, process object properties
 ## Linux process viewing tools
 
 Linux offers several tools for inspecting running processes. `ps` produces a static snapshot, `top` and `htop` provide real-time views updated on a timer, and `pstree` visualises the parent-child hierarchy. Choosing the right tool depends on whether you need a point-in-time record (scripts, logs) or an interactive diagnostic session.

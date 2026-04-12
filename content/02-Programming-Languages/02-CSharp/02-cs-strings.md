@@ -16,6 +16,125 @@ status: complete
 >
 > — **Yukihiro Matsumoto**, creator of Ruby
 
+> [!abstract]- Summary
+>
+> **String Creation & Basics** — Four literal syntaxes: standard `"..."`, verbatim `@"..."` (no escape processing), raw `"""..."""` (C# 11+, indentation-trimmed), and interpolated `$"..."`. `string` is an immutable UTF-16 reference type; `==` compares content, not reference. `Convert.ToString` is null-safe; `?.ToString() ?? fallback` is the idiomatic null-safe conversion. `string.IsNullOrEmpty` tests null and `""`, `IsNullOrWhiteSpace` also catches whitespace-only values.
+>
+> **Indexing & Slicing** — 0-based `[]` indexing; `^n` indexes from the end (C# 8+); `..` Range syntax returns a substring (right-exclusive). `Substring(start, length)` is the classic API. No built-in stride — use LINQ `Where` with index. Out-of-range access throws `IndexOutOfRangeException` or `ArgumentOutOfRangeException` immediately; no silent failure.
+>
+> **String Methods** — `ToUpper`/`ToLower`/`ToTitleCase` for case; `Trim`/`TrimStart`/`TrimEnd` accept custom chars; `PadLeft`/`PadRight` for fixed-width output. `char.IsXxx` classifies individual characters; `LINQ.All(char.IsXxx)` tests whole strings. `IndexOf`/`LastIndexOf`/`Contains`/`StartsWith`/`EndsWith` all accept `StringComparison`. `Replace` has no max-count; `Split` accepts `StringSplitOptions.RemoveEmptyEntries` and `.TrimEntries` (.NET 5+). `Encoding.UTF8.GetBytes`/`GetString` convert to/from byte arrays.
+>
+> **String Formatting** — `$""` interpolation is preferred and compiles to `DefaultInterpolatedStringHandler` (.NET 6+). `string.Format` with `{index,alignment:format}` is used when the format string is a runtime variable. Standard format specifiers: `F`/`N`/`E`/`G`/`P`/`C`/`D`/`X`. Culture-aware formatting via `ToString("C2", new CultureInfo("fr-FR"))`.
+>
+> **Efficient String Building** — `StringBuilder` uses a mutable `char[]` buffer; O(n) vs O(n²) for `+=` in loops. Key methods: `Append`, `AppendLine`, `Insert`, `Replace`, `Remove`. Pre-allocate with `new StringBuilder(estimatedCapacity)`. `string.Join` is the single-allocation path for collections; `string.Concat` for separator-free assembly. `ReadOnlySpan<char>` via `string.AsSpan()` enables zero-allocation slicing; `string.Create` writes directly into a new string's buffer via `SpanAction<char, TState>`.
+>
+> **Regular Expressions** — `Regex.Match` (first match), `Regex.Matches` (all matches), `Regex.IsMatch` (boolean). Numbered groups via `Groups[n]`; named groups via `(?<name>...)` and `Groups["name"]`. `Regex.Replace` accepts a `MatchEvaluator` lambda or `$n` backreferences. `RegexOptions.Compiled` pre-emits IL; `[GeneratedRegex]` (.NET 7+) does this at build time, is AOT-compatible, and is the preferred path. `RegexOptions.IgnorePatternWhitespace` enables inline `#` comments. `NonBacktracking` option guarantees linear time.
+
+> [!note]- Glossary
+>
+> **`string`** — Immutable UTF-16 character sequence; a reference type whose `==` operator is overloaded to compare content rather than object identity.
+> - Every transformation (`ToUpper`, `Replace`, `Substring`) allocates a new string on the heap; the original is unchanged.
+>
+> > [!tip] Use `string.Intern` to share identical string instances and reduce heap pressure in scenarios with many repeated values.
+>
+> > ---
+>
+> **`char`** — Single UTF-16 character; a 16-bit value type (`System.Char`) that supports arithmetic operations. Delimited by single quotes: `'A'`.
+> - Confusing `'a'` (char literal) with `"a"` (string literal) causes type mismatch compile errors.
+>
+> > [!tip] `char.IsXxx` static methods (`IsLetter`, `IsDigit`, `IsWhiteSpace`) are Unicode-aware — they return `true` for characters in any script, not just ASCII.
+>
+> > ---
+>
+> **Immutability** — The guarantee that a `string` instance's character sequence never changes after creation. Every modification produces a new object.
+> - Concatenating with `+=` in a loop is O(n²) in both time and allocations because each iteration copies all prior characters.
+>
+> > [!warning] Concatenation in loops Use `StringBuilder` for loop-based construction; the compiler only optimizes `+` for small, fixed-count concatenations.
+>
+> > ---
+>
+> **String interpolation** — `$"Hello {expr}"` syntax that embeds any C# expression in a string literal. Compiled to `string.Format` or `DefaultInterpolatedStringHandler` (.NET 6+).
+> - Never use interpolation to build SQL or shell commands — the result is vulnerable to injection. Use parameterized queries.
+>
+> > [!danger] SQL injection risk `$"SELECT * FROM t WHERE id = {userId}"` passes user input directly to the database engine. Always use `command.Parameters.AddWithValue`.
+>
+> > ---
+>
+> **Verbatim string** — `@"..."` literal where backslashes are treated as literal characters and newlines are preserved. Escape a double-quote inside by doubling it: `""`.
+> - Eliminates double-backslash escaping for Windows file paths and regex patterns stored in string variables.
+>
+> > [!tip] Combine verbatim and interpolation with `$@"..."` or `@$"..."` (both orderings are valid in C# 8+) to get both benefits simultaneously.
+>
+> > ---
+>
+> **Raw string literal** — `"""..."""` syntax (C# 11+) requiring no escape sequences. Indentation is trimmed to the column of the closing `"""`.
+> - Use `$$"""{{expr}}"""` to add interpolation inside a raw string — the number of `$` signs determines how many braces are needed.
+>
+> > [!tip] Raw literals are the cleanest choice for embedded JSON, SQL, or complex regex — zero escaping, full fidelity, indentation-trimmed automatically.
+>
+> > ---
+>
+> **`StringBuilder`** — Mutable string buffer (`System.Text.StringBuilder`) that appends to an internal `char[]` without allocating intermediate strings.
+> - Pre-allocate capacity when the final size is known: `new StringBuilder(estimatedLength)` avoids internal buffer resizing.
+>
+> > [!tip] For collections, prefer `string.Join` over a `StringBuilder` loop — it performs a single allocation and is more expressive.
+>
+> > ---
+>
+> **`Span<char>`** — A stack-allocated view over a contiguous region of memory, obtained from a string via `string.AsSpan()`. Cannot be stored in fields or used across `await` boundaries.
+> - Zero allocation for slicing; the underlying string bytes are not copied.
+>
+> > [!tip] Use `Memory<char>` instead of `Span<char>` when the slice must survive a method call, be stored in a class field, or cross an `await` point.
+>
+> > ---
+>
+> **`ReadOnlySpan<char>`** — Read-only variant of `Span<char>`. BCL overloads like `int.Parse(ReadOnlySpan<char>)` and `double.Parse(ReadOnlySpan<char>)` accept it for allocation-free numeric parsing.
+> - Not all APIs have `Span` overloads — verify the overload exists in the target framework before assuming zero-allocation behavior.
+>
+> > [!tip] `MemoryExtensions` provides additional span-based methods (`IndexOf`, `StartsWith`, `Trim`) that avoid string allocation when working with `ReadOnlySpan<char>`.
+>
+> > ---
+>
+> **`StringComparison`** — Enum controlling case sensitivity and culture rules in `Equals`, `Compare`, `IndexOf`, `StartsWith`, and `Contains`. Values: `Ordinal`, `OrdinalIgnoreCase`, `CurrentCulture`, `CurrentCultureIgnoreCase`, `InvariantCulture`, `InvariantCultureIgnoreCase`.
+> - `==` is always ordinal case-sensitive; there is no implicit `StringComparison` on the equality operator.
+>
+> > [!tip] Use `OrdinalIgnoreCase` for identifiers, dictionary keys, file paths, and protocol strings. Use `CurrentCulture` only when sorting displayed text for end users.
+>
+> > ---
+>
+> **String interning** — CLR mechanism that maintains a pool of unique string instances. String literals are interned automatically; runtime strings can be interned with `string.Intern(s)`. `string.IsInterned(s)` returns the interned instance or `null`.
+> - Interning reduces heap pressure for large volumes of repeated identical strings (e.g., column names, enum-like codes).
+>
+> > [!tip] Do not rely on reference equality (`ReferenceEquals`) to detect interned strings in business logic — two identical strings may or may not share an instance depending on runtime state.
+>
+> > ---
+>
+> **`Regex`** — `System.Text.RegularExpressions.Regex` class providing pattern matching, extraction, replacement, and splitting. Supports named groups `(?<name>...)`, lookaround, backreferences, and Unicode categories.
+> - Always use verbatim strings (`@""`) for regex patterns to avoid double-escaping backslashes.
+>
+> > [!warning] Recompiling in loops Instantiating `new Regex(pattern)` inside a loop re-parses the pattern on every iteration. Cache the instance or use `[GeneratedRegex]`.
+>
+> > ---
+>
+> **`[GeneratedRegex]`** — .NET 7+ source-generator attribute that emits optimized regex matching code at compile time. Replaces `RegexOptions.Compiled` for patterns known at compile time. The containing class and method must both be `partial`.
+> - AOT-compatible and trimming-safe; `RegexOptions.Compiled` is neither. Analyzer `SYSLIB1045` flags existing `Regex` usages that can be converted.
+>
+> > [!tip] Visual Studio's SYSLIB1045 one-click fixer automatically converts `new Regex(..., RegexOptions.Compiled)` declarations to `[GeneratedRegex]` partial methods.
+>
+> > ---
+>
+> **Capture group** — `(...)` or `(?<name>...)` in a regex pattern that saves matched text. Accessed via `match.Groups[n]` (1-based for numbered groups) or `match.Groups["name"]`. `Groups[0]` is always the full match.
+> - Confusing `Groups[0]` (full match) with `Groups[1]` (first capture) is the most common off-by-one error in regex extraction code.
+>
+> > [!tip] Use non-capturing groups `(?:...)` when grouping is needed for quantifiers or alternation but the matched text does not need to be extracted — reduces `Groups` collection size.
+>
+> > ---
+>
+> **`string.Format()`** — Composite formatting method using numbered placeholders: `string.Format("{0:N2}", value)`. Syntax: `{index[,alignment][:format]}`. Placeholders are 0-indexed.
+> - Prefer `$""` interpolation in new code. Use `string.Format` only when the format string is a runtime variable (e.g., loaded from a resource file or config).
+>
+> > [!tip] `FormattableString` and `IFormattable` allow culture-aware interpolation without switching to `string.Format` — use `FormattableString.Invariant($"...")` for invariant-culture output from an interpolated string.
+
 This note covers C#'s string type in full: creation and immutability, indexing and range syntax, the complete set of string methods, interpolation and composite formatting, `StringBuilder` for efficient construction, `Span<char>` for zero-allocation parsing, and regular expressions including .NET 7's source-generated `[GeneratedRegex]`.
 
 ### Key terms used in this note

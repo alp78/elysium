@@ -12,14 +12,101 @@ updated: 2026-04-03
 status: complete
 ---
 
-# Services — Starting, Stopping, and Debugging Daemons
-
-Every long-running process in your infrastructure — SQL Server, Airflow, Datadog agent, Docker daemon — runs as a systemd service on Linux or a Windows Service on Windows. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
+# Managing Services
 
 > [!quote]
 > "systemd is never finished, never complete, but tracking progress of technology."
 >
 > — **Lennart Poettering** (creator of systemd)
+
+> [!abstract]- Summary
+>
+> Linux and Windows infrastructure services are long-running background processes managed by init systems — systemd on Linux, Service Control Manager on Windows. This note covers the full operational lifecycle of both platforms.
+>
+> - **Linux systemctl and journalctl tools** — start, stop, restart, enable, disable, mask, and inspect services; read and filter the structured journal; diagnose OOM kills with `dmesg` and `journalctl -k`
+> - **PowerShell Windows Services tools** — `Get-Service`, `Start-Service`, `Stop-Service`, `Restart-Service`, `Set-Service`, `sc.exe`; query event logs with `Get-WinEvent`
+> - **When to use service management tools** — restarting after config changes, diagnosing failures, enabling boot persistence, blocking dangerous services
+> - **When not to use service management tools** — application-level reloads, container orchestration, one-shot scheduled scripts
+> - **Warnings** — connection interruption on database restarts, `start` vs `enable` independence, `sc` alias trap in PowerShell, `daemon-reload` requirement after unit file edits
+> - **Recommendations** — per-scenario command reference table
+> - **Troubleshooting** — symptom → cause → fix table for the most common service failures
+
+> [!note]- Glossary
+>
+> **Service / Daemon** — a long-running background process (SQL Server, nginx, sshd, Docker, Airflow scheduler) that starts at boot and runs continuously without user interaction. Managed by an init system rather than by the user directly.
+>
+> > [!info] Services vs one-shot commands
+> >
+> > A service is registered with the init system and restarts automatically on failure. A one-shot command runs once and exits — it is not a service even if it is long-running.
+>
+> ---
+>
+> **`systemctl`** — the primary command for managing systemd services on modern Linux (Ubuntu 16+, RHEL 7+, Debian 8+). Covers the full lifecycle: `start`, `stop`, `restart`, `reload`, `enable`, `disable`, `mask`, `status`.
+>
+> > [!warning] `start` and `enable` are independent
+> >
+> > `start` runs the service now; `enable` creates the boot symlink. A service can be started but not enabled (runs now, gone after reboot) or enabled but not started (boots next reboot only). Use `systemctl enable --now` to do both.
+>
+> ---
+>
+> **`journalctl`** — the systemd log viewer. Reads the structured binary journal written by systemd for every unit. Supports filtering by unit (`-u`), time range (`--since`/`--until`), priority level (`-p`), and boot session (`-b`).
+>
+> > [!tip] Always filter by unit
+> >
+> > `journalctl` without `-u` dumps all system logs simultaneously, which is overwhelming. `journalctl -u <service> -f` is the systemd equivalent of `tail -f` scoped to a single service.
+>
+> ---
+>
+> **Unit file** — a systemd configuration file (`.service`, `.timer`, `.socket`) that defines how a service is started, stopped, and managed. Located in `/lib/systemd/system/` (package defaults) or `/etc/systemd/system/` (local overrides).
+>
+> > [!warning] Edit overrides, not package defaults
+> >
+> > Never edit files under `/lib/systemd/system/` — package upgrades overwrite them. Always create overrides in `/etc/systemd/system/` or use `systemctl edit <service>` to create drop-in files. Run `systemctl daemon-reload` after any edit.
+>
+> ---
+>
+> **Service state** — a service can be `active (running)`, `inactive (dead)`, `activating`, `deactivating`, `failed`, or `masked`. Shown by `systemctl status`.
+>
+> > [!info] `inactive` does not mean broken
+> >
+> > A service can be intentionally stopped. Run `systemctl is-enabled <service>` to check whether it should be running at boot. `masked` means it is explicitly blocked from starting by any mechanism.
+>
+> ---
+>
+> **OOM killer** — the Linux kernel mechanism that terminates the process with the highest `oom_score` when physical memory and swap are exhausted. Writes a `Killed process` record to the kernel ring buffer, not to the service's own journal.
+>
+> > [!warning] OOM kills are invisible in service logs
+> >
+> > `journalctl -u <service>` shows the service stopped cleanly, which is misleading. Always cross-check with `dmesg | grep -i oom` or `journalctl -k` when a service restarts unexpectedly with no apparent error.
+>
+> ---
+>
+> **`Get-Service` / `Set-Service`** — PowerShell cmdlets wrapping the Windows Service Control Manager (SCM) API. `Get-Service` lists services and their state; `Set-Service` changes startup type; `Start-Service` / `Stop-Service` / `Restart-Service` control the runtime lifecycle.
+>
+> > [!info] Startup type vs running state are independent on Windows
+> >
+> > A service can be set to `Automatic` but currently `Stopped`, or `Manual` but currently `Running`. `Get-Service` shows both `Status` and `StartType` as separate properties on the returned `ServiceController` object.
+>
+> ---
+>
+> **`sc.exe`** — the Windows Service Control command-line tool. Lower-level than PowerShell cmdlets; required for creating, deleting, and configuring services not exposed by `*-Service` cmdlets.
+>
+> > [!warning] `sc` is a PowerShell alias for `Set-Content`
+> >
+> > Running `sc query <service>` in a PowerShell session calls `Set-Content`, not the service control tool. Always use the full name `sc.exe` in PowerShell scripts.
+>
+> ---
+>
+> **`Get-WinEvent`** — queries Windows Event Log, the Windows equivalent of `journalctl`. Service lifecycle events (start, stop, crash, SCM errors) land in the `System` log. Application-specific events use dedicated provider logs (e.g., `MSSQLSERVER`).
+>
+> > [!info] Key event IDs for service diagnostics
+> >
+> > - **7036** — service state change (started or stopped)
+> > - **7034** — unexpected service termination (crash)
+> > - **7031** — service failed; SCM attempted recovery action
+> > - **2004** — resource exhaustion (Windows OOM equivalent, `Microsoft-Windows-Resource-Exhaustion-Detector` provider)
+
+Every long-running process in your infrastructure — SQL Server, Airflow, Datadog agent, Docker daemon — runs as a systemd service on Linux or a Windows Service on Windows. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
 The diagram below shows the full service lifecycle and the commands that drive each transition.
 
@@ -39,25 +126,6 @@ stateDiagram-v2
 ```
 
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Service / daemon | A long-running background process that starts at boot and runs continuously without user interaction. Examples: SQL Server, nginx, sshd, Docker, Airflow scheduler. | Data engineering infrastructure runs as services. Knowing how to start, stop, restart, and inspect services is essential for operations. | Confusing a service with a one-shot command. A service is managed by an init system (systemd) and restarts automatically on failure. A command runs once and exits. |
-| `systemctl` | The primary command for managing systemd services on modern Linux. Controls service lifecycle: start, stop, restart, enable (boot), disable, status. | The universal service management tool on all modern Linux distributions (Ubuntu 16+, RHEL 7+, Debian 8+). | Confusing `start` (run now) with `enable` (start at boot). A service can be started but not enabled (runs now, not after reboot), or enabled but not started. |
-| `journalctl` | The systemd log viewer. Reads structured logs from the journal, supporting filtering by service, time range, priority, and boot session. | The primary tool for diagnosing service failures. `journalctl -u <service> -f` is the systemd equivalent of `tail -f` for service logs. | Not knowing `-u` for service filtering. `journalctl` without `-u` dumps ALL system logs, which is overwhelming. Always filter by unit. |
-| Unit file | A systemd configuration file (`.service`, `.timer`, `.socket`) that defines how a service is started, stopped, and managed. Located in `/etc/systemd/system/` or `/lib/systemd/system/`. | Understanding unit files is required to create custom services, diagnose startup failures, and modify service behavior (restart policy, environment, dependencies). | Editing unit files in `/lib/systemd/system/` (package defaults). Always create overrides in `/etc/systemd/system/` or use `systemctl edit` for drop-in files. |
-| Service state | A service can be: `active (running)`, `inactive (dead)`, `activating`, `deactivating`, `failed`, or `masked`. | `systemctl status` shows the current state. `failed` means the service crashed and needs investigation. `masked` means it is explicitly blocked from starting. | Assuming `inactive` means broken. A service can be intentionally stopped. Check `is-enabled` to see if it should be running. |
-| `Get-Service` / `Set-Service` (PS) | PowerShell cmdlets for viewing and managing Windows services. `Get-Service` lists services; `Set-Service` changes startup type; `Start-Service` / `Stop-Service` control lifecycle. | The PowerShell equivalent of `systemctl`. Returns typed `ServiceController` objects with `Status`, `StartType`, and `DependentServices` properties. | Windows services have startup types (Automatic, Manual, Disabled) that are separate from running state. A service can be set to Automatic but currently Stopped. |
-| `sc.exe` | The Windows Service Control command-line tool. Lower-level than PowerShell cmdlets. Used for creating, deleting, and configuring services. | Required for creating new Windows services and for operations not exposed by PowerShell cmdlets. | `sc` in PowerShell is an alias for `Set-Content`, not `sc.exe`. Always use the full name `sc.exe` in PowerShell scripts. |
-
-## What this note covers
-
-- Managing Linux services with `systemctl`: start, stop, restart, enable, disable, status, mask
-- Reading service logs with `journalctl`: filtering by unit, time range, priority, and boot
-- Understanding systemd unit files and service states
-- PowerShell equivalents: `Get-Service`, `Start-Service`, `Stop-Service`, `Set-Service`, `sc.exe`
-- Common data engineering service operations: SQL Server, Docker, Airflow, nginx
 ## Linux systemctl and journalctl tools
 
 systemd is the init system and service manager for most modern Linux distributions. Every service is described by a unit file stored in `/etc/systemd/system/` or `/lib/systemd/system/`. The `systemctl` command controls service state; `journalctl` reads the structured log journal that systemd writes for every unit.

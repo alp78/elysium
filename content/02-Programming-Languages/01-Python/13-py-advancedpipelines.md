@@ -15,6 +15,169 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
 
+> [!abstract]- Summary
+>
+> - **Async Generators** — `async def` + `yield` streams paginated API pages lazily; consumed with `async for` to avoid loading all results into memory at once.
+> - **Parallel API Ingestion** — `asyncio.gather` fans out concurrent fetches; `asyncio.Semaphore(n)` caps live connections to respect rate limits (e.g., n=3 for Twelve Data free tier). `asyncio.as_completed` processes results in arrival order rather than submission order.
+> - **Async Batching** — `asyncio.Queue` decouples producers from a batch consumer that flushes on either a count threshold (`max_size`) or a wall-clock timeout (`max_wait`), providing bounded memory and efficient bulk I/O.
+> - **Cross-Process Execution** — `subprocess.run()` (sync) and `asyncio.create_subprocess_exec()` (async) spawn external CLI tools; always pass arguments as a list (`shell=False`) to prevent shell injection. `ThreadPoolExecutor` parallelises multiple subprocess calls within one Python process.
+> - **Distributed Task Queues** — Celery or RQ dispatch tasks to a broker (Redis/RabbitMQ) consumed by N workers; Dask extends this to distributed DataFrame and ML workloads. Evolution path: `asyncio.gather` → `ProcessPoolExecutor` → Celery/RQ → Dask/Spark.
+> - **Secrets** — load from `.env` via `python-dotenv` locally; use GCP Secret Manager (or equivalent) in production; never commit `.env` to git.
+
+> [!note]- Glossary
+>
+> **async generator**
+>
+> - An `async def` function that contains one or more `yield` statements, producing values lazily and asynchronously — one item per `async for` iteration without blocking the event loop.
+> - Declared with `async def` + `yield`; consumed exclusively with `async for`. Using a regular `for` loop raises `TypeError` because the object is an asynchronous iterable, not a synchronous one.
+>
+> > [!tip] Use async generators for paginated APIs
+> >
+> > Yield individual records from each page response so the caller receives a uniform `async for item in paginate(url)` interface regardless of underlying page size or pagination token format.
+>
+> > ---
+>
+> **asyncio.Semaphore**
+>
+> - A counter-based concurrency primitive that limits how many coroutines can execute a guarded block simultaneously. `asyncio.Semaphore(n)` allows at most `n` concurrent holders; excess coroutines suspend until a slot is released.
+> - Not thread-safe — designed for use within a single event loop. Crossing thread boundaries requires `threading.Semaphore` instead.
+>
+> > [!tip] Semaphore sizing for financial APIs
+> >
+> > Start at `n = 3` for Twelve Data free tier (8 req/min) and `n = 5` for Finnhub. Monitor HTTP 429 responses and halve `n` if they appear; double it if latency is acceptable and no 429s are seen.
+>
+> > ---
+>
+> **asyncio.gather**
+>
+> - Schedules multiple coroutines to run concurrently and returns a list of their results in submission order once all have completed. By default, one unhandled exception cancels all pending tasks.
+> - Pass `return_exceptions=True` to collect exceptions as result values rather than propagating immediately — critical for resilient pipelines where partial failure is acceptable.
+>
+> > [!warning] gather without a Semaphore fires all tasks simultaneously
+> >
+> > For 50 symbols, `gather(*[fetch(s) for s in symbols])` opens 50 connections at once, exhausting rate limits and connection pools instantly.
+>
+> > ---
+>
+> **aiohttp**
+>
+> - An async HTTP client/server library for Python built on `asyncio`. Uses connection pooling and keep-alive for high-throughput requests without per-request TCP overhead.
+> - `ClientSession` must be created once per batch and closed after use (via `async with`). Creating a new session per request defeats connection pooling and leaks file descriptors.
+>
+> > [!tip] Share one ClientSession per pipeline run
+> >
+> > Instantiate `aiohttp.ClientSession()` at the top of the async entry point and pass it into every fetch coroutine. The session manages the connection pool automatically.
+>
+> > ---
+>
+> **asyncio.as_completed**
+>
+> - Wraps an iterable of coroutines and returns an iterator of `Future` objects that resolve in completion order — the fastest response is yielded first regardless of its position in the input list.
+> - Requires `await` on each yielded future inside the loop: `for coro in asyncio.as_completed(coros): result = await coro`. The futures are not the original coroutines.
+>
+> > [!tip] Use as_completed for streaming dashboards
+> >
+> > When rendering live price updates, `as_completed` lets you display each quote as it arrives rather than waiting for the slowest symbol in the batch.
+>
+> > ---
+>
+> **asyncio.Queue**
+>
+> - A thread-safe, async-aware FIFO queue that decouples producers (which `put` items) from consumers (which `get` items). `maxsize` bounds the queue, providing backpressure — producers suspend when the queue is full.
+> - Sentinel value (`None`) signals the consumer to drain remaining items and exit cleanly. Without a sentinel, the consumer loop blocks indefinitely on `queue.get()`.
+>
+> > [!tip] Bound the queue to control memory
+> >
+> > Set `asyncio.Queue(maxsize=100)` when producers can outpace consumers. Unbounded queues accumulate all items in memory before the consumer starts, defeating the purpose of streaming.
+>
+> > ---
+>
+> **asyncio.wait_for**
+>
+> - Wraps a coroutine with a wall-clock timeout (seconds). Raises `asyncio.TimeoutError` if the coroutine does not complete within the deadline; the wrapped task is cancelled automatically.
+> - Used in the batch consumer to implement time-bounded flushing: if no new item arrives within `max_wait` seconds, the accumulated partial batch is flushed immediately.
+>
+> > [!tip] Catch TimeoutError, not CancelledError
+> >
+> > `asyncio.wait_for` raises `TimeoutError` (a subclass of `asyncio.TimeoutError`). Catching `CancelledError` instead silently swallows task cancellations and hides bugs.
+>
+> > ---
+>
+> **subprocess**
+>
+> - A standard-library module for spawning child processes, connecting to their stdin/stdout/stderr pipes, and retrieving return codes. `subprocess.run()` is the blocking high-level API; `asyncio.create_subprocess_exec()` is the non-blocking async equivalent.
+> - Shell injection is the primary risk: `shell=True` passes the command string through `/bin/sh`, allowing arbitrary execution if any part of the command contains unsanitised user input. Always use `shell=False` (default) with an argument list.
+>
+> > [!danger] Never interpolate user input into shell strings
+> >
+> > `subprocess.run(f"curl {user_url}", shell=True)` allows `user_url = "; rm -rf /"` to execute as a shell command. Use `subprocess.run(["curl", user_url])` — each list element is passed as a literal argument to `execve`, bypassing the shell entirely.
+>
+> > ---
+>
+> **asyncio.create_subprocess_exec**
+>
+> - The async equivalent of `subprocess.run()`. Returns a `Process` object whose `stdout` and `stderr` are `asyncio.StreamReader` instances, allowing non-blocking pipe reads within the event loop.
+> - Use instead of `subprocess.run()` when the child process runs concurrently with other async tasks — blocking `subprocess.run()` inside a coroutine stalls the entire event loop for the duration of the child.
+>
+> > [!tip] Prefer create_subprocess_exec for long-running CLI tools
+> >
+> > When calling `gcloud`, `bq`, or `sqlcmd` from an async pipeline, `create_subprocess_exec` keeps the event loop alive so other coroutines (heartbeats, queue consumers) continue running while the CLI executes.
+>
+> > ---
+>
+> **ThreadPoolExecutor**
+>
+> - A `concurrent.futures` executor that runs callables in a pool of OS threads. Each thread has its own GIL slot, making it suitable for I/O-bound work but not for CPU-bound computation (GIL prevents true parallel CPU execution across threads).
+> - Used here to parallelise multiple `subprocess.run()` calls from a single Python process: since each call blocks its thread while the child runs, a thread pool issues N calls concurrently without requiring async code.
+>
+> > [!tip] Use ThreadPoolExecutor for blocking subprocess calls
+> >
+> > Wrap `subprocess.run()` in `pool.map(run_expr, exprs)` to issue multiple external commands in parallel. The pool size should not exceed the number of child processes you want active simultaneously.
+>
+> > ---
+>
+> **python-dotenv**
+>
+> - A third-party package that reads `.env` files and loads their key-value pairs into `os.environ` via `load_dotenv()`. Zero configuration — call `load_dotenv()` once at process startup.
+> - `.env` files must be added to `.gitignore` before the first commit. A leaked API key cannot be revoked retroactively in git history without a full rewrite.
+>
+> > [!danger] Never commit .env to git
+> >
+> > Even a single accidental commit exposes secrets in git history permanently. Rotate any leaked keys immediately and audit access logs for the interval the key was exposed.
+>
+> > ---
+>
+> **Celery**
+>
+> - A distributed task queue framework that uses a message broker (Redis or RabbitMQ) to dispatch tasks to a pool of worker processes on one or more machines. Workers pull task messages, execute the registered function, and optionally store results in a result backend.
+> - Requires a running broker and at least one worker process — it is not an in-process concurrency library. Monitoring is typically done via the Flower web UI or Prometheus metrics.
+>
+> > [!tip] Configure retries and dead-letter queues from the start
+> >
+> > Production Celery tasks should set `max_retries`, `retry_backoff`, and route failed tasks to a dead-letter queue. Silent task disappearance (broker connection lost, worker OOM) is the most common production failure mode.
+>
+> > ---
+>
+> **Redis Queue (RQ)**
+>
+> - A simpler alternative to Celery that uses Redis as its sole broker and result backend. Workers are started with `rq worker` and process jobs enqueued with `q.enqueue(func, *args)`.
+> - Lower operational overhead than Celery but fewer features: no advanced routing, no canvas primitives (chains/chords), and no built-in support for non-Redis brokers.
+>
+> > [!tip] Prefer RQ for small-to-medium workloads
+> >
+> > If your pipeline needs a distributed queue but does not require Celery's routing flexibility or canvas composition, RQ is operationally simpler to run and debug.
+>
+> > ---
+>
+> **Dask**
+>
+> - A parallel computing framework that scales Python (pandas, NumPy, scikit-learn) workloads from a single laptop to a distributed cluster. The `dask.dataframe` API mirrors pandas; computations are expressed as lazy task graphs and executed by a scheduler.
+> - Occupies the step above Celery/RQ in the scaling ladder: use Dask when your data does not fit in a single machine's RAM or when ML pipeline parallelism (grid search, feature engineering) requires more than `ProcessPoolExecutor` can provide.
+>
+> > [!tip] Dask vs Spark for DE workloads
+> >
+> > Dask integrates natively with the Python data ecosystem and has lower operational overhead than Spark for medium-scale jobs (< 1 TB). Choose Spark when you need mature SQL support, ACID transactions (Delta Lake), or tight GCP Dataproc/Dataflow integration.
+
 > [!danger] Secrets Management
 >
 > Load API keys from `.env` for local development. In production, use GCP Secret Manager, AWS Secrets Manager, or Azure Key Vault. NEVER commit `.env` to git.
@@ -330,11 +493,11 @@ A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Wor
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    P["Producer\n(pipeline script)"] --> B["Broker\n(Redis / RabbitMQ)"]
+    P["Producer<br/>(pipeline script)"] --> B["Broker<br/>(Redis / RabbitMQ)"]
     B --> W1["Worker 1"]
     B --> W2["Worker 2"]
     B --> W3["Worker N"]
-    W1 --> R["Results\n(DB / object store)"]
+    W1 --> R["Results<br/>(DB / object store)"]
     W2 --> R
     W3 --> R
 ```

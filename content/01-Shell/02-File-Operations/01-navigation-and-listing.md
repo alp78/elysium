@@ -12,7 +12,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Navigation and Listing — Seeing What You Have
+# Navigation and Listing
 
 > [!quote]
 > "UNIX is basically a simple operating system, but you have to be a genius to understand the simplicity."
@@ -22,6 +22,121 @@ status: complete
 > "I think the major good idea in Unix was its clean and simple interface: open, close, read, and write."
 >
 > — **Ken Thompson**, *Coders at Work* interview (2009)
+
+> [!abstract]- Summary
+>
+> Linux and PowerShell tools for navigating the filesystem, listing files sorted by modification time, measuring disk consumption with `du`, and monitoring free space with `df` — including the `du` vs `df` discrepancy that trips up every data engineer at least once.
+>
+> **Linux navigation and listing tools**
+> - `ls -lhrt` — long format, human-readable sizes, reverse-chronological sort; most recently modified file appears last
+> - `ls -la` — includes dotfiles (`.env`, `.git/`, `.dbt/`); use `-A` to exclude `.` and `..`
+> - `ls -d */` — lists only directories via the `*/` glob; `-S` sorts by size largest-first
+> - `tree -L 2 --dirsfirst` — visual directory tree limited to 2 levels; `-I` excludes patterns; not installed by default on minimal images
+> - `du -h --max-depth=1 | sort -rh | head -10` — top space consumers at one level of depth
+> - `df -h` for block usage, `df -i` for inode usage; run after `du` to confirm remaining headroom
+>
+> **PowerShell navigation and listing tools**
+> - `Get-ChildItem` (aliases `ls`, `dir`, `gci`) returns typed `FileInfo`/`DirectoryInfo` objects, not text
+> - `-Force` required to see hidden and system files; `-Filter` is filesystem-level (fast), `-Include` is post-retrieval (10× slower)
+> - `Get-PSDrive -PSProvider FileSystem` — disk-free equivalent of `df -h`; filter by `-PSProvider FileSystem` to exclude registry and certificate drives
+> - Calculated properties `@{N=...; E=...}` with `Select-Object` produce human-readable GB/MB/KB sizes
+>
+> **Operations and safety**
+> - Use `ls -lhrt` to verify pipeline output; use `du` → `df` in order before any disk remediation
+> - Never parse `ls` output in scripts — use shell globs, `find -print0 | xargs -0`, or `stat` instead
+> - Deleted files held open by a process are counted by `df` but not `du`; diagnose with `sudo lsof +L1 | grep deleted`
+> - Inode exhaustion produces "No space left on device" with free disk blocks; `df -i` reveals the true cause
+> - 4 warnings, 6 recommendations, 5 troubleshooting entries covering disk-full scenarios and PowerShell hidden-file failures
+
+> [!note]- Glossary
+>
+> **`ls`**
+> - The primary Linux command for listing directory contents; with flags shows permissions, sizes, timestamps, and ownership.
+> - Used in this note to verify pipeline output, identify recently modified files (`-t`), expose hidden dotfiles (`-a`), and sort by size (`-S`).
+>
+> > [!danger] Never parse ls output in scripts
+> >
+> > Filenames containing spaces, newlines, or glob characters silently break any script that parses `ls`. Use `for f in *.csv`, `find -print0 | xargs -0`, or `stat` for programmatic file handling.
+>
+> ---
+>
+> **`tree`**
+> - A recursive directory listing tool that prints the filesystem as an indented tree; not installed by default on minimal Linux images (Debian slim, Alpine).
+> - Used to quickly visualise project structure and pipeline output directories; always limit with `-L` on data directories.
+>
+> > [!warning] Always set -L depth on large directories
+> >
+> > Without `-L`, `tree` recurses the entire subtree. On a directory with millions of partitioned Parquet files this produces unusable output and can take minutes.
+>
+> ---
+>
+> **`du`** (disk usage)
+> - Reports how much disk space files and directories actually occupy on disk, measured in allocated blocks — not logical file sizes.
+> - The primary tool for diagnosing disk pressure: `du -h --max-depth=1 | sort -rh | head -10` identifies the largest consumers before any remediation.
+>
+> > [!warning] du reports blocks, not logical size
+> >
+> > `du` output differs from `ls -l` sizes. Sparse files (e.g., pre-allocated database files) show especially large divergences. Use `du -sh file` for actual disk consumption.
+>
+> ---
+>
+> **`df`** (disk free)
+> - Reports filesystem-level disk usage: total, used, available, and percent-used for each mounted filesystem.
+> - Run after `du` to confirm remaining headroom; use `df -i` (not `df -h`) to diagnose inode exhaustion.
+>
+> > [!danger] df can show free space when disk writes are failing
+> >
+> > Deleted files still held open by a running process consume blocks that `df` counts but `du` does not. The space is not freed until the process releases the file handle. Use `sudo lsof +L1 | grep deleted` to find these files.
+>
+> ---
+>
+> **Inode**
+> - A filesystem data structure that stores file metadata (permissions, owner, timestamps, block pointers) — not the filename or content. Each file consumes exactly one inode.
+> - Inode exhaustion produces the same "No space left on device" error as disk-full, but `df -h` shows plenty of free space; `df -i` reveals `IUse%` at 100%.
+>
+> > [!danger] Inode exhaustion looks identical to disk full
+> >
+> > Millions of small files — logs, cache entries, lock files — exhaust inodes while disk bytes remain plentiful. Always check `df -i` when `df -h` shows free space but writes are failing.
+>
+> ---
+>
+> **Hidden file (dotfile)**
+> - A file whose name starts with `.` (e.g., `.env`, `.git/`, `.dockerignore`). Hidden from `ls` and `Get-ChildItem` by default.
+> - Critical config files like `.env` and `.dbt/` are hidden; if a pipeline cannot find its config, expose dotfiles with `ls -a` (bash) or `Get-ChildItem -Force` (PowerShell).
+>
+> > [!warning] ls hides dotfiles without -a
+> >
+> > `ls` without `-a` silently omits dotfiles. PowerShell's `Get-ChildItem` skips hidden files entirely with no error message — `Get-ChildItem -Path ".env"` returns nothing if the file is hidden.
+>
+> ---
+>
+> **`ncdu`**
+> - An interactive, ncurses-based disk usage explorer that displays directories sorted by size with keyboard navigation.
+> - Far more efficient than running `du` repeatedly when hunting the largest consumers; press `d` inside the interface to delete with confirmation. Install with `apt install ncdu`.
+>
+> > [!info] ncdu is not installed by default
+> >
+> > Not present on minimal images. On Debian/Ubuntu: `apt install ncdu`. Run `ncdu /path/` to start, then navigate with arrow keys.
+>
+> ---
+>
+> **`Get-ChildItem`**
+> - The PowerShell cmdlet for listing files and directories; aliases `ls`, `dir`, `gci`. Returns typed `FileInfo`/`DirectoryInfo` objects, not text strings.
+> - Objects pipeline directly into `Sort-Object`, `Where-Object`, `Measure-Object`, and `Select-Object` without text parsing — immune to filename-space pitfalls that affect bash `ls`.
+>
+> > [!warning] -Filter vs -Include performance gap
+> >
+> > `-Filter` is applied at the filesystem provider level during retrieval (fast). `-Include` retrieves everything first and filters in PowerShell (slow). On directories with millions of files, `-Include "*.parquet"` can take 10× longer than `-Filter "*.parquet"`.
+>
+> ---
+>
+> **`Get-PSDrive`**
+> - A PowerShell cmdlet that returns drive objects with `Used` and `Free` byte properties; covers disk, registry, certificate, and environment drives.
+> - The PowerShell equivalent of `df -h`; always filter with `-PSProvider FileSystem` to exclude non-disk providers and avoid misleading output.
+>
+> > [!warning] Filter to FileSystem provider
+> >
+> > Without `-PSProvider FileSystem`, `Get-PSDrive` returns registry (`HKLM:`, `HKCU:`), certificate (`Cert:`), and environment (`Env:`) drives alongside disk drives, making disk-space readings unreadable.
 
 The `ls` command is your window into the file system. The flags you choose determine whether you see just filenames or a complete picture of sizes, permissions, ownership, and modification times. As a data engineer you regularly deal with directories containing gigabytes of data — the right listing command tells you what changed, what's consuming space, and whether a pipeline produced what it should.
 

@@ -15,6 +15,159 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
+> [!abstract]- Summary
+>
+> - Python uses `try`/`except`/`else`/`finally` for structured exception handling; `else` runs on success only, `finally` runs unconditionally.
+> - The exception hierarchy is rooted at `BaseException`; `Exception` is the correct broadest catch — it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`.
+> - Multiple `except` clauses are evaluated top-to-bottom; place the most specific types first and a broad `except Exception` fallback last.
+> - `raise ... from e` chains exceptions explicitly (sets `__cause__`); bare `raise` re-raises with the original traceback intact; `raise ... from None` suppresses the chain.
+> - Custom exception classes inherit from `Exception` and carry structured diagnostic fields (`row_number`, `column_name`, `raw_value`) for domain-specific error reporting.
+> - The `with` statement (`__enter__`/`__exit__` protocol) guarantees resource cleanup — files, connections, locks — equivalent to C#'s `using`.
+> - `@contextlib.contextmanager` turns a generator function into a context manager; `yield` marks the boundary between setup and teardown.
+> - Safe parse helpers (`safe_int`, `safe_float`, `safe_date`) return a default instead of raising, enabling resilient CSV/JSON parsing in ETL pipelines.
+> - Error accumulation collects failures into a list so a batch pipeline processes all records before reporting; `ExceptionGroup` / `except*` (Python 3.11+) extends this to parallel multi-error scenarios.
+> - Retry with backoff wraps an operation in a loop with increasing delays; always cap retries and re-raise after exhaustion.
+
+> [!note]- Glossary
+>
+> **try / except**
+> - `try:` wraps code that may raise; `except ExceptionType as e:` catches matching exceptions by type, evaluated top-to-bottom — first match wins.
+> - Bare `except:` catches `BaseException` (including `KeyboardInterrupt`) and must never be used; always name the type.
+>
+> > [!warning] Bare except blocks are a production hazard
+> >
+> > A bare `except:` silently swallows `KeyboardInterrupt` and `SystemExit`, making the process unkillable and masking all errors. Replace with `except Exception as e:` at the broadest.
+>
+> > ---
+>
+> **else**
+> - The `else` block executes only when no exception was raised in the `try` block — separating success-path logic from error-handling code.
+> - Code inside `else` is not protected by the preceding `except` clauses — exceptions raised there propagate normally up the call stack.
+>
+> > [!info] else improves code clarity
+> >
+> > Moving success-only logic into `else` makes the `try` block narrower (only the risky call) and avoids accidentally catching errors produced by the post-success code.
+>
+> > ---
+>
+> **finally**
+> - `finally` runs unconditionally — whether an exception occurred, was caught, or propagated — guaranteeing cleanup such as closing files and releasing locks.
+> - Executes even when a `return`, `break`, or `continue` exits the `try`; do not rely on control-flow statements to skip it.
+>
+> > [!tip] Use finally for every resource acquired outside a context manager
+> >
+> > If the resource does not support the `with` protocol, wrap acquisition in `try` and place `resource.close()` in `finally`. This is the explicit fallback when `@contextmanager` is not available.
+>
+> > ---
+>
+> **raise**
+> - `raise` (bare) re-raises the current exception with the original traceback preserved; `raise ValueError("msg")` throws a new exception; `raise NewError("msg") from e` chains it explicitly.
+> - `raise e` (binding the exception to a variable first) resets the traceback to the `raise` line, losing the original origin — prefer bare `raise` when re-raising.
+>
+> > [!warning] raise e discards the origin traceback
+> >
+> > Inside an `except` block, `raise e` creates a new traceback starting at that line. Use bare `raise` to preserve the full stack or `raise NewError() from e` to chain with context.
+>
+> > ---
+>
+> **exception chaining**
+> - `raise NewError("msg") from original_error` sets `original_error` as `__cause__` on the new exception, making the full error chain visible in tracebacks and log parsers.
+> - `raise NewError("msg") from None` deliberately suppresses the chain — used to hide internal implementation details from callers (e.g., surfacing a database error as a public API error).
+>
+> > [!info] __cause__ vs __context__
+> >
+> > `__cause__` is set explicitly via `raise ... from e`; `__context__` is set implicitly when one exception is raised while another is active. Debuggers and logging frameworks display both, but `__cause__` signals intentional wrapping.
+>
+> > ---
+>
+> **BaseException**
+> - The root of Python's entire exception hierarchy; `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` are direct children alongside `Exception`.
+> - Catching `BaseException` intercepts process-termination signals and is almost never correct outside framework-level shutdown handlers.
+>
+> > [!danger] Never catch BaseException in application code
+> >
+> > `except BaseException` blocks Ctrl+C, interpreter shutdown, and generator cleanup signals. Use `except Exception` as the broadest safe catch in all application and pipeline code.
+>
+> > ---
+>
+> **Exception**
+> - Subclass of `BaseException` and the base for all "normal" errors: `ValueError`, `TypeError`, `KeyError`, `IndexError`, `OSError`, and their subclasses.
+> - `except Exception as e:` is the safe broadest catch; it still covers too much for narrow handlers — prefer specific types like `except FileNotFoundError`.
+>
+> > [!tip] Catch the most specific type possible
+> >
+> > `except FileNotFoundError` is more precise than `except OSError` is more precise than `except Exception`. Narrow catches prevent accidental suppression of unrelated errors and make intent explicit.
+>
+> > ---
+>
+> **custom exception**
+> - A user-defined class inheriting from `Exception` (or a more specific built-in) that adds structured diagnostic fields — `row_number`, `column_name`, `raw_value` — for domain-specific error reporting.
+> - Keep custom exceptions as simple data carriers; avoid putting business logic inside the class itself.
+>
+> > [!info] When to create a custom exception
+> >
+> > Create a custom exception when the caller needs structured metadata beyond what a built-in message string provides, or when callers must distinguish pipeline-domain errors (`PipelineError`) from generic runtime errors in a type-safe `except` clause.
+>
+> > ---
+>
+> **context manager**
+> - An object implementing `__enter__` and `__exit__` (or decorated with `@contextmanager`), used with the `with` statement to guarantee deterministic resource cleanup.
+> - `__exit__` receives `(exc_type, exc_val, exc_tb)`; returning `True` suppresses the exception — correct only in narrow, deliberate cases such as `contextlib.suppress`.
+>
+> > [!warning] Returning True from __exit__ silently suppresses exceptions
+> >
+> > A context manager that returns `True` from `__exit__` swallows any exception raised inside the `with` block. Return `False` (or `None`) to let exceptions propagate normally.
+>
+> > ---
+>
+> **`with` statement**
+> - `with resource as r:` calls `__enter__` at block entry and `__exit__` at block exit, even when an exception occurs — equivalent to C#'s `using`.
+> - Multiple resources can be stacked in one statement: `with open(src) as f1, open(dst, 'w') as f2:` — both are closed even if an exception fires inside the block.
+>
+> > [!tip] Prefer with over manual try/finally for resources
+> >
+> > `with open(path) as f:` is shorter, safer, and harder to get wrong than a `try`/`finally` block that calls `f.close()`. Use it for files, database connections, locks, thread pools, and any object that supports the context manager protocol.
+>
+> > ---
+>
+> **`@contextmanager`**
+> - Decorator from `contextlib` that converts a generator function into a context manager; code before `yield` is the setup phase, code after `yield` is the teardown phase.
+> - Exceptions raised inside the `with` block are re-raised at the `yield` point — use `try`/`finally` around the `yield` inside the generator to guarantee teardown runs.
+>
+> > [!info] Generator-based vs class-based context managers
+> >
+> > `@contextmanager` is idiomatic for simple, single-resource patterns. Use a full `__enter__`/`__exit__` class when the manager needs state across multiple methods, must be subclassed, or requires fine-grained control over exception suppression logic.
+>
+> > ---
+>
+> **ExceptionGroup**
+> - Python 3.11+ construct that bundles multiple exceptions into a single raised object: `raise ExceptionGroup("label", [e1, e2, e3])`.
+> - Caught with `except*` syntax, which matches specific types within the group independently and lets unmatched exceptions propagate — equivalent to C#'s `AggregateException`.
+>
+> > [!warning] ExceptionGroup requires Python 3.11+
+> >
+> > `ExceptionGroup` and `except*` are not available on Python 3.10 or earlier. Guard with `if sys.version_info >= (3, 11):` and fall back to the error-accumulation list pattern for older runtimes.
+>
+> > ---
+>
+> **error accumulation**
+> - Pattern where each processing step appends errors to a list instead of raising immediately, so a batch pipeline completes all records before surfacing failures.
+> - Always check and act on the error list at the end of the batch; failing to do so silently swallows errors and allows corrupted data to pass downstream.
+>
+> > [!tip] Partition results into valid and invalid at the end
+> >
+> > Store each row result in a typed dataclass (`ParseResult`) with an `is_valid` flag and an `error` field. After the loop, split on `is_valid` — send good records downstream, quarantine or log the bad ones, and raise if the rejection rate exceeds a threshold.
+>
+> > ---
+>
+> **retry with backoff**
+> - Pattern that retries a failing operation up to a fixed maximum, sleeping an increasing delay between attempts (`delay_s * attempt`) to handle transient failures such as network timeouts, rate limits, and connection resets.
+> - Always pass a specific tuple of retryable exception types to avoid retrying permanent failures like `ValueError` or `PermissionError`; re-raise after exhaustion.
+>
+> > [!tip] Use tenacity or stamina in production
+> >
+> > Hand-rolled retry loops lack jitter, circuit-breaking, and dead-letter handling. In production pipelines, replace custom retry logic with `tenacity` (mature, flexible) or `stamina` (opinionated, typed) to get correct exponential-backoff-with-jitter out of the box.
+
 Python uses `try`/`except`/`else`/`finally` blocks for exception handling, a class-based hierarchy rooted in `BaseException`, and context managers (`with` statement) for deterministic resource cleanup. This note covers exception catching and chaining, the built-in exception tree, custom domain exceptions, context managers (both generator-based and class-based), and data-engineering patterns like error accumulation, safe parse helpers, and retry with backoff.
 ### Key terms used in this note
 

@@ -72,9 +72,9 @@ Key constraints of REST:
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A["Pipeline Client\n(stateless caller)"] -->|"HTTP Request\nMethod + URL\nAuth Header\nBody (optional)"| B["API Server\n(stateless handler)"]
-    B -->|"HTTP Response\nStatus Code\nRate-Limit Headers\nJSON Body"| A
-    B -.->|"No session\nstate stored"| B
+    A["Pipeline Client<br/>(stateless caller)"] -->|"HTTP Request<br/>Method + URL<br/>Auth Header<br/>Body (optional)"| B["API Server<br/>(stateless handler)"]
+    B -->|"HTTP Response<br/>Status Code<br/>Rate-Limit Headers<br/>JSON Body"| A
+    B -.->|"No session<br/>state stored"| B
 ```
 
 *Figure: REST request-response lifecycle — every request is self-contained; the server stores no client state between calls.*
@@ -711,12 +711,12 @@ def paginate_cursor(session, base_url: str, params: dict, page_size: int = 100) 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A[Start: cursor = null] --> B["GET /v1/trades?limit=100\n(+cursor param if set)"]
+    A[Start: cursor = null] --> B["GET /v1/trades?limit=100<br/>(+cursor param if set)"]
     B --> C[Append records to result]
-    C --> D{next_cursor\nin response?}
+    C --> D{next_cursor<br/>in response?}
     D -->|Yes| E[cursor = next_cursor]
     E --> B
-    D -->|No| F[All pages fetched\nReturn all_records]
+    D -->|No| F[All pages fetched<br/>Return all_records]
 ```
 
 *Figure: Cursor pagination flow — each response carries an opaque cursor pointing to the next page; the loop terminates when `next_cursor` is null.*
@@ -1157,9 +1157,9 @@ stateDiagram-v2
     HALF_OPEN --> CLOSED: call succeeds
     HALF_OPEN --> OPEN: call fails
 
-    CLOSED: CLOSED\nCalls pass through normally
-    OPEN: OPEN\nAll calls blocked immediately
-    HALF_OPEN: HALF_OPEN\nOne probe call allowed
+    CLOSED: CLOSED<br/>Calls pass through normally
+    OPEN: OPEN<br/>All calls blocked immediately
+    HALF_OPEN: HALF_OPEN<br/>One probe call allowed
 ```
 
 *Figure: Circuit breaker state machine — CLOSED allows calls, OPEN blocks them after repeated failures, HALF\_OPEN tests whether the API has recovered.*

@@ -50,13 +50,13 @@ The canonical data lake organizes storage into **zones** (also called layers or 
 ```mermaid
 flowchart TD
     src["Source Systems"]
-    landing["LANDING / RAW ZONE (Bronze)\nExact copy, no transformation\nImmutable — write once\nAll formats: JSON, CSV, Parquet, XML\nRetained 90 days to permanent\nAccess: pipeline service accounts only"]
-    cleansed["CLEANSED / CONFORMING ZONE (Silver)\nValidated, deduplicated, schema-enforced\nParquet / Avro only\nHive-style date partitioning\nPII masked or tokenized\nAccess: data engineers + approved tooling"]
-    curated["CURATED / ANALYTICS ZONE (Gold)\nBusiness-ready, query-optimized\nColumnar, compressed, partitioned\nDenormalized for common patterns\nAccess: analysts, BI, data science\nExposed via external tables or DWH"]
+    landing["LANDING / RAW ZONE (Bronze)<br/>Exact copy, no transformation<br/>Immutable — write once<br/>All formats: JSON, CSV, Parquet, XML<br/>Retained 90 days to permanent<br/>Access: pipeline service accounts only"]
+    cleansed["CLEANSED / CONFORMING ZONE (Silver)<br/>Validated, deduplicated, schema-enforced<br/>Parquet / Avro only<br/>Hive-style date partitioning<br/>PII masked or tokenized<br/>Access: data engineers + approved tooling"]
+    curated["CURATED / ANALYTICS ZONE (Gold)<br/>Business-ready, query-optimized<br/>Columnar, compressed, partitioned<br/>Denormalized for common patterns<br/>Access: analysts, BI, data science<br/>Exposed via external tables or DWH"]
 
     src --> landing
-    landing -->|"validation +\ncleaning pipeline"| cleansed
-    cleansed -->|"aggregation +\nenrichment pipeline"| curated
+    landing -->|"validation +<br/>cleaning pipeline"| cleansed
+    cleansed -->|"aggregation +<br/>enrichment pipeline"| curated
 
     style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
     style landing fill:#1a1a2e,stroke:#e0af68,color:#fff

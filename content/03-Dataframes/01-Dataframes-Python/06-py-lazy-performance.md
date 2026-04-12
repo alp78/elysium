@@ -116,13 +116,13 @@ The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1b2e', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#7aa2f7', 'lineColor': '#7aa2f7', 'background': '#1a1b2e', 'mainBkg': '#1f2335', 'clusterBkg': '#1f2335', 'titleColor': '#c0caf5', 'edgeLabelBackground': '#1f2335', 'fontFamily': 'monospace'}}}%%
 flowchart LR
-    A["pl.scan_parquet(path)\npl.scan_csv(path)"] -->|"LazyFrame\n(no data)"| B["Build query plan"]
+    A["pl.scan_parquet(path)<br/>pl.scan_csv(path)"] -->|"LazyFrame<br/>(no data)"| B["Build query plan"]
     B --> C[".filter(pl.col(...))"]
     C --> D[".select(...)"]
-    D --> E[".group_by / .sort\n.with_columns"]
+    D --> E[".group_by / .sort<br/>.with_columns"]
     E -->|"Optimizer rewrites plan"| F[".collect()"]
-    F --> G["DataFrame\n(materialized)"]
-    B2["pd.read_parquet(path)"] -->|"DataFrame\n(all data loaded)"| G2["Immediate execution\n(no optimization)"]
+    F --> G["DataFrame<br/>(materialized)"]
+    B2["pd.read_parquet(path)"] -->|"DataFrame<br/>(all data loaded)"| G2["Immediate execution<br/>(no optimization)"]
 
     style A fill:#1f2335,stroke:#7aa2f7,color:#c0caf5
     style B fill:#1f2335,stroke:#7aa2f7,color:#c0caf5

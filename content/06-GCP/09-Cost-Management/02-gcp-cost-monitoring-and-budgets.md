@@ -968,11 +968,11 @@ gcloud storage buckets describe gs://BUCKET_NAME \
 }}}%%
 stateDiagram-v2
     [*] --> Standard : object created
-    Standard --> Nearline : age ≥ 30 days\n$0.020→$0.010/GB/mo
-    Nearline --> Coldline : age ≥ 90 days\n$0.010→$0.004/GB/mo
-    Coldline --> Archive : age ≥ 365 days\n$0.004→$0.0012/GB/mo
-    Archive --> [*] : age ≥ 1825 days\n(5 years) — deleted
-    Standard --> [*] : AbortIncompleteMultipartUpload\nage ≥ 7 days
+    Standard --> Nearline : age ≥ 30 days<br/>$0.020→$0.010/GB/mo
+    Nearline --> Coldline : age ≥ 90 days<br/>$0.010→$0.004/GB/mo
+    Coldline --> Archive : age ≥ 365 days<br/>$0.004→$0.0012/GB/mo
+    Archive --> [*] : age ≥ 1825 days<br/>(5 years) — deleted
+    Standard --> [*] : AbortIncompleteMultipartUpload<br/>age ≥ 7 days
 ```
 
 Find buckets without any lifecycle policy configured:

@@ -430,11 +430,11 @@ provider "google" {
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A["Terraform Core"] --> B["Provider Plugin\nhashicorp/google"]
+    A["Terraform Core"] --> B["Provider Plugin<br/>hashicorp/google"]
     B --> C["GCP API"]
-    A --> D["Backend\ngcs"]
-    D --> E["GCS Bucket\ntf-state"]
-    E --> F["State File\ndefault.tfstate"]
+    A --> D["Backend<br/>gcs"]
+    D --> E["GCS Bucket<br/>tf-state"]
+    E --> F["State File<br/>default.tfstate"]
     E --> G["Lock Object"]
 ```
 

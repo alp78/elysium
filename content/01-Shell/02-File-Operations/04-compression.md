@@ -12,12 +12,120 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Compression — Shrinking Data for Transfer and Storage
+# Compression
 
 > [!quote]
 > "There is no compression algorithm for experience."
 >
 > — **Andy Jassy**, AWS re:Invent keynote (2012)
+
+> [!abstract]- Summary
+>
+> Covers Linux and PowerShell compression tools — gzip, zstd, tar, lz4, Compress-Archive, 7-Zip, GZipStream — and a decision matrix for selecting the right algorithm by pipeline scenario.
+>
+> **Linux file compression tools**
+> - `gzip`: single-file DEFLATE compression; universal compatibility on every Linux distro, macOS, and CI runner; single-threaded (use `pigz` for multi-core)
+> - `zstd`: compresses better than gzip at every speed tier; default level 3 beats gzip -6 in both ratio and decompression speed; levels 1–22; keeps original by default
+> - `tar`: bundles directory trees into a single tarball; combine with `-z` (gzip) or `--zstd` for compressed archives; auto-detects format on extract
+>
+> **Compression strategy matrix**
+> - Pipeline intermediate files: zstd -3 (best speed/ratio balance)
+> - Long-term GCS archive: zstd -19 (maximum compression)
+> - Log shipping: gzip -6 (universal compatibility)
+> - Database backup transfer: gzip -1 (fast compression on large structured data)
+> - Real-time streaming: lz4 (fastest decompression, ~4 GB/s)
+>
+> **PowerShell compression tools**
+> - `Compress-Archive`: built-in zip cmdlet; 2 GB per-file hard limit; no external dependencies required
+> - 7-Zip (`7z`): multi-format (gzip, zstd, tar, zip, 7z); no size limits; multi-threaded; install via `scoop install 7zip`
+> - `GZipStream`: .NET programmatic gzip; reads entire file into memory; not suitable for files larger than available RAM
+>
+> **Operations and safety**
+> - Use `gzip -k` — gzip removes the original file by default with no confirmation prompt
+> - Always run `tar tf` before extracting unknown archives to detect tar bombs
+> - `Compress-Archive` silently produces a corrupt archive when any file entry exceeds 2 GB; use 7-Zip instead
+> - Over-compressing pipeline intermediates: gzip -1 vs gzip -9 is only 5–15% size difference but 5–8x slower
+
+> [!abstract]- Glossary
+>
+> **Compression algorithm**
+> - A method for encoding data more efficiently to reduce file size. Lossless algorithms (gzip, zstd, lz4) reconstruct the original data exactly; lossy algorithms (JPEG, MP3) do not.
+> - Linux: `gzip`, `zstd`, `lz4`, `bzip2`, `xz` are all lossless. PowerShell: `Compress-Archive` uses zip (DEFLATE, lossless); 7-Zip supports all of the above plus its native 7z format.
+>
+> > [!info] Lossless vs lossy
+> > All algorithms covered in this note are lossless. Data engineering pipelines require exact reconstruction — never use lossy compression on structured data.
+>
+> ---
+>
+> **`gzip`**
+> - The most widely supported Linux compression tool. Uses the DEFLATE algorithm (RFC 1952). Produces `.gz` files. Single-threaded. Removes the original file after compression by default.
+> - Linux: `gzip -k data.csv` keeps the original; `gzip -d data.csv.gz` decompresses; `gzip -t` tests integrity; levels `-1` (fastest) to `-9` (smallest), default `-6`. PowerShell/Windows: available as `gzip` if 7-Zip or Git for Windows is installed; otherwise use `7z a -tgzip`.
+>
+> > [!warning] Original file removal
+> > `gzip data.csv` deletes `data.csv` immediately after compression. Use `-k` for any file you cannot recreate.
+>
+> ---
+>
+> **`zstd` (Zstandard)**
+> - A modern compression algorithm (Facebook, 2016) that compresses better than gzip and decompresses faster at every speed tier. Produces `.zst` files. Keeps the original by default. Supports multi-threading with `-T`.
+> - Linux: `zstd data.csv` (compress, levels 1–19); `zstd --ultra -22 data.csv` (extreme, high memory); `zstd --adapt` (dynamic level based on I/O speed); `zstd -T0` (auto-detect CPU count). PowerShell: `7z a -tzstd archive.zst data.csv` (requires 7-Zip 21.01+).
+>
+> > [!tip] Default level
+> > zstd default level 3 beats gzip default level 6 in both compression ratio and decompression speed. It is the recommended default for all modern data pipelines.
+>
+> ---
+>
+> **`tar`**
+> - A tool that bundles a directory tree into a single archive file (tarball). Does not compress by itself — combined with `-z` (gzip), `--zstd`, `-j` (bzip2), or `-J` (xz) for compressed archives. Produces `.tar.gz`, `.tar.zst`, `.tar.bz2`, or `.tar.xz` files.
+> - Linux: `tar czf archive.tar.gz dir/` (create gzip); `tar --zstd -cf archive.tar.zst dir/` (create zstd); `tar xf archive.tar.gz -C /out/` (extract, auto-detects format); `tar tf archive.tar.gz` (list without extracting). PowerShell: `tar.exe` is available natively on Windows 10 build 17063+ and PowerShell 7+.
+>
+> > [!danger] Tar bombs
+> > Archives created with `tar cf bomb.tar.gz *` (no parent directory) extract files directly into the current working directory, potentially overwriting existing files. Always run `tar tf` first on archives you did not create.
+>
+> ---
+>
+> **`lz4`**
+> - An extremely fast compression algorithm optimized for decompression speed (~4 GB/s). Trades compression ratio for minimal CPU overhead. Produces `.lz4` files.
+> - Linux: `lz4 data.csv` (compress); `lz4 -d data.csv.lz4` (decompress). Not natively supported by `tar` without helper tools. PowerShell: available via 7-Zip. Best used for real-time streaming and latency-sensitive pipelines, not for long-term archival.
+>
+> > [!info] When not to use lz4
+> > lz4 compression ratio is significantly worse than zstd or gzip. Do not use it for long-term archives or cloud storage where storage cost matters.
+>
+> ---
+>
+> **Compression level**
+> - A numeric parameter controlling the trade-off between compression speed and output file size. Higher levels produce smaller files but take longer and use more CPU and memory.
+> - gzip: levels 1–9 (default 6). zstd: levels 1–19 standard, 20–22 with `--ultra` (default 3). 7-Zip: levels 0–9 via `-mx`. Practical guidance: for pipeline intermediates use fast levels (gzip -1, zstd -3); for long-term archives use high levels (zstd -19).
+>
+> > [!warning] Over-compression
+> > For pipeline intermediate files, gzip -1 vs gzip -9 is only 5–15% size difference but 5–8x slower. Always use fast levels for data that will be decompressed within minutes.
+>
+> ---
+>
+> **`pigz`**
+> - Parallel gzip — a drop-in replacement for `gzip` that uses multiple CPU cores. Produces identical `.gz` files compatible with all standard gzip tools.
+> - Linux only: `pigz -p 4 data.csv` (use 4 threads); `pigz -d data.csv.gz` or `unpigz data.csv.gz` to decompress. Install with `apt install pigz`. Not available natively on Windows. PowerShell equivalent: `7z a -tgzip -mmt4 archive.gz data.csv`.
+>
+> > [!tip] When to use pigz
+> > On a 4-core VM compressing a 10 GB CSV, gzip uses one core while three sit idle. pigz provides 3–4x faster compression with identical output format.
+>
+> ---
+>
+> **`Compress-Archive`** (PowerShell)
+> - The built-in PowerShell cmdlet for creating and extracting `.zip` files. Uses .NET `System.IO.Compression.ZipArchive`. No external dependencies.
+> - PowerShell only: `Compress-Archive -Path "C:\data\*" -DestinationPath out.zip`; compression levels: `Optimal` (default), `Fastest`, `NoCompression`; `Expand-Archive` for extraction. Linux equivalent: `zip` (not always installed) or `7z a -tzip`.
+>
+> > [!warning] 2 GB file size limit
+> > `Compress-Archive` silently produces a corrupt archive when any file entry exceeds 2 GB. This limit applies to all current stable versions including PowerShell 7.x. Use 7-Zip for large files.
+>
+> ---
+>
+> **`7z`** (7-Zip)
+> - A multi-format compression tool supporting gzip, zstd, bzip2, xz, tar, zip, and its native 7z format. No file size limits. Multi-threaded. Open source.
+> - PowerShell/Windows: `7z a -tgzip archive.gz data.csv`; `7z a -tzstd archive.zst data.csv`; `7z x archive.gz` (extract, auto-detects format); `7z l archive.tar.gz` (list contents). Install via `scoop install 7zip` or `winget install 7zip`. Linux: available via `apt install p7zip-full`.
+>
+> > [!info] Installation required
+> > 7-Zip is not installed by default on Windows or Linux. It must be explicitly installed before use in pipelines or automation scripts.
 
 When you move data between systems (GCE VM to GCS, pipeline output to archive), compression is not optional — it directly affects transfer time, storage cost, and bandwidth consumption. Choosing the right compression algorithm is an engineering decision, not an aesthetic one.
 

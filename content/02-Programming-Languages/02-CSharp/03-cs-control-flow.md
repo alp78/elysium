@@ -16,6 +16,206 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
+> [!abstract]- Summary
+>
+> **Conditional Statements**
+> - `if`/`else` chains require explicit `bool`; no truthy/falsy coercion — `if (1)` is a compile error.
+> - Ternary `?:` and null-coalescing `??`/`??=` cover inline value selection and null defaults.
+> - `switch` statement: imperative, mandatory `break`, constant case labels only.
+> - `switch` expression: value-returning, exhaustive pattern matching; missing `_` discard throws `SwitchExpressionException`.
+> - Pattern types: type (`is int n`), property (`{ Month: 12 }`), relational (`>= 90`), logical combinators (`and`/`or`/`not`, C# 9+), list/positional (`[1, 2, ..]`, C# 11+).
+>
+> **Loops**
+> - `for`: index-based, custom step, countdown; off-by-one risk with `<` vs `<=`.
+> - `foreach`: iterates any `IEnumerable<T>`; loop variable is read-only; modifying the source throws `InvalidOperationException`.
+> - `while`: condition-first — body may never execute.
+> - `do-while`: body-first — always runs at least once.
+> - Index simulation: `.Select((item, i) => ...)` LINQ overload; parallel pairing: `.Zip()`.
+>
+> **Loop Control**
+> - `break` exits the innermost loop only; `continue` skips to next iteration.
+> - No labeled `break` in C#; nested-loop escape uses `goto label` or method extraction with `return`.
+>
+> **Iterators & Generators**
+> - `yield return` pauses execution and emits one value; method body deferred until first `MoveNext()`.
+> - `yield break` terminates the iterator early; using plain `return` in an iterator is a compile error.
+> - `GetEnumerator()` / `MoveNext()` / `Current` is the underlying protocol `foreach` wraps.
+> - `SelectMany` flattens one level; recursive or `Stack<T>`-based flatten handles arbitrary depth.
+> - Eager: `ToList()` materializes; lazy: query object re-executes on every enumeration.
+>
+> **LINQ & Functional Equivalents**
+> - `Select` (map), `Where` (filter), `SelectMany` (flat-map) are lazy; nothing executes until `foreach` or `ToList()`.
+> - Query syntax and method syntax compile to identical IL.
+> - Materialization: `ToDictionary`, `ToHashSet`, `ToList`, `ToArray`.
+> - Aggregation: `Aggregate` (general fold), `Sum`, `Max`, `Min`, `Count`, `Any`, `All`, `Average`.
+> - Ordering: `OrderBy` / `OrderByDescending` + `ThenBy`; do not chain two `OrderBy` calls.
+> - Infinite generators: pair with `Take(n)` or `TakeWhile` before materializing.
+
+> [!note]- Glossary
+>
+> **`if`/`else`**
+>
+> - Conditional branching construct that evaluates an explicit `bool` expression and executes one of two code paths. C# has no truthy/falsy coercion — every condition must resolve to `true` or `false`.
+> - `else if` chains evaluate top-down; only the first matching branch executes. Deep nesting should be replaced with guard clauses or `switch` expressions.
+>
+> > [!tip] Use braces always
+> >
+> > Always wrap `if`/`else` bodies in braces even for single-line branches to prevent accidental bugs when adding statements later.
+>
+> > ---
+>
+> **Ternary operator**
+>
+> - Inline conditional expression `condition ? valueIfTrue : valueIfFalse`. Both branches must return the same type; the whole expression is a value, not a statement.
+> - Right-associative chains are legal but unreadable beyond two levels — prefer a `switch` expression for three or more tiers.
+>
+> > [!tip] Limit nesting depth
+> >
+> > Limit ternary chains to two levels maximum. Replace deeper nesting with a `switch` expression for clarity and exhaustiveness checking.
+>
+> > ---
+>
+> **Null-coalescing (`??`, `??=`)**
+>
+> - `a ?? b` returns `a` if non-null, otherwise `b`. `a ??= b` assigns `b` only when `a` is currently null — a one-line lazy initializer pattern.
+> - Both operators short-circuit: the right operand is not evaluated if the left is non-null.
+>
+> > [!warning] `??` is not a null guard
+> >
+> > When null is a programming error rather than an expected state, throw `ArgumentNullException` instead of silently substituting a default with `??`.
+>
+> > ---
+>
+> **`switch` statement**
+>
+> - Imperative multi-branch dispatch on a value. Each `case` must end with `break` — C# does not allow fall-through (compile error), unlike C/C++. Empty cases may stack to match multiple values.
+> - Only compile-time constants are allowed as case labels; runtime expressions require a `switch` expression with a `when` guard.
+>
+> > [!info] Compile-time exhaustiveness
+> >
+> > The compiler warns when a `switch` statement over an `enum` omits one or more members. Add a `default` case to silence the warning and handle unexpected future values.
+>
+> > ---
+>
+> **`switch` expression**
+>
+> - Expression-based pattern dispatcher: `value switch { pattern => result, ... }`. Returns a value directly; each arm is `pattern => expression`, not a statement block.
+> - Compiler verifies exhaustiveness — missing a `_` discard arm throws `SwitchExpressionException` at runtime when no pattern matches.
+>
+> > [!warning] Missing discard arm throws at runtime
+> >
+> > Always close a `switch` expression with `_ => defaultValue` or `_ => throw new ArgumentException(...)` to guarantee exhaustive coverage.
+>
+> > ---
+>
+> **Pattern matching**
+>
+> - Unified syntax for testing and destructuring values in `if` and `switch`. Types: type pattern (`is int n`), property pattern (`{ Length: > 5 }`), relational (`>= 90`), list/positional (`[1, 2, ..]`), logical combinators (`and`, `or`, `not`).
+> - Patterns introduce new variables in scope (e.g., `int n` in `is int n`) — these can shadow outer variables if the same name is reused.
+>
+> > [!info] C# 9+ and C# 11+ additions
+> >
+> > Logical pattern combinators (`and`, `or`, `not`) were added in C# 9. List and positional patterns were added in C# 11 and operate on arrays, lists, and spans.
+>
+> > ---
+>
+> **`for` loop**
+>
+> - Index-based iteration: `for (init; condition; increment)`. The step expression can be any integer — positive, negative, or greater than 1 for non-unit strides.
+> - The most common error is off-by-one: using `<=` when `<` is intended (or vice versa) in the condition.
+>
+> > [!tip] Prefer `foreach` when index is not needed
+> >
+> > Reserve `for` for cases requiring explicit index access, custom step, or backward traversal. Use `foreach` for straightforward collection iteration.
+>
+> > ---
+>
+> **`foreach`**
+>
+> - Iterates any type implementing `IEnumerable<T>` without exposing an index. The loop variable is read-only — reassigning it inside the body has no effect on the source collection.
+> - Modifying the source collection during iteration throws `InvalidOperationException`. Snapshot with `.ToList()` first if mutation is required.
+>
+> > [!warning] Mutation during iteration throws
+> >
+> > To remove or add items while iterating, snapshot with `.ToList()` before the loop or collect changes and apply them after the loop completes.
+>
+> > ---
+>
+> **`while` / `do-while`**
+>
+> - `while` evaluates the condition before each iteration — the body may never execute if the condition is false from the start. `do-while` executes the body first and then checks — guaranteeing at least one iteration.
+> - Use `while` for polling and input validation where zero iterations is valid; use `do-while` for retry-at-least-once patterns and menu display.
+>
+> > [!tip] Match construct to intent
+> >
+> > If the first iteration must always run (e.g., show a menu, prompt for input), use `do-while`. If the loop may legitimately not run at all, use `while`.
+>
+> > ---
+>
+> **`break` / `continue`**
+>
+> - `break` exits the innermost enclosing loop immediately; execution resumes after the loop body. `continue` skips the remainder of the current iteration and jumps to the next cycle.
+> - Neither keyword propagates through nested loops — `break` in an inner loop does not exit the outer loop.
+>
+> > [!warning] `break` is scoped to the innermost loop only
+> >
+> > To exit nested loops, use `goto` with a label placed after the outer loop, or extract the loop body to a method and use `return`.
+>
+> > ---
+>
+> **`goto`**
+>
+> - Unconditional jump to a labeled statement in the same method. In C#, its only accepted use is escaping nested loops by jumping to a label placed immediately after the outer loop.
+> - Avoid for general flow control — it creates spaghetti code and makes reasoning about execution order difficult. Method extraction with `return` is usually cleaner.
+>
+> > [!warning] Use `goto` only for nested-loop escape
+> >
+> > Restrict `goto` strictly to the nested-break pattern. Any other use signals a design problem that should be resolved by refactoring to methods, flags, or LINQ.
+>
+> > ---
+>
+> **`yield return`**
+>
+> - Produces one value from an iterator method returning `IEnumerable<T>`. The compiler transforms the method into a state machine that pauses at each `yield return` and resumes on the next `MoveNext()` call.
+> - The method body does not execute at call time — execution is deferred until the first enumeration. Place argument validation before the first `yield` in a non-iterator wrapper to ensure immediate checking.
+>
+> > [!tip] Validate eagerly, yield lazily
+> >
+> > Wrap the iterator in a non-iterator method that validates arguments first, then delegates to the `yield`-containing private method. This ensures validation fires at call time.
+>
+> > ---
+>
+> **`yield break`**
+>
+> - Terminates an iterator method early — no further values are produced. Equivalent to `return` in a regular method. Using plain `return` (with no value) in an iterator is a compile error; `yield break` is mandatory.
+> - Use for custom take-while logic, error boundaries, or when a sentinel value is encountered mid-sequence.
+>
+> > [!tip] Prefer `.TakeWhile()` for simple filtering
+> >
+> > For straightforward prefix-filtering, `.TakeWhile(predicate)` is more concise than a manual `yield break`. Reserve `yield break` for complex early-exit logic that LINQ cannot express cleanly.
+>
+> > ---
+>
+> **LINQ**
+>
+> - Language-Integrated Query: a set of extension methods (`Select`, `Where`, `OrderBy`, `GroupBy`, `Aggregate`, etc.) that provide declarative, composable, lazy data transformation directly in C# syntax.
+> - All LINQ methods return lazy `IEnumerable<T>` — nothing executes until the sequence is enumerated. Re-enumerating a deferred query re-executes the entire pipeline; materialize with `.ToList()` to prevent duplicate work.
+>
+> > [!warning] Re-enumeration duplicates work
+> >
+> > Assign the result of `.ToList()` to a variable after composing the pipeline, then use that variable for all subsequent iterations or passes.
+>
+> > ---
+>
+> **`IEnumerable<T>`**
+>
+> - The standard iteration contract for forward-only, lazy sequences in .NET. Returned by LINQ methods, `yield return` iterators, and all standard collection types.
+> - Enumerating the same `IEnumerable<T>` multiple times triggers multiple evaluations — particularly costly when backed by a database query, file read, or network call. Materialize with `.ToList()` or `.ToArray()` to cache results.
+>
+> > [!warning] Multiple enumeration triggers multiple source reads
+> >
+> > Never enumerate a raw `IEnumerable<T>` more than once when the source is expensive. Assign `.ToList()` once and reuse the list.
+
 This note covers every mechanism C# provides for directing program execution: conditional branching (`if`/`else`, ternary, null-coalescing), `switch` statements and expressions with exhaustive pattern matching (type, property, relational, list, positional), loops (`for`, `foreach`, `while`, `do-while`), loop control (`break`, `continue`, `goto`), iterator methods with `yield return`, and LINQ as functional pipeline equivalents.
 
 ### Key terms used in this note
@@ -71,10 +271,10 @@ flowchart TD
     C --> G["Switch statement"]
     C --> H["Switch expression"]
     D --> I["Type / property / relational patterns"]
-    E --> J["Use for side effects,\nmultiple statements"]
-    F --> K["Use for inline\nvalue selection"]
-    G --> L["Use for imperative flow\nwith fall-through"]
-    H --> M["Use for value-returning\ncompact matching"]
+    E --> J["Use for side effects,<br/>multiple statements"]
+    F --> K["Use for inline<br/>value selection"]
+    G --> L["Use for imperative flow<br/>with fall-through"]
+    H --> M["Use for value-returning<br/>compact matching"]
     I --> H
 ```
 
@@ -426,13 +626,13 @@ flowchart TD
     A --> E["A transformation pipeline"]
     B --> F["foreach"]
     C --> G["for"]
-    D --> H{"Must body run\nat least once?"}
+    D --> H{"Must body run<br/>at least once?"}
     E --> I["LINQ .Where/.Select"]
     H -->|Yes| J["do-while"]
     H -->|No| K["while"]
-    F --> L["Preferred for\nIEnumerable&lt;T&gt;"]
-    G --> M["Use when index\nis needed"]
-    I --> N["Lazy, composable,\nvalue-returning"]
+    F --> L["Preferred for<br/>IEnumerable&lt;T&gt;"]
+    G --> M["Use when index<br/>is needed"]
+    I --> N["Lazy, composable,<br/>value-returning"]
 ```
 
 ### Counted and collection iteration

@@ -1,5 +1,5 @@
 ---
-title: "04 - Firewalls"
+title: "Firewalls — Controlling Access to Your Data"
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
@@ -14,8 +14,6 @@ status: complete
 
 # Firewalls — Controlling Access to Your Data
 
-Every production database should be accessible ONLY from authorized sources. A SQL Server port open to the internet is a security incident waiting to happen. Firewalls are your perimeter defense — and relying on only one layer is not enough.
-
 > [!quote]
 > "Complexity is the worst enemy of security, and our systems are getting more complex all the time."
 >
@@ -25,16 +23,105 @@ Every production database should be accessible ONLY from authorized sources. A S
 >
 > — **Ken Thompson**, *Reflections on Trusting Trust*, Turing Award lecture (1984)
 
+> [!abstract]- Summary
+>
+> This note covers firewall configuration across Linux, Windows, and GCP for securing database and infrastructure access in production environments.
+>
+> - **Linux ufw tools** — allow/deny rules scoped by source IP and port, default policies, numbered rule management, logging levels
+> - **PowerShell Windows Firewall tools** — `Get-NetFirewallRule`, `New-NetFirewallRule`, `Set-NetFirewallProfile` across Domain/Private/Public profiles, rule removal
+> - **PowerShell / Linux | gcloud | firewall rules** — VPC firewall rule lifecycle: list, create, update, delete; interaction with OS-level firewalls
+> - **Defense in depth** — five-layer model: VPC firewall + OS firewall + SQL Server auth + no public IP + VPC Service Controls
+> - **Operations and safety** — when to use and avoid firewall tools; lockout scenarios; troubleshooting connectivity failures; alignment between GCP VPC and OS firewall layers
+
+> [!note]- Glossary
+>
+> **Firewall**
+>
+> - Software or hardware that filters network traffic based on rules (allow/deny by IP, port, protocol, direction). The first match in a rule chain wins; unmatched traffic follows the default policy.
+> - Controls which traffic can reach your services. Misconfigured firewalls are the primary cause of "connection timed out" errors after deployment.
+>
+> > [!info] Cloud and OS firewalls are independent layers
+> >
+> > Cloud VPCs (GCP, AWS, Azure) evaluate their own firewall rules before traffic reaches any VM. Configuring only the OS firewall while leaving the VPC layer open — or vice versa — still exposes or silently blocks traffic.
+>
+> ---
+>
+> **`ufw`** (Uncomplicated Firewall)
+>
+> - A user-friendly frontend for `iptables` on Ubuntu/Debian. Manages ordered rule chains where the first match determines the action; handles rule persistence automatically.
+> - The recommended firewall tool for single-VM Linux configurations. Use `ufw status verbose` to inspect rules before making changes.
+>
+> > [!warning] Do not mix `ufw` and raw `iptables` rules
+> >
+> > `ufw` manages `iptables` chains internally. Adding raw `iptables` rules on the same system can produce unpredictable ordering and conflict with `ufw`'s state tracking.
+>
+> ---
+>
+> **`iptables` / `nftables`**
+>
+> - The low-level Linux packet filtering frameworks. `iptables` (legacy) and `nftables` (modern replacement) define rules in chains: INPUT (inbound), OUTPUT (outbound), FORWARD (routed). `nftables` supersedes `iptables` on modern kernels.
+> - Required for complex configurations that `ufw` cannot express, such as multi-chain NAT rules or traffic shaping. On most production VMs `ufw` is sufficient.
+>
+> > [!warning] Raw `iptables` rules do not survive reboot
+> >
+> > Rules written directly via `iptables` exist only in memory. Use `iptables-save > /etc/iptables/rules.v4` with `iptables-persistent`, or use `ufw` which persists rules automatically.
+>
+> ---
+>
+> **VPC firewall** (GCP)
+>
+> - Google Cloud network-level firewall rules that filter traffic before it reaches VM instances. Managed via `gcloud compute firewall-rules` or Terraform. Rules are applied per-network and can target specific VM tags or service accounts.
+> - Evaluated independently from the OS firewall. Both the VPC rule and the OS rule must allow traffic for a connection to succeed. A common failure: `ufw` allows port 1433 but the VPC firewall blocks it, causing `nc -zv` to time out from inside the VPC.
+>
+> > [!info] VPC firewall rule priorities
+> >
+> > Rules are evaluated in ascending priority order (lower number = higher priority, range 0–65535). The default implicit rule is deny-all at priority 65535. An explicit allow rule at a lower priority number overrides it.
+>
+> ---
+>
+> **Windows Firewall** (Windows Defender Firewall)
+>
+> - The built-in Windows packet filter managed via the `NetSecurity` PowerShell module (`New-NetFirewallRule`, `Get-NetFirewallRule`, `Set-NetFirewallProfile`) or legacy `netsh advfirewall`. Operates on three profiles applied based on detected network type: Domain, Private, and Public.
+> - Controls inbound and outbound traffic on Windows VMs. Rules applied to the wrong profile (e.g., Domain only) have no effect when the VM is on a Public network.
+>
+> > [!warning] Profile mismatch silently disables rules
+> >
+> > A rule created without `-Profile` defaults to all profiles, but explicitly scoping to `-Profile Domain` means the rule is inactive on Private and Public networks. Always verify with `Get-NetFirewallRule -DisplayName "name" | Format-List`.
+>
+> ---
+>
+> **Default policy** (allow vs. deny)
+>
+> - The firewall action applied to traffic that matches no explicit rule. **Default deny** blocks all unmatched traffic; **default allow** permits it. Production firewalls must default to deny on inbound traffic.
+> - In `ufw`: set with `ufw default deny incoming`. In Windows Firewall: set with `Set-NetFirewallProfile -DefaultInboundAction Block`. In GCP VPC: the implicit rule at priority 65535 is deny-all ingress.
+>
+> > [!danger] Enabling `ufw` without an SSH allow rule locks you out immediately
+> >
+> > `ufw enable` with default-deny active blocks all inbound traffic including port 22. Always run `sudo ufw allow from 35.235.240.0/20 to any port 22 proto tcp` before `ufw enable`. Recovery requires GCP serial console or IAP tunnel.
+>
+> ---
+>
+> **IAP tunnel** (Identity-Aware Proxy)
+>
+> - A Google Cloud proxy that brokers SSH sessions to VMs without requiring a public IP or an open port 22 on the internet. Traffic arrives at the VM from the fixed CIDR `35.235.240.0/20`; the VPC firewall must allow TCP 22 from that range.
+> - Used as the fourth defense-in-depth layer: removing the VM's external IP entirely eliminates the public attack surface while preserving SSH access via `gcloud compute ssh`.
+>
+> > [!info] IAP requires a matching VPC firewall rule
+> >
+> > Even with IAP enabled, `gcloud compute ssh` times out if no VPC firewall rule permits TCP 22 from `35.235.240.0/20`. The OS-level SSH allow rule alone is insufficient.
+
+Every production database should be accessible ONLY from authorized sources. A SQL Server port open to the internet is a security incident waiting to happen. Firewalls are your perimeter defense — and relying on only one layer is not enough.
+
 The defense-in-depth model layers GCP VPC firewall rules (network level), OS-level firewall (ufw/Windows Firewall), application authentication, and IAP tunneling so that no single misconfiguration exposes a service.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
     Internet["Internet / External Client"]
-    GCP["GCP VPC Firewall\n(network perimeter)"]
-    OS["OS Firewall\nufw / Windows Firewall"]
-    App["Application Auth\nSQL Server login / IAM"]
-    IAP["IAP Tunnel\n(no public IP)"]
+    GCP["GCP VPC Firewall<br>(network perimeter)"]
+    OS["OS Firewall<br>ufw / Windows Firewall"]
+    App["Application Auth<br>SQL Server login / IAM"]
+    IAP["IAP Tunnel<br>(no public IP)"]
     DB[("SQL Server / DB")]
 
     Internet -->|"blocked unless explicitly allowed"| GCP
@@ -44,26 +131,6 @@ flowchart TD
     Internet -.->|"SSH via IAP"| IAP
     IAP --> OS
 ```
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Firewall | Software or hardware that filters network traffic based on rules (allow/deny by IP, port, protocol, direction). | Controls which network traffic can reach your services. Misconfigured firewalls are the #1 cause of "connection timeout" errors after deployment. | Assuming the OS firewall is the only firewall. Cloud VPCs (GCP, AWS, Azure) have their own firewall rules that apply before traffic reaches the VM. |
-| `ufw` (Uncomplicated Firewall) | A user-friendly frontend for iptables on Ubuntu/Debian. Simplifies common firewall operations (allow/deny by port, IP, or service name). | The recommended firewall tool for single-VM configurations. Simple syntax for the most common operations. | `ufw` is a frontend for iptables but they can conflict. Avoid mixing `ufw` and raw `iptables` rules on the same system. |
-| `iptables` / `nftables` | The low-level Linux packet filtering frameworks. `iptables` (legacy) and `nftables` (modern replacement) define rules in chains (INPUT, OUTPUT, FORWARD). | Required for complex firewall configurations that `ufw` cannot express. | `iptables` rules are lost on reboot unless saved with `iptables-save`. Use `ufw` or `iptables-persistent` for persistent rules. |
-| VPC firewall (GCP) | Google Cloud network-level firewall rules that filter traffic before it reaches VM instances. Managed via `gcloud compute firewall-rules`. | VPC rules are evaluated before the OS firewall. Both layers must allow traffic for a connection to succeed. | Configuring the OS firewall but forgetting the VPC firewall (or vice versa). Both must be aligned. |
-| Windows Firewall | The built-in Windows packet filter. Managed via `New-NetFirewallRule` (PowerShell) or `netsh advfirewall` (cmd). | Controls inbound and outbound traffic on Windows VMs. | Windows Firewall has separate profiles (Domain, Private, Public). Rules in the wrong profile have no effect. |
-| Allow vs Deny (default policy) | The firewall default action when no rule matches. "Default deny" blocks all traffic not explicitly allowed. "Default allow" permits all traffic not explicitly blocked. | Production firewalls should default to deny. Only explicitly allowed ports and IPs should pass. | Running `ufw enable` without first allowing SSH (port 22). This locks you out of the VM immediately. |
-
-## What this note covers
-
-- Linux firewall management with `ufw`: allow, deny, status, enable, disable, reset
-- Understanding iptables chains and when `ufw` is insufficient
-- GCP VPC firewall rules and how they interact with OS-level firewalls
-- Windows Firewall management with PowerShell `New-NetFirewallRule` and `netsh`
-- Best practices for production firewall configuration
 
 ## Linux ufw tools
 

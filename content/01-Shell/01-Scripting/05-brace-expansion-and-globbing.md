@@ -12,49 +12,147 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Brace Expansion and Globbing — Generating Arguments Efficiently
-
-Brace expansion and shell globbing let you generate multiple arguments from compact patterns, match files by name across directory trees, and write commands that would otherwise require loops — all in a single expression. Enabling the right `shopt` options unlocks recursive globbing and prevents dangerous silent failures.
+# Brace Expansion and Globbing
 
 > [!quote]
 > "The order of expansions is: brace expansion, tilde expansion, parameter and variable expansion, command substitution, arithmetic expansion, word splitting, and filename expansion."
 >
 > — **Bash Reference Manual**, GNU
 
+> [!abstract]- Summary
+>
+> Covers bash brace expansion and shell globbing (filename expansion), including `shopt` options for extended, recursive, and safe globbing, plus PowerShell equivalents via `Get-ChildItem` and explicit iteration.
+>
+> **Brace expansion (bash)**
+> - `{a,b,c}` comma lists and `{n..m}` / `{n..m..step}` ranges generate multiple arguments before any filesystem access.
+> - Nested brace expressions (`{a,{b,c}}`) and shared prefix/suffix strings are supported.
+> - Common uses: `mkdir -p` directory trees, zero-padded sequences, quick file backups with `{,.bak}`.
+>
+> **Shell globbing and `shopt` options**
+> - Standard wildcards: `*` (any string), `?` (one char), `[set]` / `[range]` (character class), available without any `shopt` setting.
+> - `extglob`: enables `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, `!(pat)` — required for glob negation.
+> - `globstar`: makes `**` traverse directory levels recursively (`**/*.py`).
+> - `failglob`: raises a shell error when a pattern matches no files, preventing silent literal-string pass-through.
+> - `nocaseglob`: case-insensitive matching; `cdspell`: typo correction in `cd` (commonly grouped).
+>
+> **PowerShell equivalents**
+> - No native brace expansion; use array literals `"a","b","c"` with `ForEach-Object` or `for` loops.
+> - `Get-ChildItem` with `-Filter` (OS-level, single pattern), `-Include` / `-Exclude` (multi-pattern, PowerShell engine), `-Recurse`, `-Depth`, `-File`, `-Directory`.
+> - `-Filter` is fastest; `-Include` requires `-Recurse` or trailing `\*` in `-Path` to match file names.
+>
+> **Operations and safety**
+> - Use: generating directory trees, bulk extension-based operations, quick backups, numeric batch identifiers, excluding file types with `extglob`.
+> - Avoid: filenames with spaces (quote variables), very large trees (`ARG_MAX` limit — use `find` or `fd`), cross-platform `#!/bin/sh` scripts (brace expansion is bash-only), complex multi-criterion filters.
+> - Always add `shopt -s extglob globstar failglob` after `set -euo pipefail` in production scripts.
+> - Always preview recursive deletes with `-WhatIf` before piping `Get-ChildItem` to `Remove-Item`.
+> - Troubleshoot: unmatched globs pass literals → enable `failglob`; `**` not recursive → enable `globstar`; `!(pat)` errors → enable `extglob`; `-Include` returns nothing → add `-Recurse`.
+
+> [!note]- Glossary
+>
+> **Brace expansion**
+> - A purely textual shell operation that replaces `{a,b,c}` or `{n..m}` with multiple words before any other expansion phase runs; no filesystem access occurs.
+> - Used to generate directory trees, versioned copies, and numeric sequences from compact expressions without loops.
+>
+> > [!warning] Runs before globbing — order matters
+> >
+> > Brace expansion is the first expansion in the pipeline. It does not check the filesystem, so `{*.csv,*.parquet}` does not glob — it produces two literal strings. Globbing happens later.
+>
+> ---
+>
+> **Globbing (filename expansion)**
+> - The final phase of shell expansion: wildcard patterns (`*`, `?`, `[...]`, `**`) are replaced with the sorted list of matching filenames that exist on disk.
+> - Used to target sets of files by extension, name pattern, or directory depth without writing explicit loops.
+>
+> > [!warning] Dotfiles excluded by default
+> >
+> > Standard glob patterns do not match hidden files (names starting with `.`) unless `dotglob` is enabled. This is a common source of missed files in backup or cleanup scripts.
+>
+> ---
+>
+> **`extglob`**
+> - A `shopt` option that enables five extended pattern operators: `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, `!(pat)` — quantified and negated glob matching unavailable in standard globbing.
+> - The `!(pattern)` form is the only native bash mechanism to exclude files from a glob match.
+>
+> > [!danger] `!` without `extglob` triggers history expansion
+> >
+> > Running `rm !(important.txt)` without `shopt -s extglob` causes bash to interpret `!` as a history expansion operator, leading to unexpected command substitution or errors.
+>
+> ---
+>
+> **`globstar`**
+> - A `shopt` option that makes `**` match zero or more directory levels, enabling recursive file traversal without `find`.
+> - `**/*.py` with `globstar` enabled expands to every `.py` file at any depth in the directory tree.
+>
+> > [!warning] `**` without `globstar` is just a double wildcard
+> >
+> > Without `globstar`, `**` is treated as two consecutive `*` characters and matches only within a single directory level. No error is raised — the pattern silently behaves differently than expected.
+>
+> ---
+>
+> **`failglob`**
+> - A `shopt` option that makes the shell report a fatal error when a glob pattern matches no files, instead of passing the literal pattern string to the command.
+> - Prevents `rm *.csv` in an empty directory from silently passing the string `*.csv` to `rm`.
+>
+> > [!danger] Default behavior silently passes unmatched globs
+> >
+> > Without `failglob`, an unmatched glob like `*.csv` becomes a literal argument. If a file named `*.csv` exists it is deleted without warning; if not and `set -e` is active, `rm` exits non-zero and terminates the script at an unexpected point.
+>
+> ---
+>
+> **`nocaseglob`**
+> - A `shopt` option that makes glob patterns case-insensitive: `*.CSV` also matches `data.csv` and `Data.Csv`.
+> - Useful when processing files originating from Windows systems or mixed-case filesystems.
+>
+> > [!warning] Avoid globally when case matters
+> >
+> > Enabling `nocaseglob` in `.bashrc` affects all glob operations in the session. If any script depends on case-sensitive matching, enable and disable it locally around the specific operation.
+>
+> ---
+>
+> **`shopt`**
+> - The bash built-in command for enabling (`-s`) or disabling (`-u`) optional shell behaviors. `-p` prints all options; `-q` tests silently for use in conditionals.
+> - All extended globbing features (`extglob`, `globstar`, `failglob`, `nocaseglob`) require explicit `shopt -s` activation — they are off by default.
+>
+> > [!info] `shopt` vs `set` — different option sets
+> >
+> > `shopt` controls bash-specific behaviors. `set` (e.g., `set -euo pipefail`) controls POSIX shell options. They are not interchangeable and cover different feature sets.
+>
+> ---
+>
+> **`Get-ChildItem`**
+> - The PowerShell cmdlet for listing files and directories, equivalent to bash globbing. Accepts `-Filter`, `-Include`, `-Exclude`, `-Recurse`, `-Depth`, `-File`, `-Directory`, and `-Name`.
+> - `-Filter` uses the OS-level filter (fastest, single pattern); `-Include` / `-Exclude` use PowerShell's wildcard engine and accept multiple comma-separated patterns.
+>
+> > [!warning] `-Include` without `-Recurse` returns nothing
+> >
+> > `Get-ChildItem -Path . -Include *.py` returns nothing because `-Include` applies to children of `-Path`, not to `-Path` itself. Add `-Recurse` or change `-Path .` to `-Path .\*`.
+>
+> ---
+>
+> **`ARG_MAX`**
+> - The operating system limit on the total size of arguments passed to an external command. When a glob expands to thousands of paths, the combined argument list can exceed this limit.
+> - On very large directory trees, replace `**/*.ext` glob expansion with `find` or `fd` to avoid hitting this ceiling.
+>
+> > [!warning] `globstar` on large trees can hit `ARG_MAX`
+> >
+> > `**/*.py` on a tree with tens of thousands of files (e.g., inside `node_modules` or `.git`) can produce an argument list too large for the shell to pass to the command, resulting in a "Argument list too long" error.
+
+Brace expansion and shell globbing let you generate multiple arguments from compact patterns, match files by name across directory trees, and write commands that would otherwise require loops — all in a single expression. Enabling the right `shopt` options unlocks recursive globbing and prevents dangerous silent failures.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
-    A["Shell command line"] --> B["Brace expansion\n{a,b,c} / {1..5}"]
-    B --> C["Tilde expansion\n~user"]
-    C --> D["Parameter expansion\n$VAR / ${VAR}"]
-    D --> E["Command substitution\n$(cmd)"]
-    E --> F["Arithmetic expansion\n$((expr))"]
+    A["Shell command line"] --> B["Brace expansion<br>{a,b,c} / {1..5}"]
+    B --> C["Tilde expansion<br>~user"]
+    C --> D["Parameter expansion<br>$VAR / ${VAR}"]
+    D --> E["Command substitution<br>$(cmd)"]
+    E --> F["Arithmetic expansion<br>$((expr))"]
     F --> G["Word splitting"]
-    G --> H["Filename expansion\n(globbing)\n*.py / **/*.sql"]
-    H --> I["Command executed\nwith final arguments"]
+    G --> H["Filename expansion<br>(globbing)<br>*.py / **/*.sql"]
+    H --> I["Command executed<br>with final arguments"]
 ```
 
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Brace expansion | A textual operation where the shell replaces `{a,b,c}` or `{1..5}` with multiple words before any other expansion runs. No files need to exist. | Used to generate directory trees, backup copies, and numeric sequences without loops. | Confusing brace expansion (textual, no filesystem check) with globbing (matches against actual files on disk). |
-| Globbing (filename expansion) | The shell replaces wildcard patterns (`*`, `?`, `[...]`, `**`) with the sorted list of matching filenames in the filesystem. Runs as the last step of shell expansion. | Used to target sets of files by extension, name pattern, or directory depth. | Assuming globs match hidden files (dotfiles) by default -- they do not unless `dotglob` is enabled. |
-| `extglob` | A `shopt` option that enables extended pattern operators: `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, `!(pat)`. | The `!(pattern)` operator is the only way to negate a glob in bash. | Forgetting to enable `extglob` before using `!(pattern)` -- without it, `!` is interpreted as history expansion. |
-| `globstar` | A `shopt` option that makes `**` match zero or more directory levels, enabling recursive file matching without `find`. | `**/*.py` with `globstar` expands to every `.py` file at any depth in the directory tree. | Using `**` without enabling `globstar` -- the `**` is treated as a literal two-character pattern. |
-| `failglob` | A `shopt` option that makes the shell report an error when a glob pattern matches no files, instead of passing the literal pattern string to the command. | Prevents `rm *.csv` in an empty directory from passing the literal string `*.csv` to `rm`. | Not enabling `failglob` in production scripts -- the default behavior silently passes unmatched globs as literal strings. |
-| `nocaseglob` | A `shopt` option that makes glob patterns case-insensitive: `*.CSV` also matches `data.csv` and `Data.Csv`. | Useful on mixed-case filesystems or when processing files from Windows systems. | Enabling it globally when case-sensitivity matters. |
-| `shopt` | The bash built-in that enables or disables optional shell behaviors. Takes `-s` (set/enable) or `-u` (unset/disable). | All extended globbing features require explicit `shopt -s` activation. | Confusing `shopt` (bash-specific) with `set` (POSIX). They control different sets of options. |
-| Get-ChildItem | The PowerShell cmdlet for listing files and directories. Supports `-Filter`, `-Include`, `-Exclude`, `-Recurse`, and `-Depth` parameters. | The PowerShell equivalent of bash globbing -- filtering happens inside the cmdlet. | Using `-Include` without `-Recurse` or a trailing `\*` in `-Path` -- the include pattern may not apply as expected. |
-
-## What this note covers
-
-- Brace expansion for generating sets of arguments from compact patterns (`{a,b,c}`, `{1..100}`, `{start..end..step}`)
-- Standard glob wildcards (`*`, `?`, `[...]`) and extended patterns (`extglob`)
-- Recursive file matching with `globstar` (`**/*.py`)
-- Safety options: `failglob`, `nocaseglob`
-- PowerShell equivalents: arrays with `ForEach-Object`, `Get-ChildItem` with `-Filter`, `-Include`, `-Exclude`, `-Recurse`
 ## Linux brace expansion tools
 
 Brace expansion is a purely textual operation performed before any other shell expansion. The shell replaces a brace expression with a comma-separated or range-based list of words, then passes that list as individual arguments to the command. No files need to exist — brace expansion works on any string.

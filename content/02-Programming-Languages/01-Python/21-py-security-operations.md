@@ -19,6 +19,189 @@ status: complete
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
+> [!abstract]- Summary
+>
+> **Environment Setup**
+> - Imports all third-party and Google Cloud libraries; verifies versions; loads `.env` via `load_dotenv`; defines project constants (`PROJECT_ID`, `KMS_KEYRING`, `BUCKET_NAME`, etc.); validates credentials with an explicit token refresh.
+>
+> **Identity and Authentication**
+> - SA key-file auth (`Credentials.from_service_account_file`); scope restriction with `with_scopes`; ADC lookup chain via `google.auth.default`; service account impersonation with short-lived tokens; `IAMCredentialsClient.generate_access_token` (600 s TTL); raw Bearer-token HTTP calls; Workload Identity Federation (GitHub OIDC → STS → GCP); ID token vs access token distinction; JWT decode; `testIamPermissions` dry-run check.
+>
+> **Secret Manager**
+> - Read by version (`latest` and pinned); parse JSON secrets; create secrets with labels and automatic replication; rotate with `add_secret_version`; disable old versions; audit IAM policy; startup-load and lazy-cache-with-TTL application patterns.
+>
+> **Cloud KMS**
+> - Symmetric encrypt/decrypt for payloads ≤ 64 KiB; envelope encryption (AES-256-GCM DEK + KMS-wrapped DEK) for large data; latency benchmark across payload sizes; client-side KMS encrypt before GCS upload; download and decrypt; list key versions and rotation metadata; CMEK bucket verification.
+>
+> **Compute Engine**
+> - SSH via `paramiko` with Ed25519 key and OS Login username; OS Login key list; IAP TCP tunnel reference; metadata server endpoint table and `curl` usage; firewall audit with `FirewallsClient` flagging `0.0.0.0/0` rules.
+>
+> **Cloud SQL**
+> - Auth method comparison table and decision matrix; dynamic IP allowlisting with `gcloud sql instances patch`; `pymssql` password auth; server CA certificate download and `cryptography` inspection; `pymssql` SSL-verified connection via `TDSSSL`/`TDSCAFILE`; Auth Proxy reference; authorized-networks audit; CMEK-at-rest verification.
+>
+> **BigQuery**
+> - Authenticated queries with SA key and impersonated credentials; column-level KMS encryption before insert; ciphertext query and client-side decrypt; dataset and per-table encryption audit; authorized view for column-level access control.
+>
+> **Firestore**
+> - SA-authenticated CRUD (`set`, `update`, `delete`); field-level KMS encryption before write and decrypt after read; IAM-based access control demo; scope-restriction 403 demonstration; IAM role audit via `gcloud`.
+>
+> **Cloud Storage**
+> - CMEK-bucket upload with `blob.reload()` CMEK verification; AES-256-GCM client-side encryption + KMS-wrapped key stored as separate blob; download and decrypt; CSEK (customer-supplied key) upload/download; signed GET URL (15 min); signed PUT URL for direct-upload; bucket IAM policy audit.
+>
+> **Cross-Service Security Patterns**
+> - End-to-end pipeline: Secret Manager → BigQuery → KMS encrypt → Firestore → GCS (triple-layer encryption); TLS certificate chain inspection for `bigquery.googleapis.com` using `ssl` + `cryptography`.
+>
+> **Cleanup and Cost Control**
+> - GCS demo-file deletion; BigQuery table/view cleanup; Firestore document cleanup; Cloud SQL stop (`activation-policy=NEVER`); VM stop; full irreversible teardown commands.
+>
+> **Warnings / Recommendations / Troubleshooting**
+> - Standalone `[!warning]`/`[!success]` pairs for KMS payload size, SSL validation, token logging, and DEK version tagging; eight operational recommendations; troubleshooting table for eight common errors.
+
+> [!note]- Glossary
+>
+> **ADC (Application Default Credentials)**
+>
+> - Google's credential resolution chain checked automatically by all GCP client libraries; priority order: `GOOGLE_APPLICATION_CREDENTIALS` env var → gcloud user credentials → Compute Engine metadata server → Workload Identity Federation config.
+> - All notebook cells use ADC unless `GOOGLE_APPLICATION_CREDENTIALS` is set explicitly, which pins the identity to a specific SA key file.
+>
+> > [!tip] ADC credential source in use
+> >
+> > Call `google.auth.default()` and inspect `type(credentials).__name__` to confirm which credential source ADC resolved to at runtime.
+>
+> > ---
+>
+> **Service Account Impersonation**
+>
+> - A source identity requests short-lived credentials for a target SA via the IAM Credentials API using `impersonated_credentials.Credentials`; requires `roles/iam.serviceAccountTokenCreator` on the target SA.
+> - Credentials expire automatically (up to 3 600 s); the source identity never downloads or stores the target SA's key file.
+>
+> > [!warning] Scope impersonation tightly
+> >
+> > Grant `serviceAccountTokenCreator` on a specific target SA, never at project level. Audit the binding with `gcloud iam service-accounts get-iam-policy`.
+>
+> > ---
+>
+> **Cloud KMS — Symmetric Encryption**
+>
+> - Encrypts and decrypts data directly inside Google-operated HSMs using the `encrypt` / `decrypt` API; the key bytes never leave the HSM, and the caller sends plaintext (up to 64 KiB) and receives ciphertext.
+> - Each ciphertext envelope contains an embedded key-version identifier so `decrypt` automatically routes to the correct version without the caller specifying it.
+>
+> > [!warning] 64 KiB payload limit
+> >
+> > Sending payloads larger than 64 KiB to `kms_client.encrypt` raises `INVALID_ARGUMENT`. Use envelope encryption for larger data.
+>
+> > ---
+>
+> **Envelope Encryption**
+>
+> - Two-layer scheme: a fresh 256-bit AES-GCM Data Encryption Key (DEK) encrypts the payload locally, then Cloud KMS encrypts the DEK; only the small DEK (32 bytes) is sent to the KMS API.
+> - The wrapped DEK and nonce are stored alongside the ciphertext; decryption reverses the order — KMS unwraps the DEK, then the application decrypts locally.
+>
+> > [!danger] Never store the plaintext DEK
+> >
+> > Store only the KMS-wrapped DEK next to the ciphertext. A plaintext DEK in the same location eliminates the protection that envelope encryption provides.
+>
+> > ---
+>
+> **Secret Version**
+>
+> - An immutable, numbered snapshot of a secret's byte value stored in Secret Manager; each `add_secret_version` call creates a new version while previous versions remain accessible until explicitly disabled or destroyed.
+> - Consumers reference a version as `latest` (always the newest enabled version) or by a pinned number such as `versions/1` for reproducibility.
+>
+> > [!warning] `latest` can change between pipeline runs
+> >
+> > Pin to a specific version number in production deployments. Reserve `latest` for development or when an automated rotation workflow updates the consumer config immediately after each rotation.
+>
+> > ---
+>
+> **SSL/TLS Mutual Auth**
+>
+> - Both client and server present X.509 certificates during the TLS handshake; the server's CA certificate proves the server's identity, and the client cert/key pair proves the client's identity to the server.
+> - Cloud SQL mutual TLS requires: the server CA cert (`TDSCAFILE`), a client certificate, and a client private key — all three must be supplied to the driver.
+>
+> > [!danger] Never use `TrustServerCertificate=yes` in production
+> >
+> > This flag accepts any certificate without validation, leaving the connection open to man-in-the-middle attacks even though traffic is encrypted.
+>
+> > ---
+>
+> **Access Token**
+>
+> - A short-lived OAuth 2.0 bearer string (default TTL 1 hour, minimum 300 s via `generateAccessToken`) that authorizes calls to Google APIs scoped at issuance time; any HTTP client can use it in an `Authorization: Bearer <token>` header.
+> - GCP client libraries refresh tokens automatically; applications should never cache tokens manually, log token values, or hand them to untrusted code without a short TTL.
+>
+> > [!warning] Never log or cache access tokens manually
+> >
+> > Pass the `credentials` object to client library constructors and let the library manage the refresh lifecycle. A logged token is a bearer credential valid for up to one hour.
+>
+> > ---
+>
+> **CMEK (Customer-Managed Encryption Key) Verification**
+>
+> - The act of confirming, after resource creation or object upload, that a GCP resource is actually encrypted with the expected Cloud KMS key by calling `describe`/`get` on the resource and checking the `kmsKeyName` field.
+> - CMEK is configured at resource creation time and cannot be changed afterwards; a failed CMEK configuration silently falls back to Google-managed encryption without an error.
+>
+> > [!tip] Always verify CMEK after provisioning
+> >
+> > Call `blob.reload()` after a GCS upload, or `bq_client.get_table()` after a BigQuery table creation, to confirm the `kms_key_name` field is populated before assuming CMEK is active.
+>
+> > ---
+>
+> **`pg8000` / `psycopg2`**
+>
+> - Pure-Python PostgreSQL drivers implementing DB-API 2.0; `pg8000` has no native library dependencies, making it preferable in constrained environments such as Cloud Run or minimal container images.
+> - Both require three SSL artifacts for mutual TLS connections to Cloud SQL PostgreSQL: the server CA certificate, a client certificate, and a client private key.
+>
+> > [!tip] Prefer `pg8000` in serverless environments
+> >
+> > `psycopg2` requires the `libpq` native library and a C compiler at build time; `pg8000` is pure Python and installs cleanly in any environment without system dependencies.
+>
+> > ---
+>
+> **`pyOpenSSL` / `cryptography`**
+>
+> - Python libraries for X.509 certificate parsing and low-level cryptographic operations; `pyOpenSSL` wraps OpenSSL, while `cryptography` is the modern pure-Python replacement with a stable high-level API.
+> - Used in this note to inspect certificate fields (subject, issuer, validity window, SANs, serial number) returned by Cloud SQL and Google API TLS connections.
+>
+> > [!warning] Do not mix `pyOpenSSL` and `cryptography` APIs in the same code path
+> >
+> > The two libraries have overlapping but incompatible object models. Use `cryptography` for all new code; `pyOpenSSL` is maintained for legacy compatibility only.
+>
+> > ---
+>
+> **BigQuery Column-Level Encryption**
+>
+> - A client-side pattern where individual field values are KMS-encrypted before insertion into BigQuery; the table stores `BYTES` or base64-encoded `STRING` ciphertext, and decryption happens in the application after fetch.
+> - Only callers with `cloudkms.cryptoKeyDecrypter` on the relevant key can read plaintext; BigQuery column ACLs and authorized views provide a complementary but weaker access control layer.
+>
+> > [!warning] Encrypted columns cannot be filtered or joined
+> >
+> > KMS ciphertext is opaque — equality lookups and range scans on an encrypted column will not work. For columns that must be queried, use deterministic tokenization (HMAC or format-preserving encryption) instead.
+>
+> > ---
+>
+> **Firestore Field-Level Encryption**
+>
+> - A client-side pattern where individual document field values are KMS-encrypted before writing to Firestore; the document stores base64-encoded ciphertext, and decryption happens in the application after reading the document.
+> - Prevents plaintext exposure even from Firestore admin-level access or GCP support; the `encryption_key` metadata field in the document records which KMS key was used for decryption reference.
+>
+> > [!tip] Establish a clear policy for which fields require encryption
+> >
+> > Inconsistent field-level encryption — where some documents encrypt a field and others do not — is harder to audit and easier to misconfigure than a schema-wide policy applied uniformly.
+>
+> > ---
+>
+> **Signed URL**
+>
+> - A time-limited capability URL that embeds an HMAC-signed authorization credential directly in the query string, granting the bearer access to a specific GCS object for the duration of the `expiration` window without requiring a Google identity.
+> - Generated with `blob.generate_signed_url(version="v4", expiration=timedelta(...), method="GET"|"PUT")`; maximum validity is 7 days; cannot be revoked before expiry.
+>
+> > [!warning] Never log the full signed URL
+> >
+> > The URL itself is the credential. Log only the GCS object path and the expiry timestamp. Set the shortest practical expiration — minutes for one-time downloads, not hours.
+>
+> > ---
+
 This note demonstrates Python-based security operations across GCP services — encryption, certificate handling, identity, and secure access patterns.
 
 ### Key terms used in this note

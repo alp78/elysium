@@ -52,11 +52,11 @@ The Lambda architecture (Nathan Marz, 2011) addresses a real problem: batch syst
 
 ```mermaid
 flowchart TD
-    src["Raw Event Stream\n(all events)"]
-    broker["MESSAGE BROKER\nKafka / Pub/Sub / Kinesis"]
-    batch["BATCH LAYER\nSpark on HDFS, BigQuery\nRecomputes ALL data nightly\nAuthoritative"]
-    speed["SPEED LAYER\nFlink / Kafka Streams / Storm\nProcesses only recent events\nFast but approximate"]
-    serving["SERVING LAYER\nCassandra, HBase, BigQuery, Redis\nMerges batch + speed views at query time"]
+    src["Raw Event Stream<br/>(all events)"]
+    broker["MESSAGE BROKER<br/>Kafka / Pub/Sub / Kinesis"]
+    batch["BATCH LAYER<br/>Spark on HDFS, BigQuery<br/>Recomputes ALL data nightly<br/>Authoritative"]
+    speed["SPEED LAYER<br/>Flink / Kafka Streams / Storm<br/>Processes only recent events<br/>Fast but approximate"]
+    serving["SERVING LAYER<br/>Cassandra, HBase, BigQuery, Redis<br/>Merges batch + speed views at query time"]
 
     src --> broker
     broker --> batch
@@ -109,13 +109,13 @@ The Kappa architecture (Jay Kreps, LinkedIn, 2014) is a direct response to Lambd
 
 ```mermaid
 flowchart TD
-    src["Raw Event Stream\n(all events, long retention)"]
-    broker["MESSAGE BROKER\nKafka — long retention,\ncompacted topics, replay"]
-    engine["STREAM PROCESSING ENGINE\nFlink / Kafka Streams / Beam\nSingle codebase for ALL processing\nReprocessing = replay from offset 0"]
-    serving["SERVING LAYER\nBigQuery, Iceberg, Redis, Cassandra"]
+    src["Raw Event Stream<br/>(all events, long retention)"]
+    broker["MESSAGE BROKER<br/>Kafka — long retention,<br/>compacted topics, replay"]
+    engine["STREAM PROCESSING ENGINE<br/>Flink / Kafka Streams / Beam<br/>Single codebase for ALL processing<br/>Reprocessing = replay from offset 0"]
+    serving["SERVING LAYER<br/>BigQuery, Iceberg, Redis, Cassandra"]
 
     src --> broker
-    broker -->|"consumed by ONE\nprocessing system"| engine
+    broker -->|"consumed by ONE<br/>processing system"| engine
     engine --> serving
 
     style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
@@ -174,7 +174,7 @@ flowchart LR
         p3["Inventory svc"]
     end
 
-    subgraph Broker["MESSAGE BROKER\nKafka / Pub/Sub / Kinesis"]
+    subgraph Broker["MESSAGE BROKER<br/>Kafka / Pub/Sub / Kinesis"]
         t1["payments.events"]
         t2["orders.completed"]
         t3["inventory.changes"]
@@ -615,7 +615,7 @@ flowchart LR
         pubsub["Cloud Pub/Sub"]
         ds["Datastream"]
         iot["IoT Core"]
-        df["Dataflow\n(Beam)"]
+        df["Dataflow<br/>(Beam)"]
     end
 
     subgraph Destinations

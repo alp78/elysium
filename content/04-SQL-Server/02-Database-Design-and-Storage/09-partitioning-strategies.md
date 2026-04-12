@@ -1073,14 +1073,14 @@ Partitioning adds structural complexity — partition functions, schemes, alignm
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    Q1{"Does the partition key appear\nin WHERE clauses of the\nmost expensive queries?"}
+    Q1{"Does the partition key appear<br/>in WHERE clauses of the<br/>most expensive queries?"}
     Q1 --> YES1["YES"]
     Q1 --> NO1["NO"]
-    YES1 --> Q2{"Is there a data lifecycle\nthat benefits from per-partition\noperations?"}
+    YES1 --> Q2{"Is there a data lifecycle<br/>that benefits from per-partition<br/>operations?"}
     NO1 --> SKIP["Do not partition"]
     Q2 --> YES2["YES"]
     Q2 --> NO2["NO"]
-    YES2 --> Q3{"Is the table large enough\nthat full-table maintenance\nis painful?"}
+    YES2 --> Q3{"Is the table large enough<br/>that full-table maintenance<br/>is painful?"}
     NO2 --> Q3
     Q3 --> YES3["YES"]
     Q3 --> NO3["NO"]

@@ -20,6 +20,192 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
+> [!abstract]- Summary
+>
+> **Lists**
+> - Ordered, mutable, dynamic-array-backed sequence; O(1) `append` and indexed access, O(n) `insert`/`remove`/`search`
+> - Creation: literals, `list()`, `range()`, repetition (`[0] * n`), nested
+> - Mutation: `append`, `insert(i, x)`, `extend`, `remove`, `del`, `pop()`, `clear()`
+> - Search: `in` (O(n)), `index()` (raises `ValueError` if missing), `count()`
+> - Sort: `sorted()` returns new list; `sort()` mutates in place; both accept `key=` and `reverse=True`
+> - Copy: shallow (`copy()`, `lst[:]`) shares inner objects; `copy.deepcopy()` for nested structures
+> - Stack (LIFO): `append()`/`pop()` on a plain list, both O(1)
+>
+> **Dictionaries**
+> - Hash-based key-value mapping; O(1) average lookup, insert, delete; insertion-ordered since Python 3.7
+> - Keys must be hashable (`str`, `int`, `tuple`, `frozenset` — NOT `list` or `dict`)
+> - Safe access: `.get(key, default)` avoids `KeyError`; `|` / `|=` for merging (Python 3.9+)
+> - `defaultdict(factory)`: auto-creates missing keys — eliminates `if key not in d` boilerplate for grouping
+> - `Counter(iterable)`: frequency dict; `.most_common(n)`, `.total()`, supports arithmetic
+>
+> **Sets**
+> - Unordered unique hashable elements; O(1) membership, deduplication, set algebra (`|`, `&`, `-`, `^`)
+> - `{}` creates an empty dict — use `set()` for an empty set
+> - `frozenset`: immutable, hashable — usable as dict key or element of another set
+> - `remove` raises `KeyError`; `discard` silently ignores missing elements
+>
+> **Tuples & Enums**
+> - Tuples: ordered, immutable; hashable if all elements are hashable; single-element needs trailing comma `(42,)`
+> - `namedtuple` / `typing.NamedTuple`: named-field immutable records; `_asdict()`, `_replace()` for non-destructive update
+> - `Enum`: closed set of named constants; members compare by identity, not value
+> - `IntEnum`: members are true integers — support numeric comparison and arithmetic with `int`
+> - `auto()`: assigns incrementing integer values starting from 1
+>
+> **Stacks, Queues & Deques**
+> - `deque`: O(1) on both ends — `append`/`pop` (right), `appendleft`/`popleft` (left)
+> - `maxlen`: bounded deque that silently drops oldest element when full (sliding window, fixed buffer)
+> - `rotate(n)`: circularly shifts elements; positive = right, negative = left
+> - `heapq`: min-heap on a regular list; `heappush`/`heappop`; negate values for max-heap
+> - Priority queue tuples: `(priority, item)` — lower priority number = dequeued first
+>
+> **Collection Comparison**
+> - Cheat sheet: `list` O(n) lookup, `dict`/`set`/`defaultdict`/`Counter` O(1), `heapq` O(log n) push/pop
+> - Decision guide: ordered+mutable → `list`; keyed → `dict`/`defaultdict`/`Counter`; unique → `set`/`frozenset`; FIFO → `deque`; priority → `heapq`
+> - Data engineering patterns: `list[dict]` for records, `defaultdict(list)` for grouping, `Counter` for frequencies, `deque` for task queues
+>
+> **Operations & Safety**
+> - `list.pop(0)` is O(n) — use `deque.popleft()` for FIFO queues
+> - Mutable default arguments (`def f(result={})`) are shared across all calls — use `None` sentinel
+> - Shallow copy with nested mutable objects causes silent mutation of the original — use `copy.deepcopy()`
+> - `defaultdict` silently creates keys on read access — use `key in dd` or `.get()` to check without side effects
+> - `set` iteration order is not guaranteed — use `sorted(my_set)` when order matters
+> - `heapq` is min-heap only; `Counter` allows negative counts — use `+counter` to strip zero/negative entries
+
+> [!note]- Glossary
+>
+> **`list`**
+> - Ordered, mutable, dynamic-array-backed sequence; elements accessed by zero-based integer index; allows duplicates and mixed types.
+> - The default general-purpose container for ordered data; supports slicing, sorting, and stack operations.
+>
+> > [!warning] Membership test pitfall
+> > `in` on a list is O(n). For repeated membership checks on large data, convert to `set` first.
+>
+> > ---
+>
+> **`dict`**
+> - Hash-based key-value mapping with O(1) average lookup, insert, and delete; insertion-ordered since Python 3.7; keys must be hashable.
+> - The standard structure for associating names with values — config, lookup tables, grouped records.
+>
+> > [!warning] Safe access
+> > `d[key]` raises `KeyError` if missing. Use `d.get(key, default)` for safe reads; use `d.pop(key, default)` for safe removal.
+>
+> > ---
+>
+> **`set`**
+> - Unordered collection of unique hashable elements; O(1) membership testing and deduplication; supports full set algebra.
+> - Ideal for deduplication, fast `in` checks, and comparing two datasets (missing/extra items via `-`).
+>
+> > [!warning] Empty set syntax
+> > `{}` creates an empty `dict`, not an empty `set`. Always use `set()` for an empty set.
+>
+> > ---
+>
+> **`frozenset`**
+> - Immutable variant of `set`; because it is hashable, it can serve as a dict key or an element of another `set`.
+> - Used for compound lookup keys, cache keys, and immutable set algebra; regular `set` cannot fill these roles.
+>
+> > [!info] No mutating methods
+> > `frozenset` has no `add`, `remove`, or `discard`. It is entirely read-only after construction.
+>
+> > ---
+>
+> **`tuple`**
+> - Ordered, immutable sequence; hashable if all elements are hashable; supports indexing, slicing, and unpacking.
+> - Used as dict keys, function return values, and fixed records where accidental mutation must be impossible.
+>
+> > [!warning] Single-element syntax
+> > `(42)` is grouping parentheses, not a tuple. A single-element tuple requires a trailing comma: `(42,)`.
+>
+> > ---
+>
+> **`namedtuple`**
+> - Tuple subclass with named fields created via `collections.namedtuple` or `typing.NamedTuple`; immutable; supports dot-access, index access, and unpacking.
+> - Lightweight immutable record type — more readable than plain tuples, more memory-efficient than dicts or dataclasses.
+>
+> > [!tip] Non-destructive update
+> > Use `instance._replace(field=value)` to produce a new instance with one field changed. The original is never mutated.
+>
+> > ---
+>
+> **`defaultdict`**
+> - `dict` subclass that auto-creates missing keys using a factory function (e.g., `list`, `int`, `set`) on first access.
+> - Eliminates the `if key not in d: d[key] = []` boilerplate for grouping and counting in ETL pipelines.
+>
+> > [!warning] Silent key creation
+> > Reading `dd["missing"]` inserts the key with the factory default even if you only wanted to check existence. Use `key in dd` or `.get()` for non-mutating lookups.
+>
+> > ---
+>
+> **`Counter`**
+> - `dict` subclass purpose-built for counting hashable objects; supports `most_common(n)`, `total()`, and counter arithmetic (`+`, `-`).
+> - Builds frequency tables in one call; handles top-N queries without manual sorting.
+>
+> > [!warning] Negative counts
+> > `Counter` allows negative counts (from subtraction or manual assignment). Use `+counter` to strip zero and negative entries.
+>
+> > ---
+>
+> **`deque`**
+> - Double-ended queue from `collections`; O(1) `append`/`pop` on the right and `appendleft`/`popleft` on the left; optional `maxlen` for bounded buffers.
+> - The correct structure for FIFO queues, LIFO stacks, sliding windows, and bounded buffers where `list.pop(0)` would be O(n).
+>
+> > [!warning] List as queue is O(n)
+> > `list.pop(0)` shifts every element left on each call, degrading a queue loop to O(n²). Use `deque.popleft()`.
+>
+> > ---
+>
+> **`heapq`**
+> - Standard-library module providing min-heap operations (`heappush`, `heappop`, `nsmallest`, `nlargest`) on a regular Python list.
+> - Used for priority queues, top-N selection, and merge-sorting multiple sorted streams without loading everything into memory.
+>
+> > [!warning] Min-heap only
+> > `heapq` always pops the smallest element first. For max-heap behavior, store negated priority values: `heappush(h, (-priority, item))`.
+>
+> > ---
+>
+> **Enum**
+> - Class from the `enum` module defining a closed set of named symbolic constants; members have `.name` (string) and `.value` (assigned constant).
+> - Replaces magic numbers and magic strings with type-safe names; members compare by identity, not by value.
+>
+> > [!warning] Identity comparison
+> > `Color.RED == 1` is `False` for standard `Enum`. Use `IntEnum` when numeric comparison with plain integers is required.
+>
+> > ---
+>
+> **IntEnum**
+> - `Enum` subclass whose members are true integers — support comparison, arithmetic, and equality with `int`.
+> - Used for status codes, priorities, and severity levels where numeric ordering is meaningful.
+>
+> > [!warning] Isolation trade-off
+> > `IntEnum` members compare equal to plain `int` values. This convenience can mask bugs where an integer from an unrelated domain compares equal to an enum member.
+>
+> > ---
+>
+> **shallow copy**
+> - Copies the outer container but shares references to all inner objects; produced by `list.copy()`, `lst[:]`, `dict.copy()`, `list(original)`.
+> - Fast for flat collections of primitives; safe only when inner objects will not be mutated.
+>
+> > [!danger] Nested mutation trap
+> > Mutating a nested object in a shallow copy also mutates the original. Use `copy.deepcopy()` for any collection containing nested mutable objects.
+>
+> > ---
+>
+> **deep copy**
+> - Recursively copies every nested object to produce a fully independent clone; performed by `copy.deepcopy()`.
+> - Required when inner objects are mutable and must not be shared between the original and the copy.
+>
+> > [!warning] Performance and compatibility
+> > `deepcopy` is significantly slower than shallow copy and fails on non-picklable objects (open file handles, sockets, database connections).
+>
+> > ---
+>
+> **O(1) / O(n) / O(log n)**
+> - Big-O notation describing how an operation's cost scales with collection size: O(1) = constant time, O(n) = linear (proportional to size), O(log n) = logarithmic (e.g., heap operations).
+> - The primary criterion for choosing the right collection type — a wrong choice can silently turn fast code into a performance bottleneck.
+>
+> > [!info] Key benchmarks
+> > `list` index access and `dict`/`set` lookup are O(1). `list.index()`, `list.remove()`, and `list.pop(0)` are O(n). `heappush`/`heappop` are O(log n).
+
 Python's built-in collections span the full spectrum from mutable sequences to immutable records, ordered mappings to hash sets, and specialized structures for queues, stacks, and priority scheduling. This page covers the core types and the `collections` module extensions.
 
 ### Key terms used in this note

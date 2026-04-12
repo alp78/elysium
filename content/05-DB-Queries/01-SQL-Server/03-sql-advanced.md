@@ -1685,12 +1685,12 @@ The table below compares the three mechanisms across the dimensions that most af
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A[Need intermediate\nresult set?] --> B{Referenced more\nthan once in query?}
-    B -- No --> D[CTE\nReadability, single-use]
-    B -- Yes --> C{Large set or\nneeds an index?}
-    C -- Yes --> E[#temp table\nMaterialize into tempdb,\nadd index on join key]
+    A[Need intermediate<br/>result set?] --> B{Referenced more<br/>than once in query?}
+    B -- No --> D[CTE<br/>Readability, single-use]
+    B -- Yes --> C{Large set or<br/>needs an index?}
+    C -- Yes --> E[#temp table<br/>Materialize into tempdb,<br/>add index on join key]
     C -- No --> F{Under ~100 rows?}
-    F -- Yes --> G[@table variable\nMemory-resident,\nfast for tiny lookups]
+    F -- Yes --> G[@table variable<br/>Memory-resident,<br/>fast for tiny lookups]
     F -- No --> E
 ```
 

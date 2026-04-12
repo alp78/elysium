@@ -8,12 +8,138 @@ updated: 2026-04-03
 status: complete
 ---
 
-# Finding Files — Surgical Searching at Scale
+# Finding Files
 
 > [!quote]
 > "UNIX has a couple of hundred system calls, and the `find` command is probably the single most complicated command in the whole system."
 >
 > — **Brian Kernighan**, *Unix: A History and a Memoir* (2019)
+
+> [!abstract]- Summary
+>
+> Covers targeted file search on Linux and PowerShell — finding files by name, size, modification time, ownership, and type — and executing bulk operations on results safely and in parallel.
+>
+> **Linux file finding tools**
+> - `find`: full metadata predicate support (`-name`, `-size`, `-mtime`, `-user`, `-perm`); traverses the tree in real time; no index
+> - `fd`: 5–10x faster than `find` due to parallel traversal; respects `.gitignore`; regex syntax by default; preferred for interactive investigation
+> - `locate`: instant results from a pre-built index; stale by up to 24 hours; use `sudo updatedb` to refresh before relying on it
+>
+> **Parallel processing**
+> - `find -print0 | xargs -0 -P N`: safe null-delimited pipeline for parallel bulk operations (compression, checksum, deletion)
+> - `-exec cmd {} +`: batches matched files into fewer process invocations; dramatically faster than `\;` on large result sets
+> - GNU `parallel`: richer substitution (`{.}`, `{/}`, `{//}`), per-job output grouping, `--halt` semantics; requires pre-acknowledging citation prompt before automation use
+>
+> **PowerShell file finding tools**
+> - `Get-ChildItem -Recurse -Filter`: provider-level glob filtering (fast); pipe to `Where-Object` for size/time predicates
+> - `ForEach-Object -Parallel`: concurrent runspace processing; tune `-ThrottleLimit` to core count for CPU-bound tasks
+> - `Select-String`: .NET regex content search across file trees; equivalent to `grep -rn`
+>
+> **Operations and safety**
+> - Always preview destructive operations with `-print` before adding `-delete` or piping to `xargs rm`
+> - Use `-print0` / `xargs -0` whenever filenames may contain spaces or special characters
+> - `find -delete` is permanent with no confirmation — add `-type f` to avoid removing directories
+> - `locate` results may exclude files created since the last `updatedb` run — verify with `-e` flag
+> - `parallel` blocks on first run without citation acknowledgement; run `echo 'will cite' | parallel --citation` on each new machine before scheduling in cron
+
+> [!note]- Glossary
+>
+> **`find`**
+> - Standard Unix command that traverses a directory tree in real time, evaluating predicates against each file's metadata: name, type, size, modification time, ownership, and permissions.
+> - The universal scripted search tool — available on every Linux system; used when complex multi-predicate filters, `-exec` chaining, or `-delete` are required.
+>
+> > [!warning] No index — full traversal every time
+> >
+> > `find` performs a complete recursive scan with no caching. On trees with millions of files this can take minutes. Limit scope with `-maxdepth` or switch to `locate` for name-only lookups.
+>
+> ---
+>
+> **`fd`**
+> - Modern, Rust-based alternative to `find`; searches recursively from the current directory by default, uses regex syntax, and parallelises traversal for 5–10x faster results.
+> - Preferred for interactive investigation; respects `.gitignore` / `.fdignore` automatically; use `find` when you need `-exec`, `-delete`, or permission-based predicates.
+>
+> > [!info] Binary name varies by distribution
+> >
+> > On Debian/Ubuntu, `apt install fd-find` installs the binary as `fdfind`. Add `alias fd=fdfind` to your shell profile. On other distros and macOS the binary is `fd`.
+>
+> ---
+>
+> **`locate`** / **`updatedb`**
+> - `locate` queries a pre-built filename index and returns results in milliseconds regardless of tree size. `updatedb` rebuilds that index by traversing the filesystem; it runs as a nightly cron job by default.
+> - Use for instant "where did this file go?" lookups; always run `sudo updatedb` first if you expect recently created or deleted files to appear.
+>
+> > [!warning] Results may be up to 24 hours stale
+> >
+> > Files created or deleted since the last `updatedb` run will be missing or still present in results. Use `locate -e pattern` to verify each match still exists on disk before acting on it.
+>
+> ---
+>
+> **`xargs`**
+> - Reads items from stdin and passes them as batched arguments to a command. Combined with `find -print0`, it converts a stream of filenames into safe, parallel command invocations.
+> - Converts `find` output into arguments for `rm`, `gzip`, `grep`, or any other command; `-P N` runs N worker processes in parallel for CPU-bound tasks.
+>
+> > [!danger] Always pair with `-print0` / `-0`
+> >
+> > Without null-delimited input, `xargs` splits on spaces and newlines. A filename like `file with spaces.csv` becomes three separate arguments, potentially targeting wrong or nonexistent files — including in destructive operations.
+>
+> ---
+>
+> **`-exec`**
+> - A `find` action that runs a command on matched files. `{}` is replaced with the filename. Terminated with `\;` (one process per file) or `+` (files batched into one invocation).
+> - Executes operations directly on search results without piping; use `+` terminator whenever the command accepts multiple arguments to avoid spawning thousands of processes.
+>
+> > [!warning] `\;` forks one process per file
+> >
+> > On 10,000 matched files, `-exec rm {} \;` launches 10,000 `rm` processes. Use `-exec rm {} +` to batch all files into ~5 invocations. The `+` form is always preferable unless the command cannot handle multiple arguments.
+>
+> ---
+>
+> **`-print0`**
+> - A `find` action that outputs matched paths separated by null bytes (`\0`) instead of newlines. Consumed by `xargs -0` on the receiving end.
+> - The only safe way to pass `find` results through a pipe when filenames may contain spaces, tabs, newlines, or shell special characters.
+>
+> > [!info] The standard safe idiom
+> >
+> > `find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip` handles any legal filename unconditionally. Treat this pair as the default for all `find | xargs` pipelines.
+>
+> ---
+>
+> **`-delete`**
+> - A `find` action that removes matched files directly without spawning `rm`. Implies `-depth` (processes children before parents). Eliminates quoting bugs that affect `-exec rm`.
+> - Use for scripted cleanup of log files, empty stubs, or stale staging outputs; always preview the same `find` command with `-print` before substituting `-delete`.
+>
+> > [!danger] Permanent, no confirmation, no undo
+> >
+> > `-delete` removes files immediately with no trash, recycle bin, or prompt. Combine with `-type f` to prevent accidental directory removal, and always run the preview pass first.
+>
+> ---
+>
+> **`Get-ChildItem`**
+> - PowerShell cmdlet that traverses a directory tree and returns typed `FileInfo` / `DirectoryInfo` objects. Supports `-Filter` (provider-level, fast), `-Recurse`, `-Depth`, `-File`, `-Directory`, and `-Force`.
+> - The PowerShell equivalent of `find`; object output pipelines safely into `Where-Object` for size/time predicates without filename-parsing issues that affect text-based tools.
+>
+> > [!info] `-Filter` is faster than `-Include`
+> >
+> > `-Filter` is applied at the filesystem provider level before results enter the pipeline — roughly 10x faster than piping to `Where-Object`. Use `-Filter` for single-pattern searches; use `-Include` only when multiple patterns are required (and always combine with `-Recurse`).
+>
+> ---
+>
+> **`Select-String`**
+> - PowerShell cmdlet that searches file contents using .NET regex and returns `MatchInfo` objects with `Filename`, `LineNumber`, `Line`, and `Matches` properties.
+> - The PowerShell equivalent of `grep -rn`; use for content search after `Get-ChildItem` narrows the file set by metadata.
+>
+> > [!info] Default matching is case-insensitive
+> >
+> > Unlike `grep`, `Select-String` is case-insensitive by default. Add `-CaseSensitive` when the pattern must be exact. Use `-SimpleMatch` to treat the pattern as a literal string rather than a .NET regex.
+>
+> ---
+>
+> **GNU `parallel`**
+> - A shell tool that executes commands in parallel, reading one argument per line from stdin. Provides richer substitution tokens (`{.}`, `{/}`, `{//}`, `{/.}`), per-job output grouping, and `--halt` failure semantics compared to `xargs -P`.
+> - Preferred over `xargs -P` for complex per-file transformations (format conversion, multi-step processing) where output ordering, progress reporting, or structured failure handling matters.
+>
+> > [!warning] Blocks on first run without citation acknowledgement
+> >
+> > On any machine where `parallel` has not been pre-acknowledged, the first invocation prints a citation prompt and hangs — silently blocking cron jobs and pipeline runs. Run `echo 'will cite' | parallel --citation` interactively on every new machine before scheduling.
 
 When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/03-Text-Processing/02-grep-and-pattern-matching) searches inside those files for content — the two tools complement each other in every investigation.
 
@@ -460,12 +586,12 @@ All three tools find files but differ in speed, result freshness, and predicate 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A([Need to find a file]) --> B{Results must be\ncurrent / real-time?}
-    B -- Yes --> C{Complex predicates?\nsize, mtime, exec...}
-    B -- No --> D[locate\nInstant from index\nMay be up to 24h stale]
-    C -- Yes --> E[find\nFull predicate support\nChain -exec, -delete]
-    C -- No --> F{Respecting .gitignore\nor need speed?}
-    F -- Yes --> G[fd\n5–10x faster than find\nSimpler regex syntax]
+    A([Need to find a file]) --> B{Results must be<br>current / real-time?}
+    B -- Yes --> C{Complex predicates?<br>size, mtime, exec...}
+    B -- No --> D[locate<br>Instant from index<br>May be up to 24h stale]
+    C -- Yes --> E[find<br>Full predicate support<br>Chain -exec, -delete]
+    C -- No --> F{Respecting .gitignore<br>or need speed?}
+    F -- Yes --> G[fd<br>5–10x faster than find<br>Simpler regex syntax]
     F -- No --> E
 
     style D fill:#292e42,stroke:#565f89

@@ -16,29 +16,224 @@ status: complete
 >
 > — **Yukihiro Matsumoto**, creator of Ruby
 
+> [!abstract]- Summary
+>
+> **String Creation & Basics**
+> - `str` is the only text type — immutable sequence of Unicode code points; no `char` type
+> - Single, double, triple quotes produce identical objects; `r"..."` disables escape processing
+> - `str()` converts any object; `*` repeats; empty strings are falsy (`if not s:`)
+> - Every operation returns a new object — `+=` in loops is O(n²); use `"".join()` instead
+>
+> **Indexing & Slicing**
+> - 0-based positive indexing; negative indexing from end (`s[-1]` = last char)
+> - Slice syntax `s[start:stop:step]`: `stop` is exclusive; out-of-range silently clamped
+> - `s[::-1]` reverses; direct `s[i]` raises `IndexError` for out-of-range
+>
+> **String Methods**
+> - Case: `upper`, `lower`, `title`, `capitalize`, `swapcase`, `casefold` (Unicode-aware)
+> - Whitespace/padding: `strip`, `lstrip`, `rstrip`, `ljust`, `rjust`, `center`, `zfill`
+> - Content checks: `isalpha`, `isdigit`, `isdecimal`, `isnumeric`, `isspace`, `isidentifier`
+> - Search: `find` (returns -1), `index` (raises), `rfind`, `count`, `startswith`, `endswith`
+> - Replace/split/join: `replace`, `split`, `rsplit`, `splitlines`, `partition`, `join`, `expandtabs`
+> - Encoding: `maketrans`/`translate` for character-level substitution; `encode`/`decode` for bytes
+>
+> **String Formatting**
+> - f-strings (Python 3.6+): preferred; any expression in `{...}` evaluated at runtime
+> - `str.format()`: positional/named placeholders; use when template is a variable
+> - `%` operator: legacy C-style; still common in logging
+> - Format specifiers: `:.2f`, `:,.2f`, `:.2e`, `:.1%`, `:b`, `:x`, `:#x`, `:<10`, `:>10`, `:^10`
+> - Locale currency: `locale` module (platform-fragile); prefer `babel` in production
+>
+> **Efficient String Building**
+> - `"".join()`: O(n), single allocation — use for any loop-based assembly
+> - `io.StringIO`: incremental write interface; equivalent to C#'s `StringBuilder`
+> - `+`: acceptable for 2–5 fixed parts only
+>
+> **Regular Expressions**
+> - `re.search` scans whole string; `re.match` anchors to start; `re.fullmatch` requires full string
+> - `re.findall` returns list; `re.finditer` yields match objects with position info
+> - Capture groups `(...)`: `group(0)` = full match, `group(1)` = first group
+> - Named groups `(?P<name>...)`: access via `group('name')` or `groupdict()`
+> - `re.sub`: static, lambda, or backreference replacement; `re.split`: pattern-based tokenizing
+> - `re.compile`: pre-compiles for repeated use; flags: `IGNORECASE`, `MULTILINE`, `DOTALL`, `VERBOSE`
+>
+> **Operations & Safety**
+> - Never use f-strings in SQL/shell — use parameterized queries or `shlex.quote()`
+> - Always use raw strings `r"..."` for regex patterns to avoid escape conflicts
+> - Use `casefold()` not `lower()` for Unicode-correct case-insensitive comparison
+> - Use `babel` not `locale` for portable currency/number formatting in production
+
+> [!note]- Glossary
+>
+> **`str`**
+> - Python's only text type — an immutable sequence of Unicode code points; no separate `char` type; a single character is a `str` of length 1
+> - Used for all text processing: user input, SQL queries, JSON, file paths, log messages
+>
+> > [!info] Unicode by default
+> >
+> > Every Python 3 `str` is Unicode. There is no ANSI/ASCII string type. Operations like `upper()` and `casefold()` are Unicode-aware out of the box.
+>
+> ---
+>
+> **Immutability**
+> - A `str` object cannot be changed after creation; item assignment (`s[0] = 'H'`) raises `TypeError`; every transformation allocates a new string on the heap
+> - Enables safe sharing across scopes, hashing, and use as dictionary keys
+>
+> > [!warning] `+=` in loops is O(n²)
+> >
+> > Each iteration copies the entire accumulated string into a new object. Use `"".join()` or `io.StringIO` for loop-based construction.
+>
+> ---
+>
+> **Indexing**
+> - Accessing a single character by zero-based position with `s[i]`; raises `IndexError` for out-of-range positions
+> - Used to extract characters for parsing, validation, and format detection
+>
+> > [!info] No `char` type
+> >
+> > `s[i]` returns a `str` of length 1, not a `char`. This differs from C# where `s[i]` returns a `char` value type.
+>
+> ---
+>
+> **Negative indexing**
+> - `s[-1]` accesses the last character, `s[-n]` the nth from the end — equivalent to `s[len(s) - n]`
+> - Eliminates `len(s) - 1` arithmetic for end-of-string access
+>
+> > [!warning] `s[-0]` is `s[0]`
+> >
+> > Negative zero is identical to positive zero in Python. There is no `-0` shorthand for the last element — use `s[-1]`.
+>
+> ---
+>
+> **Slicing**
+> - `s[start:stop:step]` extracts a substring; `stop` is exclusive; omitting any part uses defaults (0, len, 1); never raises `IndexError`
+> - Used for substrings, reversal (`s[::-1]`), and stride patterns
+>
+> > [!info] Slicing is always safe
+> >
+> > Out-of-range slice indices are silently clamped — `s[0:1000]` returns the full string. Direct indexing (`s[1000]`) is not safe.
+>
+> ---
+>
+> **`f-string`**
+> - Formatted string literal (Python 3.6+); any expression inside `{...}` is evaluated at runtime; supports format specifiers after `:`
+> - Preferred interpolation mechanism for new code — faster than `.format()` and more readable
+>
+> > [!danger] Injection risk in SQL and shell
+> >
+> > `f"SELECT * FROM t WHERE id = {user_id}"` is vulnerable to SQL injection. Use parameterized queries: `cursor.execute("SELECT * FROM t WHERE id = %s", (user_id,))`.
+>
+> ---
+>
+> **`str.format()`**
+> - Template formatting using `"{} {}".format(a, b)` with positional or named placeholders; template can be a variable
+> - Use when the format string is stored dynamically — f-strings require string literals and cannot be used with variable templates
+>
+> > [!warning] Mixed placeholder styles
+> >
+> > Mixing positional and named placeholders in a single `.format()` call raises `ValueError`. Use one style consistently per template.
+>
+> ---
+>
+> **Format specifier**
+> - Mini-language inside `{}` after a colon: `:.2f` (2 decimals), `:,.2f` (comma + 2 decimals), `:#x` (hex with prefix), `:.1%` (percentage)
+> - Enables precise numeric display, alignment, and base conversion without manual string operations
+>
+> > [!warning] Colon is required
+> >
+> > `f"{n.2f}"` is a syntax error — the colon separating the expression from the specifier is mandatory: `f"{n:.2f}"`.
+>
+> ---
+>
+> **`join()`**
+> - `separator.join(iterable)` — assembles all items into a single string with one allocation; called on the separator string, not on the collection
+> - O(n) string assembly replacing `+=` in loops; the single most impactful string performance optimization
+>
+> > [!warning] Reversed call syntax
+> >
+> > `parts.join(", ")` raises `AttributeError` — `list` has no `join`. The correct form is `", ".join(parts)`.
+>
+> ---
+>
+> **`io.StringIO`**
+> - File-like interface for in-memory string building; supports `.write()`, `.getvalue()`, and context manager protocol
+> - Python's equivalent of C#'s `StringBuilder`; use for incremental writes where parts are not all available at once
+>
+> > [!info] Always close or use `with`
+> >
+> > Call `buf.close()` after `.getvalue()` or wrap in `with io.StringIO() as buf:` to release the underlying buffer.
+>
+> ---
+>
+> **Regular expression**
+> - Pattern language for matching, extracting, replacing, and splitting text; Python's `re` module is Perl-compatible (PCRE-like)
+> - Used for validation, structured extraction, and text transformation where fixed string methods are insufficient
+>
+> > [!warning] Always use raw strings for patterns
+> >
+> > `re.search("\bword\b", text)` fails silently — `\b` is Python's backspace escape. Use `re.search(r"\bword\b", text)` to keep backslashes literal.
+>
+> ---
+>
+> **Capture group**
+> - `(...)` in a regex saves the matched text; retrieved via `match.group(1)`, `match.group(2)`, etc.; `group(0)` is the full match; `groups()` returns all as a tuple
+> - Extracts structured parts from a match: area code, domain, username, date components
+>
+> > [!info] `group(0)` vs `group(1)`
+> >
+> > `group(0)` always returns the entire match. Numbered groups start at 1. Mixing these up silently returns wrong data.
+>
+> ---
+>
+> **Named group**
+> - `(?P<name>...)` names a capture group; accessed via `match.group('name')` or `match.groupdict()`; Python requires the `P` prefix unlike C#'s `(?<name>...)`
+> - Produces self-documenting patterns and readable extraction code; `groupdict()` returns a clean `{name: value}` mapping
+>
+> > [!warning] Python syntax differs from C#
+> >
+> > C# named groups use `(?<name>...)`. Python requires `(?P<name>...)`. Using C# syntax silently fails or matches differently.
+>
+> ---
+>
+> **`re.compile`**
+> - Pre-compiles a regex pattern string into a reusable pattern object; equivalent to C#'s `new Regex(pattern, RegexOptions.Compiled)`
+> - Improves performance when the same pattern is applied many times in a hot path; compiled object supports all `re` module functions as methods
+>
+> > [!info] No build-time generation
+> >
+> > Unlike C# (.NET 7+) `[GeneratedRegex]`, Python `re.compile()` compiles at runtime. There is no static code generation for Python regex.
+>
+> ---
+>
+> **Raw string**
+> - `r"..."` prefix disables Python's backslash escape processing; every `\` is treated as a literal character
+> - Essential for regex patterns (avoids double-escaping) and Windows file paths
+>
+> > [!warning] Cannot end with odd backslash
+> >
+> > `r"path\"` is a syntax error — a raw string cannot end with an odd number of backslashes. Use `r"path\\"` or a regular string with `"path\\"`.
+>
+> ---
+>
+> **`casefold()`**
+> - Aggressive Unicode-aware case normalization — more thorough than `lower()`; converts `"Straße"` to `"strasse"` (not `"straße"`)
+> - Required for correct case-insensitive comparison across all Unicode scripts; `lower()` fails for certain German, Greek, and other Unicode characters
+>
+> > [!warning] `lower()` is not sufficient for Unicode
+> >
+> > `"Straße".lower()` returns `"straße"` but `"STRASSE".lower()` returns `"strasse"` — they don't match. `casefold()` normalizes both to `"strasse"`.
+>
+> ---
+>
+> **Locale**
+> - System-specific rules for number formatting, currency symbols, decimal separators, and collation order; accessed via Python's `locale` module
+> - Used to format numbers and currency per regional conventions; `locale.setlocale` + `locale.currency` handles display formatting
+>
+> > [!warning] `locale` is platform-fragile
+> >
+> > Locale names differ by OS (`en_US.UTF-8` on Linux, `English_United States.1252` on Windows). Use the `babel` library for portable currency and number formatting in production.
+
 This note covers Python's string type in full: creation and immutability, indexing and slicing, the complete set of built-in string methods, all three formatting mechanisms (f-strings, `.format()`, `%`), efficient string building patterns, and regular expressions with the `re` module.
-
-### Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **str** | Python's only text type — an immutable sequence of Unicode code points. No separate `char` type; a single character is a `str` of length 1. | All text processing, from user input to SQL queries to JSON. | Assuming `str` is mutable — every operation returns a new object. |
-| **Immutability** | A `str` cannot be modified after creation. Item assignment (`s[0] = 'H'`) raises `TypeError`. All transformations allocate new strings. | Enables safe sharing, hashing, and dict key usage. | Using `+=` in loops — each iteration copies the entire string. Use `"".join()`. |
-| **Indexing** | Accessing a single character by position with `s[i]`. Python uses 0-based indexing. | Extract characters for parsing or validation. | Confusing `s[i]` (returns length-1 `str`) with C#'s `s[i]` (returns `char`). |
-| **Negative indexing** | `s[-1]` accesses the last character, `s[-2]` the second-to-last, etc. | Convenient end-of-string access without `len(s) - 1`. | `s[-0]` is the same as `s[0]`, not the last character. |
-| **Slicing** | `s[start:stop:step]` extracts a substring. `stop` is exclusive. Omit any part for defaults. | Substrings, reversal, skipping characters. | Forgetting `stop` is exclusive — `s[0:3]` returns indices 0, 1, 2. |
-| **f-string** | Formatted string literal (Python 3.6+) with embedded `{expressions}`. | Readable, performant interpolation — preferred for new code. | Using f-strings for SQL/shell commands — injection risk. Use parameterized queries. |
-| **str.format()** | Template formatting: `"{} {}".format(a, b)`. Supports positional and named placeholders. | When the format template is a variable (f-strings require literals). | Mixing positional and named placeholders inconsistently. |
-| **Format specifier** | Mini-language inside `{}`: `:.2f` (2 decimals), `:,d` (commas), `:#x` (hex prefix). | Precise numeric and alignment formatting. | Forgetting the colon — `{n.2f}` fails, `{n:.2f}` works. |
-| **join()** | `separator.join(iterable)` — assembles strings in a single allocation. Called on the separator. | O(n) string assembly replacing `+=` in loops. | Calling on the list: `parts.join(", ")` fails; `", ".join(parts)` works. |
-| **io.StringIO** | File-like interface for incremental string building. Python's equivalent of C#'s `StringBuilder`. | Build strings with `.write()`, retrieve with `.getvalue()`. | Forgetting `.close()` or to use a `with` block. |
-| **Regular expression** | Pattern language for matching, extracting, replacing, and splitting text. Python's `re` module is Perl-compatible. | Validation, extraction, transformation of text. | Not using raw strings (`r"..."`) — backslashes get eaten by Python's escape processing. |
-| **Capture group** | `(...)` in a regex saves matched text, retrieved via `group(1)`, `group(2)`, etc. | Extract structured parts (area code, domain, username). | Confusing `group(0)` (full match) with `group(1)` (first capture). |
-| **Named group** | `(?P<name>...)` names a capture group. Access via `group('name')` or `groupdict()`. | Self-documenting patterns and readable extraction. | Using C#'s `(?<name>...)` syntax — Python requires `P`: `(?P<name>...)`. |
-| **re.compile** | Pre-compiles a pattern into a reusable object for repeated matching. | Performance when the same pattern is used many times. | Compiling patterns used only once — overhead outweighs benefit. |
-| **Raw string** | `r"..."` disables backslash escape processing. Backslashes are literal. | Essential for regex patterns and Windows file paths. | `r"path\"` is a syntax error — raw strings cannot end with odd backslashes. |
-| **casefold()** | Aggressive Unicode-aware lowering for case-insensitive comparison. More thorough than `lower()`. | Correct case-insensitive comparison across all Unicode. | Using `lower()` instead — fails for `"Straße"` (should become `"strasse"`). |
-| **Locale** | System-specific rules for number formatting, currency, and collation. | Format numbers/currency per regional conventions. | Relying on `locale` cross-platform — names differ by OS. Use `babel` instead. |
 
 ### What this note covers
 

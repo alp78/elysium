@@ -395,10 +395,10 @@ The guard functions below enforce the same quality dimensions — completeness, 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#a9b1d6", "primaryBorderColor": "#3b4261", "lineColor": "#7aa2f7", "secondaryColor": "#24283b", "tertiaryColor": "#1a1b26", "background": "#1a1b26", "mainBkg": "#24283b", "nodeBorder": "#3b4261", "clusterBkg": "#1a1b26", "titleColor": "#a9b1d6", "edgeLabelBackground": "#1a1b26", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#24283b"}}}%%
 flowchart LR
-    A[ReadCsv] --> B[AssertNoNulls\nkey columns]
-    B --> C[AssertUnique\nprimary key]
-    C --> D[AssertInRange\nnumeric bounds]
-    D --> E{Quality\nrules}
+    A[ReadCsv] --> B[AssertNoNulls<br/>key columns]
+    B --> C[AssertUnique<br/>primary key]
+    C --> D[AssertInRange<br/>numeric bounds]
+    D --> E{Quality<br/>rules}
     E -- pass --> F[good rows]
     E -- fail --> G[quarantine]
 ```

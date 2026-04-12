@@ -15,42 +15,189 @@ status: complete
 >
 > — **Brian W. Kernighan & Dennis Ritchie**, *The C Programming Language* (1978)
 
+> [!abstract]- Summary
+>
+> **Environment Setup** — verifies the .NET Interactive kernel, suppresses assembly version warnings, inspects the runtime version, OS, and working directory, loads NuGet packages with `#r "nuget:"`, and confirms required assembly availability.
+>
+> **Console I/O** — covers `Console.Write`/`Console.WriteLine` for output, string formatting via interpolation (`$"..."`), `String.Format`, and composite formatting; escape sequences and verbatim strings (`@"..."`); raw string literals (C# 11); ANSI color and style codes; numeric format specifiers (`C`, `D`, `E`, `F`, `N`, `P`, `X`); `Console.ReadLine` for input; and safe parsing with `int.TryParse`, `double.TryParse`, and validation loops.
+>
+> **Variables, Constants & Data Types** — static typing with explicit types and `var` inference; compile-time `const` vs runtime `readonly`; all ten integer types (`sbyte`–`ulong`, `nint`/`nuint`); three floating-point tiers (`float`/`double`/`decimal`); `bool`, `char`, `string`, `byte[]`; `null`, `Nullable<T>` (`T?`), `??` and `?.`; `struct`, `enum`, `ValueTuple`, `record`; collections (`List`, `Dictionary`, `HashSet`, `Queue`, `Stack`, `LinkedList`, sorted variants).
+>
+> **Operators** — arithmetic (including integer vs float division, `Math.Pow`, `Math.Floor`); comparison and reference equality (`ReferenceEquals`, `SequenceEqual`); logical short-circuit (`&&`, `||`, `!`); bitwise; compound assignment; ternary; null-coalescing (`??`, `??=`); pattern matching (`is`, `switch`); operator precedence.
+>
+> **Special Methods & Operator Overloading** — custom `operator` definitions; `IEquatable<T>`, `IComparable<T>`, `IEnumerable<T>`; implicit/explicit conversion operators; indexers; type inspection with `GetType`, `typeof`, `is`, `as`.
+>
+> **Value vs Reference Types** — stack vs heap allocation; copy vs shared-reference semantics; string immutability; boxing and unboxing; `struct` vs `class`; `ref`/`out`/`in` parameter modifiers.
+
+> [!note]- Glossary
+>
+> **Variable** — a named, statically-typed storage location; the type is fixed at compile time.
+> - Stores, retrieves, and passes data with compile-time type safety.
+>
+> > [!tip] `var` is not dynamic
+> > `var x = 5;` infers `int` at compile time. The type is permanent — `x = "text"` is a compile error.
+>
+> > ---
+>
+> **Constant** — a value declared with `const` (compile-time literal, inlined by the compiler) or `readonly` (set once at runtime, typically in a constructor).
+> - Prevents accidental reassignment of fixed values.
+>
+> > [!warning] `const` requires a compile-time literal
+> > Use `readonly` or `static readonly` for values that depend on environment variables, configuration files, or any runtime computation.
+>
+> > ---
+>
+> **Static typing** — every variable's type is resolved at compile time, not at runtime.
+> - Enables compile-time error detection, IDE refactoring support, and performance-optimized code generation.
+>
+> > [!info] `var` vs `dynamic`
+> > `var` is inferred-static — the type is fixed after inference. `dynamic` defers type resolution to runtime and disables compile-time checks; it is rarely needed outside COM interop.
+>
+> > ---
+>
+> **`int`** — 32-bit signed integer (`System.Int32`); range −2,147,483,648 to 2,147,483,647.
+> - Default type for counters, indices, and general-purpose whole numbers.
+>
+> > [!warning] Silent overflow by default
+> > `int.MaxValue + 1` silently wraps to `int.MinValue`. Wrap critical arithmetic in `checked { }` to get `OverflowException` instead.
+>
+> > ---
+>
+> **`long`** — 64-bit signed integer (`System.Int64`); range ±9.2 × 10¹⁸.
+> - Required when values exceed the `int` ceiling of ~2.1 billion (large IDs, timestamps, financial counters).
+>
+> > [!tip] Use `L` suffix for long literals
+> > `9_000_000_000L` — without `L`, the compiler treats the literal as `int` and rejects values outside range.
+>
+> > ---
+>
+> **`float` / `double`** — IEEE 754 binary floating-point: `float` is 32-bit (~6–9 digits precision), `double` is 64-bit (~15–17 digits); `double` is the default for unqualified decimal literals.
+> - Scientific values, measurements, ML features, and general-purpose decimals where binary rounding is acceptable.
+>
+> > [!danger] Never use for currency
+> > Binary floating-point cannot represent exact base-10 fractions: `0.1 + 0.2 == 0.30000000000000004`. Use `decimal` for all monetary math.
+>
+> > ---
+>
+> **`decimal`** — 128-bit base-10 floating-point (`System.Decimal`); ~28–29 digit precision with exact decimal representation.
+> - Financial calculations, tax, currency — wherever binary rounding is unacceptable.
+>
+> > [!warning] `m` suffix is required
+> > `19.99` is a `double`. `19.99m` is a `decimal`. Omitting `m` silently gives a `double` with binary rounding errors.
+>
+> > ---
+>
+> **`bool`** — holds exactly `true` or `false`; not an integer subclass.
+> - Control flow, flags, and conditions requiring explicit boolean expressions.
+>
+> > [!info] No implicit numeric conversion
+> > `if (1)` and `true + true` are compile errors. Use `Convert.ToInt32(boolVal)` to get `1`/`0` explicitly.
+>
+> > ---
+>
+> **`string`** — immutable UTF-16 character sequence; reference type with value-based `==` equality.
+> - Text data: names, SQL, JSON, file paths.
+>
+> > [!warning] Concatenation in loops is O(n²)
+> > Each `+=` allocates a new string. Use `StringBuilder` for repeated concatenation — 10–100× faster in loops.
+>
+> > ---
+>
+> **`char`** — single UTF-16 code unit (2 bytes); supports arithmetic and comparison.
+> - Individual character processing, lexer tokenization, character classification.
+>
+> > [!tip] Single quotes, not double
+> > `'a'` is a `char`. `"a"` is a one-character `string`. They are not interchangeable.
+>
+> > ---
+>
+> **`byte` / `sbyte`** — `byte` is unsigned 0–255 (1 byte); `sbyte` is signed −128 to 127 (1 byte).
+> - Binary data, network protocols, color channel values, interop buffers.
+>
+> > [!warning] `byte` cannot hold negative values
+> > Assigning a negative literal to `byte` is a compile error. Use `sbyte` for signed single-byte values.
+>
+> > ---
+>
+> **`null`** — a reference that points to no object; value types cannot be `null` unless wrapped in `Nullable<T>`.
+> - Represents the explicit absence of a value for reference types and nullable value types.
+>
+> > [!danger] `NullReferenceException` is the most common C# runtime error
+> > Guard with null-conditional `?.` (returns `null` instead of throwing) and null-coalescing `??` (supplies a fallback value).
+>
+> > ---
+>
+> **Value type** — stored on the stack (or inline in arrays/structs); assignment copies the entire value; includes `int`, `double`, `bool`, `struct`, `enum`, `ValueTuple`.
+> - Lightweight, deterministic allocation with no garbage-collector pressure.
+>
+> > [!tip] Copies are independent
+> > `int b = a; a = 100;` — `b` retains the original value. Contrast with reference types where both variables share the same heap object.
+>
+> > ---
+>
+> **Reference type** — stored on the heap; assignment copies the reference pointer, not the data; includes `class`, `string`, arrays, `delegate`, `record`.
+> - Shared mutable objects, polymorphism, large data structures.
+>
+> > [!warning] Aliasing side effect
+> > `var listB = listA;` — both variables point to the same `List`. Mutations via `listA.Add(...)` are visible through `listB`.
+>
+> > ---
+>
+> **Nullable (`T?`)** — `Nullable<T>` wraps a value type to add a `null` state via a `HasValue` flag and a `Value` property.
+> - Optional parameters, database columns that allow `NULL`, distinction between "zero" and "absent".
+>
+> > [!warning] Unwrap safely
+> > `x.Value` throws `InvalidOperationException` when `x` is `null`. Use `x.HasValue`, `x ?? default`, or `x.GetValueOrDefault(fallback)`.
+>
+> > ---
+>
+> **`var`** — type inference keyword; the compiler resolves the actual type from the right-hand side at compile time.
+> - Reduces verbosity in obvious assignments (constructors, LINQ, anonymous types) without sacrificing type safety.
+>
+> > [!tip] Suffix matters with `var`
+> > `var x = 3.14m;` infers `decimal`. `var x = 3.14;` infers `double`. Omitting `m` silently gives the wrong type for monetary values.
+>
+> > ---
+>
+> **`record`** — a reference type (or `record struct` for value semantics) with compiler-generated value-based equality, `ToString`, deconstruction, and `with` expression support.
+> - Immutable DTOs, configuration objects, domain value objects where structural equality is required.
+>
+> > [!info] Not the same as `class`
+> > `record` uses value equality by default — two instances with identical properties are equal. `class` uses reference equality unless overridden.
+>
+> > ---
+>
+> **`StringBuilder`** — a mutable character buffer in `System.Text` for efficient incremental string construction.
+> - Accumulating strings in loops or pipelines where repeated `+=` would cause quadratic allocations.
+>
+> > [!tip] Use `Append`, `AppendLine`, `AppendFormat`
+> > Call `.ToString()` once at the end to materialize the final string. Avoid mixing `StringBuilder` and `string +=` in the same loop.
+>
+> > ---
+>
+> **Operator overloading** — defining custom behavior for operators (`+`, `-`, `==`, etc.) via `public static T operator+(T a, T b)` inside a type; C#'s analogue to Python dunder methods.
+> - Natural arithmetic syntax for mathematical value types (vectors, matrices, money amounts).
+>
+> > [!warning] Overload `==` consistently
+> > Overloading `==` without also overriding `Equals()` and `GetHashCode()` produces inconsistent equality — hash-based collections will behave incorrectly.
+>
+> > ---
+>
+> **Checked / Unchecked** — `checked { }` enables overflow detection and throws `OverflowException` when an operation exceeds the type's range; `unchecked { }` (the default) silently wraps around.
+> - Detecting integer overflow in financial calculations, safety-critical counters, and index arithmetic.
+>
+> > [!tip] Enable project-wide checked mode
+> > Add `<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>` in `.csproj` to make all integer arithmetic checked by default, and opt out selectively with `unchecked`.
+>
+> > ---
+>
+> **NuGet** — the .NET package manager; packages are referenced with `#r "nuget: PackageName"` in notebooks or via `<PackageReference>` in `.csproj` files.
+> - Installs and manages third-party libraries and their transitive dependencies.
+>
+> > [!tip] Centralize versions
+> > Use `Directory.Packages.props` with `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>` to pin all package versions in one place across a multi-project solution.
+
 This note covers the absolute foundations of C# as a programming language: how to set up and verify a .NET Interactive notebook environment, read and write console output, declare variables with static typing, work with every built-in data type, use all operator families, implement custom operator behavior via operator overloading, and understand the value-vs-reference type distinction that governs memory layout and mutation safety.
-
-### Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Variable** | A named storage location with a declared type. In C#, the type is fixed at compile time (static typing). `var` infers the type but does not make it dynamic. | Store, retrieve, and pass data with compile-time type safety. | Thinking `var` is dynamic typing — it is not. `var x = 5;` makes `x` an `int` permanently. |
-| **Constant** | A value declared with `const` (compile-time) or `readonly` (runtime). `const` is inlined by the compiler; `readonly` is set once in the constructor. | Prevent accidental reassignment of fixed values. | Using `const` for values that depend on runtime — `const` requires a compile-time literal. Use `readonly` or `static readonly` instead. |
-| **Static typing** | Type of every variable is determined at compile time. Contrast with Python's dynamic typing where types are checked at runtime. | Catch type errors at compile time, enable IDE support and refactoring. | Assuming `var` or `dynamic` are the same as Python's dynamic typing — `var` is inferred-static, `dynamic` bypasses compile-time checks but is rarely needed. |
-| **int** | 32-bit signed integer (`System.Int32`). Range: -2,147,483,648 to 2,147,483,647. | Counters, indices, general-purpose whole numbers. | Not knowing that arithmetic overflow silently wraps around by default. Use `checked { }` to detect overflow. |
-| **long** | 64-bit signed integer (`System.Int64`). Use when `int` range is insufficient. | Large identifiers, timestamps, financial IDs. | Using `int` for values that exceed 2.1 billion — use `long` or `BigInteger`. |
-| **float / double** | `float` is 32-bit IEEE 754 (~7 digits precision); `double` is 64-bit (~15 digits). `double` is the default for literals like `3.14`. | Scientific values, measurements, general-purpose decimals. | Using `float`/`double` for money — binary representation causes rounding errors. Use `decimal`. |
-| **decimal** | 128-bit base-10 floating-point (`System.Decimal`). ~28 digit precision with exact decimal representation. | Financial calculations, tax, currency — anywhere binary rounding is unacceptable. | Forgetting the `m` suffix: `19.99` is a `double`, `19.99m` is a `decimal`. |
-| **bool** | Boolean `true`/`false`. Unlike Python, C# `bool` is NOT an integer subclass — no arithmetic with booleans. | Control flow, flags, conditions. | Thinking `if (1)` works like Python — C# requires an explicit `bool` expression. |
-| **string** | Immutable UTF-16 character sequence. Reference type, but behaves like a value type for equality (`==` compares content). | Text data — names, SQL, JSON, paths. | Concatenating strings in a loop with `+=` — each creates a new object. Use `StringBuilder` for loops. |
-| **char** | Single UTF-16 character (16-bit). Numeric under the hood — supports arithmetic and comparison. | Individual character processing, parsing. | Confusing `char` with `string` — `'a'` is a `char`, `"a"` is a `string`. |
-| **byte / sbyte** | `byte` is unsigned 0–255; `sbyte` is signed -128 to 127. | Binary data, network protocols, color values. | Assuming `byte` can hold negative values — it cannot. Use `sbyte` for signed bytes. |
-| **null** | Reference that points to no object. Value types cannot be `null` unless wrapped in `Nullable<T>` (or `T?`). | Represent absence of a value. | Calling methods on `null` — causes `NullReferenceException`. Use null-conditional `?.` and null-coalescing `??` operators. |
-| **Value type** | Stored on the stack (or inline in arrays). Copied on assignment. Includes `int`, `double`, `bool`, `struct`, `enum`. | Lightweight, fast allocation, no GC pressure. | Assuming all types are reference types like in Python — value types copy on assignment, they don't share references. |
-| **Reference type** | Stored on the heap. Assignment copies the reference, not the data. Includes `class`, `string`, arrays, `delegate`. | Shared objects, polymorphism, large data structures. | Not realizing two variables can point to the same object — mutations through one affect the other. |
-| **Nullable** | `T?` syntax wrapping a value type to allow `null`. `int?` can hold an `int` or `null`. | Optional values, database columns that allow NULL. | Forgetting `.Value` when unwrapping — use `.HasValue` to check first, or `??` for a default. |
-| **var** | Type inference keyword — the compiler determines the type from the right-hand side. | Reduce verbosity without losing type safety. | Thinking `var` is dynamically typed — it is statically inferred. The type is fixed after assignment. |
-| **record** | Immutable reference type with value-based equality. `record struct` is the value-type variant. | DTOs, configuration objects, immutable data. | Thinking `record` is the same as `class` — records have value equality, `with` expressions, and are immutable by convention. |
-| **StringBuilder** | Mutable string buffer for efficient string construction. | Building strings in loops without quadratic allocation. | Using `string +=` in a loop — `StringBuilder` is 10–100x faster for repeated concatenation. |
-| **Operator overloading** | Defining custom behavior for `+`, `-`, `==`, etc. via `public static T operator+(T a, T b)`. C#'s equivalent of Python dunder methods. | Natural syntax for mathematical types (vectors, matrices, money). | Overloading `==` without overriding `Equals()` and `GetHashCode()` — causes inconsistent equality. |
-| **Checked / Unchecked** | `checked { }` throws `OverflowException` on arithmetic overflow. `unchecked { }` (default) silently wraps around. | Detect integer overflow in financial or safety-critical code. | Assuming C# detects overflow by default — it does not. Wrap critical arithmetic in `checked`. |
-| **NuGet** | .NET's package manager. Packages are referenced with `#r "nuget: PackageName"` in notebooks or via `.csproj` in projects. | Install and manage third-party libraries. | Mixing package versions across projects — use `Directory.Packages.props` for centralized version management. |
-
-### What this note covers
-
-- **Environment Setup** — verify .NET runtime, suppress notebook warnings, inspect assemblies
-- **Console I/O** — `Console.Write`/`WriteLine`, string interpolation, escape sequences, ANSI colors, `Console.ReadLine` with `TryParse`
-- **Variables, Constants & Data Types** — static typing, `var`, `const`/`readonly`, all numeric types (`int`–`BigInteger`, `float`/`double`/`decimal`), `bool`, `char`, `string`, `byte`, `null`/`Nullable<T>`, enums, tuples, records
-- **Operators** — arithmetic, comparison, identity/equality, logical, bitwise, compound assignment, ternary, null-coalescing, pattern matching, precedence
-- **Special Methods & Operator Overloading** — custom operators, `IEquatable<T>`, `IComparable<T>`, `IEnumerable<T>`, implicit/explicit conversion, indexers, type inspection
-- **Value vs Reference Types** — stack vs heap, copy vs share semantics, boxing/unboxing, struct vs class, `ref`/`out`/`in` parameters
 
 ## Environment Setup
 

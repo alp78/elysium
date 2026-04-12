@@ -19,40 +19,223 @@ status: complete
 >
 > — **Kent Beck**, *Test-Driven Development: By Example*
 
+> [!abstract]- Summary
+>
+> **Testing Philosophy**
+> - Testing pyramid: 70% unit (~1 ms, `pytest`/`assert`/`unittest.mock`) → 20% integration (~100 ms, `pyodbc`/`pandera`) → 10% E2E (~1 s+, `FastAPI.TestClient`). Unit tests run on every commit; integration tests on every PR; E2E on deploy.
+> - TDD cycle: write a failing test first, then write the minimum code to pass it, then refactor.
+>
+> **Unit Testing with pytest**
+> - Auto-discovery: files `test_*.py` or `*_test.py`, functions `test_*`. No base class needed.
+> - Plain `assert` is rewritten by pytest for rich diffs. `ipytest` enables interactive pytest in notebooks.
+>
+> **Assertions and Test Organization**
+> - Numeric: `pytest.approx` for float tolerance (default 1e-6 relative); essential for financial calculations.
+> - Collections: `in`, `.issubset()`, `all(...)` for membership and completeness checks.
+> - Strings: `len()`, `.isalpha()`, `re.match()` for structured identifiers (ISIN, ticker, log format).
+> - Types/None: `isinstance()` catches API type mismatches; `is None` avoids falsy-value confusion.
+>
+> **Fixtures and Parametrize**
+> - `@pytest.fixture` provides reusable setup; `yield` adds guaranteed teardown even on failure.
+> - `scope`: `"function"` (default, fresh per test), `"module"`, `"session"` (shared, use for immutable data only).
+> - `conftest.py` auto-discovered; fixtures in it are available to all tests below without imports.
+> - `@pytest.mark.parametrize` runs one test function per row of input data; use `ids=` for readable names.
+>
+> **Mocking and Patching**
+> - `Mock()` / `MagicMock()` from `unittest.mock`; configure with `.return_value` or `.side_effect`.
+> - `patch()` replaces the target where it is **used**, not where it is defined.
+> - `Mock(spec=RealClass)` prevents typos from silently passing; always prefer spec.
+> - `@patch.dict(os.environ, {...}, clear=True)` isolates env-var-dependent tests.
+> - Dependency injection (accepting `now=None`) eliminates need for `@patch` on datetime/clock code.
+>
+> **Test Patterns for Data Engineering**
+> - Pure function tests (e.g., `normalize_trades`): no mocks, fastest, most valuable.
+> - `validate_eod_prices`: OHLCV invariants (`close > 0`, `high >= low`, `volume >= 0`, daily return < 20%).
+> - `Mock(spec=MarketDataClient)`: spec-bound mock for external API client; verifies call args.
+>
+> **Integration Testing with Real Database**
+> - `pyodbc` + `query_scalar`/`query_rows` helpers against `stoxx` SQL Server (Docker, port 1434).
+> - Schema validation via `INFORMATION_SCHEMA`; completeness via `COUNT(DISTINCT symbol)`.
+> - OHLCV invariants in SQL; cross-layer checks (bronze → silver → gold row counts, z-score range).
+>
+> **Data Quality with Pandera**
+> - `pa.DataFrameSchema` defines column dtypes, ranges (`pa.Check.greater_than`), and nullability per medallion layer.
+> - `ohlcv_schema.validate(df)` raises `SchemaError` on any violation; used with `try/except` for reporting.
+>
+> **API Integration Tests**
+> - `requests.get` against Finnhub API; cross-checks live price against `silver` DB close within a wide ratio tolerance.
+>
+> **CI/CD — Running Tests in GitHub Actions**
+> - Matrix build across Python 3.11/3.12; secrets injected via GitHub Secrets.
+> - `pytest --cov=src --cov-report=xml --junitxml=test-results.xml`; artifacts uploaded on `always()`.
+> - Project layout: `src/` + `tests/` + `conftest.py` + `pyproject.toml`.
+
+> [!note]- Glossary
+>
+> **Unit test**
+>
+> - A test that exercises one function in isolation with no I/O or external dependencies.
+> - Forms the fast base of the testing pyramid; the majority (≥70%) of a test suite should be unit tests.
+>
+> > [!tip] Common mistake
+> >
+> > Calling a test a "unit test" while it queries a real database. The moment a test opens a network connection or reads a file, it becomes an integration test — slower and environment-dependent.
+>
+> > ---
+>
+> **Integration test**
+>
+> - A test that exercises code together with real dependencies (database, API, filesystem).
+> - Validates that components connect correctly; reveals schema drift and connection failures that unit tests cannot catch.
+>
+> > [!tip] Common mistake
+> >
+> > Running integration tests on every commit. They are 100× slower than unit tests; gate them to PR builds or nightly schedules to keep commit feedback fast.
+>
+> > ---
+>
+> **Fixture**
+>
+> - A reusable setup function decorated with `@pytest.fixture` that provides data or objects to tests.
+> - Eliminates copy-paste setup across test functions; `yield` fixtures guarantee cleanup even when a test fails.
+>
+> > [!tip] Common mistake
+> >
+> > Defining fixtures inside the test module file. Fixtures belong in `conftest.py` so they are shared across the whole directory without explicit imports.
+>
+> > ---
+>
+> **conftest.py**
+>
+> - A special pytest file auto-discovered in any directory; contains shared fixtures and hooks.
+> - Makes fixtures available to all tests in the same directory and all subdirectories without any import statement.
+>
+> > [!tip] Common mistake
+> >
+> > Renaming the file. pytest discovers it specifically by the name `conftest.py`; any other name breaks auto-discovery silently.
+>
+> > ---
+>
+> **Parametrize**
+>
+> - `@pytest.mark.parametrize` decorator that runs a test function once per row of input data.
+> - Replaces loops inside test functions with clean, independent test cases; each row appears as a separate result in the test report.
+>
+> > [!tip] Common mistake
+> >
+> > Putting all cases inside a single `assert` in a loop. A failure in row 3 masks whether rows 4–N would have passed. Parametrize reports each row independently.
+>
+> > ---
+>
+> **Mock / MagicMock**
+>
+> - A stand-in object from `unittest.mock` that records all calls and returns controlled values. `MagicMock` additionally pre-configures magic methods (`__len__`, `__iter__`, etc.).
+> - Isolates units from I/O, external APIs, databases, or non-deterministic behavior such as clocks and random numbers.
+>
+> > [!tip] Common mistake
+> >
+> > Mocking at the wrong layer. Always patch where the name is **used** (the consuming module), not where it is defined. `from requests import get` in `mymodule` means patch `"mymodule.get"`, not `"requests.get"`.
+>
+> > ---
+>
+> **patch**
+>
+> - `unittest.mock.patch` context manager or decorator that temporarily replaces a named attribute in a module for the duration of one test, then restores it.
+> - Swaps out real dependencies (APIs, clocks, env vars) without modifying production code.
+>
+> > [!tip] Common mistake
+> >
+> > Patching the wrong module path — the original definition site instead of the import site in the consuming module. The real function still executes and the mock has no effect.
+>
+> > ---
+>
+> **side_effect**
+>
+> - A list or callable assigned to a mock that returns different values (or raises exceptions) on successive calls.
+> - Simulates retry scenarios, alternating states, transient failures, or ordered sequences of API responses.
+>
+> > [!tip] Common mistake
+> >
+> > Confusing `return_value` with `side_effect`. `return_value` returns the same single value on every call. `side_effect` consumes the list in order; a `StopIteration` is raised if the list is exhausted.
+>
+> > ---
+>
+> **spec**
+>
+> - `Mock(spec=RealClass)` — restricts the mock to only expose attributes and methods that exist on the real class.
+> - Prevents tests from passing due to a typo on a mock attribute; accessing a non-existent attribute raises `AttributeError` immediately.
+>
+> > [!tip] Common mistake
+> >
+> > Omitting `spec`. A bare `Mock()` accepts any attribute access and method call without error, so `mock.conect()` (typo) silently succeeds while the real code would fail.
+>
+> > ---
+>
+> **pytest.approx**
+>
+> - Wrapper for floating-point equality checks that applies a configurable tolerance (default relative tolerance 1e-6).
+> - Essential for financial calculations where IEEE 754 rounding makes exact equality comparisons unreliable.
+>
+> > [!tip] Common mistake
+> >
+> > Using `==` directly on floats: `assert 0.1 + 0.2 == 0.3` fails in Python. For production financial code outside tests, use `math.isclose()` for the same protection.
+>
+> > ---
+>
+> **pytest.raises**
+>
+> - Context manager that asserts a specific exception type is raised within the `with` block; the test fails if no exception is raised.
+> - Tests error paths explicitly and verifies that validation logic fires; use `match=` to also assert the error message.
+>
+> > [!tip] Common mistake
+> >
+> > Not asserting the exception message with `match=`. A different exception type that is a subclass of the expected one can still pass, hiding a regression in the error path.
+>
+> > ---
+>
+> **scope**
+>
+> - Fixture parameter controlling lifetime: `"function"` (default, fresh per test), `"class"`, `"module"`, `"session"` (shared for the entire run).
+> - Wider scope avoids repeated expensive setup such as database connections or large dataset loads.
+>
+> > [!tip] Common mistake
+> >
+> > Using `scope="session"` for mutable objects (lists, dicts, DataFrames). Mutations from one test persist into the next, making tests order-dependent and causing intermittent failures.
+>
+> > ---
+>
+> **hypothesis**
+>
+> - Property-based testing library that generates random inputs covering edge cases and finds counterexamples automatically.
+> - Uncovers bugs that hand-picked examples miss; particularly effective for pure functions with wide numeric or string input domains.
+>
+> > [!tip] Common mistake
+> >
+> > Applying hypothesis to every test. Reserve it for pure functions where the input domain is large and the invariant is expressible as a property. For domain-specific business logic with constrained inputs, parametrize is clearer and faster.
+>
+> > ---
+>
+> **pandera**
+>
+> - Schema validation library for pandas DataFrames — defines expected column dtypes, value ranges, and nullability constraints in a `DataFrameSchema` object.
+> - Catches data quality regressions in pipeline outputs; raises `SchemaError` with a full report of all violations, not just the first.
+>
+> > [!tip] Common mistake
+> >
+> > Using a single schema across all medallion layers. Bronze schemas must allow NULLs and broad types (raw data is messy); silver enforces non-null on critical columns; gold schemas are strict and match downstream consumer contracts exactly.
+>
+> > ---
+>
+> **TDD (Test-Driven Development)**
+>
+> - A development cycle: write a failing test first, then write the minimum code to make it pass, then refactor.
+> - Forces clear specification before implementation; improves design by making testability a first-class constraint.
+>
+> > [!tip] Common mistake
+> >
+> > Writing tests after the implementation and calling it TDD. The sequence is the point — writing the test first forces the developer to define the expected behavior before writing code that could bias the test.
+
 This note covers Python testing patterns.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Unit test** | A test that exercises one function in isolation with no I/O or external dependencies | Forms the fast base of the testing pyramid | Calling it a unit test while it hits a real database |
-| **Integration test** | A test that exercises code together with real dependencies (DB, API, filesystem) | Validates that components connect correctly | Running integration tests in every CI job — they are slow; gate them separately |
-| **Fixture** | A reusable setup function decorated with `@pytest.fixture` that provides data or objects to tests | Eliminates copy-paste setup across test functions | Defining fixtures inside the test module instead of `conftest.py` |
-| **conftest.py** | A special pytest file auto-discovered in any directory; contains shared fixtures and hooks | Makes fixtures available to all tests below it without importing | Forgetting that pytest discovers it by name — renaming it breaks discovery |
-| **Parametrize** | `@pytest.mark.parametrize` decorator that runs a test once per row of input data | Replaces loops inside test functions with clean, independent test cases | Putting all cases in one `assert` inside a loop — a single failure masks others |
-| **Mock / MagicMock** | A stand-in object from `unittest.mock` that records calls and returns controlled values | Isolates units from I/O, external APIs, or non-deterministic behavior | Mocking at the wrong layer — patch where the name is used, not where it is defined |
-| **patch** | `unittest.mock.patch` context manager or decorator that temporarily replaces a named attribute | Swaps out dependencies for the duration of one test | Patching the wrong module path (e.g., original module instead of the importing one) |
-| **side_effect** | A list or callable assigned to a mock to return different values on successive calls | Simulates retries, alternating states, or raised exceptions | Confusing `return_value` (single value always) with `side_effect` (sequence or exception) |
-| **spec** | `Mock(spec=RealClass)` — restricts the mock to only expose attributes the real class has | Prevents tests from passing because of a typo on a mock attribute | Omitting `spec` and calling `.nonexistent_method()` on a mock without error |
-| **pytest.approx** | Wrapper for floating-point equality checks with a configurable tolerance | Essential for financial calculations where IEEE 754 rounding is unavoidable | Using `==` directly on floats, which fails on rounding differences |
-| **pytest.raises** | Context manager that asserts a specific exception is raised inside the block | Tests error paths explicitly rather than hoping exceptions don't occur | Not asserting the exception message — the wrong error type can still pass |
-| **scope** | Fixture parameter controlling lifetime: `function` (default), `class`, `module`, `session` | Wider scope avoids repeated expensive setup (e.g., DB connections) | Using `scope="session"` for mutable shared state — tests become order-dependent |
-| **hypothesis** | Property-based testing library that generates random inputs and finds edge cases | Uncovers bugs that hand-picked examples miss | Using it for every test — reserve it for pure functions with wide input domains |
-| **pandera** | Schema validation library for pandas DataFrames — defines expected dtypes, ranges, and constraints | Catches data quality regressions in pipeline outputs | Treating schema errors as test failures rather than data quality alerts in production |
-| **TDD (Test-Driven Development)** | Write a failing test first, then write the minimum code to pass it | Forces clear specification before implementation; improves design | Confusing TDD with writing tests after the fact — the sequence is the point |
-
-### What this note covers
-
-- **Testing Philosophy** — the testing pyramid (unit, integration, end-to-end), TDD cycle
-- **Unit Testing with pytest** — `pytest` basics, assertions, test discovery, and running tests
-- **Assertions and Test Organization** — `assert`, `pytest.approx`, `pytest.raises`, and test grouping
-- **Fixtures and Parametrize** — `@pytest.fixture`, `conftest.py`, `scope`, `yield`, `@pytest.mark.parametrize`
-- **Mocking and Patching** — `Mock`, `MagicMock`, `patch`, `side_effect`, `spec`, environment patching
-- **Test Patterns for Data Engineering** — pandas DataFrame testing, schema validation with pandera, hypothesis
-- **Integration Testing with Real Database** — `pyodbc`, transactional rollback fixtures, real DB tests
-- **Data Quality with Pandera** — schema checks, custom checks, error reporting
-- **API Integration Tests** — `FastAPI.TestClient`, `httpx`, endpoint assertions
-- **CI/CD — Running Tests in GitHub Actions** — workflow YAML, matrix builds, coverage upload
 
 ## Testing Philosophy
 

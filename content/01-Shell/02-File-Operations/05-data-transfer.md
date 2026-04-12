@@ -12,12 +12,130 @@ updated: 2026-04-01
 status: complete
 ---
 
-# Data Transfer — Moving and Copying Data Across Machines
+# Data Transfer
 
 > [!quote]
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
+
+> [!abstract]- Summary
+>
+> Complete reference for shell-based data transfer tools used in data engineering: local and remote file sync, GCS bucket operations, and SQL Server bulk export and import.
+>
+> **Linux file transfer tools**
+> - `rsync`: delta transfer, resume (`-P`), mirror (`--delete`), bandwidth cap (`--bwlimit`), checksum verification (`-c`), SSH push/pull, IAP tunnel relay
+> - `scp`: SSH-based one-off file copies; no resume, no delta transfer; use rsync for anything larger than a single file
+>
+> **PowerShell file transfer tools**
+> - `Robocopy`: robust directory replication with mirror (`/MIR`), restartable mode (`/Z`), multi-threaded copy (`/MT:n`), and inter-packet gap throttle (`/IPG`)
+> - Exit codes 0–7 are success; 8+ are errors — scripts must check `$LASTEXITCODE -ge 8`, not `-ne 0`
+>
+> **GCP transfer tools (Linux and PowerShell)**
+> - `gcloud compute scp`: wraps scp with automatic IAP tunneling and OS Login key management for GCE VMs
+> - `gsutil`: legacy Python-based GCS CLI; supports parallel upload (`-m`), delta sync (`rsync`), and composite upload
+> - `gcloud storage`: modern Go-based GCS CLI; resumable uploads by default, 20–94% faster than gsutil; preferred for new scripts
+>
+> **SQL Server data transfer**
+> - `bcp`: highest-throughput bulk export (`out`, `queryout`) and import (`in`); bypasses the query engine; character mode (`-c`) required for readable CSV
+> - `sqlcmd` / `Invoke-Sqlcmd`: query-based export; `sqlcmd` produces a dashes separator line on row 2 that must be stripped; `Invoke-Sqlcmd | Export-Csv` avoids it entirely
+>
+> **Operations and safety**
+> - When to use: pipeline output upload to GCS, VM-to-workstation sync, bulk SQL import/export, Windows directory replication
+> - When not to use: API-to-API pipelines, database replication (use Always On / CDC), real-time streaming, files under 1 MB
+> - Warnings: `rsync --delete` and `Robocopy /MIR` permanently remove destination-only files — always dry-run first; `gsutil rsync -d` deletes GCS objects with no recycle bin; `bcp` silently truncates data on column length mismatch and returns exit code 0 on row rejection
+> - Recommendations: use `rsync -avP` for any file over 1 GB; prefer `gcloud storage` over `gsutil` for new scripts; always verify bcp import row counts against source
+> - Troubleshooting: 5 symptoms covered (rsync full-file transfer, nested directory creation, bcp binary output, sqlcmd dashes line, gcloud scp zone error)
+
+> [!abstract]- Glossary
+>
+> **`rsync`** — Robust file synchronisation tool for Linux, macOS, and WSL.
+> - Transfers only changed bytes within files (delta algorithm), preserves all metadata, supports compression (`-z`), and resumes interrupted transfers automatically with `-P`.
+> - Core flags: `-a` (archive: recursive + metadata), `-v` (verbose), `-z` (compress), `-P` (partial + progress), `-n` (dry-run), `--delete` (mirror), `--bwlimit` (KB/s cap), `-c` (checksum), `--exclude` (glob filter).
+>
+> > [!warning] Trailing slash on source changes what is copied
+> > `rsync src/ dst/` copies the **contents** of `src` into `dst`. `rsync src dst/` copies the **directory itself**, creating `dst/src/`. Combined with `--delete`, a missing trailing slash can wipe the destination. Always dry-run with `-n` first.
+>
+> ---
+>
+> **Delta transfer** — A transfer strategy that sends only the bytes that changed between source and destination, not entire files.
+> - `rsync` implements the rsync algorithm for byte-level delta transfer; `Robocopy` detects changed files but always copies the full file.
+> - Not supported by `scp`, `gsutil cp`, or `gcloud storage cp` — those always transfer the complete file.
+>
+> > [!tip] Delta transfer impact on large incrementally-changing files
+> > A 10 GB database backup where 100 MB changed: rsync sends ~100 MB; Robocopy sends 10 GB; scp sends 10 GB. For large files that change incrementally, rsync is significantly more efficient.
+>
+> ---
+>
+> **`scp`** — Secure Copy Protocol; transfers files over SSH using the same key and agent authentication as `ssh`.
+> - No resume support, no delta transfer, no directory sync with metadata fidelity; for any transfer larger than a single file, prefer `rsync`.
+> - Flag gotcha: `-P` (uppercase) sets the remote port number; `-p` (lowercase) preserves timestamps and permissions — opposite of `ssh`'s convention.
+>
+> > [!warning] scp -P vs -p confusion
+> > On `scp`: uppercase `-P` = port number. On `ssh`: lowercase `-p` = port number. Mixing them up is one of the most common scp mistakes.
+>
+> ---
+>
+> **`gcloud compute scp`** — GCP CLI command that wraps `scp` with automatic SSH key management and IAP tunnel support for Compute Engine VMs.
+> - Required for VMs behind IAP firewalls; no manual SSH key provisioning needed; `--tunnel-through-iap` routes through Identity-Aware Proxy with no public IP.
+> - `--zone` is required when the VM is not in the default gcloud zone; omitting it causes silent failures or connects to the wrong VM.
+>
+> > [!warning] Permission errors on gcloud scp
+> > `gcloud compute scp` logs in as the OS Login user, which may lack write access to system directories. Copy to `/tmp/` first, then SSH in and `sudo mv` to the final destination.
+>
+> ---
+>
+> **`gsutil`** — Legacy Python-based GCP CLI for Google Cloud Storage bucket operations.
+> - Supports parallel transfer (`-m`), recursive copy (`-r`), delta sync (`rsync`), parallel composite upload (splits files over 150 MB into chunks), and server-side bucket-to-bucket copies.
+> - Maintenance mode: still works, but `gcloud storage` is the preferred replacement for new scripts.
+>
+> > [!danger] gsutil rsync -d deletes destination objects permanently
+> > `gsutil rsync -d` removes GCS objects not present locally. There is no GCS trash or recycle bin. Always preview with `gsutil rsync -n` (dry-run) before running with `-d`.
+>
+> ---
+>
+> **`gcloud storage`** — Modern Go-based GCP CLI replacement for `gsutil`; same semantics with 20–94% faster execution.
+> - Resumable uploads enabled by default (no configuration needed); parallel transfers built-in; identical flag names (`cp`, `rsync`, `-r`).
+> - Prefer for all new scripts and pipelines; existing `gsutil` scripts continue to work without urgency to migrate.
+>
+> > [!tip] gsutil vs gcloud storage
+> > Both work. Use `gcloud storage` for new code — it is faster, handles large file resumption automatically, and is under active development.
+>
+> ---
+>
+> **`bcp`** (Bulk Copy Program) — SQL Server command-line tool for highest-throughput bulk import and export, bypassing the query engine.
+> - Three directions: `out` (full table export, fastest), `queryout` (query result export), `in` (file import). Character mode (`-c`) is required for human-readable CSV; default is native binary (`-n`), which is not portable.
+> - Silent failure risks: truncates data without error when a CSV field exceeds the target column length; returns exit code 0 even when rows are rejected. Always check the `-e` error log and compare row counts after every import.
+>
+> > [!danger] bcp silently truncates and returns exit code 0 on rejection
+> > A `VARCHAR(255)` column receiving a 500-character field is silently truncated — the import reports success but data is damaged. Always run `SELECT MAX(LEN(column_name))` on staging data before import, and always inspect the `-e` error log.
+>
+> ---
+>
+> **`sqlcmd` / `Invoke-Sqlcmd`** — Command-line tools for executing T-SQL queries against SQL Server and redirecting output to files.
+> - `sqlcmd` (Linux/cross-platform): produces a dashes separator line on row 2 of every CSV export; must be stripped with `sed -i '2d'` before parsing. Flags for clean CSV: `-s ","` (separator), `-W` (trim trailing spaces), `-h -1` (suppress headers).
+> - `Invoke-Sqlcmd` (PowerShell): returns PowerShell objects; pipe to `Export-Csv -NoTypeInformation` for clean, properly quoted CSV with no dashes line.
+>
+> > [!tip] Prefer Invoke-Sqlcmd on PowerShell
+> > `Invoke-Sqlcmd | Export-Csv` produces a clean CSV with correct quoting and no post-processing. On Linux, `sqlcmd` output always requires `sed -i '2d'` to remove the dashes separator.
+>
+> ---
+>
+> **`Robocopy`** (Robust File Copy) — Windows built-in directory replication tool; the closest Windows equivalent to `rsync`.
+> - Supports mirroring (`/MIR` = `/E` + `/PURGE`), restartable mode (`/Z`), multi-threaded copy (`/MT:n`, up to 128 threads), logging (`/LOG`), and bandwidth throttle via inter-packet gap (`/IPG:ms`).
+> - No delta (byte-level) transfer: copies entire changed files, not just changed bytes. No trailing-slash gotcha: always copies source contents into destination.
+>
+> > [!warning] Robocopy exit codes differ from Unix conventions
+> > Codes 0–7 all indicate success or informational states; only codes 8+ are errors. Scripts checking `$LASTEXITCODE -ne 0` will treat successful copies as failures. Always check `$LASTEXITCODE -ge 8`.
+>
+> ---
+>
+> **Bandwidth limiting** — A transfer option that caps network throughput to prevent saturating shared connections during production hours.
+> - `rsync --bwlimit=<KB/s>`: precise kilobytes-per-second cap. `Robocopy /IPG:<ms>`: cruder inter-packet gap in milliseconds (`/IPG:20` ≈ 3 MB/s). `scp -l <Kbit/s>`: note the unit is kilobits, not kilobytes — 8x difference from rsync.
+> - Apply during business hours on shared network links. Not applying limits during peak hours can starve production traffic.
+>
+> > [!warning] scp -l uses Kbit/s, rsync --bwlimit uses KB/s
+> > `scp -l 50000` = ~6.1 MB/s (kilobits). `rsync --bwlimit=50000` = ~48.8 MB/s (kilobytes). Confusing the units produces transfers 8x faster or slower than intended.
 
 Copying a file on a single machine is trivial. Copying 50 GB of pipeline output from a Compute Engine VM to your workstation, synchronizing a directory tree between two servers, or uploading a database backup to Cloud Storage — that is where the tool choice and flags determine whether the transfer takes 5 minutes or 5 hours, and whether a network interruption means starting over or resuming cleanly.
 
@@ -35,12 +153,12 @@ Copying a file on a single machine is trivial. Copying 50 GB of pipeline output 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A([What are you transferring?]) --> B{Single file,\nlocal machine}
-    A --> C{Large or repeated\ndirectory, local}
-    A --> D{To / from\nGCE VM}
-    A --> E{To / from\nCloud Storage}
-    A --> F{SQL Server\ntable or query}
-    A --> G{Quick remote\nSSH copy}
+    A([What are you transferring?]) --> B{Single file,<br>local machine}
+    A --> C{Large or repeated<br>directory, local}
+    A --> D{To / from<br>GCE VM}
+    A --> E{To / from<br>Cloud Storage}
+    A --> F{SQL Server<br>table or query}
+    A --> G{Quick remote<br>SSH copy}
 
     B --> B1[cp / Copy-Item]
     C --> C1[rsync / Robocopy]
@@ -903,7 +1021,7 @@ For new scripts and pipelines, prefer `gcloud storage`. For existing scripts, `g
 
 `bcp` (bulk copy program) is the highest-throughput path between SQL Server and flat files. It bypasses the query engine and writes directly to or from the storage layer. The three core directions are `queryout` (export query result), `out` (export full table — faster than queryout), and `in` (import from file).
 
-Key flags: `-S` server,port | `-U` username | `-P` password | `-d` database | `-c` character mode (text) | `-n` native mode (binary, fastest for SQL→SQL) | `-t ","` field terminator | `-r "\n"` row terminator | `-F 2` skip header row | `-b 10000` batch size | `-e errors.log` rejected row log.
+Key flags: `-S` server,port | `-U` username | `-P` password | `-d` database | `-c` character mode (text) | `-n` native mode (binary, fastest for SQL→SQL) | `-t ","` field terminator | `-r "<br>"` row terminator | `-F 2` skip header row | `-b 10000` batch size | `-e errors.log` rejected row log.
 
 #### Export a query result to CSV
 
@@ -912,7 +1030,7 @@ Key flags: `-S` server,port | `-U` username | `-P` password | `-d` database | `-
 ```bash
 bcp "SELECT * FROM gold.scores_daily" queryout scores.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
-    -c -t "," -r "\n"
+    -c -t "," -r "<br>"
 ```
 
 #### Export a full table
@@ -926,7 +1044,7 @@ bcp "SELECT * FROM gold.scores_daily" queryout scores.csv \
 ```bash
 bcp data-pipeline.gold.scores_daily out scores.tsv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -c -t "\t" -r "\n"
+    -c -t "\t" -r "<br>"
 ```
 
 #### Import CSV into a SQL Server table
@@ -936,7 +1054,7 @@ bcp data-pipeline.gold.scores_daily out scores.tsv \
 ```bash
 bcp data-pipeline.bronze.staging_data in data.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -c -t "," -r "\n" -F 2 -b 10000 -e errors.log
+    -c -t "," -r "<br>" -F 2 -b 10000 -e errors.log
 ```
 
 > [!danger] bcp silently truncates data
@@ -983,9 +1101,9 @@ Split the source by a partition key and run multiple `bcp` processes in backgrou
 
 ```bash
 bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_europe'" queryout chunk1.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "\n" &
+    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "<br>" &
 bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_usa'" queryout chunk2.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "\n" &
+    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "<br>" &
 wait
 ```
 
@@ -1014,7 +1132,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 | `-n` | `-n` | Native binary format — fastest, SQL Server to SQL Server only |
 | `-P <pass>` | `-P $SA_PASSWORD` | Password |
 | `-q` | `-q` | Quoted identifiers — required for table names with special characters |
-| `-r <term>` | `-r "\n"` | Row terminator |
+| `-r <term>` | `-r "<br>"` | Row terminator |
 | `-S <server>` | `-S 127.0.0.1,1435` | Server and port |
 | `-t <term>` | `-t ","` | Field terminator |
 | `-T` | `-T` | Trusted connection (Windows Authentication) |
@@ -1175,7 +1293,7 @@ For transfers over 1 GB, the ability to resume after failure is more valuable th
 
 > [!warning] `bcp` default format is native binary, not CSV
 >
-> Without `-c` (character mode) and `-t` (field terminator), bcp produces a binary format that is not human-readable and not portable across SQL Server versions. Always specify `-c -t "," -r "\n"` for CSV output.
+> Without `-c` (character mode) and `-t` (field terminator), bcp produces a binary format that is not human-readable and not portable across SQL Server versions. Always specify `-c -t "," -r "<br>"` for CSV output.
 
 > [!warning] Large transfers can starve production network traffic
 >

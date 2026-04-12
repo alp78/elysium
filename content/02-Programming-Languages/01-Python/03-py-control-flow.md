@@ -16,6 +16,275 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
+> [!abstract]- Summary
+>
+> **Conditional Statements**
+> - `if`/`elif`/`else` uses indentation-based blocks; conditions need no parentheses; first matching branch wins
+> - Ternary: `value_if_true if condition else value_if_false` — reverse order vs C#; avoid nesting beyond 2 levels
+> - Truthy/falsy: `0`, `""`, `None`, `[]`, `{}` are falsy; non-empty collections and non-zero numbers are truthy
+> - Chained comparisons: `10 < x < 20` evaluates `x` once — no equivalent in C#
+> - `match`/`case` (Python 3.10+): structural pattern matching with destructuring, type checks, guard clauses (`if`), OR patterns (`|`), and wildcard `_`; bare variable names in `case` capture rather than compare
+>
+> **Loops**
+> - `for` iterates any iterable (list, range, dict, generator, string, file) — no C-style `for(;;)`
+> - `range(start, stop, step)`: lazy, stop is exclusive; `500 in range(1000)` is O(1)
+> - `enumerate(iterable, start=0)` yields `(index, value)` tuples — replaces `range(len(items))`
+> - `zip(a, b)` stops at the shortest iterable; use `itertools.zip_longest` for unequal lengths
+> - `while` repeats while condition is truthy; no `do-while` — use `while True: ... if cond: break`
+> - `for...else`: `else` block runs only when no `break` occurred — clean "not found" idiom
+>
+> **Loop Control**
+> - `break` exits the innermost loop only — no labeled break in Python
+> - `continue` skips to the next iteration of the innermost loop
+> - `pass` is a no-op placeholder required where syntax demands a block; temporary scaffolding only
+> - Walrus operator `:=` assigns and returns in one expression — eliminates read-before-loop duplication; works in `while` conditions and comprehension filters
+> - Multi-level exit: use a flag variable + `break`, or extract to a function and `return`
+>
+> **Iterators & Generators**
+> - Iterator protocol: `__iter__()` + `__next__()`; raises `StopIteration` when exhausted; single-pass
+> - `yield` turns a function into a generator; execution suspends at each `yield` and resumes on `next()`
+> - `yield from iterable` delegates to a sub-generator — replaces `for item in sub: yield item`
+> - Generator expression: `(expr for x in iter if cond)` — lazy, constant memory; omit outer parens as function arg
+> - Memory: list of 100k items ≈ 800 KB; equivalent generator object ≈ 192 bytes
+> - Infinite generators use `while True` + `yield`; always limit with `islice` or `break` — never call `list()` on them
+> - `itertools`: `chain`, `cycle`, `repeat`, `accumulate`, `product` — all lazy
+> - Flatten strategies: `chain.from_iterable` (1 level), `more_itertools.collapse` (any depth), stack-based iterative (no deps), `pd.json_normalize` (nested dicts)
+>
+> **Comprehensions & Functional Tools**
+> - List: `[expr for x in iter if cond]` — optimized at bytecode level, faster than `for` + `append`
+> - Dict: `{k: v for ...}`; Set: `{expr for ...}` — auto-deduplicates
+> - Nested comprehension: outer loop first, inner second; max 2 levels
+> - `map(func, iter)` and `filter(pred, iter)` are lazy; prefer comprehensions with lambdas for readability
+> - `reduce(func, iter, init)` for custom folds; prefer built-ins `sum`, `max`, `min`, `any`, `all` for common reductions
+> - `sorted(iter, key=func, reverse=bool)` returns a new list; Python sort is stable; multi-key: return tuple from `key`
+>
+> **Operations & Safety**
+> - Modifying a collection during iteration causes skipped items or `RuntimeError` — iterate a copy or use comprehension
+> - Generators are single-pass — re-call the function to get a fresh iterator
+> - `pass` in production `except` blocks silently swallows errors — always log at minimum
+> - `match`/`case` does not enforce exhaustiveness at compile time — missing cases fail silently; always add `case _:`
+> - Python loops are 10–100× slower than C# for CPU-bound work — use NumPy/Polars vectorization for tight loops
+
+> [!note]- Glossary
+>
+> **`if` / `elif` / `else`**
+>
+> - Conditional branching construct; Python uses indentation (not braces) to delimit blocks; `elif` replaces C#'s `else if`; conditions need no parentheses; first matching branch wins
+> - Directs program execution based on boolean conditions; the primary tool for multi-tier conditional logic
+>
+> > [!tip] Flatten with early return
+> >
+> > Replace `if cond: do_work() else: return` with `if not cond: return; do_work()` to reduce nesting levels.
+>
+> > ---
+>
+> **Ternary expression**
+>
+> - Inline conditional: `value_if_true if condition else value_if_false`; reversed order vs C#'s `condition ? true : false`; can be chained but readability degrades past 2 levels
+> - Enables single-line conditional assignment without a full `if`/`else` block
+>
+> > [!warning] Reversed operand order vs C#
+> >
+> > Python puts the true-branch first: `x if cond else y`. C# puts the condition first: `cond ? x : y`. The inversion causes subtle bugs when reading Python with C# muscle memory.
+>
+> > ---
+>
+> **`match` / `case`**
+>
+> - Structural pattern matching introduced in Python 3.10; matches value, type, sequence, mapping, and nested patterns; supports OR patterns (`|`), guard clauses (`if`), and variable binding; `_` is the wildcard catch-all
+> - Replaces long `if`/`elif` chains for multi-branch dispatch and type narrowing; reduces boilerplate for heterogeneous data structures
+>
+> > [!warning] Bare variable names capture, not compare
+> >
+> > In `case cmd:`, `cmd` captures the matched value — it does not compare against an existing variable named `cmd`. Use a literal (`case "start":`) or a guard (`case c if c == expected:`) for equality tests.
+>
+> > ---
+>
+> **`for` loop**
+>
+> - Iterates over any object implementing the iterator protocol (`__iter__`/`__next__`): lists, tuples, strings, dicts, ranges, generators, files; no index-based C-style `for(;;)`
+> - Primary construct for processing every element in a collection; the backbone of ETL record-by-record processing
+>
+> > [!warning] Never modify the iterable during iteration
+> >
+> > Adding or removing items from a list inside the loop causes skipped elements or `RuntimeError` for dicts and sets. Iterate over `items.copy()` or build a new collection with a comprehension.
+>
+> > ---
+>
+> **`while` loop**
+>
+> - Repeats the body while the condition is truthy; body may never execute if condition is falsy from the start; combine with `:=` (walrus) for read-and-test patterns; no `do-while` — use `while True: ... if cond: break`
+> - Used when the number of iterations is not known in advance: polling, retry logic, input validation
+>
+> > [!warning] Condition must become falsy
+> >
+> > Forgetting to update the loop variable creates an infinite loop. Always ensure the condition progresses toward falsy, or include an explicit `break` with a timeout counter.
+>
+> > ---
+>
+> **`range()`**
+>
+> - Lazy integer sequence generator: `range(start, stop, step)`; `stop` is exclusive; negative step for countdown; membership test `n in range(...)` is O(1)
+> - Generates index sequences for counted loops, replaces C-style `for(i=0; i<n; i++)`
+>
+> > [!tip] Stop is exclusive — remember the off-by-one
+> >
+> > `range(5)` produces 0, 1, 2, 3, 4. To include 5, write `range(6)` or `range(1, 6)`.
+>
+> > ---
+>
+> **`enumerate()`**
+>
+> - Wraps an iterable to yield `(index, value)` tuples; optional `start` parameter shifts the index base; lazy
+> - Replaces manual counter variables and `range(len(items))` patterns; cleaner and immune to off-by-one errors
+>
+> > [!tip] Always unpack the tuple
+> >
+> > Use `for i, val in enumerate(items):` — not `for pair in enumerate(items): pair[0]`. Destructuring keeps the code readable and avoids tuple indexing noise.
+>
+> > ---
+>
+> **`zip()`**
+>
+> - Iterates over multiple iterables in parallel, yielding tuples of corresponding elements; stops at the shortest iterable; lazy; use `itertools.zip_longest(fillvalue=None)` to pad unequal lengths
+> - Pairs corresponding elements from parallel sequences without index arithmetic
+>
+> > [!warning] Silent truncation on unequal lengths
+> >
+> > `zip([1,2,3], [10,20])` silently drops the `3`. If equal-length input is not guaranteed, use `itertools.zip_longest` or assert lengths match before zipping.
+>
+> > ---
+>
+> **`break`**
+>
+> - Exits the innermost enclosing loop immediately; does not affect outer loops; the `for...else` `else` block is skipped when `break` fires; Python has no labeled break
+> - Stops early when a search condition is met or a timeout is reached, avoiding unnecessary iterations
+>
+> > [!tip] Multi-level exit via function return
+> >
+> > Wrap nested loops in a function and use `return` to exit all levels at once — cleaner than flag variables.
+>
+> > ---
+>
+> **`continue`**
+>
+> - Skips the remainder of the current loop body and jumps to the next iteration of the innermost loop
+> - Filters specific items inline without restructuring the loop body with nested `if`/`else` blocks
+>
+> > [!tip] Prefer filtering the iterable
+> >
+> > When skipping many items, replace `if cond: continue` with a filtered comprehension or `filter()` before the loop — the intent is clearer.
+>
+> > ---
+>
+> **`pass`**
+>
+> - No-op statement; required where Python syntax expects an indented block but no action is needed: empty functions, classes, `except` blocks, and loop stubs during development
+> - Allows syntactically complete but intentionally empty blocks — temporary scaffolding, not permanent code
+>
+> > [!warning] Never use `pass` in production `except` blocks
+> >
+> > `except Exception: pass` silently swallows all errors. At minimum log: `except Exception as e: logger.warning("Unhandled: %s", e)`.
+>
+> > ---
+>
+> **`for...else`**
+>
+> - The `else` block appended to a `for` or `while` loop runs only if the loop completed without a `break`; the name is counterintuitive — think of it as "no break occurred"
+> - Clean idiom for "search completed without finding a match"; eliminates a separate boolean flag variable
+>
+> > [!warning] `else` does not mean the loop body was falsy
+> >
+> > `for...else` is not about the truth value of the loop body. The `else` block runs on normal completion — suppress it only with `break`.
+>
+> > ---
+>
+> **Iterator protocol**
+>
+> - An object is an iterator if it implements `__iter__(self)` returning `self` and `__next__(self)` raising `StopIteration` when exhausted; iterators are single-pass — they cannot be rewound
+> - Makes any class usable in `for` loops, `list()`, `zip()`, and all iteration contexts; enables custom lazy traversal logic
+>
+> > [!tip] Distinguish iterables from iterators
+> >
+> > A list is *iterable* (has `__iter__`) but not an *iterator* (no `__next__`). Calling `iter(my_list)` returns a fresh list iterator. A generator is both — it is its own iterator.
+>
+> > ---
+>
+> **Generator / `yield`**
+>
+> - A function containing `yield` becomes a generator function; calling it returns a generator iterator without executing any body code; each `next()` call resumes execution until the next `yield`; state is preserved between calls; `StopIteration` signals exhaustion; single-pass
+> - Enables memory-efficient lazy pipelines for large or infinite sequences — only one value is held in memory at a time
+>
+> > [!warning] Calling a generator function returns the object, not the first value
+> >
+> > `gen = countdown(5)` does not start execution. The body runs only when `next(gen)` or a `for` loop consumes it.
+>
+> > ---
+>
+> **`yield from`**
+>
+> - Delegates iteration to a sub-generator or iterable in a single expression; equivalent to `for item in sub: yield item` but also passes `.send()` / `.throw()` calls through; Python's equivalent of C#'s `foreach (var x in sub) yield return x`
+> - Composes generators and enables recursive traversal of nested structures without manual forwarding loops
+>
+> > [!warning] `yield from` on a string yields individual characters
+> >
+> > `yield from "hello"` yields `'h'`, `'e'`, `'l'`, `'l'`, `'o'` — not the string itself. Guard with `isinstance(item, str)` in recursive flatten functions.
+>
+> > ---
+>
+> **Generator expression**
+>
+> - `(expr for x in iterable if condition)` — lazy comprehension producing values on demand; as a function argument, outer parentheses may be omitted: `sum(x**2 for x in range(n))`; single-pass
+> - Memory-efficient alternative to list comprehension when the full collection is not needed — eliminates upfront allocation
+>
+> > [!tip] Use generators when you only need to iterate once
+> >
+> > If you need indexing, `len()`, or multiple passes, use a list. If you only need to iterate once (e.g., `sum`, `max`, pipeline), a generator saves memory with no speed penalty for large inputs.
+>
+> > ---
+>
+> **List comprehension**
+>
+> - `[expr for x in iterable if condition]` — creates a new list by transforming and optionally filtering; optimized at bytecode level; faster than equivalent `for` + `append`; supports nesting (outer loop first)
+> - Concise, readable collection construction; the idiomatic replacement for `for` + `append` patterns
+>
+> > [!warning] Two-level nesting maximum
+> >
+> > Beyond 2 `for` clauses the comprehension becomes harder to read than explicit loops. Extract inner logic into a named function.
+>
+> > ---
+>
+> **Dict / Set comprehension**
+>
+> - Dict: `{k: v for item in iterable if cond}` — builds a dict declaratively; Set: `{expr for item in iterable}` — builds a deduplicated set; both support `if` filtering; colon distinguishes dict from set
+> - Declarative construction of dicts and sets; replaces `for` + `d[k] = v` and `for` + `s.add(x)` patterns
+>
+> > [!warning] Duplicate keys silently overwrite
+> >
+> > In a dict comprehension, if two iterations produce the same key, the last value wins without any error. Ensure keys are unique or handle collisions explicitly.
+>
+> > ---
+>
+> **Walrus operator (`:=`)**
+>
+> - Assignment expression: `(var := expr)` assigns the value and returns it in the same expression; valid in `while` conditions, `if` conditions, and comprehension filters; introduced in Python 3.8
+> - Eliminates the "compute before the loop, test inside the loop" duplication common in `while` polling patterns
+>
+> > [!tip] Use sparingly — simple assignment is clearer
+> >
+> > Walrus is most valuable in `while (line := f.readline()):` and comprehension filter reuse: `[y for x in data if (y := f(x)) > 0]`. Avoid it in straightforward `if` statements where a regular assignment reads more clearly.
+>
+> > ---
+>
+> **`itertools`**
+>
+> - Standard-library module providing lazy iterator building blocks: `chain` (join iterables end-to-end), `cycle` (infinite repetition), `repeat` (same value *n* times), `accumulate` (running totals), `product` (Cartesian product), `islice` (take first *n* from any iterator), `zip_longest` (zip with padding)
+> - Composable, memory-efficient primitives for building data pipelines without materializing intermediate collections
+>
+> > [!danger] Never call `list()` on infinite itertools iterators
+> >
+> > `list(cycle([1,2,3]))` hangs indefinitely. Always bound infinite iterators with `islice` or a `break` condition.
+
 This note covers every mechanism Python provides for directing program execution: conditional branching (`if`/`elif`/`else`, ternary, `match`/`case`), loops (`for`, `while`), loop control (`break`, `continue`, `pass`, `for...else`), iterators and generators (`yield`, `yield from`, generator expressions), and comprehensions as functional alternatives to imperative loops.
 
 ### Key terms used in this note
@@ -71,12 +340,12 @@ flowchart TD
     A --> C["3+ values or patterns"]
     B --> D["if / elif / else"]
     B --> E["Ternary expression"]
-    C --> F{"Structural\npattern matching?"}
+    C --> F{"Structural<br>pattern matching?"}
     F -->|Yes| G["match / case"]
     F -->|No| D
-    D --> H["Use for side effects,\nmultiple statements"]
-    E --> I["Use for inline\nvalue selection"]
-    G --> J["Destructuring, type checks,\nguards, OR patterns"]
+    D --> H["Use for side effects,<br>multiple statements"]
+    E --> I["Use for inline<br>value selection"]
+    G --> J["Destructuring, type checks,<br>guards, OR patterns"]
 ```
 
 ### Branching with if / elif / else
@@ -323,11 +592,11 @@ flowchart TD
     B --> F["for item in iterable"]
     C --> G["for i in range(...)"]
     D --> H["while condition"]
-    E --> I["Comprehension or\nmap/filter"]
-    F --> J["Preferred: direct,\nno index needed"]
-    G --> K["Use range() for\ncounted loops"]
-    H --> L["Polling, retry,\ninput validation"]
-    I --> M["Lazy, composable,\nvalue-returning"]
+    E --> I["Comprehension or<br>map/filter"]
+    F --> J["Preferred: direct,<br>no index needed"]
+    G --> K["Use range() for<br>counted loops"]
+    H --> L["Polling, retry,<br>input validation"]
+    I --> M["Lazy, composable,<br>value-returning"]
 ```
 
 ### for loop and iterables

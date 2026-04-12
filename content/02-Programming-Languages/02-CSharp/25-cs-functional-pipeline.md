@@ -8,7 +8,7 @@ updated: 2026-03-30
 status: complete
 ---
 
-# 25. Functional Data Pipeline — C# / .NET
+# Functional Pipeline - C#
 
 **A production-grade data pipeline architecture combining five principles:**
 functional core/imperative shell, contract-first validation, quality gates,
@@ -30,24 +30,265 @@ LINQ transforms → Silver → LINQ aggregation → Gold → Parquet → HttpLis
 >
 > — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
+> [!abstract]- Summary
+>
+> **Architecture & design principles (§ intro)**
+> - Functional core / imperative shell: pure static transforms + I/O-only orchestration shell
+> - Two orthogonal trustworthiness axes: structural integrity (vertical) and semantic integrity (horizontal)
+> - Medallion architecture: Bronze → Silver → Gold with append-only Bronze and schema-on-write contracts
+>
+> **Records, contracts & validation (§ 2)**
+> - Typed C# `record` DTOs at every layer boundary: `RawOhlcv`, `CleanOhlcv`, `DailySummary`, `SymbolProfile`
+> - FluentValidation `AbstractValidator<T>` enforces market invariants (High ≥ Low, return in [−50%, +50%])
+> - `ColumnContext` registries attach unit, formula, null semantics, and source columns to every derived field
+> - `BusinessContext` / `TemporalContext` / `StageContext` / `RunContext` carry semantic metadata cross-stage
+>
+> **Lineage & provenance (§ 3)**
+> - `GenerateBatchId()` stamps every row with a UUID; `ComputeHash()` produces a 16-char SHA-256 prefix
+> - `StartStage()` / `EndStage()` record input/output row counts and hash per stage into `StageLineage`
+>
+> **SQL Server schema (§ 4)**
+> - Medallion DDL: `bronze_ohlcv`, `silver_ohlcv`, `gold_daily_summary`, `gold_symbol_profile`
+> - Quarantine table, lineage tables, and covering indexes for incremental ingestion guards
+>
+> **Dimension tables (§ 5)**
+> - SCD Type 2 `dim_symbol` with effective-date rows; `dim_trading_calendar` populated via exchange map
+>
+> **Bronze layer (§ 6)**
+> - Polly v8 `ResiliencePipelineBuilder` wraps `HttpClient` Yahoo Finance download with exponential back-off
+> - Incremental ingestion: `WHERE NOT EXISTS` guard prevents duplicate-key inserts; `SqlBulkCopy` for batch writes
+>
+> **Silver layer (§ 7)**
+> - LINQ enrichment: `daily_return`, `intraday_range`, `sma_20` (20-day rolling mean)
+> - FluentValidation quality gate before SQL write; rejections routed to `bronze_quarantine`
+>
+> **Gold layer (§ 8)**
+> - LINQ aggregations: `DailySummary` (cross-sectional per date) and `SymbolProfile` (full-history per symbol)
+> - `max_drawdown` computed as min(cumulative return − running max) per symbol
+>
+> **Parquet export (§ 9)**
+> - `ParquetSharp` pre-materializes Gold to disk; serving layer reads file, not SQL
+>
+> **Lineage review (§ 10)**
+> - Dapper queries: batch summary, stage drill-down, tamper-detection hash comparison, quarantine review
+>
+> **HttpListener serving layer (§ 11)**
+> - Minimal HTTP API over pre-serialized JSON; `http://localhost:8080/` prefixes for local use only
+>
+> **Pipeline visualization (§ 12)**
+> - Plotly.NET charts: daily return distribution, volatility ranking, volume trend, quality metrics dashboard
+>
+> **Audit (§ 13)**
+> - End-to-end dispute resolution: batch trace → hash verify → Silver drill-down → Bronze source confirm
+
+> [!note]- Glossary
+>
+> **Medallion architecture**
+> - A three-tier storage pattern: Bronze (raw landing), Silver (cleaned/enriched), Gold (aggregated mart). Each tier has an append-only write policy so upstream data is never overwritten.
+> - Failures in one tier are isolated — a bad Silver transform cannot corrupt Bronze; reprocessing replays from Bronze with the corrected logic.
+>
+> > [!warning] Bronze as truncate-and-reload
+> > Truncating Bronze on each run destroys the append-only audit trail and breaks replay. Bronze must be immutable; use an incremental `WHERE NOT EXISTS` guard on insert.
+>
+> > ---
+>
+> **Functional core / imperative shell**
+> - Pure static methods perform all transforms (testable in isolation, no I/O); the outer orchestration layer owns all database, HTTP, and file system calls.
+> - Business logic in the core can be unit-tested without SQL Server, `HttpClient`, or file system dependencies.
+>
+> > [!warning] I/O inside transform methods
+> > Embedding `SqlConnection.Execute()` inside a transform method makes it an integration test target only — it cannot be unit-tested without a live database.
+>
+> > ---
+>
+> **`record` (C#)**
+> - An immutable reference type with compiler-generated value-based equality and a `with` expression for non-destructive field updates.
+> - Used as the DTO type across all layer boundaries; `init`-only setters prevent post-construction mutation in transform chains.
+>
+> > [!warning] Mutable `class` DTOs
+> > A `class` with public setters allows any method in the transform chain to silently overwrite a field. Use `record` so each stage produces a new instance via `with`, leaving the source object untouched.
+>
+> > ---
+>
+> **Schema-on-write (Design by Contract)**
+> - Data is validated against a typed contract at ingestion time, before any write to persistent storage. Bad rows are rejected at the boundary, not discovered downstream.
+> - Contrast with schema-on-read (data lake pattern): bad data enters freely and surfaces months later in analytics results.
+>
+> > [!info] Origin
+> > The term derives from Bertrand Meyer's Design by Contract (1986). In this pipeline the contract is a C# `record` + `AbstractValidator<T>` — it is version-controlled, testable, and enforced at runtime.
+>
+> > ---
+>
+> **FluentValidation**
+> - A .NET library that defines validation rules as composable `AbstractValidator<T>` subclasses with full cross-field, conditional, and custom-message support.
+> - Enforces market invariants (High ≥ Low), business constraints (return in [−50%, +50%]), and referential requirements (`batch_id` not empty) at each layer boundary before writing to SQL Server.
+>
+> > [!warning] `DataAnnotations`-only validation
+> > Attribute-based `DataAnnotations` do not support cross-field rules (e.g., High ≥ Low), conditional logic, or custom error messages. Use FluentValidation for any non-trivial production gate.
+>
+> > ---
+>
+> **Polly**
+> - A .NET resilience library providing retry, circuit breaker, timeout, and fallback policies via a composable builder API.
+> - Wraps `HttpClient` Yahoo Finance downloads and SQL bulk-write operations to handle transient failures without manual retry loops.
+>
+> > [!warning] `Thread.Sleep()` retry pattern
+> > Sleeping in a `catch` block blocks the thread, cannot implement exponential back-off, and provides no circuit-breaking capability. Use `ResiliencePipelineBuilder` with `AddRetry` and an exponential delay.
+>
+> > ---
+>
+> **`ResiliencePipelineBuilder` (Polly v8)**
+> - The Polly v8 API for composing resilience behaviors; replaces the `Policy.Handle<>()...Build()` builder from Polly v7. Uses `new ResiliencePipelineBuilder<T>().AddRetry(...).Build()`.
+> - Configures retry with exponential back-off and `ShouldHandle` predicates that distinguish transient (`HttpRequestException`, SQL deadlock 1205) from permanent (`JsonException`, `ValidationException`) failures.
+>
+> > [!warning] Mixing Polly v7 and v8 APIs
+> > The two versions have incompatible builder syntax. A project that references both compiles but throws at runtime. Standardize on Polly v8 for all new code and migrate v7 policies incrementally.
+>
+> > ---
+>
+> **SHA-256 tamper detection**
+> - A cryptographic hash of a row's sorted CSV payload stored alongside the data at write time; recomputing the hash on demand and comparing detects any unauthorized field modification.
+> - `ComputeHash()` serializes a `DataTable` to sorted CSV bytes (column-name-ordered, row-sorted) and returns the first 16 hex characters of the SHA-256 digest for compact storage.
+>
+> > [!warning] Partial-field hashing
+> > Hashing only a subset of fields leaves unincluded fields modifiable without changing the hash. Hash the full row payload; normalize strings (`.Trim().ToLowerInvariant()`) before hashing to prevent false mismatches from whitespace or encoding differences.
+>
+> > ---
+>
+> **Lineage tracking**
+> - Recording metadata about every pipeline execution — source, row counts, run IDs, hash, timestamps — in a dedicated SQL audit table queryable at any future point.
+> - Enables forensic queries that reconstruct exactly which execution produced any downstream number; answers "was the source data correct?", "did the transform produce the right number?", and "was the data modified post-ingestion?" with three SQL queries.
+>
+> > [!warning] Log-file-only audit trail
+> > Application logs are not queryable and rotate off disk. Store lineage in a SQL table so any disputed value can be traced back to its run ID, row counts, and hash without manual log archaeology.
+>
+> > ---
+>
+> **`StageLineage`**
+> - An immutable `record` capturing what a single pipeline stage produced: `InputRows`, `OutputRows`, `RowsRejected`, `OutputHash` (SHA-256), `StartedAt`, `CompletedAt`, and computed `DurationMs`.
+> - Written to the SQL lineage table at the end of each stage; referenced by `StageContext.UpstreamStages` so downstream stages carry the full execution chain.
+>
+> > [!info] Distinction from `StageContext`
+> > `StageLineage` is the after-the-fact audit record. `StageContext` is the live metadata object created at stage start and propagated forward via `ForNextStage()`. Both coexist — one for auditability, one for propagation.
+>
+> > ---
+>
+> **`BatchId`**
+> - A `Guid.NewGuid()` UUID generated once per pipeline run and stamped on every row in Bronze, Silver, and Gold.
+> - Acts as the foreign-key thread linking all rows across all tables to a single execution; the primary key for forensic queries like `WHERE batch_id = @runId`.
+>
+> > [!info] Granularity choice
+> > One `BatchId` per full pipeline run (not per stage) means a single join on `batch_id` spans all layers. If partial-stage reruns are needed, add a `stage_id` column alongside `batch_id`.
+>
+> > ---
+>
+> **`ColumnContext`**
+> - A `record` attaching semantic metadata to a single column: `Description`, `Unit`, `Computation` (formula), `SourceColumns` (upstream dependencies), `ValidRange`, `NullSemantics`, `IsBusinessKey`, `IsDerived`.
+> - Turns opaque numbers self-describing: `volatility: 0.0187` becomes "daily σ of close-to-close returns, decimal_ratio, annualize with √252 → 29.7%".
+>
+> > [!info] Export as JSON Schema
+> > `ExportDataContracts()` serializes each layer's `ColumnContext` registry as `x-column-context` inside a JSON Schema file. Any downstream consumer — API, AI agent, analyst — reads the contract without consulting the pipeline author.
+>
+> > ---
+>
+> **`BusinessContext`**
+> - A `record` capturing why a pipeline run was triggered: `Trigger` (scheduled / manual / backfill / reprocess / test), `IsCorrection`, `BusinessDate`, `Reason`, `AffectedSymbols`.
+> - Distinguishes routine runs from corrections; two batches covering the same date range are unambiguous — one has `trigger=scheduled`, the other `trigger=reprocess, is_correction=true`.
+>
+> > [!warning] Missing business context
+> > Without `BusinessContext`, two executions over the same date range are indistinguishable in the lineage table. A correction that replaces wrong data looks identical to a routine run.
+>
+> > ---
+>
+> **`TemporalContext`**
+> - A `record` separating `AsOfDate` (the business date the data represents, typically T−1) from `KnowledgeDate` (when the pipeline ingested it, auto-set to `DateTime.UtcNow`).
+> - Critical for backfills: loading 2024 data in 2026 sets `as_of_date=2024-*`, `knowledge_date=2026-*`, making the lag explicit in every lineage query.
+>
+> > [!info] Bi-temporal model
+> > `AsOfDate` = "what date is this data FOR". `KnowledgeDate` = "when did we learn about it". Without the split, a backfill looks identical to a normal run and late-arriving data cannot be detected.
+>
+> > ---
+>
+> **`StageContext`**
+> - A mutable class created at stage start and carried forward via `ForNextStage()`, accumulating `DataWarnings`, `UpstreamStages`, `ColumnCtx`, `BizContext`, and `TempContext` across every stage.
+> - By Gold, the context contains the full warning chain from every upstream stage — a single object that answers "what happened across the entire pipeline" for any given row.
+>
+> > [!info] Mutable by design
+> > Unlike the immutable `record` DTOs, `StageContext` is a `class` with mutable properties because it accumulates state across the pipeline. `ForNextStage()` creates a shallow copy to prevent stages from mutating each other's warning lists.
+>
+> > ---
+>
+> **`RunContext`**
+> - A class aggregating the full execution envelope for one pipeline run: `BatchId`, `StartedAt`, `CompletedAt`, `Symbols`, `DateRange`, all `StageLineage` entries, `Status`, `BizContext`, `TempContext`, `DataWarnings`, `ContractVersion`.
+> - Persisted as a JSON artifact per run alongside the data exports; the single artifact needed to reconstruct what any specific execution produced.
+>
+> > [!info] Audit use
+> > Serialize `RunContext` to `lineage/{batch_id}_run_context.json` at pipeline completion. Any downstream dispute starts here: open the artifact, read `Status`, `DataWarnings`, and the stage row counts before touching SQL.
+>
+> > ---
+>
+> **Dapper**
+> - A micro-ORM that maps SQL query results to C# objects via reflection, without the overhead or abstraction of Entity Framework Core.
+> - Used for all parameterized reads and lineage inserts; faster than EF Core for read-heavy pipelines because it executes raw SQL with named `@param` bindings and avoids the N+1 pattern.
+>
+> > [!warning] String-concatenated Dapper queries
+> > Dapper executes whatever SQL string you provide. Building queries with `$"... WHERE symbol = '{symbol}'"` is exploitable if any input comes from user-controlled or untrusted sources. Always use `new { symbol }` parameter objects.
+>
+> > ---
+>
+> **SCD Type 2**
+> - Slowly Changing Dimension Type 2: inserts a new row with `effective_from` / `effective_to` dates rather than overwriting the old record, preserving the full history of changes.
+> - Preserves historical accuracy for symbol metadata (name changes, sector reclassification) so index calculations using a historical date retrieve the value that was current on that date.
+>
+> > [!warning] UPDATE on a dimension row
+> > Overwriting a dimension row with `UPDATE` destroys the historical record. Any calculation that used the old value is now unreproducible. Use SCD2 insert-only pattern with `effective_to = '9999-12-31'` for the active row.
+>
+> > ---
+>
+> **Parquet / `ParquetSharp`**
+> - Parquet is a columnar storage format with predicate pushdown and efficient compression; `ParquetSharp` is its C# binding for reading and writing Parquet files.
+> - Pre-materializes Gold aggregations to disk so the `HttpListener` API layer reads the file once at startup rather than issuing SQL queries per request.
+>
+> > [!warning] Default row group sizing
+> > Writing Parquet without tuning row group size can produce files with poor predicate pushdown performance for large datasets. Set row group size explicitly based on the expected query filter cardinality.
+>
+> > ---
+>
+> **SMA-20 (`sma_20`)**
+> - 20-trading-day simple moving average of the adjusted close price; `null` for the first 19 rows of each symbol's series (`NullSemantics: "insufficient_data"`).
+> - The 19 expected nulls per symbol are documented in `ColumnContext` and verified in the lineage review audit step; any null count above 19 indicates a data gap, not a warm-up artifact.
+>
+> > [!info] Annualization reference
+> > 20 trading days ≈ one calendar month (252 trading days / 12). The `sma_20` null warm-up period of 19 rows is exactly `window_size − 1`, consistent across all rolling-window indicators in the Silver layer.
+>
+> > ---
+>
+> **`HttpListener`**
+> - A built-in .NET class that hosts a minimal HTTP server by binding to a URI prefix, with no dependency on ASP.NET Core or any external framework.
+> - Used in the serving layer to expose pre-materialized JSON endpoints over `http://localhost:8080/`; the pipeline pre-serializes all Gold rows once at startup so each request is a string copy, not a SQL query.
+>
+> > [!warning] `HttpListener` in production
+> > `HttpListener` lacks TLS termination, authentication middleware, rate limiting, and URL routing beyond prefix matching. Never bind it to `http://+:8080/` on a public-facing host. Use ASP.NET Core Minimal API for production serving.
+>
+> > ---
+>
+> **`SqlBulkCopy`**
+> - A .NET class that uses the TDS bulk-load protocol to insert large batches of rows in a single server round-trip, bypassing the per-row overhead of individual `INSERT` statements.
+> - Typically 10–50× faster than Dapper `Execute` with `INSERT` for batches above ~1,000 rows; used for Bronze landing writes where the full Yahoo Finance download arrives as one batch.
+>
+> > [!info] When to switch from Dapper to `SqlBulkCopy`
+> > For batches up to ~500 rows, Dapper `Execute` with a list parameter is sufficient. Above 1,000 rows, switch to `SqlBulkCopy` with `BatchSize = 5000` and `BulkCopyTimeout = 120` to stay within SQL Server's lock escalation threshold.
+>
+> > ---
+>
+> **`Plotly.NET`**
+> - A .NET binding for the Plotly JavaScript charting library, available via `Plotly.NET.CSharp` for C# fluent API usage in Jupyter notebooks with `Plotly.NET.Interactive`.
+> - Used in § 12 to render daily return distributions, volatility rankings, volume trends, and the quality metrics dashboard directly in the notebook output cell.
+>
+> > [!info] Notebook rendering
+> > `Plotly.NET.Interactive` registers a .NET Interactive formatter that serializes charts to HTML and injects them into Jupyter output cells. No browser launch or file export is required for in-notebook display.
+
 This note implements an end-to-end functional data pipeline in C#/.NET using FluentValidation, Dapper, LINQ transforms, and HttpListener with medallion architecture, lineage tracking, and SHA-256 tamper detection.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Medallion architecture** | A three-tier data storage pattern: Bronze (raw landing), Silver (cleaned/enriched), Gold (aggregated/mart) | Structures the pipeline into quality layers so failures in one tier never corrupt upstream data | Treating Bronze as a staging area that is truncated on each run — Bronze must be append-only and immutable for replay and audit |
-| **Functional core / imperative shell** | A design pattern where pure static methods perform all transforms and I/O is confined to the outer orchestration layer | Keeps business logic testable in isolation, without SQL Server, HttpClient, or file system dependencies | Mixing `SqlConnection.Execute()` calls inside transform methods — they become integration-only and cannot be unit-tested |
-| **`record` (C#)** | An immutable reference type with value-based equality and a compiler-generated `with` expression for non-destructive updates | Used as the DTO type across all layer boundaries — immutability prevents accidental field mutation in transform chains | Using `class` with public setters for DTOs — mutable DTOs allow silent state corruption when the same object is passed through multiple stages |
-| **FluentValidation** | A .NET library that defines validation rules as composable `AbstractValidator<T>` subclasses | Enforces type and business constraints at each layer boundary before writing to SQL Server | Using `DataAnnotations` attributes only — they do not support cross-field rules, conditional logic, or custom error messages needed for production quality gates |
-| **Polly** | A .NET resilience library providing retry, circuit breaker, timeout, and fallback policies | Wraps `HttpClient` data download and SQL write operations to handle transient failures without manual retry loops | Using `Thread.Sleep()` in a `catch` block — it blocks the thread and cannot implement exponential back-off or circuit breaking |
-| **SHA-256 tamper detection** | A cryptographic hash of a row's payload stored alongside the data; recomputing and comparing detects any unauthorized modification | Provides data provenance guarantees for regulated pipelines where source record auditability is required | Hashing only a subset of fields — any unincluded field can be modified without the hash changing |
-| **Lineage tracking** | Recording metadata about every pipeline execution — source, row counts, run IDs, timestamps — in a dedicated audit table | Enables forensic queries that reconstruct exactly which execution produced any downstream number | Relying on application logs only — log files are not queryable and rotate off disk, breaking the audit trail |
-| **Dapper** | A micro-ORM that maps SQL query results to C# objects using reflection without a full ORM overhead | Used for all parameterized reads and bulk inserts — faster than EF Core for read-heavy pipelines and avoids N+1 query patterns | Using string concatenation to build SQL queries with Dapper — always use parameterized queries (`@param`) to prevent SQL injection |
-| **SCD Type 2** | Slowly Changing Dimension Type 2 — inserts a new row with effective dates rather than overwriting the old record | Preserves historical accuracy for symbol metadata (name changes, sector reclassification) in index calculations | Using `UPDATE` on a dimension row — destroys the audit trail of what the record said on any historical calculation date |
-| **Parquet / `ParquetSharp`** | A columnar storage format; `ParquetSharp` is its C# binding | Pre-materializes Gold aggregations to disk so the HttpListener API layer reads Parquet instead of querying SQL at request time | Writing Parquet without row group size tuning — default settings can produce files with poor predicate pushdown performance for large datasets |
-| **`HttpListener`** | A built-in .NET class that hosts a minimal HTTP server without requiring ASP.NET Core | Serves pre-materialized Parquet data as JSON endpoints in the pipeline's serving layer with no external framework dependency | Using `HttpListener` in production facing the public internet — it lacks TLS termination, authentication middleware, and routing; use ASP.NET Core Minimal API for production |
-| **`ResilienceStrategy` (Polly v8)** | The Polly v8 API for composing resilience behaviors; replaces the `Policy` builder from Polly v7 | Configures retry with exponential back-off for `HttpClient` and SQL write operations | Mixing Polly v7 and v8 APIs in the same project — the two versions have incompatible builder syntax |
 
 ### What this note covers
 

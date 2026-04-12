@@ -12,12 +12,107 @@ updated: 2026-04-05
 status: complete
 ---
 
-# awk Data Processing Reference
+# awk — Data Processing
 
 > [!quote]
 > "The goal was to see how much of programming we could stuff into one line."
 >
 > — **Brian Kernighan** (co-creator of awk)
+
+> [!abstract]- Summary
+> awk (also `gawk`, `mawk`) is a domain-specific pattern-action language for column-oriented text processing, processing input record by record and splitting each record into named fields.
+>
+> - **How it works** — record/field model, field separator (`FS`/`-F`), `BEGIN`/`END` blocks, pattern-action evaluation
+> - **Field extraction and formatting** — `$1`, `$NF`, `$(NF-1)`, `printf` width/precision specifiers, `OFS`
+> - **Filtering and conditions** — regex patterns, comparison operators, compound conditions, range patterns
+> - **Control flow** — `if/else`, `for`, `while`, `next`, `nextfile`, `exit`
+> - **Data transformation** — aggregation, deduplication, reformatting, delimiter conversion, pivoting
+> - **Data engineering scenarios** — CSV processing, log parsing, data quality checks, running totals, group-by
+> - **Advanced patterns** — user-defined functions, multi-file processing, output redirection, `getline`, `OFMT`
+> - **Processing model diagram** — visual overview of the awk execution cycle
+> - **PowerShell equivalents** — `Import-Csv`, `Select-Object`, `Where-Object`, `Group-Object`, `Measure-Object`
+> - **Quick reference card** — built-in variables, string functions, arithmetic functions
+> - **When to use awk vs sed** — decision guidance, warnings, recommendations, troubleshooting
+
+> [!note]- Glossary
+> **`awk`** — a pattern-action language for processing structured text, named after creators Aho, Weinberger, and Kernighan. Reads input line by line, splits each line into fields by a delimiter, and applies pattern-action rules.
+> - The standard shell tool for field-based data processing: CSV parsing, log analysis, report generation, data quality checks.
+> - Common variants: `gawk` (GNU awk, most Linux distros), `mawk` (faster, fewer features), BSD awk (macOS default, limited regex).
+>
+> > [!tip] Platform
+> > On Linux, `gawk` is usually the default. On macOS, `/usr/bin/awk` is BSD awk — install `gawk` via Homebrew for full compatibility. On Windows, use PowerShell natively or install `gawk` via `choco install gawk`.
+>
+> > ---
+>
+> **Field** (`$1`, `$2`, …, `$NF`) — awk splits each input line into fields separated by the field separator. `$1` is the first field, `$2` the second, `$NF` the last, `$0` the entire line.
+> - Field references are the core mechanism for extracting, filtering, and transforming columnar data.
+> - `$0` is the whole record, not the command name. `$NF` is the last field (NF = number of fields), not a fixed position.
+>
+> > [!tip] Platform
+> > In PowerShell, fields are named object properties accessed by dot notation (`$row.FieldName`) after `Import-Csv` — no positional index needed.
+>
+> > ---
+>
+> **Field separator** (`-F` / `FS`) — the delimiter awk uses to split each line into fields. Default is whitespace (spaces and tabs). Set with `-F","` on the command line or `FS=","` in a `BEGIN` block.
+> - Must be set correctly for CSV, TSV, pipe-delimited, and other structured formats.
+> - Not setting `-F` for CSV input causes awk to default to whitespace splitting, breaking comma-separated fields that contain spaces.
+>
+> > [!warning] Common mistake
+> > `FS` set in a `BEGIN` block takes effect from the first record. Setting it mid-program only applies to the next record read.
+>
+> > ---
+>
+> **`BEGIN` / `END` blocks** — `BEGIN { ... }` runs once before the first record is read; `END { ... }` runs once after the last record is processed.
+> - `BEGIN` is used to set `FS`, `OFS`, print headers, and initialize counters. `END` is used to print summaries, totals, and closing reports.
+> - `$1` and `NR` are undefined in a `BEGIN` block — no input has been read yet.
+>
+> > [!tip] Platform
+> > PowerShell achieves the same with a setup block before the pipeline and a final `| ForEach-Object -End { ... }` clause. No direct equivalent syntax exists.
+>
+> > ---
+>
+> **`NR`** (Number of Records) — a built-in variable holding the current line number (1-indexed), incrementing across all input files.
+> - Used for skipping headers (`NR > 1`), printing line numbers, and progress reporting.
+> - `NR` counts globally across all files. Use `FNR` (file-relative record number) when processing multiple files to reset the count per file.
+>
+> > [!tip] Platform
+> > PowerShell tracks row position via `[array]::IndexOf()` or a manual counter variable — there is no built-in `NR` equivalent.
+>
+> > ---
+>
+> **`NF`** (Number of Fields) — a built-in variable holding the count of fields in the current record.
+> - Used for validating record structure: `NF != expected_count` detects malformed rows. Also referenced as `$NF` to access the last field.
+> - `NF` changes per line. A blank line has `NF=0`. A line with trailing delimiters may produce empty trailing fields.
+>
+> > [!tip] Platform
+> > In PowerShell, field count is implicit in the object's property set — use `($row.PSObject.Properties).Count` to count properties dynamically.
+>
+> > ---
+>
+> **`OFS`** (Output Field Separator) — the string awk inserts between fields when printing. Default is a single space. Set `OFS=","` to produce CSV output.
+> - Controls the format of awk output. Must be set explicitly in `BEGIN` to match the desired output delimiter.
+> - Forgetting to set `OFS` when reformatting CSV causes awk to produce space-separated output even if the input was comma-separated.
+>
+> > [!tip] Platform
+> > PowerShell uses `Export-Csv` or `ConvertTo-Csv` to control output delimiters — no manual `OFS` setting required.
+>
+> > ---
+>
+> **`printf`** — awk built-in for formatted output following C `printf` conventions. Supports `%s` (string), `%d` (integer), `%f` (float), `%e` (scientific notation), and width/precision specifiers.
+> - Essential for generating aligned reports, formatted numbers, and structured output in fixed-width columns.
+> - Does not add a newline automatically (unlike `print`). Always include `\n`: `printf "%s\n", $1`.
+>
+> > [!tip] Platform
+> > PowerShell uses `-f` string format operator: `"{0,-10} {1:F2}" -f $name, $value`. Behavior is equivalent for alignment and number formatting.
+>
+> > ---
+>
+> **PowerShell object pipeline** — PowerShell processes structured objects rather than raw text. `Import-Csv` reads CSV into typed objects; `Select-Object`, `Where-Object`, `Group-Object` replace awk field processing.
+> - Eliminates the delimiter-parsing step — properties are typed and named, removing the need to set `FS` or reference `$1`.
+> - PowerShell pipelines are slower than awk for pure text processing at scale. awk remains faster for large flat files with simple field operations.
+>
+> > [!tip] Platform
+> > Prefer PowerShell (`Import-Csv | Where-Object | Select-Object`) for Windows-native workflows with headers. Prefer awk for POSIX pipelines, large log files, and cross-platform ETL scripts.
 
 awk (also gawk — GNU awk, mawk — faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.
 
@@ -25,31 +120,6 @@ On macOS the default `awk` is BSD awk. On Linux it is usually gawk. On Windows y
 
 ---
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `awk` | A pattern-action language for processing structured text. Reads input line by line, splits each line into fields by a delimiter, and applies pattern-action rules. Named after its creators: Aho, Weinberger, and Kernighan. | The standard shell tool for field-based data processing: CSV parsing, log analysis, report generation, and data quality checks. | Confusing awk with grep or sed. grep finds lines; sed transforms text patterns; awk processes structured fields. awk is the right tool when you need column-level operations. |
-| Field (`$1`, `$2`, ..., `$NF`) | awk splits each input line into fields separated by the field separator (default: whitespace). `$1` is the first field, `$2` the second, `$NF` the last. `$0` is the entire line. | Field references are the core mechanism for extracting, filtering, and transforming columnar data. | `$0` is the whole line, not the command name. `$NF` is the last field (NF = number of fields), not a fixed position. |
-| Field separator (`-F` / `FS`) | The delimiter awk uses to split each line into fields. Default is whitespace (spaces and tabs). Set with `-F","` (command line) or `FS=","` (in the script). | Must be set correctly for CSV, TSV, pipe-delimited, and other structured formats. | Not setting `-F` for CSV data -- awk defaults to whitespace splitting, which breaks comma-separated fields. |
-| `BEGIN` / `END` blocks | `BEGIN { ... }` runs before the first line is read. `END { ... }` runs after the last line is processed. | `BEGIN` sets up variables, headers, and field separators. `END` prints summaries, totals, and reports. | Forgetting that `BEGIN` runs before any input -- you cannot reference `$1` or `NR` in a `BEGIN` block. |
-| `NR` (Number of Records) | A built-in variable that holds the current line number (1-indexed). Increments for each input line across all files. | Used for skipping headers (`NR > 1`), printing line numbers, and progress reporting. | `NR` counts across all files. Use `FNR` (file-relative record number) when processing multiple files. |
-| `NF` (Number of Fields) | A built-in variable that holds the number of fields in the current line. | Used for validating record structure: `NF != expected_count` detects malformed rows. Also used as `$NF` to reference the last field. | NF changes per line. A blank line has NF=0. A line with trailing delimiters may have empty trailing fields. |
-| `OFS` (Output Field Separator) | The string awk inserts between fields when printing. Default is a single space. Set with `OFS=","` to produce CSV output. | Controls the format of awk output. Must be set explicitly to match the desired output format. | Forgetting to set OFS when reformatting CSV -- awk defaults to space-separated output even if the input was comma-separated. |
-| `printf` | awk built-in function for formatted output, following C printf conventions. Supports `%s` (string), `%d` (integer), `%f` (float), `%e` (scientific), and width/precision specifiers. | Essential for generating aligned reports, formatted numbers, and structured output. | `printf` does not add a newline automatically (unlike `print`). Always include `\n` at the end: `printf "%s\n", $1`. |
-| PowerShell object pipeline | PowerShell processes structured objects instead of text. `Import-Csv` reads CSV into objects; `Select-Object`, `Where-Object`, `Group-Object` replace awk field processing. | Eliminates the delimiter-parsing step entirely -- properties are typed and named. | PowerShell pipelines are slower than awk for pure text processing. awk remains faster for large flat files. |
-
-## What this note covers
-
-- The awk pattern-action processing model
-- Field extraction and formatting with `$1`, `$NF`, `printf`
-- Filtering and conditions with pattern matching and comparisons
-- Control flow: if/else, for loops, arrays
-- Data transformation: aggregation, deduplication, reformatting
-- Data engineering scenarios: CSV processing, log parsing, data quality checks
-- PowerShell equivalents: `Import-Csv`, `Select-Object`, `Group-Object`, `Measure-Object`
-- Quick reference card for built-in variables and functions
 ## Linux awk | how it works
 
 This section covers the fundamental model that underlies every awk program: how input is divided into records and fields, how the field separator is set, how pattern-action rules are evaluated, and how `BEGIN`/`END` blocks provide setup and teardown logic.
@@ -1782,8 +1852,8 @@ flowchart TD
     A([awk invoked]) --> B[Execute BEGIN block]
     B --> C{More input records?}
     C -- yes --> D[Read next record into $0]
-    D --> E[Split $0 into fields\n$1 $2 ... $NF]
-    E --> F{Evaluate each\npattern-action rule}
+    D --> E[Split $0 into fields<br>$1 $2 ... $NF]
+    E --> F{Evaluate each<br>pattern-action rule}
     F -- pattern matches --> G[Execute action]
     F -- no match / default --> H[Next rule]
     G --> H

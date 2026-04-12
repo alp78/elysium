@@ -1,5 +1,5 @@
 ---
-title: "19 - Performance and Code Quality - C#"
+title: "19 - Performance & Code Quality — C#"
 tags: [csharp, performance]
 aliases: [performance profiling, code quality, Stopwatch, BenchmarkDotNet, Span, nullable reference types]
 description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19-py-performance-quality](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/19-py-performance-quality) for the Python equivalent."
@@ -15,38 +15,159 @@ status: complete
 >
 > — **Wes Dyer**, blog post (2007)
 
+> [!abstract]- Summary
+>
+> **Timing & Benchmarking**
+> - `Stopwatch.StartNew()` / `Stopwatch.GetElapsedTime()` for ad-hoc development timing; `BenchmarkDotNet` for production micro-benchmarks with JIT warm-up and GC control.
+> - A reusable `MeasureTime<T>` helper wraps any `Func<T>` for side-by-side comparisons without repeating timing boilerplate.
+> - Collection lookup benchmark confirms O(n) (`List`, `Array`) vs O(1) (`HashSet`, `Dictionary`) timing difference at 100,000 elements.
+>
+> **Memory Measurement**
+> - `GC.GetTotalMemory(true)` / `GC.GetTotalMemory(false)` delta pattern measures per-operation managed heap allocations.
+> - `String +=` in a loop is O(n²) in allocations — allocates 63× more than `StringBuilder` at 10,000 iterations.
+> - `PointStruct[]` consumes ~4× less memory than `PointClass[]` for 100,000 two-field elements; value types stored contiguously with no per-element GC header.
+>
+> **`Span<T>` & Zero-Allocation Patterns**
+> - `data.AsSpan()` slices without copying; `string.AsSpan()` + range indexing replaces `Substring` with zero allocation.
+> - `stackalloc int[N]` wraps into `Span<int>` — stack-only, no GC, limit ≤ ~1 KB.
+> - `Memory<T>` is the heap-storable, async-safe counterpart; `MemoryPool<T>.Shared.Rent()` avoids allocations in async pipelines.
+>
+> **Big-O & Collection Selection**
+> - Reference table covers `List<T>`, `Array`, `Dictionary`, `HashSet`, `SortedDictionary` for index, search, add, remove.
+> - Decision flowchart guides collection selection by primary operation (lookup, membership, ordered, FIFO).
+> - `SortedDictionary` is slower than `Dictionary` in practice at n=100,000 despite O(log n) theory — red-black tree pointer-chasing causes cache misses.
+>
+> **Golden Rules of Performance**
+> - Ten prioritized rules: measure first → algorithm → minimize allocations → right collection → avoid boxing → `StringBuilder` → async for I/O → pool resources → seal classes → `readonly struct`.
+> - `ArrayPool<T>.Shared` demo: `Rent(1024)` / `Return()` cycle eliminates heap allocations for temporary buffers.
+>
+> **Absolute No-Go's**
+> - Twelve anti-patterns: `string +=`, empty catch, `async void`, `.Result`/`.Wait()`, mutable public collections, undisposed `IDisposable`, hardcoded secrets, `new HttpClient()` per request, blocking UI thread, `GetType()` comparisons, `dynamic`, ignoring analyzer warnings.
+> - `using var conn` pattern guarantees disposal even on exception paths.
+>
+> **Code Smells & Anti-Patterns**
+> - Seven smells: God class, primitive obsession, feature envy, magic literals, deep inheritance, service locator, boolean parameters.
+> - `record Email` value object enforces invariant at construction; invalid state cannot propagate past the domain boundary.
+>
+> **Nullable Reference Types & Static Analysis**
+> - NRT (C# 8+, default in .NET 6+): `string` = non-null, `string?` = nullable. `#nullable enable` activates file-scoped analysis.
+> - Null-safe patterns: `??` (fallback), `?.` (conditional member access), `is` (pattern match with type extraction).
+>
+> **LINQ Performance Pitfalls**
+> - Multiple enumeration executes the query twice; materialize with `ToList()` before reuse.
+> - `OrderBy().First()` is O(n log n); replace with `MinBy()`/`MaxBy()` (O(n)).
+> - `.Any()` short-circuits; `.Count() > 0` does not. Manual loop is fastest — no iterator object, no closure allocation.
+>
+> **Code Quality Tools**
+> - Tool matrix: Roslyn Analyzers, StyleCop, SonarAnalyzer, `dotnet format`, NDepend, `dotnet-counters`, `dotnet-trace`, PerfView, dotTrace/dotMemory.
+> - `dotnet-trace collect --process-id <pid>` → `.nettrace` for PerfView/SpeedScope; `dotnet-counters monitor` for live GC/JIT/threadpool metrics.
+> - Key `.editorconfig` rule IDs: CA1822, CA2007, CA1062, IDE0090.
+
+> [!note]- Glossary
+>
+> **`Stopwatch`** — .NET class in `System.Diagnostics` that wraps the OS high-resolution performance counter.
+> - Provides nanosecond-resolution elapsed time via `ElapsedMilliseconds` (long, whole ms) or `Elapsed.TotalMilliseconds` (double, sub-ms). `StartNew()` creates and starts in one call; `Restart()` resets without allocating a new instance.
+> - Use instead of `DateTime.Now`, which has ~15 ms resolution on Windows and is affected by NTP adjustments and daylight-saving transitions.
+>
+> > [!tip] Prefer `Stopwatch.GetElapsedTime(start)` (.NET 7+) in hot-path instrumentation — it avoids allocating a `Stopwatch` object entirely.
+>
+> > ---
+>
+> **`BenchmarkDotNet`** — NuGet library for production-grade micro-benchmarks that control for JIT warm-up, GC pauses, and hardware timer resolution.
+> - Runs multiple iterations with statistical analysis, reports mean, standard deviation, and memory allocation per operation. Requires `[MemoryDiagnoser]` attribute to capture allocations.
+> - Always run with `dotnet run -c Release`. BenchmarkDotNet will refuse to execute in Debug mode and print a hard warning — treat that refusal as a gate.
+>
+> > [!warning] BenchmarkDotNet in Debug mode suppresses JIT inlining and optimizations, producing results 2–10× slower than production behavior.
+>
+> > ---
+>
+> **`Span<T>`** — `ref struct` providing a type-safe, bounds-checked view over a contiguous memory region (array, stack buffer, or unmanaged memory) without allocation.
+> - Slicing a `Span<T>` creates a new view over the same backing memory with no copy. Supports `AsSpan()` on arrays and strings, and `stackalloc` buffers.
+> - Cannot be stored in class fields, used as a generic type argument, or used across `await` expressions — it is stack-only by compiler enforcement.
+>
+> > [!info] `Span<T>` is a `ref struct`. The compiler will reject any attempt to store it on the heap or let it survive an `await` point. Use `Memory<T>` when the slice must outlive a single stack frame.
+>
+> > ---
+>
+> **`stackalloc`** — C# keyword that allocates a fixed-size block on the thread stack rather than the managed heap.
+> - Returns a `Span<T>` wrapping the buffer. Memory is reclaimed automatically when the stack frame exits — no GC involvement, no finalizer, no `Dispose`.
+> - Limit to small fixed sizes (≤ ~1 KB; the default stack is ~1 MB). Variable-size `stackalloc` is permitted but must be bounded at compile time or guarded with an explicit size check.
+>
+> > [!danger] Allocating too large a block with `stackalloc` causes a `StackOverflowException` that cannot be caught — it terminates the process.
+>
+> > ---
+>
+> **`GC.GetTotalMemory()`** — returns the approximate number of bytes currently allocated on the managed heap.
+> - `forceFullCollection: true` triggers a blocking full GC before measuring, giving a clean baseline. `false` skips collection, preserving newly allocated objects so the after-snapshot includes them. The before/after delta approximates the allocation for the intervening code.
+> - Not perfectly precise — concurrent threads may allocate between measurements — but accurate enough for comparing approaches in isolated test harnesses.
+>
+> > [!warning] `GC.GetTotalMemory(forceFullCollection: true)` in a production code path triggers a stop-the-world GC pause that blocks all managed threads and causes request-latency spikes.
+>
+> > ---
+>
+> **Nullable Reference Types (NRT)** — compiler feature introduced in C# 8 that extends the type system to track nullability of reference types at compile time.
+> - With NRT enabled, `string` is guaranteed non-null and `string?` is explicitly nullable. The compiler emits warnings (CS8600–CS8625 range) when a nullable reference is dereferenced without a null check.
+> - Enabled project-wide via `<Nullable>enable</Nullable>` in `.csproj` (default in .NET 6+). The `!` null-forgiving operator suppresses a warning — each use is a potential `NullReferenceException` and must be justified inline.
+>
+> > [!tip] Enable NRT in all new projects. Fix every warning rather than suppressing; use `!` only with an inline comment explaining why null is impossible at that point.
+>
+> > ---
+>
+> **Roslyn Analyzers** — static analysis rules embedded in the C# compiler SDK that run during `dotnet build` and in the IDE.
+> - Cover correctness (CA rules), performance (e.g., CA1822 mark-static, CA1851 avoid multiple enumeration), security, and style (IDE rules). Results are emitted as build warnings or errors depending on severity configuration.
+> - Severity is controlled per rule via `.editorconfig` (`dotnet_diagnostic.CA1822.severity = error`). Suppress only with a recorded justification comment.
+>
+> > [!tip] Add `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` to `.csproj` or `Directory.Build.props` to make all analyzer warnings block the build in CI.
+>
+> > ---
+>
+> **LINQ deferred execution** — LINQ query operators (`Where`, `Select`, `OrderBy`, etc.) return `IEnumerable<T>` wrappers that do not execute until the sequence is enumerated.
+> - Each enumeration re-runs the full query chain from the source. A method that enumerates the same `IEnumerable<T>` twice (e.g., `.Count()` then `foreach`) executes the query twice — two full scans if the source is a database query or a generator.
+> - Materialize with `.ToList()` or `.ToArray()` at the point of ownership to control when and how many times the query executes.
+>
+> > [!warning] Returning `IEnumerable<T>` from a repository method backed by an `IQueryable` or generator allows callers to accidentally re-execute the query on every enumeration.
+>
+> > ---
+>
+> **`ArrayPool<T>`** — static pool of reusable arrays in `System.Buffers`, accessible via `ArrayPool<T>.Shared`.
+> - `Rent(minimumLength)` retrieves an array from the pool or allocates a new one if the pool is empty. The returned array may be larger than requested — always track the intended length separately, never use `array.Length` after renting. `Return(array)` places it back; optionally clears the contents if `clearArray: true`.
+> - Eliminates heap allocations for large or frequently needed temporary buffers — critical for preventing LOH fragmentation when buffers exceed 85 KB.
+>
+> > [!danger] Forgetting to call `ArrayPool<T>.Shared.Return()` leaks the rented array from the pool permanently, causing pool exhaustion and falling back to full heap allocations under load.
+>
+> > ---
+>
+> **`Memory<T>`** — heap-storable complement to `Span<T>` that can be stored in class fields, captured by lambdas, and used across `await` boundaries.
+> - Wraps the same contiguous memory types as `Span<T>` but is a regular `struct` (not a `ref struct`). Use `memory.Span` to obtain a `Span<T>` for synchronous inner work. `MemoryPool<T>.Shared.Rent(minLength)` provides pooled `Memory<T>` blocks for async pipelines.
+> - Adds one indirection layer compared to `Span<T>` — slightly slower for pure synchronous hot paths. Prefer `Span<T>` when async crossing is not needed.
+>
+> > [!info] Use `Memory<T>` in async methods and class fields; use `Span<T>` in synchronous inner scopes where the extra indirection cost matters.
+>
+> > ---
+>
+> **`dotnet-trace`** — cross-platform .NET CLI diagnostic tool that collects CPU, GC, JIT, and custom event-source traces, producing `.nettrace` files.
+> - Attach with `dotnet-trace collect --process-id <pid>`. Open the output in PerfView (Windows) or SpeedScope (cross-platform). Specify `--providers` to target GC events (`Microsoft-Windows-DotNETRuntime:0x1:4`), JIT events, or custom `EventSource` names.
+> - Modern replacement for many PerfView capture scenarios that previously required a Windows-only agent.
+>
+> > [!warning] Running `dotnet-trace` without `--providers` uses default providers that may miss GC allocation events or JIT tiering details depending on the runtime version.
+>
+> > ---
+>
+> **`.editorconfig` / Roslyn rule IDs** — file-based configuration standard (`.editorconfig`) that maps Roslyn diagnostic rule IDs to severity levels (`none`, `suggestion`, `warning`, `error`).
+> - Placed at the solution root or in any subdirectory. Rules cascade from parent to child — a repo-root `.editorconfig` sets the baseline; project-specific overrides go in the project folder. Key rule IDs: `CA1822` (mark members static), `CA2007` (ConfigureAwait), `CA1062` (validate arguments), `IDE0090` (use `new()` shorthand).
+> - The `.editorconfig` is version-controlled and enforced consistently across the team and CI. Suppressing a rule globally without a recorded justification creates maintenance debt.
+>
+> > [!tip] Pair `.editorconfig` with a `Directory.Build.props` that sets `<AnalysisMode>All</AnalysisMode>` to opt into the full CA rule set, then whittle down exceptions in `.editorconfig` with justification comments.
+>
+> > ---
+>
+> **`ObjectPool<T>`** — pool for expensive-to-create, reusable objects, provided by `Microsoft.Extensions.ObjectPool` (ASP.NET Core) or `Microsoft.Extensions.DependencyInjection`.
+> - `ObjectPool<StringBuilder>` is the canonical use case: avoids allocating a new `StringBuilder` on each request in a high-throughput path. Obtain with `pool.Get()`, use, then return with `pool.Return(obj)`.
+> - Objects must be returned in a clean (reset) state before calling `Return`. The pool does not reset objects automatically — a `StringBuilder` must be cleared with `.Clear()` before returning or the next caller receives stale content.
+>
+> > [!danger] Using `ObjectPool<T>` for non-thread-safe objects without external synchronization causes data races. The pool itself is thread-safe; the objects it holds are not.
+
 This note is the C# reference for performance measurement and code quality tooling.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `Stopwatch` | .NET class wrapping the OS high-resolution performance counter | Correct tool for ad-hoc elapsed-time measurement with nanosecond resolution | Using `DateTime.Now` — ~15 ms resolution on Windows and affected by NTP/DST |
-| `BenchmarkDotNet` | NuGet library for production-grade micro-benchmarks that control JIT warm-up and GC | Produces statistically reliable comparisons between candidate implementations | Running benchmarks in Debug mode — JIT optimizations are suppressed, results are not representative |
-| `Span<T>` | Ref struct providing a type-safe view over a contiguous memory region without allocation | Eliminates heap allocations when slicing strings, arrays, or stack-allocated buffers | Using `Span<T>` as a field in a class — ref structs cannot live on the heap |
-| `stackalloc` | Keyword that allocates a fixed-size block on the stack rather than the heap | Avoids GC pressure for small, short-lived buffers | Allocating too large a block — stack is limited (~1 MB default); prefer ≤ 512 bytes |
-| `GC.GetTotalMemory()` | Returns approximate managed heap bytes currently allocated | Quick snapshot for before/after comparisons in tests | The `forceFullCollection` parameter triggers a blocking GC — avoid in production paths |
-| Nullable Reference Types (NRT) | Compiler feature (C# 8+) that treats all reference types as non-nullable by default | Turns null-dereference bugs into compile-time warnings | Enabling NRT without fixing warnings — suppressing with `!` operator negates the benefit |
-| Roslyn Analyzers | Static analysis rules embedded in the C# compiler SDK | Enforce correctness, performance, and security patterns during build | Treating analyzer warnings as informational — upgrade to errors in CI via `<TreatWarningsAsErrors>` |
-| LINQ deferred execution | LINQ queries are not evaluated until enumerated; each enumeration re-runs the query | Avoids unnecessary work when a query is never consumed | Enumerating the same IEnumerable twice — runs the query twice; materialize with `.ToList()` first |
-| `ArrayPool<T>` | Framework pool of reusable arrays that avoids repeated heap allocations | Eliminates large-array GC pressure in high-throughput paths | Forgetting to return the array with `ArrayPool<T>.Shared.Return()` — causes pool exhaustion |
-| `Memory<T>` | Heap-safe counterpart to `Span<T>` that can be stored in fields and used in async methods | Enables zero-copy slicing across await points where `Span<T>` is forbidden | Confusing `Memory<T>` with `Span<T>` — `Memory<T>` adds an indirection layer and is slower |
-| `dotnet-trace` | Cross-platform CLI profiling tool producing `.nettrace` files for PerfView or SpeedScope | Modern replacement for many PerfView capture scenarios | Running without specifying `--providers` — default providers may miss GC or JIT events |
-| `editorconfig` / Roslyn rule IDs | File-based configuration that maps analyzer rule IDs to severity levels | Standardizes code style and correctness rules across the team and CI | Suppressing rules globally in `.editorconfig` without a recorded justification |
-| `ObjectPool<T>` | ASP.NET Core / Microsoft.Extensions pool for expensive-to-create objects | Reduces allocation cost for objects like `StringBuilder` in hot paths | Using `ObjectPool<T>` for non-thread-safe objects without synchronization |
-
-### What this note covers
-
-- **Timing & Benchmarking** — `Stopwatch`, `BenchmarkDotNet`, JIT warm-up considerations
-- **Memory Measurement** — `GC.GetTotalMemory()`, `GC.Collect()`, `ArrayPool<T>`, `ObjectPool<T>`
-- **Span\<T\> & Zero-Allocation Patterns** — `Span<T>`, `Memory<T>`, `stackalloc`, slicing without copies
-- **Big-O Complexity & Collection Performance** — per-operation costs for .NET collections
-- **Golden Rules of Performance** — measure-first principles and .NET-specific optimization hierarchy
-- **Absolute No-Go's** — patterns that reliably destroy C# performance
-- **Code Smells & Anti-Patterns** — readability and maintainability red flags
-- **Nullable Reference Types & Static Analysis** — NRT, `#nullable enable`, Roslyn Analyzers
-- **LINQ Performance Pitfalls** — deferred execution traps, multiple enumeration, `.ToList()` placement
-- **Code Quality Tools** — `dotnet format`, `.editorconfig`, `dotnet-trace`, `dotnet-counters`
 
 ## Timing & Benchmarking
 

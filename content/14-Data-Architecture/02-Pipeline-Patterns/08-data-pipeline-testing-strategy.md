@@ -38,10 +38,10 @@ Every page in this vault covers *how* to use a testing tool — pytest fixtures,
 ```mermaid
 block-beta
     columns 7
-    space:2 E2E["E2E\nNightly"]:3 space:2
-    space:1 INT["Integration\nOn merge"]:5 space:1
-    CONTRACT["Contract + Quality\nEvery PR and every load"]:7
-    UNIT["Unit Tests\nEvery PR"]:7
+    space:2 E2E["E2E<br/>Nightly"]:3 space:2
+    space:1 INT["Integration<br/>On merge"]:5 space:1
+    CONTRACT["Contract + Quality<br/>Every PR and every load"]:7
+    UNIT["Unit Tests<br/>Every PR"]:7
 
     style E2E fill:#cc4125,stroke:#cc4125,color:#fff
     style INT fill:#e8b84d,stroke:#e8b84d,color:#1a1a2e

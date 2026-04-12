@@ -16,33 +16,92 @@ status: complete
 >
 > — **Douglas Adams**, *The Hitchhiker's Guide to the Galaxy* (1979)
 
+> [!abstract]- Summary
+> Dates look simple until timezones, DST transitions, and ambiguous formats collide in a multi-region pipeline — this note is the exhaustive cross-platform reference for getting them right.
+>
+> - **Date and time standards** — ISO 8601 variant catalogue, UTC storage rule, epoch timestamps, and format selection by context (SQL column, API, log, filename, cron)
+> - **Linux date and time tools** — `date` formatting with `strftime` codes, GNU `-d` arithmetic, `timedatectl`, timezone conversion via `TZ=`
+> - **PowerShell date and time tools** — `Get-Date` formatting (`.ToString`), `.AddDays`/`.AddMonths` arithmetic, `[TimeZoneInfo]` conversion
+> - **SQL Server (T-SQL)** — `GETUTCDATE()`, `SYSUTCDATETIME()`, `DATEADD`, `DATEDIFF`, `DATETRUNC`, `EOMONTH`, `AT TIME ZONE`, `DATETIMEOFFSET` vs `DATETIME2`
+> - **Python** — `datetime`, `date`, `timedelta`, `dateutil.relativedelta`, `zoneinfo`/`pytz`, `strftime`/`strptime`, `pandas` date ranges
+> - **C# (.NET)** — `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeZoneInfo`, `TimeSpan`, NodaTime overview
+> - **DST Pitfalls** — the traps that break pipelines: spring-forward gaps, fall-back duplicates, 23/25-hour days, offset vs name confusion
+
+> [!note]- Glossary
+> **ISO 8601** — the international standard for representing dates and times as `YYYY-MM-DDTHH:MM:SSZ`.
+> - Variants: date-only (`2026-03-10`), UTC (`T15:30:00Z`), offset (`+01:00`), compact (`20260310T153000Z`), ISO week (`2026-W11`).
+> - Sorts correctly as plain text; unambiguous across all locales and databases — use it everywhere in pipelines.
+>
+> > [!tip] Pipeline rule
+> > `04/05/2026` means April 5 in the US and May 4 in Europe. ISO 8601 is never ambiguous.
+>
+> > ---
+>
+> **UTC (Coordinated Universal Time)** — the primary global time standard with no daylight saving transitions; all time zones are expressed as offsets from UTC.
+> - Store and process all pipeline timestamps in UTC; convert to local time only at the presentation layer.
+> - A local timestamp like `2026-03-10 02:30:00` without a timezone is ambiguous — it may not exist or may occur twice during a DST transition.
+>
+> > [!warning] UTC is not a timezone
+> > UTC is a time standard. "UTC+0" is a timezone offset. `Z` (Zulu) in ISO 8601 means UTC+0.
+>
+> > ---
+>
+> **Epoch / Unix timestamp** — the number of seconds (or milliseconds) elapsed since `1970-01-01 00:00:00 UTC`; a single integer that uniquely identifies any moment in time.
+> - Compact, timezone-free, and trivially comparable. Used in APIs (`Date` headers), Kafka offsets, and database internals.
+> - Platform pitfall: Unix/Python use seconds (10 digits); JavaScript/Java use milliseconds (13 digits). Off-by-1000 bugs silently corrupt timestamps.
+>
+> > [!tip] Quick check
+> > If your epoch is 13 digits, divide by 1000 before passing to `datetime.fromtimestamp()` in Python.
+>
+> > ---
+>
+> **`strftime`** — a formatting function available in bash `date`, Python, C, Ruby, and others that converts a datetime into a string using `%`-coded specifiers (`%Y`, `%m`, `%d`, `%H`, `%M`, `%S`).
+> - Generates timestamped filenames, log entries, and human-readable output from datetime objects.
+> - Platform difference: GNU `date` (Linux) supports `%N` for nanoseconds; BSD `date` (macOS) does not. .NET uses `yyyy`/`MM`/`dd` without `%`.
+>
+> > [!info] Cross-platform
+> > For portable date formatting in scripts that must run on both Linux and macOS, use Python: `python3 -c "from datetime import datetime; print(datetime.utcnow().strftime('%Y-%m-%d'))"`.
+>
+> > ---
+>
+> **DST (Daylight Saving Time)** — a seasonal clock adjustment: clocks spring forward 1 hour in March/April and fall back in October/November, creating 23-hour and 25-hour days respectively.
+> - The single most common source of date/time bugs in data pipelines — a "daily" job spanning a DST boundary may process 23 or 25 hours of data.
+> - Spring-forward gap: `2:30 AM` does not exist on transition day. Fall-back duplicate: `2:30 AM` occurs twice.
+>
+> > [!warning] Never assume 86 400 seconds per day
+> > DST days have 82 800 or 90 000 seconds. Use date arithmetic libraries (`dateutil.relativedelta`, `DATEADD` in T-SQL) rather than adding raw seconds.
+>
+> > ---
+>
+> **`date` (Linux)** — the GNU/Linux command-line tool for displaying and formatting dates; supports `strftime` format codes via `+format` and date arithmetic via `-d`.
+> - `date +%Y-%m-%d` prints today in ISO format; `date -d "yesterday"` computes relative dates; `date -u +%Y-%m-%dT%H:%M:%SZ` prints UTC.
+> - GNU `date` (`-d` flag) differs from BSD `date` (macOS, `-j -f` flags) — pipeline scripts that must run on both platforms should delegate complex arithmetic to Python.
+>
+> > [!info] macOS note
+> > On macOS use `gdate` (from `brew install coreutils`) to get GNU `date` behavior, or use `python3 -c "..."` for portability.
+>
+> > ---
+>
+> **`Get-Date` (PowerShell)** — the PowerShell cmdlet that returns a .NET `DateTime` object representing the current date and time, with properties and methods for formatting and arithmetic.
+> - `.ToString("yyyy-MM-dd")` formats; `.AddDays(-1)`, `.AddMonths(1)` do arithmetic; `[TimeZoneInfo]::ConvertTime()` converts timezones.
+> - .NET format strings use `yyyy`/`MM`/`dd` (no `%` prefix) — opposite of `strftime` conventions.
+>
+> > [!tip] PowerShell vs bash
+> > `date +%Y-%m-%d` (bash) ≡ `(Get-Date).ToString("yyyy-MM-dd")` (PowerShell). Both produce `2026-03-10`.
+>
+> > ---
+>
+> **Timezone offset** — the signed difference between local time and UTC, expressed as `±HH:MM` (e.g., `+02:00` for Central European Summer Time, `-05:00` for EST).
+> - Timestamps without a timezone offset or explicit UTC marker are **naive** — ambiguous and unreliable across DST boundaries.
+> - Hardcoding an offset instead of a timezone name is fragile: `+01:00` could be CET, WAT, or BST depending on date and location; use IANA timezone names (`Europe/Paris`) whenever persistence is required.
+>
+> > [!warning] Naive vs aware
+> > SQL Server `DATETIME2` is naive (stores no offset). `DATETIMEOFFSET` is aware (stores `±HH:MM`). Use `DATETIMEOFFSET` for any timestamp that crosses timezone boundaries.
+
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
 This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) and [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| ISO 8601 | An international standard for date and time representation. Format: `YYYY-MM-DDTHH:MM:SSZ` (e.g., `2026-04-10T14:30:00Z`). The `T` separates date from time; `Z` means UTC. | The recommended format for all timestamps in data pipelines, file naming, APIs, and logs. Sorts lexicographically and is unambiguous across locales. | Using locale-dependent formats like `MM/DD/YYYY` or `DD-Mon-YYYY` which are ambiguous internationally. `04/05/2026` means April 5 in the US but May 4 in Europe. |
-| UTC (Coordinated Universal Time) | The primary time standard for global timekeeping. No daylight saving transitions. All time zones are expressed as offsets from UTC. | Data pipelines should store and process timestamps in UTC to avoid DST ambiguity and timezone conversion bugs. | Storing local time without timezone information. A timestamp of `2026-03-10 02:30:00` is ambiguous during DST transitions -- it may not exist or may occur twice. |
-| Epoch / Unix timestamp | The number of seconds (or milliseconds) since 1970-01-01 00:00:00 UTC. A single integer that uniquely identifies a moment in time. | Compact, timezone-free, and easy to compare. Used in APIs, message queues, and database internals. | Confusing seconds vs milliseconds. JavaScript and Java use milliseconds (13 digits). Unix and Python use seconds (10 digits). Dividing or multiplying by 1000 incorrectly corrupts timestamps. |
-| `strftime` | A function (available in bash `date`, Python, C, and many other languages) that formats a datetime into a string using format codes like `%Y` (year), `%m` (month), `%d` (day), `%H` (hour), `%M` (minute), `%S` (second). | Generates timestamped filenames, log entries, and formatted date strings. | Platform differences: GNU `date` uses `%N` for nanoseconds (not available on macOS). macOS `date` uses `-v` for date arithmetic (GNU uses `-d`). |
-| DST (Daylight Saving Time) | A seasonal clock adjustment where clocks move forward in spring and back in fall. Creates a 23-hour day in spring and a 25-hour day in fall. | The single most common source of date/time bugs in data pipelines. A "daily" job spanning a DST transition may process 23 or 25 hours of data. | Assuming every day has 24 hours. Assuming `+ 1 day` always advances by 86400 seconds. Assuming 2:30 AM always exists (it does not during spring-forward). |
-| `date` (Linux) | The Linux command for displaying and formatting dates. `date +%Y-%m-%d` prints today in ISO format. `date -d "yesterday"` does date arithmetic. | Generates timestamps for file naming, log entries, and pipeline scheduling. | GNU `date` and BSD/macOS `date` have different syntax for date arithmetic and formatting. Scripts must handle both or use Python for portability. |
-| `Get-Date` (PS) | The PowerShell cmdlet for date/time operations. Returns a .NET `DateTime` object with properties and methods for formatting and arithmetic. | The PowerShell equivalent of the Linux `date` command. `.ToString("yyyy-MM-dd")` for formatting; `.AddDays(-1)` for arithmetic. | .NET format strings differ from `strftime`: `yyyy` not `%Y`, `MM` not `%m`, `dd` not `%d`. |
-| Timezone offset | The difference between local time and UTC, expressed as `+HH:MM` or `-HH:MM`. E.g., `+02:00` for Central European Summer Time. | Timestamps without timezone information are ambiguous. Always store offsets or use UTC. | Hardcoding offsets instead of using timezone names. An offset of `+01:00` could be CET, WAT, or BST depending on the date and location. |
-
-## What this note covers
-
-- Date and time standards: ISO 8601, UTC, epoch timestamps
-- Linux `date` command: formatting (`strftime`), arithmetic, timezone conversion
-- PowerShell `Get-Date`: formatting (`.ToString`), arithmetic (`.AddDays`), timezone conversion
-- SQL Server date functions: `GETDATE()`, `GETUTCDATE()`, `DATEADD`, `DATEDIFF`, `FORMAT`
-- Python datetime: `datetime`, `timedelta`, `pytz`/`zoneinfo`, `strftime`/`strptime`
-- C# (.NET) DateTime: `DateTime.UtcNow`, `.ToString`, `.AddDays`, `TimeZoneInfo`
-- DST pitfalls: the traps that break data pipelines
 ## Date and time standards
 
 Dates look deceptively simple until a pipeline processes market close times across Euro, US, and Asia/Pacific indexes simultaneously. ISO 8601 is the universal wire format; understanding its variants and when to apply each prevents format confusion across regional conventions and database types.

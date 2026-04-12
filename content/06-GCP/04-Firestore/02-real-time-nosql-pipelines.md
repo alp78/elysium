@@ -150,11 +150,11 @@ The pipeline writes a document at the start of execution and updates it on compl
   'textColor': '#c0caf5',
   'fontSize': '14px'}}}%%
 flowchart TD
-    A([Pipeline starts]) --> B["Write: status=running\nstarted_at=SERVER_TIMESTAMP"]
+    A([Pipeline starts]) --> B["Write: status=running<br/>started_at=SERVER_TIMESTAMP"]
     B -->|on_snapshot push| C[Dashboard: RUNNING]
     B --> D{Outcome}
-    D -->|Success| E["Update: status=success\nrows=N, finished_at=SERVER_TIMESTAMP"]
-    D -->|Failure| F["Update: status=failed\nerror=msg, finished_at=SERVER_TIMESTAMP"]
+    D -->|Success| E["Update: status=success<br/>rows=N, finished_at=SERVER_TIMESTAMP"]
+    D -->|Failure| F["Update: status=failed<br/>error=msg, finished_at=SERVER_TIMESTAMP"]
     E -->|on_snapshot push| G[Dashboard: SUCCESS]
     F -->|on_snapshot push| H[Dashboard: FAILED]
 ```
@@ -241,12 +241,12 @@ Firestore document writes trigger Eventarc events, which invoke a Cloud Function
   'textColor': '#c0caf5',
   'fontSize': '14px'}}}%%
 flowchart TD
-    A([Data arrives]) --> B["Write to Firestore\ncollection: raw_events"]
-    B --> C{Eventarc detects\ndocument create/update}
-    C --> D["Cloud Function fires\nwith document snapshot"]
+    A([Data arrives]) --> B["Write to Firestore<br/>collection: raw_events"]
+    B --> C{Eventarc detects<br/>document create/update}
+    C --> D["Cloud Function fires<br/>with document snapshot"]
     D --> E[Process document]
-    E --> F["Write derived record\nto BigQuery"]
-    F --> G["Mark document processed\nor delete it"]
+    E --> F["Write derived record<br/>to BigQuery"]
+    F --> G["Mark document processed<br/>or delete it"]
 ```
 
 #### Create an Eventarc trigger for Firestore document creation
@@ -325,9 +325,9 @@ Operational parameters live in a Firestore document rather than environment vari
   'textColor': '#c0caf5',
   'fontSize': '14px'}}}%%
 flowchart LR
-    A([Operator]) -->|"Updates config doc\nvia Console or API"| B[("Firestore\nconfig collection")]
-    B -->|"Read at run start\nwith 5-min TTL cache"| C[Pipeline run]
-    C --> D([Behavior change\nno deploy needed])
+    A([Operator]) -->|"Updates config doc<br/>via Console or API"| B[("Firestore<br/>config collection")]
+    B -->|"Read at run start<br/>with 5-min TTL cache"| C[Pipeline run]
+    C --> D([Behavior change<br/>no deploy needed])
 ```
 
 The live `bq-wh-nb/main` database has a `config` collection with two documents: `display` and `pipeline`.
@@ -382,10 +382,10 @@ Use this architecture when inbound throughput exceeds Firestore's direct write c
   'textColor': '#c0caf5',
   'fontSize': '14px'}}}%%
 flowchart LR
-    P["Producers\n(IoT / APIs)"] --> T[Pub/Sub Topic]
-    T --> D["Dataflow\n(Apache Beam streaming)"]
-    D --> F["Firestore\nhot / live reads"]
-    D --> B["BigQuery\ncold / OLAP analytics"]
+    P["Producers<br/>(IoT / APIs)"] --> T[Pub/Sub Topic]
+    T --> D["Dataflow<br/>(Apache Beam streaming)"]
+    D --> F["Firestore<br/>hot / live reads"]
+    D --> B["BigQuery<br/>cold / OLAP analytics"]
 ```
 
 **When NOT to use this pattern:** if you only need analytics (skip Firestore, write directly to BigQuery via Dataflow), or if you only need real-time reads with no analytics (skip Dataflow, write directly to Firestore from producers). See [Pub/Sub](https://alp78.github.io/elysium/06-GCP/02-Serverless/02-pubsub-topics-and-subscriptions) for topic and subscription configuration.

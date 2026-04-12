@@ -13,25 +13,141 @@ status: complete
 
 # PowerShell Automation for Data Engineering
 
-PowerShell is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
-
-Every script in this page follows the defensive scripting patterns documented in [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) and uses the command chaining operators explained in [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining). The Bash equivalent of every script exists at [bash-automation](https://alp78.github.io/elysium/01-Shell/Automation/bash-automation).
-
 > [!quote]
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >
 > — **Brian Kernighan**, *Unix for Beginners* (1979)
 
+> [!abstract]- Summary
+> 28 production-ready PowerShell scripts for data engineering automation, organized by pipeline phase — from file intake to scheduling.
+>
+> - **File intake and validation** — CSV header validation, null/empty field scanning, duplicate key detection, file arrival SLA monitoring.
+> - **Data transformation** — Column extraction and reordering, large CSV splitting for parallel loads, JSON-to-CSV flattening, CSV-to-NDJSON conversion.
+> - **API interaction** — REST GET with retry and exponential backoff, paginated API fetching, OAuth2 bearer token refresh, download with SHA-256 checksum verification.
+> - **Database operations** — Connectivity health check, query-to-CSV export via `Invoke-Sqlcmd`, source-to-target row count reconciliation.
+> - **GCP cloud operations** — GCS stale object reporting, BigQuery dry-run cost estimation, Pub/Sub backlog monitoring, service account key age checking.
+> - **Log parsing and monitoring** — Error rate calculation, structured NDJSON log filtering by level and time window, log rotation with compression and deletion.
+> - **Environment and pre-flight checks** — CLI dependency verification, `.env` file loading, disk space threshold checking.
+> - **Scheduling and orchestration** — Mutex lock wrapper to prevent overlapping runs, generic retry wrapper with backoff, run-and-alert pattern with Slack webhook.
+> - **Operations and safety** — Warnings on execution policy, `$ErrorActionPreference` defaults, and `$LASTEXITCODE` handling; recommendation table for script headers, cleanup, logging, and SQL Server operations.
+
+> [!note]- Glossary
+> **PowerShell script (`.ps1`)** — a text file containing PowerShell commands, identified by the `.ps1` extension, executed by `pwsh.exe` (PowerShell 7+) or `powershell.exe` (Windows PowerShell 5.1).
+> - **Purpose:** The standard automation unit for Windows data engineering — file processing, SQL Server interaction, Windows services, and scheduled jobs.
+> > [!warning] Execution policy blocks scripts by default
+> >
+> > Windows blocks unsigned `.ps1` files until `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` is configured; scripts that run in an interactive shell may silently fail in Task Scheduler if the policy was never set for that session.
+>
+> ---
+>
+> **`$ErrorActionPreference`** — a PowerShell preference variable that controls how the runtime responds to non-terminating cmdlet errors; the default value `Continue` prints the error and keeps running.
+> - **Purpose:** Set to `Stop` at the top of every automation script to make all cmdlet errors terminating — the PowerShell equivalent of Bash `set -e`.
+> > [!warning] Does not cover native executables
+> >
+> > `$ErrorActionPreference = "Stop"` only applies to PowerShell cmdlets. Errors from `gcloud`, `python.exe`, or `sqlcmd.exe` are not terminating — check `$LASTEXITCODE` manually after every native call.
+>
+> ---
+>
+> **`$LASTEXITCODE`** — an automatic variable holding the integer exit code of the most recently executed native executable; `0` means success, any non-zero value means failure.
+> - **Purpose:** The only way to detect errors from non-PowerShell processes; must be checked explicitly with `if ($LASTEXITCODE -ne 0) { throw "..." }` after every `gcloud`, `bq`, `sqlcmd`, or `python` call.
+> > [!info] Bash parity: `$?`
+> >
+> > In Bash, `$?` holds the same value and `set -e` automatically aborts on non-zero exit. PowerShell has no automatic equivalent for native processes — the check is always manual.
+>
+> ---
+>
+> **`Set-StrictMode`** — a PowerShell cmdlet that turns uninitialized variable access, invalid property references, and bare function calls into terminating errors.
+> - **Purpose:** Use `-Version Latest` at the top of every script to catch logic bugs early; equivalent to Bash `set -u`, but broader — also catches property-access errors that Bash cannot model.
+> > [!info] Scope is local only
+> >
+> > `Set-StrictMode` only affects the scope in which it is called. Functions defined before it, or dot-sourced scripts, inherit whatever mode was active when they were loaded — set it first, before any function definitions.
+>
+> ---
+>
+> **`try / catch / finally`** — PowerShell's structured error-handling construct: `try` wraps guarded code, `catch` handles terminating errors, and `finally` runs unconditionally for cleanup.
+> - **Purpose:** `finally` is the correct place for resource cleanup (mutex release, temp-file deletion, stream close) because it executes whether the script succeeds, fails, or is interrupted — the PowerShell equivalent of Bash `trap EXIT`.
+> > [!warning] `catch` is bypassed by non-terminating errors
+> >
+> > `catch` only fires for terminating errors. Without `$ErrorActionPreference = "Stop"`, a cmdlet failure prints a message and execution falls through the `try` block silently — the most common source of "errors that do nothing" bugs.
+>
+> ---
+>
+> **Execution policy** — a Windows security setting (`Set-ExecutionPolicy`) that controls which PowerShell scripts are permitted to run; the default `Restricted` policy blocks all `.ps1` files.
+> - **Purpose:** Set to `RemoteSigned` at minimum to allow locally authored scripts to run without a digital signature; use `-Scope CurrentUser` to avoid requiring administrator rights.
+> > [!info] No Bash equivalent
+> >
+> > Bash has no platform-wide execution policy. On Linux/macOS, script execution is governed entirely by the file's execute bit (`chmod +x`) — no signing or policy registry exists.
+>
+> ---
+>
+> **`Import-Csv` / `Export-Csv`** — PowerShell cmdlets that parse a delimited file into an array of `PSCustomObject` rows (`Import-Csv`) or serialize PowerShell objects back to CSV format (`Export-Csv`).
+> - **Purpose:** Column access by property name (`$row.email`) rather than positional index makes scripts resilient to column reordering in source files; `Export-Csv` adds a header row automatically and handles quoting.
+> > [!info] No native Bash CSV parser
+> >
+> > Bash has no equivalent of `Import-Csv`. The closest options are `awk -F,` for simple fixed-schema files or Python's `csv.DictReader` invoked from a subshell for robust, named-column parsing.
+>
+> ---
+>
+> **`Invoke-RestMethod`** — a PowerShell cmdlet that sends HTTP/HTTPS requests and automatically deserializes JSON or XML responses into live PowerShell objects, eliminating manual `ConvertFrom-Json` calls.
+> - **Purpose:** Used for API polling, paginated fetching, and OAuth2 token exchange throughout this note; returned objects can be accessed by property name immediately, without re-parsing the response string.
+> > [!info] Bash parity: `curl | jq`
+> >
+> > `curl -s URL | jq '.field'` is the idiomatic Bash equivalent. PowerShell's object is live and queryable; Bash's `jq` output is a string that must be re-parsed or re-assigned each time it is used.
+>
+> ---
+>
+> **NDJSON (Newline-Delimited JSON)** — a text format where each line is a self-contained, valid JSON object; also called JSON Lines (`.jsonl`). Used by BigQuery streaming inserts, Cloud Logging exports, and most modern data tools.
+> - **Purpose:** Unlike a JSON array, NDJSON can be read and written line-by-line without loading the entire file into memory — essential for large datasets where a full `ConvertFrom-Json` parse would exhaust RAM.
+> > [!info] Bash parity: `jq -c`
+> >
+> > `jq -c '.[]' input.json` converts a JSON array to NDJSON on Linux. In PowerShell, use `ConvertTo-Json -Compress` per object inside a `foreach` loop and write each line with `[System.IO.StreamWriter]` for memory efficiency.
+>
+> ---
+>
+> **Exponential backoff** — a retry strategy where the wait time between attempts doubles after each failure (1 s → 2 s → 4 s → 8 s), preventing a recovering service from being overwhelmed by rapid retries.
+> - **Purpose:** Implemented in the REST GET and generic retry wrappers in this note to handle transient API failures; production systems add a random jitter component to avoid thundering-herd stampedes when many clients retry simultaneously.
+> > [!info] Bash parity: identical logic
+> >
+> > Bash uses `sleep $delay` inside a `while` loop with `delay=$((delay * 2))`. The algorithm is identical; only the syntax differs — making it straightforward to port retry logic between PowerShell and Bash wrappers.
+>
+> ---
+>
+> **Mutex (named mutex)** — a system-wide synchronization primitive (`System.Threading.Mutex`) that only one process can hold at a time; used to prevent overlapping scheduled task instances.
+> - **Purpose:** The `Global\` prefix makes the mutex visible across all Windows sessions including services; without the prefix it is session-scoped and cannot prevent two logon sessions from running the same job simultaneously.
+> > [!danger] File-based locks are not atomic
+> >
+> > The common Bash alternative — `[ -f /tmp/job.lock ] && exit 0; touch /tmp/job.lock` — has a race window between the existence check and the file creation. PowerShell's `Mutex.WaitOne(0)` is an OS-level atomic operation with no race.
+>
+> ---
+>
+> **`Invoke-Sqlcmd`** — a PowerShell cmdlet (from the `SqlServer` module) that executes T-SQL against SQL Server and returns results as `DataRow` objects rather than raw text.
+> - **Purpose:** Structured output enables direct piping to `Export-Csv` or property access without text parsing; requires `Install-Module SqlServer` (once per machine) before first use.
+> > [!info] Bash parity: `sqlcmd` returns text
+> >
+> > The Bash equivalent `sqlcmd -S server -d db -Q "SELECT ..."` produces plain text output. Structured column access requires piping to `awk` or re-parsing in Python — making `Invoke-Sqlcmd` significantly more ergonomic for object-based workflows.
+>
+> ---
+>
+> **Task Scheduler** — the Windows built-in job scheduler (`taskschd.msc` / `schtasks.exe`) that runs scripts at defined times, system events, or triggers; the Windows equivalent of `cron` on Linux.
+> - **Purpose:** The standard mechanism for scheduling unattended pipeline scripts on Windows; tasks run in a separate non-interactive session where missing `PATH` entries and execution policy settings are the most common causes of scripts that work interactively but fail when scheduled.
+> > [!warning] Non-interactive environment differs from shell
+> >
+> > Tasks run as the task-definition user, not the interactive session. Environment variables, `$env:PATH`, and execution policy must all be explicitly configured in the task definition or set in the script itself — never assume the interactive shell environment is available.
+
+PowerShell is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
+
+Every script in this page follows the defensive scripting patterns documented in [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) and uses the command chaining operators explained in [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining). The Bash equivalent of every script exists at [bash-automation](https://alp78.github.io/elysium/01-Shell/Automation/bash-automation).
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart LR
-    A[File Intake\n& Validation] --> B[Data\nTransformation]
-    B --> C[API\nInteraction]
-    C --> D[Database\nOperations]
-    D --> E[GCP Cloud\nOperations]
-    E --> F[Log Parsing\n& Monitoring]
-    F --> G[Environment\n& Pre-flight]
-    G --> H[Scheduling\n& Orchestration]
+    A[File Intake<br>& Validation] --> B[Data<br>Transformation]
+    B --> C[API<br>Interaction]
+    C --> D[Database<br>Operations]
+    D --> E[GCP Cloud<br>Operations]
+    E --> F[Log Parsing<br>& Monitoring]
+    F --> G[Environment<br>& Pre-flight]
+    G --> H[Scheduling<br>& Orchestration]
     style A fill:#292e42,stroke:#7aa2f7
     style B fill:#292e42,stroke:#7aa2f7
     style C fill:#292e42,stroke:#7aa2f7

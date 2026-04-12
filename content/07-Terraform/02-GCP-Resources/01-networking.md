@@ -59,17 +59,17 @@ The following diagram shows the complete network topology provisioned by this fi
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    VPC["google_compute_network\ndata-pipeline-vpc"]
-    SUB["google_compute_subnetwork\n10.0.0.0/24 · europe-west1"]
-    RTR["google_compute_router\ndata-pipeline-router"]
-    NAT["google_compute_router_nat\ndata-pipeline-nat"]
-    FW_SQL["google_compute_firewall\nallow-sql · 1433"]
-    FW_AIR["google_compute_firewall\nallow-airflow · 8080"]
-    FW_APM["google_compute_firewall\nallow-apm · 8126"]
-    FW_IAP["google_compute_firewall\nallow-iap · 22"]
-    FW_DENY["google_compute_firewall\ndeny-all-ingress · 65000"]
-    SQL["GCE VM\ndata-pipeline-sql\ntag: sql · no public IP"]
-    AIR["GCE VM\ndata-pipeline-airflow\ntag: airflow · ephemeral IP"]
+    VPC["google_compute_network<br/>data-pipeline-vpc"]
+    SUB["google_compute_subnetwork<br/>10.0.0.0/24 · europe-west1"]
+    RTR["google_compute_router<br/>data-pipeline-router"]
+    NAT["google_compute_router_nat<br/>data-pipeline-nat"]
+    FW_SQL["google_compute_firewall<br/>allow-sql · 1433"]
+    FW_AIR["google_compute_firewall<br/>allow-airflow · 8080"]
+    FW_APM["google_compute_firewall<br/>allow-apm · 8126"]
+    FW_IAP["google_compute_firewall<br/>allow-iap · 22"]
+    FW_DENY["google_compute_firewall<br/>deny-all-ingress · 65000"]
+    SQL["GCE VM<br/>data-pipeline-sql<br/>tag: sql · no public IP"]
+    AIR["GCE VM<br/>data-pipeline-airflow<br/>tag: airflow · ephemeral IP"]
 
     VPC --> SUB
     SUB --> RTR

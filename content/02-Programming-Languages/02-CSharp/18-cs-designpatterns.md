@@ -8,41 +8,174 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 18. Design Patterns & Architecture - C#
+# 18. Design Patterns - C#
 
 > [!quote]
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
 >
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
 
+> [!abstract]- Summary
+>
+> **Dependency Injection**
+> - Interfaces (`IDataRepository`, `INotificationService`) define contracts; concrete classes (`SqlRepository`, `SlackNotifier`) implement them; test doubles (`MockRepository`, `MockNotifier`) replace them
+> - Constructor injection is the standard pattern; C# 12 primary constructors eliminate boilerplate fields
+> - `IServiceCollection` manages lifetimes: `AddTransient` (per call), `AddScoped` (per HTTP request), `AddSingleton` (application lifetime)
+>
+> **Design Patterns**
+> - **Singleton** — `Lazy<T>` + private constructor guarantees one instance; prefer DI `AddSingleton<T>()` for testability
+> - **Factory** — static `Create(string provider)` with a switch expression maps a string to a concrete `IStorageClient`; caller never references concrete types
+> - **Observer** — `event Action<StepEvent>` on `EventBus`; multiple handlers subscribe with `+=`; `?.Invoke` publishes safely to all
+> - **Strategy** — `IScoringStrategy` interface injected into `StockScorer`; `MomentumStrategy` and `VolatilityStrategy` swap at runtime with no change to the scorer
+> - **Decorator** — wraps any `IDataRepository` via composition to add retry/logging; same interface, transparent to callers; not to be confused with C# `[Attribute]`
+> - **Repository** — `IDataRepository` abstracts SQL Server, BigQuery, or in-memory; combined with DI enables zero-change test substitution
+>
+> **Data Validation**
+> - `OhlcvRecord` decorated with `[Required]`, `[Range]`, `[StringLength]`; cross-field High ≥ Low enforced via `IValidatableObject.Validate()`
+> - `Validator.TryValidateObject(obj, ctx, results, true)` collects all violations in one pass; must be called explicitly in non-MVC code
+>
+> **Reflection**
+> - `GetType()` → `GetProperties()` / `GetMethods()` / `GetConstructors()` inspect any type at runtime
+> - `PropertyInfo.GetValue(obj)` reads a property by name; foundation for ORMs, JSON serializers, and DI containers
+> - `Activator.CreateInstance(type, args)` instantiates a type without compile-time knowledge; used by plugin systems
+> - Reflection is 10–100× slower than direct calls — cache `PropertyInfo` / `MethodInfo` in static fields for hot paths
+>
+> **Project Structure & Best Practices**
+> - Clean Architecture: Core (interfaces + models + services, no external deps) → Infra (implements interfaces) → API (DI wiring); Core never references Infra
+> - Solution layout: `src/Core`, `src/Infra`, `src/Api`, `tests/Core.Tests`, `tests/Infra.Tests`, `docker/Dockerfile`
+> - Validate at boundaries (controllers, API endpoints); bind config sections to strongly-typed options with `IOptions<T>` / `IOptionsMonitor<T>`
+
+> [!note]- Glossary
+>
+> **Design pattern**
+> - A named, reusable solution to a recurring structural problem in code; provides a shared vocabulary so teams do not reinvent solutions
+> - Matters here as the organizational principle for every pattern covered — Singleton through Repository
+>
+> > [!tip] Pattern vs. framework
+> >
+> > Patterns are optional tools, not mandatory frameworks. Apply them when the problem recurs and the structure genuinely fits — not because the name sounds appropriate.
+>
+> > ---
+>
+> **Dependency Injection (DI)**
+> - Passing a class's dependencies in from outside (constructor, method, property) rather than creating them internally; decouples business logic from infrastructure
+> - ASP.NET Core's `IServiceCollection` manages lifetimes automatically; the service class is unchanged whether talking to SQL Server, BigQuery, or a mock
+>
+> > [!warning] Wrong lifetime registration
+> >
+> > Registering a Scoped service as `AddSingleton` keeps the Scoped instance alive for the full application lifetime, defeating per-request isolation and causing data leaks across HTTP requests.
+>
+> > ---
+>
+> **`IServiceCollection`**
+> - The ASP.NET Core interface used to register services and their lifetimes before the host is built; central registration point for all DI bindings
+> - `AddTransient<T>()` creates a new instance per call; `AddScoped<T>()` creates one per HTTP request; `AddSingleton<T>()` creates one for the entire application
+>
+> > [!warning] Registering after `Build()`
+> >
+> > Calling `services.AddXxx<T>()` after `builder.Build()` has no effect — the service container is already frozen. All registrations must complete before `Build()` is called.
+>
+> > ---
+>
+> **Singleton**
+> - A class with only one instance for the application lifetime; controls shared, expensive resources such as connection pools and configuration caches
+> - Thread-safe via `Lazy<T>` + private constructor; or registered as `AddSingleton<T>()` in DI for testability without global state
+>
+> > [!warning] Classic double-checked locking
+> >
+> > The manual `if (_instance == null) { lock ... }` pattern can return a partially-constructed object on pre-.NET 2.0 memory models without `volatile`. Use `Lazy<T>` instead.
+>
+> > ---
+>
+> **`Lazy<T>`**
+> - A BCL wrapper that defers object construction until first access; thread-safe by default under `LazyThreadSafetyMode.ExecutionAndPublication`
+> - Preferred Singleton initialisation pattern: `private static readonly Lazy<T> _instance = new(() => new T())`; the runtime guarantees the delegate runs exactly once
+>
+> > [!tip] Do not cache `.Value`
+> >
+> > Storing `Lazy<T>.Value` in a local variable defeats lazy initialisation — the object is constructed immediately at that assignment. Always access via the property.
+>
+> > ---
+>
+> **Factory**
+> - A static or injected method that creates and returns the correct concrete type based on a parameter; centralises object creation so callers never reference concrete classes
+> - C# switch expressions make the mapping concise and exhaustive; adding a new backend requires one new class and one new switch arm, with zero changes to calling code
+>
+> > [!warning] Missing discard arm
+> >
+> > A switch expression without a `_ => throw new ArgumentException(...)` arm throws an unguarded `SwitchExpressionException` for any unknown input. Always add the fallback arm.
+>
+> > ---
+>
+> **Observer / event delegate**
+> - A pub/sub mechanism using C# `event Action<T>` and `+=` / `-=` operators; when the subject publishes, all registered handlers are invoked automatically
+> - Decouples publishers from subscribers; delegates are type-safe and garbage-collected with the subscriber when properly unsubscribed
+>
+> > [!warning] Missing `-=` unsubscription
+> >
+> > A subscriber that registers `publisher.Event += Handler` but never calls `-=` prevents the subscriber from being garbage-collected as long as the publisher lives, silently growing memory. Unsubscribe in `Dispose()` or `StopAsync`.
+>
+> > ---
+>
+> **Strategy**
+> - An interface defining an algorithm contract, with multiple concrete implementations injected at runtime; allows scoring, pricing, or routing rules to change without touching the calling class
+> - The context class (`StockScorer`) depends only on the interface (`IScoringStrategy`); swapping `MomentumStrategy` for `VolatilityStrategy` requires no change to the scorer
+>
+> > [!tip] Interface over abstract base class
+> >
+> > Use an interface for the strategy contract unless concrete shared implementation is genuinely needed. Abstract base classes add coupling that pure interfaces avoid.
+>
+> > ---
+>
+> **Decorator pattern**
+> - A class that implements the same interface as the wrapped object and adds behaviour via composition; the caller is unaware of whether it holds the original or a decorated instance
+> - Adds cross-cutting concerns (logging, caching, retries) without modifying the original class; `.NET` standard library uses this pattern for `BufferedStream` and `LoggingHandler`
+>
+> > [!warning] Decorator vs. C# `[Attribute]`
+> >
+> > C# attributes (`[Required]`, `[Authorize]`) are metadata annotations processed at compile time or via reflection. The Decorator *pattern* adds runtime behavior through wrapping — these are entirely different mechanisms.
+>
+> > ---
+>
+> **Repository pattern**
+> - An interface abstracting data access, with concrete implementations for SQL, in-memory, or GCS; `repo.GetPrices("ASML.AS")` works identically regardless of backend
+> - Combined with DI: swap `SqlRepository` for `MockRepository` in tests purely by changing what is passed to the constructor — zero production code changes
+>
+> > [!warning] Leaking `IQueryable` through repository boundaries
+> >
+> > Returning `IQueryable<T>` from a repository exposes EF Core implementation details and allows callers to append LINQ clauses that translate to SQL. Return `IReadOnlyList<T>` or `IEnumerable<T>` — the query executes inside the repository.
+>
+> > ---
+>
+> **DataAnnotations**
+> - `System.ComponentModel.DataAnnotations` attributes (`[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`) declare validation constraints on model properties
+> - Evaluated by MVC model binding automatically; in non-MVC code, call `Validator.TryValidateObject(obj, ctx, results, validateAllProperties: true)` explicitly to collect all violations
+>
+> > [!warning] Attributes alone do not throw
+> >
+> > Decorating a property with `[Required]` does nothing on its own outside of MVC. Without an explicit `Validator.TryValidateObject` call, constraints are silently ignored. Validation must be triggered.
+>
+> > ---
+>
+> **`System.Reflection`**
+> - BCL namespace for inspecting types, properties, and methods at runtime via `Type`, `PropertyInfo`, `MethodInfo`, and `ConstructorInfo`
+> - Enables generic serializers, ORMs, config loaders, DI containers, and test frameworks; Python equivalent: `type()`, `dir()`, `inspect`
+>
+> > [!warning] Reflection in hot paths
+> >
+> > `GetProperty().GetValue()` uses late binding on every call and is 10–100× slower than direct access. Cache `PropertyInfo` objects in static fields, or compile them into typed delegates with `Expression.Lambda<Func<T, object>>()` for near-direct performance.
+>
+> > ---
+>
+> **`Activator.CreateInstance`**
+> - Creates an instance of a type by its `Type` object at runtime without knowing the concrete class at compile time; finds a matching constructor by parameter types
+> - Foundation for plugin systems that load assemblies dynamically and for ORMs that hydrate entity objects from database rows
+>
+> > [!tip] Cache the `Type` reference
+> >
+> > Repeated `Type.GetType("ClassName")` calls add overhead. Resolve the `Type` once at startup, store it in a static field, and reuse it across all `Activator.CreateInstance` calls.
+
 This note documents C# design patterns and architectural idioms, including ASP.NET Core's built-in DI container, for data engineering and backend development.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Design pattern** | A named, reusable solution to a recurring structural problem in code | Provides a shared vocabulary and proven template so teams don't reinvent solutions | Treating patterns as mandatory frameworks rather than optional tools |
-| **Dependency Injection (DI)** | Passing a class's dependencies in from outside (constructor, method, property) rather than creating them internally | Decouples components; ASP.NET Core's `IServiceCollection` manages lifetimes automatically | Registering the wrong lifetime (`AddSingleton` for a scoped resource) causing thread-safety bugs |
-| **`IServiceCollection`** | The ASP.NET Core interface used to register services and their lifetimes before the host is built | Central registration point for all DI bindings — `AddTransient`, `AddScoped`, `AddSingleton` | Registering a service after `builder.Build()` — changes have no effect |
-| **Singleton** | A class with only one instance for the application lifetime | Controls shared, expensive resources (connection pool, config cache); thread-safe via `Lazy<T>` | Classic double-checked locking without `volatile` — race condition on older runtimes |
-| **`Lazy<T>`** | A BCL wrapper that defers object construction until first access, thread-safe by default | Preferred Singleton initialisation: `static readonly Lazy<T> _instance = new(() => new T())` | Storing `Lazy<T>.Value` in a variable — that defeats lazy initialisation |
-| **Factory** | A static or injected method that creates and returns the correct concrete type based on a parameter | Centralises object creation; C# switch expressions make the mapping concise and exhaustive | Mixing creation logic with business logic inside the factory method |
-| **Observer / event delegate** | A pub/sub mechanism using C# `event Action<T>` and `+=` / `-=` operators | Decouples publishers from subscribers; delegates are type-safe and garbage-collected with the subscriber | Forgetting `-=` unsubscription — keeps objects alive, causes memory leaks |
-| **Strategy** | An interface defining an algorithm contract, with multiple concrete implementations injected at runtime | Allows scoring, pricing, or routing rules to change without touching the calling class | Using an abstract base class when an interface suffices — adds unnecessary coupling |
-| **Decorator pattern** | A class that implements the same interface as the wrapped object and adds behaviour via composition | Adds cross-cutting concerns (logging, caching, retries) without modifying the original class | Confusing with C# attributes (`[Attribute]`) — a wholly different language feature |
-| **Repository pattern** | An interface abstracting data access, with concrete implementations for SQL, in-memory, or GCS | Swap `SqlRepository` for `MockRepository` in tests purely via DI — no production code changes | Leaking `DbContext` or EF Core `IQueryable` through the repository boundary |
-| **DataAnnotations** | `System.ComponentModel.DataAnnotations` attributes (`[Required]`, `[Range]`, `[StringLength]`) | Declarative validation rules evaluated by MVC model binding and `Validator.TryValidateObject` | Using annotations without calling validation — attributes alone don't throw; validation must be triggered |
-| **`System.Reflection`** | BCL namespace for inspecting types, properties, and methods at runtime via `Type`, `PropertyInfo`, `MethodInfo` | Enables generic serialisers, config loaders, and plugin systems; equivalent to Python's `inspect` | Using reflection in hot paths — it is significantly slower than compiled code |
-| **`Activator.CreateInstance`** | Creates an instance of a type by its `Type` object at runtime without knowing the concrete class at compile time | Foundation for plugin and factory patterns that load types dynamically | Not caching the `Type` reference — repeated `Type.GetType("Name")` calls add overhead |
-
-### What this note covers
-
-- **Dependency Injection** — `IServiceCollection` registration lifetimes, constructor injection, `IServiceProvider`, test substitution
-- **Design Patterns** — Singleton (`Lazy<T>`), Factory (switch expression), Observer (event delegate), Strategy (interface injection), Decorator, Repository
-- **Data Validation** — DataAnnotations attributes, `IValidatableObject`, `Validator.TryValidateObject`, custom validators
-- **Reflection** — `GetType()`, `GetProperties()`, `GetValue()`, `Activator.CreateInstance()`, attribute inspection
-- **Project Structure & Best Practices** — solution layout, layered architecture, naming conventions, `dotnet` CLI
-- **Summary** — pattern decision flowchart, C# quick-reference table
 
 
 ```csharp

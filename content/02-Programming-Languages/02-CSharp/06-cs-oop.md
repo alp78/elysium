@@ -9,7 +9,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 06. Object-Oriented Programming - C#
+# Object-Oriented Programming - C#
 
 > [!quote]
 > "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
@@ -20,39 +20,205 @@ status: complete
 >
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
 
+> [!abstract]- Summary
+>
+> **Classes & Objects**
+> - Class declaration combines auto-properties (`{ get; set; }`), constructors, methods, and `ToString` overrides into a single type definition.
+> - Auto-properties eliminate backing-field boilerplate while preserving encapsulation; constructors enforce valid initial state.
+> - Property setters can throw on invalid input; computed properties (no setter) recalculate on every access.
+>
+> **Inheritance & Polymorphism**
+> - A derived class acquires all base-class members via `: BaseClass` syntax; C# supports single class inheritance only.
+> - `virtual` marks a method as overridable; `override` in the child replaces it; `sealed override` stops further overriding.
+> - Calling through a base-type reference dispatches to the most-derived `override` at runtime (polymorphic dispatch).
+> - `is` tests runtime type and optionally binds (`if (a is Dog d)`); `as` performs a safe cast returning `null` on mismatch.
+>
+> **Abstract Classes & Interfaces**
+> - An `abstract` class cannot be instantiated; its `abstract` methods must be overridden; it can carry fields, constructors, and concrete methods.
+> - An interface is a pure contract (no state, no constructor); a class may implement multiple interfaces simultaneously.
+> - Since C# 8.0, interfaces support default method implementations; this is rare — keep interfaces as pure contracts.
+> - Decision rule: shared state/constructor → abstract class; multi-capability contract / DI / testing → interface.
+>
+> **Encapsulation & Access Modifiers**
+> - Six modifiers control visibility: `public`, `private`, `protected`, `internal`, `protected internal`, `private protected`.
+> - `{ get; private set; }` exposes read access while guarding writes; `{ get; init; }` allows assignment only during construction.
+> - Fields should always be `private`; expose them through properties to retain the ability to add validation later.
+>
+> **Static Members**
+> - `static` fields and properties belong to the type, not instances — one shared copy across all objects.
+> - `static` methods require no instance and are called via `ClassName.Method()`; a `static` class can only contain static members.
+> - Factory methods (`FromString`, `Create`) are the primary use case; avoid mutable static state in multi-threaded code.
+>
+> **Records & Init-Only Properties**
+> - `record` is an immutable reference type with compiler-generated value equality, `ToString`, deconstruction, and `with` expression.
+> - `with` creates a modified copy without mutating the original: `emp with { Salary = 110000 }`.
+> - `record struct` is the stack-allocated value-type variant — zero GC overhead, same value-equality semantics.
+> - Records catch typos and type mismatches at compile time; `Dictionary<string, object>` only fails at runtime.
+> - Use `record` for DTOs, configs, API responses, and pipeline metadata; reserve dictionaries for truly dynamic keys.
+
+> [!note]- Glossary
+>
+> **class**
+> - A reference type that bundles state (fields/properties) and behavior (methods) into a reusable named type. Instantiated with `new`.
+> - The primary unit of OOP in C# — defines the blueprint for objects; instances are concrete allocations created from that blueprint.
+>
+> > [!tip] Blueprint vs instance
+> > The class is the mold; the object is the casting. `Dog rex = new Dog("Rex", 5)` — `Dog` is the class, `rex` is the instance. Confusing the two leads to accessing instance members via type name or vice versa.
+>
+> > ---
+>
+> **auto-property**
+> - Shorthand `{ get; set; }` syntax that instructs the compiler to generate a hidden backing field automatically.
+> - Eliminates boilerplate while preserving encapsulation; a setter body can be added later without breaking callers.
+>
+> > [!tip] Auto-property vs public field
+> > `public string Name;` is a public field — no encapsulation, no validation hook, breaks binary compatibility if changed. `public string Name { get; set; }` is an auto-property — callers use the same syntax but the implementation can evolve.
+>
+> > ---
+>
+> **constructor**
+> - A special method with the same name as the class, invoked automatically when `new` allocates an instance.
+> - Enforces that every instance starts with valid, fully-initialized state; delegates heavy work to factory methods.
+>
+> > [!tip] Constructor chaining
+> > Use `: this(...)` to chain overloaded constructors and avoid duplicating initialization logic. Use `: base(...)` in derived classes to initialize parent state before the child body executes.
+>
+> > ---
+>
+> **`ToString()`**
+> - Override of `object.ToString()` that returns a meaningful string representation of an instance.
+> - Essential for logging, debugging output, and display — without it, all objects default to printing their type name.
+>
+> > [!tip] When to override
+> > Override `ToString()` on any class that will appear in log output or console diagnostics. A terse, readable string like `Dog(Rex, age=5)` is far more useful than `YourNamespace.Dog`.
+>
+> > ---
+>
+> **inheritance**
+> - A mechanism where a derived class acquires all fields, properties, and methods from a base class and can extend or override them.
+> - Enables code reuse and type specialization; C# supports single class inheritance — one base class per type.
+>
+> > [!tip] Inheritance vs composition
+> > Prefer composition (inject dependencies as constructor parameters) for HAS-A relationships. Reserve inheritance for genuine IS-A relationships where the derived type is a specialization of the base, not merely a user of it.
+>
+> > ---
+>
+> **`virtual`**
+> - Modifier on a base-class method (or property) that marks it as overridable by derived classes.
+> - Required for polymorphic dispatch — without `virtual`, derived `override` is a compile error and runtime will always call the base version.
+>
+> > [!tip] Virtual by default in other languages
+> > C# methods are non-virtual by default (unlike Java/Python). You must explicitly opt in with `virtual`. If polymorphism is broken at runtime, check whether the base method is actually marked `virtual`.
+>
+> > ---
+>
+> **`override`**
+> - Modifier in a derived class that replaces the implementation of an inherited `virtual` (or `abstract`) method.
+> - Preserves polymorphic dispatch — callers holding a base-type reference will receive the derived implementation.
+>
+> > [!tip] `override` vs `new`
+> > Using the `new` keyword on a derived method hides the base method instead of overriding it. Polymorphism silently breaks: a `Dog` variable calls the derived method, but an `Animal` reference calls the base method. Always use `override`.
+>
+> > ---
+>
+> **`sealed`**
+> - Modifier that prevents a derived class from further overriding a `virtual` method, or prevents any class from inheriting a `sealed` class.
+> - Locks down behavior once correctness depends on the exact implementation; also enables minor JIT optimizations.
+>
+> > [!tip] Seal at the right level
+> > Seal a method when you have overridden it and want no further subclasses to change it. Seal a class when instantiation must always use the exact implementation (e.g., security-critical or performance-critical types). Do not seal preemptively.
+>
+> > ---
+>
+> **`abstract` class**
+> - A class declared with the `abstract` modifier that cannot be instantiated directly. Contains `abstract` method declarations that derived classes must implement.
+> - Defines a shared contract plus shared implementation (fields, constructors, concrete methods) for a family of related types.
+>
+> > [!tip] Abstract class vs interface
+> > Use an abstract class when derived types share genuine state or constructor logic (e.g., `Shape` carries a `Color` field). If there is no shared state, an interface is preferable because it supports multiple implementation.
+>
+> > ---
+>
+> **interface**
+> - A pure contract specifying a set of methods and properties that implementing types must provide; carries no instance state and no constructor.
+> - Enables dependency injection, testability, and multi-capability types because a single class may implement any number of interfaces.
+>
+> > [!tip] Interface-first design
+> > Depend on interfaces (`IDatabaseConnection`), not concrete classes (`SqlConnection`), so unit tests can inject fakes without a real database. Design interfaces before writing implementations.
+>
+> > ---
+>
+> **polymorphism**
+> - The ability of code written against a base type or interface to invoke the correct derived-type implementation at runtime without knowing the concrete type.
+> - Powers plugin systems, the strategy pattern, and extensible frameworks — swap implementations freely without changing call sites.
+>
+> > [!tip] Compile-time vs runtime polymorphism
+> > C# also supports compile-time polymorphism via method overloading (same name, different signatures). Runtime polymorphism via `virtual`/`override` is the OOP meaning. Both coexist; do not confuse them.
+>
+> > ---
+>
+> **`is` / `as`**
+> - `is` tests whether an object is of a given type and, in pattern form (`a is Dog d`), binds a typed variable in one step.
+> - `as` performs a safe cast returning `null` if the type does not match, avoiding the `InvalidCastException` thrown by a hard cast.
+>
+> > [!tip] Prefer `is` pattern over `as` + null check
+> > `if (a is Dog d) { use d; }` is more concise and safer than `var d = a as Dog; if (d != null) { use d; }`. Both are correct; `is` pattern is idiomatic C# since C# 7.
+>
+> > ---
+>
+> **access modifier**
+> - Keywords (`public`, `private`, `protected`, `internal`, `protected internal`, `private protected`) that control the visibility of a type or member.
+> - Encapsulation is enforced through access modifiers — expose only the intended API surface and hide implementation details.
+>
+> > [!tip] Default is private
+> > Class members default to `private` if no modifier is written. Types (classes, interfaces) default to `internal`. Make the access as restrictive as possible; widening later is non-breaking, narrowing is breaking.
+>
+> > ---
+>
+> **`init`-only property**
+> - A property declared with `{ get; init; }` that can be assigned only in a constructor or object initializer, never after construction completes.
+> - Provides immutability without requiring all initialization through a constructor — compatible with object initializer syntax.
+>
+> > [!tip] `init` vs `readonly` field
+> > `init` properties work with object initializers (`new Config { Port = 5432 }`), making them more ergonomic than readonly fields for data-transfer objects. Both enforce post-construction immutability.
+>
+> > ---
+>
+> **`static`**
+> - Modifier making a field, property, method, or class belong to the type itself rather than to any instance — one shared copy per type.
+> - Used for shared counters, factory methods, and pure utility functions that do not depend on instance state.
+>
+> > [!tip] Thread safety with mutable static state
+> > A mutable `static int _count` incremented without synchronization causes race conditions when multiple threads execute concurrently. Use `Interlocked.Increment(ref _count)` for atomic updates, or redesign to avoid shared mutable state entirely.
+>
+> > ---
+>
+> **record**
+> - An immutable reference type with compiler-generated value-based equality, `ToString`, `GetHashCode`, deconstruction, and `with`-expression support.
+> - The modern replacement for manually written immutable classes — used for DTOs, configs, API responses, and pipeline metadata.
+>
+> > [!tip] Record equality vs class equality
+> > Two record instances with identical field values are `==` equal. Two class instances with identical fields are not equal by default (reference comparison). This matters in LINQ, sets, and dictionary lookups.
+>
+> > ---
+>
+> **`with` expression**
+> - Creates a new record instance that is a copy of the original with one or more specified properties replaced: `emp with { Salary = 110000 }`.
+> - Enables non-destructive mutation — essential for immutable data patterns and thread-safe functional pipelines.
+>
+> > [!tip] `with` is records-only
+> > The `with` expression works exclusively on `record` and `record struct` types. Applying it to a plain `class` is a compile error. If you need non-destructive updates on a class, implement a manual `Clone()` or `With(...)` factory method.
+>
+> > ---
+>
+> **`record struct`**
+> - The value-type variant of `record` — stack-allocated, no garbage-collection overhead, same value-based equality and `with` expression as `record`.
+> - Preferred for small, frequently created data (coordinates, version numbers, lightweight metadata) where GC pressure matters.
+>
+> > [!tip] Size threshold for `record struct`
+> > Keep `record struct` types small (16 bytes or fewer). Larger structs are copied on every assignment and method-parameter pass, which can be slower than the heap allocation they were meant to avoid.
+
 C# OOP organises code into classes, interfaces, inheritance hierarchies, and records. This page covers all core constructs with executable examples — from basic class declaration through to records and static members.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **class** | A reference type that bundles state (properties/fields) and behavior (methods) into a reusable type. | The primary unit of OOP in C# — defines what objects look like and what they can do. | Confusing the class (the blueprint) with an instance (a concrete object created with `new`). |
-| **auto-property** | Shorthand `{ get; set; }` that generates a hidden backing field automatically. | Eliminates boilerplate while preserving encapsulation. | Using public fields instead of auto-properties — loses validation and encapsulation. |
-| **constructor** | A special method called when `new` creates an instance. Initializes required state. | Enforces that every instance starts with valid data. | Doing heavy work (I/O, network) in a constructor — use a factory method instead. |
-| **`ToString()`** | Override of `object.ToString()` to return a meaningful string representation. | Logging, debugging, and display. | Not overriding it — defaults to the type name, which isn't useful. |
-| **inheritance** | A derived class acquires all fields, properties, and methods from a base class and can extend or override them. | Code reuse and specialization — `Dog : Animal` inherits `Speak()` and adds `Fetch()`. | C# supports single class inheritance only. For multiple capabilities, use interfaces. |
-| **`virtual`** | Modifier that marks a method as overridable by derived classes. | Enables polymorphic dispatch — the runtime calls the most-derived version. | Forgetting `virtual` — the method cannot be overridden; derived classes get the base version. |
-| **`override`** | Modifier in a derived class that replaces a `virtual` method with a new implementation. | Customize behavior for specific subtypes. | Using `new` instead of `override` — silently hides the base method, breaking polymorphism. |
-| **`sealed`** | Modifier that prevents further overriding of a method or inheriting from a class. | Lock down a method or type once the correct behavior is established. | Sealing too aggressively — prevents legitimate extension. Seal only when correctness depends on it. |
-| **`abstract` class** | A class that cannot be instantiated directly — `abstract` methods must be overridden by derived classes. | Define contracts with shared implementation. | Using abstract when there's no shared code — use an interface instead. |
-| **interface** | A pure contract: a set of methods/properties that implementing types must provide. A class can implement multiple interfaces. | Dependency injection, testability, and multi-capability types. | Interfaces can have default implementations (C# 8+), but this is rarely used — keep them as pure contracts. |
-| **polymorphism** | Code written against a base type dispatches to the correct derived implementation at runtime. | Plugin systems, strategy pattern, extensible frameworks. | Not marking the base method `virtual` — `override` without `virtual` is a compile error. |
-| **`is` / `as`** | `is` tests the runtime type (and optionally binds). `as` performs a safe cast (returns `null` on failure). | Safe downcasting without exceptions. | Using a hard cast `(Dog)animal` when the type isn't guaranteed — throws `InvalidCastException`. Use `is` or `as` instead. |
-| **access modifier** | Keywords (`public`, `private`, `protected`, `internal`) controlling visibility of members. | Encapsulation — expose only the intended API surface. | Defaulting everything to `public` — exposes implementation details and makes the API hard to evolve. |
-| **`init`-only property** | `{ get; init; }` — can only be set during object construction (constructor or object initializer). | Immutable properties that are set once and never changed. | Trying to assign after construction — compile error. |
-| **`static`** | Members belonging to the type, not any instance. One copy shared across all instances. | Shared counters, factory methods, utility functions. | Mutable static state shared across threads — race conditions without `lock` or `Interlocked`. |
-| **record** | Immutable reference type with auto-generated value-based equality, `ToString`, deconstruction, and `with` expression. | DTOs, configs, API responses, pipeline metadata — the modern replacement for manually written immutable classes. | Records are reference types by default. Use `record struct` for value-type (stack-allocated) behavior. |
-| **`with` expression** | Creates a modified copy of a record without mutating the original: `emp with { Salary = 110000 }`. | Non-destructive mutation for immutable data patterns. | Only works with records and record structs — not with plain classes. |
-| **`record struct`** | Value-type variant of `record` — stack-allocated, no GC overhead, value-based equality. | Small, frequently created data (coordinates, versions). | Larger record structs (>16 bytes) are copied on assignment — can be slower than reference-type records. |
-
-### What this note covers
-
-- **Classes & Objects** — class declaration, auto-properties, constructors, `ToString`, property validation
-- **Inheritance & Polymorphism** — base/derived classes, `virtual`/`override`/`sealed`, polymorphic dispatch, `is`/`as` type checking
-- **Abstract Classes & Interfaces** — `abstract` classes, interfaces, default implementations, abstract vs interface decision
-- **Encapsulation & Access Modifiers** — `public`/`private`/`protected`/`internal`, `init`-only properties, access modifier reference
-- **Static Members** — static fields/methods/classes, factory pattern, inheritance behavior
-- **Records & Init-Only Properties** — `record`, `record struct`, value equality, `with` expression, record vs dictionary decision
 
 ## Classes & Objects
 

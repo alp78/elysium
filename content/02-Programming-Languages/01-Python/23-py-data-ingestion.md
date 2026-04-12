@@ -1,5 +1,5 @@
 ---
-title: "23 - Data Ingestion - Python"
+title: "23 - Data Ingestion — SQL Server, BigQuery, Firestore"
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
 description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23-cs-data-ingestion](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/23-cs-data-ingestion) for the C# equivalent."
@@ -15,40 +15,181 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
+> [!abstract]- Summary
+>
+> **Setup**
+> - Environment variables (`GCP_SQL_IP`, `GCP_SQL_PASSWORD`, `GCP_SA_KEY_PATH`), service account credentials, and shared GCP client initialization (`bigquery.Client`, `storage.Client`, `firestore.Client`).
+> - Two SQL Server connection factories: `sql_pymssql` (lightweight scripting) and `sql_pyodbc` (ODBC Driver 18, production-grade, supports `fast_executemany`).
+> - Benchmark infrastructure: tier definitions (2.5K / 75K / 750K rows), formatting helpers, and a shared result recorder that persists results to JSON.
+>
+> **Schema Setup**
+> - DDL for `dbo.ohlcv_bench` staging table in SQL Server (`CREATE TABLE` with explicit column types).
+> - BigQuery dataset and table creation via `bq_client.create_dataset` and `bq_client.create_table` with an explicit schema.
+>
+> **Local → SQL Server Ingestion**
+> - Three paths benchmarked: `pyodbc` with `fast_executemany`, `bcp` CLI via `subprocess`, and `SQLAlchemy` with `to_sql`.
+> - `fast_executemany` is the fastest pure-Python path; `bcp` outperforms it at 750K rows.
+>
+> **Local → BigQuery Ingestion**
+> - Three paths benchmarked: `load_table_from_file` (Python client), `bq load` CLI, and `pandas_gbq.to_gbq`.
+> - `load_table_from_file` with Parquet is the fastest and most schema-safe path.
+>
+> **Local → Firestore Ingestion**
+> - Two paths benchmarked: `batch.set` (500-doc commit loop) and `BulkWriter` (async flush with auto-retry).
+> - `BulkWriter` is faster at scale and handles 429 back-pressure automatically.
+>
+> **GCS → BigQuery Ingestion**
+> - `load_table_from_uri` for CSV, JSON, and Parquet source files already staged in `gs://{BUCKET_NAME}/bronze/`.
+> - Parquet path is fastest; `WriteDisposition.WRITE_TRUNCATE` used for reproducible re-runs.
+>
+> **GCS → SQL Server Ingestion**
+> - GCS blob downloaded via `download_as_bytes`, parsed in-memory, and inserted with `fast_executemany`.
+> - No local disk write; suitable for containerized pipelines without persistent storage.
+>
+> **Cross-Service Transfers**
+> - BQ → SQL Server: `to_dataframe()` + `fast_executemany` with chunked iteration.
+> - SQL Server → BQ: `read_sql` into a DataFrame, optional GCS staging, then `load_table_from_dataframe`.
+> - SQL Server → Firestore: `read_sql` rows converted to dicts and ingested via `BulkWriter`.
+>
+> **Export**
+> - Local CSV export via `csv.writer` from a SQL Server `SELECT` cursor.
+> - GCS export via BigQuery `extract_table` method targeting a GCS URI; supports CSV, JSON, and Avro.
+>
+> **Summary**
+> - Benchmark results table aggregated from the persisted JSON store; displayed as a DataFrame.
+> - Plotly bar chart comparing throughput (rows/s) across all methods and tiers.
+
+> [!note]- Glossary
+>
+> **bulk insert**
+> - Loading many rows in a single database operation rather than row-by-row. The core performance technique for all three targets in this note.
+> - Contrast with an `INSERT` loop, which issues one network round-trip per row and runs approximately 100× slower at 75K+ rows.
+>
+> > [!tip] When to use bulk insert
+> >
+> > Use any bulk API (`fast_executemany`, `bcp`, `load_table_from_file`, `BulkWriter`) whenever inserting more than a few hundred rows. The overhead of batch setup is amortized after roughly 500 rows.
+>
+> > ---
+>
+> **`fast_executemany`**
+> - A `pyodbc` connection option that sends an entire array of parameter tuples to the ODBC driver in one call, eliminating per-row round-trips to SQL Server.
+> - Set `cursor.fast_executemany = True` before calling `cursor.executemany()`; the default is `False`, which falls back to single-row inserts.
+>
+> > [!warning] Default mode is single-row
+> >
+> > Omitting `fast_executemany = True` silently degrades to one insert per row. At 750K rows this is the difference between ~10 s and ~200 s.
+>
+> > ---
+>
+> **BCP (Bulk Copy Program)**
+> - A SQL Server command-line utility that streams CSV or native-format data directly into SQL Server page structures, bypassing the SQL parser and row-at-a-time logging.
+> - Requires the `bcp` binary on `PATH`; authentication flags differ between Windows Auth (`-T`) and SQL Auth (`-U`/`-P`). Fastest path for large local file loads.
+>
+> > [!info] BCP vs fast_executemany
+> >
+> > BCP outperforms `fast_executemany` at 750K rows because it writes directly to data pages. Use `fast_executemany` for in-process pipelines where spawning a subprocess is undesirable.
+>
+> > ---
+>
+> **BigQuery Load Job**
+> - An asynchronous GCP job (`bigquery.LoadJobConfig`) that reads a file from local disk or a GCS URI and writes rows into a BigQuery table. Preferred over the Streaming Insert API for batch workloads.
+> - Load jobs are free per row; the Streaming Insert API charges per byte. Load jobs are subject to a 1,500-jobs-per-table-per-day quota.
+>
+> > [!warning] Load job vs Streaming Insert quota
+> >
+> > Do not substitute streaming inserts for load jobs on large batch ETL — per-byte costs accumulate quickly. Reserve streaming inserts for low-latency, low-volume append scenarios.
+>
+> > ---
+>
+> **GCS staging**
+> - Uploading a file to Google Cloud Storage before triggering a BigQuery load job via `load_table_from_uri`. Required when the file exceeds the 10 GB direct-upload cap on `load_table_from_file`.
+> - The recommended pattern for files above a few hundred MB: write to `gs://{bucket}/bronze/` then call `load_table_from_uri` with the GCS URI.
+>
+> > [!tip] Always stage Parquet for large loads
+> >
+> > GCS staging with Parquet eliminates client-side data transfer entirely. The BigQuery service reads directly from GCS, and column pruning keeps I/O minimal even for wide tables.
+>
+> > ---
+>
+> **Parquet**
+> - A columnar binary file format with built-in compression (Snappy by default) and embedded schema metadata. BigQuery can read Parquet natively without schema inference.
+> - Faster than CSV or JSON for BigQuery ingestion because the columnar layout allows the service to skip columns not in the target schema, reducing bytes read.
+>
+> > [!info] Parquet schema enforcement
+> >
+> > When loading Parquet to BigQuery, set `autodetect=False` and supply an explicit `schema` in `LoadJobConfig` to catch type mismatches at load time rather than at query time.
+>
+> > ---
+>
+> **`BulkWriter`**
+> - A Firestore client abstraction (`firestore.Client.bulk_writer()`) that queues write operations internally and flushes in batches of up to 500 documents. Supports `set`, `update`, `delete`, and `create`.
+> - Automatically retries on `429 RESOURCE_EXHAUSTED` errors with exponential back-off, making it resilient to Firestore rate limits without manual retry logic.
+>
+> > [!warning] document.set() in a loop is not bulk
+> >
+> > Calling `doc_ref.set(data)` in a Python loop issues one gRPC call per document. At 75K documents this can take minutes and will hit rate limits. Always use `BulkWriter` for batch writes.
+>
+> > ---
+>
+> **`pandas_gbq`**
+> - A Python library wrapping the BigQuery Storage Write API; exposes a single `pandas_gbq.to_gbq(df, table_id)` call that serializes a DataFrame and uploads it to BigQuery.
+> - Convenient for mid-size DataFrames (up to ~250K rows); above that, `load_table_from_file` with Parquet is faster. Set `TQDM_DISABLE=1` in the environment to suppress progress-bar output in notebooks.
+>
+> > [!tip] Suppress tqdm in production notebooks
+> >
+> > `pandas_gbq` uses `tqdm` internally. Set `os.environ['TQDM_DISABLE'] = '1'` before any import to prevent progress bars from polluting notebook output and CI logs.
+>
+> > ---
+>
+> **`load_table_from_uri`**
+> - A `bigquery.Client` method that submits a load job reading directly from one or more GCS URIs (`gs://bucket/path/*.parquet`). No data passes through the client machine.
+> - The fastest BigQuery ingestion path for large files. Always set `WriteDisposition` explicitly in `LoadJobConfig`; the default (`WRITE_APPEND`) silently duplicates rows on re-runs.
+>
+> > [!danger] Default WriteDisposition appends
+> >
+> > Omitting `write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE` on a repeated load job doubles the row count each run. Always set disposition explicitly for reproducible pipelines.
+>
+> > ---
+>
+> **benchmark tier**
+> - A row-count category used in this note to measure ingestion throughput across methods: **2.5K** (small / in-memory baseline), **75K** (medium / realistic daily batch), **750K** (large / full production load).
+> - Results at the 2.5K tier are dominated by connection overhead and rarely predict behavior at 750K. Always benchmark at the tier closest to production volume.
+>
+> > [!info] Tier rationale
+> >
+> > The three tiers correspond to the three benchmark CSV/Parquet files in `DATA_DIR`. Each tier file contains OHLCV rows for a synthetic equity universe generated at that scale.
+>
+> > ---
+>
+> **`WriteDisposition`**
+> - A BigQuery `LoadJobConfig` enum controlling what happens to existing table data before the load: `WRITE_TRUNCATE` (delete all rows first), `WRITE_APPEND` (add rows to existing data), or `WRITE_EMPTY` (fail if the table is non-empty).
+> - Must be set explicitly for reproducible benchmarks. The default is `WRITE_APPEND`, which accumulates duplicate rows across re-runs.
+>
+> > [!warning] WRITE_APPEND is the default
+> >
+> > Forgetting to set `write_disposition` causes silent row duplication. Use `WRITE_TRUNCATE` for all benchmark and ETL loads; reserve `WRITE_APPEND` only for intentional incremental appends.
+>
+> > ---
+>
+> **cross-service transfer**
+> - Moving data between two cloud services (e.g., BigQuery → SQL Server, SQL Server → Firestore) without writing to local disk. Reduces egress costs and eliminates intermediate file management.
+> - The typical pattern: read into a Python iterator or DataFrame in memory, then write to the target using that service's bulk API. For very large result sets, chunk the read to avoid OOM.
+>
+> > [!warning] In-memory buffering at scale
+> >
+> > Calling `to_dataframe()` on a 750K-row BigQuery result loads the entire result set into RAM. Use `client.list_rows(..., page_size=CHUNK_SIZE)` with a chunked insert loop for large transfers.
+>
+> > ---
+>
+> **`extract_table`**
+> - A `bigquery.Client` method that exports a BigQuery table to one or more GCS objects as CSV, newline-delimited JSON, or Avro. The export runs server-side; no data passes through the client.
+> - For local export, data must first flow through `to_dataframe()` and then be written with `csv.writer` or `df.to_csv()` — significantly slower for large tables than a GCS extract.
+>
+> > [!info] Wildcard URIs for large exports
+> >
+> > When exporting tables larger than 1 GB, use a wildcard URI (`gs://bucket/export/data-*.csv`) so BigQuery can shard the output across multiple files in parallel.
+
 This note covers Python bulk-load patterns for SQL Server, BigQuery, and Firestore, including performance benchmarking across file formats and source tiers.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Bulk insert** | Loading many rows in a single database operation rather than one at a time | Core performance technique for all three targets | Using `INSERT` in a loop instead of a bulk API; 100× slower |
-| **fast_executemany** | pyodbc option that batches parameter arrays in a single ODBC call | Drastically reduces round-trips to SQL Server | Forgetting to set it — default mode inserts one row per call |
-| **SqlBulkCopy (BCP)** | Command-line tool / API that streams data directly into SQL Server page structures | Fastest path for large local CSV/Parquet loads | Requires the `bcp` binary on PATH; auth flags differ by environment |
-| **BigQuery Load Job** | Asynchronous GCP job that ingests a file from local disk or GCS into a BQ table | Preferred over streaming inserts for large batches; no per-row cost | Confusing it with streaming insert — load jobs have a quota, streaming has per-byte cost |
-| **GCS staging** | Uploading a file to Google Cloud Storage before triggering a BigQuery load | Required for very large files that exceed the local-upload limit | Skipping staging and hitting the 10 GB direct-upload cap |
-| **Parquet** | Columnar binary format with built-in compression and schema metadata | Fastest format for BigQuery ingestion due to native column pruning | Assuming CSV is "simpler" when Parquet is faster and schema-safe |
-| **BulkWriter** | Firestore client abstraction that queues up to 500 operations before flushing | Avoids per-document round-trips; auto-retries on 429 errors | Using `document.set()` in a loop — one network call per document |
-| **pandas_gbq** | Python wrapper that writes a DataFrame to BigQuery via the Storage Write API | Convenient for mid-size DataFrames; not ideal for 750K+ rows | Triggering tqdm progress bars that pollute notebook output — disable with `TQDM_DISABLE=1` |
-| **load_table_from_uri** | BigQuery client method that loads data directly from a GCS URI | Fastest BQ ingestion path; no client-side data transfer | Forgetting to set `WriteDisposition` — default appends rather than replaces |
-| **benchmark tier** | Row-count category (2.5K / 75K / 750K) used to measure ingestion throughput | Reveals which method scales and where bottlenecks emerge | Testing only small files and assuming results hold at 750K rows |
-| **WriteDisposition** | BigQuery job option controlling whether to truncate, append, or error on existing data | Must be set explicitly for reproducible benchmarks | Omitting it causes accidental data duplication across re-runs |
-| **Cross-service transfer** | Moving data between two cloud services (e.g. BQ → SQL Server) without touching local disk | Avoids egress to local machine; useful for large result sets | Buffering the entire result set in memory as a DataFrame before writing |
-| **extract_table** | BigQuery method that exports a table to GCS as CSV, JSON, or Avro | Used in the Export section for GCS-backed archiving | Export to local disk goes through `to_dataframe()` — much slower for large tables |
-
-### What this note covers
-
-- **Setup** — environment variables, service account credentials, library imports
-- **Schema Setup** — DDL for SQL Server staging table and BigQuery dataset/table creation
-- **Local → SQL Server Ingestion** — fast_executemany, BCP, and SQLAlchemy paths with timing
-- **Local → BigQuery Ingestion** — load_table_from_file, bq CLI, and pandas_gbq paths
-- **Local → Firestore Ingestion** — batch.set and BulkWriter paths
-- **GCS → BigQuery Ingestion** — load_table_from_uri for CSV, JSON, and Parquet
-- **GCS → SQL Server Ingestion** — download_as_bytes + fast_executemany pipeline
-- **Cross-Service Transfers** — BQ → SQL Server, SQL Server → BQ, SQL Server → Firestore
-- **Export** — table export to local CSV and GCS via extract_table
-- **Summary** — benchmark results table and Plotly visualisation
-
-This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Firestore across three file tiers (2.5K / 75K / 750K rows) and four source formats (CSV, JSON, Parquet, GCS). Results are persisted to JSON for cross-session comparison and visualised with Plotly.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -64,18 +205,18 @@ This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Fi
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    LOC["Local Files\nCSV · JSON · Parquet"]
-    GCS["GCS\nbronze/"]
+    LOC["Local Files<br/>CSV · JSON · Parquet"]
+    GCS["GCS<br/>bronze/"]
     SQL["SQL Server"]
     BQ["BigQuery"]
     FS["Firestore"]
     LOC -->|"fast_executemany / bcp"| SQL
-    LOC -->|"load_table_from_file\nbq CLI"| BQ
+    LOC -->|"load_table_from_file<br/>bq CLI"| BQ
     LOC -->|"batch.set / BulkWriter"| FS
     GCS -->|"load_table_from_uri"| BQ
-    GCS -->|"download_as_bytes +\nfast_executemany"| SQL
-    SQL -->|"load_table_from_dataframe\n(GCS staging)"| BQ
-    BQ -->|"to_dataframe +\nfast_executemany"| SQL
+    GCS -->|"download_as_bytes +<br/>fast_executemany"| SQL
+    SQL -->|"load_table_from_dataframe<br/>(GCS staging)"| BQ
+    BQ -->|"to_dataframe +<br/>fast_executemany"| SQL
     SQL -->|"batch.set / BulkWriter"| FS
     SQL -->|"csv.writer"| LOC
     BQ -->|"extract_table"| GCS

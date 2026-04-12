@@ -8,7 +8,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 14. Testing - C#
+# Testing - C#
 
 > [!quote]
 > "Legacy code is simply code without tests."
@@ -19,26 +19,200 @@ status: complete
 >
 > — **Kent Beck**, *Test-Driven Development: By Example*
 
+> [!abstract]- Summary
+>
+> **Testing Philosophy**
+> - Testing pyramid: 70% unit (~1 ms, xUnit + Moq), 20% integration (~100 ms, xUnit + SqlClient), 10% E2E (WebApplicationFactory). Unit tests run on every commit; integration on every PR; E2E on deploy.
+> - TDD cycle: write a failing test, make it pass with minimal code, refactor. Tests catch silent failures — wrong prices, missing rows, schema drift.
+>
+> **Unit Testing with xUnit**
+> - `[Fact]` marks a single test; xUnit instantiates a fresh class per test for isolation (no `[SetUp]`/`[TearDown]` — use constructor and `IDisposable`).
+> - `Assert` methods: `Equal`, `True`/`False`, `Null`/`NotNull`, `Contains`, `Empty`/`NotEmpty`, `InRange`, `Throws<T>`, `Single`, `Matches`.
+> - AAA structure (Arrange / Act / Assert) is the standard test body layout.
+>
+> **Theory and InlineData**
+> - `[Theory]` + `[InlineData]` runs one method with N parameter rows — equivalent to `@pytest.mark.parametrize`.
+> - Complex objects use `[MemberData]` (static property returning `IEnumerable<object[]>`) or `[ClassData]`.
+> - Demonstrated on fee tiers, FX conversion, OHLCV candle validation, and ticker regex.
+>
+> **Mocking with Moq**
+> - Depend on interfaces; inject mock implementations in tests.
+> - Hand-written mocks track `CallCount` and `Last*` inputs — identical pattern to `Mock<T>.Setup` / `mock.Verify`.
+> - `MockExchangeGateway.FailCount` simulates transient errors for retry-logic testing.
+>
+> **Test Patterns for Data Engineering**
+> - Pure transform functions (`NormalizeTrades`, `ValidateEodPrices`) need no mocks — fast and deterministic.
+> - `MockIndexDataClient` verifies that callers pass the correct index name and call exactly once.
+> - Data-quality validators return error lists; tests assert on count and content.
+>
+> **Integration Testing with Real Database**
+> - `QueryScalar<T>` and `QueryRows` helpers connect to the `stoxx` SQL Server instance.
+> - Schema tests query `INFORMATION_SCHEMA`; completeness tests count rows per layer; quality tests assert OHLCV invariants; cross-layer tests verify bronze → silver → gold consistency.
+> - Intentional fail included: `composite_score` is a z-score (−2 to +2), not a [0, 1] percentage — exposed by the test.
+>
+> **DI Validation Testing**
+> - Build a `ServiceProvider` from `IServiceCollection` and call `GetRequiredService<T>()` for each root service.
+> - Catches missing registrations and lifetime mismatches before the first HTTP request in production.
+>
+> **CI/CD — Running Tests in GitHub Actions**
+> - `dotnet test` with `--collect:"XPlat Code Coverage"` and `--logger trx`; matrix across .NET 8 and 9.
+> - Secrets injected as environment variables; TRX and Cobertura XML uploaded as artifacts.
+
+> [!note]- Glossary
+>
+> **xUnit**
+>
+> - The dominant .NET test framework; uses `[Fact]` and `[Theory]` attributes on plain methods instead of requiring class inheritance.
+> - Preferred over NUnit and MSTest for new projects; integrates directly with `dotnet test` and every major CI system.
+>
+> > [!tip] Framework selection
+> >
+> > When starting a new .NET test project, default to xUnit. NUnit and MSTest are valid but xUnit's constructor-per-test isolation model is simpler and its ecosystem is the most actively maintained.
+>
+> > ---
+>
+> **`[Fact]`**
+>
+> - xUnit attribute that marks a method as a single, non-parametrized test case; no arguments, one expected behaviour.
+> - The basic unit of a test suite — the runner discovers and executes every public `[Fact]` method automatically.
+>
+> > [!warning] Silent omission
+> >
+> > A test method without `[Fact]` is never discovered by the runner — it compiles and builds cleanly but is silently skipped.
+>
+> > ---
+>
+> **`[Theory]` + `[InlineData]`**
+>
+> - xUnit mechanism for parametrized tests: the method runs once per `[InlineData]` attribute, each row appearing as a separate named test result.
+> - C# equivalent of `@pytest.mark.parametrize`; each row is isolated and independently reported as pass or fail.
+>
+> > [!info] Complex parameter data
+> >
+> > `[InlineData]` only accepts compile-time constants. For objects, collections, or computed values use `[MemberData]` (a static `IEnumerable<object[]>` property) or `[ClassData]` (a class implementing `IEnumerable<object[]>`).
+>
+> > ---
+>
+> **Moq**
+>
+> - The most widely used .NET mocking library; generates fake interface implementations at runtime via `new Mock<T>()`.
+> - Isolates the system under test from real I/O, databases, and APIs so tests are deterministic and fast.
+>
+> > [!warning] Mocking concrete classes
+> >
+> > `new Mock<SqlConnection>()` will fail or behave unexpectedly because `SqlConnection` has no virtual members. Moq can only mock interfaces or classes with `virtual` methods.
+>
+> > ---
+>
+> **`Mock<T>.Setup`**
+>
+> - Configures what a Moq mock returns or does when a specific method is called: `mock.Setup(s => s.Method()).Returns(value)`.
+> - Controls mock behaviour so the test is fully deterministic regardless of external state.
+>
+> > [!warning] Silent default return
+> >
+> > If `Setup` is omitted for a called method, Moq returns `default(T)` — `null` for reference types, `0` for numerics — without any error. The test may pass for the wrong reason.
+>
+> > ---
+>
+> **`Mock<T>.Verify`**
+>
+> - Asserts that a mocked method was called a specified number of times with specific arguments: `mock.Verify(s => s.Method(arg), Times.Once())`.
+> - Validates interaction behaviour — confirms that the production code actually invoked the dependency, not just that it returned the right value.
+>
+> > [!warning] Unverified calls
+> >
+> > Skipping `Verify` means a missing dependency call (e.g., audit log never written, order never submitted) goes completely undetected — the test passes even if the critical side effect never happened.
+>
+> > ---
+>
+> **FluentAssertions**
+>
+> - NuGet library providing readable assertion chains: `actual.Should().Be(expected, because: "reason")`.
+> - Self-describing failure messages eliminate the need for custom error strings and make assertion intent obvious at a glance.
+>
+> > [!tip] Mixing assertion styles
+> >
+> > Choose one assertion style per project. Mixing `Assert.Equal` with FluentAssertions chains in the same file produces inconsistent failure messages and confuses reviewers.
+>
+> > ---
+>
+> **`IDisposable` / `IAsyncLifetime`**
+>
+> - xUnit interfaces implemented on the test class to hook setup (constructor) and teardown (`Dispose` / `DisposeAsync`); replace NUnit's `[SetUp]` / `[TearDown]`.
+> - `IAsyncLifetime` adds `InitializeAsync` and `DisposeAsync` for tests that need async setup (opening DB connections, seeding data).
+>
+> > [!warning] Expensive constructor setup
+> >
+> > The constructor runs before every `[Fact]` in the class. Placing a database connection or HTTP client there spins up a new instance for each test — use `IClassFixture<T>` for shared expensive resources.
+>
+> > ---
+>
+> **`IClassFixture<T>`**
+>
+> - xUnit mechanism for sharing a single fixture instance across all tests in a class; the fixture is created once, injected into the constructor, and disposed after the last test.
+> - Used for expensive resources — DB connections, HTTP clients, in-memory servers — equivalent to `scope="class"` in pytest fixtures.
+>
+> > [!warning] Shared mutable state
+> >
+> > Mutating fixture data inside a test makes all subsequent tests in the class order-dependent and non-reproducible. Fixture objects should be read-only after construction or should reset state explicitly in each test.
+>
+> > ---
+>
+> **`WebApplicationFactory`**
+>
+> - ASP.NET Core test helper (`Microsoft.AspNetCore.Mvc.Testing`) that boots the real application in-process for integration tests; no live server required.
+> - Enables full end-to-end HTTP testing with the real DI container, middleware pipeline, and routing — `CreateClient()` returns an `HttpClient` wired directly to the in-memory host.
+>
+> > [!info] Lazy startup
+> >
+> > The factory does not start the application until `CreateClient()` is called. Calling `CreateClient()` from a fixture constructor is the correct pattern to ensure the app is ready before any test runs.
+>
+> > ---
+>
+> **`dotnet test`**
+>
+> - CLI command that discovers, builds (unless `--no-build`), and executes all tests in the solution or specified project.
+> - Entry point for CI pipelines; supports `--filter` (run by name or trait), `--logger trx` (structured results), and `--collect:"XPlat Code Coverage"` (coverlet integration).
+>
+> > [!warning] Working directory
+> >
+> > Always run `dotnet test` from the solution root. Running from a subdirectory may miss projects, resolve the wrong `global.json`, or produce incomplete coverage data.
+>
+> > ---
+>
+> **coverlet**
+>
+> - .NET code coverage collector distributed as a NuGet package (`coverlet.collector`); activated by the `--collect:"XPlat Code Coverage"` flag during `dotnet test`.
+> - Generates Cobertura or OpenCover XML consumed by CI dashboards (GitHub Actions, Azure DevOps, SonarQube) to enforce coverage thresholds.
+>
+> > [!warning] Missing coverage output
+> >
+> > Omitting `--collect:"XPlat Code Coverage"` causes tests to run normally but produces no coverage data — the CI step succeeds silently with zero coverage reported.
+>
+> > ---
+>
+> **AAA (Arrange-Act-Assert)**
+>
+> - The standard three-phase structure of a unit test: set up inputs and dependencies (Arrange), invoke the unit under test (Act), verify the result (Assert).
+> - Makes tests readable and predictable; each phase has a single responsibility and the boundary between them is immediately visible.
+>
+> > [!tip] Keeping phases distinct
+> >
+> > When Arrange and Assert blur into the same line (e.g., `Assert.Equal(expected, service.Compute(input))`), the test becomes harder to debug on failure. Capture the Act result in a named variable, then assert against it separately.
+>
+> > ---
+>
+> **DI Validation**
+>
+> - A test that builds a `ServiceProvider` from the application's `IServiceCollection` and calls `GetRequiredService<T>()` for each root service to verify the full dependency graph resolves without errors.
+> - Catches missing registrations, wrong lifetimes (Scoped injected into Singleton), and unresolved dependencies before they surface as startup crashes or 500 errors in production.
+>
+> > [!info] When to run
+> >
+> > Add one DI validation test per microservice or API project. It requires no I/O, runs in milliseconds, and is the cheapest safety net against container misconfiguration.
+
 This note covers C# testing patterns using xUnit, Moq, and FluentAssertions.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **xUnit** | The dominant .NET testing framework — uses `[Fact]` and `[Theory]` attributes instead of test class inheritance | Preferred over NUnit/MSTest for new projects; integrates with `dotnet test` and all major CI systems | Mixing xUnit and NUnit in the same project — their assertion APIs conflict |
-| **[Fact]** | xUnit attribute marking a method as a single, non-parametrized test case | The basic unit of a test suite — no parameters, one expected behaviour | Forgetting the attribute — the method is silently ignored by the test runner |
-| **[Theory] + [InlineData]** | xUnit mechanism for parametrized tests — the method runs once per `[InlineData]` row | Equivalent to `@pytest.mark.parametrize`; each row is an independent, named test | Using `[InlineData]` with complex objects — use `[MemberData]` or `[ClassData]` instead |
-| **Moq** | The most widely used .NET mocking library — creates fake implementations of interfaces at runtime | Isolates the system under test from real I/O, databases, or APIs | Mocking concrete classes — always depend on interfaces to make mocking possible |
-| **Mock\<T\>.Setup** | Configures what a Moq mock returns or does when a specific method is called | Controls the mock's behaviour so the test is deterministic | Forgetting `.Returns(...)` — the mock returns `default(T)` (null/0) silently |
-| **Mock\<T\>.Verify** | Asserts that a mocked method was called a specified number of times with specific arguments | Validates interaction behaviour (that code called the dependency correctly) | Not calling `Verify` — a missing dependency call goes undetected |
-| **FluentAssertions** | NuGet library providing readable assertion chains like `.Should().Be(x)` | Makes assertion failures self-describing; reduces need for custom error messages | Using `Assert.Equal` alongside FluentAssertions in the same project — pick one |
-| **IDisposable / IAsyncLifetime** | xUnit interfaces implemented on the test class to run setup (`Constructor`) and teardown (`Dispose`) | Replace `[SetUp]`/`[TearDown]` from NUnit; constructor runs before each test | Putting expensive setup in the constructor — it runs before every `[Fact]`, not once |
-| **IClassFixture\<T\>** | xUnit mechanism for sharing a single instance of setup across all tests in a class | Used for expensive resources (DB connections, HTTP clients); equivalent to `scope="class"` in pytest | Mutating the shared fixture state inside a test — tests become order-dependent |
-| **WebApplicationFactory** | ASP.NET Core test helper that boots the real app in-memory for integration tests | Enables end-to-end API testing without a running server | Forgetting to call `CreateClient()` — the factory does not start the app until a client is requested |
-| **dotnet test** | CLI command that discovers and runs all tests in the solution | Entry point for CI pipelines; accepts `--filter`, `--logger`, and `--collect` | Running it from the wrong directory — always run from the solution root |
-| **coverlet** | .NET code coverage tool bundled with the SDK; collects coverage during `dotnet test` | Generates Cobertura or OpenCover XML consumed by CI dashboards | Omitting `--collect:"XPlat Code Coverage"` — tests run but no coverage data is produced |
-| **AAA (Arrange-Act-Assert)** | The standard structure of a test: set up data, call the unit, assert the result | Makes tests readable and predictable; each section has a single responsibility | Combining arrange and assert in the same line — obscures what is being tested |
-| **Dependency Injection (DI) validation** | Test that verifies `IServiceCollection` can resolve all registered services without runtime errors | Catches misconfigured services before deployment, not at the first HTTP request | Skipping DI tests — misconfigured singletons surface as 500 errors in production |
 
 ### What this note covers
 

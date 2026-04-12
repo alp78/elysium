@@ -1120,8 +1120,8 @@ stateDiagram-v2
     [*] --> SECONDARY
     SECONDARY --> RESOLVING: role switch begins
     PRIMARY --> RESOLVING: role switch begins
-    RESOLVING --> PRIMARY: recovery completes\nSYNCHRONIZED rows found
-    RESOLVING --> SECONDARY: demoted\ndata movement resumes
+    RESOLVING --> PRIMARY: recovery completes<br/>SYNCHRONIZED rows found
+    RESOLVING --> SECONDARY: demoted<br/>data movement resumes
     PRIMARY --> [*]
     SECONDARY --> [*]
     note left of RESOLVING

@@ -409,11 +409,11 @@ Bill Inmon's approach is top-down: build an integrated, normalized Enterprise Da
 ```mermaid
 flowchart TD
     oltp["Source Systems (OLTP)"]
-    ods["ODS\nOperational Data Store\n(optional, near-real-time staging)"]
-    edw["EDW\n3NF, integrated, atomic"]
-    martA["Data Mart A\nFinance — star schema"]
-    martB["Data Mart B\nRisk — star schema"]
-    martC["Data Mart C\nCompliance — star schema"]
+    ods["ODS<br/>Operational Data Store<br/>(optional, near-real-time staging)"]
+    edw["EDW<br/>3NF, integrated, atomic"]
+    martA["Data Mart A<br/>Finance — star schema"]
+    martB["Data Mart B<br/>Risk — star schema"]
+    martC["Data Mart C<br/>Compliance — star schema"]
 
     oltp --> ods --> edw
     edw --> martA

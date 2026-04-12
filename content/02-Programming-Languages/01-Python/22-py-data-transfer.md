@@ -1,5 +1,5 @@
 ---
-title: "22 - Data Transfer - Python"
+title: "22 - Data Transfer — GCS, SQL Server, BigQuery"
 tags: [python, gcp, data-transfer, benchmarks]
 aliases: [Data Transfer Python, GCS Transfer, BigQuery Load]
 description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22-cs-data-transfer](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/22-cs-data-transfer) for the C# equivalent."
@@ -8,32 +8,173 @@ updated: 2026-03-27
 status: complete
 ---
 
-# 22. Data Transfer — GCS, SQL Server, BigQuery
+# Data Transfer — GCS, SQL Server, BigQuery
 
 > [!quote]
 > "Make it work, make it right, make it fast — in that order. But when moving data at scale, make it parallel."
 >
 > — **Kent Beck**
 
+> [!abstract]- Summary
+>
+> **Setup**
+> - Imports standard library, third-party, and GCP client packages; loads `.env`; initialises `storage.Client`, `bigquery.Client`, and `kms.KeyManagementServiceClient`; defines formatting helpers and benchmark file sets.
+>
+> **Upload: Local → GCS**
+> - Single-file upload via `.upload_from_filename()`; directory upload via explicit loop; parallel Transfer Manager upload with configurable chunk size and worker count; throughput benchmarks across file sizes.
+>
+> **Copy: Local → VM**
+> - `rsync` over SSH and `gcloud compute scp` benchmarks for moving datasets to a Compute Engine instance; `returncode` validation pattern.
+>
+> **Transfer: VM → GCS**
+> - `gcloud storage cp` invoked via `subprocess` from a running VM; direct GCS API upload from within the VM instance.
+>
+> **Parallel Transfer**
+> - Multi-threaded chunked upload benchmarks isolating the effect of concurrency level vs chunk size on aggregate throughput.
+>
+> **Download: GCS → Local**
+> - Single-blob download; Transfer Manager parallel download with chunk/worker tuning.
+>
+> **Download: VM → Local**
+> - Pulling files from a Compute Engine VM back to local storage via `rsync` and `scp`.
+>
+> **File Compression Benchmarks**
+> - gzip, bz2, lzma, zstd throughput and compression-ratio comparisons; zstd emerges as the best ratio/speed trade-off.
+>
+> **Production Pipeline**
+> - End-to-end compress → split → parallel upload → download → verify (CRC32c) → merge → decompress pipeline with cleanup; CMEK encryption applied at upload.
+
+> [!note]- Glossary
+>
+> **GCS bucket**
+> - Google Cloud Storage container that holds objects (blobs) in a flat namespace; all uploads, downloads, and pipeline intermediaries land in a bucket.
+> - Object paths are prefixes (e.g., `data/2024/file.csv`), not POSIX directories; there are no true subdirectories.
+>
+> > [!warning] Treating GCS like a filesystem
+> >
+> > Iterating a "folder" with a path like `gs://bucket/data/` without specifying the prefix correctly silently returns all objects in the bucket.
+>
+> > ---
+>
+> **Blob / object**
+> - Individual file stored in GCS, identified by its full object key (e.g., `data/file.csv`); every transfer operation targets one or more blobs.
+> - Object keys are strings, not filesystem paths; two keys sharing a prefix are co-located only logically, not physically.
+>
+> > [!warning] Confusing object key with a relative path
+> >
+> > GCS has no concept of "current directory" — always supply the full key from the bucket root.
+>
+> > ---
+>
+> **Multipart / parallel upload**
+> - Splits a large file into fixed-size chunks and uploads them concurrently across multiple threads or processes to saturate available bandwidth.
+> - Required to reach >100 MB/s throughput; a single-threaded upload loop becomes the bottleneck for files above ~1 GB.
+>
+> > [!tip] Use Transfer Manager for parallel uploads
+> >
+> > `transfer_manager.upload_chunks_concurrently()` handles splitting, ordering, and reassembly automatically — no manual chunk management needed.
+>
+> > ---
+>
+> **Resumable upload**
+> - GCS upload session that records acknowledged byte offsets so an interrupted transfer can restart from the last confirmed chunk rather than from byte 0.
+> - Mandatory for files >5 MB on unreliable or high-latency links; a single dropped packet on a simple upload forces a full restart.
+>
+> > [!info] GCS resumable session lifetime
+> >
+> > A resumable upload session is valid for 7 days after the last activity. After that, the session expires and the upload must restart from the beginning.
+>
+> > ---
+>
+> **Transfer Manager**
+> - `google-cloud-storage` helper (`google.cloud.storage.transfer_manager`) that orchestrates parallel chunk uploads and downloads behind a single API call.
+> - Simplest way to achieve parallel throughput without manual chunking; exposes `worker_type` (threads vs processes) and `max_workers` for tuning.
+>
+> > [!warning] Calling `.upload_from_filename()` on large files
+> >
+> > The default single-call upload is single-threaded; switch to `transfer_manager.upload_chunks_concurrently()` for files above 100 MB.
+>
+> > ---
+>
+> **`subprocess` / `rsync`**
+> - `subprocess.run()` executes shell commands from Python to drive Linux utilities (`rsync`, `gcloud storage`) for VM-to-VM and local-to-VM transfers where the Python client library overhead is too high.
+> - Must always check `returncode`; a non-zero code indicates a transfer failure that Python itself cannot detect otherwise.
+>
+> > [!danger] Silent failures from unchecked `returncode`
+> >
+> > `subprocess.run()` does not raise an exception on a failed shell command unless `check=True` is passed. Omitting it leaves partial or missing transfers undetected.
+>
+> > ---
+>
+> **`SqlAlchemy` engine**
+> - Python connection factory (`sqlalchemy.create_engine()`) that wraps an ODBC driver and provides the connection-string abstraction used by `pandas.to_sql()` to issue bulk-insert SQL against SQL Server.
+> - The correct dialect string for SQL Server over ODBC is `mssql+pyodbc`; using `mssql` alone causes driver resolution failures.
+>
+> > [!warning] Missing ODBC driver
+> >
+> > `create_engine()` with `mssql+pyodbc` will raise `InterfaceError` at runtime if the Microsoft ODBC Driver for SQL Server is not installed on the host.
+>
+> > ---
+>
+> **`pandas.to_sql()`**
+> - DataFrame method that bulk-inserts rows via the SQLAlchemy engine into a SQL Server table; accepts `chunksize`, `if_exists`, and `method` parameters.
+> - Defaulting `chunksize=None` sends all rows in a single transaction, which can exhaust server memory on datasets larger than ~100 k rows.
+>
+> > [!tip] Set `chunksize` and `method="multi"` for large inserts
+> >
+> > `df.to_sql(..., chunksize=5000, method="multi")` batches rows and uses a multi-row `INSERT` statement, dramatically reducing round-trips and memory pressure.
+>
+> > ---
+>
+> **BigQuery Load Job**
+> - Asynchronous GCS-to-BigQuery import (`bigquery.LoadJobConfig`) that reads Parquet, CSV, or JSON from a GCS URI and writes to a destination table; the job runs server-side and returns a job handle to poll.
+> - The fastest path for moving large datasets from GCS into BigQuery; streaming inserts (`insert_rows_json`) are orders of magnitude slower and more expensive for bulk historical loads.
+>
+> > [!warning] Using streaming inserts for bulk loads
+> >
+> > `insert_rows_json` is billed per row and has a 10 MB per-request limit; a load job via GCS is free for data already in GCS and has no practical size ceiling.
+>
+> > ---
+>
+> **CMEK / KMS key**
+> - Customer-managed encryption key applied to GCS objects via Cloud KMS; the key name is supplied as `kms_key_name` on upload to encrypt each object at rest under a key the customer controls.
+> - Required for regulated data; the service account performing the upload must hold `cloudkms.cryptoKeyEncrypterDecrypter` on the key resource.
+>
+> > [!danger] Missing KMS IAM binding
+> >
+> > Uploading with `kms_key_name` set but without the `cryptoKeyEncrypterDecrypter` role on the service account raises a `403 PERMISSION_DENIED`; objects already uploaded without the key are stored under Google-managed encryption, not CMEK.
+>
+> > ---
+>
+> **zstd compression**
+> - Zstandard algorithm (`zstandard` Python library) offering the best compression-ratio to throughput trade-off across the benchmarks in this note; used in the production pipeline to reduce wire bytes before GCS upload.
+> - Consistently outperforms gzip at equivalent or better compression ratios in the benchmarks; supports streaming compression via `ZstdCompressor.stream_writer()`.
+>
+> > [!tip] Prefer zstd over gzip for pipeline intermediaries
+> >
+> > At compression level 3 (the default), zstd achieves gzip-level ratios at 3–5× the throughput; level 1 is appropriate when CPU is the bottleneck.
+>
+> > ---
+>
+> **Checksum / CRC32c**
+> - Cyclic redundancy check computed on each chunk during upload/download to detect corruption in transit; GCS natively stores the CRC32c of every object and exposes it for post-download verification.
+> - Skipping the verify step after download allows silent bit-rot to propagate undetected into downstream BigQuery loads or SQL Server inserts.
+>
+> > [!warning] Skipping post-download verification
+> >
+> > Always compare the locally recomputed CRC32c against `blob.crc32c` after download; a mismatch indicates network corruption and requires re-download before further processing.
+>
+> > ---
+>
+> **`BULK INSERT`**
+> - T-SQL statement that reads a flat file directly from the SQL Server host's filesystem into a table in a single server-side operation; the fastest single-statement insert path for SQL Server.
+> - The file path in `BULK INSERT` refers to the *server* filesystem, not the client machine; pointing it at a client-side path silently fails or raises a path-not-found error.
+>
+> > [!danger] Path resolves on the server, not the client
+> >
+> > If the SQL Server instance is remote, the data file must be copied to the server (or a UNC share accessible from the server) before `BULK INSERT` can read it.
+
 This note is the Python reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **GCS bucket** | Google Cloud Storage container that holds objects (blobs) in a flat namespace | All uploads, downloads, and pipeline intermediaries land in a bucket | Treating GCS like a POSIX filesystem — paths are object prefixes, not directories |
-| **Blob / object** | Individual file stored in GCS, identified by its full key (e.g., `data/file.csv`) | Every transfer operation targets one or more blobs | Confusing object key with a relative path; GCS has no true subdirectories |
-| **Multipart / parallel upload** | Splitting a large file into chunks and uploading them concurrently to saturate bandwidth | Required to reach >100 MB/s throughput on large files | Using a single-threaded upload loop for files >1 GB — becomes the bottleneck |
-| **Resumable upload** | GCS session that can restart from the last acknowledged byte after a network interruption | Mandatory for files >5 MB on unreliable links | Using simple uploads for large files — a single dropped packet forces a full restart |
-| **Transfer Manager** | `google-cloud-storage` helper that orchestrates parallel chunk uploads/downloads behind a single API call | Simplest way to get parallel throughput without manual chunking | Calling `.upload_from_filename()` directly for large files and missing the concurrency gain |
-| **`subprocess` / `rsync`** | Shell command execution from Python to drive Linux utilities (`rsync`, `gcloud storage`) | Used for VM-to-VM and local-to-VM transfers where Python client overhead is too high | Forgetting to check `returncode` — silent failures leave incomplete transfers unchecked |
-| **`SqlAlchemy` engine** | Python ORM connection factory used to issue bulk-insert SQL against SQL Server | Provides the connection string abstraction used with `pandas.to_sql()` | Using the wrong dialect string (`mssql` vs `mssql+pyodbc`) or missing the ODBC driver |
-| **`pandas.to_sql()`** | DataFrame method that bulk-inserts rows via the SQLAlchemy engine | Used for benchmarking Python insert throughput against SQL Server | Defaulting `chunksize=None`, which sends all rows in one transaction and can exhaust server memory |
-| **BigQuery Load Job** | Asynchronous GCS-to-BigQuery import that reads Parquet/CSV/JSON and writes to a table | The fastest path for moving large datasets from GCS into BigQuery | Using streaming inserts (insertAll) for bulk historical loads — much slower and more expensive |
-| **CMEK / KMS key** | Customer-managed encryption key applied to GCS objects via Cloud KMS | Required for regulated data; some pipelines encrypt blobs before upload | Applying CMEK only at upload and forgetting to grant the service account `cloudkms.cryptoKeyEncrypterDecrypter` |
-| **zstd compression** | Zstandard algorithm offering the best ratio/speed trade-off in the benchmarks here | Used in the production pipeline to reduce wire bytes before upload | Assuming gzip is faster — zstd consistently outperforms gzip at equivalent or better ratios in the benchmarks |
-| **Checksum / CRC32c** | Hash computed on each chunk to detect corruption in transit | Post-download verification step in the production pipeline | Skipping the verify step after download — silent bit-rot can corrupt downstream BigQuery loads |
-| **`BULK INSERT`** | T-SQL statement that reads a flat file directly into a SQL Server table from the server's filesystem | Used in the SQL Server benchmarks as the fastest single-statement insert path | Pointing the path at the client machine — `BULK INSERT` reads from the *server* filesystem, not the client |
 
 ### What this note covers
 
@@ -2341,14 +2482,14 @@ Choose the algorithm based on your pipeline's bottleneck — CPU time or final s
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1e2030', 'primaryTextColor': '#cdd6f4', 'primaryBorderColor': '#45475a', 'lineColor': '#89b4fa', 'secondaryColor': '#181825', 'tertiaryColor': '#313244', 'edgeLabelBackground': '#1e2030', 'fontFamily': 'monospace'}}}%%
 flowchart TD
-    A[Need to compress?] --> B{Decompression\nspeed critical?}
-    B -->|Yes — real-time or\nlow-latency pipeline| C["lz4\n1.6x ratio · 460 MB/s compress\n1.0+ GB/s decompress"]
-    B -->|No — batch or\nnightly job| D{Minimize\nstorage cost?}
-    D -->|Yes| E["brotli\n3.0x ratio · 88 MB/s"]
-    D -->|No — balance\nspeed and ratio| F{Need universal\nformat support?}
-    F -->|Yes — cross-team,\ncross-tool| G["gzip\n2.9x ratio · 31 MB/s\nEvery OS and language"]
-    F -->|No — internal\npipeline only| H["zstd level 3\n2.8x ratio · 215 MB/s\nProduction sweet spot"]
-    A -->|Multiple named files\nor folder| I["ZIP\nPreserves filenames\nper-file compression"]
+    A[Need to compress?] --> B{Decompression<br/>speed critical?}
+    B -->|Yes — real-time or<br/>low-latency pipeline| C["lz4<br/>1.6x ratio · 460 MB/s compress<br/>1.0+ GB/s decompress"]
+    B -->|No — batch or<br/>nightly job| D{Minimize<br/>storage cost?}
+    D -->|Yes| E["brotli<br/>3.0x ratio · 88 MB/s"]
+    D -->|No — balance<br/>speed and ratio| F{Need universal<br/>format support?}
+    F -->|Yes — cross-team,<br/>cross-tool| G["gzip<br/>2.9x ratio · 31 MB/s<br/>Every OS and language"]
+    F -->|No — internal<br/>pipeline only| H["zstd level 3<br/>2.8x ratio · 215 MB/s<br/>Production sweet spot"]
+    A -->|Multiple named files<br/>or folder| I["ZIP<br/>Preserves filenames<br/>per-file compression"]
 ```
 
 #### Chart — compression speed vs ratio

@@ -8,12 +8,274 @@ updated: 2026-04-04
 status: complete
 ---
 
-# 12. Async & Concurrency - Python
+# 12. Async and Concurrency - Python
 
 > [!quote]
 > "Everybody who learns concurrency thinks they understand it, ends up finding mysterious races they thought weren't possible, and discovers that they didn't actually understand it yet after all."
 >
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)
+
+> [!abstract]- Summary
+>
+> **Async and Await** — `async def` / `await` drive a single-threaded event loop for I/O-bound concurrency. `asyncio.gather` runs coroutines concurrently and collects all results; `asyncio.TaskGroup` (3.11+) adds structured cancellation. `asyncio.Semaphore` caps concurrent execution; `asyncio.wait_for` enforces per-coroutine timeouts. `asyncio.as_completed` yields futures fastest-first. `asyncio.Lock` guards shared state; `asyncio.Event` broadcasts a one-shot ready signal. Async generators (`async def` + `yield`) stream paginated data with `async for`.
+>
+> **Tasks and Parallelism** — `concurrent.futures` unifies thread and process pools under a single API. `ThreadPoolExecutor` parallelises I/O-bound blocking calls (GIL is released during I/O); `ProcessPoolExecutor` bypasses the GIL for true CPU parallelism in separate processes. `submit()` + `as_completed()` processes futures fastest-first; `pool.map()` preserves submission order. `asyncio.to_thread()` bridges a blocking call into the async event loop. `multiprocessing.Queue` passes data across process boundaries via serialisation.
+>
+> **Threading and Concurrency** — `threading.Thread` creates OS threads; `.join()` waits for completion. `threading.Lock` serialises read-modify-write sequences. `threading.Event` holds workers until a signal arrives; `threading.Barrier` synchronises N threads at a checkpoint before the next phase. `queue.Queue` is the thread-safe FIFO for producer-consumer patterns.
+>
+> **Advanced Synchronisation** — Python has no built-in reader-writer lock, countdown latch, lock-free atomics (`Interlocked`), or periodic timer — C# equivalents documented with migration patterns. Retry with exponential backoff is the standard transient-error recovery pattern for async I/O.
+>
+> **Decision rule** — I/O-bound + async library → `asyncio`; I/O-bound + blocking library → `ThreadPoolExecutor`; CPU-bound → `ProcessPoolExecutor`. Rate-limit with `asyncio.Semaphore`; pipeline with `asyncio.Queue` or `queue.Queue`; guard shared state with `threading.Lock`.
+
+> [!note]- Glossary
+>
+> **asyncio**
+> - Python's standard-library single-threaded asynchronous I/O framework built on an event loop that multiplexes coroutines cooperatively.
+> - Ideal for I/O-bound concurrency (HTTP, DB, file); useless for CPU-bound work because it runs on one thread and does not bypass the GIL.
+>
+> > [!tip] asyncio is not parallelism
+> >
+> > `asyncio` overlaps waiting time across coroutines but executes only one at a time. CPU-bound tasks block the loop; offload them to `ProcessPoolExecutor` or `asyncio.to_thread`.
+>
+> > ---
+>
+> **async / await**
+> - `async def` declares a coroutine — a function that can suspend and resume without blocking a thread.
+> - `await` pauses the current coroutine and yields control back to the event loop until the awaited object resolves.
+>
+> > [!warning] Un-awaited coroutine silently does nothing
+> >
+> > Calling `async def fetch()` without `await` returns a coroutine object and never executes the body. Python emits `RuntimeWarning: coroutine 'fetch' was never awaited`.
+>
+> > ---
+>
+> **coroutine**
+> - A function declared with `async def` that returns a coroutine object when called; the body runs only when the object is `await`ed or scheduled.
+> - The fundamental unit of asyncio programs — `gather`, `TaskGroup`, and `create_task` all schedule coroutines.
+>
+> > [!info] Coroutine vs function
+> >
+> > A regular function executes immediately on call. A coroutine is a lazy object: it does nothing until driven by the event loop via `await`, `asyncio.run()`, or `create_task()`.
+>
+> > ---
+>
+> **event loop**
+> - The single-threaded scheduler inside `asyncio` that drives coroutines by resuming them when their awaited I/O completes.
+> - `asyncio.run(main())` creates, runs, and closes the loop; in Jupyter the loop is already running — use `await` directly.
+>
+> > [!danger] Nested asyncio.run() raises RuntimeError
+> >
+> > `asyncio.run()` cannot be called inside an already-running loop (Jupyter, FastAPI, Airflow). Use `await` directly in those environments, or apply `nest_asyncio` as a last resort.
+>
+> > ---
+>
+> **asyncio.gather**
+> - Schedules multiple coroutines concurrently and returns all results in submission order when every coroutine completes.
+> - With `return_exceptions=True`, exceptions are returned as values instead of aborting the gather; without it, the first exception cancels remaining tasks.
+>
+> > [!tip] gather vs TaskGroup
+> >
+> > Prefer `gather(return_exceptions=True)` when partial failures are acceptable and all outcomes must be inspected. Prefer `TaskGroup` (3.11+) for all-or-nothing operations that should abort immediately on any failure.
+>
+> > ---
+>
+> **TaskGroup (Python 3.11+)**
+> - Structured concurrency primitive: all tasks created inside `async with asyncio.TaskGroup() as tg` are cancelled if any one raises an exception.
+> - Uses `except*` syntax to catch `ExceptionGroup` — multiple simultaneous exceptions from different tasks.
+>
+> > [!info] Structured concurrency guarantee
+> >
+> > `TaskGroup` ensures no task outlives its scope. Orphaned background tasks (a common `gather` bug) are impossible — the `async with` block does not exit until every task is settled.
+>
+> > ---
+>
+> **GIL (Global Interpreter Lock)**
+> - CPython mutex that allows only one thread to execute Python bytecode at a time, preventing true CPU parallelism across threads.
+> - The GIL is released during I/O operations, so threads still provide concurrency for network and file work; only CPU-bound loops are serialised.
+>
+> > [!warning] ThreadPoolExecutor is not CPU-parallel
+> >
+> > Adding threads to CPU-bound work adds context-switching overhead with no parallelism gain — measured speedup drops below 1.0×. Use `ProcessPoolExecutor` to bypass the GIL with separate processes.
+>
+> > ---
+>
+> **concurrent.futures**
+> - Standard-library module providing `ThreadPoolExecutor` and `ProcessPoolExecutor` under a uniform API: `submit()`, `map()`, `as_completed()`.
+> - Switching from threads to processes requires only replacing the executor class — the rest of the call site is identical.
+>
+> > [!tip] Uniform API benefit
+> >
+> > Profile first, then swap: start with `ThreadPoolExecutor` for I/O work and replace with `ProcessPoolExecutor` for CPU work without changing business logic.
+>
+> > ---
+>
+> **ThreadPoolExecutor**
+> - Manages a pool of reusable OS threads for running blocking I/O calls concurrently without blocking the calling thread.
+> - `max_workers` should be set explicitly; the default can spawn dozens of threads, which wastes memory for I/O workloads with high sleep-to-work ratios.
+>
+> > [!info] Bridging sync and async
+> >
+> > Use `loop.run_in_executor(pool, blocking_fn, *args)` or the convenience wrapper `asyncio.to_thread(blocking_fn, *args)` to run a blocking call inside the event loop without stalling it.
+>
+> > ---
+>
+> **ProcessPoolExecutor**
+> - Creates a pool of separate OS processes, each with its own Python interpreter and GIL, enabling true CPU parallelism on multi-core machines.
+> - All arguments and return values must be picklable; the `if __name__ == "__main__":` guard is required on Windows to prevent recursive subprocess spawning.
+>
+> > [!warning] Pickling overhead
+> >
+> > Inter-process data transfer serialises arguments and results with `pickle`. Passing large numpy arrays, open file handles, or lambda functions fails with `PicklingError`. Keep payloads small or use shared memory (`multiprocessing.shared_memory`).
+>
+> > ---
+>
+> **asyncio.Semaphore**
+> - Async-safe counter that limits how many coroutines can execute a guarded block simultaneously; extras `await` until a slot frees.
+> - `Semaphore(N)` is the standard rate-limiting pattern for capping concurrent API calls, database connections, or file handles.
+>
+> > [!danger] Semaphore limits execution, not creation
+> >
+> > Creating 10,000 tasks with `Semaphore(10)` still allocates 10,000 task objects in memory. For large fan-outs, create tasks lazily or feed them through a bounded `asyncio.Queue` to cap both memory and concurrency.
+>
+> > ---
+>
+> **asyncio.wait_for**
+> - Wraps a coroutine with a deadline; raises `asyncio.TimeoutError` and cancels the coroutine if it does not complete within the specified seconds.
+> - Unlike C#'s `CancellationToken`, cancellation is automatic — the coroutine receives `CancelledError` internally and must handle cleanup in `finally` or `except asyncio.CancelledError`.
+>
+> > [!tip] Always handle CancelledError in cleanup paths
+> >
+> > If a timed-out coroutine holds a lock or an open connection, it must release it in a `finally` block; otherwise the resource leaks even after the timeout fires.
+>
+> > ---
+>
+> **asyncio.as_completed**
+> - Returns an iterator of futures in completion order (fastest first), regardless of submission order; equivalent to C#'s `Task.WhenAny` used in a loop.
+> - Use when latency matters and partial results can be processed immediately, rather than waiting for the slowest task before processing any.
+>
+> > [!info] as_completed vs gather
+> >
+> > `gather` blocks until all tasks finish and returns results in submission order. `as_completed` unblocks as each task finishes, returning results in wall-clock order. Choose `gather` for batch collection, `as_completed` for streaming display or early termination.
+>
+> > ---
+>
+> **asyncio.Queue**
+> - Async-safe FIFO queue for producer-consumer pipelines; `put()` blocks if bounded and full, `get()` blocks if empty, enforcing backpressure.
+> - Equivalent to C#'s `Channel<T>`; use sentinel values (`None`) or `maxsize` to signal workers and cap memory usage.
+>
+> > [!warning] asyncio.Queue is not thread-safe
+> >
+> > `asyncio.Queue` is designed for coroutines on the same event loop. Passing it to `threading.Thread` workers causes undefined behaviour. Use `queue.Queue` for thread-based pipelines.
+>
+> > ---
+>
+> **asyncio.Lock**
+> - Async-safe mutual exclusion primitive; only one coroutine can hold the lock at a time — others `await` until it is released.
+> - Typical use: guard a shared cache or token refresh so only one coroutine triggers the expensive operation while others wait and reuse the result.
+>
+> > [!info] asyncio.Lock vs threading.Lock
+> >
+> > `asyncio.Lock` is not thread-safe; it only works within a single event loop. For mixed async/thread code, use `threading.Lock` or `asyncio.to_thread` to isolate the boundary.
+>
+> > ---
+>
+> **asyncio.Event**
+> - Async signalling primitive: `event.set()` unblocks all coroutines currently waiting on `await event.wait()` simultaneously; the event stays set until `event.clear()`.
+> - Use to broadcast a one-shot ready signal (e.g., "schema validated, all loaders may proceed") rather than polling.
+>
+> > [!tip] One-shot vs repeating signals
+> >
+> > `asyncio.Event` is best for one-shot broadcasts. For repeating signals or value handoff, prefer `asyncio.Queue`. For phased milestones across multiple stages, use `asyncio.Barrier` (3.11+) or `asyncio.gather`.
+>
+> > ---
+>
+> **async generator**
+> - An `async def` function containing `yield` that produces values lazily; consumed with `async for`, equivalent to C#'s `IAsyncEnumerable<T>`.
+> - Ideal for paginated API responses, streaming database cursors, or large file processing where materialising all items at once would exhaust memory.
+>
+> > [!info] Early exit triggers cleanup
+> >
+> > Using `break` inside `async for` sends a `GeneratorExit` (via `aclose()`) to the generator, which triggers `finally` blocks inside it. Always put resource cleanup in `finally` to avoid connection leaks on early exit.
+>
+> > ---
+>
+> **threading.Thread**
+> - OS-level thread created with `threading.Thread(target=fn, args=())` and started with `.start()`; `.join()` blocks the caller until the thread finishes.
+> - Prefer `ThreadPoolExecutor` for managed thread pools; use `threading.Thread` directly only for long-lived background tasks (heartbeat loops, file watchers).
+>
+> > [!warning] Daemon threads are silently killed
+> >
+> > A daemon thread (`daemon=True`) is terminated immediately when the main thread exits, without running `finally` blocks or cleanup. Use non-daemon threads and explicit `.join()` for any thread that writes data or holds resources.
+>
+> > ---
+>
+> **threading.Lock**
+> - Mutual exclusion primitive that serialises access to shared mutable state; `with lock:` acquires on entry and releases on exit.
+> - `threading.Lock` is not reentrant — the same thread acquiring it twice deadlocks. Use `threading.RLock` if re-entrant acquisition is needed.
+>
+> > [!danger] += is not atomic in Python
+> >
+> > Despite the GIL, `counter += 1` compiles to LOAD / ADD / STORE — three bytecode instructions. The GIL can be released between them, causing lost updates. Always wrap read-modify-write sequences with `threading.Lock`.
+>
+> > ---
+>
+> **threading.Event**
+> - Thread signalling primitive; `event.set()` unblocks all threads waiting on `event.wait()`. Equivalent to C#'s `ManualResetEventSlim`.
+> - The event stays set until `event.clear()`; use `event.is_set()` for non-blocking polls.
+>
+> > [!tip] Event vs Queue for thread coordination
+> >
+> > Use `threading.Event` for a broadcast "go" signal with no payload. Use `queue.Queue` when the signal must carry data or when multiple distinct signals need to be queued.
+>
+> > ---
+>
+> **threading.Barrier**
+> - Synchronises exactly N threads at a checkpoint: all N must call `barrier.wait()` before any can proceed. Direct equivalent of C#'s `System.Threading.Barrier`.
+> - Useful for phased ETL pipelines where all partition loads must complete before the merge step begins.
+>
+> > [!warning] Broken barrier raises BrokenBarrierError
+> >
+> > If a thread raises inside `barrier.wait()` or the barrier is aborted with `barrier.abort()`, all waiting threads receive `BrokenBarrierError`. Always handle this in each worker to avoid silent deadlock.
+>
+> > ---
+>
+> **queue.Queue**
+> - Thread-safe FIFO queue for inter-thread communication; `put()` blocks if bounded and full, `get()` blocks if empty. Equivalent to C#'s `BlockingCollection<T>`.
+> - Handles locking internally — no manual `Lock` required for producer-consumer patterns.
+>
+> > [!tip] Stop signal pattern
+> >
+> > Use a `threading.Event` as a stop signal rather than a sentinel value when multiple consumers are running: `stop_event.set()` signals all workers simultaneously without requiring one sentinel per worker thread.
+>
+> > ---
+>
+> **multiprocessing.Queue**
+> - Process-safe queue that passes data between processes using OS pipes and `pickle` serialisation; unlike `queue.Queue`, it crosses process memory boundaries.
+> - Use with `ProcessPoolExecutor` producer-consumer patterns; avoid for high-frequency small messages due to serialisation overhead.
+>
+> > [!warning] Serialisation cost is non-trivial
+> >
+> > Each item passed through `multiprocessing.Queue` is pickled on write and unpickled on read. For throughput-sensitive pipelines, batch items into lists before queuing or consider `multiprocessing.shared_memory` for large arrays.
+>
+> > ---
+>
+> **exponential backoff**
+> - Retry strategy that doubles the wait interval after each failure — 0.1s, 0.2s, 0.4s, 0.8s — to reduce load on a failing downstream service.
+> - After `max_retries` attempts the final exception is re-raised, signalling a permanent failure to the caller.
+>
+> > [!tip] Add jitter to backoff in multi-client scenarios
+> >
+> > When many clients retry simultaneously (API rate-limit hit), pure exponential backoff causes a retry thundering herd. Add `random.uniform(0, delay)` jitter to spread retry bursts across time.
+>
+> > ---
+>
+> **structured concurrency**
+> - Programming model (Python 3.11 `TaskGroup`, Trio `nursery`) where tasks are scoped to a block — no task can outlive the block, and any failure cancels siblings.
+> - Eliminates the "fire-and-forget leak" pattern where `asyncio.create_task` tasks escape the calling coroutine's lifetime.
+>
+> > [!info] C# equivalent
+> >
+> > C# achieves structured concurrency via `Task.WhenAll` with `CancellationTokenSource` linkage. `TaskGroup` is more ergonomic: cancellation and exception aggregation happen automatically without manual `CancellationToken` plumbing.
 
 Python provides async/await for I/O-bound concurrency, `concurrent.futures` for thread/process pooling, and `threading`/`multiprocessing` for low-level control. The GIL limits CPU parallelism to multi-processing. This note covers asyncio fundamentals, task parallelism, threading, and synchronization primitives.
 ### Key terms used in this note

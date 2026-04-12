@@ -12,14 +12,112 @@ updated: 2026-04-03
 status: complete
 ---
 
-# HTTP Requests — Interacting with APIs and Services
-
-Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the standard command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For REST API design patterns including pagination, error handling, and idempotency, see the [Data Architecture section](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
+# HTTP Requests and APIs
 
 > [!quote]
 > "I just wanted it to do Internet transfers good, fast and reliably and that's what I worked on making reality."
 >
 > — **Daniel Stenberg** (creator of curl)
+
+> [!abstract]- Summary
+>
+> `curl` and PowerShell's `Invoke-RestMethod` / `Invoke-WebRequest` are the standard CLI tools for making HTTP requests, testing REST APIs, downloading files with retry logic, and diagnosing latency — covering the full spectrum from one-off GET calls to authenticated POST requests and production-grade downloads.
+>
+> - **Linux curl tools** — GET/POST/PUT/PATCH/DELETE with `-H` headers and `-d` bodies; bearer token and Basic Auth; production downloads with `--retry`, `--connect-timeout`, `--max-time`, `-f`; `-w` timing breakdown across DNS, TCP, TLS, and TTFB phases; wget for recursive and resumable downloads; tool selection guidance (curl vs wget vs Python requests).
+> - **PowerShell HTTP request tools** — `Invoke-RestMethod` for auto-deserialized JSON/XML objects; `Invoke-WebRequest` for file downloads with `-OutFile`; `-MaximumRetryCount` / `-RetryIntervalSec` (PS 7+); Base64-encoded Basic Auth; `ConvertTo-Json` / `ConvertFrom-Json` for body serialization.
+> - **Operations and safety** — when to use CLI tools (API testing, health checks, debugging, one-off downloads) vs language SDKs (production pipelines, pagination, rate limiting); warnings on silent exit-0 failures, token hardcoding, and missing `Content-Type`; troubleshooting table for 401/403/connection-refused/JSON parse errors.
+
+> [!note]- Glossary
+>
+> **`curl`** — a command-line tool for transferring data over HTTP, HTTPS, FTP, SFTP, and other protocols, controlled entirely by flags.
+> It supports every HTTP method, custom headers, authentication, TLS, file upload and download, and per-phase timing metrics via `-w`.
+>
+> > [!warning] curl exits 0 on HTTP 4xx/5xx by default
+> >
+> > Without `-f`, a 404 or 500 response saves as a file and the script continues unaware. Use `curl -f` or check `-w '%{http_code}'` in production scripts.
+>
+> ---
+>
+> **HTTP method** — the verb in an HTTP request that declares the intended operation: GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (remove).
+> Every API interaction requires the correct method; an incorrect method returns `405 Method Not Allowed`. PUT replaces an entire resource; PATCH modifies specific fields only.
+>
+> > [!info] PUT vs PATCH
+> >
+> > Most REST APIs use PATCH for partial updates. Sending PUT with a partial body may silently null-out unspecified fields depending on the server implementation.
+>
+> ---
+>
+> **HTTP status code** — a 3-digit number in the response indicating the outcome: 2xx (success), 3xx (redirect), 4xx (client error), 5xx (server error).
+> Codes drive retry logic: 5xx and 429 (Too Many Requests) are transient and safe to retry; 4xx are permanent client errors that retrying will not fix.
+>
+> > [!tip] Not all non-200 codes are failures
+> >
+> > 201 (Created), 204 (No Content), and 3xx redirects are valid success responses. Treat any 2xx as success; use `-L` with curl to follow 3xx automatically.
+>
+> ---
+>
+> **Bearer token** — an authentication credential sent in the `Authorization: Bearer <token>` HTTP header, standard in OAuth 2.0 and API key schemes.
+> Tokens expire and must be resolved at runtime. Never hardcode them in scripts — use `gcloud auth print-access-token` or a secret manager and inject via environment variable.
+>
+> > [!danger] Hardcoded tokens leak into version control and shell history
+> >
+> > Resolve at runtime: `curl -H "Authorization: Bearer $(gcloud auth print-access-token)" https://api/endpoint`.
+>
+> ---
+>
+> **JSON (JavaScript Object Notation)** — a lightweight text format for structured data using key-value pairs and arrays: `{"key": "value", "list": [1, 2, 3]}`. The standard format for REST API request and response bodies.
+> Send JSON with curl using `-H 'Content-Type: application/json' -d '{"key":"value"}'`. Omitting the `Content-Type` header causes many APIs to reject or misparse the body.
+>
+> > [!warning] Missing Content-Type on POST requests
+> >
+> > Always set `-H 'Content-Type: application/json'` when POSTing JSON. Without it the server may parse the body as form data or return a 400 Bad Request.
+>
+> ---
+>
+> **`jq`** — a command-line JSON processor that filters, transforms, and extracts fields from JSON using a concise query language.
+> Essential for parsing API responses in shell scripts: `curl -s https://api/data | jq '.results[].name'`. Not installed by default — requires `apt install jq` on Debian/Ubuntu.
+>
+> > [!tip] Validate API response format before parsing
+> >
+> > If `jq` fails with a parse error, the API likely returned an HTML error page instead of JSON. Add `-v` to curl to inspect the raw response and `Content-Type` header.
+>
+> ---
+>
+> **`wget`** — a command-line downloader optimized for file retrieval, recursive directory mirroring, and resumable transfers.
+> Unlike curl, wget writes to a local file by default and natively supports `-c` (resume), `--tries` (retry), and `-r` (recursive). Use wget when resuming large interrupted downloads; use curl for API calls and custom headers.
+>
+> > [!tip] Choose curl for APIs, wget for file downloads
+> >
+> > wget has no equivalent to curl's `-w` timing breakdown or per-phase latency metrics. For scripted API calls with JSON bodies and custom headers, curl is the better tool.
+>
+> ---
+>
+> **`Invoke-RestMethod`** (`irm`) — the PowerShell cmdlet for making HTTP requests that automatically deserializes JSON and XML responses into .NET objects.
+> The PowerShell equivalent of curl for API interactions. Returns structured objects navigable with dot notation (`$response.records`), not raw text. Throws a terminating error on HTTP 4xx/5xx — wrap in `try/catch`.
+>
+> > [!warning] Invoke-RestMethod throws on HTTP errors
+> >
+> > Unlike curl (which exits 0 on 4xx/5xx by default), `Invoke-RestMethod` throws a terminating exception. Set `$ErrorActionPreference = 'Stop'` and use `try/catch` for reliable error handling.
+>
+> ---
+>
+> **`Invoke-WebRequest`** (`iwr`) — the PowerShell cmdlet that returns the raw HTTP response object including `StatusCode`, `Headers`, and `Content` as a string.
+> Preferred over `Invoke-RestMethod` for file downloads because `-OutFile` streams the body directly to disk. In PowerShell 7+, `-MaximumRetryCount` and `-RetryIntervalSec` add native retry on 429/5xx.
+>
+> > [!info] Retry parameters require PowerShell 7+
+> >
+> > `-MaximumRetryCount` and `-RetryIntervalSec` do not exist in Windows PowerShell 5.1. Use an explicit `for` retry loop for cross-version compatibility.
+>
+> ---
+>
+> **TLS (Transport Layer Security)** — the cryptographic protocol that encrypts HTTP traffic over HTTPS. The handshake negotiates cipher suites and verifies the server certificate before any data is exchanged.
+> `curl`'s `time_appconnect` metric measures the TLS handshake duration. A high `time_appconnect` relative to `time_connect` indicates a slow certificate chain or missing OCSP stapling on the server.
+>
+> > [!tip] Inspect TLS details with curl -v
+> >
+> > `curl -v https://endpoint` prints the full TLS handshake, cipher suite, and certificate chain. Use this to diagnose certificate errors, expired certs, and SNI mismatches.
+
+Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the standard command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For REST API design patterns including pagination, error handling, and idempotency, see the [Data Architecture section](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%

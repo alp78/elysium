@@ -71,11 +71,11 @@ Every piece of data flowing through a pipeline needs five types of context to be
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
 flowchart TD
     DATA(["Data Record"])
-    RC["Run Context\nWhich execution\nproduced this?"]
-    PC["Provenance Context\nWhere did it\ncome from?"]
-    TC["Temporal Context\nAs of when\nis it true?"]
-    QC["Quality Context\nHow trustworthy\nis it?"]
-    BC["Business Context\nWhat does\nit mean?"]
+    RC["Run Context<br/>Which execution<br/>produced this?"]
+    PC["Provenance Context<br/>Where did it<br/>come from?"]
+    TC["Temporal Context<br/>As of when<br/>is it true?"]
+    QC["Quality Context<br/>How trustworthy<br/>is it?"]
+    BC["Business Context<br/>What does<br/>it mean?"]
 
     DATA --> RC
     DATA --> PC
@@ -696,14 +696,14 @@ Bi-temporal tables track two independent time axes:
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
 flowchart TD
     subgraph BT["Business Time Axis — when was it true in the world?"]
-        V1["Version 1\nvalid_from: 2025-01-01\nvalid_to: 2026-03-01\nsector: Technology"]:::highlight
-        V2["Version 2\nvalid_from: 2026-03-01\nvalid_to: 9999-12-31\nsector: Software"]
+        V1["Version 1<br/>valid_from: 2025-01-01<br/>valid_to: 2026-03-01<br/>sector: Technology"]:::highlight
+        V2["Version 2<br/>valid_from: 2026-03-01<br/>valid_to: 9999-12-31<br/>sector: Software"]
         V1 -->|"sector changed"| V2
     end
     subgraph ST["System Time Axis — when did the system learn about each version?"]
-        R1["Recorded: 2025-01-01\nfirst known version"]:::highlight
-        R2["Recorded: 2026-03-01\nnew version discovered"]
-        RC["Recorded: 2026-03-05\nretroactive correction to V1\nsupersedes original R1"]
+        R1["Recorded: 2025-01-01<br/>first known version"]:::highlight
+        R2["Recorded: 2026-03-01<br/>new version discovered"]
+        RC["Recorded: 2026-03-05<br/>retroactive correction to V1<br/>supersedes original R1"]
         R1 --> RC
         R2
     end
@@ -1446,13 +1446,13 @@ As data flows through pipeline stages, context must flow with it. Each stage rea
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
 flowchart LR
-    API["Source API\napi_version · endpoint"]
-    GCS["GCS Landing\nsource_file · extracted_at\nrun_id · checksum"]
-    BRZ["SQL Server Bronze\n_run_id · _loaded_at\n_source_system · _source_file\n_extracted_at"]
-    SLV["SQL Server Silver\n_run_id · _loaded_at\n_source_system · event_time\nvalid_from/to · _quality_score"]
-    GLD["SQL Server Gold\n_run_id · _loaded_at\n_quality_score"]
-    BQ["BigQuery\n_run_id · _loaded_at\nlabels · descriptions"]
-    META["Metadata Tables\npipeline_runs\ndata_quality_results"]
+    API["Source API<br/>api_version · endpoint"]
+    GCS["GCS Landing<br/>source_file · extracted_at<br/>run_id · checksum"]
+    BRZ["SQL Server Bronze<br/>_run_id · _loaded_at<br/>_source_system · _source_file<br/>_extracted_at"]
+    SLV["SQL Server Silver<br/>_run_id · _loaded_at<br/>_source_system · event_time<br/>valid_from/to · _quality_score"]
+    GLD["SQL Server Gold<br/>_run_id · _loaded_at<br/>_quality_score"]
+    BQ["BigQuery<br/>_run_id · _loaded_at<br/>labels · descriptions"]
+    META["Metadata Tables<br/>pipeline_runs<br/>data_quality_results"]
     SIDECAR[".meta.json Sidecar"]
 
     API --> GCS
@@ -2352,17 +2352,17 @@ The following patterns represent the most common ways context is silently lost i
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
 flowchart TD
-    START{"What is your\nprimary pain point?"}
+    START{"What is your<br/>primary pain point?"}
 
-    START -->|"Cannot debug\nfailed runs"| RC["Run Context\npipeline_runs + _run_id\non every row"]:::tip
-    START -->|"Cannot trace\ndata origin"| PC["Provenance Context\nsource columns +\nlineage API"]:::tip
-    START -->|"Late data / corrections\nbreak reports"| TC["Temporal Context\nbi-temporal modeling,\nevent_time + _processed_at"]:::tip
-    START -->|"Nobody trusts\nthe data"| QC["Quality Context\nquality checks + scores\n+ circuit breakers"]:::tip
-    START -->|"Teams define\nmetrics differently"| BC["Business Context\nglossary + data contracts\n+ catalog tags"]:::tip
+    START -->|"Cannot debug<br/>failed runs"| RC["Run Context<br/>pipeline_runs + _run_id<br/>on every row"]:::tip
+    START -->|"Cannot trace<br/>data origin"| PC["Provenance Context<br/>source columns +<br/>lineage API"]:::tip
+    START -->|"Late data / corrections<br/>break reports"| TC["Temporal Context<br/>bi-temporal modeling,<br/>event_time + _processed_at"]:::tip
+    START -->|"Nobody trusts<br/>the data"| QC["Quality Context<br/>quality checks + scores<br/>+ circuit breakers"]:::tip
+    START -->|"Teams define<br/>metrics differently"| BC["Business Context<br/>glossary + data contracts<br/>+ catalog tags"]:::tip
 
-    RC --> MIN["Minimum Viable:\npipeline_runs table\n+ _run_id everywhere\n+ column descriptions"]:::highlight
+    RC --> MIN["Minimum Viable:<br/>pipeline_runs table<br/>+ _run_id everywhere<br/>+ column descriptions"]:::highlight
     PC --> MIN
-    TC --> ADV["Advanced:\nbi-temporal dimensions\n+ event sourcing\n+ Dataplex lineage"]
+    TC --> ADV["Advanced:<br/>bi-temporal dimensions<br/>+ event sourcing<br/>+ Dataplex lineage"]
     QC --> MIN
     BC --> ADV
 

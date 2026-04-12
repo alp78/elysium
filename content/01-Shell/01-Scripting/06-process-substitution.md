@@ -14,34 +14,130 @@ status: complete
 
 # Process Substitution and Here Documents — Advanced Input/Output
 
-These features let you treat command output as files and embed multi-line strings directly in your scripts. They eliminate temporary files and make complex data pipeline scripts significantly cleaner.
-
 > [!quote]
 > "Expect the output of every program to become the input to another, as yet unknown, program. Don't clutter output with extraneous information. Don't insist on interactive input."
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
+> [!abstract]- Summary
+>
+> Covers bash process substitution (`<()`, `>()`), here documents (`<<EOF`, `<<'EOF'`), and here strings (`<<<`) for treating command output as files and embedding multi-line input — with PowerShell parity for each pattern.
+>
+> **Input process substitution `<()`**
+> - Runs a command and exposes its stdout as a readable `/dev/fd/N` path accepted anywhere a filename is expected
+> - Eliminates temporary files when diffing two command outputs: `diff <(sort a) <(sort b)`
+> - Used to compare SQL row counts between prod and staging with a single `diff` call
+> - Bash-only: not available in POSIX `sh`
+>
+> **Output process substitution `>()`**
+> - Creates a writable file descriptor whose data is piped into a backing command's stdin
+> - Enables fan-out pipelines: `tee >(gzip > data.gz) >(wc -l) < data.csv > /dev/null`
+> - Both `<()` and `>()` can appear on the same command line
+>
+> **Here documents (`<<`, `<<'EOF'`, `<<-`)**
+> - `<<'EOF'` (quoted): literal block — no `$var` or `$(cmd)` expansion; safe for SQL with dollar signs
+> - `<<EOF` (unquoted): expanding block — shell resolves variables and command substitutions before passing to the command
+> - `<<-`: expanding, strips leading tabs (not spaces) from each line
+> - Useful for inline SQL to `sqlcmd`, multi-command SSH sessions, and config file generation
+>
+> **Here strings (`<<<`)**
+> - Feeds a single string as stdin without spawning an `echo` subshell
+> - Works with `jq`, `base64`, `bc`, `grep`, and `read`; bash-only
+>
+> **PowerShell equivalents**
+> - No native process substitution; alternatives: temp files via `[System.IO.Path]::GetTempFileName()`, `Tee-Object -Variable`, `ForEach-Object` inline branching
+> - `@'...'@` (literal here-string) and `@"..."@` (expanding here-string); closing delimiter must be at column 0
+>
+> **Operations and safety**
+> - Use `#!/usr/bin/env bash` — process substitution and `<<<` fail silently or error under `sh`/`dash`
+> - Quote here-doc delimiters (`<<'EOF'`) when the body contains SQL dollar signs or backticks
+> - Avoid embedding here-docs longer than ~50 lines; extract to a `.sql` or config file instead
+> - Route 3+ consumers with different transforms to a Python/PowerShell script rather than nesting `>()` expressions
+> - PowerShell `Tee-Object` supports only one simultaneous destination; use `ForEach-Object` for multiple
+> - 3 warnings, 6 recommendations, 5 troubleshooting entries
 
-## Key terms used in this note
+> [!note]- Glossary
+>
+> **`<(cmd)`** — input process substitution
+> - Bash operator that runs `cmd` in a subshell and exposes its stdout as a readable path (`/dev/fd/N`); accepted anywhere a filename argument is expected.
+> - Eliminates temporary files when commands like `diff`, `paste`, or `comm` require two file operands — both can be live command outputs.
+>
+> > [!warning] Bash-only, not POSIX sh
+> >
+> > Scripts starting with `#!/bin/sh` fail with a syntax error on systems where `/bin/sh` is `dash` (Debian, Ubuntu). Always use `#!/usr/bin/env bash`.
+>
+> ---
+>
+> **`>(cmd)`** — output process substitution
+> - Bash operator that creates a writable `/dev/fd/N` path; data written to it is piped into `cmd`'s stdin.
+> - Used with `tee` to fan out a single input stream to multiple consumers (compress + count in one pass).
+>
+> > [!info] Data flows into `>(cmd)`, not out
+> >
+> > The direction is opposite to `<()`. The producer writes to the substitution; the named `cmd` is the consumer. Newcomers often reverse this mental model.
+>
+> ---
+>
+> **`/dev/fd/N`** — kernel file descriptor path
+> - A virtual filesystem path the Linux kernel exposes for open file descriptors; `N` is the descriptor integer assigned at runtime.
+> - Process substitution expands to a path like `/dev/fd/63`, which is why it works wherever a filename string is accepted.
+>
+> > [!warning] Descriptor exists only during command execution
+> >
+> > The path disappears once the substituted command exits. Storing `/dev/fd/63` in a variable and referencing it later will return "no such file or descriptor."
+>
+> ---
+>
+> **`<<EOF`** — expanding here document
+> - Shell construct that feeds a multi-line block as stdin; shell expands `$variables` and `$(cmd)` substitutions before passing the text to the command.
+> - Used for dynamic config generation (`cat <<EOF > config.env`) and multi-command SSH sessions where variable values must be resolved at runtime.
+>
+> > [!warning] Unintended expansion in SQL
+> >
+> > Dollar signs in SQL parameter syntax (e.g., `$1` in PostgreSQL) are expanded by the shell unless the delimiter is quoted. Use `<<'EOF'` for any SQL body.
+>
+> ---
+>
+> **`<<'EOF'`** — literal here document
+> - Same as `<<EOF` but the quoted delimiter suppresses all shell expansion; the body is passed verbatim to the command.
+> - The safe default for embedding SQL, JSON, or any text containing dollar signs, backticks, or backslashes that must not be interpreted.
+>
+> > [!info] `<<-` strips leading tabs
+> >
+> > The `<<-EOF` variant (dash after `<<`) removes leading tab characters from each line, allowing the body to be indented for readability. It strips tabs only — spaces are preserved.
+>
+> ---
+>
+> **`<<<`** — here string
+> - Bash operator that feeds a single string as stdin to a command; avoids spawning an `echo` subshell, making it slightly more efficient and syntactically cleaner.
+> - Standard idiom for one-off stdin values to `jq`, `base64`, `bc`, `grep`, and `read` (including multi-variable `read first rest <<< "$line"`).
+>
+> > [!warning] Bash-only
+> >
+> > `<<<` is not available in POSIX `sh`. Use `printf '%s<br>' "$val" | cmd` as the portable fallback.
+>
+> ---
+>
+> **`Tee-Object`** — PowerShell pipeline splitter
+> - PowerShell cmdlet that duplicates pipeline output: one copy goes to a file (`-FilePath`) or in-memory variable (`-Variable`), the other continues downstream.
+> - The closest PowerShell equivalent to `tee >(cmd)` for capturing and forwarding simultaneously without a temporary file.
+>
+> > [!warning] Single destination only
+> >
+> > `Tee-Object` supports one output target at a time. To route to two or more consumers simultaneously, use `ForEach-Object` with inline branching logic.
+>
+> ---
+>
+> **`@'...'@` / `@"..."@`** — PowerShell here-strings
+> - PowerShell multi-line string literals: `@'...'@` is literal (no expansion), `@"..."@` is expanding (`$var` and `$(expr)` resolved).
+> - The PowerShell equivalent of bash here documents; used for inline SQL blocks, JSON templates, and config file generation via `Invoke-Sqlcmd` or `Set-Content`.
+>
+> > [!danger] Closing delimiter must be at column 0
+> >
+> > PowerShell raises a syntax error if the closing `'@` or `"@` has any leading whitespace — even a single space or tab. This applies even inside indented `if` blocks or functions.
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Process substitution `<()` | A bash feature that runs a command and exposes its stdout as a readable file descriptor (`/dev/fd/N`). Other commands can read from this descriptor as if it were a file on disk. | Eliminates temporary files when you need to pass command output as a filename argument (e.g., `diff <(sort a) <(sort b)`). | Only available in bash (not POSIX sh). Scripts using `#!/bin/sh` cannot use process substitution. |
-| Process substitution `>()` | The writable counterpart: creates a file descriptor that pipes data into a command stdin. Used to feed a single data stream to multiple consumers simultaneously. | Enables `tee >(gzip > data.gz) >(wc -l)` -- compress and count in one pass, no temp files. | Less commonly used than `<()` and can be confusing -- the data flows into the `>()` command, not out of it. |
-| File descriptor | A small integer handle the kernel assigns to each open file, socket, or pipe in a process. Process substitution creates ephemeral descriptors visible as `/dev/fd/N`. | Understanding that `<(cmd)` expands to a path like `/dev/fd/63` explains why it works anywhere a filename is expected. | Assuming the file persists on disk -- process substitution descriptors exist only while the command runs. |
-| Here document (`<<`) | A shell construct that feeds multi-line inline text to a command stdin without creating a temporary file. Delimited by a user-chosen word (e.g., `EOF`). | Used to embed SQL scripts, config blocks, or multi-line strings directly in shell scripts. | Not quoting the delimiter: `<<EOF` expands `$variables`; `<<'EOF'` treats everything as literal text. |
-| Here string (`<<<`) | A bash construct that feeds a single string to a command stdin. More efficient than `echo "text" \| command` because it avoids spawning a subshell. | Quick way to feed short values to tools like `jq`, `base64`, `bc`, or `read`. | Only available in bash -- not POSIX sh. |
-| Here-string (PowerShell) | PowerShell multi-line string literal: `@'...'@` (literal, no expansion) or `@"..."@` (expanding). The closing delimiter must start at column 0. | The PowerShell equivalent of bash here documents. Used for inline SQL, JSON, and config templates. | Indenting the closing delimiter -- PowerShell requires it at column 0 with no leading whitespace. |
-| `Tee-Object` | The PowerShell cmdlet that splits pipeline output: one copy goes to a file or variable, the other continues down the pipeline. | The closest PowerShell equivalent to bash `tee >(cmd)` for in-memory branching. | Expecting `Tee-Object` to support multiple simultaneous destinations like bash `tee >() >()` -- it supports only one. |
+These features let you treat command output as files and embed multi-line strings directly in your scripts. They eliminate temporary files and make complex data pipeline scripts significantly cleaner.
 
-## What this note covers
-
-- Bash input process substitution (`<()`) for passing command output as filenames
-- Bash output process substitution (`>()`) for splitting output to multiple consumers
-- Here documents (`<<EOF`, `<<'EOF'`) for embedding multi-line inline input
-- Here strings (`<<<`) for feeding single-line input
-- PowerShell workarounds: temporary files, `Tee-Object -Variable`, `ForEach-Object` branching
-- PowerShell here-strings (`@'...'@`, `@"..."@`)
 ## Linux process substitution tools
 
 Process substitution creates a virtual file descriptor that wraps a command's output so other commands can read from it as if it were a file. No temporary files are created or cleaned up. The kernel provides the file descriptor transparently via `/dev/fd/N` (or a named pipe on systems that lack `/dev/fd`).
@@ -52,11 +148,11 @@ Two forms exist: `<(cmd)` produces a readable file descriptor (input substitutio
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart LR
     subgraph ps_in["Input substitution  <(cmd)"]
-        A[cmd] -->|stdout| FD1["/dev/fd/N\nvirtual file"]
+        A[cmd] -->|stdout| FD1["/dev/fd/N<br>virtual file"]
         FD1 -->|read| B[consumer command]
     end
     subgraph ps_out["Output substitution  >(cmd)"]
-        C[producer command] -->|write| FD2["/dev/fd/M\nvirtual file"]
+        C[producer command] -->|write| FD2["/dev/fd/M<br>virtual file"]
         FD2 -->|stdin| D[cmd]
     end
 ```

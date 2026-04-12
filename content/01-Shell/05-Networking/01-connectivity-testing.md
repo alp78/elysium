@@ -12,34 +12,161 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Connectivity Testing — "Can I Reach the Server?"
+# Connectivity Testing
 
-The first question in any network debugging session is: "Can my client reach the server at all?" This seems simple, but there are multiple layers that can fail: DNS resolution, TCP routing, firewall rules, and the service itself. Working through the layers systematically turns a 2-hour debugging session into a 5-minute one.
-
-> [!quote]
+> [!quote] Werner Vogels, AWS re:Invent 2012
+>
 > "Everything fails, all the time."
 >
 > — **Werner Vogels**, AWS re:Invent keynote (2012)
 
+> [!abstract]- Summary
+>
+> Systematic four-layer debugging sequence — DNS, ICMP, TCP port, application auth — using purpose-built tools on both Linux and PowerShell. Covers the most common failure signatures and how to read them.
+>
+> - **Linux connectivity testing tools** — `nc` (`-z`, `-v`, `-w`, `-u`, `-l`, `-n`, `-k`), `/dev/tcp` pseudo-device, `dig` (`+short`, `+noall +answer`, `@<server>`, `-x`, `+trace`, `+dnssec`), `traceroute` (`-T`, `-I`, `-p`, `-m`, `-n`), `mtr` (`-c`, `-r`, `-T`, `-P`, `-b`), `ss` (`-t`, `-l`, `-n`, `-p`, `-a`, `sport =`)
+> - **PowerShell connectivity testing tools** — `Test-NetConnection` (`-Port`, `-TraceRoute`, `-Hops`, `-InformationLevel`, `-WarningAction`), `Resolve-DnsName` (`-Type`, `-Server`, `-DnsOnly`, `-NoHostsFile`), `Get-NetTCPConnection` (`-State`, `-LocalPort`, `-RemotePort`, `-OwningProcess`)
+> - **Systematic debugging walkthroughs** — layer-by-layer sequences for both platforms: DNS → ICMP → TCP port → app auth → GCP firewall rule inspection; the "works from my machine" failure taxonomy
+> - **Operations and safety** — use TCP port tests (`nc -zv`, `Test-NetConnection -Port`) as the primary diagnostic when ICMP is blocked on GCP; `curl` exits 0 on HTTP 4xx/5xx (use `-f` or `-w '%{http_code}'`); DNS caching persists until TTL expires after record changes; 3 warnings, 1 troubleshooting table (5 symptoms), 1 recommendations table (6 scenarios)
+
+> [!note]- Glossary
+>
+> **`ping`** — sends ICMP echo requests to a host and records the round-trip time for each packet; the most universally available network reachability probe.
+> Confirms whether a host is alive at the IP layer (Layer 3) before investing time in TCP or application-level diagnosis.
+>
+> > [!warning] ICMP is frequently blocked
+> >
+> > Many cloud environments and corporate firewalls drop ICMP by default. A host that does not respond to `ping` may still be fully reachable on TCP ports.
+>
+> ---
+>
+> **`traceroute`** / **`tracert`** — maps the network path hop-by-hop by sending packets with incrementing TTL values; each router that decrements TTL to zero returns an ICMP "time exceeded" message revealing its address.
+> Identifies where in the network path latency spikes or packet drops begin; essential for routing and firewall boundary diagnosis.
+>
+> > [!info] UDP vs TCP probe mode
+> >
+> > `traceroute` defaults to UDP probes, which corporate firewalls and GCP VPC rules commonly block. Use `-T` (TCP SYN mode) to follow the same path as real application traffic.
+>
+> ---
+>
+> **`nc`** (netcat) — a general-purpose TCP/UDP tool used here in scan mode (`-z`) to open and immediately close a connection to a remote port without sending data.
+> The primary Linux tool for verifying TCP port reachability before application-level testing; distinguishes "refused" (host alive, service not listening) from "timed out" (firewall dropping packets).
+>
+> > [!danger] Refused vs timed out are not equivalent
+> >
+> > "Connection refused" means the host is reachable and rejecting the probe — the service is down or on a different port. "Connection timed out" means packets are being dropped by a firewall or the host is unreachable.
+>
+> ---
+>
+> **`/dev/tcp`** — a Bash built-in pseudo-device at `/dev/tcp/<host>/<port>` that opens a TCP connection when read or written; requires no external tools.
+> Enables TCP port testing on minimal containers and Docker images where `nc` is not installed.
+>
+> > [!info] Bash-only feature
+> >
+> > `/dev/tcp` is a Bash extension; it is not available in `sh`, `dash`, or `zsh` by default.
+>
+> ---
+>
+> **`dig`** — a DNS query tool that supports all record types (A, AAAA, CNAME, MX, TXT, NS, SOA) and returns structured output including TTL, authority, and additional records.
+> The scriptable standard for DNS resolution verification; `dig +short` returns only the answer for use in scripts, unlike `nslookup` whose output format varies between implementations.
+>
+> > [!warning] `+short` may return a CNAME, not an IP
+> >
+> > When the target is an alias, `dig +short hostname` returns the CNAME target. Use `dig +short hostname A` to force A-record resolution and always receive an IP address.
+>
+> ---
+>
+> **`mtr`** — combines `ping` and `traceroute` into a continuously updating per-hop statistics display; accumulates loss percentage, average latency, and jitter over repeated probes.
+> Identifies bottleneck routers and sustained packet loss patterns that a single `traceroute` pass would miss.
+>
+> > [!info] Install on Debian/Ubuntu
+> >
+> > `mtr` is not installed by default. Install with `apt install mtr`. Use `-r -c 10` for a non-interactive one-shot report.
+>
+> ---
+>
+> **`ss`** — reads socket state directly from the kernel (replacing `netstat`); significantly faster on hosts with many connections.
+> Verifies that a service is actually bound to the expected port on the local machine before attempting remote connectivity tests.
+>
+> > [!info] Replaces `netstat`
+> >
+> > `netstat` is deprecated on modern Linux. `ss` provides the same output via the kernel's `netlink` interface with lower overhead.
+>
+> ---
+>
+> **`Test-NetConnection`** — PowerShell cmdlet that combines ICMP ping, TCP port test, and traceroute; returns a structured object with `TcpTestSucceeded`, `PingSucceeded`, `RemoteAddress`, and `TraceRoute` properties.
+> The PowerShell equivalent of `ping` + `nc`; `-Port` enables TCP mode and is the primary interactive diagnostic on Windows.
+>
+> > [!warning] Slow for bulk port sweeps
+> >
+> > Each `Test-NetConnection` call waits for a built-in timeout. Sweeping multiple unreachable ports can exceed 30 seconds. Use `[System.Net.Sockets.TcpClient]` with `BeginConnect`/`AsyncWaitHandle` for scripted sweeps.
+>
+> ---
+>
+> **`Resolve-DnsName`** — PowerShell cmdlet that queries DNS and returns structured objects with `Name`, `Type`, `IPAddress`, and `TTL` properties.
+> The PowerShell equivalent of `dig`; `-Server` overrides the system resolver and `-Type` constrains the query to a single record type.
+>
+> > [!info] Structured output vs text parsing
+> >
+> > Unlike `nslookup`, `Resolve-DnsName` returns typed objects that can be filtered with `Where-Object` and piped without parsing text.
+>
+> ---
+>
+> **`Get-NetTCPConnection`** — PowerShell cmdlet that reads TCP socket state from the OS; joined with `Get-Process` to map each socket to a process name.
+> The PowerShell equivalent of `ss -tlnp`; used on the server side to confirm a service is bound before testing remotely.
+>
+> > [!info] Requires joining with `Get-Process`
+> >
+> > `Get-NetTCPConnection` returns `OwningProcess` (PID) but not the process name. Use a calculated property `@{N='Process';E={(Get-Process -Id $_.OwningProcess).ProcessName}}` to display human-readable names.
+>
+> ---
+>
+> **ICMP** (Internet Control Message Protocol) — a Layer 3 protocol used by `ping` and `traceroute` to exchange control messages; operates below TCP and UDP.
+> Verifies basic network-layer reachability; widely blocked by cloud firewalls, meaning its absence does not confirm a host is down.
+>
+> > [!warning] ICMP block does not mean host down
+> >
+> > A host can block all ICMP and still serve HTTP, SSH, and database traffic on TCP ports. Never conclude a host is unreachable from a `ping` timeout alone.
+>
+> ---
+>
+> **TTL** (Time To Live) — a counter in each IP packet decremented by every router; when it reaches zero the router drops the packet and returns an ICMP "time exceeded" message. Also used in DNS records to control cache duration.
+> `traceroute` exploits IP TTL to reveal each router hop; DNS TTL controls how long resolvers cache a record before re-querying the authoritative server.
+>
+> > [!warning] Two unrelated concepts share the same abbreviation
+> >
+> > IP packet TTL (hop count, typically 64–128) and DNS TTL (cache lifetime in seconds, e.g., 300) are completely independent. Context determines which is meant.
+>
+> ---
+>
+> **GCP firewall rules** — VPC-level ingress/egress rules evaluated before traffic reaches a VM; stateless and enforced by the Google network fabric, not the guest OS.
+> The most common cause of "connection timed out" failures in GCP environments; must be checked with `gcloud compute firewall-rules list` when `nc` or `Test-NetConnection` times out.
+>
+> > [!info] Stateless and invisible to the VM
+> >
+> > GCP firewall rules drop packets silently before they reach the guest OS. The VM's own `iptables` or Windows Firewall never sees the traffic, so local firewall checks on the server are inconclusive when the GCP rule is the blocker.
+
+The first question in any network debugging session is: "Can my client reach the server at all?" This seems simple, but there are multiple layers that can fail: DNS resolution, TCP routing, firewall rules, and the service itself. Working through the layers systematically turns a 2-hour debugging session into a 5-minute one.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
-    A([Start: can I reach the server?]) --> B[Step 1: DNS\ndig +short hostname]
+    A([Start: can I reach the server?]) --> B[Step 1: DNS<br>dig +short hostname]
     B --> B1{Resolves?}
-    B1 -- No --> B2[Check /etc/resolv.conf\nVPC DNS settings]
-    B1 -- Yes --> C[Step 2: ICMP\nping -c 3 IP]
+    B1 -- No --> B2[Check /etc/resolv.conf<br>VPC DNS settings]
+    B1 -- Yes --> C[Step 2: ICMP<br>ping -c 3 IP]
     C --> C1{Responds?}
-    C1 -- Timeout --> C2[Possibly blocked by firewall\nSkip to Step 3 on GCP]
-    C1 -- Yes --> D[Step 3: TCP port\nnc -zv -w 5 IP port]
+    C1 -- Timeout --> C2[Possibly blocked by firewall<br>Skip to Step 3 on GCP]
+    C1 -- Yes --> D[Step 3: TCP port<br>nc -zv -w 5 IP port]
     C2 --> D
     D --> D1{Port state?}
-    D1 -- Refused --> D2[Host alive, service not running\nor wrong port]
-    D1 -- Timed out --> D3[Firewall blocking port\nor wrong IP]
-    D1 -- Succeeded --> E[Step 4: App auth\nsqlcmd / psql / redis-cli]
+    D1 -- Refused --> D2[Host alive, service not running<br>or wrong port]
+    D1 -- Timed out --> D3[Firewall blocking port<br>or wrong IP]
+    D1 -- Succeeded --> E[Step 4: App auth<br>sqlcmd / psql / redis-cli]
     E --> E1{Auth OK?}
-    E1 -- Login failed --> E2[Wrong credentials\nor insufficient privileges]
+    E1 -- Login failed --> E2[Wrong credentials<br>or insufficient privileges]
     E1 -- Cannot open DB --> E3[Database does not exist]
-    E1 -- Timeout --> E4[Connection pool exhausted\nor server overloaded]
+    E1 -- Timeout --> E4[Connection pool exhausted<br>or server overloaded]
     E1 -- Connected --> F([Connectivity confirmed])
 ```
 

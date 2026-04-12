@@ -8,12 +8,174 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 17. GCP - Python
+# GCP - Python
 
 > [!quote]
 > "Everything fails all the time, so plan for failure and nothing fails."
 >
 > — **Werner Vogels**, CTO of Amazon
+
+> [!abstract]- Summary
+>
+> **Authentication & Setup**
+> - ADC (Application Default Credentials) chain: env var → `gcloud auth` → GCE metadata server — all `google-cloud-*` clients resolve credentials automatically on construction.
+> - `GOOGLE_APPLICATION_CREDENTIALS` points to a service account JSON key; unset means ADC falls through to the next source.
+>
+> **Cloud Storage (GCS) — Bronze Layer**
+> - `storage.Client` + `bucket.blob(path).upload_from_string()` writes CSV directly to GCS without a temp file.
+> - `list_blobs(bucket, prefix=)` is a lazy paginated iterator; `download_as_text()` + `io.StringIO` reads objects into DataFrames in memory.
+>
+> **BigQuery — Silver + Gold Layers**
+> - `load_table_from_dataframe(df, table, job_config)` converts to Parquet internally and submits a load job; `job.result()` blocks until complete.
+> - SQL transforms use `LAG` + `SAFE_DIVIDE` for daily returns (bronze → silver) and CTEs with `ROW_NUMBER` + `RANK` for momentum scoring (silver → gold).
+> - `QueryJobConfig(destination=table, write_disposition='WRITE_TRUNCATE')` writes query output directly to a table.
+>
+> **Pub/Sub — Event Bus**
+> - `publisher.publish(topic_path, data, **attributes).result()` returns the server-assigned message ID after confirmation.
+> - `subscriber.pull(subscription, max_messages)` is synchronous batch pull; production services use the streaming callback form.
+> - All received messages must be explicitly acknowledged via `subscriber.acknowledge()` or they are redelivered.
+>
+> **Firestore — Real-Time Layer**
+> - `db.batch().set(doc_ref, data)` + `batch.commit()` upserts up to 500 documents in a single network round-trip.
+> - `collection.on_snapshot(callback)` opens a persistent gRPC stream; callback fires immediately with `ADDED` for existing docs, then `MODIFIED`/`REMOVED` on changes.
+>
+> **Secret Manager — Credential Vault**
+> - `sm.access_secret_version(name='.../versions/latest')` fetches the current payload as bytes; decode with `.decode('utf-8')`.
+> - Create container with `create_secret`, add immutable value with `add_secret_version`; old versions can be disabled or destroyed for rotation.
+>
+> **Cloud Monitoring — Observability**
+> - `cloud_logging.Client.logger('name').log_struct({...}, severity='INFO')` writes queryable structured JSON entries to Cloud Logging.
+> - Custom metrics require a registered `MetricDescriptor` (idempotent); data points are written via `create_time_series` and appear in Metrics Explorer within ~60 seconds.
+
+> [!note]- Glossary
+>
+> **ADC (Application Default Credentials)**
+> - Google's automatic credential discovery chain: checks `GOOGLE_APPLICATION_CREDENTIALS` env var first, then `gcloud auth application-default login` cached credentials, then the GCE/Cloud Run metadata server.
+> - All `google-cloud-*` client constructors call this chain silently — no explicit credential initialization is needed in managed GCP environments.
+>
+> > [!tip] Local dev pattern
+> >
+> > Run `gcloud auth application-default login` once and all library clients resolve credentials automatically — no key file needed on the developer machine.
+>
+> ---
+>
+> **Service Account**
+> - A non-human GCP identity (email address + RSA key pair) assigned IAM roles; applications authenticate as it by presenting its JSON key file or via Workload Identity.
+> - Used by pipeline code, Cloud Functions, Cloud Run, and GKE workloads to call GCP APIs without user interaction.
+>
+> > [!warning] Principle of least privilege
+> >
+> > Never assign `roles/owner` to a service account. Grant only the specific role each service needs (e.g., `roles/bigquery.dataEditor`, `roles/storage.objectAdmin`).
+>
+> ---
+>
+> **GCS (Google Cloud Storage)**
+> - Globally distributed object storage: data is organized into **buckets** (globally unique named containers) holding **blobs** (objects identified by a path string).
+> - Prefixes like `bronze/`, `silver/`, `gold/` simulate folder hierarchy and align with BigQuery Hive-style partition convention.
+>
+> > [!tip] Naming collision risk
+> >
+> > Bucket names are globally unique across all GCP accounts — use a project-ID prefix (e.g., `{project_id}-index-data`) to avoid conflicts.
+>
+> ---
+>
+> **BigQuery**
+> - Serverless columnar data warehouse with standard SQL interface; scales to petabyte queries with no infrastructure management.
+> - Charges by **bytes scanned**, not query time — `SELECT *` on a large unpartitioned table incurs full-scan cost even when only two columns are needed.
+>
+> > [!warning] Cost footgun: SELECT * on large tables
+> >
+> > Always select only required columns and use partitioned/clustered tables to restrict scan scope and control costs.
+>
+> ---
+>
+> **Load Job**
+> - A BigQuery asynchronous operation that ingests data from a DataFrame, GCS file, or JSONL stream into a table; `job.result()` blocks until the job completes or errors.
+> - `WRITE_TRUNCATE` replaces all existing data; `WRITE_APPEND` adds rows; write disposition is set in `LoadJobConfig` or `QueryJobConfig`.
+>
+> > [!info] DataFrame → Parquet conversion
+> >
+> > `load_table_from_dataframe` converts the DataFrame to Parquet internally before submission — date columns must be Python `datetime.date` objects, not strings, for BigQuery DATE partitioning to work.
+>
+> ---
+>
+> **Pub/Sub**
+> - Managed message queue: **publishers** push byte payloads to named **topics**; **subscribers** receive them via **subscriptions** (pull or push delivery).
+> - Delivery is **at-least-once** — the same message may arrive more than once; consumers must be idempotent and use `message_id` or a business key for deduplication.
+>
+> > [!tip] Pull vs streaming subscribe
+> >
+> > `subscriber.pull()` is synchronous batch pull — suitable for notebooks and batch scripts. For production services, `subscriber.subscribe(subscription, callback)` provides continuous streaming delivery.
+>
+> ---
+>
+> **Ack Deadline**
+> - The time window (default 60 seconds) within which a pulled message must be acknowledged; unacknowledged messages are redelivered automatically.
+> - Extend with `modify_ack_deadline` for long-running processing to prevent premature redelivery.
+>
+> > [!warning] Missing acknowledgment causes redelivery
+> >
+> > Always call `subscriber.acknowledge(subscription, ack_ids)` after processing. Failing to ack causes duplicate delivery after the deadline expires.
+>
+> ---
+>
+> **Firestore**
+> - Serverless NoSQL document database: data is organized into **collections** (groups of documents) containing **documents** (JSON-like records with typed fields and optional subcollections).
+> - Hard limits: 1 MB per document, 500 writes/sec per document path — restructure large payloads into subcollections or offload to GCS.
+>
+> > [!tip] Real-time listener pattern
+> >
+> > `collection.on_snapshot(callback)` opens a persistent gRPC stream that fires immediately with the current state (`ADDED` events), then pushes `MODIFIED` or `REMOVED` on every subsequent change — no polling required.
+>
+> ---
+>
+> **Batch Write (Firestore)**
+> - `db.batch()` creates a write buffer that accumulates `set`, `update`, and `delete` operations; `batch.commit()` sends all of them in a single atomic network round-trip.
+> - Supports up to 500 operations per batch — more efficient than individual writes for bulk upserts.
+>
+> > [!info] Upsert semantics
+> >
+> > `batch.set(doc_ref, data)` overwrites the document entirely. Use `batch.update(doc_ref, fields)` to merge into an existing document without replacing untouched fields.
+>
+> ---
+>
+> **Secret Manager**
+> - GCP managed secret store: a **secret** is a named container; each update creates a new immutable **version**; old versions can be disabled or destroyed for rotation.
+> - Always access secrets at **runtime** (inside function bodies), never at module import time — import-time access prevents rotation from taking effect without a redeploy.
+>
+> > [!danger] Never commit secrets to source control
+> >
+> > API keys, service account JSON files, and passwords in git are the leading cause of cloud security incidents. Use Secret Manager in production and `.env` + `.gitignore` locally.
+>
+> ---
+>
+> **Secret Version**
+> - An immutable snapshot of a secret's value, created by `add_secret_version`; referenced as `.../versions/latest` for the current active value or `.../versions/N` for a specific revision.
+> - Disabling or destroying old versions completes the rotation cycle without changing the secret name referenced in code.
+>
+> > [!tip] Masked logging pattern
+> >
+> > When verifying a secret was fetched, log only the first 3 characters plus masked remainder (`value[:3] + '*' * (len(value) - 3)`) — never print the raw value in production logs.
+>
+> ---
+>
+> **Cloud Logging**
+> - GCP's structured log ingestion service: `log_struct({...}, severity='INFO')` writes a JSON payload queryable in Log Explorer by `logName`, severity, timestamp, and any payload field.
+> - Valid severity levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` — using `print()` instead of structured logging loses queryability and alerting capability.
+>
+> > [!tip] Prefer structured over print
+> >
+> > `logger.log_struct({'event': 'pipeline_completed', 'rows': N}, severity='INFO')` makes every log entry filterable and alertable in Cloud Logging — `print()` produces unstructured stdout with no metadata.
+>
+> ---
+>
+> **Custom Metric (Cloud Monitoring)**
+> - A user-defined time series registered via `create_metric_descriptor` (idempotent) and written via `create_time_series`; appears in Metrics Explorer within ~60 seconds.
+> - Metric kinds: `GAUGE` (point-in-time snapshot), `CUMULATIVE` (monotonically increasing counter), `DELTA` (change since last write).
+>
+> > [!info] Descriptor registration is idempotent
+> >
+> > Calling `create_metric_descriptor` with the same type on repeated runs returns `ALREADY_EXISTS` — safe to include in pipeline startup without guard logic.
 
 ![Pipeline Architecture](/static/index_lab.jpg)
 

@@ -8,27 +8,148 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 11. Date, Time, Math & Utilities - C#
+# DateTime, Math & Utilities - C#
 
 > [!quote]
 > "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
 >
 > — **Jon Skeet**
 
-.NET provides date/time types (`DateTime`, `DateOnly`, `DateTimeOffset`, `TimeSpan`), math utilities, random number generation, logging with `ILogger`, and configuration with `IConfiguration`. This note covers all common utility patterns for data engineering.
-### Key terms used in this note
+> [!abstract]- Summary
+>
+> **Date and Time**
+> - `DateTime` — date + time struct; `.Kind` is `Utc`, `Local`, or `Unspecified`; always use `DateTime.UtcNow` for storage
+> - `DateOnly` / `TimeOnly` — .NET 6+ split types for date-only and time-only values
+> - `DateTimeOffset` — `DateTime` plus explicit UTC offset; unambiguous across timezones
+> - `TimeSpan` — duration type; supports arithmetic via `Add*` methods; no months/years (use `AddMonths()` on `DateTime`)
+> - Unix timestamps — convert via `DateTimeOffset.ToUnixTimeSeconds()` / `FromUnixTimeSeconds()`
+> - Parsing — `ParseExact` with explicit format and `CultureInfo.InvariantCulture`; `TryParseExact` for safe pipeline parsing
+> - Formatting — standard specifiers (`"o"`, `"s"`, `"R"`) and custom specifiers (`yyyy-MM-dd'T'HH:mm:ss`)
+> - ISO 8601 — `"o"` (round-trip, full precision) and `"s"` (sortable, no fractional seconds)
+> - Timezones — `TimeZoneInfo.FindSystemTimeZoneById()` with Windows IDs; `ConvertTimeFromUtc()` for display conversion
+> - Month edge cases — `AddMonths()` clamps to last valid day of target month
+>
+> **Math and Random**
+> - `Math` — static class; `Abs`, `Max`, `Min`, `Clamp`, `Floor`, `Ceiling`, `Round`, `Sqrt`, `Pow`, `Log`, `Log10`, `Log2`, `Exp`, `Sin`, `Cos`, `PI`, `E`, `Tau`
+> - Banker's rounding — `Math.Round(2.5)` returns `2`; use `MidpointRounding.AwayFromZero` for standard rounding
+> - `double` special values — `NaN`, `PositiveInfinity`; check with `double.IsNaN()`, `double.IsInfinity()`
+> - Percentile — sort array, interpolate between `Floor` and `Ceiling` of the index
+> - `Random` — `new Random(seed)` for reproducible sequences; `Random.Shared` (.NET 6+) for thread-safe casual use
+> - `NextBytes()`, `Shuffle()` (.NET 8+); synthetic OHLCV test data generation pattern
+>
+> **Logging**
+> - `ILogger` / `ILoggerFactory` from `Microsoft.Extensions.Logging` — structured, leveled, pluggable sinks
+> - Log levels: `Trace` < `Debug` < `Information` < `Warning` < `Error` < `Critical`
+> - Structured logging with named placeholders — backends (Seq, ELK, GCP) index named values
+> - `LoggerFactory.Create()` for manual setup in scripts; `builder.Services.AddLogging()` in full apps
+>
+> **Configuration**
+> - `Environment.GetEnvironmentVariable()` — reads single var; `??` for safe defaults; `SetEnvironmentVariable()` is process-scoped only
+> - `IConfiguration` — layered sources: JSON → env vars → command-line args (later sources override earlier)
+> - `ConfigurationBuilder` — chains `AddJsonFile()` + `AddEnvironmentVariables()`; access with `"Section:Key"` colon syntax
+> - `GetValue<T>()` with typed defaults; `GetSection()` for nested navigation; `Bind()` to map a section onto a POCO
+> - Env var override — `__` (double underscore) maps to `:` in config key paths
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **DateTime** | Struct representing date and time. `.Kind` indicates `Utc`, `Local`, or `Unspecified`. | The most common timestamp type in .NET. | `DateTime.Now` returns local time — use `DateTime.UtcNow` for storage and transmission. |
-| **DateTimeOffset** | `DateTime` plus an explicit UTC offset. Unambiguously identifies a moment in time. | Cross-timezone applications, database storage, API contracts. | `DateTimeOffset` and `DateTime` don't compare directly — convert first. |
-| **DateOnly / TimeOnly** | .NET 6+ types for date-without-time and time-without-date. | Database `DATE` and `TIME` columns, scheduling, birthdays. | Not available before .NET 6 — use `DateTime` with `.Date` for older frameworks. |
-| **TimeSpan** | Represents a duration: days, hours, minutes, seconds, ticks. | Date arithmetic, timeouts, intervals. | `TimeSpan` has no months/years — months vary in length. Use `AddMonths()` on `DateTime`. |
-| **TimeZoneInfo** | Access to IANA/Windows timezone database. Handles DST transitions. | Convert UTC to local time for display across regions. | Windows timezone IDs differ from IANA IDs — use `TimeZoneInfo.FindSystemTimeZoneById()`. |
-| **Math class** | Static class with `Ceiling`, `Floor`, `Round`, `Sqrt`, `Log`, `PI`, `Clamp`. | Rounding, statistics, scientific computation. | `Math.Round(2.5)` returns `2` (banker's rounding) — use `MidpointRounding.AwayFromZero` for standard rounding. |
-| **Random** | Pseudorandom number generator. Thread-safe shared instance via `Random.Shared` (.NET 6+). | Sampling, shuffling, test data generation. | `new Random()` in a tight loop with the same seed — use `Random.Shared`. |
-| **ILogger** | Microsoft.Extensions.Logging interface for structured, leveled log output. | Production observability — structured, filterable, pluggable sinks. | Using `Console.WriteLine` instead of `ILogger` — no levels, no routing, no structure. |
-| **IConfiguration** | Microsoft.Extensions.Configuration interface for layered config: JSON, env vars, command line. | Deployment-specific settings with environment variable overrides. | `__` (double underscore) maps to `:` in config keys for env var overrides. |
+> [!note]- Glossary
+>
+> **`DateTime`** — struct representing a date and time value; carries a `.Kind` property indicating `Utc`, `Local`, or `Unspecified`.
+>
+> > [!warning] `DateTime.Now` vs `DateTime.UtcNow`
+> >
+> > `DateTime.Now` returns local server time and is timezone-dependent. Use `DateTime.UtcNow` for all storage and transmission; convert to local time only for display.
+>
+> - `.Kind` defaults to `Unspecified` when a `DateTime` is constructed without an explicit kind — comparing `Unspecified` with `Utc` produces undefined behavior.
+> - Sub-millisecond precision is available via `.Ticks` (100-nanosecond intervals since 0001-01-01) or `.AddTicks()`.
+>
+> > ---
+>
+> **`DateTimeOffset`** — a `DateTime` paired with an explicit UTC offset; unambiguously identifies a single moment in time regardless of the local timezone.
+>
+> > [!info] When to prefer `DateTimeOffset`
+> >
+> > Use `DateTimeOffset` for database storage, API contracts, and any cross-timezone application where the originating offset must be preserved alongside the value.
+>
+> - `.UtcDateTime` extracts the UTC equivalent; `.LocalDateTime` converts to the host's local timezone.
+> - `ToOffset(TimeSpan)` reexpresses the same instant in a different offset without changing the underlying UTC value.
+>
+> > ---
+>
+> **`DateOnly` / `TimeOnly`** — .NET 6+ types for a date without a time component and a time without a date component, respectively.
+>
+> > [!info] Pre-.NET 6 fallback
+> >
+> > Before .NET 6, use `DateTime.Date` to extract the date portion and `DateTime.TimeOfDay` to extract a `TimeSpan` representing the time.
+>
+> - `DateOnly` difference is computed via `.DayNumber` subtraction (returns `int`, not `TimeSpan`).
+> - `TimeOnly` wraps around midnight — `14:30 + 12 hours = 02:30` — so arithmetic must account for day-boundary crossing.
+>
+> > ---
+>
+> **`TimeSpan`** — represents a duration: days, hours, minutes, seconds, milliseconds, and ticks; does not model months or years because those vary in length.
+>
+> > [!warning] No month or year arithmetic on `TimeSpan`
+> >
+> > `TimeSpan` cannot represent "one month" because months have different lengths. Use `DateTime.AddMonths()` or `DateTime.AddYears()` for calendar-aware arithmetic.
+>
+> - Produced by subtracting two `DateTime` values; access duration in different units via `.TotalDays`, `.TotalHours`, `.TotalSeconds`.
+> - Pass to `DateTime.Add(TimeSpan)` to combine multiple units in a single operation.
+>
+> > ---
+>
+> **`TimeZoneInfo`** — provides access to the system timezone database; handles DST transitions, UTC offsets, and timezone identity.
+>
+> > [!info] Windows vs IANA timezone IDs
+> >
+> > Windows uses display IDs such as `"Eastern Standard Time"` and `"Tokyo Standard Time"`. Linux and macOS use IANA IDs such as `"America/New_York"`. Use `TimeZoneInfo.FindSystemTimeZoneById()` with the ID format that matches the runtime OS.
+>
+> - `ConvertTimeFromUtc(utcDateTime, targetZone)` converts a UTC `DateTime` to the target timezone, accounting for DST.
+> - `GetSystemTimeZones()` returns all 141 Windows timezone entries as `ReadOnlyCollection<TimeZoneInfo>`.
+>
+> > ---
+>
+> **`Math` class** — static class exposing arithmetic, rounding, power, logarithm, and trigonometric operations; all methods are overloaded for `int`, `double`, and `decimal`.
+>
+> > [!warning] Banker's rounding is the default
+> >
+> > `Math.Round(2.5)` returns `2`, not `3`. The default midpoint rounding mode is `MidpointRounding.ToEven`, which rounds to the nearest even number. Use `MidpointRounding.AwayFromZero` for standard rounding.
+>
+> - `Math.Clamp(value, min, max)` — constrains a value to a range; replaces manual `if`/`else` guard clauses.
+> - `Math.Log` computes the natural logarithm; `Math.Log10` and `Math.Log2` compute base-10 and base-2 logarithms.
+>
+> > ---
+>
+> **`Random`** — pseudorandom number generator; `new Random(seed)` creates a seeded instance for reproducible sequences; `Random.Shared` (.NET 6+) is a thread-safe singleton.
+>
+> > [!warning] Seeding `new Random()` in tight loops
+> >
+> > Multiple `new Random()` calls within the same clock tick receive the same seed and produce identical sequences. Use `Random.Shared` for casual use or pass an explicit seed for reproducible test data.
+>
+> - `Next(min, max)` — returns an integer in `[min, max)`; `NextDouble()` — returns a `double` in `[0.0, 1.0)`.
+> - `Shuffle(array)` (.NET 8+) — in-place Fisher-Yates shuffle; `NextBytes(buffer)` — fills a byte array with random values.
+>
+> > ---
+>
+> **`ILogger`** — interface from `Microsoft.Extensions.Logging` for structured, leveled log output with pluggable sinks (console, Seq, ELK, GCP).
+>
+> > [!warning] `Console.WriteLine` is not a logging substitute
+> >
+> > `Console.WriteLine` has no log levels, no timestamps, no structured fields, and no routing. Use `ILogger` with named placeholders so backends can index parameter values.
+>
+> - Log levels in ascending severity: `Trace` → `Debug` → `Information` → `Warning` → `Error` → `Critical`; set the minimum via `SetMinimumLevel()`.
+> - In application code, obtain via DI (`builder.Services.AddLogging()`); in scripts and notebooks, build manually with `LoggerFactory.Create()`.
+>
+> > ---
+>
+> **`IConfiguration`** — interface from `Microsoft.Extensions.Configuration` for reading settings from layered sources (JSON files, environment variables, command-line arguments).
+>
+> > [!info] Source precedence and env var override syntax
+> >
+> > Sources are layered in the order they are added to `ConfigurationBuilder`; later sources override earlier ones. Environment variables use `__` (double underscore) as the separator for nested keys — `Pipeline__BatchSize` maps to `Pipeline:BatchSize`.
+>
+> - `GetValue<T>("key", defaultValue)` — reads a typed value with a fallback if the key is absent.
+> - `GetSection("path")` navigates nested config; `Bind(object)` maps an entire config section onto a POCO class.
+
+.NET provides date/time types (`DateTime`, `DateOnly`, `DateTimeOffset`, `TimeSpan`), math utilities, random number generation, logging with `ILogger`, and configuration with `IConfiguration`. This note covers all common utility patterns for data engineering.
 
 ### What this note covers
 

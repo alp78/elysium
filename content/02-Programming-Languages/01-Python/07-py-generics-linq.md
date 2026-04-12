@@ -8,31 +8,183 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 07. Generics & Functional Data Processing - Python
+# Generics & Functional Data Processing - Python
 
 > [!quote]
 > "All non-trivial abstractions, to some degree, are leaky."
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
-Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
-### Key terms used in this note
+> [!abstract]- Summary
+>
+> **Generics**
+> - Python's duck typing makes functions naturally generic — any object with the right methods works without type declarations or generic syntax.
+> - `TypeVar` declares a generic type variable (`T = TypeVar('T')`); resolved by the static checker at each call site, erased at runtime.
+> - `Generic[T]` as a base class enables parameterized containers (`Stack[int]`, `Repository[Trade]`); mypy tracks the inner type through operations.
+> - Bounded type variables (`TypeVar('T', bound=Comparable)`) restrict `T` to subtypes of a given class, enabling method calls on `T` that are only safe for that bound.
+> - `Protocol` defines structural interfaces: any class with the required methods satisfies the protocol without inheritance; add `@runtime_checkable` to enable `isinstance()` checks.
+> - Built-in generic hints: `list[int]`, `dict[str, int]`, `tuple[int, str]`, `Optional[str]`, `Callable[[int], bool]` — no import needed in Python 3.9+.
+>
+> **Functional Data Processing**
+> - List/dict/set comprehensions are Python's primary replacement for C# LINQ `Select`/`Where`; generator expressions (`()`) are the lazy, memory-efficient variant.
+> - `map(func, iter)` transforms, `filter(pred, iter)` selects, `functools.reduce(func, iter)` accumulates — all return lazy iterators; wrap in `list()` to materialise.
+> - `itertools.groupby` groups consecutive equal elements after a mandatory pre-sort; yields `(key, group_iterator)` pairs consumed once.
+> - `zip` pairs elements from parallel iterables positionally, stopping at the shortest — equivalent to C# `Zip`.
+> - Nested comprehensions (`[x for outer in col for x in outer]`) replace C# `SelectMany`; `set(...)` deduplicates.
+> - Dictionary lookups replace C# `Join`; `defaultdict(list)` handles left-join fan-out without key-presence checks.
+>
+> **Pandas vs Polars Analytics**
+> - Both libraries are demonstrated against live SQL Server data: `silver.eurostoxx50_ohlcv` (66 K rows, 50 symbols) and `gold.scores_daily` (466 rows).
+> - Operations shown side-by-side: row/column subsetting, filter, groupby+aggregate, join, window functions, sort.
+> - Pandas: mutable, row-indexed, NumPy-backed; `.iloc[]` / `.loc[]` / double-bracket column selection; `groupby().agg()`; `merge()`; `transform()` for window results.
+> - Polars: immutable, Rust-backed, Apache Arrow columnar; `slice()` / `select()` / `filter()`; `group_by().agg()`; `join()`; `over()` for window expressions; lazy mode via `.lazy()` + `.collect()`.
+> - Comparison matrix: Polars 10–100× faster on large datasets; 2–5× less RAM via Arrow; no row index; lazy plan applies predicate/projection pushdown automatically.
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **TypeVar** | A placeholder for a type that the static checker resolves at each call site: `T = TypeVar('T')`. | Write functions that work on any type while keeping type-checker coverage. | `TypeVar` is erased at runtime — it provides no enforcement, only IDE/mypy support. |
-| **Generic[T]** | Base class for parameterized classes: `class Stack(Generic[T])`. | Create type-safe containers (stacks, caches, repositories) without losing type information. | Forgetting to inherit from `Generic[T]` — the class works but mypy can't track the inner type. |
-| **bound** | `TypeVar('T', bound=Comparable)` restricts the type variable to subtypes of `Comparable`. | Call methods on `T` that are only defined on the bound type (e.g., `__lt__` for sorting). | Confusing `bound=X` (subtypes of X) with `TypeVar('T', X, Y)` (exactly X or Y, nothing else). |
-| **Protocol** | Structural typing interface from `typing` — any class with matching methods satisfies it without inheritance. | Define contracts for duck-typed code that mypy can verify statically. | Not adding `@runtime_checkable` when you need `isinstance()` checks at runtime. |
-| **duck typing** | Python's default: if an object has the right methods, it works — no base class or interface needed. | Most Python code is naturally generic through duck typing; type hints add optional safety. | Over-constraining with `isinstance()` checks defeats duck typing's flexibility. |
-| **comprehension** | Concise syntax for building collections: `[expr for x in iter if cond]` (list), `{k: v for ...}` (dict), `{x for ...}` (set). | Python's primary replacement for C#'s LINQ `Select`/`Where` chains. | Nested comprehensions become unreadable — prefer explicit loops or `itertools` for complex logic. |
-| **generator expression** | Lazy comprehension using `()` instead of `[]`: `(x for x in iter)`. Yields items one at a time, no full list in memory. | Process large datasets without loading everything into RAM. | Generators are single-pass — once exhausted, they're empty. Store as `list()` if you need multiple passes. |
-| **map / filter / reduce** | Functional built-ins: `map(func, iter)` transforms, `filter(pred, iter)` selects, `reduce(func, iter)` accumulates. | Functional data processing pipelines — Python's closest equivalent to LINQ method syntax. | `map` and `filter` return lazy iterators — wrap in `list()` to materialize. `reduce` is in `functools`. |
-| **itertools** | Standard library module with efficient iterator combinators: `groupby`, `chain`, `islice`, `product`, `combinations`. | Advanced iteration patterns (grouping, windowing, Cartesian products) without loading into memory. | `itertools.groupby` requires pre-sorted input — it groups consecutive equal elements, not all matching elements. |
-| **pandas** | DataFrame library for tabular data analysis — mutable, row-indexed, NumPy-backed, massive ecosystem. | The standard tool for data exploration, notebooks, and existing pipeline codebases. | `SettingWithCopyWarning` — modifying a view vs copy is ambiguous. Use `.copy()` or `.loc[]`. |
-| **Polars** | High-performance DataFrame library — immutable, Rust-backed, lazy evaluation, Apache Arrow format. | 10–100x faster than pandas for large datasets; native lazy execution and predicate pushdown. | No row index — if you rely on `.loc[label]`, you need `.filter()` instead. |
-| **lazy evaluation** | Polars builds a query plan without executing it; `.collect()` triggers execution with optimizations applied. | Predicate pushdown, projection pushdown, and parallelism are applied automatically. | Forgetting `.collect()` — the lazy frame isn't materialized until you call it. |
-| **Apache Arrow** | Columnar in-memory format used by Polars. Enables zero-copy reads and efficient interop between libraries. | 2–5x less RAM than pandas for the same data; fast Parquet/IPC I/O. | Arrow is a format, not a library — Polars uses it internally, you rarely interact with it directly. |
+> [!note]- Glossary
+>
+> **`TypeVar`**
+> - A placeholder for a type that the static checker (mypy, pyright) resolves at each call site: `T = TypeVar('T')`.
+> - Enables writing functions and classes that work on any type while retaining full type-checker coverage across the call graph.
+>
+> > [!info] Runtime erasure
+> >
+> > `TypeVar` is a development-time construct only. The interpreter ignores it at runtime — it provides no enforcement, no dispatch, and no overhead. All checking is performed by mypy or pyright during CI or IDE analysis.
+>
+> > ---
+>
+> **`Generic[T]`**
+> - Base class for parameterised classes: `class Stack(Generic[T])` tells the type checker to track the inner type `T` through every method.
+> - Used for custom container classes and typed wrappers; when built-in containers (`list`, `dict`) suffice, no custom class is needed.
+>
+> > [!warning] Missing `Generic[T]` inheritance
+> >
+> > If you omit `Generic[T]`, the class works at runtime but mypy cannot track the inner type — you lose all type-safety benefits for callers.
+> >
+> > > [!success] Correct pattern
+> > >
+> > > Always inherit: `class Stack(Generic[T]):` and annotate the internal storage as `list[T]`.
+>
+> > ---
+>
+> **`bound` (TypeVar bound)**
+> - `TypeVar('T', bound=SomeClass)` restricts `T` to subtypes of `SomeClass`, enabling method calls on `T` that are only safe for that type.
+> - Essential when the generic function must call a method (e.g., `__lt__` for sorting, `.close()` for resources) that is not defined on arbitrary objects.
+>
+> > [!tip] `bound` vs constrained TypeVar
+> >
+> > `bound=X` accepts any subtype of X. `TypeVar('T', X, Y)` accepts *exactly* X or Y — nothing else, including subtypes of X. Use `bound` for "at least this interface"; use constrained form only when the set of valid types is fixed.
+>
+> > ---
+>
+> **`Protocol`**
+> - Structural typing interface from `typing`: any class with the required method signatures satisfies the protocol without explicit inheritance.
+> - Defines contracts for duck-typed code that mypy can verify statically — the Python equivalent of C# interface checking without the inheritance overhead.
+>
+> > [!warning] Missing `@runtime_checkable`
+> >
+> > Without `@runtime_checkable`, `isinstance(obj, MyProtocol)` raises `TypeError` at runtime. The decorator must be applied explicitly.
+> >
+> > > [!success] Add the decorator when runtime checks are needed
+> > >
+> > > `@runtime_checkable` on the Protocol class enables `isinstance()` checks while preserving static verification.
+>
+> > ---
+>
+> **duck typing**
+> - Python's default polymorphism model: if an object has the right methods and attributes, it works — no base class, interface, or generic declaration required.
+> - Most Python code is naturally generic through duck typing; `TypeVar` and `Generic` add optional static-analysis safety on top without changing this behaviour.
+>
+> > [!tip] Avoid over-constraining with `isinstance()`
+> >
+> > Adding `isinstance()` guards defeats duck typing's flexibility. Prefer structural checks (try/except `AttributeError`) or Protocol annotations in signatures.
+>
+> > ---
+>
+> **comprehension**
+> - Concise syntax for building collections in a single expression: `[expr for x in iter if cond]` (list), `{k: v for ...}` (dict), `{x for ...}` (set).
+> - Python's primary replacement for C# LINQ `Select`/`Where` chains; generally faster than equivalent `for` loops due to CPython bytecode optimisation.
+>
+> > [!warning] Nested comprehensions and readability
+> >
+> > Beyond two levels of nesting, comprehensions become difficult to read and debug. Prefer explicit `for` loops or `itertools` combinators for complex multi-level logic.
+>
+> > ---
+>
+> **generator expression**
+> - Lazy comprehension using `()` instead of `[]`: `(x*2 for x in items)`. Yields items one at a time without building the full list in memory.
+> - Essential for processing large datasets — a generator of 10 M rows uses constant memory regardless of the dataset size.
+>
+> > [!warning] Generators are single-pass
+> >
+> > Once a generator is exhausted it yields nothing on re-iteration. Wrap with `list()` if multiple passes are needed: `data = list(gen_expr)`.
+>
+> > ---
+>
+> **`map` / `filter` / `reduce`**
+> - Functional built-ins: `map(func, iter)` applies a function to every element, `filter(pred, iter)` keeps elements where the predicate is `True`, `functools.reduce(func, iter)` folds the sequence into a single value left-to-right.
+> - Python's closest equivalents to C# LINQ method-syntax chains (`Select`, `Where`, `Aggregate`).
+>
+> > [!info] Lazy iterators — materialise explicitly
+> >
+> > `map()` and `filter()` return iterator objects, not lists. Wrap in `list()` to force evaluation: `list(map(str, nums))`. `reduce` is in `functools` (not a built-in since Python 3).
+>
+> > ---
+>
+> **`itertools`**
+> - Standard library module with efficient iterator combinators: `groupby`, `chain`, `islice`, `product`, `combinations`, `permutations`, `repeat`, `cycle`.
+> - Enables advanced iteration patterns — grouping, windowing, Cartesian products, infinite sequences — without loading data into memory.
+>
+> > [!warning] `itertools.groupby` requires pre-sorted input
+> >
+> > `groupby` groups *consecutive* equal elements, not all matching elements across the sequence. Always sort by the grouping key first: `sorted(data, key=lambda x: x['dept'])`. Without sorting, the same key can appear in multiple non-adjacent groups.
+>
+> > ---
+>
+> **pandas**
+> - DataFrame library for tabular data analysis: mutable, row-indexed, NumPy-backed, with a massive ecosystem (scikit-learn, matplotlib, statsmodels, SQLAlchemy integration).
+> - The standard tool for data exploration, notebooks, and existing Python analytics pipelines; the dominant library in production data engineering as of 2025.
+>
+> > [!warning] `SettingWithCopyWarning` — view vs copy ambiguity
+> >
+> > Modifying a column on a DataFrame slice may silently modify only a copy, not the original. Use `.copy()` to force a new DataFrame, or `.loc[row_mask, col]` for in-place assignment. The warning signals that pandas cannot determine whether the slice is a view or copy.
+>
+> > ---
+>
+> **Polars**
+> - High-performance DataFrame library: immutable, Rust-backed, lazy-by-default, Apache Arrow columnar format; no row index.
+> - 10–100× faster than pandas for large datasets; native lazy execution with automatic predicate pushdown and projection pushdown; 2–5× less RAM via Arrow columnar storage.
+>
+> > [!info] No `.loc[]` — use `.filter()` instead
+> >
+> > Polars has no row-label index. Label-based row selection with `.loc[]` does not exist. Use `.filter(pl.col('symbol') == 'ASML.AS')` for conditional row selection.
+>
+> > ---
+>
+> **lazy evaluation (Polars)**
+> - Polars builds a logical query plan without executing it when the API is called in lazy mode (`.lazy()`); `.collect()` triggers optimised execution.
+> - Predicate pushdown, projection pushdown, and multi-threaded parallelism are applied automatically at `.collect()` time — operations that would be expensive in eager mode become cheap.
+>
+> > [!warning] Forgetting `.collect()`
+> >
+> > A `LazyFrame` is not a `DataFrame`. Printing a `LazyFrame` shows the plan, not the data. All downstream operations that expect a `DataFrame` will fail until `.collect()` is called.
+>
+> > [!success] Always terminate the lazy chain with `.collect()`
+> >
+> > Call `.collect()` at the end of every lazy chain when a `DataFrame` is needed: `df = lf.filter(...).group_by(...).agg(...).collect()`. Use `.lazy()` / `.collect()` as the outer boundary and keep all transformations in between lazy for automatic query optimization.
+>
+> > ---
+>
+> **Apache Arrow**
+> - Columnar in-memory data format used by Polars as its internal storage layer. Enables zero-copy reads between Arrow-compatible libraries and efficient Parquet/IPC I/O.
+> - Columnar layout means analytical queries (aggregations, filters on one column) scan only the required columns — 2–5× less RAM and better cache locality than row-oriented storage.
+>
+> > [!info] Arrow is a format, not a user-facing API
+> >
+> > Polars uses Arrow internally; users interact with Polars DataFrames and Series, not Arrow arrays directly. Arrow becomes relevant when exchanging data with other libraries (PyArrow, DuckDB, Hugging Face Datasets) via zero-copy interop.
+>
+> > ---
+
+Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
 
 ### What this note covers
 

@@ -17,6 +17,124 @@ status: complete
 >
 > — **Larry Wall**, *Programming Perl* (1991)
 
+> [!abstract]- Summary
+>
+> `sed` is a non-interactive, line-oriented stream editor that applies transformation commands to each input line and writes results to stdout. This note is an exhaustive reference covering GNU sed (Linux) and BSD sed (macOS) with PowerShell equivalents throughout.
+>
+> - **How sed Works** — the read/apply/print cycle, pattern space, hold space, invocation forms, and address types
+> - **Basic Substitution** — `s///` syntax, substitution flags (`g`, `i`, `N`, `p`, `w`), delimiter alternatives
+> - **In-Place Editing** — `-i` portability between GNU and BSD sed, backup strategies, multi-file batch edits
+> - **Line Selection and Addressing** — numeric, range, pattern, step, and negated addresses
+> - **Deletion, Insertion, and Append** — `d`, `i`, `a`, `c` commands; blank-line suppression
+> - **Advanced Substitution with Regex** — BRE vs ERE, capture groups, backreferences, multiline via `-z`
+> - **Print, Quiet Mode, and Line Extraction** — `-n` with `p`; extracting specific lines and ranges
+> - **Multi-Command and Script Files** — `-e` chaining, `-f` script files, compound expressions
+> - **Hold Space — Advanced Multi-Line Operations** — `h/H/g/G/x` commands; joining, reversing, accumulating lines
+> - **Data Engineering Scenarios** — config transformation, CSV manipulation, log cleanup, SQL migration patching
+> - **PowerShell Equivalents** — `-replace`, `-creplace`, `ForEach-Object`, `Set-Content`, `(Get-Content) | Set-Content`
+> - **Operations and safety** — portability pitfalls (GNU vs BSD), in-place backup discipline, when to prefer awk or Python
+
+> [!note]- Glossary
+>
+> **`sed` (stream editor)**
+> - `sed` reads input one line at a time into the **pattern space**, applies all matching commands in sequence, and writes the result to stdout. It never loads the entire file into memory.
+> - The default invocation writes to stdout only; files are never modified unless `-i` is supplied.
+>
+> > [!tip] Zero memory overhead
+> >
+> > Because sed processes one line at a time, it handles arbitrarily large files without memory pressure — unlike tools that slurp the whole file (Python `read()`, PowerShell `Get-Content` without streaming).
+>
+> > ---
+>
+> **Pattern space**
+> - The working buffer that holds the current input line while sed applies commands to it.
+> - At the end of each cycle the pattern space is printed (unless `-n` suppresses output) and then cleared before the next line is read.
+>
+> > [!info] Pattern space is ephemeral
+> >
+> > Any text written to the pattern space during a cycle is discarded after printing. Use the hold space to persist data across lines.
+>
+> > ---
+>
+> **Hold space**
+> - A secondary, persistent buffer that survives across sed cycles. Commands: `h` (copy pattern → hold), `H` (append pattern → hold), `g` (copy hold → pattern), `G` (append hold → pattern), `x` (exchange the two).
+> - The hold space is empty at startup and retains its value until explicitly overwritten. Most sed tasks do not need it; complex multi-line logic is often cleaner in `awk` or Python.
+>
+> > [!tip] When to reach for hold space
+> >
+> > Use hold space for operations like joining the next line to the current one (`N`), reversing line order, or accumulating a running header. If the script grows beyond two hold-space commands, switch to awk.
+>
+> > ---
+>
+> **Substitution command (`s///`)**
+> - Syntax: `s/pattern/replacement/flags`. Replaces the first match of `pattern` on each line with `replacement` by default; the `g` flag replaces all occurrences.
+> - `&` in the replacement expands to the entire matched text. `\1`–`\9` expand to capture groups.
+>
+> > [!warning] `g` flag omission is the most common sed bug
+> >
+> > Without `g`, `s/old/new/` replaces only the first `old` on each line. Every other occurrence is silently left unchanged. Add `g` whenever the intent is global replacement.
+>
+> > ---
+>
+> **BRE vs ERE**
+> - **BRE** (Basic Regular Expressions) is the default sed regex dialect. Grouping parentheses and `|` must be escaped: `\(...\)`, `\|`.
+> - **ERE** (Extended Regular Expressions) is enabled with `sed -E` (or `sed -r` on GNU sed). Parentheses, `|`, `+`, and `?` work without backslashes.
+>
+> > [!info] ERE is standard in GNU sed 4.2+ and BSD sed
+> >
+> > Prefer `-E` for any non-trivial pattern — the unescaped syntax is less error-prone and matches the dialect used by `grep -E`, `awk`, and Python `re`.
+>
+> > ---
+>
+> **Line addressing**
+> - A prefix that restricts a command to specific lines. Forms: `5` (single line), `5,10` (range), `/pattern/` (regex match), `1~2` (every odd line, GNU only), `addr!` (negation).
+> - Without an address, the command applies to every line.
+>
+> > [!tip] Combine address and command on one expression
+> >
+> > `sed '10,20s/foo/bar/g'` applies the global substitution only on lines 10–20. This avoids piping through `head`/`tail` and keeps the transformation atomic.
+>
+> > ---
+>
+> **In-place editing (`-i`)**
+> - The `-i` flag rewrites the file on disk instead of printing to stdout. GNU sed: `sed -i 's/a/b/' file`. BSD/macOS sed: `sed -i '' 's/a/b/' file` (empty string extension required).
+> - Always use `-i.bak` in scripts to create an automatic backup before modifying a file; this works on both GNU and BSD.
+>
+> > [!danger] In-place editing is irreversible without a backup
+> >
+> > `sed -i 's/.*//' file` will silently empty every line. Use `sed -i.bak` so the original is preserved as `file.bak`, and validate output with a dry run (`sed 's/...' file | head`) before applying `-i`.
+>
+> > [!success] Safe in-place pattern
+> >
+> > ```bash
+> > sed 's/old/new/g' file          # dry run: inspect output
+> > sed -i.bak 's/old/new/g' file   # apply with automatic backup
+> > diff file.bak file              # verify only expected lines changed
+> > ```
+>
+> > ---
+>
+> **`-n` (quiet / suppress) flag**
+> - Suppresses the default print-after-every-cycle behaviour. Only lines explicitly printed with the `p` command (or `p` flag on `s`) are written to stdout.
+> - Essential when extracting specific lines: `sed -n '10,20p' file` prints only lines 10–20.
+>
+> > [!info] `-n` with `p` is sed's line-range extractor
+> >
+> > This pattern replaces `head | tail` for extracting interior line ranges and is compatible with pipelines of arbitrary size.
+>
+> > ---
+>
+> **PowerShell `-replace` operator**
+> - Performs regex-based string substitution: `$string -replace 'pattern', 'replacement'`. Uses .NET regex (ERE-compatible superset).
+> - Case-insensitive by default. Use `-creplace` for case-sensitive matching. Operates on strings and pipeline objects — equivalent to `sed 's/pattern/replacement/gi'`.
+>
+> > [!tip] PowerShell in-place file edit pattern
+> >
+> > ```powershell
+> > (Get-Content file.txt) -replace 'old', 'new' | Set-Content file.txt
+> > ```
+> > Wrap `Get-Content` in parentheses so the file handle is closed before `Set-Content` writes back to the same path.
+
 `sed` (stream editor) is a non-interactive, line-oriented text transformation tool. It processes input one line at a time, applies a sequence of editing commands, and writes results to standard output. Used by data engineers daily for log cleaning, SQL migration file edits, CSV header fixes, config file patching, and bulk in-place file edits across entire codebases.
 
 > [!info] Scope of this note
@@ -25,30 +143,6 @@ status: complete
 
 ---
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `sed` (stream editor) | A command-line tool that reads input line by line, applies transformation rules (most commonly substitution), and writes the result to stdout. It does not load the entire file into memory. | The standard tool for automated text transformation in shell scripts: config edits, log cleanup, CSV header manipulation, and template processing. | Thinking sed modifies files by default -- it writes to stdout. Use `-i` for in-place editing, but always back up first (`-i.bak`). |
-| Substitution (`s///`) | The most common sed command. `s/pattern/replacement/` replaces the first occurrence of `pattern` on each line. Add `g` flag for all occurrences. | The core operation for text transformation: renaming, reformatting, cleaning, and templating. | Forgetting the `g` flag -- `s/old/new/` only replaces the first match per line. |
-| In-place editing (`-i`) | The `-i` flag modifies the file directly instead of writing to stdout. On macOS/BSD, `-i ''` requires an empty extension argument. | Enables automated config and data file modifications without temp files. | GNU sed `-i` and BSD/macOS sed `-i` have different syntax. GNU: `sed -i 's/.../.../'`. BSD: `sed -i '' 's/.../.../'`. Scripts must handle both. |
-| Line addressing | sed can restrict commands to specific lines or line ranges: `5s/.../.../` (line 5 only), `10,20s/.../.../` (lines 10-20), `/pattern/s/.../.../` (lines matching pattern). | Target transformations to specific parts of a file without affecting the rest. | Off-by-one errors in line ranges, or forgetting that `/pattern/` matching is case-sensitive by default. |
-| Hold space | An auxiliary buffer in sed. The pattern space holds the current line; the hold space is a secondary buffer for storing lines across cycles. Commands: `h` (copy to hold), `H` (append to hold), `g` (get from hold), `G` (append from hold), `x` (exchange). | Enables multi-line operations like joining lines, reversing order, and accumulating patterns. | The hold space is an advanced feature. Most sed tasks only need the pattern space. Over-using hold space makes scripts unreadable -- consider awk or Python instead. |
-| Regex groups and backreferences | Parentheses `\(...\)` in BRE or `(...)` in ERE capture matched text. `\1`, `\2` reference captured groups in the replacement. | Essential for reformatting: extract parts of a line and rearrange them. | BRE (default sed) requires escaped parentheses `\(...\)`. ERE (`sed -E`) uses unescaped `(...)`. |
-| `-E` (extended regex) | Enables Extended Regular Expression syntax in sed, matching `grep -E` behavior. `+`, `?`, `\|`, `()` work without backslash escaping. | Cleaner syntax for complex patterns. Available in GNU sed 4.2+ and BSD sed. | Not available in very old sed versions. Check `sed --version` for compatibility. |
-| PowerShell `-replace` | The PowerShell operator for regex-based string substitution. Syntax: `$string -replace 'pattern', 'replacement'`. Uses .NET regex. | The PowerShell equivalent of sed substitution. Works on strings and pipeline objects. | `-replace` is case-insensitive by default. Use `-creplace` for case-sensitive matching. |
-
-## What this note covers
-
-- Basic substitution with `s///`, global flag, case-insensitive flag
-- In-place file editing with `-i` and portability between GNU and BSD sed
-- Line selection and addressing: by number, range, and pattern
-- Deletion, insertion, and append commands
-- Advanced regex with groups and backreferences
-- Hold space for multi-line operations
-- Data engineering scenarios: config transformation, CSV manipulation, log cleanup
-- PowerShell equivalents: `-replace`, `ForEach-Object`, `Set-Content`
 ## How sed Works
 
 sed reads input line by line into a working buffer called the pattern space, applies all matching commands, then prints the result. Understanding this cycle — along with addresses, flags, and the hold space — is the key to writing correct sed scripts.

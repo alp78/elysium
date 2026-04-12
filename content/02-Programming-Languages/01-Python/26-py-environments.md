@@ -18,6 +18,182 @@ status: complete
 >
 > — **Attributed to various DevOps practitioners**
 
+> [!abstract]- Summary
+>
+> **Isolation foundations**
+> - `venv` creates a per-project Python installation with its own `python`, `pip`, and `site-packages`; the system Python is shared and must never be touched with bare `pip install`.
+> - Activation prepends the venv's `bin/` or `Scripts/` to `PATH` and sets `VIRTUAL_ENV`; deactivation restores the original shell state.
+> - `.venv/` must be in `.gitignore` immediately after creation; it is platform-specific and not portable.
+>
+> **Dependency specification**
+> - `pip freeze > requirements.txt` captures the full resolved tree (direct + transitive) with exact `==` pins; this is the reproducibility contract between dev, CI, and production.
+> - `pip-tools` separates abstract intent (`requirements.in`) from pinned output (`requirements.txt`); `pip-compile --upgrade` updates the lock.
+> - `requirements-dev.txt` starts with `-r requirements.txt` and adds test/lint tools; Docker images never install dev deps.
+> - Constraint files (`-c constraints.txt`) enforce version bounds across multiple requirements files without installing those packages.
+>
+> **Package operations**
+> - `pip install --upgrade pip` must be the first command in every new venv; bundled pip is often months old.
+> - `pip uninstall` leaves transitive orphans; the canonical fix is delete-and-rebuild from the pinned spec.
+> - `pip check` detects version conflicts; `pip cache purge` reclaims disk space.
+>
+> **Version management**
+> - `pyenv` manages interpreter versions independently of package isolation; `.python-version` pins per-project and is committed to the repo.
+> - Python minor versions are not interchangeable — pin in three places: `.python-version`, `Dockerfile`, and CI.
+>
+> **Modern tooling**
+> - `uv` is a Rust-based drop-in replacement for `pip` + `pip-tools` + `virtualenv`, 10–100× faster; `uv pip sync` removes packages not in the spec.
+> - `pipx` installs CLI tools into isolated hidden venvs, making them globally available without polluting project environments.
+>
+> **Private feeds**
+> - `pip.conf` / `PIP_EXTRA_INDEX_URL` add private PyPI feeds (Artifact Registry, Artifactory); credentials must never be hardcoded — use `keyring` or environment variables.
+>
+> **Container and CI patterns**
+> - No venv inside Docker — the container is the isolation; copy `requirements.txt` first, install, then copy source to preserve layer cache.
+> - Multi-stage builds compile wheels in a builder stage and install pre-built wheels in the slim runtime stage.
+> - GitHub Actions: `actions/setup-python@v5` → upgrade pip → install deps → lint/type-check/test; cache `~/.cache/pip` keyed on `requirements.txt` hash.
+>
+> **GCP deployment**
+> - Cloud Run: environment baked into the Docker image; no separate install step at deploy time.
+> - Cloud Functions: GCP reads `requirements.txt` from the source directory automatically.
+> - Cloud Composer: packages installed via `gcloud composer environments update`, not via SSH.
+> - Terraform: deploys infrastructure pointing at images; has no knowledge of venv, pip, or requirements files.
+>
+> **Anti-patterns and cheat sheet**
+> - Ten canonical mistakes (no venv, unpinned deps, committed venv, venv in Docker, `python:latest`, `alpine` for data engineering, etc.) with explicit fixes.
+> - Quick-reference tables: environment commands, specification files, and per-deployment-target install patterns.
+
+> [!note]- Glossary
+>
+> **`venv`** — stdlib module that creates a self-contained Python installation per project
+>
+> - Ships with every Python 3.3+ installation; no extra install required. Creates `bin/` (Linux/macOS) or `Scripts/` (Windows), an empty `site-packages/`, and `pyvenv.cfg` pointing to the base interpreter.
+> - Each venv is 10–20 MB empty; grows proportionally with installed packages. The entire directory is platform-specific and must never be committed to source control.
+>
+> > [!tip] Naming convention
+> >
+> > Name the directory `.venv/` (leading dot). VS Code, PyCharm, and most CI templates auto-detect this name. Any other name (`env/`, `myenv/`) requires manual interpreter selection in the IDE.
+>
+> > ---
+>
+> **`pip`** — Python package installer; fetches packages from PyPI into the active environment
+>
+> - Resolves, downloads, and installs packages and their transitive dependencies into `site-packages`. The `==` operator pins exact versions; `>=` / `<` allow bounded ranges; `[extras]` installs optional dependency groups.
+> - Running `pip install` without an active venv installs into the system Python or user site-packages, which is the primary cause of "it works on my machine" failures.
+>
+> > [!danger] Bare `pip install` without a venv
+> >
+> > On Linux, the OS itself depends on specific system-Python package versions. A careless `pip install` can corrupt `apt` or `yum` package management. On any platform, the next project needing a different version silently breaks the first.
+>
+> > ---
+>
+> **`requirements.txt`** — plain-text file listing pinned package names used to reproduce an environment
+>
+> - The reproducibility contract between developer machines, CI pipelines, and production. Every line must use `==` (exact pin) when the file is committed for deployment. Unpinned ranges (`pandas>=2.0`) are acceptable only in `requirements.in` source files, never in the final lock file.
+> - Generated with `pip freeze > requirements.txt` (not `pip list`) so that transitive dependencies are included with exact version pins.
+>
+> > [!warning] `pip list > requirements.txt` produces unpinned output
+> >
+> > `pip list` emits a formatted table without `==version` syntax. Passing it to `pip install -r` on another machine installs the latest available version of each package, breaking reproducibility.
+>
+> > ---
+>
+> **`pip freeze`** — outputs all installed packages in `name==version` format, including transitive dependencies
+>
+> - Captures the complete resolved state of the environment: every package pip installed, whether you requested it directly or not. Redirected to `requirements.txt`, it creates a deterministic snapshot.
+> - Must be run inside the active venv. Running it outside captures all system packages, producing a useless and enormous file.
+>
+> > [!info] `pip freeze` vs `pip list`
+> >
+> > `pip freeze` outputs `name==version` — the exact format `pip install -r` expects. `pip list` outputs a human-readable table without version pins. Only `pip freeze` is suitable for generating reproducible requirements files.
+>
+> > ---
+>
+> **`pyenv`** — tool that compiles and manages multiple Python interpreter versions side by side
+>
+> - Works by intercepting the `python` command and routing it to whichever version is configured via `pyenv global` (machine-wide) or `pyenv local` (per-directory via `.python-version` file). Available on Linux and macOS; `pyenv-win` for Windows.
+> - Solves a different problem from `venv`: `pyenv` manages which interpreter version runs; `venv` manages which packages are visible to that interpreter. Both are needed for full isolation.
+>
+> > [!tip] Commit `.python-version`
+> >
+> > Committing `.python-version` ensures every contributor and CI runner uses the same Python minor version. Without it, local (3.11) vs CI (3.12) mismatches surface as type errors or missing stdlib modules at the worst possible time.
+>
+> > ---
+>
+> **`uv`** — Rust-based Python package manager replacing `pip`, `pip-tools`, and `virtualenv`
+>
+> - Written by Astral (creators of `ruff`); resolves and installs packages 10–100× faster than pip using a parallel resolver and a global wheel cache. Uses `pip`-compatible syntax: `uv pip install`, `uv pip compile`, `uv pip sync`.
+> - `uv pip sync requirements.txt` installs exactly what is listed and removes everything else — unlike `pip install -r`, which only adds. Requires explicit installation in CI base images (`pip install uv` or via the official `curl` installer).
+>
+> > [!info] `uv` availability in CI
+> >
+> > `uv` is not pre-installed in most GitHub Actions runner images (as of 2024). Add `pip install uv` or the official `astral-sh/setup-uv` action before using `uv` commands in workflows.
+>
+> > ---
+>
+> **`pipx`** — installs Python CLI tools into isolated hidden venvs, exposing them globally
+>
+> - Each tool gets its own dedicated venv under `~/.local/pipx/venvs/`; the entry point is symlinked to `~/.local/bin/` so it is available on `PATH` without any activation step.
+> - The correct tool for `black`, `ruff`, `mypy`, `httpie`, `poetry`, and any other CLI that should be available system-wide but must not pollute project dependencies. Equivalent pattern to .NET's `dotnet tool install --global`.
+>
+> > [!tip] `pipx` vs `pip install --user`
+> >
+> > `pip install --user` installs a tool and all its dependencies into the user site-packages, where they can conflict with other tools or project packages. `pipx` isolates each tool completely.
+>
+> > ---
+>
+> **`pip.conf` / `--extra-index-url`** — configuration for private PyPI feeds alongside the public `pypi.org`
+>
+> - `pip.conf` (`~/.config/pip/pip.conf` on Linux/macOS, `%APPDATA%\pip\pip.ini` on Windows) persists the extra index URL so it applies to every `pip install` without a command-line flag. `--extra-index-url` on the command line applies only to that invocation.
+> - Used to reach internal packages hosted on GCP Artifact Registry, Azure DevOps Artifacts, JFrog Artifactory, or any PEP 503-compliant private feed. Never hardcode credentials in `pip.conf`; use `keyring`, `PIP_EXTRA_INDEX_URL`, or `keyrings.google-artifactregistry-auth`.
+>
+> > [!danger] Credentials in `pip.conf` leak into logs and repos
+> >
+> > `pip.conf` is often committed or logged in CI. Store feed credentials as CI secrets and expose them via `PIP_EXTRA_INDEX_URL` environment variable. For GCP Artifact Registry, use `keyrings.google-artifactregistry-auth` for seamless credential management.
+>
+> > ---
+>
+> **`VIRTUAL_ENV`** — environment variable set automatically when a venv is activated
+>
+> - Set by the activation script to the absolute path of the active venv directory. `pip`, `python`, and other tools read it to confirm which environment is active. Unset on `deactivate`.
+> - Checking `VIRTUAL_ENV` programmatically (or comparing `sys.prefix != sys.base_prefix` in Python) is the portable, path-independent way to assert that a venv is active before running install commands in scripts or automation.
+>
+> > [!tip] Programmatic venv check
+> >
+> > In Python scripts that must guard against running outside a venv, use `import sys; assert sys.prefix != sys.base_prefix, "Must run inside a virtual environment"`.
+>
+> > ---
+>
+> **Docker multi-stage build** — Dockerfile pattern using multiple `FROM` stages to separate build from runtime
+>
+> - Stage 1 (`builder`) installs compilers (`gcc`, dev headers) and compiles C-extension packages into wheel files. Stage 2 starts from a clean `slim` base, copies only the pre-built wheels, and installs them without any compiler. The final image has no build tools, smaller attack surface, and lower image size.
+> - Required when packages like `psycopg2`, `pyodbc`, or `numpy` need compilation. For pure-Python dependency trees, a single stage is sufficient.
+>
+> > [!info] `python:3.12-slim` vs `python:3.12-alpine`
+> >
+> > `slim` is Debian-based (~150 MB) with `glibc` — virtually all packages install from binary wheels. `alpine` is musl-based (~50 MB) but breaks `numpy`, `pandas`, and `pyodbc` at the linker level, requiring long source compilations. For data engineering workloads, always use `slim`.
+>
+> > ---
+>
+> **`pip install --no-cache-dir`** — skips pip's local wheel cache during installation
+>
+> - By default, pip caches downloaded wheels in `~/.cache/pip` (Linux), `~/Library/Caches/pip` (macOS), or `%LocalAppData%\pip\Cache` (Windows) to speed up future installs. In a Docker build, this cache is written into the image layer and is never reused — it adds tens to hundreds of MB with no benefit.
+> - Mandatory in all `RUN pip install` Dockerfile instructions. The cache is still useful in CI (where it persists between runs via `actions/cache@v4`) but not in single-use build contexts.
+>
+> > [!danger] Omitting `--no-cache-dir` in Docker
+> >
+> > Without `--no-cache-dir`, the pip wheel cache is written into the image layer. A typical data-science environment with `pandas`, `numpy`, and `scikit-learn` adds 300–600 MB of cache that the container never uses at runtime.
+>
+> > ---
+>
+> **Cloud Functions `requirements.txt`** — GCP's mechanism for installing Python dependencies in serverless functions
+>
+> - GCP reads `requirements.txt` from the function's source directory and runs `pip install -r requirements.txt` automatically during the build phase before deploying the function. No Dockerfile is needed — the runtime installs packages from the spec.
+> - The `venv/` directory must be excluded from the deployment source; the runtime ignores it and installs from `requirements.txt`, wasting transfer time. Pin all versions exactly to prevent silent breakage on the next deployment if a new package version is published.
+>
+> > [!warning] Including `venv/` in Cloud Functions source
+> >
+> > Uploading the local venv directory in the deployment archive inflates transfer time and triggers a GCP warning. Add `venv/` and `.venv/` to `.gcloudignore` to keep the source archive minimal.
+
 This note covers Python environment and dependency management — from `venv` isolation and `pip` workflows to `pyenv`, `uv`, Docker, CI/CD, and GCP deployment patterns.
 
 ### Key terms used in this note

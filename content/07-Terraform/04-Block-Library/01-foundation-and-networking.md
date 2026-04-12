@@ -807,12 +807,12 @@ In a Shared VPC setup, the host project owns the network and subnets while servi
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    HOST["Host Project\n(VPC + Subnets)"] --> |"subnet access"| SVC1["Service Project\ndev"]
-    HOST --> |"subnet access"| SVC2["Service Project\nstaging"]
-    HOST --> |"subnet access"| SVC3["Service Project\nprod"]
-    SVC1 --> |"IAM: networkUser"| SUB1["Subnet A\n10.0.1.0/24"]
+    HOST["Host Project<br/>(VPC + Subnets)"] --> |"subnet access"| SVC1["Service Project<br/>dev"]
+    HOST --> |"subnet access"| SVC2["Service Project<br/>staging"]
+    HOST --> |"subnet access"| SVC3["Service Project<br/>prod"]
+    SVC1 --> |"IAM: networkUser"| SUB1["Subnet A<br/>10.0.1.0/24"]
     SVC2 --> |"IAM: networkUser"| SUB1
-    SVC3 --> |"IAM: networkUser"| SUB2["Subnet B\n10.0.2.0/24"]
+    SVC3 --> |"IAM: networkUser"| SUB2["Subnet B<br/>10.0.2.0/24"]
 ```
 
 ### google_compute_shared_vpc_host_project

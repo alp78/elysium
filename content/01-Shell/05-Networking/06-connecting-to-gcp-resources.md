@@ -12,42 +12,178 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Connecting to GCP Resources — A Complete Guide by Service Type
-
-Every GCP resource has different connectivity patterns. This note provides the exact commands for connecting to each resource type you will encounter in data engineering, from both Linux and PowerShell, with the expected output so you can debug when things go wrong.
+# Connecting to GCP Resources
 
 > [!quote]
 > "The interesting thing about cloud computing is that we've redefined cloud computing to include everything that we already do."
 >
 > — **Larry Ellison**, Oracle analyst conference (2008)
 
+> [!abstract]- Summary
+> GCP resources fall into three connectivity categories: IAP-tunneled VMs (SSH, SQL Server, Airflow), localhost-only services reachable only inside an SSH session (Datadog Agent), and Google-managed HTTPS API services requiring no tunnel (BigQuery, Cloud Run, Cloud Storage). This note provides exact commands for all categories from both Linux and PowerShell.
+>
+> **Compute Engine SSH access** — `gcloud compute ssh` with automatic IAP tunneling and OS Login key management; `gcloud compute scp` for file transfers.
+>
+> **SQL Server via IAP tunnel** — `gcloud compute start-iap-tunnel` → `sqlcmd` / SSMS / `pymssql`; comma syntax `127.0.0.1,1435` for all SQL Server clients except `pymssql`.
+>
+> **BigQuery direct API access** — no tunnel, no port; `bq` CLI and `google-cloud-bigquery` Python client authenticate via ADC or `gcloud auth`; `--use_legacy_sql=false` required.
+>
+> **Cloud Run HTTPS endpoints** — public or IAM-protected `*.run.app` endpoints; `gcloud auth print-identity-token` for private services.
+>
+> **Airflow on Compute Engine** — IAP tunnel to port 8080 then browser; Airflow REST API health endpoint verifiable via `curl` or `Invoke-RestMethod`.
+>
+> **Datadog Agent diagnostics** — agent binds to `127.0.0.1` only; must SSH into the VM to run `datadog-agent status`; ports 5000, 5001, 8126.
+>
+> **Connection quick reference matrix** — table of all resource types with protocol, tunnel requirement, local command, and port.
+
+> [!note]- Glossary
+> **IAP (Identity-Aware Proxy)**
+> - Google's zero-trust proxy that authenticates the caller's Google identity before forwarding TCP traffic to a private GCE VM. Requires no VPN or public IP on the VM side — IAP validates the caller's IAM permissions at the Google control plane before forwarding any packet.
+> - Required for every connectivity pattern in this note that targets a VM without a public IP: SSH, SQL Server, Airflow, and Datadog all route through IAP.
+> >
+> > [!info] Cross-platform parity
+> >
+> > IAP tunneling works identically from bash and PowerShell via the same `gcloud compute ssh` and `gcloud compute start-iap-tunnel` commands.
+>
+> ---
+>
+> `gcloud compute ssh`
+> - GCP CLI command that manages SSH key distribution automatically and opens a terminal session to a GCE VM; adds `--tunnel-through-iap` to route through IAP when the VM has no public IP.
+> - The primary tool for interactive shell access and remote one-off command execution on Compute Engine VMs; eliminates manual SSH key management.
+> >
+> > [!info] Remote command flag
+> >
+> > The `--command` flag executes a one-liner on the VM and streams output back without opening an interactive shell — useful for health checks and diagnostics.
+>
+> ---
+>
+> `gcloud compute scp`
+> - Secure file-copy wrapper that uses the same IAP-tunneled SSH channel as `gcloud compute ssh`; remote paths use `instance-name:/path/on/vm` syntax; add `--recurse` for directories.
+> - The standard way to move files to and from GCE VMs without manually configuring SSH keys or opening additional firewall rules.
+> >
+> > [!info] Trailing-slash semantics
+> >
+> > Follows standard `scp` behavior: `source/` copies the directory's contents; `source` (no trailing slash) copies the directory itself. This distinction is a common source of transfer errors.
+>
+> ---
+>
+> `gcloud compute start-iap-tunnel`
+> - Opens a TCP forwarding tunnel through IAP between a local port (`--local-host-port`) and a port on the target VM; runs as a foreground process and closes when killed.
+> - Required for non-SSH services running on private VMs (SQL Server port 1433, Airflow port 8080); allows any local client to connect as if the service were running on localhost.
+> >
+> > [!info] Background execution
+> >
+> > Run with `&` on Linux or in a separate terminal on PowerShell, then connect any client to the local port. The tunnel must stay alive for the duration of the client session.
+>
+> ---
+>
+> `gsutil` / `gcloud storage`
+> - CLI tools for Google Cloud Storage; `gsutil` is the legacy tool with per-object threading; `gcloud storage` is the modern replacement with parallel composite transfers by default.
+> - The standard interface for uploading, downloading, syncing, and managing lifecycle policies on GCS buckets from both Linux and PowerShell.
+> >
+> > [!warning] Destructive rsync flag
+> >
+> > `gsutil rsync -d` permanently deletes destination-only objects. GCS has no recycle bin. Always preview with `-n` (dry-run) before running with `-d`.
+>
+> ---
+>
+> **Service account**
+> - A GCP non-human identity of the form `name@project.iam.gserviceaccount.com` used by VMs, Cloud Run services, and pipelines to authenticate to GCP APIs; granted IAM roles the same way as a user account.
+> - VMs authenticate to BigQuery, GCS, and other services through their attached service account; the role set on this account is the effective permission boundary for the workload.
+> >
+> > [!warning] Default account is over-privileged
+> >
+> > The Compute Engine default service account carries the Editor role. Always attach a custom service account with only the roles the workload needs.
+>
+> ---
+>
+> **Application Default Credentials (ADC)**
+> - A credential-resolution chain used by all Google client libraries and the `bq` CLI; on a developer workstation ADC is populated via `gcloud auth application-default login`; on GCE it resolves automatically from the attached service account.
+> - Allows the same application code to authenticate both locally and in production without any code changes — only the credential source changes between environments.
+> >
+> > [!info] Implicit resolution
+> >
+> > Client libraries call ADC implicitly. No credentials need to be passed in code — the library discovers the right source (workstation login or attached service account) at runtime.
+>
+> ---
+>
+> **TDS (Tabular Data Stream)**
+> - The wire protocol used by SQL Server for client-server communication, running on port 1433; SQL Server clients express the server address as `host,port` (comma) rather than the Unix `host:port` convention.
+> - Defines how all SQL Server clients in this note connect through the IAP tunnel: the local tunnel port (`127.0.0.1,1435`) must be expressed with comma syntax in every connection string.
+> >
+> > [!info] pymssql exception
+> >
+> > `sqlcmd`, SSMS, pyodbc, and SQLAlchemy all use comma syntax. `pymssql` is the sole exception: it takes `server` and `port` as separate keyword arguments.
+>
+> ---
+>
+> `sqlcmd`
+> - Microsoft's command-line SQL Server client; accepts `-S host,port` for server, `-U` / `-P` for credentials, `-d` for database, and `-Q` to run a query and exit; available on Linux via the `mssql-tools` package.
+> - The primary tool for verifying SQL Server connectivity through the IAP tunnel and running ad-hoc queries from both Linux and PowerShell.
+> >
+> > [!info] PowerShell equivalent
+> >
+> > `Invoke-Sqlcmd` is the PowerShell cmdlet equivalent, part of the `SqlServer` module; accepts the same `host,port` syntax via `-ServerInstance`.
+>
+> ---
+>
+> `pymssql` / `pyodbc`
+> - Python libraries for connecting to SQL Server; `pymssql` wraps FreeTDS and takes `server` and `port` as separate arguments; `pyodbc` uses an ODBC DSN string with comma syntax; SQLAlchemy supports both via connection URL.
+> - Used in Python pipelines to query SQL Server through the IAP tunnel on the same local port exposed by `gcloud compute start-iap-tunnel`.
+> >
+> > [!info] Production driver recommendation
+> >
+> > Prefer `pyodbc` with the ODBC Driver 18 for SQL Server in production; `pymssql` is simpler for scripts but is less actively maintained.
+>
+> ---
+>
+> **Identity token vs Access token**
+> - An identity token (JWT produced by `gcloud auth print-identity-token`) asserts the caller's identity and is consumed by Cloud Run's IAM invoker check; an access token (from `gcloud auth print-access-token`) proves IAM permissions and is consumed by Google API services such as BigQuery and GCS.
+> - Choosing the wrong token type is the most common authentication error when calling Cloud Run: Cloud Run requires an identity token in the `Authorization: Bearer` header, not an access token.
+> >
+> > [!danger] Token type mismatch
+> >
+> > Sending an access token to a Cloud Run `Authorization: Bearer` header fails the invoker check silently — the service returns 403. Always use `gcloud auth print-identity-token` for Cloud Run.
+>
+> ---
+>
+> `bq` CLI
+> - The BigQuery command-line tool, part of the Google Cloud SDK; sends queries as HTTPS requests to `bigquery.googleapis.com`; standard SQL mode must be enabled explicitly with `--use_legacy_sql=false`.
+> - The standard way to run ad-hoc BigQuery queries, inspect datasets, and export results from both Linux and PowerShell without writing Python client code.
+> >
+> > [!info] Backtick escaping by shell
+> >
+> > In bash, fully-qualified table names must be escaped as `` \` `` inside double-quoted strings. In PowerShell, use double backticks ` `` ` to produce a literal backtick character.
+
+Every GCP resource has different connectivity patterns. This note provides the exact commands for connecting to each resource type you will encounter in data engineering, from both Linux and PowerShell, with the expected output so you can debug when things go wrong.
+
 The connectivity model for GCP resources falls into three categories: resources you SSH into (Compute Engine VMs), resources that require an IAP tunnel before you can connect (SQL Server, Airflow, PostgreSQL on private VMs), and Google-managed services that expose HTTPS API endpoints directly (BigQuery, Cloud Run, Cloud Storage).
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart LR
-    Dev["Developer\nWorkstation"]
+    Dev["Developer<br>Workstation"]
 
     subgraph IAP["IAP-Protected (Private VMs)"]
-        SSH["GCE VM\nSSH port 22"]
-        SQL["SQL Server\nTDS port 1433"]
-        Airflow["Airflow\nHTTP port 8080"]
-        DD["Datadog Agent\nlocalhost only"]
+        SSH["GCE VM<br>SSH port 22"]
+        SQL["SQL Server<br>TDS port 1433"]
+        Airflow["Airflow<br>HTTP port 8080"]
+        DD["Datadog Agent<br>localhost only"]
     end
 
     subgraph API["Google-Managed APIs (HTTPS/443)"]
-        BQ["BigQuery\nbigquery.googleapis.com"]
-        CR["Cloud Run\n*.run.app"]
-        GCS["Cloud Storage\nstorage.googleapis.com"]
+        BQ["BigQuery<br>bigquery.googleapis.com"]
+        CR["Cloud Run<br>*.run.app"]
+        GCS["Cloud Storage<br>storage.googleapis.com"]
     end
 
-    Dev -->|"gcloud compute ssh\n(IAP automatic)"| SSH
-    Dev -->|"gcloud start-iap-tunnel\nthen sqlcmd / SSMS"| SQL
-    Dev -->|"gcloud start-iap-tunnel\nthen browser"| Airflow
-    SSH -->|"SSH then\ndatadog-agent status"| DD
-    Dev -->|"bq / Python client\n(IAM only)"| BQ
-    Dev -->|"curl / Invoke-RestMethod\n(identity token)"| CR
-    Dev -->|"gsutil / Python client\n(IAM only)"| GCS
+    Dev -->|"gcloud compute ssh<br>(IAP automatic)"| SSH
+    Dev -->|"gcloud start-iap-tunnel<br>then sqlcmd / SSMS"| SQL
+    Dev -->|"gcloud start-iap-tunnel<br>then browser"| Airflow
+    SSH -->|"SSH then<br>datadog-agent status"| DD
+    Dev -->|"bq / Python client<br>(IAM only)"| BQ
+    Dev -->|"curl / Invoke-RestMethod<br>(identity token)"| CR
+    Dev -->|"gsutil / Python client<br>(IAM only)"| GCS
 ```
 
 

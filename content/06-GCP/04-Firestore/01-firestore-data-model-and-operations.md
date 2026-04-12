@@ -160,17 +160,17 @@ Firestore organizes data hierarchically. Each level in the tree is distinct — 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    DB["🗄️ Firestore Database\n(main)"]
-    C1["📁 Collection\n/stocks"]
-    C2["📁 Collection\n/config"]
-    C3["📁 Collection\n/pipeline_runs"]
-    D1["📄 Document\n/stocks/ABI.BR"]
-    D2["📄 Document\n/stocks/ASML.AS"]
-    D3["📄 Document\n/config/pipeline"]
-    D4["📄 Document\n/pipeline_runs/run_001"]
-    SC["📁 Subcollection\n/stocks/ABI.BR/prices"]
-    SD1["📄 Document\n/prices/2026-02-10"]
-    SD2["📄 Document\n/prices/2026-02-11"]
+    DB["🗄️ Firestore Database<br/>(main)"]
+    C1["📁 Collection<br/>/stocks"]
+    C2["📁 Collection<br/>/config"]
+    C3["📁 Collection<br/>/pipeline_runs"]
+    D1["📄 Document<br/>/stocks/ABI.BR"]
+    D2["📄 Document<br/>/stocks/ASML.AS"]
+    D3["📄 Document<br/>/config/pipeline"]
+    D4["📄 Document<br/>/pipeline_runs/run_001"]
+    SC["📁 Subcollection<br/>/stocks/ABI.BR/prices"]
+    SD1["📄 Document<br/>/prices/2026-02-10"]
+    SD2["📄 Document<br/>/prices/2026-02-11"]
 
     DB --> C1
     DB --> C2

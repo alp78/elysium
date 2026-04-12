@@ -44,16 +44,16 @@ Running this manually is error-prone and slow. Running it automatically on every
 ```mermaid
 flowchart TD
     PR[Pull Request Opened] --> GHA[GitHub Actions Trigger]
-    GHA --> AUTH[Workload Identity Federation\nAuthenticate to GCP]
-    AUTH --> DS[Provision Shadow BigQuery Dataset\nauto-expires 24h]
+    GHA --> AUTH[Workload Identity Federation<br/>Authenticate to GCP]
+    AUTH --> DS[Provision Shadow BigQuery Dataset<br/>auto-expires 24h]
     DS --> PARALLEL{Parallel Cloud Run Jobs}
-    PARALLEL --> NEW[Cloud Run: NEW Code\nCalculate 10yr history\nWrite to shadow dataset]
-    PARALLEL --> BASE[Cloud Run: CURRENT Production Image\nCalculate 10yr history\nWrite to baseline dataset]
-    NEW --> DIFF[BigQuery Diff Comparison Query\nlevels · returns · weights · CA factors · divisor]
+    PARALLEL --> NEW[Cloud Run: NEW Code<br/>Calculate 10yr history<br/>Write to shadow dataset]
+    PARALLEL --> BASE[Cloud Run: CURRENT Production Image<br/>Calculate 10yr history<br/>Write to baseline dataset]
+    NEW --> DIFF[BigQuery Diff Comparison Query<br/>levels · returns · weights · CA factors · divisor]
     BASE --> DIFF
     DIFF --> RESULT{Deviations Found?}
-    RESULT -- No deviations --> APPROVE[Post Pass Comment to PR\nAuto-approve DataOps check]
-    RESULT -- Deviations found --> BLOCK[Post Diff Summary to PR\nBlock merge · Require human review]
+    RESULT -- No deviations --> APPROVE[Post Pass Comment to PR<br/>Auto-approve DataOps check]
+    RESULT -- Deviations found --> BLOCK[Post Diff Summary to PR<br/>Block merge · Require human review]
     APPROVE --> CLEANUP[Cleanup Shadow Dataset]
     BLOCK --> CLEANUP
 ```

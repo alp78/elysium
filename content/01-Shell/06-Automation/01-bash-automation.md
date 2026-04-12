@@ -13,25 +13,158 @@ status: complete
 
 # Bash Automation for Data Engineering
 
-Bash is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
-
-Every script in this page follows the defensive scripting patterns documented in [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) and uses the command chaining operators explained in [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining). The PowerShell equivalent of every script exists at [powershell-automation](https://alp78.github.io/elysium/01-Shell/Automation/powershell-automation).
-
 > [!quote]
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >
 > — **Brian Kernighan**, *Unix for Beginners* (1979)
 
+> [!abstract]- Summary
+>
+> 28 production-ready Bash scripts that automate the repetitive, error-prone tasks between pipeline orchestration and raw shell commands — each following defensive scripting conventions and paired with a PowerShell equivalent.
+>
+> - **File intake and validation** — CSV header validation, null/empty field scanning, duplicate key detection, file arrival SLA monitoring.
+> - **Data transformation** — column extraction and reordering, large CSV splitting, JSON-to-CSV flattening, CSV-to-NDJSON conversion.
+> - **API interaction** — REST GET with retry and exponential backoff, cursor-based pagination, OAuth2 bearer token refresh, download with SHA-256 checksum verification.
+> - **Database operations** — connectivity health check, query-to-CSV export, post-load row count reconciliation.
+> - **GCP cloud operations** — GCS stale object reporting, BigQuery dry-run cost estimation, Pub/Sub backlog monitoring, service account key age checking.
+> - **Log parsing and monitoring** — error rate calculation, structured JSON log filtering, log rotation and compression.
+> - **Environment and pre-flight checks** — dependency verification, `.env` file loading, disk space pre-flight.
+> - **Scheduling and orchestration helpers** — lock file wrapper (`flock`), generic retry wrapper, run-and-alert pattern (Slack webhook).
+
+> [!note]- Glossary
+>
+> **Bash script**
+> A text file containing a sequence of Bash commands executed by the Bash interpreter; conventionally starts with `#!/usr/bin/env bash`.
+> The standard automation language for Linux data engineering: file processing, pipeline orchestration, scheduled jobs, and deployment scripts.
+>
+> > [!info] Bash vs sh
+> >
+> > `#!/usr/bin/env bash` invokes Bash explicitly. `#!/bin/sh` may resolve to a minimal POSIX shell (dash on Debian/Ubuntu) that lacks arrays, `[[`, and other Bash-isms, causing silent incompatibilities.
+>
+> ---
+>
+> **Shebang (`#!`)**
+> The first line of a script (`#!/usr/bin/env bash`) that tells the OS which interpreter to use when the file is executed directly.
+> Determines whether the script runs under Bash, Python, or another interpreter — critical because the same file may behave differently under different shells.
+>
+> > [!tip] PATH-based lookup
+> >
+> > `#!/usr/bin/env bash` finds Bash via `$PATH`, which works on any system regardless of where Bash is installed. `#!/bin/bash` is a hardcoded path that fails if Bash lives elsewhere (e.g., `/usr/local/bin/bash` on macOS with Homebrew).
+>
+> ---
+>
+> **`set -euo pipefail`**
+> A compound strict-mode directive: `-e` exits on any command error, `-u` treats unset variables as errors, `-o pipefail` makes a pipeline fail if any stage fails (not just the last).
+> Without this header, errors in the middle of a script are silently ignored and execution continues on corrupted or missing input. Every production script must start with this line.
+>
+> > [!danger] Omitting strict mode causes silent data corruption
+> >
+> > A failed `curl` or `psql` call without `-e` lets the script continue and write empty or partial output to the target. The pipeline appears to succeed while the data is wrong.
+>
+> ---
+>
+> **Exit code**
+> The numeric value (0–255) a process returns to its parent. `0` = success; any non-zero value = failure.
+> Orchestrators (cron, Airflow, GitHub Actions) use exit codes to determine task success. A script that fails internally but exits `0` causes silent pipeline corruption that is difficult to diagnose.
+>
+> > [!warning] Swallowed exit codes corrupt pipelines
+> >
+> > Catching an error, logging it, and then exiting `0` hides the failure from every upstream scheduler. Always propagate the actual exit code with `exit "$status"` or let `set -e` abort automatically.
+>
+> ---
+>
+> **Idempotent script**
+> A script that produces the same result whether run once or multiple times; re-running does not create duplicates, fail on completed steps, or corrupt existing output.
+> Production scripts must be idempotent because retries are common — network failures, timeouts, and scheduler restarts all trigger re-runs.
+>
+> > [!tip] Idempotency patterns
+> >
+> > Check before acting: `[[ -f "$output" ]] && exit 0`. Use `mkdir -p` instead of `mkdir`. Check for existing database rows before inserting. Use `mv` with a temp file to make writes atomic.
+>
+> ---
+>
+> **Parameter validation**
+> Checking that all required inputs (positional arguments, environment variables, files) exist and are non-empty before the script performs any side-effecting work.
+> Prevents running with missing configuration, which could produce corrupt output, overwrite wrong targets, or delete the wrong data.
+>
+> > [!info] Bash validation syntax
+> >
+> > `VAR="${1:?Usage: $0 <arg>}"` combines assignment and validation: if `$1` is unset or empty, Bash prints the message and exits immediately. `${VAR:?ERROR: VAR must be set}` does the same for environment variables.
+>
+> ---
+>
+> **Logging pattern**
+> Writing timestamped diagnostic messages to `stderr` so that the script's data output on `stdout` remains clean for piping to downstream commands.
+> Enables debugging and audit trails without contaminating data streams. Standard pattern: `log() { echo "[$(date +%Y-%m-%d\ %H:%M:%S)] $*" >&2; }`.
+>
+> > [!warning] Mixing logs with data output breaks pipelines
+> >
+> > If log messages go to `stdout`, any command that consumes the script's output receives log noise mixed with data. Downstream parsers fail or silently produce wrong results.
+>
+> ---
+>
+> **Exponential backoff**
+> A retry strategy where the wait time between successive attempts doubles after each failure (e.g., 1 s → 2 s → 4 s → 8 s), up to a configurable maximum.
+> Prevents hammering a recovering service with rapid repeated requests, which would delay its recovery. Standard for API retries, database reconnects, and file transfer failures.
+>
+> > [!tip] Jitter for distributed systems
+> >
+> > In distributed systems where many clients retry simultaneously, add random jitter to the backoff: `delay=$(( delay + RANDOM % delay ))`. This prevents thundering-herd spikes when an upstream service restarts.
+>
+> ---
+>
+> **Golden schema**
+> A reference file that defines the expected column names and order for a CSV or structured data file; used as the authoritative contract for incoming data.
+> Comparing incoming file headers against the golden schema catches structural drift from upstream systems before any data is processed, preventing silent schema mismatches from propagating downstream.
+>
+> > [!info] Golden schema format
+> >
+> > In the scripts on this page, the golden schema file is a single line of comma-separated column names — the same format as the first row of the CSV. This keeps validation as a simple string comparison with `diff`.
+>
+> ---
+>
+> **NDJSON (Newline-Delimited JSON)**
+> A format where each line of a file is a complete, self-contained JSON object; also called JSON Lines (`.jsonl`).
+> Required by BigQuery streaming inserts, many modern log aggregators, and tools like `jq` for streaming processing. Unlike a JSON array, NDJSON can be processed line-by-line without loading the entire file into memory.
+>
+> > [!info] NDJSON vs JSON array
+> >
+> > A JSON array (`[{...},{...}]`) requires the full file to be parsed before any record is accessible. NDJSON (`{...}\n{...}`) allows `while read -r line` processing and supports arbitrarily large files without memory constraints.
+>
+> ---
+>
+> **Lock file / `flock`**
+> A lock file is a sentinel file whose exclusive possession by one process prevents other processes from entering the same critical section. `flock` (from `util-linux`) is the Linux system call and CLI that acquires file locks atomically.
+> Prevents overlapping cron job executions that would cause duplicate data, race conditions, or resource exhaustion when a job runs longer than its scheduled interval.
+>
+> > [!tip] `flock` vs PID files
+> >
+> > PID files (writing the process ID to a file) are fragile — they leave stale locks if the process crashes. `flock` uses kernel-level file locking that is automatically released when the process exits, even on crash.
+>
+> ---
+>
+> **`cron`**
+> A time-based job scheduler built into Linux/macOS that runs commands or scripts at specified intervals, defined in a `crontab` file using a five-field time expression (`minute hour day month weekday`).
+> The standard mechanism for scheduling unattended data engineering tasks — daily extracts, file SLA checks, log rotation — on servers without a full orchestration platform.
+>
+> > [!warning] Cron does not source shell profiles
+> >
+> > Cron runs in a minimal environment. Environment variables set in `.bashrc`, `.profile`, or `.env` are not available unless explicitly sourced at the top of the script or defined in the `crontab` environment block.
+
+Bash is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
+
+Every script in this page follows the defensive scripting patterns documented in [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) and uses the command chaining operators explained in [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining). The PowerShell equivalent of every script exists at [powershell-automation](https://alp78.github.io/elysium/01-Shell/Automation/powershell-automation).
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart LR
-    A[File Intake\n& Validation] --> B[Data\nTransformation]
-    B --> C[API\nInteraction]
-    C --> D[Database\nOperations]
-    D --> E[GCP Cloud\nOperations]
-    E --> F[Log Parsing\n& Monitoring]
-    F --> G[Environment\n& Pre-flight]
-    G --> H[Scheduling\n& Orchestration]
+    A[File Intake<br>& Validation] --> B[Data<br>Transformation]
+    B --> C[API<br>Interaction]
+    C --> D[Database<br>Operations]
+    D --> E[GCP Cloud<br>Operations]
+    E --> F[Log Parsing<br>& Monitoring]
+    F --> G[Environment<br>& Pre-flight]
+    G --> H[Scheduling<br>& Orchestration]
     style A fill:#292e42,stroke:#7aa2f7
     style B fill:#292e42,stroke:#7aa2f7
     style C fill:#292e42,stroke:#7aa2f7

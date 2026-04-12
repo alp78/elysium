@@ -49,11 +49,11 @@ The state file (`terraform.tfstate`) is a JSON document that maps every resource
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A[terraform init] --> B[Read state\nfrom GCS]
+    A[terraform init] --> B[Read state<br/>from GCS]
     B --> C[Acquire lock]
-    C --> D[terraform plan\nDiff: config vs state vs API]
-    D --> E[terraform apply\nCreate / Update / Destroy]
-    E --> F[Write updated\nstate to GCS]
+    C --> D[terraform plan<br/>Diff: config vs state vs API]
+    D --> E[terraform apply<br/>Create / Update / Destroy]
+    E --> F[Write updated<br/>state to GCS]
     F --> G[Release lock]
 
     style A fill:#292e42,stroke:#565f89,color:#c0caf5

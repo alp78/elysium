@@ -16,36 +16,217 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
+> [!abstract]- Summary
+>
+> **Function Basics**
+> - Methods are statically typed; all functions are class or struct members — no standalone functions in C#.
+> - Return types are declared explicitly; `void` signals no return value; expression-bodied syntax (`=>`) eliminates braces for single-expression methods.
+> - Local functions nest inside a method body; `static` local functions prevent accidental variable capture.
+> - Tuples enable multiple return values without a dedicated class; prefer `record` for 3–4+ fields.
+> - `Func<T, TResult>`, `Action<T>`, and `Predicate<T>` make functions first-class values for callbacks, strategy, pipelines, and DI.
+>
+> **Function-passing patterns**
+> - Callbacks: `Action<string> onSuccess` / `Action<Exception> onError` — decouple operation from side effects.
+> - Strategy: inject `Func<decimal, decimal>` to swap algorithms without modifying the consumer.
+> - Pipeline: `List<Func<string, string>>` + `Aggregate` chains sequential transformations.
+> - DI / testability: `Func<DateTime>? getNow = null` replaces `DateTime.UtcNow` with injectable time.
+> - Progress: `Action<int, int, string>? onProgress` reported via null-conditional `?.Invoke()`.
+>
+> **Parameters**
+> - Default values must be compile-time constants; named arguments (`ssl: false`) allow any order at call site.
+> - `ref` — mutable pass-by-reference (caller must initialize); `out` — must assign before return; `in` — read-only reference for large structs.
+> - `params T[]` collects variable arguments; must be last parameter; prefer `params ReadOnlySpan<T>` in .NET 8+.
+> - No `**kwargs` equivalent — use anonymous objects or `Dictionary<string, object>` for dynamic key-value pairs.
+>
+> **Lambda Expressions**
+> - Expression lambda: `x => x * x` — implicit return. Statement lambda: `(x) => { ... return ...; }` — explicit return.
+> - Compiler infers parameter types from context; assign to `Func<T, TResult>` (returns value) or `Action<T>` (void).
+> - LINQ methods (`Where`, `Select`, `OrderBy`, `MinBy`) accept lambdas as predicates, projections, and key selectors.
+> - Closures capture the variable reference, not a snapshot — mutations are shared between lambda and enclosing scope.
+>
+> **Closures & Scope**
+> - Block-level scoping: variables are inaccessible outside their `{}` block — compile error, not runtime surprise.
+> - Closure factories return independent `Func<T>` instances, each with private encapsulated state (counter, validator).
+> - `for` loop capture pitfall: all lambdas share the same loop variable and see its final value; fix by copying to a local inside the loop body. `foreach` captures per-iteration since C# 5.
+>
+> **Delegates & Events**
+> - `delegate int MathOp(int a, int b)` declares a named signature type; prefer built-in `Func`/`Action`/`Predicate` to avoid ceremony.
+> - Multicast delegates: `+=` chains handlers, `-=` removes; only the last handler's return value is kept — use `Action<T>` for fire-and-forget.
+> - Method groups (`Action<string> h = PrintUpper`) are more concise than wrapping in a lambda when the signature already matches.
+> - `event` restricts external code to `+=`/`-=`; only the declaring class can invoke — enforces observer pattern.
+> - Always unsubscribe event handlers to prevent memory leaks; use `event?.Invoke()` to skip null check.
+>
+> **Method Overloading & Extension Methods**
+> - Overloads: same name, different parameter types or counts; resolved at compile time; use `ThenBy` not chained `OrderBy` for secondary sorts.
+> - Extension methods: static method in a static class with `this` on the first parameter; powers all of LINQ on `IEnumerable<T>`.
+> - Avoid extending `object` — pollutes IntelliSense; extend the most specific type possible.
+
+> [!note]- Glossary
+>
+> **Method**
+>
+> - A named function defined inside a class or struct. C# has no standalone functions — all code is a method.
+> - The `static` modifier removes the instance requirement; instance methods receive an implicit `this` reference.
+>
+> > [!info] Static vs instance
+> >
+> > Static methods are called on the type (`ClassName.Method()`); instance methods are called on an object (`obj.Method()`). Confusing the two causes `CS0120` (object reference required) or unnecessary object instantiation.
+>
+> > ---
+>
+> **Return type**
+>
+> - Declared type of the value a method returns; `void` means no return value; the compiler enforces that all code paths return the declared type.
+> - Expression-bodied members (`=>`) provide an implicit return for single-expression methods.
+>
+> > [!info] Return type enforcement
+> >
+> > Omitting `return` in any branch of a non-void method is `CS0161` — a compile error, not a runtime surprise. Every code path must return a value of the declared type.
+>
+> > ---
+>
+> **ref / out / in**
+>
+> - `ref` passes a variable by reference (read + write); `out` requires the callee to assign a value before returning; `in` passes a read-only reference to avoid copying large structs.
+> - Both declaration and call site must carry the keyword, making the intent explicit and preventing accidental pass-by-value.
+>
+> > [!info] Parameter modifier semantics
+> >
+> > `out` parameters must be assigned on every code path before the method returns — `CS0177` if any path exits without assignment. `in` is only beneficial for large value types (`readonly struct`); for small types like `int`, the copy cost is negligible.
+>
+> > ---
+>
+> **params**
+>
+> - `params T[]` collects a variable number of arguments into an array; must be the last parameter; callers may pass individual values or an existing array.
+> - In .NET 8+, prefer `params ReadOnlySpan<T>` to avoid heap allocation for small argument lists.
+>
+> > [!info] params overload resolution
+> >
+> > Mixing `params` with optional parameters can create ambiguous overloads that the compiler cannot resolve. Keep `params` in a dedicated overload separate from optional-parameter variants.
+>
+> > ---
+>
+> **Optional parameter**
+>
+> - Parameter with a compile-time-constant default value: `void F(int x = 10)`; callers may omit the argument to use the default.
+> - Mutable objects (`new List<T>()`, arrays) cannot be defaults — only constants, `null`, and `default(T)` are allowed.
+>
+> > [!info] Optional parameter vs overloading
+> >
+> > Optional parameters reduce overload count for simple defaults but embed the default value at the call site at compile time. If the default changes in a later version, callers must be recompiled. For versioning-sensitive APIs, explicit overloads are safer.
+>
+> > ---
+>
+> **Func\<T\>**
+>
+> - Generic delegate type: `Func<TInput, TResult>` — the last type parameter is always the return type; up to 16 input parameters.
+> - Assign a named method, lambda, or method group; pass as an argument or return from another method to make functions first-class values.
+>
+> > [!info] Func type parameter order
+> >
+> > `Func<int>` takes no parameters and returns `int`; `Func<int, int>` takes one `int` and returns `int`; `Func<int, string, bool>` takes `int` and `string` and returns `bool`. The return type is always last.
+>
+> > ---
+>
+> **Action\<T\>**
+>
+> - Generic delegate type for void-returning functions: `Action<TInput>`; used for side effects — logging, printing, state mutation.
+> - Multicast-safe for fire-and-forget scenarios; use instead of `Func<T, Unit>` or custom void delegates.
+>
+> > [!info] Action vs Func for callbacks
+> >
+> > Use `Action<T>` when the callback performs a side effect and no return value is needed. Using `Func<T, void>` is a compile error — `void` is not a valid type argument. Always reach for `Action<T>` for void callbacks.
+>
+> > ---
+>
+> **Predicate\<T\>**
+>
+> - `Func<T, bool>` alias; accepted by `List<T>.FindAll`, `List<T>.Exists`, and `Array.Find`.
+> - Modern C# and LINQ prefer `Func<T, bool>` directly — `Predicate<T>` survives only in older collection APIs.
+>
+> > [!info] Predicate vs Func\<T, bool\>
+> >
+> > `Predicate<T>` and `Func<T, bool>` are structurally identical but are distinct types — they cannot be assigned interchangeably without an explicit lambda wrapper. LINQ methods (`Where`, `Any`, `All`) take `Func<T, bool>`, not `Predicate<T>`.
+>
+> > ---
+>
+> **Lambda expression**
+>
+> - Anonymous function defined with `=>`: expression lambda `x => x * x` (implicit return) or statement lambda `(x) => { return x * x; }` (explicit return with braces).
+> - Inferred as `Func<T, TResult>`, `Action<T>`, or `Predicate<T>` depending on context; the compiler resolves parameter types from the target delegate.
+>
+> > [!info] Expression vs statement lambda
+> >
+> > Expression lambdas support a single expression and return implicitly. Statement lambdas wrap multiple statements in `{}` and require an explicit `return`. Keep statement lambdas under 5 lines — extract longer logic to a named method for readability and testability.
+>
+> > ---
+>
+> **Closure**
+>
+> - Lambda or local function that captures variables from the enclosing scope; captured variables are stored on the heap and shared by reference between the lambda and the enclosing scope.
+> - `foreach` in C# 5+ captures per-iteration automatically; `for` loops still share the same loop variable — fix by copying to a local inside the loop body.
+>
+> > [!info] Closure heap allocation
+> >
+> > Every closure that captures enclosing variables causes a heap allocation for a compiler-generated display class. Use `static` local functions to prevent capture and eliminate the allocation when the helper does not need enclosing state.
+>
+> > ---
+>
+> **Delegate**
+>
+> - A type-safe function pointer declared with the `delegate` keyword: `delegate int Op(int a, int b)` defines a type whose variables hold any matching method reference.
+> - Built-in generics (`Func`, `Action`, `Predicate`) cover most scenarios; custom delegates add named semantics for event signatures and domain-specific contracts.
+>
+> > [!info] Delegate vs lambda
+> >
+> > The `delegate` keyword has two meanings: (1) declare a delegate type (`delegate int Op(int a, int b)`); (2) anonymous method syntax (`delegate(int a, int b) { return a + b; }` — older style replaced by lambdas). Multicast delegates chain handlers via `+=`; only the last handler's return value survives.
+>
+> > ---
+>
+> **Event**
+>
+> - A delegate field restricted by the `event` keyword: external subscribers can only use `+=` and `-=`; only the declaring class can invoke the event.
+> - Prevents external code from accidentally replacing the invocation list or invoking the event directly — enforces the observer / publisher-subscriber pattern.
+>
+> > [!info] event vs raw delegate field
+> >
+> > A public `Action<string> OnClick;` field lets any caller invoke or reassign the entire handler list. `public event Action<string> OnClick;` limits external callers to `+=`/`-=` while keeping invocation internal. Always prefer `event` for public notification points. Use `event?.Invoke()` to skip the null check safely.
+>
+> > ---
+>
+> **Extension method**
+>
+> - Static method in a `static` class with `this` before the first parameter: `static int WordCount(this string s)` — enables `"hello".WordCount()` fluent syntax.
+> - Does not modify the target type's source; LINQ is built entirely from extension methods on `IEnumerable<T>`.
+>
+> > [!info] Extension method resolution
+> >
+> > Extension methods require a `using` directive for the namespace of the static class. The compiler preferentially resolves instance methods before extension methods, so an extension method can never shadow a real member. Avoid extending `object` — it pollutes IntelliSense for every type in the codebase.
+>
+> > ---
+>
+> **Method overloading**
+>
+> - Multiple methods sharing a name but differing in parameter type or count; resolved at compile time with no runtime overhead.
+> - Combining overloads with `params` or optional parameters can produce ambiguous call sites — keep overloads mutually unambiguous.
+>
+> > [!info] Overload resolution priority
+> >
+> > The compiler picks the most specific matching overload. An `int` argument matches `Format(int)` before `Format(double)` via implicit widening. When no single best match exists, the compiler emits an ambiguous call error — resolve with an explicit cast at the call site or by removing the ambiguous overload.
+>
+> > ---
+>
+> **Local function**
+>
+> - A function defined inside another method's body; has access to all enclosing variables and is invisible outside its parent method.
+> - Add the `static` modifier to prevent variable capture and eliminate the associated heap allocation.
+>
+> > [!info] Static local function
+> >
+> > `static int Helper(int x) => x * 2;` declared inside a method cannot reference any enclosing variable — the compiler enforces this. Use `static` local functions for pure helpers that need no outer context; it makes the intent explicit and avoids accidental capture-induced allocations.
+
 This note covers C#'s function system in full: method definitions and return types, parameter modes (`ref`, `out`, `in`, `params`), `Func<T>`/`Action<T>` delegate types, lambda expressions, closures and captured variables, the event/delegate pattern, method overloading, and extension methods that power LINQ.
-
-### Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Method** | A named function defined inside a class or struct. C# has no standalone functions — all functions are methods. | Reusable, typed blocks of logic. | Confusing static methods (no instance needed) with instance methods (require `this`). |
-| **Return type** | Declared type of the value a method returns. `void` means no return value. | Compile-time contract for callers. | Forgetting `return` in a non-void method — compile error. |
-| **ref / out / in** | Parameter modifiers: `ref` passes by reference (read/write), `out` requires assignment inside the method, `in` passes by readonly reference. | Avoid copying large structs; return multiple values. | `out` parameters must be assigned before the method returns — compile error otherwise. |
-| **params** | `params T[]` collects variable arguments into an array. Must be the last parameter. | Accept variable number of arguments of the same type. | Mixing `params` with other array parameters — ambiguous overload resolution. |
-| **Optional parameter** | Parameter with a default value: `void F(int x = 10)`. Must be compile-time constant. | Reduce overload count for common defaults. | Mutable objects can't be defaults — only constants, `null`, and `default`. |
-| **Func\<T\>** | Generic delegate type: `Func<TInput, TResult>`. Last type parameter is the return type. | Type-safe function references for callbacks, LINQ, strategy pattern. | `Func<int>` returns `int` with no parameters; `Func<int, int>` takes `int` and returns `int`. |
-| **Action\<T\>** | Generic delegate type for void-returning functions: `Action<TInput>`. | Callbacks that perform side effects without returning a value. | Using `Action` when a return value is needed — use `Func` instead. |
-| **Predicate\<T\>** | `Func<T, bool>` alias for boolean test functions. Used in `List.FindAll`, `Array.Find`. | Filter callbacks on collections. | Modern C# prefers `Func<T, bool>` over `Predicate<T>` — LINQ uses `Func`. |
-| **Lambda expression** | `(params) => expression` or `(params) => { statements }`. Anonymous function inferred as `Func<T>` or `Action<T>`. | Concise inline callbacks for LINQ, event handlers, and higher-order methods. | Confusing expression lambdas (single expression, implicit return) with statement lambdas (braces, explicit `return`). |
-| **Closure** | Lambda or local function that captures variables from the enclosing scope. Captured variables are shared by reference. | Callbacks that need access to surrounding state. | Captured loop variable — all closures share the same variable. C# 5+ fixed this for `foreach` but `for` loops still have the issue. |
-| **Delegate** | A type-safe function pointer. `delegate int Op(int a, int b);` declares a delegate type. | Callback contracts, event signatures, multicast invocation. | Confusing `delegate` keyword (type declaration) with lambda syntax (anonymous function). |
-| **Event** | A restricted delegate field: only the declaring class can invoke it. Subscribers use `+=` and `-=`. | Observer pattern — loosely coupled notification. | Invoking an event without null check — throws `NullReferenceException` if no subscribers. Use `event?.Invoke()`. |
-| **Extension method** | Static method in a static class with `this` before the first parameter. Enables `"hello".WordCount()` fluent syntax. | Add methods to existing types without modification — powers all of LINQ. | Extending `object` — pollutes IntelliSense for every type. Be specific. |
-| **Method overloading** | Multiple methods with the same name but different parameter types or counts. Resolved at compile time. | Provide convenient APIs with varying parameter sets. | Overloading with `params` and optional parameters — can cause ambiguous calls. |
-| **Local function** | Function defined inside another method. Has access to enclosing variables. Can be `static` to prevent capture. | Helper logic scoped to a single method. | Non-static local functions capture enclosing variables — use `static` local functions to prevent accidental capture and allocation. |
-
-### What this note covers
-
-- **Function Basics** — method definitions, return types, void, expression-bodied members, local functions, first-class function usage
-- **Parameters** — positional, optional, `ref`/`out`/`in`, `params`, named arguments, discard `_`
-- **Lambda Expressions** — expression vs statement lambdas, type inference, `Func<T>`/`Action<T>`, natural delegate types (C# 10+)
-- **Closures & Scope** — variable capture, loop capture pitfall, `static` local functions
-- **Delegates & Events** — custom delegate types, `Func`/`Action`/`Predicate`, multicast, event pattern, `event?.Invoke()`
-- **Method Overloading & Extension Methods** — overload resolution, extension method syntax, LINQ integration
 
 ## Function Basics
 
@@ -921,11 +1102,11 @@ flowchart TD
     A["Does the function return a value?"] -->|Yes| B["Func&lt;T, TResult&gt;"]
     A -->|No| C["Action&lt;T&gt;"]
     A -->|"Returns bool"| D["Predicate&lt;T&gt;"]
-    B --> E{"Need named semantics\nor custom signature?"}
+    B --> E{"Need named semantics<br/>or custom signature?"}
     C --> E
     E -->|Yes| F["Custom delegate"]
     E -->|No| G["Use built-in"]
-    G --> H{"Notify multiple\nsubscribers?"}
+    G --> H{"Notify multiple<br/>subscribers?"}
     H -->|Yes| I["Multicast += / -="]
     H -->|"Yes + restrict access"| J["event keyword"]
 ```

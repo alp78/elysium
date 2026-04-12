@@ -32,13 +32,13 @@ Terraform's input variables and output values are the primary mechanism for maki
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A["terraform.tfvars\n-var flags\nTF_VAR_*"] --> B["variables.tf\nInput Variables"]
-    B --> C["Resource Blocks\nvar.project_id\nvar.region"]
-    B --> D["locals { }\nDerived Values"]
+    A["terraform.tfvars<br/>-var flags<br/>TF_VAR_*"] --> B["variables.tf<br/>Input Variables"]
+    B --> C["Resource Blocks<br/>var.project_id<br/>var.region"]
+    B --> D["locals { }<br/>Derived Values"]
     D --> C
-    C --> E["State File\n.tfstate"]
-    E --> F["outputs.tf\nOutput Values"]
-    F --> G["terraform output\nCI/CD scripts"]
+    C --> E["State File<br/>.tfstate"]
+    E --> F["outputs.tf<br/>Output Values"]
+    F --> G["terraform output<br/>CI/CD scripts"]
 
     style A fill:#292e42,stroke:#565f89,color:#c0caf5
     style B fill:#292e42,stroke:#565f89,color:#c0caf5

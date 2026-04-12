@@ -12,7 +12,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# File Manipulation — Moving Data Safely
+# File Manipulation
 
 > [!quote]
 > "Unix was not designed to stop you from doing stupid things, because that would also stop you from doing clever things."
@@ -22,6 +22,145 @@ status: complete
 > "Only wimps use tape backup. Real men just upload their important stuff on ftp and let the rest of the world mirror it."
 >
 > — **Linus Torvalds**, Usenet post (1996)
+
+> [!abstract]- Summary
+>
+> Safe patterns for copying, moving, deleting, and permissioning files in Linux and PowerShell production environments — covering the tools, their failure modes, and when to use each.
+>
+> **Linux file manipulation tools**
+> - `cp -a` preserves timestamps, permissions, and symlinks; plain `cp -r` resets `mtime` and breaks downstream change detection
+> - `rsync` supports resumable transfers, checksum verification, and `--delete` sync; trailing slash on source controls whether contents or the directory itself is copied
+> - `mv` is atomic on the same filesystem (single `rename()` syscall); cross-filesystem `mv` is copy + delete — prefer `rsync -a src dst && rm src` for critical cross-filesystem moves
+> - `rm -rf` is immediate and unrecoverable; the trash pattern (move to timestamped staging dir, verify, then delete) is mandatory in scripts
+> - `rename` (Perl) applies regex substitutions to filenames in bulk; Debian and RHEL ship incompatible versions — check `rename --version`
+> - `mkdir -p` creates nested paths idempotently; `chmod` sets permissions in octal (755, 644, 600) or symbolic (`u+x`) notation; `chown -R uid:0` fixes Docker/Airflow bind-mount ownership
+> - `du -sh` reports directory size; `df -h` reports filesystem free space — check both bytes and inodes (`df -i`) before large writes
+>
+> **PowerShell file manipulation tools**
+> - `Copy-Item -Recurse` does not preserve timestamps by default; no direct equivalent of `cp -a`
+> - `Move-Item` is atomic on the same drive; cross-drive moves are copy + delete
+> - `Rename-Item` renames in place; pipe `Get-ChildItem` into it for batch renames with `-NewName { $_.Name -replace ... }`
+> - `Remove-Item -Recurse -Force` has no recycle bin and no confirmation; use `-WhatIf` to preview; use `[System.IO.Directory]::Delete($path, $true)` when `-Recurse` fails with "directory is not empty"
+> - `icacls` manages NTFS ACLs: `/grant "user:(OI)(CI)F"` for recursive full control, `/reset /T` to restore inheritance; `takeown` is required when locked out before `icacls` can act
+> - `Get-PSDrive -PSProvider FileSystem` shows used/free per drive; `Get-ChildItem -Recurse | Measure-Object -Sum Length` calculates directory size
+>
+> **Operations and safety**
+> - Use `cp -a` for data directories, `rsync` for large/network transfers, and the trash pattern for any script-driven deletion
+> - Never `rm -rf $VAR/*` without `set -u`; an unset variable expands to `rm -rf /*`
+> - Always dry-run `rsync --delete` with `-n` before the real run; a wrong trailing slash with `--delete` wipes the destination
+> - Do not move or delete live database files (`.mdf`, `.ldf`) directly — use database backup/restore tools
+> - Cross-server transfers require `rsync -e ssh`, `scp`, or `gsutil` — `cp` and `mv` are local-only
+> - 6 troubleshooting scenarios covered: Docker permission denied, rsync --delete over-deletion, cp -r timestamp reset, slow cross-filesystem mv, Remove-Item -Recurse failure, chmod no-op on FAT32/exFAT
+
+> [!note]- Glossary
+>
+> **`cp`**
+> - The Linux command for copying files and directories; without flags copies a single file, `-r` copies recursively, `-a` (archive) preserves timestamps, permissions, ownership, and symlinks.
+> - Central to staging pipeline data: always use `cp -a` for data directories so downstream change-detection logic based on `mtime` is not broken.
+>
+> > [!warning] `-r` silently resets modification times
+> >
+> > `cp -r` copies all files but sets every `mtime` to the current time. Tools using `find -newer` or `stat` will treat every file as "new." Use `cp -a` whenever timestamps matter.
+>
+> ---
+>
+> **`rsync`**
+> - A file-transfer tool that copies only the delta between source and destination, supports checksum verification, and resumes after interruption by re-running the same command.
+> - The standard choice for large, networked, or unreliable transfers; `-ah --progress` gives human-readable output with per-file speed; `--delete` keeps source and destination in exact sync.
+>
+> > [!danger] Trailing slash controls scope with `--delete`
+> >
+> > `rsync -a src/ dst/` copies contents into `dst/`; `rsync -a src dst/` creates `dst/src/`. Combined with `--delete`, a wrong slash wipes the destination. Always dry-run with `rsync -avn --delete` first.
+>
+> ---
+>
+> **`mv`**
+> - The Linux command for moving and renaming files; same-filesystem moves are a single `rename()` syscall (instant, atomic); cross-filesystem moves are copy + delete (not atomic).
+> - Used for atomic output commits in pipelines: write to a temp file, then `mv` it to the final destination — same-filesystem `mv` prevents downstream readers from seeing a partial file.
+>
+> > [!warning] Cross-filesystem `mv` can leave partial files
+> >
+> > If a cross-filesystem `mv` fails mid-copy (disk full, permission error), the partial copy remains at the destination and the original is still at the source. Use `rsync -a src dst && rm src` for verifiable cross-filesystem moves.
+>
+> ---
+>
+> **`rm`**
+> - The Linux command for permanently deleting files and directories; there is no system trash — deletion is immediate and unrecoverable without a backup.
+> - The most operationally dangerous standard command: `rm -rf` with a wrong path or unset variable can destroy entire directory trees instantly.
+>
+> > [!danger] Unset variable expands to `rm -rf /*`
+> >
+> > `rm -rf "$STAGING_DIR"/*` with an unset `STAGING_DIR` expands to `rm -rf /*`. Always enable `set -u` and verify paths before deletion. Use the trash pattern in all scripts.
+>
+> ---
+>
+> **Trash pattern**
+> - A safe deletion strategy: move the target to a timestamped staging directory (`/tmp/trash_$(date +%Y%m%d_%H%M%S)`) instead of deleting immediately, verify, then delete the staging directory.
+> - Provides a recovery window at the cost of a 30-second verification step — the only safe approach for `rm`-equivalent operations in automated scripts.
+>
+> > [!warning] Skipping verification defeats the pattern
+> >
+> > The trash pattern only helps if you inspect the staging directory before final deletion. An unverified trash-then-delete is functionally equivalent to `rm -rf` — just slower.
+>
+> ---
+>
+> **`chmod`**
+> - The Linux command for setting file permissions using octal notation (e.g., `755`) or symbolic notation (e.g., `u+x`); each octal digit encodes read (4) + write (2) + execute (1) for owner, group, and others.
+> - Common production values: `755` for scripts and executables, `644` for data files and configs, `600` for secrets and key files, `700` for private directories.
+>
+> > [!info] `chmod` modifies the target, not the symlink
+> >
+> > `chmod 600 my_link` changes permissions on the target file the symlink points to, not the symlink itself. On most Linux filesystems, symlink permissions are ignored entirely — the target's permissions govern access.
+>
+> ---
+>
+> **`chown`**
+> - The Linux command for changing file ownership; `chown user:group file` sets both owner and group in a single operation; `-R` applies recursively.
+> - Required in Docker/Airflow environments where containers run as a specific UID (Airflow default: `50000`) and need write access to host-mounted directories.
+>
+> > [!warning] Mismatched container UID causes silent write failures
+> >
+> > Setting `chown root:root` on a bind mount that an Airflow container (UID 50000) must write to causes "Permission denied" at runtime. Always match the container's UID — verify with `docker inspect`.
+>
+> ---
+>
+> **`rename` (Perl)**
+> - A Debian/Ubuntu utility that applies a Perl regex substitution (`s/old/new/`) to filenames for bulk renaming; not installed by default on RHEL/CentOS.
+> - Used for batch extension changes, prefix/suffix operations, and pattern-based renames; `-n` dry-runs the operation before committing.
+>
+> > [!danger] Two incompatible `rename` utilities exist
+> >
+> > Debian/Ubuntu ship Perl `rename` (`rename 's/old/new/' files`); RHEL/CentOS ship util-linux `rename` (`rename old new files`) — completely different syntax. Running the wrong version silently corrupts filenames. Check with `rename --version`.
+>
+> ---
+>
+> **`du` / `df`**
+> - `du` (disk usage) reports how much space a file or directory occupies on disk; `df` (disk free) reports filesystem-level used/available space for all mounted filesystems.
+> - Always check `df -h` before large copies or data imports to avoid mid-transfer failures; check `df -i` for inode exhaustion — a filesystem can have 0% byte usage but 100% inode usage, blocking all new file creation.
+>
+> > [!warning] Inode exhaustion looks identical to disk-full errors
+> >
+> > Millions of small files (log entries, cache shards) can exhaust inodes while leaving gigabytes free. `df -i` reveals this; `df -h` does not. The fix is deleting many small files, not freeing large ones.
+>
+> ---
+>
+> **`icacls`**
+> - The Windows command-line tool for viewing and modifying NTFS access control lists (ACLs); the functional equivalent of `chmod` on Linux; inheritance flags `(OI)(CI)` are required for permissions to cascade to children.
+> - Used to grant (`/grant`), deny (`/deny`), remove (`/remove`), or reset (`/reset /T`) NTFS permissions on files and directories; `takeown` must precede `icacls` when ownership is lost.
+>
+> > [!warning] Missing inheritance flags limit scope to the directory only
+> >
+> > `/grant "user:F"` grants Full Control on the directory itself but not on its files or subdirectories. Use `/grant "user:(OI)(CI)F"` for permissions that cascade to all children.
+>
+> ---
+>
+> **`Remove-Item`**
+> - The PowerShell cmdlet for deleting files and directories; `-Recurse -Force` is the equivalent of `rm -rf` — no confirmation, no recycle bin, no recovery.
+> - Use `-WhatIf` to preview every file that would be deleted before committing; use `[System.IO.Directory]::Delete($path, $true)` when `-Recurse` fails with "directory is not empty" due to open file handles.
+>
+> > [!danger] `-Recurse` has no confirmation and no undo
+> >
+> > `Remove-Item -Recurse -Force` deletes immediately and permanently. There is no `-WhatIf` safety net once the command runs. Always inspect with `Get-ChildItem` and run with `-WhatIf` first.
 
 Copying, moving, and deleting files seems trivial until you accidentally overwrite a production dataset, delete a directory that was still being written to, or run out of disk space mid-copy because you did not check first. Production file operations require explicit safety habits.
 

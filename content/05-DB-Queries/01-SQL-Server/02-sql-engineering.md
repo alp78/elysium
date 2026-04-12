@@ -1286,9 +1286,9 @@ flowchart TD
     D -->|Cache Hit| E[Reuse Cached Plan]
     D -->|Cache Miss| F[Optimization Phase]
     F --> G{Trivial Plan?}
-    G -->|Yes - single table\nno joins/aggs| H[Use Trivial Plan\nno cost estimation]
-    G -->|No| I[Cost-Based Optimization\nestimate rows + cost per op]
-    I --> J[Select Lowest-Cost Plan\ncached for reuse]
+    G -->|Yes - single table<br/>no joins/aggs| H[Use Trivial Plan<br/>no cost estimation]
+    G -->|No| I[Cost-Based Optimization<br/>estimate rows + cost per op]
+    I --> J[Select Lowest-Cost Plan<br/>cached for reuse]
     H --> K[Execute Plan]
     J --> K
     E --> K

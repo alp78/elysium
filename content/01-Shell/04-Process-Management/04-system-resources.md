@@ -10,8 +10,6 @@ description: "Linux and PowerShell commands for monitoring memory, CPU, and disk
 
 # System Resources — Memory, CPU, and Disk I/O
 
-Resource monitoring tells you whether performance problems are CPU-bound, memory-constrained, or I/O-limited — three different root causes requiring completely different fixes. Reading the numbers correctly is as important as knowing which commands to run.
-
 > [!quote]
 > "Memory is like an orgasm. It's a lot better if you don't have to fake it."
 >
@@ -21,41 +19,134 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 >
 > — **Seymour Cray**, attributed remark (c. 1980s)
 
+> [!abstract]- Summary
+>
+> Linux and PowerShell commands for identifying whether a performance bottleneck is CPU-bound, memory-constrained, or I/O-limited — the three root causes that each require a different remediation path.
+>
+> - **Linux memory tools** — `free` (RAM and swap snapshot), `vmstat si/so` (swap I/O), SQL Server PLE via `sys.dm_os_performance_counters`
+> - **Linux CPU tools** — `lscpu` (core topology), `uptime` (load average vs core count)
+> - **Linux combined resource tools** — `vmstat` (memory, swap, I/O, and CPU in one view)
+> - **Linux disk I/O tools** — `iostat -x` (`%util`, `await`, queue depth), `iotop -o` (per-process I/O)
+> - **PowerShell memory tools** — `Get-CimInstance Win32_OperatingSystem` (free/total RAM), `Get-Counter '\Memory\Pages/sec'`
+> - **PowerShell CPU tools** — `Get-Counter '\Processor(_Total)\% Processor Time'` (total and per-core)
+> - **PowerShell disk I/O tools** — `Get-Counter '\PhysicalDisk(*)\...'` (latency, throughput, queue depth)
+> - **Operations and safety** — OOM killer thresholds, swap pressure reduction, `vm.swappiness`, disk saturation identification
+
+> [!note]- Glossary
+>
+> **RSS (Resident Set Size)** — the portion of physical RAM a process is currently occupying, excluding swapped-out pages and shared library pages attributed to other processes.
+> - The most practical per-process memory metric; use it to compare workload footprint against available RAM.
+> - Linux: `ps aux` RSS column (in KB); PowerShell: `Get-Process | Select-Object WorkingSet64` (in bytes).
+>
+> > [!info] RSS vs VSZ
+> >
+> > VSZ (Virtual Size) includes all virtual address space — shared libraries, memory-mapped files, and reserved-but-uncommitted regions — and is always much larger than RSS. VSZ is misleading for capacity planning; RSS is the actionable figure.
+>
+> ---
+>
+> **Swap** — disk space the kernel uses as overflow storage when physical RAM is exhausted, achieved by evicting inactive memory pages from RAM to disk.
+> - High swap I/O (`si`/`so` in `vmstat`) is the problem indicator, not a non-zero swap-used value; small amounts of cold-page eviction are normal.
+> - Linux: `free -h` Swap row; Windows: page file (`pagefile.sys`), monitored via `\Memory\Pages/sec`.
+>
+> > [!info] Swap I/O cost
+> >
+> > A swap read or write involves a full disk I/O — milliseconds vs nanoseconds for RAM — causing latency spikes in any workload that touches swapped pages. Reduce `vm.swappiness` (default 60) to 1–10 on database servers to delay swap onset.
+>
+> ---
+>
+> **Load average** — three exponentially weighted moving averages (1-min, 5-min, 15-min) of the number of processes in runnable (`R`) or uninterruptible-wait (`D`) state.
+> - A load average above the CPU core count (from `nproc`) means processes are queuing; saturation is confirmed, not just suspected.
+> - Linux-only metric; Windows has no direct equivalent — use `\Processor(_Total)\% Processor Time` instead.
+>
+> > [!info] Load average includes I/O waiters
+> >
+> > Processes blocked on disk I/O (D state) count toward load average. High load with low CPU% (`us`+`sy` in `vmstat`) indicates a disk bottleneck, not a CPU bottleneck. Confirm with `%wa` in `vmstat` or `%util` in `iostat`.
+>
+> ---
+>
+> **`free`** — Linux command reporting total, used, free, shared, buff/cache, and available RAM in one table; `-h` for human-readable units.
+> - The `available` column is authoritative: it is free RAM plus reclaimable buff/cache — the actual allocation headroom for new processes.
+> - PowerShell equivalent: `Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory, TotalVisibleMemorySize`.
+>
+> > [!info] "Free" vs "available"
+> >
+> > Linux uses idle RAM as a disk read cache (`buff/cache`). The `free` column appears low but is not alarming because that cache is immediately reclaimable. Always read `available`, never `free`, when assessing memory pressure.
+>
+> ---
+>
+> **`vmstat`** — virtual memory statistics tool reporting process scheduling, memory pages, swap I/O, block I/O, and CPU time in a compact table; first output row is a since-boot average and must be ignored.
+> - Use `vmstat 1` for real-time 1-second samples; `vmstat 2 5` for five samples at 2-second intervals.
+> - PowerShell equivalent: combine `Get-Counter '\Memory\...'` and `'\Processor(_Total)\...'` counters for the same combined view.
+>
+> > [!info] Key vmstat columns
+> >
+> > `r` — run queue length (> core count = CPU saturation). `b` — I/O-blocked processes (> 2–3 = I/O saturation). `si`/`so` — swap in/out KB/s (any non-zero = memory pressure). `wa` — CPU% waiting for I/O (> 20% = disk bottleneck). `st` — CPU% stolen by hypervisor (non-zero = VM host contention).
+>
+> ---
+>
+> **`iostat`** — I/O statistics tool (part of `sysstat` package) reading `/proc/diskstats`; `-x` flag adds latency and utilization columns.
+> - Not installed by default: `apt install sysstat` (Debian/Ubuntu) or `yum install sysstat` (RHEL/CentOS).
+> - PowerShell equivalent: `Get-Counter '\PhysicalDisk(*)\Avg. Disk sec/Read'` and `'\PhysicalDisk(*)\Avg. Disk Queue Length'`.
+>
+> > [!info] Key iostat -x columns
+> >
+> > `r_await`/`w_await` — average I/O latency in ms (SSD healthy: < 5 ms; saturated: > 20 ms). `aqu-sz` — average queue depth (> 1.0 on a single device = backlog). `%util` — device busy time (> 90% = saturation; on NVMe, also monitor `aqu-sz`).
+>
+> ---
+>
+> **`%wa` (I/O wait)** — the percentage of CPU time the processor spent idle while waiting for pending I/O operations; shown in `top`, `vmstat`, and `mpstat`.
+> - Values above 20% point to a storage bottleneck, not a CPU bottleneck — the CPU is idle, not overloaded.
+> - Windows equivalent: `\PhysicalDisk(*)\Avg. Disk Queue Length` rising above 2 (HDD) or 32 (NVMe) per spindle.
+>
+> > [!info] %wa is a storage signal, not a CPU signal
+> >
+> > A high `%wa` with low `us`+`sy` means the CPU has nothing to execute — it is waiting for disk. Investigate with `iostat -x` (`%util`, `await`) and `iotop -o` (which process is generating the I/O).
+>
+> ---
+>
+> **`Get-Counter`** — PowerShell cmdlet that reads Windows Performance Monitor counter paths and returns strongly typed `PerformanceCounterSample` objects at a configurable interval.
+> - Counter paths use backslash notation (e.g., `\Memory\Available MBytes`); discover available counters with `Get-Counter -ListSet *`.
+> - Linux equivalent: `vmstat` (combined), `free` (memory), `iostat` (disk), `uptime` (load average).
+>
+> > [!info] Get-Counter key counter sets
+> >
+> > `\Processor(_Total)\% Processor Time` — overall CPU utilization. `\Memory\Available MBytes` — free + standby RAM. `\PhysicalDisk(*)\Avg. Disk sec/Read` — read latency. `\PhysicalDisk(*)\Avg. Disk Queue Length` — I/O backlog.
+>
+> ---
+>
+> **PLE (Page Life Expectancy)** — SQL Server metric measuring how long, in seconds, a data page remains in the buffer pool before being evicted; healthy threshold is above 300 seconds.
+> - PLE below 60 seconds means SQL Server is rereading data from disk on nearly every cache miss, causing severe I/O saturation regardless of what `free -h` reports.
+> - Queried via `sys.dm_os_performance_counters` where `counter_name = 'Page life expectancy'` and `object_name LIKE '%Buffer Manager%'`.
+>
+> > [!info] PLE vs free memory
+> >
+> > A server where `free -h` shows 2 GB available but PLE is 30 seconds is memory-starved from SQL Server's perspective: its buffer pool is undersized for the working data set. The fix is raising `max server memory`, not adding OS-level memory.
+>
+> ---
+>
+> **OOM killer** — Linux kernel mechanism that terminates one or more processes when available memory falls too low to satisfy an allocation request, selecting the target by OOM score (roughly proportional to memory consumption).
+> - Triggered when `available` memory (from `free -h`) approaches zero; the target may be a critical daemon such as a database process.
+> - Detect past kills with `sudo dmesg | grep -i "oom\|killed process"` or `journalctl -k`.
+>
+> > [!info] OOM killer does not discriminate
+> >
+> > The OOM killer targets the process with the highest OOM score at the moment of memory exhaustion, which may not be the process that caused the pressure. Protect critical daemons by setting `oom_score_adj` to `-1000` in their systemd unit file (`OOMScoreAdjust=-1000`).
+
+Resource monitoring tells you whether performance problems are CPU-bound, memory-constrained, or I/O-limited — three different root causes requiring completely different fixes. Reading the numbers correctly is as important as knowing which commands to run.
+
 The diagram below shows how CPU, memory, and disk I/O relate as diagnostic layers. Each bottleneck type requires a different set of commands to isolate.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
-    A([Performance Problem]) --> B{CPU load avg\n> core count?}
-    B -->|Yes| C[CPU-bound\nlscpu · uptime · vmstat r column]
-    B -->|No| D{Swap used > 0\nor available < 500 MB?}
-    D -->|Yes| E[Memory-bound\nfree · vmstat si/so]
-    D -->|No| F{iostat await > 20ms\nor %util > 90%?}
-    F -->|Yes| G[I/O-bound\niostat · iotop]
-    F -->|No| H([Look elsewhere:\nnetwork, app logic, locks])
+    A([Performance Problem]) --> B{CPU load avg<br>> core count?}
+    B -->|Yes| C[CPU-bound<br>lscpu · uptime · vmstat r column]
+    B -->|No| D{Swap used > 0<br>or available < 500 MB?}
+    D -->|Yes| E[Memory-bound<br>free · vmstat si/so]
+    D -->|No| F{iostat await > 20ms<br>or %util > 90%?}
+    F -->|Yes| G[I/O-bound<br>iostat · iotop]
+    F -->|No| H([Look elsewhere:<br>network, app logic, locks])
 ```
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| RSS (Resident Set Size) | The amount of physical RAM a process is currently using. Does not include swapped-out pages or shared library pages counted under other processes. | The most practical measure of actual memory consumption per process. | Confusing RSS with VSZ (Virtual Size). VSZ includes all virtual address space (shared libs, mapped files, reserved pages) and is always much larger than RSS. |
-| Swap | Disk space used as overflow when physical RAM is full. The kernel moves inactive pages from RAM to swap to free memory for active processes. | High swap usage means physical RAM is exhausted. Processes using swap are dramatically slower (disk I/O vs memory speed). | Assuming some swap usage is always bad. A small amount of swap for truly inactive pages is normal. High swap I/O (swapping in and out) is the real problem. |
-| Load average | Three numbers (1-min, 5-min, 15-min) representing the average number of processes in the run queue or waiting for I/O. | A load average above the CPU core count indicates saturation. Compare to `nproc` output to assess severity. | Load includes I/O-waiting (D state) processes. High load with low CPU% means disk bottleneck, not CPU bottleneck. |
-| `free` | A Linux command that displays total, used, free, shared, buff/cache, and available memory in a single summary. | The fastest way to check RAM availability. `free -h` for human-readable output. | Confusing "free" with "available." Linux uses free RAM for disk cache (buff/cache). "Available" is what can actually be allocated to new processes -- this is the number that matters. |
-| `vmstat` | Virtual memory statistics. Shows memory, swap, I/O, CPU, and scheduling data in a compact tabular format. `vmstat 1` samples every second. | A lightweight real-time view of system health. One of the first tools in any performance investigation. | The first line of `vmstat` output is an average since boot. Real-time data starts from the second line. |
-| `iostat` | I/O statistics. Shows per-device read/write throughput, IOPS, average queue length, and utilization percentage. Part of the `sysstat` package. | The primary tool for diagnosing disk I/O bottlenecks. `%util` above 80-90% indicates disk saturation. | Not installed by default. Requires `apt install sysstat` (Debian/Ubuntu). |
-| `%wa` (I/O wait) | The percentage of CPU time spent waiting for I/O operations to complete. Shown in `top`, `vmstat`, and `mpstat`. | High `%wa` indicates the CPU is idle because it is waiting for slow disk or network I/O. The bottleneck is storage, not CPU. | `%wa` is a CPU metric, but it indicates a storage problem. It tells you the CPU is idle and waiting, not that the CPU is overloaded. |
-| `Get-Counter` (PS) | A PowerShell cmdlet that reads Windows Performance Counters. Returns structured counter samples for CPU, memory, disk, network, and application metrics. | The PowerShell equivalent of `vmstat`/`iostat`. Accesses the same performance counters as Windows Performance Monitor. | Counter paths use backslash notation (`\Memory\Available MBytes`) and must match exactly. Use `Get-Counter -ListSet *` to discover available counters. |
-
-## What this note covers
-
-- Memory monitoring with `free`, `vmstat`, and interpreting "available" vs "free"
-- CPU monitoring with `mpstat`, `vmstat`, and load average interpretation
-- Combined resource monitoring with `vmstat`, `sar`, `dstat`, and `nmon`
-- Disk I/O monitoring with `iostat` and identifying disk saturation
-- PowerShell equivalents: `Get-Counter`, `Get-Process`, `Get-CimInstance`, `Get-PSDrive`
 ## Linux memory tools
 
 Linux provides several commands for inspecting memory consumption, swap usage, and buffer cache behavior. The most important concept is the distinction between "free" and "available" memory: Linux aggressively uses free RAM as a disk cache (`buff/cache`), which accelerates reads but makes raw `free` figures misleading.

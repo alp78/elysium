@@ -15,32 +15,192 @@ status: complete
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
+> [!abstract]- Summary
+>
+> **Generics**
+> - Type parameters (`<T>`, `<TKey, TValue>`) are placeholders the compiler resolves at each usage site — eliminating boxing for value types and catching type mismatches at compile time.
+> - Constraints (`where T : IComparable<T>`, `where T : new()`, `where T : class/struct`, `where T : notnull`, `where T : unmanaged`) narrow the allowed types and unlock interface methods or constructors inside the generic body.
+> - Variance: `out T` (covariance) allows a more-derived type where a base is expected on read-only interfaces; `in T` (contravariance) does the same for write-only consumption. Both work only on interfaces and delegates.
+>
+> **Advanced LINQ — Core Operators**
+> - `Where` filters, `Select` projects, `OrderBy`/`OrderByDescending` sorts, `Take`/`Skip` pages — all build a lazy pipeline that executes only when enumerated.
+> - `GroupBy` partitions a sequence into `IGrouping<TKey, TElement>` groups for per-group aggregates (Count, Average, Sum, Min, Max, MaxBy).
+> - `Join` performs an inner join on matching keys; `GroupJoin` produces a left-join hierarchy grouping all right-side matches under each left element.
+> - `ToLookup` builds a multi-value dictionary (unlike `ToDictionary`, it does not throw on duplicate keys).
+> - `Zip` pairs elements from two or three sequences positionally, stopping at the shortest.
+> - `SelectMany` flattens a projected collection — equivalent to a nested loop or SQL `CROSS APPLY`.
+>
+> **LINQ Analytics on Live SQL Server Data**
+> - Data loaded from `stoxx` via Dapper into `List<Ohlcv>` (66 K rows) and `List<ScoreRow>` (466 rows).
+> - `GroupBy` + `Select` aggregates map to SQL `GROUP BY`; chained `GroupBy` + `SelectMany` with index maps to `ROW_NUMBER() OVER (PARTITION BY ...)`.
+> - `LAG()` via `Zip` on a shifted list; `LEAD()` via `Zip` with `Skip(1)`; cumulative `SUM()` via `Aggregate` with an accumulator list; rolling average via `Enumerable.Range` + `Skip`/`Take`.
+> - `NTILE(N)` via index arithmetic after `OrderBy`; `HAVING` as a `Where` after `GroupBy + Select`; `STDEV` computed manually (no built-in LINQ equivalent).
+> - Cross-sequence `Join` pairs OHLCV aggregates with composite scores by symbol; nested `GroupBy` computes best stock per sector.
+>
+> **LINQ vs Polars.NET — Side-by-Side**
+> - Polars.NET reads Parquet directly into a columnar Rust-backed DataFrame; LINQ operates on in-memory `IEnumerable<T>` from Dapper.
+> - Column selection: `Select(...)` vs `df.Select(...)`. Row filter: `Where(...)` vs `df.Filter(Col(...))`. Sort: `OrderBy` vs `df.Sort(...)`. Computed column: `Select` anonymous type vs `df.WithColumns(...)`.
+> - Aggregation: LINQ `GroupBy + Select` vs `df.GroupBy(...).Agg(...)`. HAVING: `Where` after `Select` vs `df.Filter` after `Agg`.
+> - Window functions: LINQ uses `Zip`/`Aggregate`/`Enumerable.Range`; Polars uses `.Shift(1).Over(...)`, `.CumSum().Over(...)`, `.RollingMean("20i").Over(...)`, `.Rank(...).Over(...)`.
+> - CRUD-like: `Concat` (LINQ) / `VStack` (Polars) to append rows; `Select` projection (LINQ) / `WithColumns` (Polars) to update; `Where` negation (LINQ) / `Filter` negation (Polars) to delete.
+
+> [!note]- Glossary
+>
+> **Generic type parameter**
+>
+> - A placeholder type declared in angle brackets — `<T>`, `<TKey, TValue>` — that the compiler substitutes with a concrete type at each usage site (e.g., `List<int>`, `Dictionary<string, int>`). One generic class or method handles any type without duplication and without losing compile-time type safety.
+> - Equivalent in Python: `TypeVar` from the `typing` module; in Java: bounded wildcards `<T extends Comparable<T>>`.
+>
+> > [!tip] Infer vs. specify
+> >
+> > The compiler infers `T` from the argument when possible (`First(new[] { 1, 2, 3 })` infers `int`). Specify explicitly (`First<string>(...)`) only when inference is ambiguous or you want to be explicit for readability.
+>
+> > ---
+>
+> **Type constraint**
+>
+> - A `where T : ...` clause that restricts which types are valid for a type parameter, enabling the compiler to guarantee that operations on `T` — such as `.CompareTo()`, `new T()`, or specific interface members — are safe to call inside the generic body.
+> - Common constraints: `where T : IComparable<T>` (enables comparison), `where T : new()` (enables `new T()`), `where T : class` (reference types only), `where T : struct` (value types only), `where T : notnull`, `where T : unmanaged` (no reference-type fields), `where T : BaseClass`, `where T : U` (T derives from another type parameter).
+>
+> > [!warning] Over-constraining reduces reusability
+> >
+> > Adding constraints that are not needed by the generic body silently narrows the set of usable types. Apply only the constraints the body actually requires.
+>
+> > ---
+>
+> **`where T : new()`**
+>
+> - A constraint that requires `T` to expose a public parameterless constructor, enabling `new T()` inside the generic class or method. Must appear last when combined with other constraints.
+> - Any type with only parameterized constructors does not satisfy `new()`. Use a factory delegate `Func<T>` as a parameter instead when parameterless construction is not guaranteed.
+>
+> > [!tip] Factory delegate pattern
+> >
+> > `T Create<T>(Func<T> factory) => factory();` avoids the `new()` constraint entirely and gives the caller full control over how `T` is constructed.
+>
+> > ---
+>
+> **Covariance (`out T`)**
+>
+> - Declared with the `out` modifier on an interface or delegate type parameter (e.g., `IEnumerable<out T>`). Allows a more-derived type to be used where a base type is expected — for example, passing `IEnumerable<Dog>` where `IEnumerable<Animal>` is required. Safe only for read (output) positions.
+> - Applies exclusively to interfaces and delegates; generic classes are invariant. The `out` modifier prevents `T` from appearing in input positions (e.g., as a method parameter), which is what makes the variance type-safe.
+>
+> > [!info] IEnumerable is covariant by design
+> >
+> > `IEnumerable<out T>` is covariant in .NET because it only produces `T` (via `GetEnumerator`) and never consumes it. This is why a `List<string>` can be passed to a method that accepts `IEnumerable<object>`.
+>
+> > ---
+>
+> **Contravariance (`in T`)**
+>
+> - Declared with the `in` modifier on an interface or delegate type parameter (e.g., `Action<in T>`, `IComparer<in T>`). Allows a less-derived (broader) type to be used where a more-derived type is expected — for example, passing `Action<Animal>` where `Action<Dog>` is required. Safe only for write (input) positions.
+> - Mixing `in` and `out` on the same type parameter causes a compile error. A type parameter can be covariant or contravariant, never both.
+>
+> > [!tip] Practical use: comparers and handlers
+> >
+> > `IComparer<Animal>` satisfies `IComparer<Dog>` (contravariance) — an `AnimalComparer` can sort dogs because dogs are animals. Pass a broader comparer or event handler where a narrower one is expected.
+>
+> > ---
+>
+> **LINQ**
+>
+> - Language Integrated Query — a set of extension methods (`System.Linq`) and optional query syntax keywords that add a declarative, composable pipeline model for filtering, transforming, grouping, and joining any `IEnumerable<T>` or `IQueryable<T>` directly in C#.
+> - Replaces manual `foreach` loops with readable, chainable expressions that preserve strong typing and compose lazily. The same operators apply to in-memory collections, LINQ to SQL, Entity Framework, and XML (`XDocument`).
+>
+> > [!warning] LINQ is lazy — pipelines re-execute on each enumeration
+> >
+> > A LINQ query builds a description of the operation, not the result. Every call to `foreach`, `.Count()`, or `.ToList()` re-runs the pipeline from source. If the source is expensive (database, file), materialize with `.ToList()` or `.ToArray()` before enumerating more than once.
+>
+> > ---
+>
+> **Deferred execution**
+>
+> - The property of LINQ pipelines whereby query evaluation is postponed until a consuming operation enumerates the result — `.ToList()`, `.ToArray()`, `foreach`, `.Count()`, `.First()`, etc. The query object holds the pipeline description, not the data.
+> - Enables composable query building: partial pipelines can be stored in variables and extended before materialization. Also avoids computing results that are never consumed.
+>
+> > [!tip] When to materialize early
+> >
+> > Materialize with `.ToList()` when: (1) the source collection may change between enumerations, (2) the pipeline is expensive and the result is needed more than once, (3) you need random access by index, or (4) you need to pass the result to a method expecting `IList<T>`.
+>
+> > ---
+>
+> **Method syntax**
+>
+> - LINQ expressed as a chain of extension-method calls: `data.Where(x => x > 5).Select(x => x * 2).OrderBy(x => x)`. The dominant style in production C# because it is composable, tooling-friendly, and supports all LINQ operators.
+> - Compiled to the same IL as query syntax. Some operators — `Distinct`, `Take`, `Skip`, `Zip`, `SelectMany` with a result selector — have no query syntax equivalent and require method syntax.
+>
+> > [!tip] Chain readability tip
+> >
+> > Break long method-syntax chains onto separate lines, one operator per line, aligned at the dot. The compiler treats the whole expression as one statement; formatting is cosmetic.
+>
+> > ---
+>
+> **Query syntax**
+>
+> - LINQ expressed with SQL-like keywords: `from x in data where x > 5 select x * 2`. Compiled identically to method syntax. More readable for complex multi-source joins and `let` bindings that would produce deeply nested lambda arguments.
+> - Not all LINQ operators have query-syntax equivalents: `Distinct`, `Take`, `Skip`, `Zip`, `Aggregate`, and `ToLookup` require method syntax or a hybrid expression.
+>
+> > [!info] Query syntax is syntactic sugar
+> >
+> > The C# compiler transforms every query-syntax expression into an equivalent method-syntax call tree before compilation. The two forms produce identical IL — choose based on readability for the specific query.
+>
+> > ---
+>
+> **`Select`**
+>
+> - Projects each element of a sequence into a new form using a selector function: `data.Select(x => new { x.Name, x.Age })`. Equivalent to SQL `SELECT` or Python `map()`. Returns a new `IEnumerable<TResult>` of the projected type without filtering the source.
+> - Confusing `Select` (transform) with `Where` (filter) is the most common beginner mistake. `Select` always produces the same count as the source; `Where` may produce fewer.
+>
+> > [!tip] Projecting to anonymous types
+> >
+> > `Select(x => new { x.Symbol, x.Close })` creates an anonymous type inferred by the compiler. Use named record or class types when the projection must cross method boundaries or be returned from a method.
+>
+> > ---
+>
+> **`Where`**
+>
+> - Filters elements by a predicate: `data.Where(x => x.Age > 30)`. Returns an `IEnumerable<T>` containing only elements for which the predicate returns `true`. Equivalent to SQL `WHERE` or Python `filter()`.
+> - Use `First(predicate)` or `Single(predicate)` when you expect exactly one result — using `Where` when you need a single element forces a second traversal or requires `.First()` chained after `Where`.
+>
+> > [!warning] `First` vs `FirstOrDefault` on empty sequences
+> >
+> > `First(predicate)` throws `InvalidOperationException` when no element matches. Use `FirstOrDefault(predicate)` and null-check the result when an empty match is a valid outcome.
+>
+> > ---
+>
+> **`GroupBy`**
+>
+> - Groups elements by a key selector function: `data.GroupBy(x => x.Department)`. Returns `IEnumerable<IGrouping<TKey, TElement>>` — one `IGrouping` per distinct key. Access `.Key` for the group identifier and enumerate the group itself for its elements.
+> - Equivalent to SQL `GROUP BY` or Python `itertools.groupby` (but does not require the source to be pre-sorted). Use with `Select(g => new { g.Key, ... })` to project aggregates per group.
+>
+> > [!info] IGrouping is lazy too
+> >
+> > Each `IGrouping<TKey, TElement>` is itself a deferred sequence. Calling aggregates like `.Count()`, `.Sum()`, or `.Average()` inside a `Select` after `GroupBy` enumerates the group on each call. If multiple aggregates are needed on the same group, materializing each group with `.ToList()` inside the `Select` avoids repeated enumeration.
+>
+> > ---
+>
+> **`Aggregate`**
+>
+> - Applies an accumulator function sequentially across a sequence, threading the result from one step to the next: `data.Aggregate((acc, x) => acc + x)`. Equivalent to Python's `functools.reduce()`. An optional seed value initializes the accumulator before the first element.
+> - Without a seed, `Aggregate` throws `InvalidOperationException` on an empty sequence. With a seed (`data.Aggregate(0, (acc, x) => acc + x)`), an empty sequence safely returns the seed value.
+>
+> > [!warning] Seed-less Aggregate throws on empty sequences
+> >
+> > The overload `Aggregate(func)` uses the first element as the implicit seed. If the sequence is empty, it throws. Always provide an explicit seed unless the source is guaranteed non-empty.
+>
+> > ---
+>
+> **Polars.NET**
+>
+> - A .NET binding for the Polars DataFrame library — a Rust-backed, columnar, multi-threaded analytical engine. Exposes a `DataFrame` / `Series` API in C# for vectorized operations over large datasets, reading Parquet files directly without ORM overhead.
+> - Newer ecosystem with fewer community examples than pandas (Python) or LINQ on collections. The expression API (`Col(...)`, `Lit(...)`, `.Over(...)`) mirrors Polars' lazy evaluation model and supports window functions natively via `.Shift`, `.CumSum`, `.RollingMean`, and `.Rank`.
+>
+> > [!info] LINQ vs Polars.NET — when to choose each
+> >
+> > - **LINQ:** natural choice for in-memory object graphs loaded from Dapper, EF Core, or any `IEnumerable<T>`. Zero extra dependencies; composes with the type system.
+> > - **Polars.NET:** better for large columnar datasets (>100 K rows), Parquet ingestion, or when vectorized aggregations and window functions need to run fast without writing LINQ workarounds.
+
 Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. This note covers generic type parameters and constraints, core LINQ operators on in-memory collections, advanced analytics queries against live SQL Server data, and a side-by-side comparison of LINQ pipelines with Polars.NET DataFrames.
-### Key terms used in this note
 
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Generic type parameter** | A placeholder type `<T>` that the compiler resolves at each usage site: `List<int>`, `List<string>`. | Write one class/method that works for any type without losing compile-time type safety. | Forgetting constraints — calling `item.CompareTo()` on unconstrained `T` won't compile. |
-| **Type constraint** | `where T : IComparable<T>` restricts what types can fill `T`. | Enables calling specific methods on the type parameter. | Over-constraining — adding unnecessary constraints reduces reusability. |
-| **`where T : new()`** | Constraint requiring `T` to have a public parameterless constructor. | Enables `new T()` inside the generic class. | Types with only parameterized constructors don't satisfy `new()` — use a factory delegate instead. |
-| **covariance (`out T`)** | `IEnumerable<out T>` — allows `IEnumerable<Dog>` where `IEnumerable<Animal>` is expected. | Safe read-only variance — you can read `T` but not write it. | Only works on interfaces and delegates, not classes. |
-| **contravariance (`in T`)** | `Action<in T>` — allows `Action<Animal>` where `Action<Dog>` is expected. | Safe write-only variance — you can accept `T` but not return it. | Mixing `in`/`out` incorrectly causes compile errors. |
-| **LINQ** | Language Integrated Query — a declarative pipeline for filtering, transforming, grouping, and joining collections directly in C#. | Replaces manual loops with composable, SQL-like expressions that preserve strong typing. | LINQ is lazy by default — the query doesn't execute until you enumerate (`.ToList()`, `foreach`). |
-| **deferred execution** | LINQ queries build a pipeline description; execution happens only when results are consumed (`.ToList()`, `foreach`, `.Count()`). | Avoids unnecessary computation; enables composable query building. | Enumerating a deferred query multiple times re-executes it each time. Materialize with `.ToList()` if you need the results more than once. |
-| **method syntax** | LINQ using extension methods: `data.Where(x => x > 5).Select(x => x * 2)`. | The dominant style in production C# — composable, chainable. | Forgetting to materialize with `.ToList()` or `.ToArray()` when the result must be stable. |
-| **query syntax** | LINQ using SQL-like keywords: `from x in data where x > 5 select x * 2`. | More readable for complex joins and `let` bindings; compiled to the same IL as method syntax. | Not all LINQ operators have query syntax equivalents (e.g., `Distinct`, `Take`, `Skip`). |
-| **`Select`** | Projects each element into a new form: `data.Select(x => new { x.Name, x.Age })`. | Equivalent to SQL `SELECT` or Python `map()`. | Confusing `Select` (transform) with `Where` (filter). |
-| **`Where`** | Filters elements by a predicate: `data.Where(x => x.Age > 30)`. | Equivalent to SQL `WHERE` or Python `filter()`. | Using `Where` when you need `First`/`Single` — `Where` returns a sequence, not one element. |
-| **`GroupBy`** | Groups elements by a key: `data.GroupBy(x => x.Department)`. Returns `IGrouping<TKey, TElement>`. | Equivalent to SQL `GROUP BY` or Python `itertools.groupby` (but doesn't require sorting). | Each group is an `IGrouping` — access `.Key` for the group key and enumerate for the group's elements. |
-| **`Aggregate`** | Applies an accumulator function across a sequence: `data.Aggregate((a, b) => a + b)`. | Equivalent to Python's `functools.reduce()`. | No initial seed — throws on empty sequences. Use the overload with a seed value. |
-| **Polars.NET** | .NET binding for the Polars DataFrame library — Rust-backed, columnar, high-performance. | Brings Polars' speed to C# for DataFrame-style analytics alongside LINQ. | Newer ecosystem — fewer examples and community support than pandas or LINQ on collections. |
-
-### What this note covers
-
-- **Generics** — type parameters, constraints (`where T :`), generic classes/methods, variance (`in`/`out`)
-- **Advanced LINQ** — `Select`, `Where`, `GroupBy`, `Join`, `Aggregate`, deferred execution, method vs query syntax
-- **LINQ Analytics on Live SQL Server Data** — Dapper queries, analytical pipelines (top-N, rolling windows, cross-joins)
-- **LINQ vs Polars.NET** — side-by-side comparison on the same SQL Server dataset
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.

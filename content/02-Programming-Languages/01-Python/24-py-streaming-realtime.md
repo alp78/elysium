@@ -12,44 +12,167 @@ updated: 2026-03-28
 status: complete
 ---
 
-# 24. Streaming & Real-Time Data — WebSocket, SSE, Pub/Sub, Firestore
+# Streaming and Real-Time Data — Python
 
 > [!quote]
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
+> [!abstract]- Summary
+>
+> **Technologies Overview**
+> - Protocol comparison table across WebSocket, SSE, Pub/Sub, Firestore, and GCS batch — direction, latency range, and primary use case for each.
+> - Mermaid sequence diagram showing message flow for all four real-time protocols.
+>
+> **Setup**
+> - Jupyter imports: `websockets`, `aiohttp`, `httpx`, `google-cloud-pubsub`, `google-cloud-firestore`, `plotly`; `nest_asyncio.apply()` enables nested event loops in Jupyter.
+> - GCP client init: `PublisherClient` with batching disabled (`max_messages=1, max_latency=0`) for accurate per-message latency; `SubscriberClient`, `firestore.Client`, `storage.Client`.
+> - Shared utilities: `fmt_time` (ms → human-readable), `fmt_rate` (msg/s), and `generate_tick()` (Gaussian random-walk OHLCV ticks for 5 European equity symbols).
+>
+> **WebSocket Streaming**
+> - Local `websockets` server in a background thread broadcasts ticks at ~100 msg/s; client measures one-way latency via `time.perf_counter_ns()` embedded in each message.
+> - 10 000-message benchmark (100 warmup, GC disabled during measurement): p50 = 83 µs, p99 = 139 µs, p99.9 = 233 µs.
+>
+> **Server-Sent Events (SSE)**
+> - Local `aiohttp` server streams `text/event-stream`; `httpx` async client parses `data:` lines and measures one-way latency with same `perf_counter_ns()` approach.
+> - 10 000-message benchmark: p50 = 127 µs, p99 = 524 µs, p99.9 = 654 µs; higher tail latency than WebSocket due to HTTP chunked text parsing overhead.
+>
+> **Google Cloud Pub/Sub**
+> - Topic and subscription created idempotently; streaming subscriber started before publishing to measure true transport latency, not queue wait time.
+> - 500-message benchmark at ~50 msg/s (50 warmup); same-machine `time.time()` used as `send_ts` attribute to avoid NTP drift: p50 = 45 ms, p99 = 52 ms, avg = 45 ms.
+> - Topic and subscription deleted after the benchmark (idempotent teardown).
+>
+> **Firestore Real-Time Listener**
+> - `on_snapshot` callback registered on a collection; 550 documents written at ~50 doc/s (50 warmup); write-to-notification latency measured via `send_ts` field.
+> - 500-document benchmark: p50 = 44 ms, p99 = 63 ms, avg = 44 ms; test documents deleted after measurement.
+>
+> **Latency Comparison**
+> - Local protocols compared on localhost (network RTT = 0): WebSocket ~1.5× faster at p50 than SSE; SSE tail latency significantly worse due to HTTP line-parsing overhead.
+> - GCP services: raw gRPC RTT to GCP measured at p50 = 33 ms (50 probes); stacked bar chart shows network RTT accounts for ~75% of total latency for both Pub/Sub and Firestore; pure service overhead is ~11–12 ms on the same region.
+>
+> **Enterprise Transfer & Streaming Patterns**
+> - MFT gateways (IBM Sterling, Axway, GoAnywhere) for regulated B2B file exchange with audit trails.
+> - GCS Transfer Service for scheduled cross-cloud replication and TB-scale migration via `gcloud transfer jobs create`.
+> - Transfer Acceleration (2–5× CDN speedup) vs. Dedicated Interconnect (10–100 Gbps dedicated line).
+> - Decision matrix mapping scenario → pattern across all seven options.
+>
+> **Warnings, Recommendations, Troubleshooting**
+> - Four warning/success pairs: nested event loop, ack deadline < processing time, undetached Firestore listeners, WebSocket reconnect without back-off.
+> - Eight operational recommendations covering protocol selection, Pub/Sub version pinning, streaming pull, `FlowControl.max_messages`, and SSE preference for read-only dashboards.
+> - Eight-row troubleshooting table covering the most common runtime errors across all five patterns.
+
+> [!note]- Glossary
+>
+> **WebSocket**
+> - A persistent, full-duplex TCP connection established via an HTTP `Upgrade: websocket` handshake; both sides can send frames at any time without reopening the connection.
+> - Used for sub-millisecond bidirectional messaging — live price ticks, order book feeds, collaborative editing. On localhost the p50 one-way latency is ~83 µs.
+>
+> > [!tip] WebSocket vs. HTTP long-polling
+> >
+> > Long-polling reopens the HTTP connection after each response; WebSocket keeps a single persistent connection open. At >10 msg/s, the reconnect overhead of long-polling dominates.
+>
+> > ---
+>
+> **SSE (Server-Sent Events)**
+> - A unidirectional HTTP/1.1 stream where the server holds the connection open and pushes `text/event-stream` lines; clients cannot send data back over the same connection.
+> - Works through CDNs and proxies that block WebSocket upgrades; browsers reconnect automatically on failure. p50 one-way latency on localhost is ~127 µs.
+>
+> > [!tip] SSE auto-reconnect
+> >
+> > The browser `EventSource` API handles reconnection natively using the `Last-Event-ID` header. Python `httpx` clients must implement reconnect logic manually.
+>
+> > ---
+>
+> **Pub/Sub**
+> - A managed GCP messaging service where publishers write to named topics and subscribers pull from independent subscriptions; the two sides are fully decoupled and scale independently.
+> - Provides at-least-once delivery with configurable retry, dead-letter queues, and fan-out (one topic → many subscriptions). End-to-end latency to `europe-west1` is ~45 ms at p50.
+>
+> > [!tip] Streaming pull vs. synchronous pull
+> >
+> > `StreamingPullFuture` maintains a persistent gRPC stream and delivers messages in real time. Synchronous pull adds one round-trip per batch and saturates above ~10 msg/s.
+>
+> > ---
+>
+> **Firestore listener**
+> - A real-time database subscription (`on_snapshot`) that fires a callback with ADDED / MODIFIED / REMOVED change events whenever a document or collection changes, delivered over a gRPC bidirectional stream.
+> - Used for mobile sync and per-document granularity without polling. Write-to-notification latency to `europe-west1` is ~44 ms at p50 — comparable to Pub/Sub because both share the same gRPC RTT baseline.
+>
+> > [!warning] Detach listeners when no longer needed
+> >
+> > Each active `on_snapshot` holds an open gRPC stream and incurs Firestore read charges. Store the unsubscribe handle and call it explicitly: `unsubscribe = col_ref.on_snapshot(cb)` → `unsubscribe()`.
+>
+> > ---
+>
+> **asyncio**
+> - Python's cooperative multitasking event loop (`asyncio.get_event_loop()`) for writing non-blocking I/O code using `async`/`await` syntax; a single thread interleaves I/O waits instead of blocking.
+> - All async streaming clients in this note (`websockets`, `aiohttp`, `httpx`) run inside an asyncio event loop. `nest_asyncio.apply()` patches Jupyter's existing loop to allow `asyncio.run()` inside it.
+>
+> > [!warning] Blocking calls inside async functions stall the event loop
+> >
+> > `time.sleep()` inside an `async def` blocks the entire thread. Use `await asyncio.sleep()` for yielding, and `loop.run_in_executor()` for CPU-bound or blocking I/O work.
+>
+> > ---
+>
+> **backpressure**
+> - The condition where a consumer cannot process messages as fast as the producer sends them; unhandled backpressure causes in-memory buffers to grow until messages are dropped or the process OOMs.
+> - Critical for sizing Pub/Sub `FlowControl.max_messages` and WebSocket send-buffer limits. Without a `max_messages` cap, the Pub/Sub client library buffers all pulled messages in memory.
+>
+> > [!tip] FlowControl cap
+> >
+> > Set `subscriber.subscribe(sub_path, callback, flow_control=FlowControl(max_messages=N))` where N is bounded by available memory and processing throughput.
+>
+> > ---
+>
+> **at-least-once delivery**
+> - A messaging guarantee that every published message is delivered to each subscription one or more times but may be duplicated if the subscriber fails to acknowledge within the ack deadline.
+> - Pub/Sub uses this model by default. Consumers must be idempotent or explicitly deduplicate on a message ID / custom `send_ts` attribute to avoid double-processing.
+>
+> > [!tip] Exactly-once delivery in Pub/Sub
+> >
+> > Enable exactly-once delivery on the subscription (`enable_exactly_once_delivery=True`). This raises the per-message cost and is only supported on specific subscription types — verify before enabling in production.
+>
+> > ---
+>
+> **ack deadline**
+> - The window (in seconds) a Pub/Sub subscriber has to call `message.ack()` before the service redelivers the message to another subscriber or the same one.
+> - Default is 10 s. If a consumer takes 45 s to process a message, Pub/Sub redelivers before the ack arrives, triggering a redelivery cascade. Set `ack_deadline_seconds` to at least 1.5× maximum processing time; call `modify_ack_deadline()` periodically for long-running processors.
+>
+> > [!warning] Ack deadline shorter than processing time causes message storms
+> >
+> > A 10 s deadline with a 45 s processor causes exponential redelivery. Each redelivery competes with the original, amplifying load until the subscription backlog grows unboundedly.
+>
+> > ---
+>
+> **dead-letter topic**
+> - A Pub/Sub topic where messages are forwarded automatically after exceeding the maximum delivery attempt count (`max_delivery_attempts`), preventing poison-pill messages from blocking the subscription indefinitely.
+> - Must be monitored separately; unmonitored dead-letter topics silently accumulate failed messages with no alerting. Set up a Cloud Monitoring alert on `pubsub.googleapis.com/subscription/num_undelivered_messages` on the dead-letter subscription.
+>
+> > [!tip] Dead-letter topic setup
+> >
+> > Specify `dead_letter_policy=DeadLetterPolicy(dead_letter_topic=dlq_path, max_delivery_attempts=5)` when creating the subscription. The Pub/Sub service account needs `roles/pubsub.publisher` on the dead-letter topic.
+>
+> > ---
+>
+> **GCS Storage Transfer**
+> - A managed GCP service (`gcloud transfer jobs create`) for scheduled, resumable, audited bulk data transfers between GCS buckets, Amazon S3, Azure Blob Storage, and HTTP/HTTPS sources.
+> - Used for TB-scale migrations and cross-cloud nightly replication. Unlike `gsutil cp`, the Transfer Service provides automatic retry, progress checkpointing, bandwidth throttling, and a full audit log in Cloud Logging.
+>
+> > [!tip] Use Transfer Service above 1 TB
+> >
+> > `gsutil cp` lacks checkpointing — a failed multi-TB transfer must restart from zero. The Transfer Service resumes from the last successfully transferred object.
+>
+> > ---
+>
+> **Dedicated Interconnect**
+> - A physical private network link between an on-premises data center and a GCP colocation facility, providing 10–100 Gbps throughput, consistent latency, and no public internet routing.
+> - Required for production pipelines with strict SLA or compliance requirements that prohibit data traversal over the public internet. Partner Interconnect offers 50 Mbps–50 Gbps via a service provider without requiring a GCP colocation presence.
+>
+> > [!tip] Interconnect vs. Transfer Acceleration
+> >
+> > Transfer Acceleration routes through CDN PoPs (2–5× speedup for cross-continent uploads) but still traverses the public internet. Dedicated Interconnect bypasses the internet entirely and provides predictable latency under congestion.
+
 This note covers Python implementations of five streaming and transfer patterns — WebSocket, SSE, Pub/Sub, Firestore, and enterprise file transfer.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **WebSocket** | A persistent, full-duplex TCP connection that keeps the channel open after the HTTP handshake | Used for sub-millisecond bidirectional messaging (e.g., live price ticks) | Confusing it with HTTP long-polling, which reopens the connection on each message |
-| **SSE (Server-Sent Events)** | A unidirectional HTTP/1.1 stream where the server pushes events to the client | Used for one-way feeds like AI token streaming or dashboards | Assuming SSE is bidirectional — clients cannot send data back over the same connection |
-| **Pub/Sub** | A managed GCP messaging service where publishers and subscribers are decoupled via named topics | Provides at-least-once delivery with retry and dead-letter handling | Using synchronous pull in latency-sensitive paths; prefer streaming pull or push subscriptions |
-| **Firestore listener** | A real-time database subscription that fires a callback whenever a document or collection changes | Used for mobile sync and per-document granularity without polling | Forgetting to detach the listener, causing memory leaks and billing runaway |
-| **asyncio** | Python's cooperative multitasking event loop for writing non-blocking I/O code | All async streaming clients in this note run inside an asyncio event loop | Mixing blocking `time.sleep()` inside async functions — use `asyncio.sleep()` instead |
-| **backpressure** | The condition where a consumer cannot process messages as fast as the producer sends them | Critical for sizing Pub/Sub subscription ack deadlines and WebSocket buffers | Ignoring it until the buffer fills and messages are dropped silently |
-| **at-least-once delivery** | A guarantee that a message is delivered one or more times but may be duplicated | Pub/Sub uses this model — consumers must handle or deduplicate repeated messages | Assuming exactly-once delivery without explicit idempotency logic |
-| **reconnect / auto-reconnect** | The client's ability to re-establish a dropped connection automatically | SSE browsers reconnect natively; WebSocket clients must implement it manually | Writing a WebSocket client without exponential back-off, causing thundering-herd reconnects |
-| **ack deadline** | The window (in seconds) a Pub/Sub subscriber has to acknowledge a message before it is redelivered | Must be longer than the consumer's processing time | Setting it to the default 10 s for slow batch processors that take 60 s to handle a message |
-| **dead-letter topic** | A Pub/Sub topic where messages go after exceeding the maximum delivery attempt count | Prevents poison-pill messages from blocking the subscription indefinitely | Not monitoring the dead-letter topic, letting failed messages silently accumulate |
-| **GCS Storage Transfer** | A managed GCP service for scheduled bulk data transfers between GCS, S3, Azure, and HTTP sources | Used for TB-scale migrations and cross-cloud replication | Using `gsutil cp` for multi-TB jobs that need retry, scheduling, and audit logging |
-| **Dedicated Interconnect** | A physical private network link between an on-premises data center and GCP, bypassing the public internet | Provides 10–100 Gbps throughput with predictable latency for production pipelines | Using Transfer Acceleration (CDN-based) as a substitute — it does not provide the same SLA |
-
-### What this note covers
-
-- **Technologies Overview** — protocol comparison table across all five patterns
-- **Setup** — library installation and GCP credential configuration
-- **WebSocket Streaming** — asyncio server/client, reconnect logic, message framing
-- **Server-Sent Events (SSE)** — Flask/aiohttp SSE server, EventSource client, CDN compatibility
-- **Google Cloud Pub/Sub** — topic/subscription management, publish, streaming pull, dead-letter
-- **Firestore Real-Time Listener** — document and collection listeners, detach patterns
-- **Latency Comparison** — benchmark results across protocols with interpretation
-- **Enterprise Transfer & Streaming Patterns** — GCS Transfer Service, MFT, Interconnect, decision matrix
-
-Five streaming and transfer patterns — from sub-millisecond local TCP to managed GCP services and batch file transfer — covering protocol mechanics, latency characteristics, and selection criteria for real-time data engineering scenarios.
 
 ## Technologies Overview
 

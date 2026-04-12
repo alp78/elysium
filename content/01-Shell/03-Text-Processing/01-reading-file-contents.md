@@ -20,6 +20,150 @@ status: complete
 >
 > — **Brian Kernighan**, *The Elements of Programming Style* (1974)
 
+> [!abstract]- Summary
+>
+> Commands for reading file contents across the full spectrum from a quick config glance to surgical 50 GB log triage during a production incident. Tool choice is the critical decision: wrong tool turns a 30-second task into a server-killing operation.
+>
+> **Linux file reading tools**
+> - `cat` prints an entire file; use only for small configs and scripts.
+> - `head -n N` / `tail -n N` extract first or last N lines without loading the file.
+> - `tail -f` / `tail -F` follow a live log stream; `-F` survives log rotation.
+> - `less` provides interactive paging with forward/backward search and follow mode.
+> - `wc -l` counts newlines in constant memory — the fastest row-count check.
+>
+> **Linux grep / awk — incident log analysis**
+> - Six-step triage workflow: size → structure → error count → context → time window → categorization.
+> - `grep -c` counts matches; `-n` adds line numbers; `-B N`/`-A N` shows surrounding context.
+> - `awk '/ts1/,/ts2/'` range pattern isolates a time window without loading the full file.
+>
+> **Linux grep — performance flags for large files**
+> - `-F` (fixed-string) is 3–5x faster than regex for literal patterns.
+> - `-m N` exits after N matches, saving minutes on 50 GB files.
+> - `LC_ALL=C` removes UTF-8 overhead; 4x speedup on ASCII-only log data.
+> - `rg` (ripgrep) is 5–10x faster than `grep -r`; multi-threaded and `.gitignore`-aware.
+>
+> **PowerShell file reading tools**
+> - `Get-Content` returns lines as string objects; `-Head`/`-Tail` mirror `head`/`tail`; `-Raw` returns the whole file as a single string.
+> - `Get-Content -Wait` polls for new lines, equivalent to `tail -f`.
+> - `Select-String` returns `MatchInfo` objects with `LineNumber`, `Line`, `Filename`, and `Matches` properties.
+>
+> **Incident log triage — decision flowchart**
+> - Mermaid flowchart from incident report → file size branch → structured triage path.
+>
+> **Operations and safety**
+> - When to use: config verification, real-time monitoring, incident investigation, row-count validation, large-file navigation — 5 scenarios.
+> - When not to use: structured data transforms, binary files, JSON/XML parsing — 3 anti-patterns.
+> - Warnings: 4 (terminal flood from `cat`, `tail -f` vs rotation, `wc -l` newline count, `Get-Content` memory).
+> - Troubleshooting: 6 symptoms covered.
+
+> [!note]- Glossary
+>
+> **`cat`** — concatenates and prints the entire file to stdout; the simplest file-display command.
+> Appropriate only for small config files and scripts; on any file over a few hundred lines use `head`, `tail`, or `less` instead.
+>
+> > [!danger] `cat` on multi-GB files floods the terminal
+> >
+> > Dumping a 10 GB log to stdout freezes the terminal and can fill scroll-buffer memory. Interrupt with Ctrl+C.
+>
+> > ---
+>
+> **`head` / `tail`** — `head -n N` prints the first N lines of a file; `tail -n N` prints the last N lines (default 10 for both).
+> `head` is used to preview file structure and extract CSV headers; `tail` surfaces the most recent log entries without reading the full file.
+>
+> > [!info] `-c N` for byte-level inspection
+> >
+> > `head -c 100 file` reads the first 100 bytes — useful for detecting encoding markers or magic bytes without line-count assumptions.
+>
+> > ---
+>
+> **`tail -f` / `tail -F`** — `tail -f` keeps the file handle open and streams new lines as they are appended; `tail -F` reopens the file by name on rotation.
+> The primary real-time monitoring tool during pipeline runs, deployments, and incident response; always prefer `-F` (capital F) in production.
+>
+> > [!warning] `-f` follows the descriptor, not the name
+> >
+> > On log rotation a new inode is created; `tail -f` silently reads the old deleted file. Use `tail -F` to survive rotation.
+>
+> > ---
+>
+> **`less`** — an interactive terminal pager that displays file contents one screen at a time with forward and backward search.
+> Reads large files without loading them into memory; key bindings: `/` search forward, `?` search backward, `n`/`N` next/previous match, `G` jump to end, `F` follow mode, `q` quit.
+>
+> > [!info] `less +F` combines paging and follow
+> >
+> > Opens the file in follow mode with full scrollback history — use instead of `tail -f` when you also need to scroll up.
+>
+> > ---
+>
+> **`wc`** — word-count utility; `wc -l` counts newlines, `wc -w` counts words, `wc -c` counts bytes.
+> `wc -l` is the fastest way to count rows in a CSV or lines in a log — reads sequentially without loading the file.
+>
+> > [!warning] Counts newlines, not visual lines
+> >
+> > A file without a trailing newline reports one fewer line than expected. Most Unix tools write trailing newlines; some Windows-origin files do not.
+>
+> > ---
+>
+> **`grep`** — searches file contents for lines matching a pattern; returns matching lines to stdout.
+> Used across every triage stage: counting errors (`-c`), locating them (`-n`), extracting context (`-B`/`-A`/`-C`), and filtering live streams (`--line-buffered`).
+>
+> > [!info] `-E` enables extended regex
+> >
+> > `grep -E 'ERROR|WARN|DEADLOCK'` matches multiple keywords in a single pass — faster than running grep three times.
+>
+> > ---
+>
+> **`--line-buffered`** (grep flag) — flushes grep's output buffer after every matching line instead of accumulating a batch.
+> Required whenever `grep` is piped after `tail -f`; without it, output appears to freeze for minutes then arrives in one large burst.
+>
+> > [!danger] Silent buffering breaks live monitoring
+> >
+> > `tail -f log | grep "ERROR"` without `--line-buffered` is useless during an incident. Add the flag every time.
+>
+> > ---
+>
+> **`awk`** — a line-oriented text-processing language; in log analysis the range pattern `/start/,/stop/` prints every line between two matches.
+> Used to isolate a time window from a multi-GB log file in a single streaming pass — far faster than loading the file into an editor.
+>
+> > [!info] `$NF` references the last field
+> >
+> > In structured log formats, `awk '{print $NF}'` extracts the last whitespace-delimited token (often an error type or component name) for counting with `sort | uniq -c`.
+>
+> > ---
+>
+> **`ripgrep` (`rg`)** — a modern grep replacement written in Rust; multi-threaded, respects `.gitignore`, defaults to recursive search.
+> 5–10x faster than `grep -r` on large codebases and log directories; preferred for all interactive recursive searches.
+>
+> > [!warning] Not installed by default
+> >
+> > `rg` is absent from base Linux images. Install with `apt install ripgrep`. The binary is named `rg`, not `ripgrep`.
+>
+> > ---
+>
+> **`LC_ALL=C`** — sets the process locale to the POSIX C locale, disabling Unicode character-class handling for the duration of the command.
+> Removes UTF-8 processing overhead from `grep`; benchmarks show up to 4x speedup on ASCII-only log data with no impact on match correctness.
+>
+> > [!info] Scope is per-command
+> >
+> > Prefix as `LC_ALL=C grep ...` to scope the locale change to one command only; do not export it globally in shared scripts.
+>
+> > ---
+>
+> **`Get-Content`** (PowerShell) — reads a file and returns each line as a string object; aliased `cat`, `gc`, `type`.
+> `-Head`/`-Tail` mirror `head`/`tail`; `-Wait` polls for new lines like `tail -f`; `-Raw` returns the entire file as a single string for multi-line parsing (JSON, XML).
+>
+> > [!warning] Loads entire file into memory by default
+> >
+> > On multi-GB files `Get-Content` consumes all available RAM. Use `-Tail 100` or `-ReadCount 1000` to stream in manageable chunks.
+>
+> > ---
+>
+> **`Select-String`** (PowerShell) — searches files or pipeline input for regex patterns; returns `MatchInfo` objects with `LineNumber`, `Line`, `Filename`, and `Matches` properties.
+> Enables chained object-pipeline analysis (`Where-Object`, `Group-Object`, `.Count`) that raw text piping in bash cannot match without additional parsing.
+>
+> > [!info] `.NET` regex, not POSIX
+> >
+> > `Select-String` uses .NET regular expressions by default. Use `-SimpleMatch` for literal string searches equivalent to `grep -F`.
+
 A senior data engineer reads files differently depending on context. Checking a config file means reading the whole thing. Investigating a 50GB log file means surgical extraction. Understanding a Parquet file means reading metadata, not data. Choosing the wrong tool turns a 30-second task into a server-killing operation.
 
 

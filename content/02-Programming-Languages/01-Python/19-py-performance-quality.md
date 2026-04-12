@@ -8,49 +8,177 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 19. Performance & Code Quality - Python
+# Performance and Code Quality - Python
 
 > [!quote]
 > "Make it correct, make it clear, make it concise, make it fast. In that order."
 >
 > — **Wes Dyer**, blog post (2007)
 
+> [!abstract]- Summary
+>
+> **Timing & Benchmarking**
+> - `time.perf_counter()` for single-run wall-clock timing; `timeit` for multi-run micro-benchmarks with GC disabled; `%%timeit` in Jupyter for auto-calibrated runs.
+> - Benchmark comparisons: set lookup ~2,000× faster than list scan; `.sort()` ~30% faster than `sorted()` due to in-place allocation.
+>
+> **Memory Profiling**
+> - `sys.getsizeof()` reports shallow (pointer-array) size only; containers appear smaller than their actual heap footprint.
+> - `tracemalloc` tracks allocations by file and line; `take_snapshot()` + `statistics("lineno")` surfaces the top allocation sites.
+> - Generators use O(1) memory vs O(n) for list comprehensions; `__slots__` eliminates per-instance `__dict__` (200–400 bytes saved per object).
+>
+> **CPU Profiling**
+> - `cProfile` + `pstats`: `tottime` = exclusive time, `cumtime` = inclusive. Focus on `cumtime` for root bottlenecks; `tottime` for hottest leaves.
+> - String `+=` in loops is O(n²); `"".join()` and `io.StringIO` are O(n). Difference becomes severe above n=500,000.
+>
+> **Big-O & Data Structures**
+> - Complexity classes: O(1) hash lookup, O(log n) binary search, O(n) linear scan, O(n log n) Timsort, O(n²) nested loops, O(2ⁿ) naive recursion.
+> - `deque` is 158× faster than `list` for front-insert/pop; `set`/`dict` O(1) lookup vs `list` O(n) scan.
+> - `@lru_cache` / `@functools.cache` converts exponential recursion to linear; `fib(300)` cached is 201× faster than `fib(30)` uncached.
+>
+> **Code Quality & Type Safety**
+> - Absolute no-go's: string `+=` in loops, bare `except:`, mutable default args, `eval()` with user input, wildcard imports, `except: pass`.
+> - Code smells: god functions, deep nesting, magic numbers, copy-paste, boolean blindness. Guard clauses flatten nesting without logic change.
+> - Type hints: annotate all signatures; `X | None` over `Optional[X]` (3.10+); `@overload` for multi-return-type functions.
+> - `ruff` replaces `flake8` + `isort` + `black`; `mypy --strict` in CI; `pyright` in VS Code. Cyclomatic complexity (CC) > 10 is a refactor signal.
+>
+> **Profiling Real Workloads**
+> - Profile stage-by-stage with `perf_counter`; fix the bottleneck identified by `max(results)`. Read I/O typically dominates; cache the DataFrame upstream.
+>
+> **memoryview & Zero-Copy Views**
+> - `memoryview` wraps `bytes`, `bytearray`, `array.array`, and NumPy arrays; slicing returns a view with no copy. C# equivalent: `Span<T>` / `Memory<T>`.
+> - NumPy slices are always views; `.copy()` materializes an independent array. Views cost ~28 ns per slice; `.copy()` costs ~41 µs.
+>
+> **Generator & Iterator Pitfalls**
+> - Generators are single-pass: second iteration returns `[]` silently. `filter()` and `map()` are lazy iterators in Python 3, not lists.
+> - `zip()` stops at the shortest iterable, silently discarding remaining elements. Use `itertools.zip_longest` to preserve all elements.
+
+> [!note]- Glossary
+>
+> **`time.perf_counter()`**
+>
+> - High-resolution monotonic clock that returns fractional seconds; unaffected by NTP or DST adjustments. The correct tool for wrapping a single code block to measure elapsed wall-clock time.
+> - Pair with a `t0 = time.perf_counter()` before and `elapsed = time.perf_counter() - t0` after; multiply by 1,000 for milliseconds.
+>
+> > [!tip] Use `perf_counter` for one-off blocks; use `timeit` when comparing two implementations.
+>
+> > ---
+>
+> **`timeit`**
+>
+> - Standard-library micro-benchmark harness that disables garbage collection during measurement, runs the statement `number` times, and returns total elapsed seconds. Dividing by `number` gives the per-call average.
+> - `timeit.timeit(stmt, setup, number=N)` is the API form; `%%timeit` in Jupyter auto-calibrates `number` based on runtime.
+>
+> > [!warning] Never compare raw `timeit` totals from different `number=` settings — always normalize to per-call time before comparing.
+>
+> > ---
+>
+> **`cProfile`**
+>
+> - Deterministic function-call profiler built into CPython. Instruments every function call; records `ncalls` (call count), `tottime` (exclusive time inside the function), and `cumtime` (inclusive time including all sub-calls).
+> - Use `cProfile.Profile()` with `.enable()` / `.disable()`, then wrap with `pstats.Stats` to sort and filter. Sort by `cumtime` to find the root bottleneck; by `tottime` to isolate the hottest leaf function.
+>
+> > [!tip] `cProfile` adds 10–30 % overhead. Use `py-spy` (sampling profiler) for attaching to a running production process with near-zero overhead.
+>
+> > ---
+>
+> **`tracemalloc`**
+>
+> - Built-in allocation tracer that records the source file and line number of every Python heap allocation. `start()` activates tracing; `take_snapshot()` captures all current allocations; `get_traced_memory()` returns `(current_bytes, peak_bytes)`.
+> - `snapshot.statistics("lineno")` groups by source line, making it easy to identify which list comprehension or dict expression dominates memory use.
+>
+> > [!warning] Forgetting to call `tracemalloc.stop()` leaves the tracer active, which distorts all subsequent allocation measurements in the same process.
+>
+> > ---
+>
+> **`sys.getsizeof()`**
+>
+> - Returns the shallow byte size of a single Python object — the object's own struct plus internal bookkeeping, but not the objects it references. For a `list`, this is the pointer array; for a `dict` or `set`, this is the hash-table header and slot array.
+> - An empty `list` is 56 bytes; an empty `set` is 216 bytes; a `list` of 10,000 integers reports ~80 KB in pointers but ~2.8 MB when the `int` objects are included.
+>
+> > [!warning] `sys.getsizeof` systematically understates container memory. Use `tracemalloc` or `pympler.asizeof` to measure the true heap footprint including all referenced objects.
+>
+> > ---
+>
+> **`memoryview`**
+>
+> - Zero-copy buffer-protocol wrapper over any bytes-like object (`bytes`, `bytearray`, `array.array`, NumPy array). Slicing a `memoryview` returns another `memoryview` referencing the same underlying memory — no allocation occurs.
+> - Exposes `format` (e.g., `'B'` for unsigned byte, `'i'` for signed int) and `itemsize`. Calling `bytes(mv[a:b])` materializes the slice into a new object only when explicitly requested. C# equivalent: `Span<T>`.
+>
+> > [!warning] `memoryview` only works on contiguous, bytes-like objects. Passing a plain `list` raises `TypeError: a bytes-like object is required`.
+>
+> > ---
+>
+> **Big-O notation**
+>
+> - Mathematical shorthand describing how runtime or memory scales with input size n, independent of hardware or constant factors. Common classes: O(1) constant, O(log n) logarithmic, O(n) linear, O(n log n) linearithmic, O(n²) quadratic, O(2ⁿ) exponential.
+> - Guides algorithm selection before benchmarking. Switching from O(n²) to O(n) at n=10,000 yields a 10,000× improvement that no constant-factor tuning can match.
+>
+> > [!tip] O(n log n) is not always faster than O(n²) — constant factors dominate at small n. Measure before concluding a theoretically better algorithm is faster for your actual input size.
+>
+> > ---
+>
+> **`ruff`**
+>
+> - Rust-based Python linter and formatter that replaces `flake8`, `isort`, `pyflakes`, and more in a single binary. Runs 10–100× faster than the tools it supersedes. `ruff check --fix .` auto-fixes lint violations; `ruff format .` reformats code.
+> - Catches style issues, import order problems, undefined names, unused variables, and logic errors. Configurable via `ruff.toml` or `pyproject.toml`.
+>
+> > [!tip] `ruff` is not only a formatter. Running `ruff check` without `--fix` surfaces logic errors and import issues that formatters like `black` never report.
+>
+> > ---
+>
+> **`mypy`**
+>
+> - Gradual static type checker for Python that reads type annotations and reports mismatches before code runs. Supports incremental adoption — unannotated functions are treated as `Any` unless `--strict` is enabled.
+> - `--strict` enables `--disallow-untyped-defs`, `--no-implicit-optional`, `--warn-return-any`, and several other checks. A clean pass without `--strict` does not mean the code is fully typed.
+>
+> > [!warning] `mypy` and `pyright` share most inference rules but diverge on edge cases. Use `pyright` as the primary checker in VS Code and `mypy --strict` in CI; fix all errors in both.
+>
+> > ---
+>
+> **`pyright`**
+>
+> - Microsoft's static type checker for Python, written in TypeScript and powering the Pylance extension in VS Code. Faster inference than `mypy`; supports `reportMissingTypeArgument`, `reportUnknownVariableType`, and stricter generics handling.
+> - Configured via `pyrightconfig.json` or `pyproject.toml`. `basic` mode is the default; `strict` mode enables all checks.
+>
+> > [!tip] Prefer `pyright` in VS Code for real-time feedback during editing, and `mypy --strict` in CI for enforcement — both checkers surface different edge cases and complement each other.
+>
+> > ---
+>
+> **GC (Garbage Collector)**
+>
+> - Python's memory management layer: primary reference counting (immediate deallocation when `refcount` reaches zero) plus a cyclic garbage collector that handles reference cycles. The cyclic GC runs in generational passes (gen 0, 1, 2) and can introduce unpredictable pauses.
+> - `timeit` disables the cyclic GC during measurement to prevent pauses from inflating benchmark results. GC is automatically re-enabled when `timeit` exits.
+>
+> > [!warning] Forgetting that GC is disabled inside `timeit` can cause benchmark results to appear faster than real-world runtime. For GC-sensitive comparisons, pass `gc.enable()` in the `setup` string.
+>
+> > ---
+>
+> **Generator exhaustion**
+>
+> - A generator object can only be iterated once. After the final `yield`, subsequent iteration returns an empty sequence immediately with no error or warning. Applies to generator expressions, `filter()`, `map()`, and any function containing `yield`.
+> - Silent exhaustion is the most common correctness bug in Python data pipelines: passing an already-consumed generator to a second consumer silently drops all data.
+>
+> > [!danger] Generators are not rewindable. There is no reset method. Always convert to `list()` or `tuple()` before storing a generator in a variable that will be iterated more than once.
+>
+> > ---
+>
+> **`line_profiler`**
+>
+> - Third-party profiler (`pip install line-profiler`) that measures time spent on each individual source line rather than per function. Decorated with `@profile`; run via `kernprof -l -v script.py`. Produces per-line `% Time` and `Hits` columns.
+> - Use after `cProfile` has identified a hot function to pinpoint the exact line within that function responsible for the slowdown.
+>
+> > [!tip] Only profile representative, production-scale input data. Profiling with a toy dataset produces line timings that do not reflect the real bottleneck distribution at production row counts.
+>
+> > ---
+>
+> **`Polars .profile()`**
+>
+> - Method on a Polars `LazyFrame` that executes the lazy query plan and returns per-node timing in microseconds alongside the result DataFrame. Exposes the actual operator execution order after plan optimization.
+> - Use `.explain()` first to inspect the optimized plan without executing; use `.profile()` to measure per-node cost. Run against a representative sample (≥ 1 M rows) — small frames fit in CPU cache and do not expose memory-bandwidth bottlenecks.
+>
+> > [!warning] `.profile()` on a small dataset underestimates production node times. Node costs that appear negligible at 10,000 rows can dominate at 10,000,000 rows once memory bandwidth is saturated.
+
 This note is the Python reference for performance measurement and code quality tooling.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `time.perf_counter()` | High-resolution monotonic clock returning fractional seconds | Correct tool for single-run elapsed time measurement | Using `time.time()` instead — affected by NTP/DST adjustments |
-| `timeit` | Standard-library micro-benchmark harness that disables GC and averages many repetitions | Removes OS scheduling noise from short-code comparisons | Comparing results from different `number=` settings without normalizing |
-| `cProfile` | Deterministic function-call profiler built into CPython | Identifies which function consumes the most cumulative CPU time | Confusing `cumtime` (inclusive) with `tottime` (exclusive of callees) |
-| `tracemalloc` | Allocation tracer that records memory snapshots and computes diffs | Finds where allocations concentrate over a code span | Forgetting to call `stop()` — tracer remains active and distorts subsequent runs |
-| `sys.getsizeof()` | Returns shallow byte size of a Python object | Quick inspection of a single object's memory footprint | Does not recurse into container contents — misleading for lists of objects |
-| `memoryview` | Zero-copy buffer protocol wrapper over bytes-like objects | Slice large byte payloads without materializing a copy | Assuming it works on non-contiguous or non-bytes-like objects |
-| Big-O notation | Mathematical shorthand for how runtime or memory scales with input size | Guides algorithm selection before any code is written | Treating O(n log n) as always better than O(n²) — constant factors matter at small n |
-| `ruff` | Rust-based Python linter and formatter that replaces `flake8`, `isort`, and `black` | Single-tool style and bug enforcement with sub-second runtime | Assuming it is only a formatter; it also catches logic errors and import issues |
-| `mypy` | Gradual static type checker for Python | Catches type mismatches at analysis time, before runtime | Running without `--strict` and concluding a clean pass means the code is fully typed |
-| `pyright` | Microsoft's type checker (powers Pylance in VS Code) | Faster inference than mypy; native VS Code integration | Conflating `pyright` errors with `mypy` errors — they share most rules but diverge on edge cases |
-| GC (Garbage Collector) | Python's reference-counting + cyclic-garbage collector | Disabled by `timeit` to prevent GC pauses from inflating benchmark results | Forgetting that GC is re-enabled after `timeit` exits |
-| Generator exhaustion | A generator can only be iterated once; after that it yields nothing | Silent data loss in pipelines that reuse a generator | Assuming `filter()` / `map()` return reusable collections — they are generators in Python 3 |
-| `line_profiler` | Third-party profiler that measures time per source line rather than per function | Pinpoints the exact line inside a hot function | Profiling unoptimized, non-representative input data |
-| `Polars .profile()` | Lazy-plan execution profiler that reports per-node timing in microseconds | Optimizes Polars query plans before production deployment | Running `.profile()` on a small dataset — results do not extrapolate to production row counts |
-
-### What this note covers
-
-- **Timing & Benchmarking** — `time.perf_counter()`, `timeit`, `time.process_time()`
-- **Memory Profiling** — `sys.getsizeof()`, `tracemalloc`, snapshot diffs
-- **CPU Profiling** — `cProfile`, `pstats`, `line_profiler`, SnakeViz
-- **Big-O Complexity & Algorithmic Thinking** — complexity classes, input-scaling analysis
-- **Data Structure Performance Cheat Sheet** — per-operation costs for built-in containers
-- **Golden Rules of Performance** — measure-first principles and optimization hierarchy
-- **Absolute No-Go's** — patterns that reliably destroy performance
-- **Code Smells & Anti-Patterns** — readability and maintainability red flags
-- **Type Safety & Static Analysis** — `mypy`, `pyright`, type-hint gradual adoption
-- **Linting & Code Quality Tools** — `ruff`, `black`, `pylint`, pre-commit hooks
-- **Profiling Real Workloads** — Polars `.explain()` / `.profile()`, realistic benchmarking
-- **memoryview & Zero-Copy Views** — buffer protocol, NumPy views, avoiding data copies
-- **Generator & Iterator Pitfalls** — exhaustion, reuse traps, `zip_longest` safety
 
 ## Timing & Benchmarking
 

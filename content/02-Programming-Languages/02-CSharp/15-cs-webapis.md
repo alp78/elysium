@@ -8,42 +8,143 @@ updated: 2026-03-22
 status: complete
 ---
 
-# 15. Web & APIs - C#
+# Web and APIs - C#
 
 > [!quote]
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 >
 > — **Greg Brockman**
 
+> [!abstract]- Summary
+>
+> **HTTP Clients (`HttpClient`)**
+> - `HttpClient.GetAsync` / `PostAsync` — send HTTP requests; pair with `EnsureSuccessStatusCode()` to fail fast on 4xx/5xx
+> - `JsonSerializer.Deserialize<T>` / `ReadFromJsonAsync<T>` — typed JSON deserialization from response body
+> - Custom headers via `DefaultRequestHeaders`; Bearer token auth via `Authorization: Bearer <token>`
+>
+> **REST API Patterns for Data Engineering**
+> - Pagination: loop through pages with a `maxPages` guard to avoid unbounded iteration
+> - Retry with exponential backoff: 0.5 s → 1 s → 2 s; read `Retry-After` header on 429 before sleeping
+> - Bulk POST: serialize arrays into a single request body to reduce N round trips to 1
+>
+> **ASP.NET Core Minimal APIs**
+> - Define `record` DTOs for all request/response shapes; wire handlers with `app.MapGet` / `MapPost` / `MapDelete`
+> - Return `Results.Ok()` / `Results.NotFound()` / `Results.Created()` for explicit HTTP semantics
+> - Handlers are pure functions testable without a live server; `AddSwaggerGen` enables `/swagger` UI
+>
+> **Data Validation — Records & Data Annotations**
+> - `[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]` constrain DTO properties; ASP.NET validates `[FromBody]` automatically
+> - `IValidatableObject.Validate()` enforces cross-field rules (e.g., `EndDate > StartDate`) after annotation checks pass
+> - Nested `record` types + `enum` compose complex schemas; `IValidatableObject` validates cross-leg constraints
+> - `JsonNamingPolicy.CamelCase` + `JsonStringEnumConverter` control serialization output shape
+> - `record` init-only properties enforce immutability; `with` expressions produce safe modified copies
+
+> [!note]- Glossary
+>
+> **`HttpClient`**
+> - .NET class for sending HTTP requests; replaces `WebClient` and `WebRequest` as the standard HTTP client in modern .NET
+> - Share a single long-lived instance (or use `IHttpClientFactory`) across requests to avoid socket exhaustion
+> > [!warning] Instantiating `new HttpClient()` per request in a loop causes TIME_WAIT socket pool exhaustion under load
+>
+> > ---
+>
+> **`IHttpClientFactory`**
+> - ASP.NET Core DI abstraction that manages `HttpClient` lifetimes and connection pool reuse
+> - Prevents socket exhaustion by recycling handlers; inject via constructor or use `services.AddHttpClient()`
+> > [!tip] Prefer `IHttpClientFactory` in any ASP.NET Core app; use a `static readonly HttpClient` only in scripts or notebooks
+>
+> > ---
+>
+> **`HttpResponseMessage`**
+> - Object returned by all `HttpClient` methods; contains `StatusCode`, `Headers`, and `Content`
+> - Always check `IsSuccessStatusCode` or call `EnsureSuccessStatusCode()` before reading the body
+> > [!warning] Calling `ReadFromJsonAsync<T>()` on a failed response can throw or silently return `null`
+>
+> > ---
+>
+> **`EnsureSuccessStatusCode()`**
+> - Throws `HttpRequestException` when the response status is 4xx or 5xx; equivalent to Python's `resp.raise_for_status()`
+> - Use it to fail fast in pipelines where a non-200 response should halt processing rather than silently continue
+> > [!tip] Catch `HttpRequestException` at the call site to distinguish 404 vs 500 and apply appropriate retry or skip logic
+>
+> > ---
+>
+> **ASP.NET Core Minimal APIs**
+> - Lightweight routing framework introduced in .NET 6; defines endpoints with `app.MapGet()` / `MapPost()` / `MapDelete()` — no `[HttpGet]` attributes
+> - Preferred over MVC controllers for microservices and data pipeline APIs due to reduced ceremony
+> > [!warning] Do not confuse with MVC controllers; Minimal APIs use `app.Map*()` delegates, not `[ApiController]` classes
+>
+> > ---
+>
+> **`record` DTO**
+> - Immutable C# value type used for request/response shapes; provides structural equality, concise syntax, and JSON-friendly serialization
+> - Positional properties are `init`-only by default; use `with` expressions to produce modified copies
+> > [!tip] Equivalent to Pydantic `BaseModel` with `frozen=True`; prefer `record` over mutable `class` for all API DTOs
+>
+> > ---
+>
+> **`Results`**
+> - Static factory class in ASP.NET Core Minimal APIs; `Results.Ok()`, `Results.NotFound()`, `Results.Created()` map to HTTP status codes 200, 404, 201
+> - Always return a `Results.*` type from handlers — returning a raw object may produce incorrect HTTP semantics
+> > [!warning] `Results.Ok(null)` on a missing item returns 200 instead of 404; return `Results.NotFound()` explicitly
+>
+> > ---
+>
+> **Data Annotations**
+> - `System.ComponentModel.DataAnnotations` attributes (`[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`) declare validation rules on DTO properties
+> - ASP.NET validates annotated `[FromBody]` parameters automatically before the handler runs; in notebooks call `Validator.TryValidateObject()` explicitly
+> > [!warning] Annotations on positional record constructor parameters are not enforced by `Validator.TryValidateObject` in .NET Interactive — use a `class` with settable properties or FluentValidation for reliable notebook testing
+>
+> > ---
+>
+> **`PostAsJsonAsync`**
+> - `HttpClient` extension method that serializes an object to JSON and POSTs it; sets `Content-Type: application/json` automatically
+> - Reduces boilerplate versus `PostAsync` with a manually constructed `StringContent`
+> > [!tip] Python equivalent: `requests.post(url, json=data)` — both handle serialization and the content-type header transparently
+>
+> > ---
+>
+> **`ReadFromJsonAsync<T>`**
+> - Deserializes an HTTP response body into a typed .NET object; replaces manual `JsonSerializer.Deserialize()` on the response stream
+> - Always call `EnsureSuccessStatusCode()` before invoking it to avoid deserializing error payloads
+> > [!warning] Calling it on a 4xx/5xx response body may throw `JsonException` or return `null`/default values silently
+>
+> > ---
+>
+> **Retry with backoff**
+> - Pattern of retrying failed HTTP requests after increasing delays (0.5 s → 1 s → 2 s); required for flaky or rate-limited APIs
+> - Python equivalent: `for attempt in range(max_retries): try/except` loop with `time.sleep(base * 2 ** attempt)`
+> > [!warning] Retrying immediately in a tight loop hammers the failing service; always apply exponential backoff with a `maxRetries` cap
+>
+> > ---
+>
+> **429 Too Many Requests**
+> - HTTP status indicating the client has exceeded the API's rate limit; the response includes a `Retry-After` header specifying when to retry
+> - Read `resp.Headers.RetryAfter.Delta.TotalSeconds` and sleep exactly that long before retrying
+> > [!warning] Using a fixed sleep instead of the `Retry-After` value may still violate the rate limit and continue triggering 429s
+>
+> > ---
+>
+> **Bearer token**
+> - Auth credential passed in the `Authorization: Bearer <token>` HTTP header; standard pattern for OAuth 2.0 and API key authentication
+> - Set once on `client.DefaultRequestHeaders.Authorization`; never hardcode in source or `appsettings.json`
+> > [!warning] Tokens in version-controlled config files are a permanent security liability — load from environment variables or Azure Key Vault
+>
+> > ---
+>
+> **`CancellationToken`**
+> - .NET mechanism for cooperative cancellation of async operations; pass to all `HttpClient` async calls to honour pipeline timeouts and graceful shutdown
+> - Accept it as a parameter in every `app.Map*()` handler and propagate it to downstream `await` calls
+> > [!warning] Ignoring `CancellationToken` leaves in-flight HTTP requests running after a timeout or shutdown signal, blocking process exit
+>
+> > ---
+>
+> **Kestrel**
+> - ASP.NET Core's built-in cross-platform HTTP server; the default host for self-hosted apps in production and local development
+> - Replaces IIS as the preferred host; IIS can sit in front of Kestrel as a reverse proxy but is not required
+> > [!tip] ASP.NET Core does not require IIS — Kestrel is the default and is production-ready as a standalone server
+
 This note covers C# web and API patterns using `HttpClient`, ASP.NET Core Minimal APIs, and data validation with records and Data Annotations.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `HttpClient` | .NET class for sending HTTP requests | Standard .NET HTTP client; replaces `WebClient` and `WebRequest` | Instantiating it in a `using` block per request; causes socket exhaustion — use a shared instance or `IHttpClientFactory` |
-| `IHttpClientFactory` | ASP.NET Core abstraction that manages `HttpClient` lifetimes | Prevents socket exhaustion by reusing connection pools | Bypassing it with `new HttpClient()` in each request handler |
-| `HttpResponseMessage` | Object returned by `HttpClient` methods containing status, headers, and body | Must be checked before reading content | Ignoring status code; calling `.ReadFromJsonAsync<T>()` on a failed response |
-| `EnsureSuccessStatusCode()` | Method that throws `HttpRequestException` on 4xx/5xx responses | Simplest guard against silent HTTP failures | Forgetting to call it and assuming all responses are 200 |
-| ASP.NET Core Minimal APIs | Lightweight routing API introduced in .NET 6 | Preferred for microservices and data pipelines; less ceremony than controllers | Confusing with MVC controllers; Minimal APIs use `app.Map*()` not `[HttpGet]` attributes |
-| `record` DTO | Immutable C# value type used for request/response shapes | Provides structural equality, concise syntax, and JSON-friendly serialization | Using a mutable `class` with setters where an immutable record is safer |
-| `Results` | Static class providing typed HTTP result factories in Minimal APIs | `Results.Ok()`, `Results.NotFound()`, `Results.Created()` map cleanly to status codes | Returning raw objects instead of `Results.*` — status codes may not be set correctly |
-| Data Annotations | `System.ComponentModel.DataAnnotations` attributes for model validation | Used with `[Required]`, `[Range]`, `[StringLength]` to validate DTOs | Annotations alone don't run without explicit `Validator.TryValidateObject()` or a validation middleware |
-| `PostAsJsonAsync` | `HttpClient` extension method that serializes an object to JSON and POSTs it | Reduces boilerplate; handles `Content-Type: application/json` automatically | Using `PostAsync` with a manually serialized `StringContent` when this extension is available |
-| `ReadFromJsonAsync<T>` | Deserializes an HTTP response body into a typed .NET object | Replaces manual `JsonSerializer.Deserialize()` on the response stream | Calling it before checking `EnsureSuccessStatusCode()` on error responses |
-| Retry with backoff | Pattern of retrying failed requests after increasing delays | Required for flaky or rate-limited APIs | Retrying immediately in a loop; not respecting `Retry-After` on 429 responses |
-| 429 Too Many Requests | HTTP status indicating rate limit exceeded | Must be handled with a delay; response contains `Retry-After` header | Ignoring `Retry-After` and using a fixed delay; this may still violate rate limits |
-| Bearer token | Auth credential passed in `Authorization: Bearer <token>` header | Standard OAuth 2.0 / API key pattern | Hardcoding tokens; storing them in `appsettings.json` under version control |
-| `CancellationToken` | .NET mechanism for cooperative cancellation of async operations | Pass to all `HttpClient` async calls to allow timeout and graceful shutdown | Ignoring it; leaves requests running after a pipeline timeout or shutdown signal |
-| Kestrel | ASP.NET Core's built-in HTTP server | Used in production and local development; replaces IIS for self-hosted apps | Assuming ASP.NET Core requires IIS; Kestrel is the default and preferred host |
-
-### What this note covers
-
-- HTTP clients with `HttpClient` (GET, POST, DELETE, auth headers)
-- REST API patterns for data engineering (pagination, retry, bulk POST, rate limiting)
-- Building a REST API with ASP.NET Core Minimal APIs (routes, DTOs, error handling)
-- Data validation with records and Data Annotations
-- Summary quick-reference table
 
 ## HTTP Clients & REST API Calls
 

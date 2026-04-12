@@ -8,18 +8,7 @@ updated: 2026-03-30
 status: complete
 ---
 
-# 25. Functional Data Pipeline — Polars, Pydantic, FastAPI
-
-**Ddata pipeline architecture combining five principles:**
-functional core/imperative shell, contract-first validation, quality gates,
-data provenance with SHA-256 tamper detection, and semantic context propagation.
-
-**Data flow:** yfinance → JSON landing → Pydantic validation → Bronze →
-Polars transforms → Silver → Polars aggregation → Gold → Parquet → FastAPI
-
-**Two orthogonal dimensions of data trustworthiness:**
-- **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable models
-- **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
+# Functional Data Pipeline — Python
 
 > [!quote]
 > "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
@@ -30,40 +19,177 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 >
 > — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
+> [!abstract]- Summary
+>
+> **Architecture & principles**
+> - Five-principle design: functional core/imperative shell, contract-first validation, quality gates, SHA-256 tamper detection, semantic context propagation.
+> - Medallion layers (Bronze → Silver → Gold) isolate failure; each boundary is enforced by a Pydantic model that rejects non-conforming rows to quarantine before persistence.
+> - Two orthogonal trustworthiness axes: structural integrity (typed contracts, pure transforms, quality gates) and semantic integrity (column context, business context, bi-temporal markers, lineage).
+>
+> **Schema & SQL Server (§1–§4)**
+> - Central constants cell: paths, SQL connection, 5-symbol EURO STOXX 50 universe, 2-year lookback.
+> - Pydantic DTOs: `RawOHLCV` (Bronze), `CleanOHLCV` (Silver), `DailySummary`/`SymbolProfile` (Gold), `StageLineage`, `RunContext`, `ColumnContext`, `BusinessContext`, `TemporalContext`, `StageContext`.
+> - Nine SQL Server tables: 4 medallion data tables, 2 dimension tables (`dim_symbol` SCD2, `dim_calendar`), 3 operational tables (`lineage_stages`, `quarantine`, `context_log`).
+> - Persistence helpers: idempotent MERGE upsert for Bronze and Silver, `write_to_sql()` for Gold, `quarantine_row()`, `persist_lineage()`, `persist_context()`, Tenacity retry wrapper.
+>
+> **Dimensions (§5)**
+> - `dim_symbol` populated via yfinance → JSON landing → SCD Type 2 upsert; tracked columns: company name, sector, industry, country, exchange, currency.
+> - `dim_calendar` generated from `pandas-market-calendars` per exchange, flagging trading days, month-end, and quarter-end.
+>
+> **Bronze → Silver → Gold → Export (§6–§9)**
+> - Bronze: incremental yfinance ingestion with MERGE upsert, `batch_id` stamped on every row.
+> - Silver: Polars transforms (`daily_return`, `intraday_range`, `sma_20`), quality gate suite (6 checks), `StageContext` propagation.
+> - Gold: cross-sectional `DailySummary` aggregation and per-symbol `SymbolProfile` with max-drawdown calculation.
+> - Parquet export: pre-materialized files per mart plus `context.json` sidecar containing column registry.
+>
+> **Lineage, serving & visualization (§10–§13)**
+> - Lineage review queries: stage-level row counts and durations, SHA-256 tamper detection, quarantine inspection.
+> - FastAPI: three endpoints (`/daily`, `/profile`, `/health`) serving pre-materialized Parquet; `run_in_executor` pattern for non-blocking reads.
+> - Plotly dashboard: daily return distribution, volatility ranking, volume heatmap, quality metrics gauge.
+> - Audit workflow: dispute resolution from Gold number back to Bronze source row using `batch_id` and hash comparison.
+
+> [!note]- Glossary
+>
+> **Medallion architecture**
+>
+> - A three-tier storage pattern: Bronze holds raw, unmodified source records; Silver holds cleaned and enriched records; Gold holds aggregated mart tables ready for consumption.
+> - Bronze is append-only and immutable — it serves as the source-of-truth replay buffer; modifying or truncating it destroys the ability to reprocess history.
+>
+> > [!tip] Bronze immutability rule
+> >
+> > Use MERGE upsert on `(symbol, date)` rather than TRUNCATE + reload. A truncated Bronze table cannot be distinguished from a partial load after a failure.
+>
+> > ---
+>
+> **Functional core / imperative shell**
+>
+> - All data transformation lives in pure functions with no side effects; I/O (database writes, file operations, API calls) is confined to the outermost orchestration layer.
+> - Pure transform functions can be unit-tested in isolation with a fixture DataFrame, without mocking a database or network.
+>
+> > [!tip] Testability boundary
+> >
+> > If a function both transforms data and writes to SQL, it is impossible to test the transform without a live database. Split the concerns: transform returns a `pl.DataFrame`; the caller writes it.
+>
+> > ---
+>
+> **Pydantic DTO**
+>
+> - A Data Transfer Object defined as a `BaseModel` subclass; field constraints (`Field(gt=0)`, `@model_validator`) run at instantiation and raise `ValidationError` on any violation.
+> - `@dataclass` and `TypedDict` perform no runtime validation; a negative price or `None` volume passes through silently until it corrupts a downstream aggregation.
+>
+> > [!info] Bronze contract
+> >
+> > `RawOHLCV` enforces positive prices, non-negative volume, and the market invariant `high >= low` via a `@model_validator`. Invalid rows are caught at Bronze ingestion — one layer, one fix.
+>
+> > ---
+>
+> **SHA-256 tamper detection**
+>
+> - A deterministic cryptographic hash of a row's payload fields stored alongside the data at write time; recomputing the hash and comparing to the stored value detects any post-write modification.
+> - Only hashing a subset of fields leaves unincluded columns modifiable without triggering detection; the hash must cover all immutable payload fields.
+>
+> > [!info] Hash implementation
+> >
+> > `compute_hash()` sorts the DataFrame columns before serializing to CSV bytes, ensuring column-order independence. The first 16 hex characters are stored in `output_hash` for space efficiency.
+>
+> > ---
+>
+> **Lineage tracking**
+>
+> - Recording metadata about every pipeline stage execution — `batch_id`, input and output row counts, rejection count, SHA-256 hash, start and end timestamps — in the `lineage_stages` table.
+> - Lineage stored only in log files is not queryable and is rotated off disk; the `lineage_stages` table supports SQL queries for root-cause analysis.
+>
+> > [!info] Dispute resolution pattern
+> >
+> > A disputed Gold number is traced to its `batch_id`, which links to the Bronze rows that produced it. The stored hash proves whether those rows were modified after ingestion.
+>
+> > ---
+>
+> **Polars**
+>
+> - A Rust-backed DataFrame library for Python with a columnar in-memory layout and a lazy evaluation engine; `.collect()` materializes the deferred execution plan.
+> - Mixing Polars and pandas DataFrames within a single pipeline step incurs a copy overhead and loses column metadata; conversions should be confined to SQL write boundaries.
+>
+> > [!info] Lazy API usage
+> >
+> > Silver transforms use Polars expressions (`pct_change().over("symbol")`, `rolling_mean().over("symbol")`) evaluated lazily. Only `merge_silver()` converts to pandas via `.to_pandas()` for SQLAlchemy compatibility.
+>
+> > ---
+>
+> **Quality gate**
+>
+> - A validation checkpoint between pipeline layers that executes a suite of assertions (non-empty, no null keys, no duplicates, value ranges, freshness, minimum row count) and raises `DataQualityError` if any fail.
+> - Running quality gates only at the Gold layer makes root-cause analysis expensive; gates at each boundary localize failures to the stage that introduced them.
+>
+> > [!info] Gate runner
+> >
+> > `run_quality_gate()` accepts a list of `(bool, str)` tuples, logs each result, and raises `DataQualityError` on first failure when `fail_fast=True`. The gate results are returned as a `pl.DataFrame` for audit logging.
+>
+> > ---
+>
+> **SCD Type 2**
+>
+> - Slowly Changing Dimension Type 2: when a tracked attribute changes, the current record is closed (`valid_to = now, is_current = 0`) and a new record is inserted, preserving the full change history.
+> - Using `UPDATE` on a dimension row destroys the historical record; a backfill joining Gold scores to `dim_symbol` would then see today's sector for all historical dates.
+>
+> > [!info] Tracked columns
+> >
+> > `SCD2_COMPARE_COLS` tracks six attributes: `company_name`, `sector`, `industry`, `country`, `exchange`, `currency`. Any change in these triggers a new version; non-tracked fields (e.g., `market_cap`) are updated in place.
+>
+> > ---
+>
+> **Parquet**
+>
+> - A columnar storage format with built-in compression (Snappy, Zstd) and predicate pushdown; reads skip row groups that do not match filter predicates without decompressing them.
+> - Writing Parquet without specifying a compression codec produces files with library-default settings that vary across environments and may be unreadable by stricter readers.
+>
+> > [!info] Serving pattern
+> >
+> > Gold data is pre-materialized to Parquet once per pipeline run. FastAPI reads the file at request time using `pl.read_parquet()`, avoiding repeated SQL round-trips for dashboard queries.
+>
+> > ---
+>
+> **FastAPI**
+>
+> - A Python ASGI web framework built on Starlette and Pydantic; route functions decorated with `@app.get()` generate OpenAPI documentation automatically from type annotations.
+> - Calling synchronous `pyodbc` or file I/O inside an `async def` route blocks the event loop; use `asyncio.get_event_loop().run_in_executor()` to offload blocking calls to a thread pool.
+>
+> > [!info] Endpoint design
+> >
+> > Three endpoints: `GET /daily` returns the daily summary Parquet as JSON, `GET /profile` returns the symbol profile, `GET /health` confirms file availability. All reads are wrapped in `run_in_executor`.
+>
+> > ---
+>
+> **`yfinance`**
+>
+> - An unofficial Python library that downloads OHLCV price data (open, high, low, close, adjusted close, volume) from Yahoo Finance using the `Ticker.history()` method.
+> - `yfinance` data is not authoritative: it occasionally returns `None`, `inf`, or split-unadjusted prices; every response must be parsed through `RawOHLCV` before persistence.
+>
+> > [!warning] Unofficial API
+> >
+> > Yahoo Finance does not provide a public API SLA. `fetch_with_retry()` wraps `Ticker.history()` with three attempts and exponential backoff to handle transient `ConnectionError` and `TimeoutError` failures.
+>
+> > ---
+>
+> **Tenacity**
+>
+> - A Python retry library that wraps any callable with configurable stop conditions (`stop_after_attempt`), wait strategies (`wait_exponential`), and exception filters (`retry_if_exception_type`).
+> - Using `time.sleep()` in a bare `except` block swallows exceptions and does not re-raise after exhausting retries; Tenacity propagates the last exception if all attempts fail.
+>
+> > [!info] Retry configuration
+> >
+> > `fetch_with_retry()` is configured with three attempts, exponential backoff (2 s minimum, 30 s maximum), and filters for `ConnectionError`, `TimeoutError`, and `OSError`. A `before_sleep` hook logs each retry attempt.
+
+**Data pipeline architecture combining five principles:** functional core/imperative shell, contract-first validation, quality gates, data provenance with SHA-256 tamper detection, and semantic context propagation.
+
+**Data flow:** yfinance → JSON landing → Pydantic validation → Bronze → Polars transforms → Silver → Polars aggregation → Gold → Parquet → FastAPI
+
+**Two orthogonal dimensions of data trustworthiness:**
+- **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable models
+- **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
+
 This note implements an end-to-end functional data pipeline in Python using Polars, Pydantic, FastAPI, and SQL Server with medallion architecture, lineage tracking, and SHA-256 tamper detection.
 
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Medallion architecture** | A three-tier data storage pattern: Bronze (raw landing), Silver (cleaned/enriched), Gold (aggregated/mart) | Structures the pipeline into distinct quality layers so failures in one layer never corrupt upstream data | Treating Bronze as a staging area that is overwritten — Bronze should be append-only and immutable for lineage and replay |
-| **Functional core / imperative shell** | A design pattern where pure functions perform all data transformation and I/O is confined to the outer shell | Keeps business logic testable without databases, APIs, or file system mocks | Mixing database writes inside transformation functions, making them impossible to unit-test in isolation |
-| **Pydantic DTO** | A Data Transfer Object defined as a `BaseModel` subclass that validates and coerces fields at instantiation | Enforces type contracts and business rules at every layer boundary, catching bad data before it reaches the database | Using `@dataclass` or `TypedDict` instead — they do not run validators at construction time |
-| **SHA-256 tamper detection** | A cryptographic hash of a row's payload stored alongside the data; recomputing and comparing detects any unauthorized modification | Provides data provenance guarantees for regulated pipelines where auditability of source records is required | Hashing only a subset of fields — any unincluded field can be silently altered without detection |
-| **Lineage tracking** | Recording metadata about every pipeline execution — source, row counts, timestamps, run IDs — in a dedicated audit table | Enables root-cause analysis when a downstream report disputes a number, by replaying exactly which source data produced it | Storing lineage as log file entries only — they are not queryable and are typically rotated off disk |
-| **Polars** | A Rust-backed DataFrame library for Python with a lazy evaluation engine and columnar memory layout | Outperforms pandas for large transforms in this pipeline; its lazy API defers work until `.collect()` | Mixing Polars and pandas DataFrames in the same pipeline step — conversion has a copy overhead and resets column metadata |
-| **Quality gate** | A validation checkpoint between pipeline layers that rejects or quarantines rows failing defined rules | Prevents bad data from propagating to Silver or Gold where it would corrupt aggregations | Running quality gates only at the end of the pipeline, where tracing bad data back to source becomes expensive |
-| **SCD Type 2** | Slowly Changing Dimension Type 2 — a pattern that inserts a new row with effective dates rather than overwriting the old row | Used for symbol metadata (name changes, sector reclassification) to preserve historical accuracy in index calculations | Using `UPDATE` on a dimension row, which destroys the audit trail of what the record said on any historical date |
-| **Parquet** | A columnar storage format with built-in compression and predicate pushdown support | Used as the pre-materialized output for the FastAPI serving layer — reads are orders of magnitude faster than re-querying SQL | Writing Parquet without specifying compression (`snappy` or `zstd`) — default settings vary by library and affect read performance |
-| **FastAPI** | A Python web framework based on Starlette and Pydantic that generates OpenAPI docs automatically | Serves pre-materialized Parquet data as JSON endpoints consumed by the Plotly visualization layer | Blocking FastAPI with synchronous `pyodbc` calls inside an `async def` route — use `run_in_executor` or switch to an async driver |
-| **`yfinance`** | An unofficial Python library that downloads OHLCV price data from Yahoo Finance | Used as the raw data source for the landing zone; data quality is variable and must be validated at Bronze | Treating `yfinance` data as authoritative without validation — it occasionally returns `None`, `inf`, or split-unadjusted prices |
-| **Tenacity** | A retry library that wraps any callable with configurable back-off, jitter, and exception filtering | Used to add resilience to `yfinance` network calls and database writes without manual retry loops | Using `time.sleep()` in a bare `except` block instead — it swallows exceptions and does not re-raise after exhausting retries |
-
-### What this note covers
-
-- **1. Configuration & Constants** — symbol lists, date ranges, connection strings, path constants
-- **2. Pydantic DTOs** — schema validation models for Bronze, Silver, and Gold boundaries
-- **3. Lineage & Context Infrastructure** — run ID generation, audit table writes, SHA-256 hashing
-- **4. SQL Server Schema** — medallion table DDL, lineage tables, indexes
-- **5. Dimension Tables** — SCD2 symbol metadata and trading calendar population
-- **6. Bronze Layer** — raw landing from yfinance with incremental ingestion logic
-- **7. Silver Layer** — cleaning, enrichment, and quality gate enforcement
-- **8. Gold Layer** — aggregations, mart tables, and volatility calculations
-- **9. Parquet Export** — pre-materialized data products for the serving layer
-- **10. Lineage Review** — pipeline execution audit and tamper detection queries
-- **11. FastAPI Serving Layer** — REST endpoints over pre-materialized Parquet
-- **12. Pipeline Visualization** — Plotly charts and quality metrics dashboard
-- **13. Audit** — investigating a disputed data point end-to-end
 
 > [!abstract] Pipeline Dependencies
 >

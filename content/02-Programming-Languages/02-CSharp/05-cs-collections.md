@@ -20,30 +20,248 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
+> [!abstract]- Summary
+>
+> **Arrays and Lists**
+> - `T[]` — fixed-size, contiguous memory; O(1) indexed access; use for interop, fixed buffers, and performance-critical paths.
+> - `List<T>` — dynamic array backed by a doubling internal array; default for ordered, mutable collections; pre-size with `new List<T>(capacity)` for large loads.
+> - `List<T>` search methods (`Contains`, `IndexOf`, `Find`, `Exists`) are O(n); prefer `HashSet<T>` for membership tests.
+> - `Sort()` mutates in-place; `OrderBy()` returns a new sequence.
+> - `ToList()` / `ToArray()` are shallow copies — safe for value types, not for reference types.
+> - `^` (from-end index) and `..` (range) operators available since C# 8.
+> - `Span<T>` — stack-only, zero-allocation view; supports `Sort`, `Reverse`, `Fill`, `CopyTo`; mutates the underlying array.
+> - `ReadOnlySpan<char>` — zero-allocation substring views via `AsSpan()` instead of `Substring()`.
+> - `Memory<T>` — heap-safe counterpart to `Span<T>`; use across `async`/`await` boundaries or when stored in fields.
+>
+> **Dictionaries**
+> - `Dictionary<TKey, TValue>` — O(1) average lookup, insert, delete; keys require stable `GetHashCode`/`Equals`.
+> - Bracket access `d[key]` throws `KeyNotFoundException`; use `TryGetValue` or `GetValueOrDefault` for safe reads.
+> - `ContainsKey` is O(1); `ContainsValue` is O(n).
+> - `SortedDictionary<K,V>` — red-black tree, O(log n); use only when sorted key iteration is needed.
+> - LINQ `GroupBy` + `ToDictionary` replaces Python's `Counter` and `defaultdict`.
+>
+> **Sets**
+> - `HashSet<T>` — O(1) add, remove, `Contains`; duplicates silently ignored.
+> - Set algebra: `UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith` — all mutate in-place; copy first to preserve the original.
+> - `SortedSet<T>` — red-black tree, O(log n); exposes `Min`, `Max`, `GetViewBetween`.
+> - `ImmutableHashSet<T>` — mutations return new instances; for concurrent read scenarios.
+>
+> **Tuples and Enums**
+> - `ValueTuple` — stack-allocated, compared by value, supports named fields and deconstruction.
+> - Swap without temp: `(a, b) = (b, a)`.
+> - Prefer `record` over tuple for public APIs with 3+ fields.
+> - `enum` — named integer constants; auto-increments from 0; validate external input with `Enum.IsDefined()`.
+>
+> **Stacks, Queues, and Linked Lists**
+> - `Stack<T>` (LIFO) — `Push`/`Pop`/`Peek` O(1); use `TryPop`/`TryPeek` on potentially empty stacks.
+> - `Queue<T>` (FIFO) — `Enqueue`/`Dequeue`/`Peek` O(1); use `TryDequeue` for safe access.
+> - `LinkedList<T>` — O(1) insert/remove at any node position; O(n) indexed access.
+> - `PriorityQueue<T, TPriority>` (.NET 6+) — min-heap; no built-in priority update.
+>
+> **Collection Comparison**
+> - Decision guide: ordered → `T[]`/`List<T>`; key-value → `Dictionary`/`SortedDictionary`; unique → `HashSet`/`SortedSet`; FIFO → `Queue`; LIFO → `Stack`; priority → `PriorityQueue`.
+> - `FrozenDictionary`/`FrozenSet` (.NET 8+) — build-once, read-many; faster reads than standard hash collections.
+> - Common DE patterns: `List<T>` for ETL records; `Dictionary` for config; `HashSet` for deduplication; `Queue` for task pipelines.
+
+> [!note]- Glossary
+>
+> **`T[]` (array)**
+>
+> - Fixed-size, contiguous block of memory holding elements of type `T`. Size is set at creation and cannot change; O(1) indexed access due to cache locality.
+> - Use for interop buffers, fixed-size data, and performance-critical paths. Four creation syntaxes: collection literal `{ ... }`, zero-initialized `new int[n]`, range via `Enumerable.Range().ToArray()`, and inferred `new[] { ... }`.
+>
+> > [!warning] `Array.Resize` is not in-place
+> >
+> > `Array.Resize` allocates a new array and copies all elements. Use `List<T>` for any collection that needs to grow.
+>
+> > ---
+>
+> **`List<T>`**
+>
+> - Dynamically-sized generic collection backed by an internal array. When capacity is exceeded the array doubles in size, making `Add()` amortized O(1).
+> - Default choice for ordered, mutable collections (~95% of use cases). Pre-allocate with `new List<T>(capacity: n)` when the final size is known to eliminate resize copies.
+>
+> > [!warning] Capacity doubling causes memory spikes
+> >
+> > On large lists (millions of items) a resize allocates a new array twice the current size and copies all elements, temporarily using up to 3× the data size in memory.
+>
+> > ---
+>
+> **`Dictionary<TKey, TValue>`**
+>
+> - Hash-based key-value mapping with O(1) average lookup, insert, and delete. Keys must implement stable `GetHashCode`/`Equals` — built-in types (`string`, `int`) satisfy this out of the box.
+> - Bracket access `d[key]` throws `KeyNotFoundException` if the key is absent; use `TryGetValue(key, out var val)` or `GetValueOrDefault(key, fallback)` for safe reads.
+>
+> > [!warning] Mutable keys break lookup
+> >
+> > Changing a key's hash-contributing fields after insertion breaks the internal hash table. Use immutable or value-type keys (`string`, `int`, `record struct`).
+>
+> > ---
+>
+> **`HashSet<T>`**
+>
+> - Unordered collection of unique elements with O(1) add, remove, and membership testing. Duplicate insertions are silently ignored.
+> - Use for deduplication and fast `Contains` checks. O(1) vs `List.Contains` at O(n) — switch early in hot paths.
+>
+> > [!warning] Set algebra mutates in-place
+> >
+> > `UnionWith`, `IntersectWith`, `ExceptWith`, and `SymmetricExceptWith` all modify the target set. Copy first: `var result = new HashSet<T>(original); result.ExceptWith(other);`
+>
+> > ---
+>
+> **`SortedDictionary<K,V>`**
+>
+> - Dictionary that maintains keys in sorted order using a red-black tree. O(log n) for all operations.
+> - Use when sorted key iteration is required. Slower than `Dictionary` for pure lookup — do not substitute unless order is actually needed.
+>
+> > [!info] When to prefer `SortedDictionary`
+> >
+> > Use when iterating keys in sorted order is a core requirement (e.g., range scans, ordered reports). For pure lookup, `Dictionary` is always faster.
+>
+> > ---
+>
+> **`SortedSet<T>`**
+>
+> - Set that maintains elements in sorted order via a red-black tree. O(log n) add, remove, lookup. Exposes `Min`, `Max`, and `GetViewBetween(lower, upper)` for range queries.
+> - Use when both uniqueness and sorted iteration are needed. Slower than `HashSet` for pure membership tests.
+>
+> > [!info] Range queries with `GetViewBetween`
+> >
+> > `SortedSet<T>.GetViewBetween(lower, upper)` returns a live view of elements within a range — no copy needed. Useful for windowed queries and sliding-window ETL patterns.
+>
+> > ---
+>
+> **`Span<T>`**
+>
+> - Stack-only, zero-allocation view (slice) into contiguous memory — arrays, `stackalloc`, or native buffers. Mutations to the span modify the underlying array directly.
+> - Use in parsers, serializers, and hot loops where heap allocation is unacceptable. Supports `Sort`, `Reverse`, `Fill`, `CopyTo` without allocating.
+>
+> > [!warning] `Span<T>` cannot cross async boundaries
+> >
+> > `Span<T>` is a `ref struct` — it cannot be stored in fields, captured by closures, or used in `async` methods. Use `Memory<T>` when the slice must survive an `await`.
+>
+> > ---
+>
+> **`Memory<T>`**
+>
+> - Heap-safe counterpart to `Span<T>`. Can be stored in class fields, passed to async methods, and placed in collections. Access the fast path via its `.Span` property inside synchronous blocks.
+> - Use when a slice must cross `async`/`await` boundaries or be stored in a collection. Slightly more overhead than `Span<T>`.
+>
+> > [!info] `Span<T>` vs `Memory<T>`
+> >
+> > Both make `ArraySegment<T>` redundant — implicit conversions exist. Use `Span<T>` for synchronous hot paths; use `Memory<T>` when async or field storage is required.
+>
+> > ---
+>
+> **`ReadOnlySpan<T>`**
+>
+> - Immutable view into contiguous memory. `ReadOnlySpan<char>` provides zero-allocation substring views via `AsSpan()`, avoiding the heap allocation of `Substring()`.
+> - Use for high-throughput text parsing. Read-only — the underlying data cannot be modified through the span.
+>
+> > [!info] Zero-allocation string parsing
+> >
+> > `text.AsSpan(start, length)` returns a `ReadOnlySpan<char>` view into the original string — no new string is allocated on the heap. Critical for parsers processing large volumes of text.
+>
+> > ---
+>
+> **`ValueTuple`**
+>
+> - Lightweight value type with optional named fields — stack-allocated, compared by value, zero heap overhead. Named fields accessed via dot notation; unnamed fields fall back to `Item1`, `Item2`, etc.
+> - Use for quick return types, local grouping, and deconstruction. For public APIs or tuples with 3+ fields, prefer a `record` for discoverability and documentation.
+>
+> > [!info] Deconstruction and swap
+> >
+> > `var (x, y) = tuple` unpacks fields into separate variables. `(a, b) = (b, a)` swaps two values without a temporary variable — the compiler handles it atomically.
+>
+> > ---
+>
+> **`enum`**
+>
+> - Named integer constants defining a closed set of values. Members auto-increment from 0 unless explicitly assigned. Improves readability and compile-time safety over magic numbers or string constants.
+> - Use for status codes, flags, pipeline states, and configuration options. `[Flags]` attribute enables bitwise combination for multi-valued enums.
+>
+> > [!warning] Arbitrary int casts produce undefined enum members
+> >
+> > `(Color)999` compiles and runs — producing an enum value with no defined name. Always validate with `Enum.IsDefined(typeof(Color), value)` or `Enum.TryParse` when converting external input.
+>
+> > ---
+>
+> **`Stack<T>`**
+>
+> - LIFO (Last In, First Out) collection. `Push` adds to the top; `Pop` removes and returns the top element; `Peek` reads it without removing. All O(1).
+> - Use for undo systems, DFS traversal, expression evaluation, and backtracking. `TryPop`/`TryPeek` return `false` instead of throwing on an empty stack.
+>
+> > [!warning] `Pop()` throws on empty stack
+> >
+> > `Stack<T>.Pop()` throws `InvalidOperationException` if the collection is empty. In event-driven or concurrent code, the count can change between check and call — use `TryPop(out var item)` instead.
+>
+> > ---
+>
+> **`Queue<T>`**
+>
+> - FIFO (First In, First Out) collection. `Enqueue` adds to the back; `Dequeue` removes and returns the front element; `Peek` reads it without removing. All O(1).
+> - Use for task queues, BFS traversal, ETL pipelines, and message processing. `TryDequeue` returns `false` instead of throwing on an empty queue.
+>
+> > [!warning] `Dequeue()` throws on empty queue
+> >
+> > `Queue<T>.Dequeue()` throws `InvalidOperationException` if the collection is empty. Use `TryDequeue(out var item)` for safe access in concurrent or conditional flows.
+>
+> > ---
+>
+> **`PriorityQueue<T, TPriority>`**
+>
+> - Min-heap (.NET 6+) that dequeues the element with the lowest priority value first. Internal structure is a binary heap.
+> - Use for task scheduling, top-N queries, and shortest-path algorithms. No built-in way to update priorities — remove and re-insert. Not available before .NET 6.
+>
+> > [!info] Priority update limitation
+> >
+> > `PriorityQueue<T, TPriority>` does not expose a decrease-key operation. To update a priority, track items externally and use a lazy deletion pattern (mark stale entries, skip on dequeue).
+>
+> > ---
+>
+> **`LinkedList<T>`**
+>
+> - Doubly-linked list with O(1) insert and remove at any node position, given a `LinkedListNode<T>` reference. `Find` returns the node reference for positional operations.
+> - Use for frequent insertions/removals at arbitrary positions. O(n) indexed access — do not use for random-access patterns.
+>
+> > [!warning] O(n) indexed access
+> >
+> > `LinkedList<T>` has no indexer — accessing the nth element requires traversal from the head. For indexed access patterns use `List<T>` instead.
+>
+> > ---
+>
+> **`ImmutableHashSet<T>`**
+>
+> - Thread-safe, immutable set from `System.Collections.Immutable`. Every mutation operation (`Add`, `Remove`) returns a new collection instance; the original is unchanged.
+> - Use for concurrent reads without locking, functional patterns, and shared state passed across threads. Not suitable for high-frequency writes.
+>
+> > [!info] Immutable collection trade-offs
+> >
+> > Every mutation allocates a new collection. For write-heavy scenarios use `ConcurrentDictionary<K,V>` or `ConcurrentBag<T>` from `System.Collections.Concurrent` instead.
+>
+> > ---
+>
+> **`FrozenDictionary<K,V>` / `FrozenSet<T>`**
+>
+> - Build-once, read-many collections from `System.Collections.Frozen` (.NET 8+). Created via `ToFrozenDictionary()` / `ToFrozenSet()`. The runtime pre-computes an optimal hash strategy at creation time, yielding faster reads than standard `Dictionary`/`HashSet`.
+> - Use for static lookup tables, configuration caches, and reference data loaded at startup. Only available in .NET 8+ — not a drop-in replacement for older frameworks.
+>
+> > [!warning] .NET 8+ only
+> >
+> > `FrozenDictionary` and `FrozenSet` are not available on .NET 6/7 or .NET Framework. Add a target-framework check before using them in libraries with broad compatibility requirements.
+>
+> > ---
+>
+> **O(1) / O(n) / O(log n)**
+>
+> - Big-O notation describing how an operation's cost scales with collection size. O(1) = constant time regardless of size; O(n) = linear (doubles when size doubles); O(log n) = logarithmic (grows slowly as size increases).
+> - Critical for choosing the right collection type for the access pattern. `List.Contains` is O(n); `HashSet.Contains` is O(1); `SortedDictionary` lookup is O(log n).
+>
+> > [!info] Practical collection complexity reference
+> >
+> > For membership testing at scale, switching from `List<T>.Contains` (O(n)) to `HashSet<T>.Contains` (O(1)) is the single highest-impact collection change in most data engineering pipelines.
+
 C# collections cover fixed arrays, dynamic lists, dictionaries, sets, tuples, enums, and specialised structures. This page covers all core types with executable examples — from `T[]` and `List<T>` through `Span<T>`, `Dictionary`, `HashSet`, and `PriorityQueue`.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **T[]** (array) | Fixed-size, contiguous block of memory holding elements of type `T`. Fastest indexed access due to cache locality. | Interop buffers, fixed-size data, performance-critical paths. | Arrays cannot grow — `Array.Resize` allocates a new array and copies. Use `List<T>` for dynamic sizing. |
-| **List&lt;T&gt;** | Dynamically-sized generic collection backed by an internal array that doubles capacity on overflow. | Default choice for ordered, mutable collections (~95% of use cases). | Capacity doubling causes memory spikes on large lists — pre-allocate with `new List<T>(capacity)` when size is known. |
-| **Dictionary&lt;TKey, TValue&gt;** | Hash-based key-value mapping with O(1) average lookup, insert, and delete. | The standard way to associate keys with values — config, lookup tables, grouped records. | Bracket access `d[key]` throws `KeyNotFoundException` if key is missing; use `TryGetValue` for safe access. |
-| **HashSet&lt;T&gt;** | Unordered collection of unique elements with O(1) add, remove, and membership testing. | Deduplication and fast `Contains` checks. | Set algebra methods (`UnionWith`, `ExceptWith`) mutate the set in-place — copy first to preserve the original. |
-| **SortedDictionary&lt;K,V&gt;** | Dictionary that maintains keys in sorted order using a red-black tree. O(log n) operations. | Ordered key iteration without manual sorting. | Slower than `Dictionary` for pure lookup — use only when sorted key order is actually needed. |
-| **SortedSet&lt;T&gt;** | Set that maintains elements in sorted order via a red-black tree. O(log n) operations. | Range queries (`GetViewBetween`), ordered unique elements. | Slower than `HashSet` for pure membership tests — use only when sorted iteration is needed. |
-| **Span&lt;T&gt;** | Stack-only, zero-allocation view (slice) into contiguous memory — arrays, `stackalloc`, or native buffers. | Parsers, serializers, and hot loops where heap allocation is unacceptable. | `Span<T>` is a `ref struct` — cannot be stored in fields, used in `async` methods, or captured by closures. Use `Memory<T>` instead. |
-| **Memory&lt;T&gt;** | Heap-safe counterpart to `Span<T>` — can be stored in fields and passed to async methods. | Slicing across async boundaries, storing slices in collections. | Slightly more overhead than `Span<T>` — use `Span<T>` when stack-only is acceptable. |
-| **ReadOnlySpan&lt;T&gt;** | Immutable view into contiguous memory. `ReadOnlySpan<char>` provides zero-allocation substring views. | High-throughput text parsing without `Substring()` heap allocation. | Read-only — cannot modify the underlying data. |
-| **ValueTuple** | Lightweight value type with optional named fields — stack-allocated, compared by value. | Quick return types, local grouping, deconstruction. | For public APIs with 3+ fields, prefer a `record` — tuples lack documentation and discoverability. |
-| **enum** | Named integer constants defining a closed set of values. Members auto-increment from 0 unless explicitly assigned. | Replace magic numbers with type-safe symbolic names for status codes, flags, options. | Casting an arbitrary int to an enum compiles but may produce an undefined member — use `Enum.IsDefined()` to validate. |
-| **Stack&lt;T&gt;** | LIFO (Last In, First Out) collection. `Push`/`Pop`/`Peek` are all O(1). | Undo systems, DFS, expression evaluation, backtracking. | `Pop()` throws `InvalidOperationException` on empty stack — use `TryPop()` for safe access. |
-| **Queue&lt;T&gt;** | FIFO (First In, First Out) collection. `Enqueue`/`Dequeue`/`Peek` are all O(1). | Task queues, BFS, ETL pipelines, message processing. | `Dequeue()` throws on empty queue — use `TryDequeue()` for safe access. |
-| **PriorityQueue&lt;T, TPriority&gt;** | Min-heap that dequeues the element with the lowest priority value first (.NET 6+). | Task scheduling, top-N queries, shortest-path algorithms. | No built-in way to update priorities — remove and re-insert. Not available before .NET 6. |
-| **LinkedList&lt;T&gt;** | Doubly-linked list with O(1) insert/remove at any node (given a reference). | Frequent insertions/removals at arbitrary positions. | O(n) indexed access — do not use for random-access patterns. |
-| **ImmutableHashSet&lt;T&gt;** | Thread-safe, immutable set from `System.Collections.Immutable`. Mutations return new instances. | Concurrent reads without locking, functional patterns. | Every mutation allocates a new collection — not suitable for high-frequency writes. |
-| **FrozenDictionary / FrozenSet** | Build-once, read-many collections from `System.Collections.Frozen` (.NET 8+). Optimized hash strategy at creation. | Static lookup tables, configuration caches, reference data loaded at startup. | Only available in .NET 8+ — not a drop-in for older frameworks. |
-| **O(1) / O(n) / O(log n)** | Big-O notation describing how an operation's cost scales with collection size. O(1) = constant, O(n) = linear, O(log n) = logarithmic. | Choosing the right collection type for the access pattern. | Assuming all collections have the same performance — `List.Contains` is O(n), `HashSet.Contains` is O(1). |
 
 ### What this note covers
 
