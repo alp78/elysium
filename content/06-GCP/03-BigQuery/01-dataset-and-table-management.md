@@ -35,12 +35,12 @@ BigQuery is Google's serverless data warehouse. It can scan petabytes in seconds
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    P[GCP Project] --> D1[Dataset A\nregion: EU]
-    P --> D2[Dataset B\nregion: US]
+    P[GCP Project] --> D1[Dataset A<br>region: EU]
+    P --> D2[Dataset B<br>region: US]
     D1 --> T1[Table]
     D1 --> V1[View]
     D1 --> MV1[Materialized View]
-    T1 --> C1[Columns\nname · type · mode]
+    T1 --> C1[Columns<br>name · type · mode]
     style P fill:#292e42,stroke:#565f89
     style D1 fill:#1a1b26,stroke:#565f89
     style D2 fill:#1a1b26,stroke:#565f89
@@ -403,15 +403,15 @@ flowchart TD
     A{Time-series data?} --> YES1([YES])
     A --> NO1([NO])
     YES1 --> B{Rows above 1M?}
-    NO1 --> C[No partitioning\nbq mk with inline schema]
+    NO1 --> C[No partitioning<br>bq mk with inline schema]
     B --> YES2([YES])
     B --> NO2([NO])
-    YES2 --> D[Partition by DATE or TIMESTAMP\n--time_partitioning_field=date]
+    YES2 --> D[Partition by DATE or TIMESTAMP<br>--time_partitioning_field=date]
     NO2 --> C
     D --> E{Frequent filter columns?}
     E --> YES3([YES])
     E --> NO3([NO])
-    YES3 --> F[Add clustering up to 4 cols\n--clustering_fields=symbol,index]
+    YES3 --> F[Add clustering up to 4 cols<br>--clustering_fields=symbol,index]
     NO3 --> G[Partitioned only]
     style A fill:#292e42,stroke:#565f89
     style C fill:#1a1b26,stroke:#565f89

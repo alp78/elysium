@@ -31,14 +31,14 @@ When your Cloud Run job fails at 3 AM, Cloud Logging is the first place you look
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["GCP Services\nCloud Run · GCE · BigQuery · Pub/Sub"] --> B["Log Router"]
-    B --> C["_Required Bucket\n400-day retention\nAudit logs only"]
-    B --> D["_Default Bucket\n30-day retention\nAll other logs"]
-    B --> E{"Exclusion Filter\nDrop matching entries"}
+    A["GCP Services<br>Cloud Run · GCE · BigQuery · Pub/Sub"] --> B["Log Router"]
+    B --> C["_Required Bucket<br>400-day retention<br>Audit logs only"]
+    B --> D["_Default Bucket<br>30-day retention<br>All other logs"]
+    B --> E{"Exclusion Filter<br>Drop matching entries"}
     B --> F["Custom Sinks"]
-    F --> G["BigQuery Dataset\nLog Analytics"]
-    F --> H["GCS Bucket\nLong-term archive"]
-    F --> I["Pub/Sub Topic\nReal-time streaming"]
+    F --> G["BigQuery Dataset<br>Log Analytics"]
+    F --> H["GCS Bucket<br>Long-term archive"]
+    F --> I["Pub/Sub Topic<br>Real-time streaming"]
 ```
 
 ## Read and Filter Logs

@@ -784,9 +784,9 @@ flowchart TD
     C --> F[bq load job from GCS]
     D -->|High throughput| G[Storage Write API — batched]
     D -->|Low throughput| E
-    F --> H["Cost: FREE\nDML-ready: immediately\nLatency: minutes"]
-    G --> I["Cost: $0.025/GB\nDML-ready: immediately\nLatency: seconds"]
-    E --> J["Cost: $0.012/200MB\nDML-ready: ~30 min delay\nLatency: ms"]
+    F --> H["Cost: FREE<br>DML-ready: immediately<br>Latency: minutes"]
+    G --> I["Cost: $0.025/GB<br>DML-ready: immediately<br>Latency: seconds"]
+    E --> J["Cost: $0.012/200MB<br>DML-ready: ~30 min delay<br>Latency: ms"]
     style F fill:#1a1b26,stroke:#9ece6a
     style G fill:#1a1b26,stroke:#e0af68
     style E fill:#1a1b26,stroke:#f7768e

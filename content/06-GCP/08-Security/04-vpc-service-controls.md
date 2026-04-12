@@ -62,9 +62,9 @@ flowchart LR
         SM["Secret Manager"]
     end
 
-    ENG["Engineer\n(trusted IP + managed device)"]
-    ATTACKER["Compromised SA\n(external project)"]
-    PARTNER["Partner Project\n(explicit egress rule)"]
+    ENG["Engineer<br>(trusted IP + managed device)"]
+    ATTACKER["Compromised SA<br>(external project)"]
+    PARTNER["Partner Project<br>(explicit egress rule)"]
 
     ENG -->|"access level ✅"| PERIMETER
     ATTACKER -.->|"❌ BLOCKED"| PERIMETER

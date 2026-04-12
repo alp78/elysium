@@ -46,11 +46,11 @@ Every GCP cost traces through this four-level hierarchy. Resources generate usag
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1b26', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#7aa2f7', 'lineColor': '#7aa2f7', 'secondaryColor': '#16161e', 'tertiaryColor': '#16161e', 'edgeLabelBackground': '#1a1b26', 'nodeTextColor': '#c0caf5'}}}%%
 flowchart TD
-    O[Organization] --> BA["Billing Account\n(credit card / invoice)"]
+    O[Organization] --> BA["Billing Account<br>(credit card / invoice)"]
     BA --> PA[Project A]
     BA --> PB[Project B]
     BA --> PC[Project C]
-    PA --> RA["Resources\nVMs · BQ datasets · GCS buckets"]
+    PA --> RA["Resources<br>VMs · BQ datasets · GCS buckets"]
     PB --> RB[Resources]
     PC --> RC[Resources]
 ```

@@ -35,13 +35,13 @@ A common failure mode when setting up a new GCP project is running `gcloud run j
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    ORG["Organization\ndomain.com"]
-    FOLDER["Folder\ne.g. Data Engineering"]
-    PROJ["Project\nbilling boundary · IAM scope · API unit"]
+    ORG["Organization<br>domain.com"]
+    FOLDER["Folder<br>e.g. Data Engineering"]
+    PROJ["Project<br>billing boundary · IAM scope · API unit"]
     BILLING["Billing Account"]
     APIS["Enabled APIs"]
     IAM["IAM Bindings"]
-    RESOURCES["Resources\nVMs · BQ datasets · GCS buckets · Cloud Run"]
+    RESOURCES["Resources<br>VMs · BQ datasets · GCS buckets · Cloud Run"]
 
     ORG --> FOLDER
     FOLDER --> PROJ

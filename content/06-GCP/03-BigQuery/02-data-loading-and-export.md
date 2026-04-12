@@ -433,13 +433,13 @@ The 4 GB per-file limit on compressed CSV and JSON exists because BigQuery must 
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    GCS1["GCS Bucket\n(source)"]
-    LOAD["bq load / LOAD DATA\n(free)"]
+    GCS1["GCS Bucket<br>(source)"]
+    LOAD["bq load / LOAD DATA<br>(free)"]
     BQ["BigQuery Table"]
-    TT["Time Travel\n(up to 7 days)"]
-    SNAP["Snapshot Table\n(configurable expiry)"]
-    EXTRACT["bq extract\n(free)"]
-    GCS2["GCS Bucket\n(export)"]
+    TT["Time Travel<br>(up to 7 days)"]
+    SNAP["Snapshot Table<br>(configurable expiry)"]
+    EXTRACT["bq extract<br>(free)"]
+    GCS2["GCS Bucket<br>(export)"]
 
     GCS1 -->|"CSV · Parquet · Avro · ORC"| LOAD
     LOAD --> BQ

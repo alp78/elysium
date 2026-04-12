@@ -33,13 +33,13 @@ Secret Manager is GCP's fully managed service for storing, versioning, auditing,
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    SM["Secret Manager\nversioned secret store"]
-    CR["Cloud Run / GCE\nattached SA → metadata server"]
-    AF["Airflow\nSM secrets backend"]
-    GHA["GitHub Actions\nWIF keyless auth"]
-    LD["Local Dev\nADC gcloud auth"]
-    PY["Python SDK\ngoogle-cloud-secret-manager"]
-    CS["C# SDK\nGoogle.Cloud.SecretManager.V1"]
+    SM["Secret Manager<br>versioned secret store"]
+    CR["Cloud Run / GCE<br>attached SA → metadata server"]
+    AF["Airflow<br>SM secrets backend"]
+    GHA["GitHub Actions<br>WIF keyless auth"]
+    LD["Local Dev<br>ADC gcloud auth"]
+    PY["Python SDK<br>google-cloud-secret-manager"]
+    CS["C# SDK<br>Google.Cloud.SecretManager.V1"]
 
     SM -->|"IAM: secretAccessor"| CR
     SM -->|"AIRFLOW__SECRETS__BACKEND"| AF
@@ -312,11 +312,11 @@ Rotation is a versioning operation — add a new version, migrate consumers, the
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A["1. Add new version\nto Secret Manager"] --> B["2. Update consumers\nto new version"]
-    B --> C["3. Verify\nconnectivity"]
-    C --> D["4. Disable\nold version"]
-    D --> E["5. Wait 24h\nobservation window"]
-    E --> F["6. Destroy old version\n+ delete local files"]
+    A["1. Add new version<br>to Secret Manager"] --> B["2. Update consumers<br>to new version"]
+    B --> C["3. Verify<br>connectivity"]
+    C --> D["4. Disable<br>old version"]
+    D --> E["5. Wait 24h<br>observation window"]
+    E --> F["6. Destroy old version<br>+ delete local files"]
 ```
 
 ### Service Account Keys

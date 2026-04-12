@@ -360,22 +360,22 @@ These five practices account for the vast majority of BigQuery cost reduction on
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    Q[Query submitted] --> PF{Partition filter\npresent?}
+    Q[Query submitted] --> PF{Partition filter<br>present?}
     PF --> YES1[YES]
     PF --> NO1[NO]
-    YES1 --> PS[Scan matching\npartitions only]
-    NO1 --> FS[Full table scan\n⚠️ expensive]
-    PS --> CF{Clustered column\nfiltered?}
+    YES1 --> PS[Scan matching<br>partitions only]
+    NO1 --> FS[Full table scan<br>⚠️ expensive]
+    PS --> CF{Clustered column<br>filtered?}
     CF --> YES2[YES]
     CF --> NO2[NO]
-    YES2 --> BS[Scan relevant\nblocks only]
-    NO2 --> AS[Scan all blocks\nin partition]
+    YES2 --> BS[Scan relevant<br>blocks only]
+    NO2 --> AS[Scan all blocks<br>in partition]
     BS --> COL{SELECT * ?}
     AS --> COL
     COL --> NO3[NO]
     COL --> YES3[YES]
-    NO3 --> COST[Minimal bytes\nscanned ✅]
-    YES3 --> HIGHCOST[Maximum bytes\nscanned ⚠️]
+    NO3 --> COST[Minimal bytes<br>scanned ✅]
+    YES3 --> HIGHCOST[Maximum bytes<br>scanned ⚠️]
     FS --> HIGHCOST
     style YES1 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
     style YES2 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5

@@ -125,11 +125,11 @@ The pipeline writes a document at the start of execution and updates it on compl
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
 flowchart TD
-    A([Pipeline starts]) --> B["Write: status=running\nstarted_at=now()"]
+    A([Pipeline starts]) --> B["Write: status=running<br>started_at=now()"]
     B -->|on_snapshot push| C[Dashboard: RUNNING]
     B --> D{Outcome}
-    D -->|Success| E["Update: status=success\nrows_written=N\nfinished_at=now()"]
-    D -->|Failure| F["Update: status=failed\nerror=msg\nfinished_at=now()"]
+    D -->|Success| E["Update: status=success<br>rows_written=N<br>finished_at=now()"]
+    D -->|Failure| F["Update: status=failed<br>error=msg<br>finished_at=now()"]
     E -->|on_snapshot push| G[Dashboard: SUCCESS]
     F -->|on_snapshot push| H[Dashboard: FAILED]
 ```
@@ -168,12 +168,12 @@ Firestore document writes trigger Eventarc events, which invoke a Cloud Function
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
 flowchart TD
-    A([Data arrives]) --> B["Write to Firestore\ncollection: raw_events"]
-    B --> C{Eventarc detects\ndocument create/update}
-    C --> D["Cloud Function fires\nwith document snapshot"]
+    A([Data arrives]) --> B["Write to Firestore<br>collection: raw_events"]
+    B --> C{Eventarc detects<br>document create/update}
+    C --> D["Cloud Function fires<br>with document snapshot"]
     D --> E[Process document]
-    E --> F["Write derived record\nto BigQuery"]
-    F --> G["Mark document processed\nor delete it"]
+    E --> F["Write derived record<br>to BigQuery"]
+    F --> G["Mark document processed<br>or delete it"]
 ```
 
 This pattern eliminates polling entirely. The Cloud Function is only invoked when data exists to process. Related: [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) for when a long-running service is preferable to a function.
@@ -228,9 +228,9 @@ Operational parameters live in a Firestore document rather than environment vari
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
 flowchart LR
-    A([Operator]) -->|"Updates config doc\nvia Console or API"| B[("Firestore\npipeline_config")]
-    B -->|"Read at run start\nwith 5-min TTL cache"| C[Pipeline run]
-    C --> D([Behavior change\nno deploy needed])
+    A([Operator]) -->|"Updates config doc<br>via Console or API"| B[("Firestore<br>pipeline_config")]
+    B -->|"Read at run start<br>with 5-min TTL cache"| C[Pipeline run]
+    C --> D([Behavior change<br>no deploy needed])
 ```
 
 #### Config document structure
@@ -281,10 +281,10 @@ Use this architecture when inbound throughput exceeds Firestore's direct write c
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
 flowchart LR
-    P["Producers\n(IoT / APIs)"] --> T[Pub/Sub Topic]
-    T --> D["Dataflow\n(Apache Beam streaming)"]
-    D --> F["Firestore\nhot / live reads"]
-    D --> B["BigQuery\ncold / OLAP analytics"]
+    P["Producers<br>(IoT / APIs)"] --> T[Pub/Sub Topic]
+    T --> D["Dataflow<br>(Apache Beam streaming)"]
+    D --> F["Firestore<br>hot / live reads"]
+    D --> B["BigQuery<br>cold / OLAP analytics"]
     style F fill:#16161e,stroke:#7aa2f7,color:#c0caf5
     style B fill:#16161e,stroke:#e0af68,color:#c0caf5
 ```

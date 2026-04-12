@@ -208,11 +208,11 @@ End-to-end flow from scheduled trigger through ingestion, raw storage, dbt trans
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    CS[Cloud Scheduler\n3 cron jobs] -->|trigger| CRJ[Cloud Run Jobs\n3 ingestion jobs\n1 vCPU / 2 GB / 5 min]
-    CRJ -->|write raw JSON| GCS[(GCS\n50 GB Standard)]
-    GCS -->|dbt loads via\nexternal tables| BQ[(BigQuery\n100 GB storage\n500 GB scanned/mo)]
-    BQ -->|Looker Studio\nconnection| DASH[Dashboards]
-    SM[Secret Manager\n5 secrets] -.->|API keys| CRJ
+    CS[Cloud Scheduler<br>3 cron jobs] -->|trigger| CRJ[Cloud Run Jobs<br>3 ingestion jobs<br>1 vCPU / 2 GB / 5 min]
+    CRJ -->|write raw JSON| GCS[(GCS<br>50 GB Standard)]
+    GCS -->|dbt loads via<br>external tables| BQ[(BigQuery<br>100 GB storage<br>500 GB scanned/mo)]
+    BQ -->|Looker Studio<br>connection| DASH[Dashboards]
+    SM[Secret Manager<br>5 secrets] -.->|API keys| CRJ
 ```
 
 ### Cost Optimization Tips — Small Tier
@@ -352,16 +352,16 @@ Two-VM architecture with Cloud NAT for external API access. Airflow orchestrates
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    EXT1[REST APIs] -->|HTTPS via Cloud NAT| CRJ[Cloud Run Job\nIngestion\nor Airflow task]
+    EXT1[REST APIs] -->|HTTPS via Cloud NAT| CRJ[Cloud Run Job<br>Ingestion<br>or Airflow task]
     EXT2[SFTP Server] -->|SFTP via Cloud NAT| CRJ
-    CRJ -->|raw files| GCS[(GCS\n100 GB\nLanding Zone)]
-    GCS -->|Airflow DAG\nloads bronze| SQLVM[(SQL Server VM\ne2-standard-4\n200 GB SSD\nBronze/Silver/Gold)]
-    AIRFLOW[Airflow VM\ne2-standard-2\n50 GB SSD] -->|orchestrates| CRJ
+    CRJ -->|raw files| GCS[(GCS<br>100 GB<br>Landing Zone)]
+    GCS -->|Airflow DAG<br>loads bronze| SQLVM[(SQL Server VM<br>e2-standard-4<br>200 GB SSD<br>Bronze/Silver/Gold)]
+    AIRFLOW[Airflow VM<br>e2-standard-2<br>50 GB SSD] -->|orchestrates| CRJ
     AIRFLOW -->|orchestrates| SQLVM
-    SQLVM -->|gold layer export\nvia bq load| BQ[(BigQuery\n500 GB storage\n2 TB scanned/mo)]
+    SQLVM -->|gold layer export<br>via bq load| BQ[(BigQuery<br>500 GB storage<br>2 TB scanned/mo)]
     BQ -->|analytics| DASH[Dashboards]
-    NAT[Cloud NAT\n1 gateway] -.->|outbound internet| CRJ
-    SNAP[Daily Snapshots\n200 GB] -.->|backup| SQLVM
+    NAT[Cloud NAT<br>1 gateway] -.->|outbound internet| CRJ
+    SNAP[Daily Snapshots<br>200 GB] -.->|backup| SQLVM
 ```
 
 ### Paused vs Running Cost Comparison
@@ -578,33 +578,33 @@ flowchart TD
     end
 
     subgraph Orchestration
-        COMP[Cloud Composer\nManaged Airflow\n~$316/mo]
+        COMP[Cloud Composer<br>Managed Airflow<br>~$316/mo]
     end
 
     subgraph Ingestion
-        CRJ[Cloud Run Jobs\n10 jobs / daily\n1 vCPU / 2 GB]
-        PS[Pub/Sub\n100 GB/mo]
+        CRJ[Cloud Run Jobs<br>10 jobs / daily<br>1 vCPU / 2 GB]
+        PS[Pub/Sub<br>100 GB/mo]
     end
 
     subgraph Storage
-        GCS[(GCS\n500 GB\nStandard + Nearline)]
-        SQLVM[(SQL Server VM\nn2-standard-8\n500 GB SSD)]
+        GCS[(GCS<br>500 GB<br>Standard + Nearline)]
+        SQLVM[(SQL Server VM<br>n2-standard-8<br>500 GB SSD)]
     end
 
     subgraph Analytics
-        BQ[(BigQuery\n2 TB storage\n10 TB scanned/mo)]
+        BQ[(BigQuery<br>2 TB storage<br>10 TB scanned/mo)]
     end
 
     subgraph Serving
-        CRS[Cloud Run Services\n2 services\nbehind LB]
-        LB[HTTP LB\n$18/mo]
+        CRS[Cloud Run Services<br>2 services<br>behind LB]
+        LB[HTTP LB<br>$18/mo]
         DASH[Dashboards]
     end
 
     subgraph Ops
-        DD[Datadog\n2 hosts + APM]
-        LOG[Cloud Logging\n50 GB/mo]
-        NAT[Cloud NAT\n$33/mo]
+        DD[Datadog<br>2 hosts + APM]
+        LOG[Cloud Logging<br>50 GB/mo]
+        NAT[Cloud NAT<br>$33/mo]
     end
 
     API -->|via NAT| CRJ

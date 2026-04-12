@@ -57,10 +57,10 @@ IAM has three role types:
 flowchart TD
     ORG[Organization] --> FOLDER[Folder]
     FOLDER --> PROJECT[Project]
-    PROJECT --> RESOURCE[Resource\nBigQuery dataset · GCS bucket · Secret]
-    IDENTITY[Identity\nservice account · user · group] -->|bound via| BINDING[IAM Binding\non project or resource]
-    BINDING --> ROLE[IAM Role\npredefined · custom · basic]
-    ROLE --> PERMS[Permissions\nbigquery.tables.get\nstorage.objects.create\n...]
+    PROJECT --> RESOURCE[Resource<br>BigQuery dataset · GCS bucket · Secret]
+    IDENTITY[Identity<br>service account · user · group] -->|bound via| BINDING[IAM Binding<br>on project or resource]
+    BINDING --> ROLE[IAM Role<br>predefined · custom · basic]
+    ROLE --> PERMS[Permissions<br>bigquery.tables.get<br>storage.objects.create<br>...]
     PROJECT --> BINDING
     RESOURCE --> BINDING
 ```
@@ -344,10 +344,10 @@ gs://data-platform-prod-processed/
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    SA[Service Account\ndata-pipeline@...] -->|roles/bigquery.dataEditor\nroles/bigquery.jobUser| BQ[BigQuery\nDatasets & Tables]
-    SA -->|roles/storage.objectAdmin\non specific buckets| GCS[Cloud Storage\nBuckets]
-    SA -->|roles/run.invoker| CR[Cloud Run\nJobs & Services]
-    SA -->|roles/secretmanager.secretAccessor| SM[Secret Manager\nSecrets]
+    SA[Service Account<br>data-pipeline@...] -->|roles/bigquery.dataEditor<br>roles/bigquery.jobUser| BQ[BigQuery<br>Datasets & Tables]
+    SA -->|roles/storage.objectAdmin<br>on specific buckets| GCS[Cloud Storage<br>Buckets]
+    SA -->|roles/run.invoker| CR[Cloud Run<br>Jobs & Services]
+    SA -->|roles/secretmanager.secretAccessor| SM[Secret Manager<br>Secrets]
     CR -->|attached SA at deploy time| SA
 ```
 

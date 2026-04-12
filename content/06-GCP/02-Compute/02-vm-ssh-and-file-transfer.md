@@ -179,8 +179,8 @@ When `--tunnel-through-iap` is set, `gcloud` opens an IAP-encrypted WebSocket to
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    A["Your Machine\ngcloud compute ssh"] -->|"IAM auth\nWebSocket"| B["Google IAP Proxy\ntunnel.cloudproxy.app"]
-    B -->|"Internal\nGCP network"| C["VM\nprivate IP only\nport 22"]
+    A["Your Machine<br>gcloud compute ssh"] -->|"IAM auth<br>WebSocket"| B["Google IAP Proxy<br>tunnel.cloudproxy.app"]
+    B -->|"Internal<br>GCP network"| C["VM<br>private IP only<br>port 22"]
     style A fill:#292e42,stroke:#565f89
     style B fill:#24283b,stroke:#7aa2f7
     style C fill:#292e42,stroke:#565f89

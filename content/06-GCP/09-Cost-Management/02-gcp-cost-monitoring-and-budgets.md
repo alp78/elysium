@@ -46,14 +46,14 @@ status: complete
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    BA[Billing Account] -->|Standard Export| BQ1[BigQuery\nbilling_export table]
-    BA -->|Detailed Export| BQ2[BigQuery\nbilling_export_resource table]
+    BA[Billing Account] -->|Standard Export| BQ1[BigQuery<br>billing_export table]
+    BA -->|Detailed Export| BQ2[BigQuery<br>billing_export_resource table]
     BA -->|Budget threshold| PS[Pub/Sub topic]
-    PS -->|trigger| CF[Cloud Function\nautomated enforcement]
-    BQ1 --> LS[Looker Studio\nDashboard]
-    BQ1 --> GF[Grafana\nBigQuery plugin]
+    PS -->|trigger| CF[Cloud Function<br>automated enforcement]
+    BQ1 --> LS[Looker Studio<br>Dashboard]
+    BQ1 --> GF[Grafana<br>BigQuery plugin]
     BQ2 --> LS
-    BQ1 --> AD[Anomaly Detection\nCloud Run Job]
+    BQ1 --> AD[Anomaly Detection<br>Cloud Run Job]
     AD -->|alert| SL[Slack / Email]
 ```
 
@@ -329,13 +329,13 @@ The full automation pattern: budget fires a Pub/Sub message, Cloud Function reac
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    B[Budget\n100% threshold crossed] -->|publishes message| PS[Pub/Sub topic\nbilling-alerts]
-    PS -->|triggers| CF[Cloud Function\nstop-vms-on-budget]
-    CF --> DEC{costAmount\n>= budgetAmount?}
+    B[Budget<br>100% threshold crossed] -->|publishes message| PS[Pub/Sub topic<br>billing-alerts]
+    PS -->|triggers| CF[Cloud Function<br>stop-vms-on-budget]
+    CF --> DEC{costAmount<br>>= budgetAmount?}
     DEC -->|No| LOG[Log: no action]
     DEC -->|Yes| LIST[List all zones]
     LIST --> INST[Iterate instances]
-    INST --> SKIP{auto-shutdown\nlabel = false?}
+    INST --> SKIP{auto-shutdown<br>label = false?}
     SKIP -->|Yes| NEXT[Skip instance]
     SKIP -->|No| STOP[Stop RUNNING instance]
 ```

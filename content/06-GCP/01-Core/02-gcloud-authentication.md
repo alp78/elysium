@@ -36,12 +36,12 @@ There are three authentication flows: interactive login for humans, Application 
 }}}%%
 flowchart TD
     A["Which authentication method?"] --> B{"Environment"}
-    B -- "Local dev\n(human user)" --> C["gcloud auth login\n+ application-default login"]
-    B -- "CI/CD pipeline" --> D{"GCP-hosted or\nOIDC provider?"}
-    D -- Yes --> E["Workload Identity Federation\n(no key files)"]
-    D -- No --> F["gcloud auth activate-service-account\n--key-file=key.json"]
-    B -- "GCE VM / Cloud Run\n/ GKE Pod" --> G["GCE Metadata Server\n(automatic — no setup)"]
-    B -- "Non-GCP env\nno OIDC support" --> F
+    B -- "Local dev<br>(human user)" --> C["gcloud auth login<br>+ application-default login"]
+    B -- "CI/CD pipeline" --> D{"GCP-hosted or<br>OIDC provider?"}
+    D -- Yes --> E["Workload Identity Federation<br>(no key files)"]
+    D -- No --> F["gcloud auth activate-service-account<br>--key-file=key.json"]
+    B -- "GCE VM / Cloud Run<br>/ GKE Pod" --> G["GCE Metadata Server<br>(automatic — no setup)"]
+    B -- "Non-GCP env<br>no OIDC support" --> F
 ```
 
 ## Authentication Commands
@@ -258,13 +258,13 @@ When application code calls a GCP client library, the library calls `google.auth
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["google.auth.default()"] --> B{"GOOGLE_APPLICATION_CREDENTIALS\nenv var set?"}
-    B -- Yes --> C["JSON key file\nfrom env path"]
-    B -- No --> D{"ADC file exists?\n~/.config/gcloud/\napplication_default_credentials.json"}
-    D -- Yes --> E["gcloud ADC\ngcloud auth application-default login"]
-    D -- No --> F{"Running on GCE /\nCloud Run / GKE?"}
-    F -- Yes --> G["GCE Metadata Server\n(automatic)"]
-    F -- No --> H["AuthenticationError\nNo credentials found"]
+    A["google.auth.default()"] --> B{"GOOGLE_APPLICATION_CREDENTIALS<br>env var set?"}
+    B -- Yes --> C["JSON key file<br>from env path"]
+    B -- No --> D{"ADC file exists?<br>~/.config/gcloud/<br>application_default_credentials.json"}
+    D -- Yes --> E["gcloud ADC<br>gcloud auth application-default login"]
+    D -- No --> F{"Running on GCE /<br>Cloud Run / GKE?"}
+    F -- Yes --> G["GCE Metadata Server<br>(automatic)"]
+    F -- No --> H["AuthenticationError<br>No credentials found"]
     C --> I["Authenticated"]
     E --> I
     G --> I

@@ -25,14 +25,14 @@ Cloud Monitoring captures time-series metrics for every GCP resource. When your 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#7aa2f7","primaryTextColor": "#c0caf5","primaryBorderColor": "#565f89","lineColor": "#565f89","secondaryColor": "#1a1b26","tertiaryColor": "#24283b","background": "#1a1b26","mainBkg": "#24283b","nodeBorder": "#565f89","clusterBkg": "#1a1b26","titleColor": "#c0caf5","edgeLabelBackground": "#1a1b26","attributeBackgroundColorEven": "#1a1b26","attributeBackgroundColorOdd": "#24283b"}}}%%
 flowchart TD
-    VMs["Compute Engine VMs"] -->|cpu/utilization| CM["Cloud Monitoring\nTime-Series Store"]
+    VMs["Compute Engine VMs"] -->|cpu/utilization| CM["Cloud Monitoring<br>Time-Series Store"]
     CR["Cloud Run Jobs"] -->|job/completed_task_attempt_count| CM
     PS["Pub/Sub Subscriptions"] -->|num_undelivered_messages| CM
-    BQ["BigQuery"] -->|"query/count\nslots/total_available"| CM
-    CM --> AP["Alerting Policies\nthreshold / anomaly"]
+    BQ["BigQuery"] -->|"query/count<br>slots/total_available"| CM
+    CM --> AP["Alerting Policies<br>threshold / anomaly"]
     CM --> DB["Dashboards"]
-    CM --> CLI["gcloud monitoring\ntime-series list"]
-    AP --> NC["Notification Channels\nemail · PagerDuty · Slack · Pub/Sub"]
+    CM --> CLI["gcloud monitoring<br>time-series list"]
+    AP --> NC["Notification Channels<br>email · PagerDuty · Slack · Pub/Sub"]
 ```
 
 ## Listing Available Metric Types

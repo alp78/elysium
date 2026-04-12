@@ -138,15 +138,15 @@ Restoration requires creating a new disk from the snapshot, then reattaching it 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A[Snapshot exists] --> B["gcloud compute disks create\n--source-snapshot=SNAPSHOT"]
+    A[Snapshot exists] --> B["gcloud compute disks create<br>--source-snapshot=SNAPSHOT"]
     B --> C[New disk created]
     C --> D["gcloud compute instances stop VM"]
-    D --> E["gcloud compute instances detach-disk\nold disk"]
-    E --> F["gcloud compute instances attach-disk\nnew restored disk"]
+    D --> E["gcloud compute instances detach-disk<br>old disk"]
+    E --> F["gcloud compute instances attach-disk<br>new restored disk"]
     F --> G["gcloud compute instances start VM"]
     G --> H{Validate data integrity}
     H -->|OK| I[Delete old disk]
-    H -->|Fail| J["Re-attach old disk\nand investigate"]
+    H -->|Fail| J["Re-attach old disk<br>and investigate"]
 ```
 
 #### gcloud | Create a new disk from a snapshot

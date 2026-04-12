@@ -157,15 +157,15 @@ Firestore organizes data hierarchically. Each level in the tree is distinct — 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    DB["🗄️ Firestore Database\n(default) or named"]
-    C1["📁 Collection\n/pipelines"]
-    C2["📁 Collection\n/config"]
-    D1["📄 Document\n/pipelines/daily-ingest"]
-    D2["📄 Document\n/pipelines/hourly-sync"]
-    D3["📄 Document\n/config/daily-ingest"]
-    SC["📁 Subcollection\n/pipelines/daily-ingest/runs"]
-    SD1["📄 Document\n/runs/2026-03-22T06:00:00Z"]
-    SD2["📄 Document\n/runs/2026-03-22T18:00:00Z"]
+    DB["🗄️ Firestore Database<br>(default) or named"]
+    C1["📁 Collection<br>/pipelines"]
+    C2["📁 Collection<br>/config"]
+    D1["📄 Document<br>/pipelines/daily-ingest"]
+    D2["📄 Document<br>/pipelines/hourly-sync"]
+    D3["📄 Document<br>/config/daily-ingest"]
+    SC["📁 Subcollection<br>/pipelines/daily-ingest/runs"]
+    SD1["📄 Document<br>/runs/2026-03-22T06:00:00Z"]
+    SD2["📄 Document<br>/runs/2026-03-22T18:00:00Z"]
 
     DB --> C1
     DB --> C2
@@ -1568,17 +1568,17 @@ Use the following rules to select the right storage service. When multiple crite
 }}}%%
 flowchart TD
     START["What is your primary need?"]
-    Q1{"Real-time listeners\nor push updates?"}
-    Q2{"SQL analytics on\nlarge datasets?"}
-    Q3{"ACID transactions\nwith foreign keys?"}
-    Q4{"High-throughput\ntime-series writes\n(>10 GB/s)?"}
-    Q5{"Pipeline state,\nconfig, or flags?"}
+    Q1{"Real-time listeners<br>or push updates?"}
+    Q2{"SQL analytics on<br>large datasets?"}
+    Q3{"ACID transactions<br>with foreign keys?"}
+    Q4{"High-throughput<br>time-series writes<br>(>10 GB/s)?"}
+    Q5{"Pipeline state,<br>config, or flags?"}
 
-    FS["✅ Firestore\nReal-time, schemaless,\nfully serverless"]
-    BQ["✅ BigQuery\nAnalytics, reporting,\nper-bytes-scanned cost"]
-    SQL["✅ Cloud SQL\nPostgreSQL / MySQL,\nACID, FK constraints"]
-    BT["✅ Bigtable\nIoT, time-series,\nwide-row column store"]
-    FS2["✅ Firestore\nPurpose-built for\noperational state"]
+    FS["✅ Firestore<br>Real-time, schemaless,<br>fully serverless"]
+    BQ["✅ BigQuery<br>Analytics, reporting,<br>per-bytes-scanned cost"]
+    SQL["✅ Cloud SQL<br>PostgreSQL / MySQL,<br>ACID, FK constraints"]
+    BT["✅ Bigtable<br>IoT, time-series,<br>wide-row column store"]
+    FS2["✅ Firestore<br>Purpose-built for<br>operational state"]
 
     START --> Q1
     Q1 -->|Yes| FS
