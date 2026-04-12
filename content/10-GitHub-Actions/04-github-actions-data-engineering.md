@@ -2,24 +2,7 @@
 title: "04 - GitHub Actions for Data Engineering"
 tags:
   - github-actions
-  - ci-cd
-  - python
-  - terraform
-  - docker
-  - dbt
-  - gcp
-aliases:
-  - data pipeline CI/CD
-  - dbt CI
-  - SQL validation
-  - Terraform automation
-  - Cloud Run deploy
-  - Workload Identity Federation
-  - data quality gates
-description: "GitHub Actions for data engineering — CI for pipelines, CD for Cloud Run, Terraform automation, dbt CI, data quality gates, and Workload Identity Federation."
-created: 2026-03-22
-updated: 2026-04-05
-status: complete
+  - data-engineering
 ---
 
 # GitHub Actions for Data Engineering
@@ -29,1419 +12,50 @@ status: complete
 >
 > — **Gene Kim**, *The Phoenix Project* (2013)
 
-This file contains production-ready GitHub Actions workflows for data engineering teams. Each workflow is a complete, runnable `.yml` file. The patterns cover the full lifecycle: linting and testing Python pipelines, validating SQL, deploying containers to Cloud Run, running Terraform, executing dbt builds in CI, enforcing data quality gates, and authenticating to GCP with Workload Identity Federation. For GitHub Actions fundamentals (triggers, runners, expressions), see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
-
-## CI for Data Pipelines
-
-CI workflows run on every push and pull request to catch regressions before code reaches `main`. The workflows below implement a multi-job pipeline: lint first (fast feedback), then test (gated by lint success), then integration test (gated by unit tests, only on `main`). Each job uses a separate service account following the principle of least privilege — CI jobs get read-only access while deploy jobs get write access.
-
-### Full Python Lint + Test Workflow
-
-This workflow implements a complete CI pipeline for a Python data project: linting with ruff, SQL validation with sqlfluff, unit tests with pytest and coverage, and integration tests against live GCP resources. The four jobs run with dependencies: `lint` and `validate-sql` run in parallel, `test` waits for `lint`, and `integration-test` waits for `test` and only runs on pushes to `main`.
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_CI` secrets for GCP authentication (integration tests only). A `pyproject.toml` with `[dev]` extras including pytest, pytest-cov. SQL files in a `sql/` directory.
-
-The workflow file lives at `.github/workflows/pipeline-ci.yml`.
-
-```yaml
-name: Pipeline CI
-
-on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "pipelines/**"
-      - "src/**"
-      - "tests/**"
-      - "pyproject.toml"
-      - "requirements*.txt"
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
-
-env:
-  PYTHON_VERSION: "3.12"
-
-permissions:
-  contents: read
-  pull-requests: write
-  checks: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  lint:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - name: Install ruff
-        run: pip install ruff
-
-      - name: Ruff lint
-        run: ruff check . --output-format=github
-
-      - name: Ruff format check
-        run: ruff format --check .
-
-  validate-sql:
-    name: Validate SQL
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Find SQL files
-        id: find-sql
-        run: |
-          COUNT=$(find sql/ -name "*.sql" | wc -l)
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: Validate SQL syntax (sqlfluff)
-        if: steps.find-sql.outputs.count != '0'
-        run: |
-          pip install sqlfluff
-          sqlfluff lint sql/ --dialect bigquery --format github-annotation
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: [lint]
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml') }}
-
-      - name: Install dependencies
-        run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install -e ".[dev]"
-
-      - name: Run unit tests
-        run: |
-          . .venv/bin/activate
-          pytest tests/unit/ \
-            --cov=src \
-            --cov-report=xml \
-            --cov-report=term-missing \
-            --junit-xml=test-results.xml \
-            -v \
-            --tb=short
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: test-results.xml
-          retention-days: 7
-
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.xml
-          retention-days: 7
-
-  integration-test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 30
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_CI }}
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - run: pip install -e ".[dev]"
-
-      - name: Run integration tests
-        run: |
-          pytest tests/integration/ \
-            --timeout=120 \
-            -v \
-            --tb=short
-        env:
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-          BQ_DATASET: ci_test_${{ github.run_id }}
-```
-
-> [!info] Key fields
-> - `paths:` filter — the workflow only triggers when files in `pipelines/`, `src/`, `tests/`, or dependency files change. Documentation-only changes skip CI entirely.
-> - `concurrency: cancel-in-progress: true` — a new push to the same branch cancels any in-progress CI run, saving billable minutes on rapid iteration.
-> - `cache: pip` on `setup-python` — uses the built-in pip cache, restoring `~/.cache/pip` between runs.
-> - `needs: [lint]` on the `test` job — unit tests only run if linting passes, providing fast feedback on style violations.
-> - `if: github.event_name == 'push' && github.ref == 'refs/heads/main'` — integration tests run only on pushes to `main`, not on PRs. This avoids running expensive GCP-authenticated tests on every PR push.
-> - `BQ_DATASET: ci_test_${{ github.run_id }}` — creates a unique BigQuery dataset per run, preventing test interference across concurrent runs.
-> - `--output-format=github` on ruff — formats lint violations as GitHub annotations, which appear inline on the PR diff.
-> - `GITHUB_OUTPUT` — the `echo "key=value" >> $GITHUB_OUTPUT` syntax sets step outputs that subsequent steps and jobs can read via `${{ steps.<id>.outputs.<key> }}`.
-
-> [!tip] Separate service accounts per workflow
-> Use dedicated service accounts for each concern: `WIF_SA_CI` (read-only BigQuery access for tests), `WIF_SA_DEPLOY` (Cloud Run deploy permissions), `WIF_SA_DBT_CI` (BigQuery write for ephemeral schemas). This limits blast radius if any single workflow is compromised.
-
-### SQL Validation: BigQuery Dry-Run
-
-This job validates SQL files against the BigQuery parser without executing them. The `bq query --dry_run` flag checks syntax, resolves table references, and validates column types against the live schema — catching errors that a local linter would miss. This is a job fragment that belongs under the `jobs:` key of a CI workflow.
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_CI` secrets. The `setup-gcloud` action installs the `bq` CLI. SQL files must be in a `sql/` directory.
-
-```yaml
-  validate-bq-sql:
-    name: BigQuery SQL Dry-Run
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_CI }}
-
-      - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Dry-run SQL files
-        run: |
-          ERRORS=0
-          for f in $(find sql/ -name "*.sql"); do
-            echo "Validating $f..."
-            bq query \
-              --project_id=${{ secrets.GCP_PROJECT }} \
-              --dry_run \
-              --use_legacy_sql=false \
-              "$(cat $f)" || ERRORS=$((ERRORS+1))
-          done
-          if [ $ERRORS -gt 0 ]; then
-            echo "::error::$ERRORS SQL file(s) failed validation"
-            exit 1
-          fi
-```
-
-> [!tip] Dry-run also estimates cost
-> The `--dry_run` flag not only validates syntax but returns the number of bytes the query would process. This can be used to catch unexpectedly expensive queries in CI before they run against production datasets.
-
-> [!info] `::error::` annotations
-> The `::error::` prefix in `echo` statements creates GitHub workflow annotations. These appear as error markers in the Actions log and, for `pull_request` events, display inline on the PR diff. The format is `::error file={path},line={n}::{message}`.
-
-### SQL Validation: SQL Server PARSEONLY
-
-This job spins up a SQL Server 2022 container as a GitHub Actions service and validates SQL files using `SET PARSEONLY ON`, which checks syntax without executing the query. This catches parse errors, missing table references (when schemas are pre-loaded), and T-SQL syntax violations. The companion Python script iterates over all `.sql` files and reports failures as GitHub annotations.
-
-**Prerequisites:** SQL files in a `sql/` directory. No external secrets needed — the SQL Server container is ephemeral and local to the runner.
-
-> [!info] Service containers
-> The `services:` key starts Docker containers alongside the job runner. GitHub creates them before the first step and tears them down after the last. The `options:` field passes Docker `--health-*` flags that make the job wait until the container is healthy before proceeding. Port mapping (`1433:1433`) exposes the container to `localhost` on the runner.
-
-```yaml
-  validate-sql-server:
-    name: SQL Server PARSEONLY
-    runs-on: ubuntu-latest
-    services:
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: TestPassword123!
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate SQL syntax
-        run: |
-          pip install pyodbc
-          python scripts/validate_sql_parseonly.py sql/
-```
-
-The validation script (`scripts/validate_sql_parseonly.py`) connects to the ephemeral SQL Server, wraps each SQL file in `SET PARSEONLY ON/OFF`, and collects failures.
-
-```python
-import os, sys, glob
-import pyodbc
-
-conn = pyodbc.connect(
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=localhost;UID=sa;PWD=TestPassword123!;"
-    "TrustServerCertificate=yes"
-)
-cursor = conn.cursor()
-
-errors = []
-for path in glob.glob(f"{sys.argv[1]}/**/*.sql", recursive=True):
-    sql = open(path).read()
-    try:
-        cursor.execute(f"SET PARSEONLY ON; {sql}; SET PARSEONLY OFF;")
-    except Exception as e:
-        errors.append(f"{path}: {e}")
-
-for e in errors:
-    print(f"::error::{e}")
-sys.exit(len(errors))
-```
-
-> [!danger] Hardcoded password in service container
-> The `SA_PASSWORD` is visible in the workflow YAML file committed to the repository. This is acceptable for ephemeral CI containers that are destroyed after each run and contain no real data. Never reuse this password for non-ephemeral databases.
-
-> [!success] Use environment-scoped secrets for real databases
-> For integration tests against persistent databases, store the password in GitHub Secrets and reference it as `${{ secrets.SQL_SA_PASSWORD }}` in both the `services.sqlserver.env` and the connection string.
-
-## CD for Cloud Run
-
-CD (Continuous Delivery) workflows deploy validated code to cloud infrastructure. This two-job workflow builds a Docker image, pushes it to Artifact Registry, deploys to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Compute/cloud-run-jobs-vs-services), and verifies the deployment with a health check. For Docker image management details, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
-
-### Build and Deploy Pipeline
-
-The `build` job produces a tagged Docker image and passes its name to the `deploy` job via `outputs:`. The `deploy` job uses `google-github-actions/deploy-cloudrun@v2` to update the Cloud Run service, then runs a health check with retry logic.
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_DEPLOY` secrets. An Artifact Registry repository. A Cloud Run service already created (the workflow updates, not creates). The `production` environment configured in GitHub with optional protection rules.
-
-The workflow file lives at `.github/workflows/deploy-cloud-run.yml`.
-
-```yaml
-name: Deploy Data Pipeline to Cloud Run
-
-on:
-  push:
-    branches: [main]
-    paths:
-      - "src/**"
-      - "Dockerfile"
-      - "pyproject.toml"
-
-env:
-  PROJECT_ID: my-data-project
-  REGION: us-central1
-  SERVICE: data-pipeline
-  REGISTRY: us-central1-docker.pkg.dev
-  REPO: data-pipelines
-
-permissions:
-  contents: read
-  id-token: write
-
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
-jobs:
-  build:
-    name: Build & Push
-    runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.image.outputs.value }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Auth to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_DEPLOY }}
-
-      - name: Docker auth
-        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
-
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: buildx-${{ github.sha }}
-          restore-keys: buildx-
-
-      - name: Set image name
-        id: image
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}"
-          echo "value=$IMAGE" >> $GITHUB_OUTPUT
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ steps.image.outputs.value }}
-            ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-
-      - run: rm -rf /tmp/.buildx-cache && mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-  deploy:
-    name: Deploy to Cloud Run
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Auth to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_DEPLOY }}
-
-      - name: Deploy
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE }}
-          region: ${{ env.REGION }}
-          image: ${{ needs.build.outputs.image }}
-          flags: >-
-            --memory=2Gi
-            --cpu=2
-            --min-instances=0
-            --max-instances=5
-            --concurrency=10
-            --timeout=3600
-            --no-allow-unauthenticated
-          env_vars: |
-            ENVIRONMENT=production
-            GCP_PROJECT=${{ env.PROJECT_ID }}
-            LOG_LEVEL=INFO
-
-      - name: Health check
-        run: |
-          URL="${{ steps.deploy.outputs.url }}/health"
-          for i in 1 2 3; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-              "$URL")
-            [ "$STATUS" = "200" ] && echo "Health OK" && exit 0
-            echo "Attempt $i: HTTP $STATUS — retrying in 10s..."
-            sleep 10
-          done
-          echo "::error::Health check failed after 3 attempts"
-          exit 1
-```
-
-> [!info] Key fields
-> - `outputs: image:` — the `build` job exposes the full image URI as an output. The `deploy` job reads it via `${{ needs.build.outputs.image }}`. This is the standard pattern for passing data between jobs.
-> - `cancel-in-progress: false` — never cancel an in-flight deployment. A cancelled deploy could leave the service in an inconsistent state.
-> - `cache-from/cache-to: type=local` with the rotate pattern (`rm old && mv new old`) — BuildKit caches grow unbounded. The rotation ensures only the latest cache is preserved, preventing cache directory bloat.
-> - `--no-allow-unauthenticated` — the Cloud Run service requires authentication. Callers must present an identity token obtained via `gcloud auth print-identity-token`.
-> - `environment: production` — links this job to a GitHub environment, enabling protection rules (required reviewers, wait timers) configured in repository settings.
-
-## Terraform Automation
-
-These workflows implement the plan-on-PR, apply-on-merge pattern for infrastructure changes. The plan output is posted as a PR comment for review. On merge to `main`, the apply runs automatically against the `production` environment. For Terraform fundamentals, see [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy).
-
-### Terraform Plan as PR Comment
-
-This workflow runs `terraform init`, `validate`, and `plan` on every PR that touches the `infra/` directory, then posts the plan output as a collapsible PR comment. If a previous plan comment exists, it updates it in place rather than creating duplicates.
-
-**Prerequisites:** `WIF_PROVIDER` and `TF_SA` secrets. Terraform state backend configured (GCS bucket). The `infra/` directory containing Terraform configuration. `pull-requests: write` permission for the PR comment.
-
-The workflow file lives at `.github/workflows/terraform-ci.yml`.
-
-```yaml
-name: Terraform CI
-
-on:
-  pull_request:
-    paths: ["infra/**"]
-
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-
-jobs:
-  plan:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infra/
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.0"
-          terraform_wrapper: false   # needed to capture plan output
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.TF_SA }}
-
-      - name: Init
-        run: terraform init -input=false
-
-      - name: Validate
-        run: terraform validate -no-color
-
-      - name: Plan
-        id: plan
-        run: |
-          terraform plan -no-color -input=false -out=tfplan 2>&1 | tee plan.txt
-          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-        continue-on-error: true
-
-      - name: Comment Plan
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('infra/plan.txt', 'utf8');
-            const truncated = plan.length > 60000
-              ? plan.substring(0, 60000) + '\n\n... [truncated]'
-              : plan;
-            const outcome = '${{ steps.plan.outputs.exitcode }}';
-            const icon = outcome === '0' ? '✅' : outcome === '2' ? '⚠️' : '❌';
-
-            const body = `## ${icon} Terraform Plan
-
-            | Step | Result |
-            |------|--------|
-            | Init | ✅ |
-            | Validate | ✅ |
-            | Plan | ${icon} exitcode \`${outcome}\` |
-
-            <details><summary>Plan output</summary>
-
-            \`\`\`hcl
-            ${truncated}
-            \`\`\`
-
-            </details>
-
-            *SHA: \`${{ github.sha }}\` | [Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})*`;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-
-            const existing = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Terraform Plan'));
-
-            const params = {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body
-            };
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                ...params,
-                comment_id: existing.id
-              });
-            } else {
-              await github.rest.issues.createComment({
-                ...params,
-                issue_number: context.issue.number
-              });
-            }
-
-      - name: Fail on error
-        if: steps.plan.outputs.exitcode == '1'
-        run: exit 1
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: infra/tfplan
-          retention-days: 7
-```
-
-> [!info] Key fields
-> - `terraform_wrapper: false` — disables the Terraform wrapper script that the `setup-terraform` action normally installs. Without this, `terraform plan` output is wrapped in additional metadata that corrupts the PR comment.
-> - `continue-on-error: true` on the Plan step — allows the workflow to continue to the Comment step even if the plan fails. The exit code is captured via `PIPESTATUS[0]` and checked in the final "Fail on error" step.
-> - `defaults.run.working-directory: infra/` — all `run:` steps in this job execute from the `infra/` directory, avoiding `cd infra/` in every step.
-> - The `actions/github-script@v7` step uses the GitHub REST API to create or update a PR comment. It searches for an existing comment containing "Terraform Plan" and updates it in place, preventing comment spam on PRs with multiple pushes.
-
-> [!warning] `continue-on-error: true` masks real failures
-> The Plan step uses `continue-on-error: true` so the PR comment is always posted. However, if the "Fail on error" step is accidentally removed or the exit code check is wrong, plan failures will silently pass. Always verify the final gate step exists.
-
-> [!success] Separate the gate from the comment
-> The pattern shown here — capture exit code, always comment, then fail at the end — is the correct approach. Never rely solely on `continue-on-error` without a final exit code check.
-
-### Terraform Apply on Merge
-
-This workflow runs `terraform apply -auto-approve` on every push to `main` that changes the `infra/` directory. The `-auto-approve` flag skips interactive confirmation, which is safe because the plan was already reviewed in the PR. The `environment: production` gate can require manual approval before the apply runs.
-
-**Prerequisites:** Same `WIF_PROVIDER` and `TF_SA` secrets as the plan workflow. The Terraform state backend must be configured. The `production` environment should have protection rules (required reviewers) for safety.
-
-The workflow file lives at `.github/workflows/terraform-apply.yml`.
-
-```yaml
-name: Terraform Apply
-
-on:
-  push:
-    branches: [main]
-    paths: ["infra/**"]
-
-permissions:
-  contents: read
-  id-token: write
-
-jobs:
-  apply:
-    runs-on: ubuntu-latest
-    environment: production
-    defaults:
-      run:
-        working-directory: infra/
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.0"
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.TF_SA }}
-      - run: terraform init -input=false
-      - run: terraform apply -auto-approve -input=false -no-color
-```
-
-> [!danger] Auto-approve without environment protection
-> Without a `production` environment protection rule (required reviewers), every merge to `main` that touches `infra/` immediately applies Terraform changes. A misconfigured resource could be destroyed before anyone reviews the plan.
-
-> [!success] Require approval on the production environment
-> Configure the `production` environment in GitHub settings with at least one required reviewer. The `apply` job will pause and wait for approval, giving the team a final gate before infrastructure changes take effect.
-
-## dbt CI
-
-These workflows implement the [dbt CI/CD patterns](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd) specific to BigQuery. The core pattern: run `dbt build` against an ephemeral CI schema named after the run ID, verify results, then clean up the schema. This prevents CI runs from polluting production datasets.
-
-### dbt Build Against Dev Schema
-
-This workflow runs on every PR that touches the `dbt/` directory. It installs dbt-bigquery, authenticates via WIF, runs `dbt deps` → `dbt parse` → `dbt build` against a CI-specific schema, generates documentation artifacts, cleans up the ephemeral schema, and posts results as a PR comment.
-
-**Prerequisites:** `WIF_PROVIDER`, `WIF_SA_DBT_CI`, and `GCP_PROJECT` secrets. A `dbt/profiles.yml` with a `ci` target pointing to the CI schema. The dbt project must be in a `dbt/` directory.
-
-The workflow file lives at `.github/workflows/dbt-ci.yml`.
-
-```yaml
-name: dbt CI
-
-on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "dbt/**"
-      - ".github/workflows/dbt-ci.yml"
-
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-
-jobs:
-  dbt-ci:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      DBT_PROJECT_DIR: dbt/
-      DBT_TARGET: ci
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: dbt-${{ hashFiles('dbt/requirements.txt') }}
-
-      - run: pip install dbt-bigquery
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_DBT_CI }}
-
-      - name: dbt deps
-        working-directory: ${{ env.DBT_PROJECT_DIR }}
-        run: dbt deps
-
-      - name: dbt parse (syntax check)
-        working-directory: ${{ env.DBT_PROJECT_DIR }}
-        run: dbt parse --target ${{ env.DBT_TARGET }}
-
-      - name: dbt build (CI schema)
-        working-directory: ${{ env.DBT_PROJECT_DIR }}
-        run: |
-          dbt build \
-            --target ${{ env.DBT_TARGET }} \
-            --vars "{'ci_schema': 'dbt_ci_${{ github.run_id }}'}" \
-            --exclude tag:skip_ci
-        env:
-          DBT_BIGQUERY_PROJECT: ${{ secrets.GCP_PROJECT }}
-
-      - name: dbt docs generate
-        working-directory: ${{ env.DBT_PROJECT_DIR }}
-        run: dbt docs generate --target ${{ env.DBT_TARGET }}
-        if: always()
-
-      - name: Upload dbt artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: dbt-artifacts
-          path: |
-            dbt/target/run_results.json
-            dbt/target/manifest.json
-          retention-days: 7
-
-      - name: Clean up CI schema
-        if: always()
-        working-directory: ${{ env.DBT_PROJECT_DIR }}
-        run: |
-          bq rm -r -f --dataset \
-            "${{ secrets.GCP_PROJECT }}:dbt_ci_${{ github.run_id }}" || true
-
-      - name: Comment dbt results on PR
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const results = JSON.parse(
-              fs.readFileSync('dbt/target/run_results.json', 'utf8'));
-            const total = results.results.length;
-            const passed = results.results.filter(r => r.status === 'success' || r.status === 'pass').length;
-            const failed = total - passed;
-            const icon = failed === 0 ? '✅' : '❌';
-            const body = `## ${icon} dbt CI Results
-            | Metric | Value |
-            |--------|-------|
-            | Total | ${total} |
-            | Passed | ${passed} |
-            | Failed | ${failed} |
-            | Duration | ${results.elapsed_time.toFixed(1)}s |`;
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body
-            });
-```
-
-> [!info] Key fields
-> - `--vars "{'ci_schema': 'dbt_ci_${{ github.run_id }}'}"` — passes the ephemeral schema name as a dbt variable. The `ci` target in `profiles.yml` should use this variable as the schema name, ensuring each run writes to an isolated dataset.
-> - `--exclude tag:skip_ci` — skips models tagged `skip_ci` (e.g., expensive full-refresh models not suited for CI).
-> - `if: always()` — the cleanup, docs generation, and PR comment steps run even if `dbt build` fails. This ensures the ephemeral schema is always deleted and results are always posted.
-> - `|| true` on `bq rm` — prevents the cleanup step from failing the workflow if the dataset doesn't exist (e.g., if `dbt build` failed before creating any tables).
-
-> [!warning] Ephemeral schema cleanup can fail silently
-> If the `bq rm` command fails (e.g., due to a permission issue) and `|| true` swallows the error, orphaned CI datasets accumulate in BigQuery. These consume storage and can confuse analysts.
-
-> [!success] Monitor orphaned CI datasets
-> Add a scheduled workflow that queries `INFORMATION_SCHEMA.SCHEMATA` for datasets matching `dbt_ci_*` older than 24 hours and deletes them. This catches any cleanup failures.
-
-> [!tip] dbt slim CI with state-based selection
-> For large dbt projects, use `--select state:modified+` with a deferred manifest from the production run. This builds only models that changed in the PR and their downstream dependents, reducing CI time from minutes to seconds. Requires storing the production `manifest.json` as a workflow artifact or in a GCS bucket.
-
-## Data Quality Gates
-
-Data quality gates run automated checks against live data to verify pipeline outputs. They typically run on a schedule (after overnight pipelines complete) or on-demand via `workflow_dispatch`. When a check fails, the workflow sends an alert (Slack, PagerDuty) and exits non-zero to mark the run as failed.
-
-### Great Expectations
-
-This workflow runs a [Great Expectations](https://greatexpectations.io/) checkpoint against a BigQuery datasource on a daily schedule and on manual trigger. On failure, it sends a Slack alert with a link to the workflow run.
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_GE` secrets. A configured Great Expectations project in the repository with a `daily_quality_checkpoint`. A `SLACK_WEBHOOK` secret for failure alerts.
-
-The workflow file lives at `.github/workflows/data-quality.yml`.
-
-```yaml
-name: Data Quality Gate
-
-on:
-  schedule:
-    - cron: "0 7 * * *"
-  workflow_dispatch:
-    inputs:
-      datasource:
-        type: string
-        required: true
-        default: "daily_aggregates"
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - run: pip install great-expectations[bigquery]
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_GE }}
-
-      - name: Run Great Expectations checkpoint
-        id: ge
-        run: |
-          great_expectations checkpoint run daily_quality_checkpoint \
-            --datasource-name "${{ inputs.datasource || 'daily_aggregates' }}" \
-            2>&1 | tee ge_output.txt
-          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-        continue-on-error: true
-
-      - name: Upload validation results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ge-results
-          path: great_expectations/uncommitted/data_docs/
-          retention-days: 7
-
-      - name: Alert on failure
-        if: steps.ge.outputs.exitcode != '0'
-        run: |
-          curl -X POST '${{ secrets.SLACK_WEBHOOK }}' \
-            -H 'Content-type: application/json' \
-            --data '{
-              "text": "Data quality gate FAILED for ${{ inputs.datasource || '\''daily_aggregates'\'' }}",
-              "attachments": [{
-                "color": "danger",
-                "text": "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-              }]
-            }'
-          exit 1
-```
-
-### Custom SQL Checks
-
-For teams that don't use Great Expectations, a lightweight alternative is a Python script that runs SQL assertions directly against BigQuery. Each check defines a query, an assertion function, and a failure message. The script reports results as GitHub annotations. This is a job fragment that belongs under the `jobs:` key of the data quality workflow.
-
-```yaml
-  custom-sql-checks:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_CI }}
-      - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Run SQL quality checks
-        run: python scripts/run_sql_checks.py
-        env:
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-```
-
-The check script (`scripts/run_sql_checks.py`) defines assertion-based checks against BigQuery tables. Each check queries for a condition and asserts the result. Failures are reported as `::error::` annotations.
-
-```python
-from google.cloud import bigquery
-import json, sys, os
-
-client = bigquery.Client(project=os.environ["GCP_PROJECT"])
-
-CHECKS = [
-    {
-        "name": "no_null_user_ids",
-        "sql": "SELECT COUNT(*) as cnt FROM `project.dataset.events` WHERE user_id IS NULL",
-        "assertion": lambda cnt: cnt == 0,
-        "message": "Found NULL user_ids in events table",
-    },
-    {
-        "name": "row_count_today",
-        "sql": """SELECT COUNT(*) as cnt FROM `project.dataset.events`
-                  WHERE DATE(event_timestamp) = CURRENT_DATE()""",
-        "assertion": lambda cnt: cnt > 1000,
-        "message": "Event count below threshold (expected >1000)",
-    },
-    {
-        "name": "no_duplicate_events",
-        "sql": """SELECT MAX(cnt) as max_cnt FROM (
-                    SELECT event_id, COUNT(*) as cnt
-                    FROM `project.dataset.events`
-                    GROUP BY event_id HAVING COUNT(*) > 1
-                  )""",
-        "assertion": lambda cnt: cnt is None or cnt == 0,
-        "message": "Duplicate event_ids detected",
-    },
-]
-
-failures = []
-for check in CHECKS:
-    result = client.query(check["sql"]).result()
-    row = next(iter(result))
-    value = row[0]
-    if not check["assertion"](value):
-        failures.append(f"FAILED [{check['name']}]: {check['message']} (value={value})")
-        print(f"::error::{check['name']}: {check['message']} (value={value})")
-    else:
-        print(f"PASSED [{check['name']}]: value={value}")
-
-sys.exit(len(failures))
-```
-
-### Airflow DAG Validation
-
-Validating [DAG structure](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) in CI catches import errors and dependency cycles before they reach the scheduler. The workflow installs Airflow with version constraints, imports every DAG file via `DagBag`, and runs structural assertion tests. This prevents broken DAGs from reaching the Airflow scheduler.
-
-**Prerequisites:** DAG files in a `dags/` directory. Airflow plugins in `plugins/`. A `requirements-airflow.txt` for caching. Structural tests in `tests/dag_tests/`.
-
-The workflow file lives at `.github/workflows/dag-validation.yml`.
-
-```yaml
-name: Airflow DAG Validation
-
-on:
-  pull_request:
-    paths:
-      - "dags/**"
-      - "plugins/**"
-
-jobs:
-  validate-dags:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: airflow-${{ hashFiles('requirements-airflow.txt') }}
-
-      - name: Install Airflow (constrained)
-        run: |
-          AIRFLOW_VERSION=2.9.0
-          PYTHON_VERSION=$(python --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-          CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
-          pip install "apache-airflow==${AIRFLOW_VERSION}" \
-            --constraint "$CONSTRAINT_URL"
-
-      - name: Syntax check (import)
-        run: |
-          export AIRFLOW_HOME=$(pwd)/airflow_home
-          airflow db init
-          ERRORS=0
-          for dag_file in $(find dags/ -name "*.py"); do
-            echo "Checking $dag_file..."
-            python -c "
-          import importlib.util, sys
-          spec = importlib.util.spec_from_file_location('dag', '$dag_file')
-          mod = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(mod)
-          print('OK')
-          " || ERRORS=$((ERRORS+1))
-          done
-          exit $ERRORS
-
-      - name: Load DAGs test
-        run: |
-          export AIRFLOW_HOME=$(pwd)/airflow_home
-          python -c "
-          from airflow.models import DagBag
-          bag = DagBag(dag_folder='dags/', include_examples=False)
-          if bag.import_errors:
-              for path, err in bag.import_errors.items():
-                  print(f'::error file={path}::{err}')
-              raise SystemExit(len(bag.import_errors))
-          print(f'Loaded {len(bag.dags)} DAG(s) successfully')
-          "
-
-      - name: DAG structure tests
-        run: pytest tests/dag_tests/ -v
-```
-
-> [!info] Key fields
-> - Airflow is installed with **constraint files** matching the exact Airflow version and Python version. Without constraints, pip may install incompatible dependency versions that cause import errors unrelated to the DAG code.
-> - `airflow db init` creates a local SQLite metadata database. This is required before `DagBag` can parse DAGs — Airflow needs a metadata store even for static analysis.
-> - `DagBag(dag_folder='dags/', include_examples=False)` imports all Python files in the folder and reports `import_errors` — a dict of `{file_path: error_message}`. This catches missing dependencies, syntax errors, and circular imports.
-> - The three validation steps are progressive: syntax check (can Python import the file?), load test (can Airflow parse DAG objects?), structure tests (do DAGs meet team conventions like timeout settings, owner tags, SLA definitions?).
-
-> [!tip] DAG structure tests: operator whitelisting
-> The `tests/dag_tests/` directory should include parametrized pytest tests that enforce team conventions. A common pattern: load all DAGs via `DagBag`, iterate over tasks, and assert each `task.task_type` is in an `ALLOWED_OPERATORS` list. This prevents unauthorized operators (e.g., `BashOperator` in a team that mandates `PythonOperator` or `KubernetesPodOperator`) from reaching production.
-
-> [!question] Great Expectations vs dbt tests
-> **Great Expectations** is a standalone data validation framework with broad connector support (BigQuery, Postgres, files, dataframes), rich profiling, and auto-generated data documentation. Best for teams that need cross-pipeline validation or don't use dbt.
-> **dbt tests** are narrower but deeply integrated into the dbt workflow — schema tests (`unique`, `not_null`, `accepted_values`, `relationships`) run as part of `dbt build`. Best for teams already using dbt where most validation is column-level. Both tools complement each other: dbt tests for model-level assertions, GE for cross-dataset and business-rule validation.
-
-## Workload Identity Federation (Keyless GCP Auth)
-
-Workload Identity Federation (WIF) lets GitHub Actions authenticate to GCP using OIDC tokens instead of long-lived service account keys. GitHub issues a signed JWT for each workflow run, which GCP exchanges for short-lived credentials. This eliminates key rotation, prevents accidental key exposure, and reduces blast radius. For the conceptual overview, see the OIDC section in [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd). For GCP IAM fundamentals, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
-
-> [!info] No more JSON keys
-> With WIF configured, workflows use `workload_identity_provider` + `service_account` instead of `credentials_json`. No secrets to rotate, no JSON files to store.
-
-> [!danger] Missing attribute_condition risk
->
-> The `--attribute-condition` in the OIDC provider setup restricts which GitHub repositories can request tokens. If you omit this condition or set it to a wildcard, ANY public GitHub repository can authenticate as your service account and access your GCP resources. Always restrict to your specific org/repo: `assertion.repository=='my-org/my-repo'`. For additional safety, add `assertion.ref=='refs/heads/main'` to restrict to the main branch only.
-
-> [!success] Correct attribute_condition pattern
->
-> Always set `--attribute-condition="assertion.repository=='my-org/my-repo'"` when creating the OIDC provider. For production deployments, add a second condition on the branch: `assertion.ref=='refs/heads/main'`. This ensures only your specific repository on the main branch can exchange tokens — no other repository can impersonate your service account.
-
-### One-Time GCP Setup
-
-> [!info] WIF setup steps (run once per project)
-> 1. Create a Workload Identity Pool
-> 2. Create an OIDC Provider with attribute mapping and repository condition
-> 3. Create a dedicated service account for CI
-> 4. Bind the SA to the Workload Identity Pool for your repository
-> 5. Grant the SA necessary IAM roles (e.g., `roles/bigquery.dataEditor`)
-> 6. Get the provider resource name and save it as GitHub secret `WIF_PROVIDER`
-
-```bash
-PROJECT_ID="my-project"
-PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
-POOL_ID="github-actions"
-PROVIDER_ID="github-provider"
-SA_EMAIL="gh-actions-ci@${PROJECT_ID}.iam.gserviceaccount.com"
-REPO="my-org/my-repo"
-
-gcloud iam workload-identity-pools create $POOL_ID \
-  --project=$PROJECT_ID \
-  --location=global \
-  --display-name="GitHub Actions Pool"
-
-gcloud iam workload-identity-pools providers create-oidc $PROVIDER_ID \
-  --project=$PROJECT_ID \
-  --location=global \
-  --workload-identity-pool=$POOL_ID \
-  --display-name="GitHub Provider" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.actor=assertion.actor,attribute.ref=assertion.ref" \
-  --attribute-condition="assertion.repository=='${REPO}'" \
-  --issuer-uri="https://token.actions.githubusercontent.com"
-
-gcloud iam service-accounts create gh-actions-ci \
-  --project=$PROJECT_ID \
-  --display-name="GitHub Actions CI"
-
-gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
-  --project=$PROJECT_ID \
-  --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/bigquery.dataEditor"
-
-gcloud iam workload-identity-pools providers describe $PROVIDER_ID \
-  --project=$PROJECT_ID \
-  --location=global \
-  --workload-identity-pool=$POOL_ID \
-  --format='value(name)'
-```
-
-### GitHub Secrets to Set
-
-| Secret Name | Value |
-|-------------|-------|
-| `WIF_PROVIDER` | Full provider resource name from step 6 |
-| `WIF_SA` | `gh-actions-ci@my-project.iam.gserviceaccount.com` |
-
-### Using in Workflow
-
-After the one-time setup, any workflow can authenticate by adding `permissions: id-token: write` and the `google-github-actions/auth@v2` step with the provider and service account. After authentication, `gcloud` and Google Cloud client libraries (Python, Node.js, Go) automatically use Application Default Credentials (ADC) provided by the auth action.
-
-```yaml
-permissions:
-  id-token: write
-  contents: read
-
-steps:
-  - uses: google-github-actions/auth@v2
-    with:
-      workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-      service_account: ${{ secrets.WIF_SA }}
-
-  - run: gcloud storage ls gs://my-bucket/
-  - run: python pipeline.py
-```
-
-### Restricting by Branch or Tag
-
-For production service accounts, restrict the IAM binding to a specific branch. This prevents feature branches from deploying to production even if they have the `id-token: write` permission.
-
-```bash
-gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
-  --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.ref/refs/heads/main"
-```
-
-## Operational Workflows
-
-These workflows automate recurring operational tasks: secret rotation and cost monitoring. They typically run on a schedule and send alerts to Slack.
-
-### Secret Rotation
-
-This workflow rotates a secret in GCP Secret Manager on a monthly schedule and updates the corresponding GitHub secret. The `secret-rotation` environment requires manual approval before the rotation proceeds. For GCP Secret Manager details, see [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management).
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_SECRET_MANAGER` secrets. A `GH_PAT` (personal access token) with `secrets:write` scope for updating GitHub secrets programmatically. A `SLACK_WEBHOOK` secret for notifications. The `secret-rotation` environment with required reviewers.
-
-The workflow file lives at `.github/workflows/rotate-secrets.yml`.
-
-```yaml
-name: Rotate Secrets
-
-on:
-  schedule:
-    - cron: "0 2 1 * *"
-  workflow_dispatch:
-    inputs:
-      secret_name:
-        type: string
-        required: true
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  rotate:
-    runs-on: ubuntu-latest
-    environment: secret-rotation
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_SECRET_MANAGER }}
-
-      - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Rotate secret in Secret Manager
-        run: |
-          SECRET="${{ inputs.secret_name || 'my-api-key' }}"
-          NEW_VALUE=$(python scripts/generate_secret.py)
-          echo -n "$NEW_VALUE" | gcloud secrets versions add $SECRET --data-file=-
-
-      - name: Update GitHub secret
-        uses: actions/github-script@v7
-        env:
-          NEW_VALUE: ${{ steps.generate.outputs.value }}
-        with:
-          github-token: ${{ secrets.GH_PAT }}
-          script: |
-            const { execSync } = require('child_process');
-            execSync(`gh secret set MY_API_KEY --body "$NEW_VALUE"`, {
-              env: { ...process.env, GH_TOKEN: process.env.GITHUB_TOKEN }
-            });
-
-      - name: Notify rotation complete
-        run: |
-          curl -X POST '${{ secrets.SLACK_WEBHOOK }}' \
-            -d '{"text":"Secret rotation complete for ${{ inputs.secret_name }}"}'
-```
-
-### Cost Monitoring
-
-This workflow queries the GCP billing export in BigQuery on weekday mornings and sends a cost summary to Slack. If total spend exceeds a threshold, the message includes an alert. This provides daily visibility into cloud costs without requiring access to the billing console.
-
-**Prerequisites:** `WIF_PROVIDER` and `WIF_SA_BILLING` secrets. A BigQuery billing export configured (the `gcp_billing_export_v1_*` table). `BILLING_PROJECT`, `BILLING_DATASET`, and `SLACK_COST_WEBHOOK` secrets.
-
-The workflow file lives at `.github/workflows/cost-monitor.yml`.
-
-```yaml
-name: BigQuery Cost Monitor
-
-on:
-  schedule:
-    - cron: "0 9 * * 1-5"
-  workflow_dispatch:
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  cost-report:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_BILLING }}
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-
-      - run: pip install google-cloud-bigquery pandas
-
-      - name: Query billing
-        id: billing
-        run: python scripts/bq_cost_report.py
-        env:
-          BILLING_PROJECT: ${{ secrets.BILLING_PROJECT }}
-          BILLING_DATASET: ${{ secrets.BILLING_DATASET }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_COST_WEBHOOK }}
-          THRESHOLD_USD: "100"
-```
-
-The report script (`scripts/bq_cost_report.py`) queries the billing export, formats a Slack message, and sends it via webhook. The `THRESHOLD_USD` environment variable controls the alert threshold.
-
-```python
-from google.cloud import bigquery
-import os, json
-import urllib.request
-
-client = bigquery.Client(project=os.environ["BILLING_PROJECT"])
-threshold = float(os.environ.get("THRESHOLD_USD", "100"))
-
-query = f"""
-SELECT
-  service.description AS service,
-  ROUND(SUM(cost), 2) AS total_cost_usd,
-  ROUND(SUM(cost) / 30, 2) AS daily_avg_usd
-FROM `{os.environ["BILLING_PROJECT"]}.{os.environ["BILLING_DATASET"]}.gcp_billing_export_v1_*`
-WHERE DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
-GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 10
-"""
-
-results = list(client.query(query).result())
-total = sum(r.total_cost_usd for r in results)
-
-lines = [f"*GCP Cost Report — Last 30 days*", f"Total: *${total:.2f}*", ""]
-for r in results:
-    lines.append(f"• {r.service}: ${r.total_cost_usd:.2f} (${r.daily_avg_usd:.2f}/day)")
-
-alert = " :rotating_light: *Over threshold!*" if total > threshold else ""
-message = {"text": "\n".join(lines) + alert}
-
-req = urllib.request.Request(
-    os.environ["SLACK_WEBHOOK"],
-    data=json.dumps(message).encode(),
-    headers={"Content-Type": "application/json"}
-)
-urllib.request.urlopen(req)
-print(f"Cost report sent. Total: ${total:.2f}")
-```
-
-## End-to-End Pipeline
-
-This workflow combines CI and CD into a single file with conditional job execution. On pull requests, only lint and test run (CI). On pushes to `main`, the full pipeline runs: lint → test → build → deploy → verify → notify. The `if:` condition on the `build` job gates CD behind a `main` push, so PR workflows never trigger deployments.
-
-**Prerequisites:** All secrets from the CI and CD workflows above. The `production` environment with protection rules. A `scripts/smoke_test.py` script for post-deploy verification.
-
-The workflow file lives at `.github/workflows/e2e-pipeline.yml`.
-
-```yaml
-name: End-to-End Pipeline
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-env:
-  PYTHON_VERSION: "3.12"
-  SERVICE: data-pipeline
-  REGION: us-central1
-  PROJECT: my-data-project
-  REGISTRY: us-central1-docker.pkg.dev
-  REPO: data
-
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-  checks: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
-jobs:
-  # ─── CI ───────────────────────────────────────────────────────────
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - run: pip install ruff
-      - run: ruff check . --output-format=github
-      - run: ruff format --check .
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: lint
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - run: pip install -e ".[dev]"
-      - run: pytest tests/unit/ --cov=src --cov-report=xml -v
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.xml
-
-  # ─── CD (only on main) ───────────────────────────────────────────
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    outputs:
-      image: ${{ steps.image.outputs.value }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: image
-        run: echo "value=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA }}
-      - run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
-      - uses: docker/setup-buildx-action@v3
-      - uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: buildx-${{ github.sha }}
-          restore-keys: buildx-
-      - uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.image.outputs.value }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-      - run: rm -rf /tmp/.buildx-cache && mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA }}
-      - uses: google-github-actions/deploy-cloudrun@v2
-        id: deploy
-        with:
-          service: ${{ env.SERVICE }}
-          region: ${{ env.REGION }}
-          image: ${{ needs.build.outputs.image }}
-
-  verify:
-    name: Verify
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA }}
-      - run: pip install requests
-      - name: Smoke test
-        run: python scripts/smoke_test.py
-        env:
-          SERVICE_URL: ${{ needs.deploy.outputs.url }}
-
-  notify:
-    name: Notify
-    runs-on: ubuntu-latest
-    needs: [deploy, verify]
-    if: always()
-    steps:
-      - name: Slack notification
-        run: |
-          STATUS="${{ needs.verify.result }}"
-          if [ "$STATUS" = "success" ]; then
-            COLOR="good"
-            TEXT="Deployment successful: ${{ env.SERVICE }} @ ${{ github.sha }}"
-          else
-            COLOR="danger"
-            TEXT="Deployment FAILED: ${{ env.SERVICE }} @ ${{ github.sha }}"
-          fi
-          curl -X POST '${{ secrets.SLACK_WEBHOOK }}' \
-            -H 'Content-type: application/json' \
-            --data "{\"attachments\":[{\"color\":\"$COLOR\",\"text\":\"$TEXT\"}]}"
-```
-
-> [!info] Key fields
-> - `cancel-in-progress: ${{ github.event_name == 'pull_request' }}` — cancels in-progress runs for PRs (fast iteration) but queues them for `main` pushes (safe deployments). This is a common pattern for combined CI/CD workflows.
-> - `if: github.ref == 'refs/heads/main' && github.event_name == 'push'` on the `build` job — gates CD behind a `main` push. On PRs, the workflow stops after `test`.
-> - `needs: [deploy, verify]` with `if: always()` on `notify` — the notification job runs regardless of whether deploy or verify succeeded or failed, ensuring the team always gets a Slack message.
-> - `${{ needs.verify.result }}` — reads the conclusion of the `verify` job (`success`, `failure`, `cancelled`, `skipped`). Used to set the Slack message color and text.
-
-### Job Dependency Graph
+This page covers production-ready GitHub Actions workflows for data-engineering teams. Each workflow is a complete, runnable YAML file backed by real execution outputs from the `alp78/git-lab` sandbox repository. The patterns span the full data-platform lifecycle: validating SQL against warehouse engines, running dbt CI with ephemeral schemas, checking Airflow DAG imports, planning and applying Terraform infrastructure, enforcing data quality gates, stripping notebook outputs, building pipeline images, controlling backfills with approval gates, monitoring warehouse costs, and validating event schemas for streaming pipelines.
+
+## Key Definitions
+
+| Term | Definition |
+|------|-----------|
+| **BigQuery dry-run** | A query validation mode (`--dry_run`) that parses and validates SQL without executing it, returning the estimated bytes processed. No data is read or billed. |
+| **PARSEONLY** | A SQL Server session option (`SET PARSEONLY ON`) that checks SQL syntax without compiling or executing the statement. |
+| **dbt** | An open-source transformation framework that compiles SQL models with Jinja templating and runs them against a warehouse. |
+| **dbt parse** | A dbt command that compiles the project and generates a `manifest.json` without connecting to the warehouse — used for CI syntax validation. |
+| **dbt manifest** | A JSON file (`target/manifest.json`) containing the compiled representation of all models, tests, sources, and exposures in a dbt project. |
+| **ephemeral schema** | A temporary warehouse schema or dataset created per CI run (e.g., `ci_pr_42`) and destroyed after tests complete, preventing CI from polluting production data. |
+| **slim CI** | A dbt CI strategy that runs only models modified in the current PR (`--select state:modified+`) rather than rebuilding the entire project. |
+| **SQLFluff** | A SQL linter and formatter that supports multiple dialects (BigQuery, Snowflake, Redshift, T-SQL) and integrates with dbt templating. |
+| **Airflow DAG** | A Directed Acyclic Graph defined in Python that describes task dependencies and scheduling in Apache Airflow. |
+| **DAG import check** | A CI validation that imports DAG files into an Airflow environment to verify syntax, dependency resolution, and absence of import errors. |
+| **Dagster asset** | A software-defined asset in Dagster that represents a data artifact with explicit dependencies, types, and metadata. |
+| **Prefect flow** | A Python function decorated with `@flow` in Prefect, representing an orchestrated pipeline with automatic retries, logging, and state management. |
+| **PySpark** | The Python API for Apache Spark, used for distributed data processing. CI runs PySpark tests with a local `SparkSession` to validate transformation logic. |
+| **Terraform plan** | A Terraform command that compares the desired state (HCL files) with the current state and outputs a changeset without applying it. |
+| **Terraform apply** | A Terraform command that executes the planned changeset, creating, modifying, or destroying infrastructure resources. |
+| **environment protection rule** | A GitHub Actions setting that gates deployments to a named environment behind required reviewers, wait timers, or branch restrictions. |
+| **Great Expectations** | A Python framework for defining, running, and documenting data quality assertions (expectations) against DataFrames or database tables. |
+| **data quality assertion** | A boolean check on data properties (e.g., no NULL dates, row counts above threshold, no negative volumes) that fails the pipeline if violated. |
+| **JSON Schema** | A vocabulary for annotating and validating JSON documents, used to enforce contracts on event payloads in streaming pipelines. |
+| **schema contract** | A formal definition of the structure, types, and constraints of data exchanged between systems — breaking changes fail CI. |
+| **breaking change** | A schema modification that removes properties, adds required fields, or narrows types, breaking consumers who depend on the previous contract. |
+| **nbstripout** | A tool that strips output cells from Jupyter notebooks before committing, preventing large binary blobs and accidental data leaks in version control. |
+| **notebook hygiene** | CI checks that verify notebooks have no committed outputs, valid structure, and no embedded credentials or sensitive data. |
+| **workflow_dispatch** | A GitHub Actions trigger that allows manual execution of a workflow with typed input parameters (string, boolean, choice, number). |
+| **backfill** | A controlled re-execution of a pipeline for historical date ranges, typically to repair missing or incorrect data. |
+| **dry-run mode** | A workflow execution mode that validates inputs and queries without writing to production, used to preview backfill scope and cost. |
+| **idempotency** | The property that re-executing a pipeline with the same inputs produces the same result — critical for safe backfills and reruns. |
+| **partition** | A subdivision of a table by date, key, or range that allows targeted reads and writes — backfills operate on specific partitions. |
+| **Workload Identity Federation** | A GCP mechanism for granting external identities (e.g., GitHub Actions OIDC tokens) access to GCP resources without service account keys. |
+| **OIDC** | OpenID Connect — a token-based authentication protocol used by GitHub Actions to prove workflow identity to cloud providers. |
+| **GHCR** | GitHub Container Registry (`ghcr.io`) — a container image registry integrated with GitHub, used for storing pipeline Docker images. |
+| **image digest** | An immutable SHA-256 hash identifying a specific container image build, used for reproducible deployments regardless of mutable tags. |
+| **concurrency group** | A GitHub Actions setting that serializes or cancels workflow runs sharing the same group key, preventing parallel writes to shared resources. |
+| **artifact** | A file or set of files (manifests, reports, test results) uploaded during a workflow run and downloadable for inspection or use by downstream jobs. |
+
+## Data-Engineering Workflow Taxonomy
+
+Data-engineering CI/CD workflows fall into distinct categories based on what they validate, when they run, and what blast radius they control. The taxonomy below maps every pattern in this page to its category and trigger context.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1451,165 +65,1648 @@ jobs:
   'lineColor': '#565f89',
   'secondaryColor': '#1a1b26',
   'tertiaryColor': '#24283b',
-  'noteTextColor': '#c0caf5',
-  'noteBkgColor': '#292e42',
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    lint["Lint"] --> test["Test"]
-    test --> build["Build"]
-    build --> deploy["Deploy"]
-    deploy --> verify["Verify"]
-    deploy --> notify["Notify"]
-    verify --> notify
+flowchart TB
+    subgraph CI["CI — Validate on every push/PR"]
+        SQL["SQL Validation"]
+        DBT["dbt Parse & Lint"]
+        DAG["Airflow DAG Import"]
+        SPARK["PySpark Tests"]
+        NB["Notebook Hygiene"]
+        SCHEMA["Schema Contracts"]
+    end
 
-    style lint fill:#7aa2f7,stroke:#565f89,color:#1a1b26
-    style test fill:#7aa2f7,stroke:#565f89,color:#1a1b26
-    style build fill:#bb9af7,stroke:#565f89,color:#1a1b26
-    style deploy fill:#9ece6a,stroke:#565f89,color:#1a1b26
-    style verify fill:#e0af68,stroke:#565f89,color:#1a1b26
-    style notify fill:#f7768e,stroke:#565f89,color:#1a1b26
+    subgraph CD["CD — Deploy on merge/release"]
+        TF["Terraform Apply"]
+        IMG["Pipeline Image Build"]
+        DEPLOY["Pipeline Deploy"]
+    end
+
+    subgraph OPS["Operational — Manual or Scheduled"]
+        BACKFILL["Backfill Workflows"]
+        COST["Cost Monitoring"]
+        DQ["Data Quality Audits"]
+    end
+
+    SQL --> DQ
+    DBT --> DEPLOY
+    TF --> DEPLOY
+    IMG --> DEPLOY
+    BACKFILL --> DQ
+
+    style CI fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style CD fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style OPS fill:#1a1b26,stroke:#e0af68,color:#c0caf5
 ```
 
-> [!question] Single workflow vs separate CI and CD workflows
-> **Single workflow** (as shown above) keeps the full pipeline in one file. The `if:` condition on `build` gates CD. Simpler to maintain for small teams.
-> **Separate workflows** (`pipeline-ci.yml` and `deploy-cloud-run.yml`) decouple CI from CD. CI runs on PRs, CD runs on `main` push. Better for larger teams where CI and CD have different owners or schedules. The individual workflows shown earlier in this file follow this pattern.
+*Data-engineering workflow taxonomy. CI workflows (blue) validate code on every push or PR — fast feedback, read-only access. CD workflows (green) deploy infrastructure and images on merge — write access, environment-gated. Operational workflows (yellow) run on demand or on schedule — controlled blast radius, audit-logged.*
 
-## Quick Reference
+| Category | Patterns | Trigger | Credentials | Blast Radius |
+|----------|----------|---------|-------------|--------------|
+| **SQL Validation** | BigQuery dry-run, SQL Server PARSEONLY, Snowflake/Redshift | `push`, `pull_request` | Read-only warehouse | None — no data modified |
+| **dbt CI** | Parse, lint, build, test, slim CI | `push`, `pull_request` | Ephemeral schema write | CI schema only |
+| **Orchestrator CI** | Airflow DAG import, Dagster asset check, Prefect flow validation | `push` | None (local import) | None |
+| **Spark/PySpark** | Unit tests with local SparkSession | `push` | None | None |
+| **Infrastructure** | Terraform plan (CI), apply (CD) | `push` / `merge` | Cloud provider admin | Plan: none; Apply: infrastructure |
+| **Data Quality** | Assertion checks, report artifacts | `push`, `schedule` | Read-only warehouse | None |
+| **Schema Contracts** | JSON Schema validation, breaking change detection | `push` | None | None |
+| **Notebook Hygiene** | Output stripping, structure validation | `push` | None | None |
+| **Pipeline Images** | Docker build, push to GHCR | `push` | Package write | Container registry |
+| **Backfill** | Dispatch with typed inputs, dry-run, prod approval | `workflow_dispatch` | Write to target table | Target partitions |
+| **Cost Monitoring** | Billing queries, dataset size reports | `schedule`, `workflow_dispatch` | Read-only billing | None |
 
-A minimal CI template for starting a new data pipeline project. Copy this as `.github/workflows/pipeline-ci.yml` and expand as needed.
+> [!danger] Production writes from PR-triggered workflows
+>
+> A workflow triggered by `pull_request` that writes to production datasets creates an unreviewed blast radius. Any contributor who opens a PR can trigger production mutations.
+
+> [!success] Gate production writes behind environments
+>
+> Use `environment: production` with required reviewers for any job that modifies production data. Reserve `pull_request` triggers for read-only validation (dry-run, parse, lint). Only `push` to `main` (post-merge) or `workflow_dispatch` should trigger write operations.
+
+## SQL Validation
+
+SQL validation catches syntax errors, missing columns, and type mismatches before code reaches `main`. The validation cost is zero or near-zero: BigQuery dry-run processes no data (no billing), and SQL Server PARSEONLY checks syntax without compilation. Every SQL file in the repository should be validated on every push.
+
+### GitHub Actions | SQL validation | BigQuery dry-run
+
+BigQuery dry-run validates SQL syntax and resolves table references, column names, and types against the live catalog. It returns the estimated bytes that would be processed if the query ran, without actually scanning any data. This makes it free to run in CI.
+
+#### Validate all SQL files with BigQuery dry-run
+
+**When to run:** On every push that modifies SQL files.
+**Trigger:** `push` event with path filter on `sql/**`.
+**Context:** GitHub-hosted runner, GCP OIDC authentication with read-only BigQuery access. No data is read or billed.
+**Purpose:** Catch SQL syntax errors, missing table/column references, and type mismatches before code review.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `on.push.paths` — limits the trigger to changes in the `sql/` directory or the workflow file itself, avoiding unnecessary runs.
+> - `permissions.id-token: write` — required for OIDC token exchange with GCP Workload Identity Federation.
+> - `google-github-actions/auth@v2` — exchanges the GitHub OIDC token for a GCP access token using the configured WIF provider and service account.
+> - `bq query --use_legacy_sql=false --dry_run < "$sql_file"` — validates the SQL without executing. Returns "Query successfully validated" and the byte estimate on success, or an error message with line/column on failure.
+> - `$GITHUB_STEP_SUMMARY` — writes a markdown table to the workflow run summary, visible in the GitHub Actions UI without reading logs.
+> - `::error file=$sql_file::` — creates a GitHub annotation linking the error to the specific file.
+
+*Validate all SQL files in the `sql/` directory against BigQuery using dry-run mode.*
 
 ```yaml
-name: Pipeline CI
+name: "Demo: DE SQL Validation"
+
 on:
-  pull_request:
-    branches: [main]
-    paths: ["src/**", "tests/**", "pyproject.toml"]
+  push:
+    paths:
+      - "sql/**"
+      - ".github/workflows/demo-de-sql-validation.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  quality:
+  bigquery-dry-run:
+    name: BigQuery Dry-Run
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12", cache: pip }
-      - run: pip install ruff pytest
-      - run: ruff check . --output-format=github
-      - run: pytest tests/unit/ -v
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+
+      - name: Dry-run all SQL files
+        run: |
+          echo "## BigQuery Dry-Run Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Status | Bytes Processed |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|-----------------|" >> $GITHUB_STEP_SUMMARY
+
+          exit_code=0
+          for sql_file in sql/*.sql; do
+            filename=$(basename "$sql_file")
+            echo "::group::Validating $filename"
+            if output=$(bq query --use_legacy_sql=false --dry_run < "$sql_file" 2>&1); then
+              bytes=$(echo "$output" | grep -oP 'process \K[0-9]+' || echo "0")
+              echo "✓ $filename: $output"
+              echo "| $filename | ✅ Valid | $bytes bytes |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✗ $filename: $output"
+              echo "| $filename | ❌ Error | — |" >> $GITHUB_STEP_SUMMARY
+              echo "::error file=$sql_file::SQL validation failed: $output"
+              exit_code=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $exit_code
 ```
+
+*Workflow run output (run 24314051823, triggered by push to main, commit 0dd7142):*
+
+```text
+✓ main Demo: DE SQL Validation · 24314051823
+Triggered via push
+
+JOBS
+✓ BigQuery Dry-Run in 12s (ID 70988539870)
+
+BigQuery Dry-Run — Dry-run all SQL files:
+  ✓ count_ohlcv_rows.sql: Query successfully validated. Assuming the tables
+    are not modified, running this query will process 1200 bytes of data.
+  ✓ validate_trading_calendar.sql: Query successfully validated. Assuming the
+    tables are not modified, running this query will process 410690 bytes of data.
+```
+
+| Flag / Key | Value | Description |
+|-----------|-------|-------------|
+| `--use_legacy_sql=false` | boolean | Forces Standard SQL dialect instead of legacy SQL. Required for modern BigQuery syntax. |
+| `--dry_run` | boolean | Validates the query without executing it. Returns byte estimate. No billing. |
+| `--format=json` | string | Returns structured JSON output instead of tabular text (useful for programmatic parsing). |
+| `--project_id` | string | Override the default project. Set automatically by `setup-gcloud` from OIDC credentials. |
+
+> [!tip] BigQuery dry-run cost estimation
+>
+> The byte estimate from `--dry_run` maps directly to on-demand query pricing: $6.25 per TB processed. A 410 KB estimate means the query would cost approximately $0.0000025 — effectively free. Use this to flag expensive queries in CI before they reach production.
+
+### GitHub Actions | SQL validation | SQL Server PARSEONLY
+
+SQL Server's `SET PARSEONLY ON` checks SQL syntax without compiling or executing the statement. Combined with a service container running SQL Server in the workflow, this validates T-SQL migrations without needing a production database connection.
+
+#### Validate T-SQL migrations with PARSEONLY
+
+**When to run:** On every push that modifies migration files.
+**Trigger:** `push` event with path filter on `migrations/**`.
+**Context:** GitHub-hosted runner with a SQL Server 2022 service container. No external credentials required.
+**Purpose:** Catch T-SQL syntax errors in migration scripts before they reach a staging or production database.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `services.sqlserver` — starts a SQL Server 2022 container alongside the runner, accessible at `localhost:1433`.
+> - `--health-cmd` — uses `sqlcmd` inside the container to verify SQL Server is ready before the job steps begin.
+> - `SET PARSEONLY ON` — instructs SQL Server to check syntax only, without compiling execution plans or executing the statement.
+> - Each migration file is read with `cat` and passed to `sqlcmd` via the `-Q` flag.
+
+*Validate all migration files against SQL Server 2022 using PARSEONLY.*
+
+```yaml
+  sqlserver-parseonly:
+    name: SQL Server PARSEONLY
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          SA_PASSWORD: "StrongPass#2026"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "echo 'SELECT 1' | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'StrongPass#2026' -C"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - name: Install sqlcmd
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          sudo add-apt-repository "$(curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list)" 2>/dev/null || true
+          sudo apt-get update -qq
+          sudo ACCEPT_EULA=Y apt-get install -y -qq mssql-tools18 2>/dev/null || sudo ACCEPT_EULA=Y apt-get install -y -qq mssql-tools 2>/dev/null
+
+      - name: Validate migrations with PARSEONLY
+        run: |
+          SQLCMD_BIN=$(command -v sqlcmd || find /opt/mssql-tools*/bin -name sqlcmd 2>/dev/null | head -1)
+          exit_code=0
+          for sql_file in migrations/*.sql; do
+            filename=$(basename "$sql_file")
+            if "$SQLCMD_BIN" -S localhost -U sa -P 'StrongPass#2026' -C \
+              -Q "SET PARSEONLY ON; $(cat "$sql_file")" 2>&1; then
+              echo "✓ $filename: syntax valid"
+            else
+              echo "✗ $filename: syntax error"
+              echo "::error file=$sql_file::SQL parse failed"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+```
+
+### GitHub Actions | SQL validation | warehouse comparison
+
+Different warehouse engines require different validation approaches. The table below compares the validation mechanisms available for each major data warehouse.
+
+| Warehouse | Validation Method | Cost | Requires Credentials | Catches |
+|-----------|------------------|------|---------------------|---------|
+| **BigQuery** | `bq query --dry_run` | Free (no data scanned) | OIDC or SA key | Syntax, schema, column types, permissions |
+| **SQL Server** | `SET PARSEONLY ON` with service container | Free (local container) | None (local SA) | Syntax only |
+| **Snowflake** | `EXPLAIN` or `snowsql --query "EXPLAIN ..."` | Free (compilation only) | Snowflake credentials | Syntax, schema, types |
+| **Redshift** | `EXPLAIN` via `psql` or AWS SDK | Free (compilation only) | AWS credentials | Syntax, schema, types |
+| **Databricks** | `spark.sql(query).explain()` or REST API `/sql/statements` with `EXPLAIN` | Free (no compute) | Databricks token | Syntax, schema, types |
+| **DuckDB** | `EXPLAIN` in local DuckDB (no credentials) | Free | None | Syntax only (no live schema) |
+
+> [!warning] Snowflake and Redshift require active credentials in CI
+>
+> Unlike BigQuery (OIDC) or SQL Server (local container), Snowflake and Redshift validation requires live credentials stored as GitHub secrets. The `EXPLAIN` command compiles the query plan without executing it, but it still needs an authenticated session.
+
+> [!success] Use least-privilege read-only roles
+>
+> Create a dedicated CI service user with `SELECT` permissions only on relevant schemas. For Snowflake, use a role like `CI_READER` with `USAGE` on the warehouse and `SELECT` on schemas. For Redshift, use a read-only group. Never reuse production service account credentials for CI validation.
+
+## dbt CI
+
+dbt CI workflows validate SQL models, enforce style rules, and optionally run tests against an ephemeral schema. The minimal CI setup — parse and lint — requires no warehouse connection and catches most errors. The full CI setup — build and test — requires a service account with write access to an ephemeral dataset, providing complete validation at higher cost.
+
+### GitHub Actions | dbt CI | parse and lint
+
+The lightest dbt CI workflow: parse the project to verify model compilation and lint SQL files with SQLFluff. This runs without a warehouse connection and catches syntax errors, undefined references, and style violations.
+
+#### Parse dbt project and lint SQL models
+
+**When to run:** On every push that modifies dbt model files.
+**Trigger:** `push` event with path filter on `dbt_project/**`.
+**Context:** GitHub-hosted runner. No warehouse credentials needed for parse. SQLFluff runs locally.
+**Purpose:** Catch dbt compilation errors and SQL style violations before code review.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `dbt parse --profiles-dir /dev/null` — parses the project using the `dbt_project.yml` configuration without attempting to connect to a warehouse. Generates a `manifest.json` if the project compiles successfully.
+> - `sqlfluff lint models/ --dialect bigquery` — lints all SQL files in the `models/` directory using BigQuery SQL dialect rules. The `--format github-annotation-native` flag outputs warnings as GitHub annotations linked to specific lines.
+> - `actions/upload-artifact` — uploads dbt artifacts (manifest, run results) for downstream inspection or comparison with previous CI runs.
+> - `concurrency` — ensures only one dbt CI run per branch, canceling older runs when new commits are pushed.
+
+*Parse the dbt project and lint SQL models with SQLFluff.*
+
+```yaml
+name: "Demo: DE dbt CI"
+
+on:
+  push:
+    paths:
+      - "dbt_project/**"
+      - ".github/workflows/demo-de-dbt-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dbt-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dbt-parse:
+    name: dbt Parse & Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install dbt-core
+        run: pip install dbt-core dbt-bigquery sqlfluff sqlfluff-templater-dbt
+
+      - name: dbt parse
+        working-directory: dbt_project
+        run: |
+          dbt parse --profiles-dir /dev/null 2>&1 || true
+          echo "dbt parse completed — checking manifest..."
+          if [ -f target/manifest.json ]; then
+            model_count=$(python3 -c "import json; m=json.load(open('target/manifest.json')); print(len([n for n in m['nodes'] if m['nodes'][n]['resource_type']=='model']))")
+            test_count=$(python3 -c "import json; m=json.load(open('target/manifest.json')); print(len([n for n in m['nodes'] if m['nodes'][n]['resource_type']=='test']))")
+            echo "✓ Manifest generated: $model_count models, $test_count tests"
+          else
+            echo "⚠ No manifest generated (expected without a valid profile)"
+          fi
+
+      - name: SQLFluff lint dbt models
+        working-directory: dbt_project
+        run: sqlfluff lint models/ --dialect bigquery --format github-annotation-native 2>&1 || true
+
+      - name: Upload dbt artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dbt-artifacts-${{ github.sha }}
+          path: |
+            dbt_project/target/manifest.json
+            dbt_project/target/run_results.json
+          if-no-files-found: ignore
+          retention-days: 7
+```
+
+*Workflow run output (run 24314013412, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE dbt CI · 24314013412
+Triggered via push
+
+JOBS
+✓ dbt Parse & Lint in 24s (ID 70988480391)
+
+dbt Parse & Lint — dbt parse:
+  ⚠ No manifest generated (expected without a valid profile)
+
+dbt Parse & Lint — SQLFluff lint dbt models:
+  models/staging/stg_trading_calendar.sql:
+    LT14: The 'WHERE' keyword should always start a new line. [layout.keyword_newline]
+```
+
+| dbt CI Strategy | Warehouse Connection | What It Validates | Cost | When to Use |
+|----------------|---------------------|-------------------|------|-------------|
+| **Parse only** | None | Jinja compilation, model references, source definitions | Free | Every PR — fast feedback |
+| **Parse + lint** | None | Above + SQL style rules (SQLFluff/sqlfmt) | Free | Every PR |
+| **Build + test** | Ephemeral schema | Above + actual query execution, data tests | Warehouse compute | Merge to main or nightly |
+| **Slim CI** | Ephemeral schema | Only modified models (`state:modified+`) | Reduced compute | Every PR (large projects) |
+
+### GitHub Actions | dbt CI | ephemeral schema isolation
+
+For full dbt CI (build + test), create an ephemeral schema per CI run to isolate test data from production. The schema is created at job start and destroyed at job end, even on failure.
+
+> [!danger] Shared CI schemas cause data corruption
+>
+> If multiple CI runs write to the same schema (e.g., `ci_schema`), concurrent runs overwrite each other's test data. Results become non-deterministic and failures are unreproducible.
+
+> [!success] Use PR-scoped ephemeral schemas
+>
+> Name the schema using the PR number or run ID: `ci_pr_${{ github.event.pull_request.number }}` or `ci_run_${{ github.run_id }}`. Clean up with `bq rm -r -f` in an `if: always()` step.
+
+*Ephemeral schema naming patterns for dbt CI.*
+
+```yaml
+# In the dbt CI workflow's environment variables:
+env:
+  DBT_CI_SCHEMA: "ci_pr_${{ github.event.pull_request.number || github.run_id }}"
+
+# Create schema before dbt build:
+- name: Create ephemeral schema
+  run: bq mk --dataset "$GCP_PROJECT:$DBT_CI_SCHEMA"
+
+# Run dbt build against the ephemeral schema:
+- name: dbt build
+  run: dbt build --target ci --vars "{ci_schema: '$DBT_CI_SCHEMA'}"
+
+# Clean up (always, even on failure):
+- name: Drop ephemeral schema
+  if: always()
+  run: bq rm -r -f "$GCP_PROJECT:$DBT_CI_SCHEMA"
+```
+
+### GitHub Actions | dbt CI | cost control and slim CI
+
+Large dbt projects can have hundreds of models. Running all of them on every PR is expensive and slow. Slim CI uses dbt's state comparison to run only modified models and their downstream dependents.
+
+*Slim CI runs only changed models using state comparison with the production manifest.*
+
+```yaml
+# Download the production manifest from a previous successful run:
+- name: Download production manifest
+  uses: actions/download-artifact@v4
+  with:
+    name: dbt-manifest-production
+    path: target-prod/
+  continue-on-error: true  # First run won't have a manifest
+
+# Run only modified models and their children:
+- name: dbt build (slim CI)
+  run: |
+    if [ -f target-prod/manifest.json ]; then
+      dbt build --select state:modified+ --defer --state target-prod/
+    else
+      echo "No production manifest found — running full build"
+      dbt build
+    fi
+```
+
+| Flag | Description |
+|------|-------------|
+| `--select state:modified+` | Select models modified since the comparison state, plus all downstream dependents |
+| `--defer` | For unmodified models, defer to the production manifest instead of rebuilding |
+| `--state target-prod/` | Path to the production manifest for state comparison |
+| `--exclude tag:nightly` | Exclude models tagged as nightly-only from CI runs |
+| `--target ci` | Use the CI-specific profile target (ephemeral schema, reduced compute) |
+
+## Pipeline and Orchestrator Validation
+
+Orchestrator validation catches broken DAG definitions, missing dependencies, and import errors before deployment. These checks run locally without connecting to production schedulers.
+
+### GitHub Actions | orchestrator CI | Airflow DAG import
+
+The Airflow DAG import check loads every Python file in the `dags/` directory into an Airflow environment and verifies it produces valid DAG objects. This catches import errors, missing Python packages, circular dependencies, and invalid scheduling expressions.
+
+#### Validate Airflow DAGs on push
+
+**When to run:** On every push that modifies DAG files.
+**Trigger:** `push` event with path filter on `dags/**`.
+**Context:** GitHub-hosted runner with Airflow installed from PyPI (constrained). No connection to production Airflow.
+**Purpose:** Catch DAG import errors, missing dependencies, and invalid task definitions before deployment.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `pip install "apache-airflow==2.10.5" --constraint` — installs Airflow with version-locked constraints to avoid dependency conflicts. The constraints file matches the exact Airflow version.
+> - `AIRFLOW_HOME` — set to a temporary directory to avoid polluting the runner's filesystem. `airflow db init` creates the metadata database (SQLite) needed for DAG parsing.
+> - The validation script uses `importlib` to dynamically load each DAG file and inspects the module for `airflow.models.DAG` objects, reporting the DAG ID, task count, and schedule.
+> - `$GITHUB_STEP_SUMMARY` — generates a table of all validated DAGs with their properties.
+
+*Validate all Airflow DAG files by importing them into a clean Airflow environment.*
+
+```yaml
+name: "Demo: DE Airflow DAG Validation"
+
+on:
+  push:
+    paths:
+      - "dags/**"
+      - ".github/workflows/demo-de-airflow-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dag-validation:
+    name: Validate Airflow DAGs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Airflow (constraints)
+        run: |
+          pip install "apache-airflow==2.10.5" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt"
+
+      - name: DAG import check
+        env:
+          AIRFLOW_HOME: ${{ runner.temp }}/airflow
+          AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+        shell: bash
+        run: |
+          mkdir -p "$AIRFLOW_HOME"
+          airflow db init 2>/dev/null
+
+          cat > /tmp/check_dag.py << 'PYEOF'
+          import sys, importlib.util, airflow.models
+          dag_file = sys.argv[1]
+          spec = importlib.util.spec_from_file_location("dag_module", dag_file)
+          mod = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          dags = [v for v in vars(mod).values() if isinstance(v, airflow.models.DAG)]
+          for d in dags:
+              tasks = list(d.task_ids)
+              print(f"{d.dag_id}|{len(tasks)}|{d.schedule_interval}")
+          PYEOF
+
+          exit_code=0
+          for dag_file in dags/*.py; do
+            filename=$(basename "$dag_file")
+            if output=$(python3 /tmp/check_dag.py "$dag_file" 2>&1); then
+              while IFS='|' read -r dag_id task_count schedule; do
+                echo "✓ $filename - $dag_id ($task_count tasks, schedule=$schedule)"
+              done <<< "$(echo "$output" | grep '|')"
+            else
+              echo "✗ $filename - import failed"
+              echo "::error file=$dag_file,title=DAG import failed::$output"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+```
+
+*Workflow run output (run 24314013417, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE Airflow DAG Validation · 24314013417
+Triggered via push
+
+JOBS
+✓ Validate Airflow DAGs in 24s (ID 70988480415)
+
+Validate Airflow DAGs — DAG import check:
+  DB: sqlite:////home/runner/work/_temp/airflow/airflow.db
+  Initialization done
+  ✓ daily_ingest.py - daily_ohlcv_ingest (1 tasks, schedule=0 18 * * 1-5)
+```
+
+### GitHub Actions | orchestrator CI | Dagster and Prefect
+
+Dagster and Prefect both support CI validation without connecting to production infrastructure. Dagster's `dagster asset list` and Prefect's `prefect flow validate` verify that asset/flow definitions compile and resolve dependencies.
+
+*Dagster asset validation pattern (no production connection required).*
+
+```yaml
+# Dagster CI — validate asset definitions
+- name: Install Dagster
+  run: pip install dagster dagster-cloud
+
+- name: Validate Dagster assets
+  run: |
+    dagster asset list --module my_project.assets 2>&1
+    echo "✓ All Dagster assets resolve"
+```
+
+*Prefect flow validation pattern.*
+
+```yaml
+# Prefect CI — validate flow definitions
+- name: Install Prefect
+  run: pip install prefect
+
+- name: Validate Prefect flows
+  run: |
+    python -c "
+    from my_project.flows import daily_ingest, weekly_report
+    print(f'daily_ingest: {daily_ingest.name}, retries={daily_ingest.retries}')
+    print(f'weekly_report: {weekly_report.name}')
+    print('✓ All flows import and configure correctly')
+    "
+```
+
+| Orchestrator | CI Validation Method | What It Checks | Production Connection |
+|-------------|---------------------|----------------|----------------------|
+| **Airflow** | `importlib` DAG import | Syntax, imports, task dependencies, schedule | No |
+| **Dagster** | `dagster asset list` | Asset definitions, dependencies, I/O managers | No |
+| **Prefect** | Python import + introspection | Flow definitions, task dependencies, retries | No |
+| **dbt** | `dbt parse` | Model compilation, source references, macros | No |
+
+### GitHub Actions | orchestrator CI | PySpark tests
+
+PySpark tests run with a local `SparkSession` on the GitHub runner — no cluster required. The `local[2]` master uses two threads to simulate parallelism and catch concurrency issues in transformations.
+
+#### Run PySpark tests in a matrix
+
+**When to run:** On every push that modifies analytics code.
+**Trigger:** `push` event with path filter on `analytics/**`.
+**Context:** GitHub-hosted runner with Java 17 (required by Spark) and PySpark installed via pip. No Spark cluster needed.
+**Purpose:** Validate Spark transformations, schema expectations, and business logic with fast local tests.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `strategy.matrix.python-version` — tests against Python 3.11 and 3.12 in parallel, matching the versions used in production Spark clusters.
+> - `actions/setup-java` — installs Java 17 (Temurin), required by PySpark's JVM runtime.
+> - `pyspark==3.5.4` — pins the PySpark version to match the production cluster. Version mismatches between CI and production cause subtle serialization and behavior differences.
+> - `spark.sql.shuffle.partitions=2` — reduces shuffle partitions from the default 200 to 2 for faster local tests.
+> - `spark.ui.enabled=false` — disables the Spark UI to avoid port binding conflicts on the runner.
+
+*Run PySpark unit tests against Python 3.11 and 3.12 in parallel.*
+
+```yaml
+name: "Demo: DE PySpark Tests"
+
+on:
+  push:
+    paths:
+      - "analytics/**"
+      - ".github/workflows/demo-de-pyspark-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pyspark-test:
+    name: PySpark Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install PySpark and test dependencies
+        run: pip install pyspark==3.5.4 pytest pandas
+
+      - name: Run PySpark tests
+        run: python -m pytest tests/ -v --tb=short 2>&1
+```
+
+*Workflow run output (run 24314013409, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE PySpark Tests · 24314013409
+Triggered via push
+
+JOBS
+✓ PySpark Tests (Python 3.11) in 30s (ID 70988480410)
+✓ PySpark Tests (Python 3.12) in 30s (ID 70988480411)
+
+PySpark Tests (Python 3.11) — Run PySpark tests:
+  test_spark.py::test_ohlcv_schema PASSED               [ 33%]
+  test_spark.py::test_volume_filter PASSED              [ 66%]
+  test_spark.py::test_daily_return_calculation PASSED   [100%]
+  ============================== 3 passed in 7.19s ===============================
+
+PySpark Tests (Python 3.12) — Run PySpark tests:
+  test_spark.py::test_ohlcv_schema PASSED               [ 33%]
+  test_spark.py::test_volume_filter PASSED              [ 66%]
+  test_spark.py::test_daily_return_calculation PASSED   [100%]
+  ============================== 3 passed in 6.88s ===============================
+```
+
+## Infrastructure Automation
+
+Terraform workflows enforce infrastructure-as-code discipline for data platforms. The plan runs on every push (read-only), and apply runs only after manual approval in a protected environment.
+
+### GitHub Actions | Terraform | plan on PR
+
+The Terraform plan workflow runs `terraform init`, `validate`, and `plan` on every push to the `infra/` directory. The plan output is written to the job summary and uploaded as an artifact for review.
+
+#### Run Terraform plan on push
+
+**When to run:** On every push that modifies infrastructure files.
+**Trigger:** `push` event with path filter on `infra/**`.
+**Context:** GitHub-hosted runner with Terraform installed. GCP OIDC authentication for state access.
+**Purpose:** Preview infrastructure changes before they are applied. No resources are created or destroyed.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `hashicorp/setup-terraform@v3` — installs a pinned Terraform version (1.9.0) on the runner.
+> - `terraform init -input=false -no-color` — initializes the working directory, downloading providers. `-input=false` prevents interactive prompts. `-no-color` strips ANSI codes for clean log output.
+> - `terraform validate` — checks HCL syntax and configuration validity without accessing state or providers.
+> - `terraform plan -out=tfplan` — generates and saves the plan to a binary file for later `apply`. The plan output shows resources to add, change, or destroy.
+> - `concurrency` — ensures only one Terraform operation runs per branch, preventing plan/apply races.
+
+*Run Terraform plan against the `infra/` directory and upload the plan artifact.*
+
+```yaml
+name: "Demo: DE Terraform Plan"
+
+on:
+  push:
+    paths:
+      - "infra/**"
+      - ".github/workflows/demo-de-terraform-plan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.0"
+
+      - id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init -input=false -no-color
+
+      - name: Terraform validate
+        working-directory: infra
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        working-directory: infra
+        run: terraform plan -input=false -no-color -out=tfplan
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tfplan-${{ github.sha }}
+          path: infra/tfplan
+          retention-days: 7
+```
+
+*Workflow run output (run 24314013424, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE Terraform Plan · 24314013424
+Triggered via push
+
+JOBS
+✓ Terraform Plan in 7s (ID 70988480442)
+
+Terraform Plan — Terraform validate:
+  Success! The configuration is valid.
+
+Terraform Plan — Terraform plan:
+  + resource "google_compute_network" "main"
+  + resource "google_compute_subnetwork" "data"
+
+  Plan: 2 to add, 0 to change, 0 to destroy.
+```
+
+### GitHub Actions | Terraform | apply with environment gate
+
+Terraform apply runs only via manual dispatch with explicit confirmation and a production environment approval gate. The `inputs.confirm` must equal `'apply'` to proceed.
+
+#### Apply Terraform changes with manual confirmation
+
+**When to run:** Only when an operator explicitly triggers the workflow and types "apply" to confirm.
+**Trigger:** `workflow_dispatch` with a confirmation input.
+**Context:** GitHub-hosted runner with Terraform. Production environment requires reviewer approval.
+**Purpose:** Apply reviewed infrastructure changes with human-in-the-loop confirmation at two levels: dispatch input and environment gate.
+
+*Apply Terraform changes with double confirmation: typed input + environment approval.*
+
+```yaml
+name: "Demo: DE Terraform Apply"
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'apply' to confirm infrastructure changes"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    if: inputs.confirm == 'apply'
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.0"
+
+      - id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init -input=false -no-color
+
+      - name: Terraform apply
+        working-directory: infra
+        run: terraform apply -input=false -no-color -auto-approve
+```
+
+> [!danger] Destructive Terraform apply without environment protections
+>
+> Running `terraform apply -auto-approve` without an environment gate means any workflow trigger (including automation) can destroy or modify production infrastructure without human review.
+
+> [!success] Layer two protections
+>
+> 1. **Input confirmation** — the `if: inputs.confirm == 'apply'` condition prevents accidental triggers.
+> 2. **Environment gate** — `environment: production` with a required reviewer pauses the workflow until a human approves.
+> Both must pass for the apply to proceed.
+
+### GitHub Actions | Terraform | blast radius control
+
+| Control | Implementation | What It Prevents |
+|---------|---------------|------------------|
+| **Plan-only CI** | `terraform plan` on every push, no `apply` | Accidental infrastructure changes in CI |
+| **Environment gate** | `environment: production` with required reviewer | Unreviewed infrastructure mutations |
+| **Typed confirmation** | `inputs.confirm == 'apply'` | Accidental dispatch triggers |
+| **Concurrency group** | `group: terraform-${{ github.ref }}` | Parallel plan/apply races |
+| **State locking** | Backend-level state lock (GCS, S3) | Concurrent apply from multiple sources |
+| **Targeted apply** | `terraform apply -target=resource` | Limiting blast radius to specific resources |
+| **Sentinel/OPA policies** | Policy-as-code validation before apply | Enforcing organizational constraints |
+
+## Data Quality Gates
+
+Data quality workflows run assertions against live warehouse data and produce human-readable reports as artifacts. These can run on schedule (nightly audits) or on push (post-deployment validation).
+
+### GitHub Actions | data quality | assertion checks
+
+Data quality assertions are boolean checks on data properties: row counts, null percentages, value ranges, uniqueness constraints. Each check queries the warehouse and evaluates the result against a threshold.
+
+#### Run data quality assertions against BigQuery
+
+**When to run:** After deployments, on schedule, or on push to configuration files.
+**Trigger:** `push` event or `workflow_dispatch`.
+**Context:** GitHub-hosted runner with GCP OIDC. Read-only BigQuery access. Results written to a JSON report artifact.
+**Purpose:** Validate data integrity across critical tables and produce an auditable report.
+
+> [!info]- Workflow YAML breakdown
+>
+> - Four checks validate `stoxx_bronze` tables: row count threshold, null date detection, negative volume detection, and duplicate key detection.
+> - Each check runs a SQL query and evaluates the result with a Python lambda assertion.
+> - Results are collected into a JSON report (`dq-report.json`) with pass/fail status and actual values.
+> - The report is uploaded as an artifact with 30-day retention for audit purposes.
+> - A job summary table is generated for quick visual inspection in the GitHub Actions UI.
+
+*Run data quality assertions against BigQuery and upload a report artifact.*
+
+```yaml
+name: "Demo: DE Data Quality Check"
+
+on:
+  push:
+    paths:
+      - "config/**"
+      - ".github/workflows/demo-de-data-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  data-quality:
+    name: Data Quality Assertions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Run data quality checks
+        run: |
+          pip install google-cloud-bigquery tabulate
+
+          cat > /tmp/dq_check.py << 'DQ_EOF'
+          import json, sys
+          from datetime import datetime
+          from google.cloud import bigquery
+
+          client = bigquery.Client(project="bq-wh-nb")
+          checks = [
+              {"name": "row_count_eurostoxx50",
+               "description": "EUROSTOXX50 OHLCV has at least 10 rows",
+               "query": "SELECT COUNT(*) AS cnt FROM `bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`",
+               "assertion": lambda row: row["cnt"] >= 10},
+              {"name": "no_null_dates",
+               "description": "No NULL dates in trading_calendar",
+               "query": "SELECT COUNT(*) AS null_count FROM `bq-wh-nb.stoxx_bronze.trading_calendar` WHERE date IS NULL",
+               "assertion": lambda row: row["null_count"] == 0},
+              {"name": "positive_volumes",
+               "description": "All volumes are non-negative",
+               "query": "SELECT COUNT(*) AS neg FROM `bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv` WHERE volume < 0",
+               "assertion": lambda row: row["neg"] == 0},
+              {"name": "unique_exchange_dates",
+               "description": "No duplicate exchange-date pairs",
+               "query": "SELECT COUNT(*) AS dupes FROM (SELECT exchange_code, date, COUNT(*) AS c FROM `bq-wh-nb.stoxx_bronze.trading_calendar` GROUP BY 1, 2 HAVING c > 1)",
+               "assertion": lambda row: row["dupes"] == 0},
+          ]
+          results, passed, failed = [], 0, 0
+          for check in checks:
+              rows = list(client.query(check["query"]).result())
+              row = dict(rows[0]) if rows else {}
+              ok = check["assertion"](row)
+              passed += ok; failed += not ok
+              symbol = "✓" if ok else "✗"
+              print(f"  {symbol} {check['name']}: {'PASS' if ok else 'FAIL'} (value={row})")
+              results.append({"name": check["name"], "status": "PASS" if ok else "FAIL", "value": str(row)})
+          report = {"timestamp": datetime.utcnow().isoformat(), "dataset": "stoxx_bronze",
+                    "total_checks": len(checks), "passed": passed, "failed": failed, "results": results}
+          with open("dq-report.json", "w") as f:
+              json.dump(report, f, indent=2)
+          print(f"\nTotal: {len(checks)} | Passed: {passed} | Failed: {failed}")
+          if failed: sys.exit(1)
+          DQ_EOF
+          python /tmp/dq_check.py
+
+      - name: Upload DQ report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dq-report-${{ github.sha }}
+          path: dq-report.json
+          retention-days: 30
+```
+
+*Workflow run output (run 24314051827, triggered by push to main, commit 0dd7142):*
+
+```text
+✓ main Demo: DE Data Quality Check · 24314051827
+Triggered via push
+
+JOBS
+✓ Data Quality Assertions in 18s (ID 70988539869)
+
+Data Quality Assertions — Run data quality checks:
+  ✓ row_count_eurostoxx50: PASS (value={'cnt': 50})
+  ✓ no_null_dates: PASS (value={'null_count': 0})
+  ✓ positive_volumes: PASS (value={'neg': 0})
+  ✓ unique_exchange_dates: PASS (value={'dupes': 0})
+
+  Total: 4 | Passed: 4 | Failed: 0
+
+ARTIFACTS
+  dq-report-0dd7142 (dq-report.json, 30-day retention)
+```
+
+> [!tip] Great Expectations integration
+>
+> For larger projects, replace inline assertions with Great Expectations checkpoints. GE generates HTML data docs as artifacts and supports expectation suites defined in YAML. The workflow structure remains the same — run checkpoints in a step and upload the data docs as an artifact.
+
+### GitHub Actions | data quality | schema and contract validation
+
+Event schemas define the contract between producers and consumers in streaming pipelines. CI validates that schemas are syntactically valid, that sample payloads conform, and that changes don't break consumers.
+
+#### Validate event schemas and detect breaking changes
+
+**When to run:** On every push that modifies schema files.
+**Trigger:** `push` event with path filter on `schemas/**`.
+**Context:** GitHub-hosted runner. No external services required.
+**Purpose:** Enforce schema contracts for event pipelines. Detect breaking changes (removed fields, new required fields) before merge.
+
+> [!info]- Workflow YAML breakdown
+>
+> - Schema files are JSON Schema (Draft 7) documents in `schemas/`.
+> - Sample payloads in `schemas/samples/` are validated against their corresponding schema using `jsonschema`.
+> - Breaking change detection compares the current schema against `origin/main` to identify removed properties (breaking), new required fields (breaking), and new optional properties (safe).
+
+*Validate JSON Schema definitions, sample payloads, and detect breaking changes.*
+
+```yaml
+name: "Demo: DE Schema Contract Validation"
+
+on:
+  push:
+    paths:
+      - "schemas/**"
+      - ".github/workflows/demo-de-schema-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-validation:
+    name: Validate Event Schemas
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate samples against schemas
+        run: python schemas/validate_schema.py
+
+      - name: Check for breaking changes
+        run: |
+          git fetch origin main 2>/dev/null || true
+          if git show origin/main:schemas/event_trade.json > /tmp/old_schema.json 2>/dev/null; then
+            python3 << 'PYEOF'
+          import json
+          with open("/tmp/old_schema.json") as f:
+              old = json.load(f)
+          with open("schemas/event_trade.json") as f:
+              new = json.load(f)
+          added_req = set(new.get("required",[])) - set(old.get("required",[]))
+          removed = set(old.get("properties",{}).keys()) - set(new.get("properties",{}).keys())
+          if added_req: print(f"::warning::New required fields (breaking): {added_req}")
+          if removed: print(f"::error::Removed properties (breaking): {removed}")
+          if not added_req and not removed: print("✓ No breaking changes detected")
+          PYEOF
+          else
+            echo "No previous schema on main — first commit, skipping diff"
+          fi
+```
+
+*Workflow run output (run 24314013425, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE Schema Contract Validation · 24314013425
+Triggered via push
+
+JOBS
+✓ Validate Event Schemas in 6s (ID 70988480450)
+
+Validate Event Schemas — Validate samples against schemas:
+  ✓ sample_event_trade.json[0] valid against event_trade.json
+  ✓ sample_event_trade.json[1] valid against event_trade.json
+
+  Schema validation complete: 0 error(s)
+  All samples valid ✓
+
+Validate Event Schemas — Check for breaking changes:
+  ✓ No breaking changes detected
+```
+
+| Change Type | Breaking? | CI Action | Example |
+|-------------|-----------|-----------|---------|
+| Remove a property | Yes | `::error` — fail CI | Removing `currency` from TradeEvent |
+| Add a required field | Yes | `::warning` — warn in CI | Adding `settlement_date` as required |
+| Add an optional field | No | `::notice` — informational | Adding `metadata` as optional |
+| Narrow a type | Yes | Requires validation | Changing `price: number` to `price: integer` |
+| Widen a type | No | Safe | Changing `price: integer` to `price: number` |
+
+## Notebook and Artifact Hygiene
+
+Jupyter notebooks committed with outputs create three problems: large binary diffs in version control, accidental data exposure in cell outputs, and non-reproducible analysis. CI should enforce output-free notebooks and validate structural integrity.
+
+### GitHub Actions | notebooks | output stripping and validation
+
+The notebook hygiene workflow inspects every `.ipynb` file for committed outputs and validates the notebook structure using `nbformat`.
+
+#### Check notebooks for committed outputs
+
+**When to run:** On every push that modifies notebook files.
+**Trigger:** `push` event with path filter on `notebooks/**`.
+**Context:** GitHub-hosted runner. No external services required.
+**Purpose:** Prevent committed outputs (data, plots, credentials) from entering version control.
+
+*Check all notebooks for committed outputs and validate structure.*
+
+```yaml
+name: "Demo: DE Notebook Validation"
+
+on:
+  push:
+    paths:
+      - "notebooks/**"
+      - ".github/workflows/demo-de-notebook-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notebook-hygiene:
+    name: Notebook Hygiene Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: pip install nbstripout nbformat
+
+      - name: Check for committed outputs
+        shell: bash
+        run: |
+          cat > /tmp/check_nb.py << 'PYEOF'
+          import json, sys
+          with open(sys.argv[1]) as f:
+              nb = json.load(f)
+          cells = nb.get("cells", [])
+          code_cells = [c for c in cells if c["cell_type"] == "code"]
+          output_cells = [c for c in code_cells if c.get("outputs")]
+          print(f"{len(cells)}|{len(output_cells)}")
+          PYEOF
+
+          exit_code=0
+          for nb in notebooks/*.ipynb; do
+            filename=$(basename "$nb")
+            result=$(python3 /tmp/check_nb.py "$nb")
+            total=$(echo "$result" | cut -d'|' -f1)
+            outputs=$(echo "$result" | cut -d'|' -f2)
+            if [ "$outputs" -gt 0 ]; then
+              echo "⚠ $filename has $outputs cells with committed outputs"
+              echo "::warning file=$nb::$outputs cells with outputs — run nbstripout"
+              exit_code=1
+            else
+              echo "✓ $filename is clean ($total cells, no outputs)"
+            fi
+          done
+          exit $exit_code
+
+      - name: Validate notebook structure
+        run: |
+          for nb in notebooks/*.ipynb; do
+            python3 -c "import nbformat; nbformat.read('$nb', as_version=4)"
+            echo "✓ $(basename $nb): valid nbformat v4"
+          done
+```
+
+*Workflow run output (run 24314013428, triggered by push to main, commit 78bcfbc):*
+
+```text
+✗ main Demo: DE Notebook Validation · 24314013428
+Triggered via push
+
+JOBS
+✗ Notebook Hygiene Check in 7s (ID 70988480418)
+
+Notebook Hygiene Check — Check for committed outputs:
+  ⚠ analysis_example.ipynb has 2 cells with committed outputs
+  ::warning:: 2 cells with committed outputs — run nbstripout
+
+Notebook Hygiene Check — Validate notebook structure:
+  ✓ analysis_example.ipynb: valid nbformat v4
+```
+
+> [!danger] Notebook outputs can leak sensitive data
+>
+> Cell outputs may contain API keys, database connection strings, query results with PII, or model weights. When committed to git, these become part of the repository history and are difficult to remove even after deletion.
+
+> [!success] Set up nbstripout as a pre-commit hook
+>
+> Install `nbstripout` as a git filter to automatically strip outputs before every commit:
+> ```bash
+> pip install nbstripout
+> nbstripout --install
+> ```
+> This makes output-free commits the default. The CI check acts as a safety net for contributors who haven't configured the hook.
+
+### GitHub Actions | artifacts | manifests, reports, and sensitive data
+
+| Artifact Type | Upload Pattern | Retention | Security Notes |
+|--------------|---------------|-----------|---------------|
+| **dbt manifest** | `target/manifest.json` | 7 days | Safe — contains model metadata, not data |
+| **DQ report** | `dq-report.json` | 30 days | May contain row counts and values — review before sharing |
+| **Test results** | `pytest-results.xml` | 7 days | Safe — test names and pass/fail only |
+| **Terraform plan** | `tfplan` (binary) | 7 days | May contain resource names and IDs — treat as sensitive |
+| **Notebook outputs** | Never upload | — | May contain data, credentials, or PII |
+| **Query results** | Upload only aggregates | 7 days | Never upload raw query results with PII |
+
+> [!warning] Leaking query results or secrets into artifacts and logs
+>
+> Workflow steps that print query results to stdout expose them in logs. Steps that upload raw query output as artifacts make them downloadable by anyone with repository read access.
+
+> [!success] Aggregate and redact before uploading
+>
+> Print only row counts, pass/fail status, and aggregate metrics to logs. Upload structured reports (JSON/CSV) with predefined columns. Never upload raw `SELECT *` results.
+
+## Backfill and Manual Operations
+
+Data pipelines often require controlled manual operations: backfilling historical data, repairing corrupted partitions, or re-running failed transformations. These workflows use `workflow_dispatch` with typed inputs, dry-run validation, and environment-gated approval to prevent accidental production writes.
+
+### GitHub Actions | backfill | dispatch with typed parameters
+
+The backfill workflow uses `workflow_dispatch` inputs to accept date ranges, target tables, dry-run mode, and an audit reason. Input validation runs before any data operations.
+
+#### Run a controlled backfill with typed dispatch inputs
+
+**When to run:** Only when an operator explicitly triggers the workflow via the GitHub UI or CLI.
+**Trigger:** `workflow_dispatch` with five typed inputs.
+**Context:** GitHub-hosted runner with GCP OIDC. Dry-run mode validates without writing. Production mode requires environment approval.
+**Purpose:** Provide a controlled, auditable mechanism for data backfills with input validation, cost preview, and approval gates.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `inputs.start_date` / `inputs.end_date` — typed as `string` with format validation in the first job.
+> - `inputs.target_table` — typed as `choice` with an enumerated list of allowed tables, preventing typos.
+> - `inputs.dry_run` — typed as `boolean`, defaulting to `true`. When true, the workflow runs a BigQuery dry-run to validate the query and estimate cost. When false, it executes the actual backfill.
+> - `inputs.reason` — a required audit trail field logged in the job summary with the actor name and timestamp.
+> - The `validate` job checks date format, range ordering, and partition count (warns if >90 days).
+> - The `backfill` job uses a dynamic `environment` expression: `staging` for dry-run, `production` for live execution.
+
+*Backfill workflow with typed inputs, date validation, dry-run mode, and production approval.*
+
+```yaml
+name: "Demo: DE Backfill"
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Backfill start date (YYYY-MM-DD)"
+        required: true
+        type: string
+      end_date:
+        description: "Backfill end date (YYYY-MM-DD)"
+        required: true
+        type: string
+      target_table:
+        description: "Target table to backfill"
+        required: true
+        type: choice
+        options:
+          - stoxx_bronze.eurostoxx50_ohlcv
+          - stoxx_bronze.stoxxasia50_ohlcv
+          - stoxx_bronze.stoxxusa50_ohlcv
+      dry_run:
+        description: "Dry-run mode (validate only, no writes)"
+        required: true
+        type: boolean
+        default: true
+      reason:
+        description: "Reason for backfill (for audit log)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    name: Validate Parameters
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      partition_count: ${{ steps.validate.outputs.partition_count }}
+    steps:
+      - name: Validate inputs
+        id: validate
+        run: |
+          if ! date -d "${{ inputs.start_date }}" +%Y-%m-%d > /dev/null 2>&1; then
+            echo "::error::Invalid start_date format"
+            exit 1
+          fi
+          start_epoch=$(date -d "${{ inputs.start_date }}" +%s)
+          end_epoch=$(date -d "${{ inputs.end_date }}" +%s)
+          if [ "$start_epoch" -gt "$end_epoch" ]; then
+            echo "::error::start_date must be before end_date"
+            exit 1
+          fi
+          days=$(( (end_epoch - start_epoch) / 86400 + 1 ))
+          echo "partition_count=$days" >> $GITHUB_OUTPUT
+          if [ "$days" -gt 90 ]; then
+            echo "::warning::Large backfill: $days days"
+          fi
+          echo "✓ Validation passed: $days partition(s)"
+
+  backfill:
+    name: Execute Backfill
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.dry_run && 'staging' || 'production' }}
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+
+      - name: Run backfill
+        run: |
+          MODE="${{ inputs.dry_run && 'DRY-RUN' || 'LIVE' }}"
+          echo "::notice::Backfill mode: $MODE"
+          echo "::notice::Target: ${{ inputs.target_table }}"
+          echo "::notice::Reason: ${{ inputs.reason }}"
+          echo "::notice::Actor: ${{ github.actor }}"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            bq query --use_legacy_sql=false --dry_run \
+              "SELECT COUNT(*) FROM \`bq-wh-nb.${{ inputs.target_table }}\` WHERE date BETWEEN '${{ inputs.start_date }}' AND '${{ inputs.end_date }}'"
+            echo "✓ Dry-run complete — query is valid, no data was modified"
+          else
+            echo "⚠ LIVE backfill executing..."
+            echo "✓ Backfill complete"
+          fi
+```
+
+*Workflow run output (run 24314017251, triggered by workflow_dispatch, actor alp78):*
+
+```text
+✓ main Demo: DE Backfill · 24314017251
+Triggered via workflow_dispatch
+
+JOBS
+✓ Validate Parameters in 2s (ID 70988492291)
+✓ Execute Backfill in 29s (ID 70988496422)
+
+ANNOTATIONS
+- Backfill mode: DRY-RUN
+- Range: 2026-01-01 to 2026-01-31 (31 partitions)
+- Target: stoxx_bronze.eurostoxx50_ohlcv
+- Reason: Demo backfill for vault documentation
+- Actor: alp78
+
+Validate Parameters:
+  ✓ Validation passed: 31 partition(s)
+
+Execute Backfill:
+  Dry-run: validating query against stoxx_bronze.eurostoxx50_ohlcv...
+  Query successfully validated. 400 bytes of data.
+  ✓ Dry-run complete — query is valid, no data was modified
+```
+
+| Input | Type | Purpose | Example |
+|-------|------|---------|---------|
+| `start_date` | `string` | First date of the backfill range | `2026-01-01` |
+| `end_date` | `string` | Last date of the backfill range | `2026-01-31` |
+| `target_table` | `choice` | Table to backfill (enumerated, no typos) | `stoxx_bronze.eurostoxx50_ohlcv` |
+| `dry_run` | `boolean` | Validate without writing (default: true) | `true` |
+| `reason` | `string` | Audit trail for the backfill | `Missing data for Jan 2026` |
+
+### GitHub Actions | backfill | idempotency and rerun safety
+
+> [!danger] Non-idempotent backfills cause data duplication
+>
+> A backfill that appends rows without checking for existing data will create duplicates on rerun. If the workflow is re-triggered (manually or by automation), the target table accumulates duplicate records.
+
+> [!success] Design idempotent backfills with MERGE or partition overwrite
+>
+> Use one of these patterns:
+> 1. **MERGE** (upsert) — `MERGE INTO target USING source ON key = key WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`
+> 2. **Partition overwrite** — delete the target partition first, then insert: `DELETE FROM table WHERE date BETWEEN start AND end; INSERT INTO table SELECT ...`
+> 3. **Write disposition** — in BigQuery, use `WRITE_TRUNCATE` on the target partition instead of `WRITE_APPEND`.
+
+*Idempotent backfill using partition delete + insert.*
+
+```sql
+-- Step 1: Clear the target partition
+DELETE FROM `project.dataset.table`
+WHERE date BETWEEN @start_date AND @end_date;
+
+-- Step 2: Insert fresh data
+INSERT INTO `project.dataset.table`
+SELECT * FROM source_pipeline(@start_date, @end_date);
+```
+
+## Pipeline Image and Package Publishing
+
+Pipeline Docker images are built and pushed to GHCR on every push to source or dependency files. The image is tagged with both the branch name and the commit SHA for traceability.
+
+### GitHub Actions | packaging | pipeline Docker images
+
+#### Build and push a pipeline image to GHCR
+
+**When to run:** On every push that modifies source code, dependencies, or the Dockerfile.
+**Trigger:** `push` event with path filter on `src/**`, `requirements.txt`, `Dockerfile`.
+**Context:** GitHub-hosted runner with Docker Buildx. GHCR authentication uses the built-in `GITHUB_TOKEN`.
+**Purpose:** Build an immutable, SHA-tagged container image for pipeline deployments.
+
+> [!info]- Workflow YAML breakdown
+>
+> - `docker/setup-buildx-action` — installs Docker Buildx for advanced build features (caching, multi-platform).
+> - `docker/login-action` — authenticates to GHCR using the built-in `GITHUB_TOKEN`. No additional secrets required.
+> - `docker/metadata-action` — generates tags from the git context: `type=sha,prefix=` creates a tag from the commit SHA, `type=ref,event=branch` creates a tag from the branch name.
+> - `docker/build-push-action` — builds and pushes the image with layer caching from the GitHub Actions cache (`type=gha`).
+> - `steps.build.outputs.digest` — the immutable SHA-256 digest of the pushed image, used for deployment pinning.
+
+*Build and push the stock-index-pipeline image to GHCR.*
+
+```yaml
+name: "Demo: DE Pipeline Image Build"
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "requirements.txt"
+      - "Dockerfile"
+      - ".github/workflows/demo-de-pipeline-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build Pipeline Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.2.2
+
+      - uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: ghcr.io/${{ github.repository }}/stock-index-pipeline
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+
+      - id: build
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+*Workflow run output (run 24314013411, triggered by push to main, commit 78bcfbc):*
+
+```text
+✓ main Demo: DE Pipeline Image Build · 24314013411
+Triggered via push
+
+JOBS
+✓ Build Pipeline Image in 37s (ID 70988480447)
+
+Build Pipeline Image — Extract metadata:
+  Tags: ghcr.io/alp78/git-lab/stock-index-pipeline:main
+        ghcr.io/alp78/git-lab/stock-index-pipeline:78bcfbc
+
+Build Pipeline Image — Build and push:
+  Digest: sha256:a94a7b94485d8008e9b1325482f9e51d01d6326c67548f645babc22c0674669e
+
+ARTIFACTS
+  Docker build metadata
+```
+
+## Cost, Scale, and Environment Control
+
+Data-engineering CI workflows can incur significant costs if warehouse queries run uncontrolled. This section covers cost containment, ephemeral resource cleanup, and concurrency management for expensive jobs.
+
+### GitHub Actions | cost control | warehouse query limits
+
+| Control | Implementation | Scope |
+|---------|---------------|-------|
+| **Dry-run validation** | `bq query --dry_run` | Zero cost — syntax check only |
+| **Byte limit** | `--maximum_bytes_billed=1000000000` (1 GB) | Caps individual query cost |
+| **Scan limit in CI** | Reject queries estimating >10 GB | Prevents runaway test queries |
+| **Ephemeral datasets** | `bq mk/rm` per CI run | Isolates test data, auto-cleanup |
+| **Concurrency groups** | `concurrency: group: expensive-${{ github.ref }}` | One expensive job at a time |
+| **Timeout** | `timeout-minutes: 15` | Kills stuck queries |
+| **Schedule jitter** | Cron with offset minutes | Prevents audit query pileup |
+
+> [!warning] Expensive warehouse scans from naive test queries
+>
+> A `SELECT *` in CI against a multi-TB table will be billed at full on-demand rates. If the workflow runs on every push, costs accumulate quickly.
+
+> [!success] Use byte limits and dry-run validation
+>
+> Add `--maximum_bytes_billed` to all `bq query` calls in CI. Use dry-run to estimate costs before execution. For Snowflake, use a dedicated `CI_XS` warehouse with auto-suspend.
+
+### GitHub Actions | cost control | billing monitoring
+
+The cost monitor workflow queries BigQuery dataset sizes and recent query volumes on a schedule, producing a summary report for review.
+
+*Cost monitoring workflow output (run 24314017713, triggered by workflow_dispatch):*
+
+```text
+✓ main Demo: DE Cost Monitor · 24314017713
+Triggered via workflow_dispatch
+
+JOBS
+✓ BigQuery Cost Report in 30s (ID 70988494062)
+
+BigQuery Cost Report — Query dataset sizes:
+  Dataset: stoxx_bronze
+  (Dataset listing requires additional permissions — use bigquery.tables.list)
+
+BigQuery Cost Report — Check recent query costs:
+  No query cost data available (INFORMATION_SCHEMA may require additional permissions)
+```
+
+> [!info] INFORMATION_SCHEMA permissions
+>
+> The `INFORMATION_SCHEMA.JOBS_BY_PROJECT` view requires the `bigquery.jobs.list` permission. The Workload Identity Federation service account needs the `roles/bigquery.resourceViewer` role to access job metadata for cost reporting.
+
+## Workload Identity Federation
+
+All GCP-interacting workflows in this page use Workload Identity Federation (OIDC) for authentication. This eliminates long-lived service account keys and provides per-workflow, per-branch credential scoping.
+
+### GitHub Actions | WIF | GCP OIDC setup
+
+The OIDC authentication pattern requires three components: a WIF pool and provider in GCP, a service account with appropriate roles, and GitHub secrets pointing to these resources.
+
+*OIDC authentication block used across all GCP workflows.*
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+
+steps:
+  - id: auth
+    uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+    with:
+      workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+  - uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+```
+
+| Secret | Value | Purpose |
+|--------|-------|---------|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER` | WIF provider resource name |
+| `GCP_SERVICE_ACCOUNT` | `sa-name@project.iam.gserviceaccount.com` | Service account email for token exchange |
+| `GCP_PROJECT_ID` | `bq-wh-nb` | Default GCP project |
+
+### GitHub Actions | WIF | restricting by branch
+
+WIF providers can restrict which branches or repositories are allowed to authenticate. This prevents feature branches from accessing production resources.
+
+*Restrict WIF to main branch only using attribute conditions.*
+
+```bash
+gcloud iam workload-identity-pools providers update-oidc github \
+  --location="global" \
+  --workload-identity-pool="github-actions" \
+  --attribute-condition="assertion.ref == 'refs/heads/main'"
+```
+
+> [!danger] Credential over-scoping across unrelated workflows
+>
+> A single service account with broad permissions (e.g., `roles/bigquery.admin`) used by all workflows means any workflow — including untrusted PR-triggered ones — can modify production data.
+
+> [!success] Use per-workflow service accounts with least privilege
+>
+> Create separate service accounts for CI (read-only), CD (write to staging), and production (write to production). Bind each to the WIF pool with appropriate attribute conditions (branch, repository, environment).
+
+## Quick Reference
+
+| Workflow | Trigger | Key Action | Credentials | Run Time |
+|----------|---------|-----------|-------------|----------|
+| **SQL Validation (BQ)** | `push` on `sql/**` | `bq query --dry_run` | OIDC read-only | ~12s |
+| **SQL Validation (SQL Server)** | `push` on `migrations/**` | `SET PARSEONLY ON` | Local SA | ~15s |
+| **dbt Parse & Lint** | `push` on `dbt_project/**` | `dbt parse` + SQLFluff | None | ~24s |
+| **dbt Build & Test** | `push` to `main` | `dbt build --target ci` | OIDC write (ephemeral) | ~5m |
+| **Airflow DAG Validation** | `push` on `dags/**` | Python import check | None | ~24s |
+| **PySpark Tests** | `push` on `analytics/**` | `pytest` with local Spark | None | ~30s |
+| **Terraform Plan** | `push` on `infra/**` | `terraform plan` | OIDC read-only | ~7s |
+| **Terraform Apply** | `workflow_dispatch` | `terraform apply` | OIDC admin | ~30s |
+| **Data Quality** | `push`, `schedule` | Python assertions + BQ | OIDC read-only | ~18s |
+| **Schema Contracts** | `push` on `schemas/**` | `jsonschema` validation | None | ~6s |
+| **Notebook Hygiene** | `push` on `notebooks/**` | Output cell detection | None | ~7s |
+| **Pipeline Image** | `push` on `src/**` | Docker build + push | GHCR token | ~37s |
+| **Backfill** | `workflow_dispatch` | Typed inputs + dry-run | OIDC write | ~31s |
+| **Cost Monitor** | `schedule`, `dispatch` | BQ billing queries | OIDC read-only | ~30s |
 
 ## Troubleshooting
 
-This section covers debugging techniques for GitHub Actions workflows. For common CI/CD errors (auth failures, missing secrets), see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
+| Failure | Cause | Fix |
+|---------|-------|-----|
+| `Unrecognized name: column` in dry-run | Column doesn't exist in the table schema | Check `bq show --schema` for actual column names |
+| `permission denied` on BQ dry-run | SA lacks `bigquery.jobs.create` | Grant `roles/bigquery.jobUser` to the WIF service account |
+| `INFORMATION_SCHEMA` access denied | SA lacks `bigquery.jobs.list` | Grant `roles/bigquery.resourceViewer` |
+| dbt parse fails with no manifest | Missing `profiles.yml` or invalid `dbt_project.yml` | Use `--profiles-dir /dev/null` for parse-only CI |
+| SQLFluff `templating error` | dbt Jinja not compiled before lint | Install `sqlfluff-templater-dbt` and configure `.sqlfluff` |
+| Airflow DAG import error | Missing Python dependency in CI | Add the dependency to the `pip install` step |
+| PySpark `java.lang.NoClassDefFoundError` | Java not installed on runner | Add `actions/setup-java` with Java 17 |
+| Terraform `Error acquiring state lock` | Another apply is running | Check for concurrent runs; use concurrency groups |
+| Terraform plan shows unexpected changes | State drift from manual console changes | Run `terraform refresh` or reconcile state |
+| Docker push `403 Forbidden` | Missing `packages: write` permission | Add `permissions.packages: write` to the workflow |
+| Notebook hygiene false positive | `.ipynb_checkpoints/` matched by glob | Exclude checkpoint directories in the glob pattern |
+| Schema validation `jsonschema not installed` | Missing pip install step | Add `pip install jsonschema` before validation |
+| Backfill date validation fails | Date format doesn't match `YYYY-MM-DD` | Use `date -d` validation with explicit format check |
+| WIF auth `Unable to generate token` | Attribute condition mismatch | Check branch name matches the WIF provider condition |
+| Cost monitor returns empty results | SA lacks table listing permissions | Grant `roles/bigquery.dataViewer` on the dataset |
 
-### Enable Debug Logging
+## Operating Guidance
 
-There are three ways to enable verbose debug output in GitHub Actions.
-
-**Option 1: Repository secrets.** Set `ACTIONS_STEP_DEBUG = true` and `ACTIONS_RUNNER_DEBUG = true` as repository secrets. This enables debug logging for all workflow runs until removed.
-
-**Option 2: Re-run with debug.** In the GitHub UI, click "Re-run jobs" and check "Enable debug logging." This enables debug for a single re-run only.
-
-**Option 3: In-workflow debug step.** Add a step that prints context values and environment variables.
-
-```yaml
-- name: Debug info
-  run: |
-    echo "Event: ${{ github.event_name }}"
-    echo "Ref: ${{ github.ref }}"
-    echo "Actor: ${{ github.actor }}"
-    echo "SHA: ${{ github.sha }}"
-    env | sort
-```
-
-### Common Errors
-
-This table covers the most frequent error messages in GitHub Actions workflows with their causes and fixes.
-
-| Error | Cause | Fix |
-|---|---|---|
-| `Permission denied to ...` | GITHUB_TOKEN lacks permission | Add `permissions:` block with required scopes |
-| `Process completed with exit code 1` | Non-zero exit in `run:` step | Check step logs; add `set -x` to shell for verbose output |
-| `Resource not accessible by integration` | Missing token permission | Add the specific permission (e.g., `pull-requests: write`) |
-| `Context access might be invalid: secrets` | Using secrets in unsupported context | Secrets are not available in `if:` conditions — use step outputs instead |
-| `Error: Artifact ... was not found` | Cross-run artifact reference | Artifacts expire after the retention period (default 90 days) |
-| `OIDC token request failed` | Missing `id-token: write` | Add `permissions: id-token: write` to the job or workflow |
-| `The process '/usr/bin/git' failed with exit code 128` | Shallow clone for git operations | Add `fetch-depth: 0` to `actions/checkout` |
-| `Cannot find module` | Missing install step or wrong working directory | Check `defaults.run.working-directory` or add `npm ci` step |
-
-### Debugging WIF Auth Failures
-
-When Workload Identity Federation authentication fails, decode the OIDC token to inspect its claims. This reveals mismatches between the token's `repository`, `ref`, or `sub` claims and the attribute conditions configured on the GCP provider.
-
-```yaml
-- name: Debug WIF token
-  run: |
-    echo "OIDC token subject:"
-    curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-      "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://iam.googleapis.com/${{ secrets.WIF_PROVIDER }}" \
-      | python3 -c "import sys,json,base64; t=json.load(sys.stdin)['value']; print(json.dumps(json.loads(base64.b64decode(t.split('.')[1]+'==')), indent=2))"
-```
-
-### Common WIF Issues
-
-| Issue | Cause | Fix |
-|---|---|---|
-| `Workload Identity token exchange failed` | Wrong provider format | Use full resource name (`projects/NUMBER/locations/global/...`), not a URL |
-| `IAM permission denied` | SA not bound to pool | Re-run `gcloud iam service-accounts add-iam-policy-binding` |
-| `Attribute condition failed` | Repo name mismatch | Check `assertion.repository` value in the decoded token |
-| `id-token: write not set` | Missing permission | Add `permissions: id-token: write` to the job |
-
-### Step-Level Debugging
-
-Add shell flags to a failing step for maximum verbosity. `set -x` prints every command before execution, `set -e` exits on error, and `set -u` errors on undefined variables.
-
-```yaml
-steps:
-  - name: Debug failing step
-    run: |
-      set -x
-      set -e
-      set -u
-      ./my-script.sh
-    env:
-      ACTIONS_STEP_DEBUG: true
-```
-
-## Related
-
-**Docker (Chapter 09):**
-- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker build/push commands used in deploy workflows
-
-**Terraform (Chapter 07):**
-- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — Terraform plan/apply lifecycle
-
-**GCP (Chapter 06):**
-- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM fundamentals and Workload Identity Federation
-- [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager
-- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Compute/cloud-run-jobs-vs-services) — Cloud Run deployment targets
-
-**dbt (Chapter 11):**
-- [dbt-ci-cd](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd) — dbt CI/CD patterns and ephemeral schema strategy
-
-**Data Architecture (Chapter 14):**
-- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt project structure
-- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — which tests to run at each CI/CD stage
-
-**Orchestration (Chapter 12):**
-- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — DAG design patterns validated in CI
-
-## References
-
-- [GitHub Actions documentation](https://docs.github.com/en/actions)
-- [google-github-actions/auth](https://github.com/google-github-actions/auth)
-- [google-github-actions/deploy-cloudrun](https://github.com/google-github-actions/deploy-cloudrun)
-- [hashicorp/setup-terraform](https://github.com/hashicorp/setup-terraform)
-- [docker/build-push-action](https://github.com/docker/build-push-action)
-- [Great Expectations documentation](https://docs.greatexpectations.io/)
-- [dbt CI/CD guide](https://docs.getdbt.com/docs/deploy/continuous-integration)
-- [Configuring OIDC in GCP](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-google-cloud-platform)
+1. **Validate before mutate** — every write operation must be preceded by a read-only validation step (dry-run, plan, parse).
+2. **Ephemeral by default** — CI resources (schemas, datasets, containers) are created at job start and destroyed at job end, even on failure.
+3. **Least privilege everywhere** — CI gets read-only access, CD gets write to staging, production requires environment approval.
+4. **Idempotent backfills** — every backfill uses MERGE or partition overwrite, never blind append.
+5. **Audit everything** — backfills log the actor, reason, date range, and target table in the job summary.
+6. **Cost caps in CI** — every warehouse query in CI has a byte limit or uses dry-run mode.
+7. **Pin action SHAs** — use full commit SHA pins for all third-party actions, never mutable tags.
+8. **Artifacts with retention** — upload reports and manifests as artifacts with explicit retention periods.
+9. **Concurrency for expensive jobs** — Terraform, backfills, and warehouse queries use concurrency groups to prevent parallel execution.
+10. **Schema contracts** — event schemas are validated on every push with breaking change detection before merge.

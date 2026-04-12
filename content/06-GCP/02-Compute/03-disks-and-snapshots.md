@@ -1,74 +1,590 @@
 ---
 title: "03 - Disks and Snapshots"
 tags: [gcp, compute]
-aliases: [GCE disks, persistent disk snapshots, disk resize, serial console, disk snapshot GCP]
-description: "How to manage Compute Engine persistent disks — creating incremental snapshots before risky changes, resizing disks, restoring from snapshots, and using the serial console when a VM won't boot."
+aliases: [GCE disks, persistent disk snapshots, disk resize, multi-disk layout, SQL Server disk separation]
+description: "How to manage Compute Engine persistent disks — creating a multi-disk layout for SQL Server, formatting and mounting, incremental snapshots, restore procedures, snapshot schedules, and disk resize."
 created: 2026-03-22
-updated: 2026-04-05
+updated: 2026-04-12
 status: complete
 ---
 
-# Disks and Snapshots — Protecting Your Data
+# Disks and Snapshots — Multi-Disk Storage for SQL Server
 
 > [!quote]
 > "Backups are not sexy, but neither is data loss."
 >
 > — **W. Curtis Preston**, *Backup & Recovery* (2007)
 
-Compute Engine persistent disk snapshots are your undo button. Snapshots are incremental — only changed blocks are stored — making them fast and inexpensive to create. The rule is simple: **always snapshot before any risky operation** (OS upgrades, database updates, schema migrations, disk resizing). The serial console provides the last resort for diagnosing VMs that fail to boot.
+A production SQL Server deployment separates data files, transaction logs, and TempDB onto dedicated persistent disks. This isolation provides three benefits: **IOPS isolation** (a heavy TempDB workload does not compete with data file reads), **independent sizing** (the transaction log disk can be smaller and cheaper than the data disk), and **independent snapshot/backup** (you can snapshot the data disk without including TempDB, which is ephemeral by design). This page demonstrates the full lifecycle — creating disks, attaching them to `stoxx-vm`, formatting, mounting with persistent fstab entries, snapshot management, restore procedures, automated schedules, and online resize.
 
 > [!info] Prerequisites
 >
 > - **API:** `compute.googleapis.com` must be enabled.
-> - **IAM:** `roles/compute.storageAdmin` for disk and snapshot operations; `roles/compute.instanceAdmin.v1` for full VM management including attaching and detaching disks.
+> - **IAM:** `roles/compute.storageAdmin` for disk and snapshot operations; `roles/compute.instanceAdmin.v1` for attaching/detaching disks to VM instances.
+> - **VM:** `stoxx-vm` must already exist in `bq-wh-nb` / `europe-west1-b` (created in page 01).
 
-## Disk Management
+## Key Definitions
 
-Persistent disks are network-attached block storage volumes that exist independently of the VM instances they are attached to. A disk persists until explicitly deleted — it outlives the VM it was attached to — making it the correct layer for durable application data such as database files, pipeline staging directories, and OS volumes.
+| Term | Definition |
+|---|---|
+| **Persistent disk** | Network-attached block storage volume that exists independently of the VM. Persists until explicitly deleted. |
+| **Zonal disk** | A persistent disk that resides in a single zone. Must be in the same zone as the VM it is attached to. |
+| **Regional disk** | A persistent disk replicated synchronously across two zones in the same region. Provides automatic failover with RPO = 0. Created with `--replica-zones`. Costs ~2× the zonal equivalent. |
+| **pd-ssd** | SSD-backed persistent disk optimized for random I/O. Up to 30 IOPS per GB (read and write). Best for databases, OLTP, and latency-sensitive workloads. ~$0.17/GB/month (US). |
+| **pd-balanced** | SSD-backed persistent disk with lower IOPS (6/6 per GB) at lower cost. General-purpose production workloads, boot disks. ~$0.10/GB/month (US). |
+| **pd-standard** | HDD-backed persistent disk for sequential reads, cold backups, archive. 0.75/1.5 IOPS per GB. ~$0.04/GB/month (US). |
+| **pd-extreme** | Highest-performance SSD disk with explicitly provisioned IOPS (up to 120,000). For mission-critical OLTP. ~$0.125/GB/month + $0.003/provisioned IOPS. |
+| **Hyperdisk** | Next-generation block storage with independently configurable IOPS and throughput, decoupled from disk size. GA since 2024. |
+| **IOPS** | Input/Output Operations Per Second. The primary performance metric for database workloads. SQL Server data files require high random IOPS; log files require high sequential write IOPS. |
+| **Throughput** | Data transfer rate in MB/s. Relevant for sequential scan workloads (ETL reads, backup streams). |
+| **Snapshot** | A point-in-time capture of a persistent disk's contents, stored in Cloud Storage. Incremental — only changed blocks are stored after the first full snapshot. Cross-regional: a snapshot from `europe-west1` can restore a disk in `us-central1`. |
+| **Incremental snapshot** | Every snapshot after the first captures only blocks that changed since the previous snapshot, making them fast and storage-efficient. |
+| **Resource policy** | A reusable policy object that automates snapshot creation and deletion on a schedule. Attached to one or more disks. |
+| **Device name** | A stable identifier assigned when attaching a disk to a VM. Creates a symlink at `/dev/disk/by-id/google-DEVICE_NAME` inside the guest OS. Unlike `/dev/sdX` names, device names do not change across reboots. |
+| **Mount point** | A directory in the filesystem where a disk is made accessible (e.g., `/mnt/sqldata`). |
+| **Filesystem** | The logical structure (ext4, xfs) that organizes data on a raw block device. A new disk must be formatted with a filesystem before it can be mounted. |
+| **fstab** | `/etc/fstab` — the Linux file that defines persistent mount configurations. Entries here ensure disks are automatically mounted on boot. |
 
-### Listing and Creating Disks
+## Conceptual Model
 
-#### gcloud | List all persistent disks
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph VM["stoxx-vm (e2-medium)"]
+        direction TB
+        BOOT["stoxx-boot<br>pd-balanced · 50 GB<br>/ (boot disk)<br>OS + SQL Server binaries"]
+        DATA["stoxx-data<br>pd-ssd · 100 GB<br>/mnt/sqldata<br>MDF + NDF data files"]
+        LOG["stoxx-log<br>pd-ssd · 20 GB<br>/mnt/sqllog<br>LDF transaction log"]
+        TEMP["stoxx-tempdb<br>pd-ssd · 20 GB<br>/mnt/sqltempdb<br>TempDB data + log"]
+    end
 
-List all persistent disks in the project across all zones. Use `--filter` to scope by zone, name, or status.
+    subgraph SNAP["Snapshot Storage (Cloud Storage)"]
+        S1["stoxx-data snapshots<br>(daily, 7-day retention)"]
+        S2["stoxx-log snapshots<br>(daily, 7-day retention)"]
+    end
 
-```bash
-gcloud compute disks list
+    DATA --> S1
+    LOG --> S2
 ```
 
-```text
-[OUTPUT CELL MISSING — add representative output]
-```
+> [!info] Why pd-ssd for Data, Log, and TempDB
+>
+> SQL Server data files (`MDF`/`NDF`) and TempDB require high random IOPS — index seeks, page reads, and spill operations generate small random I/O patterns that benefit from the 30 IOPS/GB ceiling of `pd-ssd`. Transaction log files (`LDF`) require high sequential write throughput for WAL flushes. The boot disk uses `pd-balanced` because OS reads are predominantly sequential and the 6 IOPS/GB ceiling is sufficient at lower cost.
 
-#### gcloud | Create a new persistent disk
+## Disk Creation
 
-Creates a zonal persistent disk. You can create a blank disk, initialize it from a source snapshot, or initialize from an image. The disk must be in the same zone as the VM you intend to attach it to.
+This section creates three dedicated disks for the SQL Server production-pattern layout. The boot disk (`stoxx-vm`, 50 GB pd-balanced) was created with the VM in page 01.
+
+### gcloud | Create data, log, and TempDB disks
+
+#### Create the data disk
+
+**When to run:** Before installing SQL Server on the VM.
+**Trigger:** Initial VM provisioning or adding a new SQL Server instance.
+**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a new billable resource.
+**Purpose:** Provision a dedicated pd-ssd disk for SQL Server data files (MDF + NDF), isolated from OS and log I/O.
+
+*Create a 50 GB pd-ssd disk labeled for SQL Server data files.*
 
 ```bash
-gcloud compute disks create data-pipeline-sql-disk \
+gcloud compute disks create stoxx-data \
   --zone=europe-west1-b \
   --size=50GB \
-  --type=pd-ssd
+  --type=pd-ssd \
+  --labels=app=stoxx-db,purpose=sqldata
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-data].
+NAME        ZONE            SIZE_GB  TYPE    STATUS
+stoxx-data  europe-west1-b  50       pd-ssd  READY
+```
+
+#### Create the log disk
+
+*Create a 20 GB pd-ssd disk for SQL Server transaction log files.*
+
+```bash
+gcloud compute disks create stoxx-log \
+  --zone=europe-west1-b \
+  --size=20GB \
+  --type=pd-ssd \
+  --labels=app=stoxx-db,purpose=sqllog
+```
+
+```text
+Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-log].
+NAME       ZONE            SIZE_GB  TYPE    STATUS
+stoxx-log  europe-west1-b  20       pd-ssd  READY
+```
+
+#### Create the TempDB disk
+
+*Create a 20 GB pd-ssd disk for SQL Server TempDB files.*
+
+```bash
+gcloud compute disks create stoxx-tempdb \
+  --zone=europe-west1-b \
+  --size=20GB \
+  --type=pd-ssd \
+  --labels=app=stoxx-db,purpose=sqltempdb
+```
+
+```text
+Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-tempdb].
+NAME          ZONE            SIZE_GB  TYPE    STATUS
+stoxx-tempdb  europe-west1-b  20       pd-ssd  READY
+```
+
+#### List all stoxx disks
+
+*List all persistent disks matching the `stoxx` prefix to verify the complete disk layout.*
+
+```bash
+gcloud compute disks list --filter="name~stoxx"
+```
+
+```text
+NAME          LOCATION        LOCATION_SCOPE  SIZE_GB  TYPE         STATUS
+stoxx-data    europe-west1-b  zone            50       pd-ssd       READY
+stoxx-log     europe-west1-b  zone            20       pd-ssd       READY
+stoxx-tempdb  europe-west1-b  zone            20       pd-ssd       READY
+stoxx-vm      europe-west1-b  zone            50       pd-balanced  READY
+```
+
+#### Describe a disk
+
+*Inspect the full metadata of the data disk including labels, physical block size, and creation timestamp.*
+
+```bash
+gcloud compute disks describe stoxx-data --zone=europe-west1-b
+```
+
+```text
+creationTimestamp: '2026-04-12T12:03:20.802-07:00'
+id: '4313860795788579479'
+kind: compute#disk
+labelFingerprint: g2UDar-6Wvk=
+labels:
+  app: stoxx-db
+  purpose: sqldata
+name: stoxx-data
+physicalBlockSizeBytes: '4096'
+sizeGb: '50'
+status: READY
+type: .../diskTypes/pd-ssd
+zone: .../zones/europe-west1-b
 ```
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--zone` | `--zone=europe-west1-b` | Zone where the disk is created. Must match the VM zone for attachment. |
-| `--size` | `--size=100GB` | Disk size in GB. Can only be increased after creation, never decreased. |
+| `--size` | `--size=50GB` | Disk size in GB. Can only be increased after creation, never decreased. |
 | `--type` | `--type=pd-ssd` | Disk type: `pd-ssd`, `pd-balanced`, `pd-standard`, `pd-extreme`, `hyperdisk-balanced`, `hyperdisk-throughput`, `hyperdisk-extreme`. |
 | `--image` | `--image=IMAGE_NAME` | Initialize disk from a public or custom image (used for boot disks). |
+| `--image-family` | `--image-family=ubuntu-2204-lts` | Initialize from the latest image in a family. |
 | `--source-snapshot` | `--source-snapshot=SNAPSHOT_NAME` | Initialize disk from an existing snapshot (restore flow). |
-| `--replica-zones` | `--replica-zones=ZONE_A,ZONE_B` | Create a Regional Persistent Disk replicated synchronously across two zones for HA. |
-| `--description` | `--description="..."` | Human-readable label for operational clarity. |
-| `--labels` | `--labels=env=prod,team=data` | Resource labels for cost attribution and filtering. |
+| `--replica-zones` | `--replica-zones=ZONE_A,ZONE_B` | Create a Regional Persistent Disk replicated synchronously across two zones. |
+| `--labels` | `--labels=app=stoxx-db,purpose=sqldata` | Resource labels for cost attribution and filtering. |
+| `--description` | `--description="..."` | Human-readable description for operational clarity. |
+| `--physical-block-size` | `--physical-block-size=4096` | Physical block size in bytes. Options: `4096` (default) or `16384`. |
+
+> [!example]- Terraform equivalent
+>
+> ```hcl
+> resource "google_compute_disk" "stoxx_data" {
+>   name   = "stoxx-data"
+>   zone   = "europe-west1-b"
+>   size   = 50
+>   type   = "pd-ssd"
+>   labels = {
+>     app     = "stoxx-db"
+>     purpose = "sqldata"
+>   }
+> }
+>
+> resource "google_compute_disk" "stoxx_log" {
+>   name   = "stoxx-log"
+>   zone   = "europe-west1-b"
+>   size   = 20
+>   type   = "pd-ssd"
+>   labels = {
+>     app     = "stoxx-db"
+>     purpose = "sqllog"
+>   }
+> }
+>
+> resource "google_compute_disk" "stoxx_tempdb" {
+>   name   = "stoxx-tempdb"
+>   zone   = "europe-west1-b"
+>   size   = 20
+>   type   = "pd-ssd"
+>   labels = {
+>     app     = "stoxx-db"
+>     purpose = "sqltempdb"
+>   }
+> }
+> ```
+
+## Attaching Disks to the VM
+
+Disks can be attached to a running VM without downtime. Each disk is assigned a `--device-name` that creates a stable symlink at `/dev/disk/by-id/google-DEVICE_NAME` inside the guest OS, regardless of the `/dev/sdX` name the kernel assigns.
+
+### gcloud | Attach data, log, and TempDB disks
+
+#### Attach the data disk
+
+*Attach the stoxx-data disk to stoxx-vm with a stable device name.*
+
+```bash
+gcloud compute instances attach-disk stoxx-vm \
+  --disk=stoxx-data \
+  --device-name=stoxx-data \
+  --zone=europe-west1-b
+```
+
+```text
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/instances/stoxx-vm].
+```
+
+#### Attach the log disk
+
+*Attach the stoxx-log disk.*
+
+```bash
+gcloud compute instances attach-disk stoxx-vm \
+  --disk=stoxx-log \
+  --device-name=stoxx-log \
+  --zone=europe-west1-b
+```
+
+```text
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/instances/stoxx-vm].
+```
+
+#### Attach the TempDB disk
+
+*Attach the stoxx-tempdb disk.*
+
+```bash
+gcloud compute instances attach-disk stoxx-vm \
+  --disk=stoxx-tempdb \
+  --device-name=stoxx-tempdb \
+  --zone=europe-west1-b
+```
+
+```text
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/instances/stoxx-vm].
+```
+
+#### Verify disk attachments
+
+*Confirm all four disks (boot + 3 data) are attached to the VM.*
+
+```bash
+gcloud compute instances describe stoxx-vm \
+  --format="yaml(disks)"
+```
+
+```text
+disks:
+- autoDelete: true
+  boot: true
+  deviceName: persistent-disk-0
+  diskSizeGb: '50'
+  interface: SCSI
+  mode: READ_WRITE
+  source: .../disks/stoxx-vm
+  type: PERSISTENT
+- autoDelete: false
+  boot: false
+  deviceName: stoxx-data
+  diskSizeGb: '50'
+  interface: SCSI
+  mode: READ_WRITE
+  source: .../disks/stoxx-data
+  type: PERSISTENT
+- autoDelete: false
+  boot: false
+  deviceName: stoxx-log
+  diskSizeGb: '20'
+  interface: SCSI
+  mode: READ_WRITE
+  source: .../disks/stoxx-log
+  type: PERSISTENT
+- autoDelete: false
+  boot: false
+  deviceName: stoxx-tempdb
+  diskSizeGb: '20'
+  interface: SCSI
+  mode: READ_WRITE
+  source: .../disks/stoxx-tempdb
+  type: PERSISTENT
+```
+
+The three data disks have `autoDelete: false` — they persist even if the VM is deleted. The boot disk has `autoDelete: true` — it is destroyed when the VM is deleted.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--disk` | `--disk=stoxx-data` | Name of the persistent disk to attach. |
+| `--device-name` | `--device-name=stoxx-data` | Stable name exposed inside the guest at `/dev/disk/by-id/google-DEVICE_NAME`. |
+| `--mode` | `--mode=rw` | Access mode: `rw` (read-write, default) or `ro` (read-only). |
+| `--zone` | `--zone=europe-west1-b` | Zone of the VM instance. |
+| `--boot` | `--boot` | Mark the disk as the boot disk (only one per VM). |
+
+> [!example]- Terraform equivalent
+>
+> ```hcl
+> resource "google_compute_attached_disk" "stoxx_data" {
+>   disk     = google_compute_disk.stoxx_data.id
+>   instance = google_compute_instance.stoxx_vm.id
+>   device_name = "stoxx-data"
+> }
+>
+> resource "google_compute_attached_disk" "stoxx_log" {
+>   disk     = google_compute_disk.stoxx_log.id
+>   instance = google_compute_instance.stoxx_vm.id
+>   device_name = "stoxx-log"
+> }
+>
+> resource "google_compute_attached_disk" "stoxx_tempdb" {
+>   disk     = google_compute_disk.stoxx_tempdb.id
+>   instance = google_compute_instance.stoxx_vm.id
+>   device_name = "stoxx-tempdb"
+> }
+> ```
+
+## Formatting and Mounting Disks
+
+All commands in this section are executed inside the VM via `gcloud compute ssh stoxx-vm --command="..."`. New disks are raw block devices — they must be formatted with a filesystem, mounted, and registered in `/etc/fstab` for persistence across reboots.
+
+### Linux | Identify, format, and mount attached disks
+
+#### Identify attached devices
+
+*List all block devices to identify the three new unformatted disks.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="lsblk"
+```
+
+```text
+NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0     7:0    0  63.8M  1 loop /snap/core20/2717
+loop1     7:1    0    74M  1 loop /snap/core22/2339
+loop2     7:2    0 435.2M  1 loop /snap/google-cloud-cli/436
+loop3     7:3    0  91.7M  1 loop /snap/lxd/38469
+loop4     7:4    0  48.1M  1 loop /snap/snapd/25935
+sda       8:0    0    50G  0 disk
+├─sda1    8:1    0  49.9G  0 part /
+├─sda14   8:14   0     4M  0 part
+└─sda15   8:15   0   106M  0 part /boot/efi
+sdb       8:16   0    50G  0 disk
+sdc       8:32   0    20G  0 disk
+sdd       8:48   0    20G  0 disk
+```
+
+`sda` is the boot disk (50 GB, partitioned). `sdb` (50 GB), `sdc` (20 GB), and `sdd` (20 GB) are the three new unformatted disks. The kernel assigns `/dev/sdX` names in attachment order — these names can change across reboots, which is why we use UUIDs in fstab.
+
+#### Format each disk as ext4
+
+The `mkfs.ext4` flags optimize for GCE persistent disks: `-m 0` reserves zero blocks for root (not needed on data-only disks), `lazy_itable_init=0,lazy_journal_init=0` forces immediate initialization (avoids background I/O after mount), and `discard` enables TRIM for SSD-backed disks.
+
+*Format the data disk (sdb, 50 GB).*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb"
+```
+
+```text
+mke2fs 1.46.5 (30-Dec-2021)
+Discarding device blocks:        0/13107200                 done
+Creating filesystem with 13107200 4k blocks and 3276800 inodes
+Filesystem UUID: fcde3cab-2d5e-44f2-8685-65f7a6e3da21
+Superblock backups stored on blocks:
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+	4096000, 7962624, 11239424
+
+Allocating group tables:   0/400       done
+Writing inode tables:   0/400       done
+Creating journal (65536 blocks): done
+Writing superblocks and filesystem accounting information:   0/400       done
+```
+
+*Format the log disk (sdc, 20 GB).*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdc"
+```
+
+```text
+mke2fs 1.46.5 (30-Dec-2021)
+Discarding device blocks:       0/5242880               done
+Creating filesystem with 5242880 4k blocks and 1310720 inodes
+Filesystem UUID: 39255f84-bf29-497c-8dbc-5432fdd9cf84
+Superblock backups stored on blocks:
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+	4096000
+
+Allocating group tables:   0/160       done
+Writing inode tables:   0/160       done
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information:   0/160       done
+```
+
+*Format the TempDB disk (sdd, 20 GB).*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  sudo mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdd"
+```
+
+```text
+mke2fs 1.46.5 (30-Dec-2021)
+Discarding device blocks:       0/5242880               done
+Creating filesystem with 5242880 4k blocks and 1310720 inodes
+Filesystem UUID: 3e8d9bae-88b3-421e-922c-a41adc3db6c5
+Superblock backups stored on blocks:
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+	4096000
+
+Allocating group tables:   0/160       done
+Writing inode tables:   0/160       done
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information:   0/160       done
+```
+
+#### Create mount points and mount
+
+*Create the three mount directories and mount each disk.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  sudo mkdir -p /mnt/sqldata /mnt/sqllog /mnt/sqltempdb && \
+  sudo mount -o discard,defaults /dev/sdb /mnt/sqldata && \
+  sudo mount -o discard,defaults /dev/sdc /mnt/sqllog && \
+  sudo mount -o discard,defaults /dev/sdd /mnt/sqltempdb"
+```
+
+#### Get UUIDs with blkid
+
+*Retrieve the filesystem UUIDs for fstab entries. UUIDs are stable identifiers that do not change across reboots, unlike `/dev/sdX` device names.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="sudo blkid /dev/sdb /dev/sdc /dev/sdd"
+```
+
+```text
+/dev/sdb: UUID="fcde3cab-2d5e-44f2-8685-65f7a6e3da21" BLOCK_SIZE="4096" TYPE="ext4"
+/dev/sdc: UUID="39255f84-bf29-497c-8dbc-5432fdd9cf84" BLOCK_SIZE="4096" TYPE="ext4"
+/dev/sdd: UUID="3e8d9bae-88b3-421e-922c-a41adc3db6c5" BLOCK_SIZE="4096" TYPE="ext4"
+```
+
+#### Add persistent mount entries to fstab
+
+The `nofail` option prevents boot failure if a disk is detached — the system continues booting without the missing mount rather than dropping to an emergency shell.
+
+*Append UUID-based fstab entries for all three disks.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  echo 'UUID=fcde3cab-2d5e-44f2-8685-65f7a6e3da21 /mnt/sqldata ext4 discard,defaults,nofail 0 2' \
+    | sudo tee -a /etc/fstab && \
+  echo 'UUID=39255f84-bf29-497c-8dbc-5432fdd9cf84 /mnt/sqllog ext4 discard,defaults,nofail 0 2' \
+    | sudo tee -a /etc/fstab && \
+  echo 'UUID=3e8d9bae-88b3-421e-922c-a41adc3db6c5 /mnt/sqltempdb ext4 discard,defaults,nofail 0 2' \
+    | sudo tee -a /etc/fstab"
+```
+
+*Resulting fstab contents:*
+
+```text
+LABEL=cloudimg-rootfs   /        ext4  discard,errors=remount-ro  0 1
+LABEL=UEFI              /boot/efi vfat umask=0077                 0 1
+UUID=fcde3cab-2d5e-44f2-8685-65f7a6e3da21 /mnt/sqldata  ext4 discard,defaults,nofail 0 2
+UUID=39255f84-bf29-497c-8dbc-5432fdd9cf84 /mnt/sqllog   ext4 discard,defaults,nofail 0 2
+UUID=3e8d9bae-88b3-421e-922c-a41adc3db6c5 /mnt/sqltempdb ext4 discard,defaults,nofail 0 2
+```
+
+> [!warning] Never use /dev/sdX device names in fstab
+>
+> Linux kernel device names (`/dev/sdb`, `/dev/sdc`) are assigned based on attachment order and can change across reboots, especially after detaching and reattaching disks (as demonstrated in the restore procedure below, where `stoxx-data` moved from `/dev/sdb` to `/dev/sdd`). An fstab entry that references `/dev/sdb` may mount the wrong filesystem after a reboot.
+
+> [!success] Always use UUID or /dev/disk/by-id/ in fstab
+>
+> UUIDs are baked into the filesystem superblock and never change. Alternatively, use the GCE device-name symlink at `/dev/disk/by-id/google-stoxx-data`. Both are stable across reboots and disk reordering.
+
+> [!warning] Missing nofail option causes boot failure
+>
+> If a disk listed in fstab without `nofail` is detached or unavailable at boot time, the VM drops to an emergency shell and becomes unreachable via SSH. Recovery requires the serial console.
+
+> [!success] Always include nofail for non-root mounts
+>
+> The `nofail` option tells systemd to continue booting if the mount fails. The VM remains accessible via SSH, and you can investigate and remount manually.
+
+#### Set permissions for SQL Server
+
+The `mssql` user and group will be created when SQL Server is installed (page 04). Pre-setting ownership now ensures SQL Server can write to the mount points immediately after installation.
+
+*Set ownership to mssql (the SQL Server service account created during installation).*
+
+```bash
+gcloud compute ssh stoxx-vm --command="\
+  sudo chmod 755 /mnt/sqldata /mnt/sqllog /mnt/sqltempdb"
+```
+
+> [!info] Deferred chown to mssql
+>
+> The `mssql` user does not exist until SQL Server is installed. After installing SQL Server (page 04), run: `sudo chown mssql:mssql /mnt/sqldata /mnt/sqllog /mnt/sqltempdb`.
+
+#### Verify all mounts
+
+*Confirm all three disks are mounted with expected sizes.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="df -h /mnt/sqldata /mnt/sqllog /mnt/sqltempdb"
+```
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb         49G   24K   49G   1% /mnt/sqldata
+/dev/sdc         20G   24K   20G   1% /mnt/sqllog
+/dev/sdd         20G   24K   20G   1% /mnt/sqltempdb
+```
+
+*Verify the complete block device layout including mount points.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="lsblk"
+```
+
+```text
+NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda       8:0    0    50G  0 disk
+├─sda1    8:1    0  49.9G  0 part /
+├─sda14   8:14   0     4M  0 part
+└─sda15   8:15   0   106M  0 part /boot/efi
+sdb       8:16   0    50G  0 disk /mnt/sqldata
+sdc       8:32   0    20G  0 disk /mnt/sqllog
+sdd       8:48   0    20G  0 disk /mnt/sqltempdb
+```
 
 ## Snapshot Management
 
-Snapshots capture the state of a persistent disk at a point in time. They are stored in Cloud Storage and are incremental — only changed blocks since the last snapshot are transferred and stored. The first snapshot of a disk is a full copy; subsequent snapshots capture only changes, making them significantly faster and cheaper. Snapshots are cross-regional: a snapshot taken from `europe-west1` can restore a disk in `us-central1`.
+Snapshots capture the state of a persistent disk at a point in time. They are stored in Cloud Storage and are incremental — only changed blocks since the last snapshot are transferred and stored. The first snapshot of a disk is a full copy; subsequent snapshots capture only changes. Snapshots are cross-regional: a snapshot taken from `europe-west1` can restore a disk in `us-central1`. The rule is simple: **always snapshot before any risky operation** (OS upgrades, SQL Server updates, schema migrations, disk resizing).
 
 > [!warning] Snapshot Cost Trap
 >
@@ -76,53 +592,89 @@ Snapshots capture the state of a persistent disk at a point in time. They are st
 
 > [!success] Use Snapshot Schedules with Retention Windows
 >
-> Automate snapshot creation and deletion with resource policies (see [Configuring Snapshot Schedules](#configuring-snapshot-schedules) below). Set `--max-retention-days` to automatically purge snapshots older than your recovery window, capping storage costs.
+> Automate snapshot creation and deletion with resource policies (see [Snapshot Schedules](#snapshot-schedules) below). Set `--max-retention-days` to automatically purge snapshots older than your recovery window, capping storage costs.
 
-### Creating Snapshots Manually
+### gcloud | Create, list, describe, and delete snapshots
 
-Snapshot before any risky operation — OS upgrades, SQL Server updates, schema migrations, disk resizing. The first snapshot of a large disk may take several minutes; subsequent incremental snapshots on typical workloads complete in under a minute.
+#### Create a manual snapshot
 
-#### gcloud | Create a disk snapshot
+**When to run:** Before any risky operation — OS upgrades, SQL Server updates, schema migrations, disk resizing.
+**Trigger:** Planned maintenance or pre-deployment step.
+**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a billable snapshot resource.
+**Purpose:** Capture a point-in-time copy of the data disk that can be used to restore if the operation fails.
 
-Creates an incremental snapshot of the specified disk. The snapshot name should encode the date and reason to make identification easy during incident response.
+*Snapshot the data disk with a descriptive name encoding the date and reason.*
 
 ```bash
-gcloud compute disks snapshot data-pipeline-sql-disk \
+gcloud compute disks snapshot stoxx-data \
   --zone=europe-west1-b \
-  --snapshot-names=data-pipeline-sql-before-upgrade-$(date +%Y%m%d)
+  --snapshot-names=stoxx-data-before-sqlsetup-20260412
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Creating snapshot(s) stoxx-data-before-sqlsetup-20260412...done.
 ```
 
 > [!tip] Snapshot Naming Convention
 >
-> Include the date and the reason in the snapshot name: `data-pipeline-sql-before-upgrade-20260322`. This makes it immediately clear which snapshot to restore from when things go wrong at 3 AM.
+> Include the disk name, reason, and date: `stoxx-data-before-sqlsetup-20260412`. This makes it immediately clear which snapshot to restore from when things go wrong at 3 AM.
 
-#### gcloud | List snapshots
+#### List snapshots
 
-Lists all snapshots in the project. Use `--filter` to scope by source disk or creation time.
+*List all snapshots in the project.*
 
 ```bash
 gcloud compute snapshots list
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+NAME                                 DISK_SIZE_GB  SRC_DISK                         STATUS
+stoxx-data-before-sqlsetup-20260412  50            europe-west1-b/disks/stoxx-data  READY
+```
+
+#### Describe a snapshot
+
+*Inspect snapshot metadata including storage size, source disk, and storage location.*
+
+```bash
+gcloud compute snapshots describe stoxx-data-before-sqlsetup-20260412
+```
+
+```text
+creationSizeBytes: '160256'
+creationTimestamp: '2026-04-12T12:05:53.435-07:00'
+diskSizeGb: '50'
+downloadBytes: '180425'
+name: stoxx-data-before-sqlsetup-20260412
+sourceDisk: .../zones/europe-west1-b/disks/stoxx-data
+status: READY
+storageBytes: '160256'
+storageBytesStatus: UP_TO_DATE
+storageLocations:
+- eu
+```
+
+The `storageBytes: 160256` (156 KB) confirms this is an incremental snapshot of an almost-empty disk. As data accumulates on the disk, subsequent snapshots will store only the changed blocks, keeping storage costs proportional to the actual change rate.
+
+#### Delete a snapshot
+
+*Delete a snapshot that is no longer needed. This is irreversible.*
+
+```bash
+gcloud compute snapshots delete stoxx-data-before-sqlsetup-20260412 --quiet
 ```
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--zone` | `--zone=europe-west1-b` | Zone of the source disk. |
+| `--zone` | `--zone=europe-west1-b` | Zone of the source disk (for `disks snapshot` command). |
 | `--snapshot-names` | `--snapshot-names=NAME` | Comma-separated snapshot names to create. |
-| `--storage-location` | `--storage-location=us` | Multi-regional (`us`, `eu`, `asia`) or regional (`us-central1`) storage for the snapshot. Defaults to closest multi-region. |
+| `--storage-location` | `--storage-location=eu` | Multi-regional (`us`, `eu`, `asia`) or regional (`us-central1`) storage. Defaults to closest multi-region. |
 | `--description` | `--description="..."` | Description attached to the snapshot resource. |
 | `--async` | `--async` | Return immediately without waiting for the snapshot to complete. Useful in scripted pipelines. |
 
-### Restoring a Disk from a Snapshot
+## Restoring from Snapshots
 
-Restoration requires creating a new disk from the snapshot, then reattaching it to the VM. There is no in-place restore — the original disk is not modified. This means you can validate the restored disk before cutting over, keeping the original as a safety net until the restore is confirmed good.
+Restoration creates a new disk from the snapshot, then reattaches it to the VM. There is no in-place restore — the original disk is not modified. This means you can validate the restored disk before cutting over, keeping the original as a safety net until the restore is confirmed good.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -138,40 +690,67 @@ Restoration requires creating a new disk from the snapshot, then reattaching it 
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A[Snapshot exists] --> B["gcloud compute disks create<br>--source-snapshot=SNAPSHOT"]
-    B --> C[New disk created]
-    C --> D["gcloud compute instances stop VM"]
-    D --> E["gcloud compute instances detach-disk<br>old disk"]
-    E --> F["gcloud compute instances attach-disk<br>new restored disk"]
-    F --> G["gcloud compute instances start VM"]
+    A[Snapshot exists] --> B["gcloud compute disks create<br>stoxx-data-restored<br>--source-snapshot=SNAPSHOT"]
+    B --> C[New disk created from snapshot]
+    C --> D["gcloud compute instances stop stoxx-vm"]
+    D --> E["gcloud compute instances detach-disk<br>stoxx-vm --disk=stoxx-data"]
+    E --> F["gcloud compute instances attach-disk<br>stoxx-vm --disk=stoxx-data-restored<br>--device-name=stoxx-data"]
+    F --> G["gcloud compute instances start stoxx-vm"]
     G --> H{Validate data integrity}
     H -->|OK| I[Delete old disk]
     H -->|Fail| J["Re-attach old disk<br>and investigate"]
 ```
 
-#### gcloud | Create a new disk from a snapshot
+### gcloud | Restore a disk from a snapshot
 
-Creates a new persistent disk initialized from the snapshot's contents. The disk type does not need to match the original.
+#### Create a new disk from the snapshot
+
+**When to run:** After a failed operation (upgrade, migration, schema change) has corrupted or damaged data on the disk.
+**Trigger:** Data corruption confirmed, rollback decision made.
+**Context:** `gcloud` CLI. State-changing: creates a new billable disk. The source snapshot is not modified.
+**Purpose:** Create a clean replacement disk from the point-in-time snapshot to replace the damaged disk.
+
+*Create a new pd-ssd disk initialized from the snapshot.*
 
 ```bash
-gcloud compute disks create data-pipeline-sql-restored \
+gcloud compute disks create stoxx-data-restored \
   --zone=europe-west1-b \
-  --source-snapshot=data-pipeline-sql-before-upgrade-20260309 \
+  --source-snapshot=stoxx-data-before-sqlsetup-20260412 \
   --type=pd-ssd
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-data-restored].
+NAME                 ZONE            SIZE_GB  TYPE    STATUS
+stoxx-data-restored  europe-west1-b  50       pd-ssd  READY
 ```
+
+#### Full restore procedure
 
 > [!todo] Full Disk Restore Procedure
 >
-> 1. Create a new disk from the snapshot (command above).
-> 2. Stop the VM: `gcloud compute instances stop INSTANCE_NAME --zone=ZONE`.
-> 3. Detach the old disk: `gcloud compute instances detach-disk INSTANCE_NAME --disk=OLD_DISK --zone=ZONE`.
-> 4. Attach the restored disk: `gcloud compute instances attach-disk INSTANCE_NAME --disk=data-pipeline-sql-restored --zone=ZONE`.
-> 5. Start the VM: `gcloud compute instances start INSTANCE_NAME --zone=ZONE`.
-> 6. SSH in and verify data integrity before deleting the old disk.
+> 1. **Create a new disk from the snapshot** (command above).
+> 2. **Stop the VM:** `gcloud compute instances stop stoxx-vm --zone=europe-west1-b`
+> 3. **Detach the damaged disk:** `gcloud compute instances detach-disk stoxx-vm --disk=stoxx-data --zone=europe-west1-b`
+> 4. **Attach the restored disk with the same device name:** `gcloud compute instances attach-disk stoxx-vm --disk=stoxx-data-restored --device-name=stoxx-data --zone=europe-west1-b`
+> 5. **Start the VM:** `gcloud compute instances start stoxx-vm --zone=europe-west1-b`
+> 6. **SSH in and verify:** `df -h /mnt/sqldata` — confirm the restored disk is mounted at the correct path (UUID-based fstab resolves automatically).
+> 7. **Validate data integrity** before deleting the old disk.
+
+*After executing the full procedure, verify the restored disk is mounted:*
+
+```bash
+gcloud compute ssh stoxx-vm --command="df -h /mnt/sqldata /mnt/sqllog /mnt/sqltempdb"
+```
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd         49G   24K   49G   1% /mnt/sqldata
+/dev/sdb         20G   24K   20G   1% /mnt/sqllog
+/dev/sdc         20G   24K   20G   1% /mnt/sqltempdb
+```
+
+Notice that `stoxx-data` moved from `/dev/sdb` to `/dev/sdd` after the detach/reattach cycle — the kernel assigned a different device name. The UUID-based fstab entry resolved to the correct mount point automatically. This is exactly why UUID-based mounts are critical.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -180,16 +759,34 @@ gcloud compute disks create data-pipeline-sql-restored \
 | `--type` | `--type=pd-ssd` | Disk type for the restored disk. Does not need to match the original. |
 | `--size` | `--size=100GB` | Override disk size. Must be ≥ the source snapshot's original disk size. |
 
-### Configuring Snapshot Schedules
+> [!example]- Terraform equivalent
+>
+> ```hcl
+> resource "google_compute_disk" "stoxx_data_restored" {
+>   name     = "stoxx-data-restored"
+>   zone     = "europe-west1-b"
+>   type     = "pd-ssd"
+>   snapshot = google_compute_snapshot.stoxx_data_before_sqlsetup.id
+> }
+> ```
 
-Snapshot schedules use resource policies to automate snapshot creation and deletion. A single policy can be attached to multiple disks. The schedule runs according to UTC by default, and snapshots are stored in the location specified by `--storage-location` on the policy.
+## Snapshot Schedules
 
-#### gcloud | Create a snapshot schedule resource policy
+Snapshot schedules use resource policies to automate snapshot creation and deletion. A single policy can be attached to multiple disks. The schedule runs according to UTC, and the `--max-retention-days` parameter automatically purges snapshots older than the specified window.
 
-Creates a reusable snapshot schedule resource policy in a given region. The `--max-retention-days` parameter automatically deletes snapshots older than the specified window.
+### gcloud | Create and attach snapshot schedule policies
+
+#### Create the schedule policy
+
+**When to run:** After the disk layout is finalized and validated.
+**Trigger:** Production readiness milestone — disks contain data worth protecting.
+**Context:** `gcloud` CLI, requires `roles/compute.resourcePolicies.create`. State-changing: creates a policy resource.
+**Purpose:** Automate daily snapshots with 7-day retention, eliminating the risk of forgotten manual snapshots and the cost of unbounded accumulation.
+
+*Create a daily snapshot schedule with 7-day retention, running at 02:00 UTC.*
 
 ```bash
-gcloud compute resource-policies create snapshot-schedule daily-snapshot-policy \
+gcloud compute resource-policies create snapshot-schedule stoxx-daily-snapshot \
   --region=europe-west1 \
   --max-retention-days=7 \
   --on-source-disk-delete=keep-auto-snapshots \
@@ -198,64 +795,178 @@ gcloud compute resource-policies create snapshot-schedule daily-snapshot-policy 
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/regions/europe-west1/resourcePolicies/stoxx-daily-snapshot].
 ```
 
-#### gcloud | Attach a snapshot schedule to a disk
+#### Attach the policy to data and log disks
 
-Binds an existing resource policy to a disk. The disk will then receive automated snapshots according to the policy schedule.
+TempDB is not included in the schedule — its contents are ephemeral and rebuilt on every SQL Server restart.
+
+*Attach the snapshot schedule to the data disk.*
 
 ```bash
-gcloud compute disks add-resource-policies data-pipeline-sql-disk \
+gcloud compute disks add-resource-policies stoxx-data \
   --zone=europe-west1-b \
-  --resource-policies=daily-snapshot-policy
+  --resource-policies=stoxx-daily-snapshot
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-data].
 ```
+
+*Attach the snapshot schedule to the log disk.*
+
+```bash
+gcloud compute disks add-resource-policies stoxx-log \
+  --zone=europe-west1-b \
+  --resource-policies=stoxx-daily-snapshot
+```
+
+```text
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-log].
+```
+
+#### List and describe policies
+
+*List all resource policies.*
+
+```bash
+gcloud compute resource-policies list
+```
+
+```text
+NAME                  DESCRIPTION  REGION         CREATION_TIMESTAMP
+stoxx-daily-snapshot               europe-west1   2026-04-12T12:13:45.526-07:00
+```
+
+*Describe the schedule policy to verify retention and schedule settings.*
+
+```bash
+gcloud compute resource-policies describe stoxx-daily-snapshot \
+  --region=europe-west1
+```
+
+```text
+creationTimestamp: '2026-04-12T12:13:45.526-07:00'
+name: stoxx-daily-snapshot
+region: .../regions/europe-west1
+snapshotSchedulePolicy:
+  retentionPolicy:
+    maxRetentionDays: 7
+    onSourceDiskDelete: KEEP_AUTO_SNAPSHOTS
+  schedule:
+    dailySchedule:
+      daysInCycle: 1
+      duration: PT14400S
+      startTime: 02:00
+status: READY
+```
+
+The `duration: PT14400S` (4 hours) is the window during which the snapshot operation may begin — not how long it takes. `onSourceDiskDelete: KEEP_AUTO_SNAPSHOTS` means snapshots are retained even if the source disk is deleted.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--region` | `--region=europe-west1` | Region where the resource policy is created. Must match the disk's region. |
 | `--max-retention-days` | `--max-retention-days=7` | Automatically delete snapshots older than this many days. |
-| `--on-source-disk-delete` | `--on-source-disk-delete=keep-auto-snapshots` | Behavior when the source disk is deleted: `keep-auto-snapshots` (retain snapshots) or `apply-retention-policy` (delete per schedule). |
-| `--daily-schedule` | `--daily-schedule` | Create one snapshot per day. Alternatives: `--hourly-schedule=N`, `--weekly-schedule=DAY`. |
+| `--on-source-disk-delete` | `--on-source-disk-delete=keep-auto-snapshots` | Behavior when source disk is deleted: `keep-auto-snapshots` (retain) or `apply-retention-policy` (delete per schedule). |
+| `--daily-schedule` | `--daily-schedule` | One snapshot per day. Alternatives: `--hourly-schedule=N`, `--weekly-schedule=DAY`. |
 | `--start-time` | `--start-time=02:00` | UTC start time for the snapshot window (ISO 8601 format). |
+| `--storage-location` | `--storage-location=eu` | Where to store the automated snapshots. Defaults to closest multi-region. |
 
-## Disk Operations
+> [!example]- Terraform equivalent
+>
+> ```hcl
+> resource "google_compute_resource_policy" "stoxx_daily_snapshot" {
+>   name   = "stoxx-daily-snapshot"
+>   region = "europe-west1"
+>
+>   snapshot_schedule_policy {
+>     schedule {
+>       daily_schedule {
+>         days_in_cycle = 1
+>         start_time    = "02:00"
+>       }
+>     }
+>     retention_policy {
+>       max_retention_days    = 7
+>       on_source_disk_delete = "KEEP_AUTO_SNAPSHOTS"
+>     }
+>   }
+> }
+>
+> resource "google_compute_disk_resource_policy_attachment" "stoxx_data_snapshot" {
+>   name = google_compute_resource_policy.stoxx_daily_snapshot.name
+>   disk = google_compute_disk.stoxx_data.name
+>   zone = "europe-west1-b"
+> }
+>
+> resource "google_compute_disk_resource_policy_attachment" "stoxx_log_snapshot" {
+>   name = google_compute_resource_policy.stoxx_daily_snapshot.name
+>   disk = google_compute_disk.stoxx_log.name
+>   zone = "europe-west1-b"
+> }
+> ```
 
-Disk modifications after creation are constrained: size can only grow, never shrink. Disk type cannot be changed after creation — to change type, create a new disk from a snapshot of the original and delete the source disk.
+## Disk Resize
 
-### Resizing a Persistent Disk
+Persistent disk resize is an online operation — the VM does not need to be stopped and the disk does not need to be detached. The GCE API allocates the additional capacity immediately, but the OS-level filesystem does not see the new space until it is explicitly expanded.
 
-Compute Engine persistent disk resize is an online operation — the VM does not need to be stopped and the disk does not need to be detached. However, the OS-level filesystem is not automatically expanded after the disk grows; this must be done manually inside the VM.
+### gcloud | Resize a persistent disk and expand the filesystem
 
-#### gcloud | Resize a persistent disk
+#### Online resize
 
-Increases the size of an existing persistent disk. The operation is online and non-disruptive to the running VM. Filesystem expansion inside the OS must follow as a separate step.
+**When to run:** When the disk is running low on space or projected growth will exceed current capacity.
+**Trigger:** Monitoring alert for disk usage exceeding 80%, or proactive capacity planning.
+**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: increases disk size (irreversible — disks can never be shrunk). The VM remains running.
+**Purpose:** Increase the data disk from 50 GB to 100 GB to accommodate growing SQL Server data files.
+
+*Resize the data disk from 50 GB to 100 GB while the VM is running.*
 
 ```bash
-gcloud compute disks resize data-pipeline-sql-disk \
+gcloud compute disks resize stoxx-data \
   --zone=europe-west1-b \
   --size=100GB
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/disks/stoxx-data].
 ```
 
 > [!warning] Filesystem Must Be Expanded Manually
 >
-> After `gcloud compute disks resize`, the new disk capacity is allocated but invisible to the OS. You must SSH in and run the appropriate filesystem expansion command:
-> - **ext4:** `sudo resize2fs /dev/sda1`
-> - **xfs:** `sudo xfs_growfs /`
->
-> Skipping this step leaves your application still seeing the old, smaller disk.
+> After `gcloud compute disks resize`, the new disk capacity is allocated at the GCE layer but invisible to the OS. The filesystem still reports the old size. You must SSH in and run the appropriate expansion command. Skipping this step leaves your application seeing the old, smaller disk.
 
 > [!success] Run Filesystem Expansion Immediately After Disk Resize
 >
-> After `gcloud compute disks resize`, SSH into the VM and run `sudo resize2fs /dev/sda1` (ext4) or `sudo xfs_growfs /` (xfs). Verify with `df -h` that the filesystem now reflects the new capacity before resuming any application workloads.
+> After resizing, SSH into the VM and run `sudo resize2fs /dev/DEVICE` (ext4) or `sudo xfs_growfs /MOUNT` (xfs). Verify with `df -h` that the filesystem reflects the new capacity before resuming workloads.
+
+#### Expand the filesystem
+
+*Expand the ext4 filesystem to fill the resized disk. This is an online operation — no unmount required.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="sudo resize2fs /dev/sdd"
+```
+
+```text
+resize2fs 1.46.5 (30-Dec-2021)
+Filesystem at /dev/sdd is mounted on /mnt/sqldata; on-line resizing required
+old_desc_blocks = 7, new_desc_blocks = 13
+The filesystem on /dev/sdd is now 26214400 (4k) blocks long.
+```
+
+*Verify the filesystem now shows the full 100 GB capacity.*
+
+```bash
+gcloud compute ssh stoxx-vm --command="df -h /mnt/sqldata"
+```
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd         99G   24K   99G   1% /mnt/sqldata
+```
+
+The filesystem expanded from 49 GB to 99 GB (1 GB reserved for filesystem overhead). The resize was performed online with no downtime.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -263,37 +974,62 @@ gcloud compute disks resize data-pipeline-sql-disk \
 | `--zone` | `--zone=europe-west1-b` | Zone of the disk. |
 | `--async` | `--async` | Return immediately without waiting for the resize operation to complete. |
 
-## Troubleshooting
+> [!example]- Terraform equivalent
+>
+> ```hcl
+> # Simply increase the size attribute — Terraform handles the resize API call.
+> # Filesystem expansion must still be done manually inside the VM.
+> resource "google_compute_disk" "stoxx_data" {
+>   name = "stoxx-data"
+>   zone = "europe-west1-b"
+>   size = 100  # was 50
+>   type = "pd-ssd"
+> }
+> ```
 
-### Serial Console Access
+## Detaching and Deleting Disks
 
-The serial console provides access to a VM's boot sequence output and kernel logs — the only diagnostic channel that remains available when SSH is unreachable. `get-serial-port-output` reads the non-interactive output buffer (BIOS/UEFI messages, kernel logs, systemd startup). For interactive serial console access (a shell at the boot prompt), enable it in instance metadata first with `serial-port-enable=true`.
+Disks that are no longer needed should be detached from the VM first, then deleted to stop billing. Detaching requires the VM to be stopped (for boot disks) or can be done while running (for non-boot disks, but unmount first to avoid data corruption).
 
-#### gcloud | Get serial port output
+### gcloud | Detach and delete a persistent disk
 
-Retrieves the raw output from the VM's serial console. This includes anything written to `/dev/ttyS0` — BIOS/UEFI messages, kernel boot output, systemd initialization, and application startup logs.
+#### Detach a disk
+
+*Detach the stoxx-data disk from the VM. The disk continues to exist as an unattached resource.*
 
 ```bash
-gcloud compute instances get-serial-port-output data-pipeline-sql \
+gcloud compute instances detach-disk stoxx-vm \
+  --disk=stoxx-data \
   --zone=europe-west1-b
 ```
 
 ```text
-[OUTPUT CELL MISSING — add representative output]
+Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/instances/stoxx-vm].
 ```
 
-> [!info] Serial Console Use Cases
+> [!warning] Unmount Before Detaching
 >
-> - Kernel panic after an OS update — the VM boots but SSH never comes up
-> - Disk full causing boot failure — `/` mounted read-only, init fails
-> - Incorrect `/etc/fstab` entries after adding a new disk — VM hangs at mount
-> - Grub misconfiguration after updating boot loader
+> Always unmount the filesystem (`sudo umount /mnt/sqldata`) before detaching the disk. Detaching a mounted disk can corrupt the filesystem.
+
+> [!success] Safe Detach Sequence
+>
+> 1. SSH in: `sudo umount /mnt/sqldata`
+> 2. Detach: `gcloud compute instances detach-disk stoxx-vm --disk=stoxx-data --zone=europe-west1-b`
+> 3. Remove the fstab entry if the disk will not be reattached.
+
+#### Delete a disk
+
+*Delete a detached disk. This is irreversible — all data on the disk is permanently destroyed.*
+
+```bash
+gcloud compute disks delete stoxx-data --zone=europe-west1-b --quiet
+```
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--zone` | `--zone=europe-west1-b` | Zone of the instance. |
-| `--port` | `--port=2` | Serial port number (1–4). Port 1 is the default kernel/BIOS output. |
-| `--start` | `--start=BYTE_OFFSET` | Start reading from a specific byte offset in the output buffer. Useful for tailing large logs. |
+| `--disk` | `--disk=stoxx-data` | Name of the disk to detach or delete. |
+| `--zone` | `--zone=europe-west1-b` | Zone of the disk or VM. |
+| `--quiet` | `--quiet` | Skip confirmation prompt (use in scripts). |
 
 ## Disk Types Reference
 
@@ -314,7 +1050,7 @@ Compute Engine offers two disk families: **Persistent Disk** (block storage bill
 
 ### Hyperdisk Types
 
-Hyperdisk decouples IOPS and throughput from disk size. You provision capacity, IOPS, and throughput independently — eliminating the need to over-provision disk size just to reach performance targets. This makes Hyperdisk more cost-efficient than `pd-ssd` or `pd-extreme` for workloads with predictable, high performance requirements.
+Hyperdisk decouples IOPS and throughput from disk size. You provision capacity, IOPS, and throughput independently — eliminating the need to over-provision disk size just to reach performance targets.
 
 | Type | Use case | Max provisioned IOPS | Max provisioned throughput |
 |---|---|---|---|
@@ -327,19 +1063,34 @@ Hyperdisk decouples IOPS and throughput from disk size. You provision capacity, 
 >
 > Regional Persistent Disks synchronously replicate data across two zones in the same region, providing automatic failover: if the primary zone fails, the disk can be force-attached to a VM in the secondary zone with no data loss. Create with `--replica-zones=ZONE_A,ZONE_B` during disk creation. Cost is approximately 2× the zonal equivalent. Recommended for stateful workloads with RPO = 0 requirements.
 
+## Troubleshooting
+
+| Symptom | Likely cause | Resolution |
+|---|---|---|
+| `lsblk` shows disk but wrong size after resize | Filesystem not expanded | Run `sudo resize2fs /dev/DEVICE` (ext4) or `sudo xfs_growfs /MOUNT` (xfs) |
+| VM fails to boot after adding fstab entry | Missing `nofail` option; disk unavailable at boot | Access via serial console, edit fstab to add `nofail`, reboot |
+| Wrong filesystem mounted at wrong path after reboot | fstab uses `/dev/sdX` instead of UUID | Update fstab to use `UUID=...` from `blkid` output |
+| `attach-disk` fails with "disk already attached" | Disk is still attached to another VM or the same VM | Check `gcloud compute disks describe` for `users` field |
+| Snapshot creation hangs | Large disk with high write rate | Use `--async` flag; ensure no heavy write workload during first snapshot |
+| `disks delete` fails with "in use" | Disk is still attached to a VM | Detach first with `detach-disk` |
+| Restored disk mounts at wrong path | UUID changed (new filesystem on restored disk) | Check `blkid` on restored disk, update fstab UUID |
+| `resize2fs` reports "nothing to do" | Running on wrong device (device names shifted) | Use `ls -la /dev/disk/by-id/google-*` to find correct device |
+| Snapshot schedule not creating snapshots | Policy not attached to disk, or disk in wrong region | Verify with `gcloud compute disks describe` — check `resourcePolicies` field |
+| Permission denied on mount point | Missing `chown` for application user | Run `sudo chown mssql:mssql /mnt/sql*` after SQL Server installation |
+
 ## Related
 
-- [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — Stop the VM before detaching/attaching disks after snapshot restore
-- [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer) — SSH is the primary access method; serial console is the fallback
-- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the alternative storage layer for pipeline data (not OS disks)
-- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Check Cloud Logging alongside serial console output for boot diagnostics
-- [Terraform: GCP compute resources](https://alp78.github.io/elysium/07-Terraform/) — IaC provisioning of persistent disks and snapshot schedules
+- [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/02-Compute/01-vm-lifecycle) — Stop the VM before detaching/attaching disks during snapshot restore
+- [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/02-Compute/02-vm-ssh-and-file-transfer) — SSH access for in-VM disk operations (formatting, mounting, filesystem expansion)
+- [terraform-compute](https://alp78.github.io/elysium/07-Terraform/02-GCP-Resources/02-terraform-compute) — IaC provisioning of persistent disks and snapshot schedules
 
 ## References
 
-- [Persistent disk snapshots](https://cloud.google.com/compute/docs/disks/create-snapshots)
-- [Resize a persistent disk](https://cloud.google.com/compute/docs/disks/resize-persistent-disk)
-- [Serial console access](https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-using-serial-console)
+- [Adding or resizing persistent disks](https://cloud.google.com/compute/docs/disks/add-persistent-disk)
+- [Formatting and mounting a persistent disk](https://cloud.google.com/compute/docs/disks/format-mount-disk-linux)
+- [Creating persistent disk snapshots](https://cloud.google.com/compute/docs/disks/create-snapshots)
+- [Restoring a disk from a snapshot](https://cloud.google.com/compute/docs/disks/restore-snapshot)
+- [Resizing a persistent disk](https://cloud.google.com/compute/docs/disks/resize-persistent-disk)
+- [Scheduled snapshots](https://cloud.google.com/compute/docs/disks/scheduled-snapshots)
 - [Disk types and performance](https://cloud.google.com/compute/docs/disks/performance)
-- [Snapshot schedules](https://cloud.google.com/compute/docs/disks/scheduled-snapshots)
 - [Hyperdisk overview](https://cloud.google.com/compute/docs/disks/hyperdisks)

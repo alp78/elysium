@@ -38,6 +38,11 @@ Every term used in this page is defined here. Refer back to this table when a te
 | **patch (`-p`)** | The full diff output appended to each commit in `git log -p`, showing exactly what changed in every file. |
 | **staging area (index)** | An intermediate state between the working directory and the next commit. `git add` moves changes into the index; `git commit` snapshots the index. |
 | **working directory** | The actual files on disk. Changes here are "unstaged" until added to the index. |
+| **range-diff** | A diff-of-diffs that compares two versions of a patch series (e.g., before and after a rebase), showing which commits were added, dropped, or modified between iterations. |
+| **cherry** | A Git command that compares patches by content (not SHA) to identify which commits from one branch have already been applied to another, accounting for cherry-picks. |
+| **mailmap** | A `.mailmap` file in the repository root that maps alternate author names and emails to a canonical identity, so contribution counts and blame attribution are accurate across identity changes. |
+| **partial clone** | A clone created with `--filter=blob:none` that downloads all commits and trees but defers blob (file content) downloads until accessed. Preserves full commit history while reducing initial clone size. |
+| **shallow clone** | A clone created with `--depth N` that contains only the last N commits. Breaks bisect, deep blame, and range-based inspection. |
 
 ## Conceptual Model
 
@@ -267,6 +272,39 @@ git shortlog -sn --all
     70  alp78
      9  alp
 ```
+
+Notice that the same person appears as two identities (`alp78` and `alp`) due to different Git configurations across machines or GitHub's noreply address. This is a common problem in multi-year repos where engineers change email addresses, switch laptops, or commit via the GitHub web UI. Audit counts become misleading unless identities are canonicalized --- see the `.mailmap` section below.
+
+#### Normalize author identities with .mailmap
+
+**When to run:** When `git shortlog` or `git log` shows the same person under multiple names or emails, distorting contribution counts and audit trails.
+**Trigger:** Onboarding audit, compliance review, or any time you need accurate per-author statistics across repository history.
+**Context:** Read-only for reporting purposes. The `.mailmap` file is committed to the repository root. Once present, `git shortlog`, `git blame`, and any command using `%aN`/`%aE` format placeholders will automatically resolve identities.
+**Purpose:** Map multiple author identities to a single canonical name and email so that audit counts, blame attribution, and contribution stats are accurate.
+
+A `.mailmap` file maps alternate identities to a canonical form. The syntax is:
+
+```text
+Canonical Name <canonical@email.com> Alternate Name <alternate@email.com>
+```
+
+*Create a `.mailmap` file that maps the `alp` noreply identity to the canonical `alp78` identity.*
+
+```bash
+echo 'alp78 <alexper.recovery@gmail.com> alp <37634801+alp78@users.noreply.github.com>' > .mailmap
+```
+
+*Verify the shortlog now shows a single consolidated identity.*
+
+```bash
+git shortlog -sn --all
+```
+
+```text
+   122  alp78
+```
+
+The 9 commits previously attributed to `alp` are now correctly counted under `alp78`. The mapping applies retroactively to all historical commits without rewriting any history.
 
 ### Git | log | advanced filters and formats
 
@@ -970,7 +1008,7 @@ The reflog is a local-only, append-only log of every position HEAD has occupied.
 
 **When to run:** When you need to find a commit that is no longer reachable from any branch --- after a bad reset, a lost branch, or a failed rebase.
 **Trigger:** "Where was HEAD before I ran that reset?", "I accidentally deleted a branch --- what was its tip?", or "I need to undo a rebase."
-**Context:** Read-only (viewing). The reflog itself is a recovery tool --- once you find the SHA, you can use `git checkout` or `git reset` to restore.
+**Context:** Read-only (viewing). The reflog itself is a recovery tool --- once you find the SHA, you can use `git restore --source=<sha>`, `git switch --detach <sha>`, or `git reset` to restore.
 **Purpose:** See every recent HEAD movement with timestamps.
 
 *Show the last 15 reflog entries.*
@@ -1183,6 +1221,128 @@ Git will run `pytest tests/test_pipeline.py -x` at each midpoint. If pytest exit
 
 ---
 
+## Inspecting Rewritten History
+
+When a branch is rebased, force-pushed, or has commits amended, the commit SHAs change even if the logical content is identical or nearly identical. Standard `git log` and `git diff` cannot compare "version 1 of a patch series" against "version 2 of the same patch series" because they operate on individual commits and ranges, not on the correspondence between two sets of patches. Git provides two tools specifically for this problem: `git range-diff` and `git cherry` / `--cherry-mark`.
+
+### Git | range-diff | comparing two versions of a patch series
+
+`git range-diff` takes two commit ranges (representing version 1 and version 2 of a patch series) and produces a diff-of-diffs. For each commit in the first range, it finds the corresponding commit in the second range (matched by subject and patch similarity) and shows what changed between versions.
+
+#### Compare two versions of a rebased branch
+
+**When to run:** When reviewing a force-pushed PR where the author rebased, amended commits, or reordered patches. You need to see what actually changed between the old version and the new version, ignoring the trivial SHA differences from the rebase.
+**Trigger:** A PR was force-pushed after review feedback. You need to verify the author addressed your comments without re-reviewing the entire series.
+**Context:** Read-only. Requires both the old and new commit ranges. The syntax is `git range-diff <base1>..<tip1> <base2>..<tip2>`. Reviewers can also use the three-argument form `git range-diff <base> <tip1> <tip2>` when the base is shared.
+**Purpose:** Show a commit-by-commit comparison of two versions of a patch series, highlighting what was added, removed, or modified between iterations.
+
+> [!info]- range-diff output symbols
+>
+> - `=` --- the patch is identical in both versions (only the SHA changed due to rebase)
+> - `!` --- the patch exists in both versions but the content differs (the author amended it)
+> - `<` --- the patch exists only in the first range (it was dropped in v2)
+> - `>` --- the patch exists only in the second range (it was added in v2)
+
+*Compare two versions of a 3-commit patch series. Version 1 branched from `35c16f7`; version 2 is the same series with the third commit amended.*
+
+```bash
+git range-diff --creation-factor=100 35c16f7..demo/range-diff-v1 35c16f7..demo/range-diff-v2
+```
+
+```text
+1:  91aa264 = 1:  19cacbf feat: add ESG adjustment factor
+2:  36d4c1b = 2:  e685b34 feat: add sector weighting to ESG
+3:  008814a ! 3:  903013b feat: add governance bonus parameter
+    @@ src/esg_adjustment.py
+      
+      ADJUSTMENT_FACTOR = 1.05
+      SECTOR_WEIGHT = 0.3
+    -+GOVERNANCE_BONUS = 0.1
+    ++GOVERNANCE_BONUS = 0.15
+```
+
+Reading the output:
+
+- Commits 1 and 2 show `=` --- the patches are identical between v1 and v2 (only the SHA changed).
+- Commit 3 shows `!` --- it exists in both versions but was modified. The inner diff shows what changed: `GOVERNANCE_BONUS` was updated from `0.1` to `0.15`. Lines prefixed with `-+` are from the old patch; lines prefixed with `++` are from the new patch.
+
+This tells the reviewer: "The author only changed one value in the third commit --- you can skip re-reviewing commits 1 and 2."
+
+> [!tip] Use --creation-factor for Better Matching
+>
+> The `--creation-factor` flag (default 60) controls how aggressively git matches commits between the two ranges. A higher value (e.g., 100) makes git try harder to pair commits even when the patches differ significantly. Use a higher value when commits were heavily amended between iterations.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `<base1>..<tip1> <base2>..<tip2>` | `git range-diff A..B C..D` | Compare two ranges explicitly |
+| `<base> <tip1> <tip2>` | `git range-diff base v1 v2` | Three-argument form (shared base) |
+| `--creation-factor` | `git range-diff --creation-factor=100 ...` | Increase patch-matching threshold (default 60) |
+| `--no-color` | `git range-diff --no-color ...` | Disable color (for piping to files) |
+| `--stat` | `git range-diff --stat ...` | Show stat summary instead of full diff |
+
+### Git | cherry | identifying already-applied commits
+
+`git cherry` compares two branches by patch content (not SHA) to determine which commits have already been applied to the other side. This is essential when working with cherry-picked patches, where the same logical change exists on two branches with different SHAs.
+
+#### Find commits not yet cherry-picked to upstream
+
+**When to run:** When maintaining a long-lived branch (e.g., a release branch) where patches are selectively cherry-picked from main, and you need to know which patches are still missing.
+**Trigger:** Release management, backport tracking, or verifying that all fixes from a feature branch have been integrated.
+**Context:** Read-only. `git cherry` compares patches by computing a symmetric diff of patch IDs (SHA of the diff content, ignoring commit metadata). A `+` prefix means the commit has **not** been applied to the upstream; a `-` prefix means an equivalent patch already exists.
+**Purpose:** Identify which commits on a branch still need to be cherry-picked or merged to another branch.
+
+*Check which commits on `demo/range-diff-v1` have not yet been cherry-picked into `main`.*
+
+```bash
+git cherry -v main demo/range-diff-v1
+```
+
+```text
+- 91aa264ff82aee8f126ce04d7ae3c09b04cb6642 feat: add ESG adjustment factor
++ 36d4c1b83ab03c75881ebc52cb3c0f066db0cfa2 feat: add sector weighting to ESG
++ 008814adf8440bec80303d8307dc366b6f3879e6 feat: add governance bonus parameter
+```
+
+Reading the output:
+
+- `-` on `91aa264` means an equivalent patch already exists in `main` (it was cherry-picked). The SHAs differ, but the patch content is the same.
+- `+` on `36d4c1b` and `008814a` means these patches have no equivalent in `main` and still need to be applied.
+
+#### Use --cherry-mark with git log for visual branch comparison
+
+**When to run:** When you want to see the full symmetric difference between two branches with cherry-pick equivalence marked visually.
+**Trigger:** Reviewing which commits are unique to each side vs already shared (via cherry-pick), during release branch maintenance or backport audits.
+**Context:** Read-only. `--cherry-mark` is a `git log` flag that works with the three-dot symmetric difference (`A...B`). Commits with an equivalent on the other side are marked `=`; unique commits are marked `+`.
+**Purpose:** Visualize the relationship between two diverged branches accounting for cherry-picks.
+
+*Show the symmetric difference between `main` and `demo/range-diff-v1` with cherry-pick markers.*
+
+```bash
+git log --cherry-mark --oneline main...demo/range-diff-v1
+```
+
+```text
+= c77ba7b feat: add ESG adjustment factor
++ 008814a feat: add governance bonus parameter
++ 36d4c1b feat: add sector weighting to ESG
+= 91aa264 feat: add ESG adjustment factor
+```
+
+The `=` marks on `c77ba7b` (main side) and `91aa264` (branch side) confirm these are equivalent patches --- the same logical change applied independently to both branches. The `+` marks on `008814a` and `36d4c1b` confirm those patches exist only on the branch.
+
+> [!tip] Related Flags for Cherry-Pick Detection
+>
+> - `--cherry-pick` --- like `--cherry-mark` but omits equivalent commits entirely (hides the `=` entries)
+> - `--left-only` / `--right-only` --- show only commits from one side of the symmetric difference
+>
+> Combine them for targeted views:
+> ```bash
+> git log --cherry-pick --right-only --oneline main...branch
+> ```
+> Shows only branch-side commits that have no equivalent on main.
+
+---
+
 ## Investigation Workflows
 
 These workflows combine multiple inspection commands to answer targeted operational questions.
@@ -1304,6 +1464,155 @@ The commit touched only `config.py` and added one line. The message explains the
 > 3. Use `git filter-repo` or BFG Repo-Cleaner to rewrite history (requires force-push and team coordination)
 > 4. Add the file pattern to `.gitignore` and set up a pre-commit hook (e.g., `detect-secrets`) to prevent recurrence
 
+#### Inspecting notebook (.ipynb) changes
+
+**When to run:** When Jupyter notebooks are tracked in Git and you need to understand what changed between versions --- complicated by the JSON structure and base64-encoded cell outputs.
+**Trigger:** A notebook's outputs or metadata changed unexpectedly, or a data scientist's PR contains notebook diffs that are unreadable in standard `git diff`.
+**Context:** Notebooks are stored as JSON with embedded outputs (images, dataframes, tracebacks). Standard `git diff` shows raw JSON changes that are nearly impossible to review.
+**Purpose:** Inspect meaningful content changes in notebooks while ignoring noise from output cells and execution counts.
+
+> [!warning] Standard git diff Is Unreadable for Notebooks
+>
+> A single re-executed cell can produce hundreds of lines of JSON diff (base64 image data, execution counts, output arrays) even when the code is unchanged. This makes standard `git diff` useless for reviewing notebook changes.
+
+> [!success] Strip Outputs Before Diffing
+>
+> Use `nbstripout` to remove cell outputs before committing, or configure a Git filter to strip outputs at diff time:
+>
+> ```bash
+> # Install nbstripout and register it as a Git filter
+> pip install nbstripout
+> nbstripout --install --attributes .gitattributes
+> ```
+>
+> After setup, `git diff` shows only source-code changes in notebooks. To see what output changed, use the `--no-textconv` flag to bypass the filter.
+
+For notebooks already committed with outputs, inspect code-cell changes using pickaxe:
+
+```bash
+# Find commits that added or removed a specific function in any notebook
+git log -S "def train_model" --oneline -- "*.ipynb"
+```
+
+```bash
+# Show the diff of a specific notebook between two tags (use --word-diff for inline changes)
+git diff --word-diff v1.0.0..v1.1.0 -- notebooks/exploration.ipynb
+```
+
+#### Inspecting binary and LFS-managed assets
+
+**When to run:** When large binary files (parquet, model weights, datasets, images) are tracked via Git LFS and you need to understand their change history.
+**Trigger:** A model artifact or dataset changed unexpectedly, or LFS pointer files appeared in a diff instead of the actual content.
+**Context:** Git LFS stores binary content on a remote server and replaces files in the repo with small pointer files. Standard `git diff` shows pointer changes (SHA256 hashes), not content changes. `git log` works normally for tracking when files changed.
+**Purpose:** Trace the history of large binary files and understand when specific versions were introduced.
+
+```bash
+# Show all commits that touched LFS-tracked parquet files
+git log --oneline -- "data/**/*.parquet"
+
+# Show which LFS files changed between two releases
+git diff --stat v1.0.0..v2.0.0 -- "*.parquet" "*.pkl" "*.h5"
+
+# Inspect the LFS pointer content at a specific tag
+git show v1.0.0:models/risk_model.pkl
+```
+
+The last command shows the LFS pointer (not the binary content):
+
+```text
+version https://git-lfs.github.com/spec/v1
+oid sha256:4d7a214614...
+size 15728640
+```
+
+> [!tip] Use git lfs diff for Content-Aware Binary Comparison
+>
+> For supported formats (images, text-based data), `git lfs diff` can delegate to external diff tools:
+>
+> ```bash
+> git lfs diff --stat HEAD~5..HEAD
+> ```
+>
+> For opaque binaries (model weights, compiled objects), you can only track when they changed and how large each version was --- not what specifically changed inside them.
+
+#### Inspecting submodule history
+
+**When to run:** When a monorepo uses Git submodules for vendored dependencies or shared libraries, and you need to trace when a submodule was updated and to which commit.
+**Trigger:** A submodule update broke the build, or you need to audit which version of a shared library was pinned at a specific release.
+**Context:** Submodule updates appear in `git diff` as pointer changes (old commit → new commit). The actual content change is in the submodule's own repository.
+**Purpose:** Trace submodule version changes and understand what was updated.
+
+```bash
+# Show submodule pointer changes in a commit
+git diff --submodule=log v1.0.0..v1.1.0
+
+# Show the submodule commit history between two pointer positions
+git log --oneline --submodule v1.0.0..v1.1.0
+
+# View what commit the submodule pointed to at a specific tag
+git ls-tree v1.0.0 -- vendor/shared-lib
+```
+
+The `--submodule=log` format expands pointer changes into the submodule's commit log between the old and new pinned commits, making submodule updates reviewable without cloning the submodule separately.
+
+#### Monorepo path-scoped inspection
+
+**When to run:** When working in a monorepo containing multiple services, packages, or teams, and you need to scope inspection to a specific service's directory without noise from unrelated changes.
+**Trigger:** Debugging a regression in one service, auditing changes to a specific package, or reviewing team-specific commit history in a shared repository.
+**Context:** All standard inspection commands accept path arguments. In monorepos, always scope by path to avoid drowning in unrelated changes.
+**Purpose:** Limit all inspection output to a specific subtree of the repository.
+
+```bash
+# Log only commits touching the ingestion service
+git log --oneline -- services/ingestion/
+
+# Blame a file within a specific service directory
+git blame services/ingestion/src/pipeline.py
+
+# Diff only the dbt models directory between two releases
+git diff --stat v1.0.0..v2.0.0 -- dbt/models/
+
+# Shortlog scoped to a specific path (who contributed to this service)
+git shortlog -sn --all -- services/ingestion/
+
+# Pickaxe search scoped to Terraform files only
+git log -S "instance_type" --oneline -- "infra/**/*.tf"
+```
+
+> [!tip] Combine Path Scoping with --first-parent for Clean Main-Line History
+>
+> In monorepos with many merge commits, `--first-parent` follows only the main line (skipping branch-internal commits). Combined with path scoping, this shows only the merge points where changes were integrated:
+>
+> ```bash
+> git log --first-parent --oneline -- services/ingestion/
+> ```
+
+#### Partial-clone and huge-history caveats
+
+**When to run:** When working with repositories that have been shallow-cloned (`--depth`), partially cloned (`--filter=blob:none`), or have very large histories (100k+ commits).
+**Trigger:** An inspection command fails with "missing object", runs extremely slowly, or returns incomplete results.
+**Context:** Shallow and partial clones intentionally omit objects to save disk and network. This breaks or limits several inspection commands.
+**Purpose:** Understand which inspection commands work in reduced-history repositories and how to work around limitations.
+
+| Command | Behavior in shallow clone | Behavior in partial clone (`--filter=blob:none`) |
+|---------|--------------------------|--------------------------------------------------|
+| `git log --oneline` | Shows only commits within the shallow depth | Full commit history available |
+| `git log -p` | Fails for commits outside shallow boundary | Fetches blobs on demand (may be slow) |
+| `git blame` | May fail or show truncated history | Fetches blobs on demand |
+| `git bisect` | Fails if good/bad range exceeds shallow depth | Works (fetches objects as needed) |
+| `git diff` | Fails for commits outside shallow boundary | Fetches blobs on demand |
+| `git reflog` | Only records local actions (unaffected) | Only records local actions (unaffected) |
+
+> [!warning] Shallow Clones Break Bisect and Deep History
+>
+> CI systems often use `--depth 1` for speed. This breaks `git bisect`, `git blame` (beyond the shallow boundary), `git log -S` (misses old commits), and range-based diffs. Never use shallow clones for debugging or auditing.
+
+> [!success] Unshallow or Use Partial Clone Instead
+>
+> - **Unshallow:** `git fetch --unshallow` converts a shallow clone to full history
+> - **Partial clone:** `git clone --filter=blob:none <url>` downloads all commits and trees but fetches file content on demand. This gives full `git log` and `git bisect` while saving initial clone time.
+> - **For CI debugging:** configure CI to use `fetch-depth: 0` or partial clone when bisect/blame is needed
+
 ---
 
 ## Troubleshooting
@@ -1320,6 +1629,11 @@ The commit touched only `config.py` and added one line. The message explains the
 | `git reflog` is empty or short | Entries expired (90-day default) or this is a fresh clone (no local history) | Reflog only records local actions. Expired entries cannot be recovered. |
 | `git show ref:path` fails with "does not exist" | The file did not exist at that commit, or the path is wrong | Verify the path with `git ls-tree <ref> -- <path>` |
 | `git log --graph` output is unreadable | Too many branches interleaving | Add `--first-parent` to follow only the main line, or use `gitk --all` for a GUI view |
+| `git shortlog` shows duplicate authors | Same person committed under different names or emails | Create a `.mailmap` file mapping alternates to a canonical identity |
+| `git range-diff` shows `<`/`>` instead of `!` | Patches differ too much for the matcher to pair them | Increase `--creation-factor` (e.g., `--creation-factor=100`) to force matching |
+| `git diff` on notebooks is unreadable | Notebooks store JSON with base64 output cells | Install `nbstripout` as a Git filter, or strip outputs before committing |
+| `git blame` shows truncated history in CI | CI used `--depth 1` shallow clone | Use `fetch-depth: 0` or `git fetch --unshallow` before blame/bisect |
+| `git diff` shows LFS pointers, not content | File is tracked by Git LFS | LFS pointer changes show SHA256 diffs. Use `git lfs diff` for content comparison |
 
 ---
 
@@ -1370,6 +1684,13 @@ The commit touched only `config.py` and added one line. The message explains the
 | `git bisect start` / `bad` / `good` | Start binary search for regression |
 | `git bisect run <script>` | Automate bisect with a test |
 | `git bisect reset` | Exit bisect and restore HEAD |
+| `git range-diff base..v1 base..v2` | Compare two versions of a patch series |
+| `git cherry -v main branch` | Find commits not yet cherry-picked to main |
+| `git log --cherry-mark A...B` | Symmetric diff with cherry-pick markers |
+| `git shortlog -sn --all` | Commit count per author (mailmap-aware) |
+| `git check-mailmap "Name <email>"` | Test mailmap identity resolution |
+| `git log --oneline -- path/` | Scope history to a specific directory |
+| `git fetch --unshallow` | Convert shallow clone to full history |
 
 ## References
 
@@ -1379,3 +1700,6 @@ The commit touched only `config.py` and added one line. The message explains the
 - [git show](https://git-scm.com/docs/git-show)
 - [git bisect](https://git-scm.com/docs/git-bisect)
 - [git reflog](https://git-scm.com/docs/git-reflog)
+- [git range-diff](https://git-scm.com/docs/git-range-diff)
+- [git cherry](https://git-scm.com/docs/git-cherry)
+- [gitmailmap](https://git-scm.com/docs/gitmailmap)
