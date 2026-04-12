@@ -74,7 +74,7 @@ flowchart TD
 
 ## Cloud Run Jobs
 
-Cloud Run Jobs execute a container image to completion and then exit. A job definition specifies the container image, resource limits, environment variables, and retry policy. Each time a job is triggered, Cloud Run creates an **execution** — a single run of the job that can contain one or more parallel **tasks**. For infrastructure-as-code deployment, [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) provides the Terraform resource definitions.
+Cloud Run Jobs execute a container image to completion and then exit. A job definition specifies the container image, resource limits, environment variables, and retry policy. Each time a job is triggered, Cloud Run creates an **execution** — a single run of the job that can contain one or more parallel **tasks**. For infrastructure-as-code deployment, [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) provides the Terraform resource definitions.
 
 > [!info] Parallel task execution
 >
@@ -310,7 +310,7 @@ The secret value is injected as an environment variable at runtime. The containe
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Job logs are available in Cloud Logging by resource type `cloud_run_job`
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler triggers for scheduled job executions
 - [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — BigQuery query patterns for downstream tables written by Cloud Run Jobs
-- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — Terraform resource definitions for Cloud Run Jobs and Services
+- [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Terraform resource definitions for Cloud Run Jobs and Services
 
 ## References
 

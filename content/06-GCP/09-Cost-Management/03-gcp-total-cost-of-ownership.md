@@ -1,6 +1,6 @@
 ---
 title: "03 - GCP Total Cost of Ownership"
-tags: [gcp, cost, billing, bigquery, cost-management, tco]
+tags: [gcp, cost, billing, bigquery, tco]
 aliases:
   - TCO
   - total cost of ownership

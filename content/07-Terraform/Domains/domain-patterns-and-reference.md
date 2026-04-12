@@ -19,10 +19,10 @@ mindmap
     (troubleshooting)
 ```
 
-> [!abstract]- [[02-terraform-conditional-resources]]
+> [!abstract]- [[02-conditional-resources]]
 
-> [!abstract]- [[01-terraform-resource-dependencies]]
+> [!abstract]- [[01-resource-dependencies]]
 
-> [!abstract]- [[03-terraform-module-composition]]
+> [!abstract]- [[03-module-composition]]
 
-> [!abstract]- [[terraform-problems]]
+> [!abstract]- [[problems]]

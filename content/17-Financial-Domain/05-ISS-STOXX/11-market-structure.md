@@ -4,7 +4,7 @@ description: "Comprehensive glossary of exchange, trading, settlement, sector cl
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - market-structure
 aliases:

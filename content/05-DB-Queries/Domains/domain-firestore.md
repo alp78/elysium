@@ -2,7 +2,7 @@
 title: "Domain: Firestore"
 tags:
   - domain
-  - db-queries
+  - database
 ---
 
 # Firestore

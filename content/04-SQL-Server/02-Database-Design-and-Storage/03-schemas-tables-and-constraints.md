@@ -3,9 +3,7 @@ title: "03 - Schemas, Tables, and Constraints"
 tags:
   - sql-server
   - ddl
-  - schemas
-  - tables
-  - constraints
+  - schema
 ---
 
 # Schemas, Tables, and Constraints
@@ -80,11 +78,7 @@ Schemas serve three simultaneous roles that are easy to conflate but should be k
 - **Security boundary.** Permissions can be granted at the schema level: `GRANT SELECT ON SCHEMA::silver TO readonly_role` grants read on every existing and future object in `silver`, which is far less error-prone than enumerating tables one by one.
 - **Deployment and lifecycle boundary.** A schema is the natural unit for "this set of tables is owned by the ingestion team, this set by the analytics team, this set is experimental and will be dropped after Q2". Grouping by schema makes the lifecycle visible in every tool that lists objects (SSMS, Azure Data Studio, catalog views).
 
-> [!abstract] The three roles of a schema
->
-> - **Namespace** — collision-free object naming within one database.
-> - **Security boundary** — grants scale from per-object to per-schema.
-> - **Lifecycle boundary** — objects that live and die together belong in the same schema.
+These three roles — **namespace**, **security boundary**, and **lifecycle boundary** — are easy to conflate but should be kept distinct when designing a database.
 
 ### SQL Server | schema model | how namespaces and owners interact
 
@@ -372,13 +366,7 @@ Before the first column is typed, answer three questions in writing. The answers
 
 If any of the three answers is "we will decide later", the DDL is premature. Write the DDL *after* the questions are settled, not before.
 
-> [!abstract] The five questions before the DDL
->
-> - **Grain** — one row per what?
-> - **Business key** — what makes a row unique in the domain?
-> - **Nullability** — which columns are truly optional and which must always be present?
-> - **Types** — what storage representation minimises footprint while covering the real-world values?
-> - **Constraints** — which rules turn the table shape into a contract the database can enforce?
+Beyond those three, two more questions complete the pre-DDL checklist: **types** (what storage representation minimises footprint while covering the real-world values?) and **constraints** (which rules turn the table shape into a contract the database can enforce?).
 
 #### Create a table with explicit nullability
 
@@ -976,10 +964,10 @@ Two rows, one for each `index_id` on the object. The first row (`index_id = 0`, 
 | `alloc_unit_type_desc` | `IN_ROW_DATA` (normal row data), `LOB_DATA` (off-row large objects), `ROW_OVERFLOW_DATA` (rows whose variable-length columns pushed them past the 8060-byte limit). | Most tables should be `IN_ROW_DATA` only. |
 | `page_count` | Number of pages in this allocation unit. | Any. Useful as a coarse size metric. |
 | `record_count` | Number of records (rows for data pages, index entries for index pages). | Any. |
-| `forwarded_record_count` | Number of forwarded rows. Heaps only. | 0 ideally. Sustained values > 1% of `record_count` are a rebuild signal. |
-| `avg_fragmentation_in_percent` | For rowstore indexes: logical fragmentation (percentage of out-of-order pages). | < 5% for high-churn indexes, < 10% for low-churn. Above 30% is usually worth rebuilding. |
-| `avg_page_space_used_in_percent` | Average fill of data pages. Low values waste disk and cache. | 70-95% is typical and healthy. Persistent values below 50% indicate page splits or heavy deletes. |
-| `ghost_record_count` | Number of deleted-but-not-yet-reclaimed rows. | Should tend toward 0; ghost cleanup runs periodically. Persistent growth is a red flag. |
+| `forwarded_record_count` | Number of forwarded rows. Heaps only. | 0 ideally. Sustained values > 1% of `record_count` indicate the heap needs `ALTER TABLE [t] REBUILD` to eliminate forwarding pointers. Use `REBUILD` (not `REORGANIZE` — heaps do not support reorganize). |
+| `avg_fragmentation_in_percent` | For rowstore indexes: logical fragmentation (percentage of out-of-order pages). | < 5%: no action. 5–30%: `ALTER INDEX [ix] REORGANIZE` (online, incremental). > 30%: `ALTER INDEX [ix] REBUILD` (rebuilds statistics; add `WITH (ONLINE = ON)` on Enterprise). |
+| `avg_page_space_used_in_percent` | Average fill of data pages. Low values waste disk and cache. | 70–95% is typical. Persistent values below 50% indicate frequent page splits or heavy deletes — investigate key choice and `fill_factor` before rebuilding. |
+| `ghost_record_count` | Number of deleted-but-not-yet-reclaimed rows. | Should tend toward 0; ghost cleanup runs periodically. If the count grows persistently, check whether the ghost cleanup task is blocked (`sp_who2` looking for `GHOST CLEANUP`) or whether a long-running snapshot transaction is pinning the ghost records. |
 
 ### SQL Server | clustered index | B-tree over the data
 
@@ -1668,11 +1656,11 @@ On Enterprise Edition the operation completes in milliseconds because SQL Server
 >
 > A default that depends on other columns (`DEFAULT (CASE WHEN ... END)` or a user-defined function) is *not* constant or runtime-determined, and the metadata-only optimisation does not apply on any edition. The statement rewrites every row and locks the table. Either use a constant / runtime function, or do the backfill manually in controlled batches.
 
-> [!success] The three-step safe pattern on Standard Edition
+> [!tip] The three-step safe pattern on Standard Edition
 >
-> 1. `ALTER TABLE ... ADD column <type> NULL` — metadata-only, instant.
-> 2. `UPDATE ... SET column = <value> WHERE column IS NULL` — run in batches of 10k-100k rows with a `WHERE` clause to avoid log pressure.
-> 3. `ALTER TABLE ... ALTER COLUMN column <type> NOT NULL` — metadata-only once all rows are populated (the engine validates existing rows in a single scan, not a rewrite).
+> 1. **Add the column as nullable** — `ALTER TABLE silver.instrument_price ADD currency_code char(3) NULL;` — metadata-only, instant, no table lock beyond a brief schema modification lock.
+> 2. **Backfill in controlled batches** — run `UPDATE TOP (50000) silver.instrument_price SET currency_code = 'USD' WHERE currency_code IS NULL;` in a loop until `@@ROWCOUNT = 0`. The batch size (10k–100k rows) should be tuned so each batch completes in under 5 seconds and generates manageable log volume. Monitor `sys.dm_db_log_space_usage` between batches — if the log grows faster than log backups can truncate it, reduce the batch size. On the 67k-row `silver.eurostoxx50_ohlcv` table in stoxx, a single unbatched `UPDATE` would be fine because the table is small; batching matters on tables above ~1M rows.
+> 3. **Switch to NOT NULL** — `ALTER TABLE silver.instrument_price ALTER COLUMN currency_code char(3) NOT NULL;` — the engine scans all rows to validate no NULLs remain, but does not rewrite them. This is a blocking schema lock for the duration of the scan.
 
 #### Add a NOT NULL column without a default — dangerous on populated tables
 
@@ -1775,11 +1763,7 @@ flowchart LR
 
 Every arrow in the diagram is reversible except the last one. Until the old column is dropped, the deployment can be rolled back by reverting the caller changes — no data has been lost, no DDL needs to be undone. This is why the pattern is safer than a single-step `ALTER COLUMN` or `sp_rename`: every rollback point is explicit, and the window for irreversible action is the final phase only, *after* every caller has been running on the new column for long enough to prove the new shape is correct.
 
-> [!abstract] Expand / migrate / contract in three sentences
->
-> - **Expand** — add the new column, keep the old column, write to both.
-> - **Migrate** — backfill the new column, update callers to read from the new column, verify.
-> - **Contract** — drop the old column once no caller references it.
+In short: **expand** (add the new column, keep the old, write to both), **migrate** (backfill, switch callers, verify), **contract** (drop the old column once no caller references it).
 
 The pattern applies to more than just column renames. It applies to:
 
@@ -1971,7 +1955,14 @@ ORDER BY SCHEMA_NAME(t.schema_id), t.name;
 |---|---|---|---|
 | demo_stc | session_state | True | SCHEMA_AND_DATA |
 
-One memory-optimized table — `demo_stc.session_state` with `SCHEMA_AND_DATA` durability. Provisioning this table required adding a `MEMORY_OPTIMIZED_DATA` filegroup to the `stoxx` database first (`ALTER DATABASE stoxx ADD FILEGROUP demo_stc_xtp_fg CONTAINS MEMORY_OPTIMIZED_DATA`, followed by `ALTER DATABASE stoxx ADD FILE ... TO FILEGROUP demo_stc_xtp_fg`) because the database did not have one before this refactor. Once the filegroup existed the `CREATE TABLE ... WITH (MEMORY_OPTIMIZED = ON)` statement succeeded immediately.
+One memory-optimized table — `demo_stc.session_state` with `SCHEMA_AND_DATA` durability. Provisioning this table required adding a `MEMORY_OPTIMIZED_DATA` filegroup to the `stoxx` database first, because the database did not have one before this refactor. The two commands that were run on this instance:
+
+```sql
+ALTER DATABASE [stoxx] ADD FILEGROUP [demo_stc_xtp_fg] CONTAINS MEMORY_OPTIMIZED_DATA;
+ALTER DATABASE [stoxx] ADD FILE (NAME = N'demo_stc_xtp_fg', FILENAME = N'/var/opt/mssql/data/demo_stc_xtp_fg') TO FILEGROUP [demo_stc_xtp_fg];
+```
+
+Once the filegroup existed the `CREATE TABLE ... WITH (MEMORY_OPTIMIZED = ON)` statement succeeded immediately.
 
 #### Create a memory-optimized table
 
@@ -1997,7 +1988,7 @@ CREATE TABLE demo_stc.session_state
 WITH (MEMORY_OPTIMIZED = ON, DURABILITY = SCHEMA_AND_DATA);
 ```
 
-The `PRIMARY KEY NONCLUSTERED HASH` declaration is specific to memory-optimized tables — hash indexes are the in-memory analogue of the B-tree and are optimal for equality lookups. The `BUCKET_COUNT` should be set to approximately twice the expected number of unique keys (rounded up to the next power of 2) — the demo table uses `1024` because only a handful of rows exist; a real high-throughput session table would use `1048576` or larger. `DURABILITY = SCHEMA_AND_DATA` is the default and makes the table survive a server restart via transaction-log checkpoints; `DURABILITY = SCHEMA_ONLY` trades durability for roughly 2× throughput and is appropriate for session-state and cache tables where losing the data on restart is acceptable.
+The `PRIMARY KEY NONCLUSTERED HASH` declaration is specific to memory-optimized tables — hash indexes are the in-memory analogue of the B-tree and are optimal for equality lookups. The `BUCKET_COUNT` should be set to approximately **twice the expected number of unique keys**, rounded up to the next power of 2. The inputs to this decision are: **peak concurrent unique key count** (not total rows ever inserted, but the maximum live at any one time), and **acceptable hash-chain depth** (deeper chains degrade point-lookup performance). The demo table uses `1024` (= 2 × ~10 demo rows, rounded up to 2^10) because only a handful of rows exist. A session-state table expecting 50,000 concurrent sessions should use `131072` (2 × 50,000 = 100,000, rounded up to 2^17). A high-throughput order queue expecting 500,000 active orders should use `1048576` (2^20). **Feedback signal:** query `sys.dm_db_xtp_hash_index_stats` — if `avg_chain_length` exceeds 10, the bucket count is too low and should be doubled; if `empty_bucket_percent` is above 90%, the bucket count is wastefully large and can be halved. `DURABILITY = SCHEMA_AND_DATA` is the default and makes the table survive a server restart via transaction-log checkpoints; `DURABILITY = SCHEMA_ONLY` trades durability for roughly 2× throughput and is appropriate for session-state and cache tables where losing the data on restart is acceptable.
 
 *Read rows from the memory-optimized table — the query syntax is identical to a disk-based table.*
 

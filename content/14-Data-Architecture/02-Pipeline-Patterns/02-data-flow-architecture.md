@@ -8,12 +8,7 @@ tags:
   - sql-server
   - bigquery
   - patterns
-  - parquet
-  - csv
   - streaming
-  - pubsub
-  - firestore
-  - cloud-run
   - airflow
   - networking
 aliases:

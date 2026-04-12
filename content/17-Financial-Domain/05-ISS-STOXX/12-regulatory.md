@@ -4,7 +4,7 @@ description: "Comprehensive glossary of financial regulation, benchmark regulati
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - regulatory
 aliases:

@@ -1,6 +1,6 @@
 ---
 title: "01 - GCP Billing and Pricing"
-tags: [cost, billing, finops, gcp, bigquery, firestore, compute, cloud-run, pubsub, gcs]
+tags: [cost, billing, finops, gcp, bigquery, compute]
 aliases:
   - GCP billing
   - GCP pricing

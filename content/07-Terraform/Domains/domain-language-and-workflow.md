@@ -21,10 +21,10 @@ mindmap
 
 > [!abstract]- [[01-hcl-syntax-basics]]
 
-> [!abstract]- [[03-terraform-variables-and-outputs]]
+> [!abstract]- [[03-variables-and-outputs]]
 
-> [!abstract]- [[02-terraform-providers-and-backend]]
+> [!abstract]- [[02-providers-and-backend]]
 
-> [!abstract]- [[04-terraform-state-management]]
+> [!abstract]- [[04-state-management]]
 
-> [!abstract]- [[05-terraform-plan-apply-destroy]]
+> [!abstract]- [[05-plan-apply-destroy]]

@@ -3,7 +3,6 @@ title: "MOC: GCP"
 tags:
   - moc
   - gcp
-  - google-cloud
   - infrastructure
 ---
 

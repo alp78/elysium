@@ -1,6 +1,6 @@
 ---
 title: "19 - Stored Procedures, Dynamic SQL, and Error Handling"
-tags: [sql, sql-server, tsql, stored-procedures, dynamic-sql, sp-executesql, try-catch, throw, raiserror, transactions, xact-abort, xact-state, save-tran, quotename, sql-injection, parameter-sniffing, nocount, output-parameter, execute-as]
+tags: [sql, sql-server, tsql, stored-procedures, dynamic-sql, transactions, sql-injection]
 aliases: [procedure reference, sp_executesql, TRY CATCH, THROW, XACT_ABORT, XACT_STATE, SAVE TRAN]
 description: "T-SQL reference for variables and assignment traps, control-of-flow, stored procedures and parameters, dynamic SQL with sp_executesql and injection defenses, TRY...CATCH, THROW vs RAISERROR, transaction nesting, SAVE TRAN, XACT_STATE, XACT_ABORT, security context, and a full production procedure template."
 created: 2026-04-08

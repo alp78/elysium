@@ -1,6 +1,6 @@
 ---
-title: "04 - Terraform: IAM, Secrets and Serverless Blocks"
-tags: [security, terraform, gcp, iam, secret-manager, cloud-run, cloud-functions, pubsub, artifact-registry]
+title: "04 - IAM, Secrets and Serverless Blocks"
+tags: [security, terraform, gcp, iam, cloud-run, pubsub]
 aliases:
   - terraform iam blocks
   - terraform gcp iam
@@ -19,23 +19,24 @@ status: complete
 
 # Terraform Block Library — IAM, Secrets & Serverless (GCP)
 
-> [!quote]
+> [!quote] Dan Kaminsky on defense in depth
+>
 > "The only way to do great work is to never trust a single layer of defense."
 >
 > — **Dan Kaminsky**, security researcher
 
 Atomic, copy-paste Terraform blocks for GCP IAM, Secret Manager, Cloud Run v2, Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Each block is self-contained and ready to adapt to any project. Argument tables document every field; callouts flag risks and best practices.
 
----
-
 ## IAM
 
 GCP Identity and Access Management controls who (identity) can do what (role) on which resource (scope). Terraform manages IAM through three resource layers: service accounts define identities, project-level bindings grant broad access, and resource-level bindings enforce least privilege. See the `gcloud` equivalent commands in [Service Accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
 
 > [!tip] One service account per workload
+>
 > Create a dedicated SA for each workload (pipeline, dashboard, CI/CD). Never share a SA between unrelated services, and never use the Compute Engine default SA for application code. This limits the blast radius if a SA is compromised.
 
 > [!question] `iam_member` vs `iam_binding` vs `iam_policy`
+>
 > - **`google_project_iam_member`** — additive, grants one role to one principal without affecting other bindings. Safest for most use cases.
 > - **`google_project_iam_binding`** — authoritative for a single role. Sets the complete member list for that role — anyone not listed is **removed**. Use only when you need full ownership of role membership.
 > - **`google_project_iam_policy`** — authoritative for the entire project. Replaces **all** IAM policy on the project. Almost never appropriate outside bootstrap scenarios.
@@ -77,6 +78,8 @@ A `google_service_account` resource creates a GCP service account — the identi
 
 A data pipeline (Dataflow, Cloud Run Job, Composer DAG) needs to read/write GCS, BigQuery, or Pub/Sub on behalf of the pipeline process.
 
+*Declares a service account for batch and streaming pipeline jobs.*
+
 ```hcl
 resource "google_service_account" "pipeline" {
   account_id   = "data-pipeline"
@@ -89,6 +92,8 @@ resource "google_service_account" "pipeline" {
 #### google_service_account | Dashboard reader
 
 A read-only reporting or dashboarding service (Looker Studio, Metabase, Grafana) needs BigQuery or Monitoring read access without write permissions.
+
+*Declares a read-only service account for BI and dashboarding tools.*
 
 ```hcl
 resource "google_service_account" "dashboard" {
@@ -103,6 +108,8 @@ resource "google_service_account" "dashboard" {
 
 Cloud Composer (managed Airflow) orchestrates pipelines and needs to trigger Cloud Run Jobs, submit Dataflow jobs, or read from GCS.
 
+*Declares a service account for Cloud Composer worker nodes.*
+
 ```hcl
 resource "google_service_account" "airflow" {
   account_id   = "airflow-worker"
@@ -116,6 +123,8 @@ resource "google_service_account" "airflow" {
 
 A GitHub Actions workflow or Cloud Build pipeline needs to push Docker images, deploy Cloud Run services, or run Terraform.
 
+*Declares a service account for CI/CD deployments via GitHub Actions or Cloud Build.*
+
 ```hcl
 resource "google_service_account" "cicd" {
   account_id   = "cicd-deployer"
@@ -128,6 +137,8 @@ resource "google_service_account" "cicd" {
 #### google_service_account | Datadog monitoring (conditional)
 
 The Datadog GCP integration is optional. The `count` meta-argument toggles creation via a boolean variable — `1` creates the resource, `0` skips it entirely without removing the block from config.
+
+*Conditionally declares a read-only service account for Datadog GCP monitoring integration.*
 
 ```hcl
 resource "google_service_account" "datadog" {
@@ -148,21 +159,23 @@ resource "google_service_account" "datadog" {
 | `project` | Yes | GCP project that owns this SA |
 | `count` | No | Terraform meta-argument; `1` = create, `0` = skip |
 
----
-
 ### google_project_iam_member
 
 `google_project_iam_member` grants a single role to a single principal at the **project** level. Each binding is additive — it does not affect other members of the same role. The `member` argument uses the format `serviceAccount:<email>`, `user:<email>`, or `group:<email>`.
 
 > [!danger] Project-level grants are broad
+>
 > A project-level role applies to **every** resource of that type in the project. For example, `roles/bigquery.dataEditor` at the project level lets the SA modify tables in all datasets, not just one.
 
 > [!success] Prefer resource-level IAM
+>
 > When a SA only needs access to specific resources, use resource-level bindings (see below) instead of project-level grants. This follows the principle of least privilege.
 
 #### google_project_iam_member | Cloud Run invoker
 
 A SA or user needs to call authenticated Cloud Run services via HTTPS. The `roles/run.invoker` role lets the principal send requests to any authenticated Cloud Run URL in the project.
+
+*Grants the pipeline SA project-wide `roles/run.invoker` to call authenticated Cloud Run services.*
 
 ```hcl
 resource "google_project_iam_member" "pipeline_run_invoker" {
@@ -176,6 +189,8 @@ resource "google_project_iam_member" "pipeline_run_invoker" {
 
 A CI/CD SA needs to deploy new revisions to Cloud Run services. The `roles/run.developer` role allows deploying, updating, and managing Cloud Run services and jobs.
 
+*Grants the CI/CD SA project-wide `roles/run.developer` to deploy Cloud Run revisions.*
+
 ```hcl
 resource "google_project_iam_member" "cicd_run_developer" {
   project = var.project_id
@@ -188,6 +203,8 @@ resource "google_project_iam_member" "cicd_run_developer" {
 
 A dashboard or monitoring SA needs to query Cloud Logging without write access. The `roles/logging.viewer` role grants read-only access to log entries — it cannot write or export logs.
 
+*Grants the dashboard SA project-wide `roles/logging.viewer` for read-only log access.*
+
 ```hcl
 resource "google_project_iam_member" "dashboard_logging_viewer" {
   project = var.project_id
@@ -199,6 +216,8 @@ resource "google_project_iam_member" "dashboard_logging_viewer" {
 #### google_project_iam_member | Monitoring viewer (conditional)
 
 Datadog or a dashboard SA needs to read Cloud Monitoring metrics. The `roles/monitoring.viewer` role grants read access to metrics, dashboards, and alerting policies without write access. The `count` meta-argument ties creation to the Datadog feature flag.
+
+*Conditionally grants the Datadog SA `roles/monitoring.viewer` to read Cloud Monitoring metrics.*
 
 ```hcl
 resource "google_project_iam_member" "datadog_monitoring_viewer" {
@@ -214,6 +233,8 @@ resource "google_project_iam_member" "datadog_monitoring_viewer" {
 
 Datadog or an observability tool needs to enumerate Compute Engine instances for GCE autodiscovery. The `roles/compute.viewer` role provides a read-only view of all Compute Engine resources in the project.
 
+*Conditionally grants the Datadog SA `roles/compute.viewer` for GCE instance enumeration.*
+
 ```hcl
 resource "google_project_iam_member" "datadog_compute_viewer" {
   count   = var.dd_enabled ? 1 : 0
@@ -228,6 +249,8 @@ resource "google_project_iam_member" "datadog_compute_viewer" {
 
 A pipeline SA needs to write rows into BigQuery tables. The `roles/bigquery.dataEditor` role allows creating, updating, and deleting tables and rows. It does **not** allow running queries — that requires `roles/bigquery.jobUser` separately.
 
+*Grants the pipeline SA project-wide `roles/bigquery.dataEditor` to create and write BigQuery tables.*
+
 ```hcl
 resource "google_project_iam_member" "pipeline_bq_data_editor" {
   project = var.project_id
@@ -239,6 +262,8 @@ resource "google_project_iam_member" "pipeline_bq_data_editor" {
 #### google_project_iam_member | BigQuery job user
 
 Any SA that runs BigQuery queries needs this role in addition to data roles. The `roles/bigquery.jobUser` role allows submitting query jobs but does not grant data access on its own.
+
+*Grants the pipeline SA `roles/bigquery.jobUser` to submit BigQuery query jobs.*
 
 ```hcl
 resource "google_project_iam_member" "pipeline_bq_job_user" {
@@ -252,6 +277,8 @@ resource "google_project_iam_member" "pipeline_bq_job_user" {
 
 The pipeline SA needs to launch and manage Dataflow streaming or batch jobs. The `roles/dataflow.developer` role allows creating, cancelling, and updating Dataflow jobs, and viewing job metrics.
 
+*Grants the pipeline SA `roles/dataflow.developer` to launch and manage Dataflow jobs.*
+
 ```hcl
 resource "google_project_iam_member" "pipeline_dataflow_developer" {
   project = var.project_id
@@ -264,6 +291,8 @@ resource "google_project_iam_member" "pipeline_dataflow_developer" {
 
 A service needs to push messages onto Pub/Sub topics. This is a project-wide grant — the SA can publish to **any** topic. For least privilege, prefer topic-level IAM (see resource-level bindings below).
 
+*Grants the pipeline SA project-wide `roles/pubsub.publisher` to publish to any Pub/Sub topic.*
+
 ```hcl
 resource "google_project_iam_member" "pipeline_pubsub_publisher" {
   project = var.project_id
@@ -275,6 +304,8 @@ resource "google_project_iam_member" "pipeline_pubsub_publisher" {
 #### google_project_iam_member | Pub/Sub subscriber
 
 A service needs to pull messages from Pub/Sub subscriptions. This is a project-wide grant — the SA can consume from **any** subscription. The role allows acknowledging and pulling messages but cannot publish or manage topics.
+
+*Grants the pipeline SA project-wide `roles/pubsub.subscriber` to pull from any Pub/Sub subscription.*
 
 ```hcl
 resource "google_project_iam_member" "pipeline_pubsub_subscriber" {
@@ -291,18 +322,19 @@ resource "google_project_iam_member" "pipeline_pubsub_subscriber" {
 | `member` | Yes | Principal receiving the role: `serviceAccount:<email>`, `user:<email>`, or `group:<email>` |
 | `count` | No | Terraform meta-argument for conditional creation |
 
----
-
 ### Resource-Level IAM
 
 Resource-level IAM scopes a role to a single resource (secret, bucket, dataset, topic) instead of the entire project. This is the preferred approach when a SA only needs access to specific resources. Each GCP resource type has its own `_iam_member` Terraform resource.
 
 > [!tip] Least privilege by default
+>
 > Start with resource-level grants and only escalate to project-level when a workload genuinely needs access to all resources of that type. Resource-level bindings are easier to audit and revoke.
 
 #### google_secret_manager_secret_iam_member | Secret accessor
 
 A Cloud Run service or pipeline SA needs to read a specific secret at runtime. The `roles/secretmanager.secretAccessor` role allows reading the secret value but cannot list, create, or delete secrets. See [Secrets Management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management).
+
+*Grants the pipeline SA `roles/secretmanager.secretAccessor` on a single secret resource.*
 
 ```hcl
 resource "google_secret_manager_secret_iam_member" "pipeline_db_password" {
@@ -317,6 +349,8 @@ resource "google_secret_manager_secret_iam_member" "pipeline_db_password" {
 
 One SA needs to impersonate another — for example, Airflow needs to act as the pipeline SA to submit Dataflow jobs. The `roles/iam.serviceAccountUser` role grants "act as" permission, which is required to attach a SA to a resource or run a job as that SA.
 
+*Grants the Airflow SA `roles/iam.serviceAccountUser` on the pipeline SA to enable impersonation.*
+
 ```hcl
 resource "google_service_account_iam_member" "airflow_act_as_pipeline" {
   service_account_id = google_service_account.pipeline.name
@@ -329,6 +363,8 @@ resource "google_service_account_iam_member" "airflow_act_as_pipeline" {
 
 A pipeline SA needs to read/write files in a specific GCS bucket. The `roles/storage.objectAdmin` role allows creating, reading, overwriting, and deleting objects in the bucket — but cannot delete the bucket itself. See [GCS Buckets and Lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle).
 
+*Grants the pipeline SA `roles/storage.objectAdmin` on a single GCS bucket.*
+
 ```hcl
 resource "google_storage_bucket_iam_member" "pipeline_raw_bucket" {
   bucket = google_storage_bucket.raw.name
@@ -340,6 +376,8 @@ resource "google_storage_bucket_iam_member" "pipeline_raw_bucket" {
 #### google_bigquery_dataset_iam_member | Data viewer
 
 A dashboard SA needs to query tables within a specific dataset without accessing other datasets. The `roles/bigquery.dataViewer` role grants read access to tables and views within the dataset. See [Dataset and Table Management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management).
+
+*Grants the dashboard SA `roles/bigquery.dataViewer` scoped to a single BigQuery dataset.*
 
 ```hcl
 resource "google_bigquery_dataset_iam_member" "dashboard_analytics_dataset" {
@@ -354,6 +392,8 @@ resource "google_bigquery_dataset_iam_member" "dashboard_analytics_dataset" {
 
 A Cloud Function or external service needs to publish to a specific Pub/Sub topic only — more restrictive than a project-level `roles/pubsub.publisher` grant. See [Pub/Sub Topics and Subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions).
 
+*Grants the pipeline SA `roles/pubsub.publisher` scoped to a single Pub/Sub topic.*
+
 ```hcl
 resource "google_pubsub_topic_iam_member" "pipeline_events_topic" {
   project = var.project_id
@@ -363,13 +403,12 @@ resource "google_pubsub_topic_iam_member" "pipeline_events_topic" {
 }
 ```
 
----
-
 ### Workload Identity Federation
 
 Workload Identity Federation lets external workloads (GitHub Actions, GitLab, AWS) authenticate to GCP without storing long-lived service account keys. An OIDC token from the external identity provider is exchanged for a short-lived GCP access token. See [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) for the workflow-side configuration.
 
 > [!info] WIF eliminates SA key management
+>
 > Workload Identity Federation is the recommended authentication method for CI/CD pipelines. It removes the need to create, rotate, and securely store JSON key files — the most common vector for credential leaks.
 
 ```mermaid
@@ -407,6 +446,8 @@ sequenceDiagram
 
 The identity pool is a container that groups external identities. GitHub Actions workflows authenticate into this pool using OIDC tokens. The `workload_identity_pool_id` becomes part of the pool's full resource name. Set `disabled = true` to temporarily block all federation without deleting the pool.
 
+*Creates a Workload Identity Pool to group GitHub Actions OIDC identities.*
+
 ```hcl
 resource "google_iam_workload_identity_pool" "github" {
   project                   = var.project_id
@@ -420,6 +461,8 @@ resource "google_iam_workload_identity_pool" "github" {
 #### google_iam_workload_identity_pool_provider | GitHub OIDC
 
 The provider registers GitHub's OIDC issuer as a trusted identity source within the pool. The `attribute_mapping` block maps GitHub's JWT claims to GCP attributes. The `attribute_condition` restricts federation to a specific repository — without it, any GitHub repository could authenticate.
+
+*Registers GitHub's OIDC issuer as a trusted provider and maps JWT claims to GCP attributes.*
 
 ```hcl
 resource "google_iam_workload_identity_pool_provider" "github_oidc" {
@@ -455,6 +498,8 @@ resource "google_iam_workload_identity_pool_provider" "github_oidc" {
 
 This binding allows GitHub Actions workflows in the specified repository to impersonate the CI/CD service account. The `principalSet` member format matches any identity from the pool whose `attribute.repository` matches the configured org/repo. The `roles/iam.workloadIdentityUser` role is specifically designed for this federation pattern.
 
+*Grants the WIF pool principal `roles/iam.workloadIdentityUser` to impersonate the CI/CD service account.*
+
 ```hcl
 resource "google_service_account_iam_member" "github_cicd_wif" {
   service_account_id = google_service_account.cicd.name
@@ -463,22 +508,24 @@ resource "google_service_account_iam_member" "github_cicd_wif" {
 }
 ```
 
----
-
 ## Secret Manager
 
 GCP Secret Manager stores sensitive data (API keys, database passwords, certificates) as versioned secrets with automatic encryption at rest. Terraform manages secrets through two resources: `google_secret_manager_secret` (the container with replication policy) and `google_secret_manager_secret_version` (the actual value). See the `gcloud` equivalent commands in [Secrets Management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management).
 
 > [!danger] Terraform stores secret values in state
+>
 > When Terraform creates a `google_secret_manager_secret_version`, the plaintext value is written to the state file. Anyone with access to the state file can read the secret.
 
 > [!success] Protect the state file
+>
 > Always use a remote backend (GCS with encryption) and restrict access to the state bucket. Mark all secret variables as `sensitive = true` so Terraform redacts them in plan output and logs.
 
 > [!warning] Missing `prevent_destroy` on secrets
+>
 > Accidental `terraform destroy` permanently deletes secrets and all their versions. There is no undo.
 
 > [!success] Add lifecycle protection
+>
 > Add `lifecycle { prevent_destroy = true }` to secret containers that hold production credentials.
 
 ### google_secret_manager_secret
@@ -488,6 +535,8 @@ The secret resource creates the container (metadata and replication policy only)
 #### google_secret_manager_secret | Auto replication
 
 The most common pattern — Google automatically chooses replica locations and manages encryption. Suitable for most workloads where data residency is not a concern.
+
+*Creates a Secret Manager secret container with Google-managed automatic replication.*
 
 ```hcl
 resource "google_secret_manager_secret" "db_password" {
@@ -508,6 +557,8 @@ resource "google_secret_manager_secret" "db_password" {
 #### google_secret_manager_secret | User-managed replication
 
 Compliance or data residency requirements mandate specific regions. Each `replicas` block pins a copy to a named region. Add more blocks for additional redundancy.
+
+*Creates a Secret Manager secret container with user-managed replication pinned to specific regions.*
 
 ```hcl
 resource "google_secret_manager_secret" "db_password_regional" {
@@ -535,11 +586,11 @@ resource "google_secret_manager_secret" "db_password_regional" {
 | `replication.auto` | Yes* | Google-managed replica placement; simplest option |
 | `replication.user_managed.replicas` | Yes* | Explicit region list for data residency; mutually exclusive with `auto` |
 
----
-
 ### google_secret_manager_secret_version
 
 The version resource holds the actual plaintext value. Each new version is immutable — updating `secret_data` creates a new version and disables the old one. The `ignore_changes` lifecycle rule prevents Terraform from replacing the version when the value is rotated outside Terraform (e.g., by a rotation function or manual update).
+
+*Stores the initial secret value and ignores external rotations to prevent Terraform drift.*
 
 ```hcl
 resource "google_secret_manager_secret_version" "db_password" {
@@ -558,11 +609,11 @@ resource "google_secret_manager_secret_version" "db_password" {
 | `secret_data` | Yes | The actual secret value; mark the variable as `sensitive = true` |
 | `lifecycle.ignore_changes` | No | Prevents Terraform from drift-correcting externally rotated values |
 
----
-
 #### google_secret_manager_secret | Conditional creation (Datadog)
 
 When a third-party integration is optional, both the secret container and version use `count` so they are created or destroyed together. The `count` expressions must match — if the container is skipped, the version must also be skipped. Reference count-controlled resources with `[0]` because `count = 1` produces a list.
+
+*Conditionally creates both the secret container and version for a Datadog API key; both use matching `count` expressions.*
 
 ```hcl
 resource "google_secret_manager_secret" "dd_api_key" {
@@ -588,13 +639,12 @@ resource "google_secret_manager_secret_version" "dd_api_key" {
 }
 ```
 
----
-
 ## Cloud Run
 
 Cloud Run is a fully managed platform for running containers. It comes in two resource types: **services** (always-on HTTP endpoints) and **jobs** (run-to-completion tasks). Terraform uses the v2 API resources (`google_cloud_run_v2_service`, `google_cloud_run_v2_job`) which supersede the older v1 resources. See the `gcloud` equivalent commands in [Cloud Run Jobs vs Services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services).
 
 > [!info] Cloud Run v2 is the current API
+>
 > Always use `google_cloud_run_v2_service` and `google_cloud_run_v2_job` — the v1 resources (`google_cloud_run_service`) are in maintenance mode. V2 supports direct VPC egress, GPU, multi-container sidecars, and startup/liveness probes.
 
 ```mermaid
@@ -642,6 +692,8 @@ The service name must be lowercase letters, digits, and hyphens, max 49 characte
 For resource limits, `cpu_idle = true` throttles CPU when not processing requests (saves cost), while `startup_cpu_boost = true` gives extra CPU during container startup to reduce cold start latency. The `ports.name` field accepts `http1` (HTTP/1.1) or `h2c` (HTTP/2 cleartext). Secret-backed environment variables use `value_source.secret_key_ref` — the `version` field accepts `"latest"` (always newest enabled version) or a specific version number for stability.
 
 The `vpc_access` block connects the service to a VPC through a Serverless VPC Access connector. Set `egress` to `PRIVATE_RANGES_ONLY` to route only RFC1918 traffic through the VPC, or `ALL_TRAFFIC` for full VPC egress.
+
+*Deploys a Cloud Run v2 HTTP service with scaling bounds, secret-backed env vars, health probes, and VPC egress.*
 
 ```hcl
 resource "google_cloud_run_v2_service" "api" {
@@ -766,8 +818,6 @@ resource "google_cloud_run_v2_service" "api" {
 | `vpc_access.connector` | No | Serverless VPC Access connector resource ID |
 | `vpc_access.egress` | No | `PRIVATE_RANGES_ONLY` or `ALL_TRAFFIC` |
 
----
-
 ### google_cloud_run_v2_job
 
 A Cloud Run Job runs a containerized task to completion and exits — it does not expose an HTTP endpoint. Use jobs for nightly ETL, data exports, model training, or database migrations. Jobs support parallel task execution (`task_count` > 1) and automatic retries on failure.
@@ -777,6 +827,8 @@ The nested `template.template` structure is intentional: the outer `template` de
 #### google_cloud_run_v2_job | Batch ETL pipeline
 
 A nightly ETL job that reads from GCS, transforms data, and writes to BigQuery. Batch jobs typically use more CPU and memory than web services. The `volume_mounts` block mounts a JSON credentials file from Secret Manager at `/secrets/credentials.json` inside the container.
+
+*Defines a Cloud Run v2 batch ETL job with secret volume mount and VPC egress.*
 
 ```hcl
 resource "google_cloud_run_v2_job" "etl_pipeline" {
@@ -863,6 +915,8 @@ resource "google_cloud_run_v2_job" "etl_pipeline" {
 
 A database migration or one-time setup script using the same image as the pipeline but with a different entrypoint. The `command` and `args` fields override the container's default CMD. Set `max_retries = 0` because migrations should not retry automatically — manual intervention is required on failure. Set a shorter `timeout` so failures surface quickly.
 
+*Defines a one-time Cloud Run v2 job for database migrations with no automatic retries.*
+
 ```hcl
 resource "google_cloud_run_v2_job" "db_migrate" {
   project  = var.project_id
@@ -934,8 +988,6 @@ resource "google_cloud_run_v2_job" "db_migrate" {
 | `containers.volume_mounts` | No | Mount a secret volume at a path inside the container |
 | `volumes.secret` | No | Maps a Secret Manager secret to a file in the container |
 
----
-
 ### google_cloud_run_v2_service_iam_member
 
 Service-level IAM controls who can invoke a specific Cloud Run service. This is separate from project-level IAM — a service-level binding scopes access to a single service rather than all services in the project.
@@ -945,10 +997,14 @@ Service-level IAM controls who can invoke a specific Cloud Run service. This is 
 The service is accessible to anyone on the internet without authentication. The `allUsers` member is a special value meaning no authentication is required. Use for public APIs or static site proxies.
 
 > [!danger] `allUsers` removes all authentication
+>
 > Anyone on the internet can call this service. There is no rate limiting built into Cloud Run — DDoS traffic will scale instances and incur costs.
 
 > [!success] Protect public services
+>
 > Place a Cloud Load Balancer with Cloud Armor in front of public services to add rate limiting, WAF rules, and DDoS protection. Or use `INTERNAL_AND_CLOUD_LOAD_BALANCING` ingress instead of `INGRESS_TRAFFIC_ALL`.
+
+*Grants `allUsers` `roles/run.invoker` to make the Cloud Run service publicly accessible.*
 
 ```hcl
 resource "google_cloud_run_v2_service_iam_member" "api_public" {
@@ -964,6 +1020,8 @@ resource "google_cloud_run_v2_service_iam_member" "api_public" {
 
 Only a specific service account (Cloud Scheduler, Airflow, another Cloud Run service) can invoke this service. All other callers receive HTTP 403. This is the recommended pattern for internal service-to-service communication.
 
+*Grants a specific service account `roles/run.invoker` on a single Cloud Run service for authenticated access.*
+
 ```hcl
 resource "google_cloud_run_v2_service_iam_member" "api_airflow_invoker" {
   project  = var.project_id
@@ -974,13 +1032,12 @@ resource "google_cloud_run_v2_service_iam_member" "api_airflow_invoker" {
 }
 ```
 
----
-
 ## Cloud Functions
 
 Cloud Functions v2 (`google_cloudfunctions2_function`) is GCP's function-as-a-service platform built on Cloud Run. It supports HTTP triggers, Pub/Sub event triggers, and Eventarc-based GCS triggers. The Terraform resource configures both the build (source code, runtime) and the service (scaling, memory, networking). See the runtime equivalent in [Cloud Run Jobs vs Services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services).
 
 > [!info] Cloud Functions v2 runs on Cloud Run
+>
 > Under the hood, each Cloud Function v2 deployment creates a Cloud Run service. This means the same scaling model, networking (VPC connectors, direct VPC egress), and execution environments apply. Choose Cloud Functions for simple event-driven workloads; choose Cloud Run directly for multi-container, custom binary, or long-running HTTP services.
 
 ### google_cloudfunctions2_function
@@ -990,6 +1047,8 @@ The function resource has two main configuration blocks: `build_config` (source 
 #### google_cloudfunctions2_function | HTTP trigger
 
 A lightweight function invoked by HTTP requests — a webhook handler or simple API endpoint that does not justify a full Cloud Run service. The function name also becomes the URL path component. Set `ingress_settings` to `ALLOW_ALL` for public access or `ALLOW_INTERNAL_AND_GCLB` for private + load balancer only. The `all_traffic_on_latest_revision` flag routes 100% of traffic to the latest deployed revision.
+
+*Deploys a Cloud Functions v2 HTTP-triggered function with secret env var injection and VPC egress.*
 
 ```hcl
 resource "google_cloudfunctions2_function" "webhook_handler" {
@@ -1044,11 +1103,11 @@ resource "google_cloudfunctions2_function" "webhook_handler" {
 }
 ```
 
----
-
 #### google_cloudfunctions2_function | Pub/Sub trigger
 
 A function that automatically fires whenever a message is published to a Pub/Sub topic — for event-driven ETL or notifications. The `event_trigger` block configures the CloudEvents subscription. The `entry_point` function must accept CloudEvent parameters. Set `retry_policy` to `RETRY_POLICY_RETRY` to redeliver on failure, or `RETRY_POLICY_DO_NOT_RETRY` to drop failed messages. The function must acknowledge within `timeout_seconds` or the message is redelivered.
+
+*Deploys a Cloud Functions v2 function triggered by Pub/Sub messages with retry on failure.*
 
 ```hcl
 resource "google_cloudfunctions2_function" "pubsub_processor" {
@@ -1088,11 +1147,11 @@ resource "google_cloudfunctions2_function" "pubsub_processor" {
 }
 ```
 
----
-
 #### google_cloudfunctions2_function | GCS event trigger
 
 A function that fires whenever a new file is uploaded to a GCS bucket — for processing CSV files dropped into a landing bucket. This uses Eventarc under the hood. The `event_filters` block scopes the trigger to a specific bucket. The `event_trigger.service_account_email` is the SA that Eventarc uses to invoke the function (separate from `service_config.service_account_email` which is the SA the function runs as). Other useful event types: `object.v1.deleted`, `object.v1.archived`, `object.v1.metadataUpdated`.
+
+*Deploys a Cloud Functions v2 function triggered by GCS object finalization events via Eventarc.*
 
 ```hcl
 resource "google_cloudfunctions2_function" "gcs_file_processor" {
@@ -1154,13 +1213,12 @@ resource "google_cloudfunctions2_function" "gcs_file_processor" {
 | `event_trigger.retry_policy` | No | `RETRY_POLICY_RETRY` or `RETRY_POLICY_DO_NOT_RETRY` |
 | `event_trigger.event_filters` | No | Scope trigger to specific resources (e.g., a single GCS bucket) |
 
----
-
 ## Cloud Scheduler
 
 Cloud Scheduler is a fully managed cron job service. Jobs can target HTTP endpoints (including Cloud Run), Pub/Sub topics, or App Engine. Use it to trigger batch pipelines, publish scheduled messages, or invoke serverless functions on a recurring schedule. See the `gcloud` equivalent commands in [GCP Scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling).
 
 > [!tip] Always use UTC for schedules
+>
 > Set `time_zone = "UTC"` to avoid daylight-saving bugs. Cron expressions use standard 5-field format: minute, hour, day-of-month, month, day-of-week.
 
 ### google_cloud_scheduler_job
@@ -1170,6 +1228,8 @@ The scheduler job resource defines the cron schedule, target (HTTP or Pub/Sub), 
 #### google_cloud_scheduler_job | HTTP target (Cloud Run Job)
 
 Triggers a Cloud Run Job on a cron schedule by sending a POST request to the Cloud Run API's `:run` endpoint. This creates a new Execution of the job. The `oauth_token` SA must have `run.jobs.run` permission.
+
+*Schedules a nightly Cloud Run Job execution via authenticated HTTP POST to the Cloud Run API.*
 
 ```hcl
 resource "google_cloud_scheduler_job" "nightly_etl" {
@@ -1203,6 +1263,8 @@ resource "google_cloud_scheduler_job" "nightly_etl" {
 #### google_cloud_scheduler_job | Pub/Sub target
 
 Publishes a trigger message to a Pub/Sub topic on a schedule, allowing multiple downstream subscribers to react (fan-out pattern). The `data` field must be base64-encoded — `base64encode(jsonencode(...))` handles this in HCL. The `attributes` map adds optional metadata visible alongside the message body.
+
+*Schedules an hourly Pub/Sub trigger message with base64-encoded JSON body.*
 
 ```hcl
 resource "google_cloud_scheduler_job" "hourly_trigger" {
@@ -1245,13 +1307,12 @@ resource "google_cloud_scheduler_job" "hourly_trigger" {
 | `pubsub_target.topic_name` | Yes* | Full Pub/Sub topic resource name; mutually exclusive with `http_target` |
 | `pubsub_target.data` | No | Base64-encoded message body |
 
----
-
 ## Pub/Sub
 
 Pub/Sub is GCP's asynchronous messaging service for decoupling producers and consumers. Terraform manages topics (message channels), subscriptions (delivery endpoints), and schemas (message structure enforcement). See the `gcloud` equivalent commands in [Pub/Sub Topics and Subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions).
 
 > [!question] Pull vs Push subscription
+>
 > - **Pull** — the subscriber calls `pull` to fetch messages. Best for batch processing, backpressure control, and when the subscriber controls its own pace.
 > - **Push** — Pub/Sub sends HTTP POST requests to an endpoint. Best for serverless targets (Cloud Run, Cloud Functions) where you want zero-polling simplicity.
 > - **BigQuery** — Pub/Sub writes messages directly to a BigQuery table. Best for analytics pipelines that don't need real-time processing.
@@ -1263,6 +1324,8 @@ A topic is the channel through which messages are published. Subscribers attach 
 #### google_pubsub_topic | With message retention
 
 Messages are retained for replay even if no subscription reads them immediately — useful during incidents or backfills. The `schema_settings` block references a `google_pubsub_schema` resource to enforce message structure. Set `encoding` to `JSON` for human-readable messages or `BINARY` for more efficient Avro/Protobuf encoding.
+
+*Creates a Pub/Sub topic with 7-day message retention and Avro schema validation.*
 
 ```hcl
 resource "google_pubsub_topic" "events" {
@@ -1287,6 +1350,8 @@ resource "google_pubsub_topic" "events" {
 
 A lightweight trigger topic without schema enforcement. Triggers are short-lived and do not need long retention — 1 day (`86400s`) is sufficient.
 
+*Creates a lightweight Pub/Sub trigger topic with 1-day message retention and no schema.*
+
 ```hcl
 resource "google_pubsub_topic" "pipeline_trigger" {
   project = var.project_id
@@ -1310,8 +1375,6 @@ resource "google_pubsub_topic" "pipeline_trigger" {
 | `schema_settings.encoding` | No | `JSON` or `BINARY`; required when `schema` is set |
 | `message_storage_policy` | No | Controls which regions can store messages; omit for Google-managed placement |
 
----
-
 ### google_pubsub_subscription
 
 A subscription attaches to a topic and controls how messages are delivered to consumers. Key settings include the ack deadline (how long before unacknowledged messages are redelivered), retry policy (backoff between retries), and dead letter policy (where undeliverable messages go after exhausting retries).
@@ -1319,14 +1382,18 @@ A subscription attaches to a topic and controls how messages are delivered to co
 The dead letter pattern requires four resources that form a tightly coupled unit: the subscription itself, a dead letter topic, and two IAM bindings granting the Pub/Sub service agent permission to publish to the dead letter topic and acknowledge messages in the source subscription. The Pub/Sub service agent SA has a fixed format: `service-<project_number>@gcp-sa-pubsub.iam.gserviceaccount.com`.
 
 > [!warning] Subscription expiration
+>
 > By default, Pub/Sub deletes inactive subscriptions after 31 days. Set `expiration_policy.ttl = ""` (empty string) to prevent expiration on subscriptions that may be idle for extended periods.
 
 > [!success] Explicitly set TTL
+>
 > Always set `expiration_policy.ttl` explicitly — either a specific duration or `""` for never-expire — so the behavior is documented in code rather than relying on the default.
 
 #### google_pubsub_subscription | Pull with dead letter
 
 A pipeline service pulls messages from a topic with robust error handling. Messages that exceed `max_delivery_attempts` are routed to a dead letter topic for inspection. The `retain_acked_messages` flag controls whether messages are kept after acknowledgment (useful for replay). The optional `filter` field accepts a CEL expression to receive only messages with specific attributes.
+
+*Creates a pull subscription with dead-letter routing, retry backoff, and required Pub/Sub service-agent IAM bindings.*
 
 ```hcl
 resource "google_pubsub_subscription" "events_pull" {
@@ -1385,11 +1452,11 @@ resource "google_pubsub_subscription_iam_member" "deadletter_subscriber" {
 }
 ```
 
----
-
 #### google_pubsub_subscription | Push to Cloud Run
 
 Pub/Sub delivers messages by pushing HTTP POST requests directly to a Cloud Run service — simpler than running a pull loop. The `push_config.oidc_token` block authenticates the push request using a service account. The `audience` must match the Cloud Run service URL for token validation. Set `expiration_policy.ttl = ""` for push subscriptions, which are usually permanent. The `no_wrapper.write_metadata` flag controls whether messages are wrapped in the standard Pub/Sub JSON envelope (`false`) or sent as raw body only (`true`).
+
+*Creates a push subscription that delivers messages to a Cloud Run service via authenticated OIDC HTTP POST.*
 
 ```hcl
 resource "google_pubsub_subscription" "events_push" {
@@ -1444,8 +1511,6 @@ resource "google_pubsub_subscription" "events_push" {
 | `push_config.oidc_token` | No | SA identity for authenticating push requests |
 | `enable_exactly_once_delivery` | No | `true` = exactly-once semantics; `false` = at-least-once (default) |
 
----
-
 ### google_pubsub_schema
 
 A schema enforces a consistent message structure across all publishers — preventing malformed messages from reaching subscribers and breaking pipelines. Schemas are referenced by topics via the `schema_settings` block. Pub/Sub validates messages at publish time and rejects any that do not conform.
@@ -1453,6 +1518,8 @@ A schema enforces a consistent message structure across all publishers — preve
 #### google_pubsub_schema | Avro
 
 Avro is the more common schema format in data engineering. The `definition` field is the Avro schema encoded as a JSON string using `jsonencode()`. Avro uses `"record"` type for named objects with fields. Union types like `["null", "string"]` create optional fields — placing `"null"` first makes the field default to null.
+
+*Defines a Pub/Sub Avro schema with required and optional fields for publish-time message validation.*
 
 ```hcl
 resource "google_pubsub_schema" "events" {
@@ -1496,6 +1563,8 @@ resource "google_pubsub_schema" "events" {
 
 Protobuf is preferred when performance and binary encoding are priorities. The `definition` field is the raw `.proto` file content. Use `proto3` syntax. Field numbers (1, 2, 3, ...) must never change once published to maintain backward compatibility — they are part of the wire format.
 
+*Defines a Pub/Sub Protocol Buffer schema using a heredoc proto3 definition.*
+
 ```hcl
 resource "google_pubsub_schema" "events_proto" {
   project = var.project_id
@@ -1521,8 +1590,6 @@ resource "google_pubsub_schema" "events_proto" {
 | `definition` | Yes | Schema definition string (JSON for Avro, proto file for Protobuf) |
 | `project` | Yes | GCP project |
 
----
-
 ## Artifact Registry
 
 Artifact Registry is GCP's managed package repository for Docker images, Maven, NPM, Python, and other formats. Co-locate the registry in the same region as Cloud Run for faster image pulls. Cleanup policies automatically remove old or untagged images to control storage costs.
@@ -1534,9 +1601,12 @@ The repository resource creates a package registry with optional cleanup policie
 Cleanup policies use `KEEP` actions (retain matching images) and `DELETE` actions (remove matching images). Each policy has a unique `id` within the repository. The `condition` block filters by tag state (`TAGGED`, `UNTAGGED`), age (`older_than`), and tag prefixes. The `most_recent_versions` block retains a fixed number of recent versions per image name.
 
 > [!tip] Start with dry run
+>
 > Set `cleanup_policy_dry_run = true` when first deploying cleanup policies. This logs what would be deleted without actually deleting — review the logs before setting to `false`.
 
 Uncomment the `docker_config.immutable_tags` block for production registries to prevent overwriting existing tags — once pushed, a tag cannot be reassigned to a different image digest.
+
+*Creates a Docker Artifact Registry repository with cleanup policies to retain the 5 latest tagged images and remove untagged and old dev/PR images.*
 
 ```hcl
 resource "google_artifact_registry_repository" "docker" {
@@ -1603,8 +1673,6 @@ resource "google_artifact_registry_repository" "docker" {
 | `cleanup_policies.condition.tag_prefixes` | No | Only match images with these tag prefixes (e.g., `dev-`, `pr-`) |
 | `cleanup_policies.most_recent_versions.keep_count` | No | Number of recent versions to retain per image |
 
----
-
 ## Variables Reference
 
 These variables are referenced across the blocks above. Adapt types and defaults to your project. Variables marked `sensitive = true` are redacted in Terraform plan output and logs.
@@ -1625,6 +1693,8 @@ These variables are referenced across the blocks above. Adapt types and defaults
 | `bq_dataset` | `string` | — | BigQuery dataset ID for pipeline output |
 | `raw_bucket_name` | `string` | — | GCS bucket name for raw data landing zone |
 | `git_sha` | `string` | `unknown` | Short git commit SHA for Cloud Run revision labels |
+
+*Declares all input variables used across the block library with types, defaults, and validation.*
 
 ```hcl
 variable "project_id" {
@@ -1709,11 +1779,11 @@ variable "git_sha" {
 }
 ```
 
----
-
 ## Data Sources
 
 Data sources read existing GCP resources without creating or modifying them. The `google_project` data source is used throughout this file to get the project number for the Pub/Sub service agent SA format. The `google_compute_default_service_account` data source is useful for referencing or restricting the default Compute Engine SA.
+
+*Reads the current GCP project metadata and default Compute Engine service account without creating any resources.*
 
 ```hcl
 data "google_project" "current" {
@@ -1725,8 +1795,6 @@ data "google_compute_default_service_account" "default" {
 }
 ```
 
----
-
 ## Common Patterns
 
 Reusable Terraform patterns used throughout the blocks above. These are not GCP-specific — they apply to any Terraform project.
@@ -1734,6 +1802,8 @@ Reusable Terraform patterns used throughout the blocks above. These are not GCP-
 ### Count Toggle Pattern
 
 The `count` meta-argument conditionally creates a resource. A ternary expression evaluates a boolean variable: `1` creates the resource, `0` skips it. When referencing a count-controlled resource, use `[0]` because `count = 1` produces a list, not a single object. The `count` expression on dependent resources must match the source resource's count.
+
+*Demonstrates the `count` toggle pattern: conditional resource creation with matching `count` on dependent resources.*
 
 ```hcl
 resource "google_service_account" "optional_sa" {
@@ -1756,6 +1826,8 @@ resource "google_project_iam_member" "optional_sa_role" {
 
 The `ignore_changes` lifecycle rule prevents Terraform from drift-correcting fields that are updated outside Terraform (e.g., by CI/CD). Without this, `terraform plan` would show a diff every time CI/CD deploys a new image tag, and `terraform apply` would revert it.
 
+*Demonstrates the `ignore_changes` lifecycle pattern to prevent Terraform from reverting CI/CD-managed image tags.*
+
 ```hcl
 resource "google_cloud_run_v2_service" "api" {
   # ... (other arguments)
@@ -1772,6 +1844,8 @@ resource "google_cloud_run_v2_service" "api" {
 ### For Each Pattern (Multiple SAs)
 
 The `for_each` meta-argument creates one resource instance per map entry. Unlike `count`, `for_each` uses map keys as identifiers — resources are addressed as `resource_type.name[each.key]` instead of numeric indices. This makes the configuration more readable and avoids index-shift issues when adding or removing entries.
+
+*Demonstrates the `for_each` pattern: creates one service account and IAM binding per map entry without index-shift issues.*
 
 ```hcl
 variable "pipelines" {

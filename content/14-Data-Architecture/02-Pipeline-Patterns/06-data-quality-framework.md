@@ -1,6 +1,6 @@
 ---
 title: "06 - Data Quality Framework"
-tags: [data-architecture, architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery, medallion, quarantine, anomaly-detection, sla, dbt, great-expectations, soda, dataplex]
+tags: [data-architecture, architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery, medallion, quarantine, anomaly-detection, sla, dbt]
 status: stable
 updated: 2026-03-29
 ---

@@ -4,15 +4,6 @@ tags:
   - sql-server
   - tsql
   - concurrency
-  - isolation-levels
-  - lost-update
-  - dirty-read
-  - non-repeatable-read
-  - phantom-read
-  - write-skew
-  - sp-getapplock
-  - updlock-holdlock
-  - rowversion
 aliases:
   - race condition
   - lost update

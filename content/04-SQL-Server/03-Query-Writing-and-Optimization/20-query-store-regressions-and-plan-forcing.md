@@ -1,6 +1,6 @@
 ---
 title: "20 - Query Store Regressions and Plan Forcing"
-tags: [sql, sql-server, tsql, query-store, plan-forcing, query-store-hints, dmv, regression, sp-query-store-force-plan, performance]
+tags: [sql, sql-server, tsql, query-store, performance]
 aliases: [query-plan-analysis, Query Store regressions, plan forcing, Query Store hints, regressed queries]
 description: "Production-focused guide to SQL Server Query Store: what it is, its catalog views, capture modes, read-only reasons, regression triage, plan forcing with sp_query_store_force_plan, and Query Store Hints (SQL 2022+)."
 created: 2026-03-22

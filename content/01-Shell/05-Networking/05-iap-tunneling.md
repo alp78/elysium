@@ -92,7 +92,7 @@ flowchart TD
 
 > [!tip] Related pattern
 >
-> IAP requires the `iap.tunnelResourceAccessor` IAM role — see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking).
+> IAP requires the `iap.tunnelResourceAccessor` IAM role — see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking).
 
 ## PowerShell / Linux | gcloud | IAP tunnel commands
 

@@ -18,10 +18,10 @@ mindmap
     (IAM, secrets, serverless)
 ```
 
-> [!abstract]- [[01-tf-foundation-and-networking]]
+> [!abstract]- [[01-foundation-and-networking]]
 
-> [!abstract]- [[02-tf-compute-and-storage]]
+> [!abstract]- [[02-compute-and-storage]]
 
-> [!abstract]- [[03-tf-data-services]]
+> [!abstract]- [[03-data-services]]
 
-> [!abstract]- [[04-tf-iam-secrets-serverless]]
+> [!abstract]- [[04-iam-secrets-serverless]]

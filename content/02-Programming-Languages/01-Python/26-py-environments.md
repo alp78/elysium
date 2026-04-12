@@ -2,8 +2,6 @@
 title: "26 - Environments - Python"
 tags:
   - python
-  - venv
-  - pip
   - environments
   - dependencies
 aliases: [virtual environments, venv, pip, requirements.txt, pyenv, python environments]

@@ -3,12 +3,8 @@ title: "04 - Keys, Defaults, Identity, and Sequences"
 tags:
   - sql-server
   - primary-key
-  - surrogate-key
-  - natural-key
   - identity
   - sequence
-  - default-constraint
-  - newsequentialid
 aliases:
   - surrogate keys
   - IDENTITY
@@ -632,7 +628,7 @@ Per the [Microsoft "Use sequences" guidance](https://learn.microsoft.com/sql/rel
 > - `INCREMENT BY 1` — step size per call. Must be non-zero. Negative values produce a descending sequence.
 > - `MINVALUE 1000` / `MAXVALUE 9999999` — explicit bounds. Without them the sequence uses the data type's full range.
 > - `NO CYCLE` — the sequence raises an error when it exceeds `MAXVALUE` instead of wrapping back to `MINVALUE`. `CYCLE` wraps without error (useful for ticket slots, harmful for primary keys).
-> - `CACHE 50` — the engine pre-allocates blocks of 50 values in memory per round-trip to system tables. Higher cache = less disk I/O but larger gap on crash. See the danger callout below.
+> - `CACHE 50` — the engine pre-allocates blocks of 50 values in memory per round-trip to system tables. The inputs to this decision are **insert rate** and **tolerable gap magnitude on crash**. At low throughput (< 100 inserts/day), `CACHE 10` or even `NO CACHE` is adequate — the system-table write cost is invisible. At moderate throughput (100–10,000 inserts/second), `CACHE 50` balances write reduction against a maximum 50-value gap per unexpected shutdown. At high throughput (10,000+ inserts/second), `CACHE 500` or `CACHE 1000` reduces system-table contention measurably. The demo uses `CACHE 50` for `dbo.race_keys_seq` because the stoxx workload is lab-scale with infrequent inserts — the value is large enough to avoid per-call I/O but small enough that a gap of ≤ 50 on crash is negligible. **Feedback signal:** if `sys.dm_exec_requests` shows waits on `PREEMPTIVE_OS_WRITEFILEGATHER` or `WRITELOG` correlated with `NEXT VALUE FOR` calls, the cache is too small — double it. If audit requirements flag unacceptable gaps after a failover, reduce the cache or switch to `NO CACHE`. See the danger callout below.
 
 > [!danger] SEQUENCE CACHE loses unused numbers on crash
 >
@@ -1277,7 +1273,7 @@ Apply these in order when designing a table that needs row identity or automatic
 2. **Prefer a composite natural key** when the table's row identity is genuinely multi-part (`(instrument_id, price_date)`, `(order_id, line_number)`) and the leading column supports monotonic inserts.
 3. **Introduce a surrogate key** whenever volatility, width, or SCD-2 versioning makes the natural key awkward — but keep a `UNIQUE` constraint on the business columns so the surrogate never silently allows duplicates.
 4. **Use `IDENTITY`** for single-table surrogates where numbering never crosses tables, pre-insert values are not needed, and monotonic cluster inserts are wanted. Start on `bigint` for any table whose volume is measured in millions per year.
-5. **Use `SEQUENCE`** when numbering must outlive one table, must be available before insert, must support bulk `sp_sequence_get_range` allocation, or must cycle. Pick `CACHE` size carefully against the cost of gap-on-crash.
+5. **Use `SEQUENCE`** when numbering must outlive one table, must be available before insert, must support bulk `sp_sequence_get_range` allocation, or must cycle. Size the `CACHE` based on insert throughput and tolerable gap magnitude — see the `CREATE SEQUENCE` breakdown earlier in this note for concrete guidance at different scales.
 6. **Use `DEFAULT` constraints** for values the database contract owns — timestamps, sequence-bound PKs, named-constant fallbacks, sequential GUIDs — and name every constraint explicitly (`DF_<table>_<column>`).
 7. **Use `NEWSEQUENTIALID()`** instead of `NEWID()` for any clustered `uniqueidentifier` PK unless global-across-hosts uniqueness is mandatory and the privacy warning does not apply.
 8. **Use `rowversion`** for optimistic concurrency and incremental-sync change detection. Never use it as a timestamp.

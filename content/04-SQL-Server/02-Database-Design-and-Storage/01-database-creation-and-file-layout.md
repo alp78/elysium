@@ -3,14 +3,7 @@ title: "01 - Database Creation and File Layout"
 tags:
   - sql-server
   - database
-  - create-database
-  - file-layout
-  - mdf
-  - ndf
-  - ldf
-  - autogrowth
   - recovery-model
-  - compatibility-level
 aliases:
   - CREATE DATABASE
   - MDF NDF LDF
@@ -47,19 +40,99 @@ This note answers the production questions that actually matter on day one:
 
 ## The Design Decisions Behind CREATE DATABASE
 
-At a superficial level, creating a database means issuing a statement such as the following template.
+The two reference databases on this instance were created using opposite approaches, and the gap between them is the teaching device of the entire note.
 
-*Template showing the minimal default syntax. Every setting — file layout, sizes, growth, collation, recovery — inherits from the `model` database.*
+#### `stoxx` — default creation, every decision inherited
+
+*The actual command that created the `stoxx` working database. Every setting — file layout, sizes, growth, collation, recovery — was inherited from the `model` database.*
 
 ```sql
-CREATE DATABASE [MyDatabase];
+CREATE DATABASE [stoxx];
 ```
 
 ```text
 Commands completed successfully.
 ```
 
-The statement runs in under a second and returns no rows. That silence is deceptive: every one of the decisions listed below has already been made implicitly, using whatever `model` currently specifies. On a default-model instance this produces a single 8 MB `.mdf`, a 1 MB `.ldf`, 10% autogrowth on the log, and instance-default collation — all of which are usually wrong for production. The `stoxx` database on this instance was created this way, and its defaults surface in every comparison query later on this page.
+The statement ran in under a second and returned no rows. That silence is deceptive: every one of the decisions listed below was made implicitly, using whatever `model` specified at the time. On this default-model instance, `stoxx` started as a single 8 MB `.mdf` + 1 MB `.ldf`, with 64 MB fixed growth, instance-default legacy collation (`SQL_Latin1_General_CP1_CI_AS`), no user filegroups, and `SIMPLE`-equivalent recovery until a full backup is taken. Its data file grew organically from 8 MB to 712 MB through dozens of reactive autogrowth events — exactly the anti-pattern that surfaces in every comparison query later on this page.
+
+#### `stoxx_db` — production baseline, every decision explicit
+
+*The actual creation script for the `stoxx_db` reference database. Five files across three filegroups, pre-sized, fixed growth, explicit caps, UTF-8 collation, full post-creation configuration, and backup-chain initialization.*
+
+```sql
+CREATE DATABASE [stoxx_db]
+ON PRIMARY (
+    NAME = N'stoxx_db_Primary',
+    FILENAME = N'/var/opt/mssql/data/stoxx_db_Primary.mdf',
+    SIZE = 128MB,
+    FILEGROWTH = 64MB,
+    MAXSIZE = 1024MB
+),
+FILEGROUP [FG_Current] (
+    NAME = N'stoxx_db_Current_01',
+    FILENAME = N'/var/opt/mssql/data/stoxx_db_Current_01.ndf',
+    SIZE = 256MB,
+    FILEGROWTH = 128MB,
+    MAXSIZE = 4096MB
+), (
+    NAME = N'stoxx_db_Current_02',
+    FILENAME = N'/var/opt/mssql/data/stoxx_db_Current_02.ndf',
+    SIZE = 256MB,
+    FILEGROWTH = 128MB,
+    MAXSIZE = 4096MB
+),
+FILEGROUP [FG_Archive] (
+    NAME = N'stoxx_db_Archive_01',
+    FILENAME = N'/var/opt/mssql/data/stoxx_db_Archive_01.ndf',
+    SIZE = 128MB,
+    FILEGROWTH = 64MB,
+    MAXSIZE = 2048MB
+)
+LOG ON (
+    NAME = N'stoxx_db_Log',
+    FILENAME = N'/var/opt/mssql/data/stoxx_db_Log.ldf',
+    SIZE = 256MB,
+    FILEGROWTH = 128MB,
+    MAXSIZE = 2048MB
+)
+COLLATE Latin1_General_100_CI_AS_SC_UTF8;
+GO
+
+-- Post-creation configuration
+ALTER DATABASE [stoxx_db] SET RECOVERY FULL;
+ALTER DATABASE [stoxx_db] SET COMPATIBILITY_LEVEL = 160;
+ALTER DATABASE [stoxx_db] SET ALLOW_SNAPSHOT_ISOLATION ON;
+ALTER DATABASE [stoxx_db] SET READ_COMMITTED_SNAPSHOT ON;
+ALTER DATABASE [stoxx_db] SET PAGE_VERIFY CHECKSUM;
+ALTER DATABASE [stoxx_db] SET AUTO_CLOSE OFF;
+ALTER DATABASE [stoxx_db] SET AUTO_SHRINK OFF;
+ALTER DATABASE [stoxx_db] SET QUERY_STORE = ON;
+ALTER DATABASE [stoxx_db] SET QUERY_STORE (
+    OPERATION_MODE = READ_WRITE,
+    QUERY_CAPTURE_MODE = AUTO,
+    SIZE_BASED_CLEANUP_MODE = AUTO,
+    MAX_STORAGE_SIZE_MB = 2048
+);
+ALTER DATABASE [stoxx_db] MODIFY FILEGROUP [FG_Current] DEFAULT;
+ALTER DATABASE [stoxx_db] MODIFY FILEGROUP [FG_Current] AUTOGROW_ALL_FILES;
+ALTER DATABASE [stoxx_db] MODIFY FILEGROUP [FG_Archive] AUTOGROW_ALL_FILES;
+ALTER AUTHORIZATION ON DATABASE::[stoxx_db] TO [sa];
+GO
+
+-- Initialize the backup chain (exits pseudo-simple mode)
+BACKUP DATABASE [stoxx_db]
+    TO DISK = N'/var/opt/mssql/data/stoxx_db_init.bak'
+    WITH INIT, COMPRESSION;
+GO
+```
+
+```text
+Commands completed successfully.
+Processed 832 pages for database 'stoxx_db', file 'stoxx_db_Primary' on file 1.
+```
+
+*Every clause maps to a design decision explained in its own H2 section below: file layout and filegroups define the physical architecture, `COLLATE` sets the character encoding, `RECOVERY FULL` enables point-in-time restore, `COMPATIBILITY_LEVEL = 160` targets the SQL Server 2022 optimizer, RCSI and snapshot isolation eliminate reader/writer blocking, `PAGE_VERIFY CHECKSUM` catches silent corruption, `AUTO_CLOSE` and `AUTO_SHRINK` are disabled because both are harmful in production, Query Store provides plan-level observability, `MODIFY FILEGROUP ... DEFAULT` moves new objects off `PRIMARY`, `AUTOGROW_ALL_FILES` keeps sibling files balanced, and the final `BACKUP DATABASE` initializes the log chain so that log backups become possible.*
 
 At a professional level, creating a database means defining four layers of decisions, each of which is covered in detail in its own H2 section later in the note:
 
@@ -68,17 +141,7 @@ At a professional level, creating a database means defining four layers of decis
 3. **Behavioral defaults** — collation, recovery model, compatibility level, snapshot behavior, read/write concurrency, and Query Store.
 4. **Operational baseline** — ownership, encryption, backup-chain initialization, monitoring expectations, capacity planning, and growth forecasting.
 
-> [!warning] Design is permanent
->
-> A database is a long-lived operational object, not just a container for tables. Poor creation-time decisions produce years of avoidable operational pain: fragmentation, blocking, slow recovery, poor restore behavior, runaway storage growth, and migration problems.
-
-> [!success] Decide before executing
->
-> Treat `CREATE DATABASE` as a design artifact, not a shortcut. Finalize workload classification, RPO/RTO, file placement, sizing, collation, recovery model, and operational baseline before running the statement. The day-one layout constrains every operational decision that follows.
-
-> [!tip] Right question
->
-> The correct question is not "How do I create a database?" but "What kind of database am I creating, for what workload, under what recovery and operational constraints?"
+**Design is permanent.** A database is a long-lived operational object, not just a container for tables. Poor creation-time decisions produce years of avoidable operational pain: fragmentation, blocking, slow recovery, poor restore behavior, runaway storage growth, and migration problems. **Treat `CREATE DATABASE` as a design artifact, not a shortcut.** Finalize workload classification, RPO/RTO, file placement, sizing, collation, recovery model, and operational baseline before running the statement. The day-one layout constrains every operational decision that follows. **The correct question is not "How do I create a database?"** but "What kind of database am I creating, for what workload, under what recovery and operational constraints?"
 
 ---
 
@@ -550,7 +613,17 @@ A **Virtual Log File** (VLF) is an internal subdivision of the transaction log. 
 | 500–1000 | High | Schedule a log rebuild (shrink + pre-size) during maintenance |
 | > 1000 | Critical | Prioritize remediation — recovery and HA performance are degraded |
 
-SQL Server creates VLFs during growth using three tiers: growth increments under 64 MB create 4 VLFs, increments from 64 MB to 1 GB create 8 VLFs, and increments over 1 GB create 16 VLFs — all of equal size. A 1,024 MB growth increment therefore creates 8 VLFs of 128 MB each, which is a well-balanced size for most production workloads. Bad VLF counts come from very small log growth increments (e.g., the 1 MB default), repeated autogrowth over weeks or months, or chronic log undersizing. To rebuild a fragmented log: (1) verify no active long-running transactions with `DBCC OPENTRAN`; (2) take a log backup to minimize active log; (3) shrink the log to the minimum with `DBCC SHRINKFILE(log_logical_name, 1)`; (4) grow the log back in 1,024–4,096 MB chunks to establish well-sized VLFs; (5) verify the new count with `sys.dm_db_log_info`.
+SQL Server creates VLFs during growth using three tiers: growth increments under 64 MB create 4 VLFs, increments from 64 MB to 1 GB create 8 VLFs, and increments over 1 GB create 16 VLFs — all of equal size. A 1,024 MB growth increment therefore creates 8 VLFs of 128 MB each, which is a well-balanced size for most production workloads. Bad VLF counts come from very small log growth increments (e.g., the 1 MB default), repeated autogrowth over weeks or months, or chronic log undersizing.
+
+> [!tip] Rebuilding a fragmented transaction log
+>
+> When VLF count exceeds the healthy threshold (200+), the remedy is a controlled shrink-and-regrow during a maintenance window. The goal is to replace dozens or hundreds of unevenly sized VLFs with a small number of well-sized ones.
+>
+> 1. **Confirm no blocking transactions** — run `DBCC OPENTRAN` to verify no long-running transaction is pinning the log. If one exists, the shrink will not release space past that point.
+> 2. **Take a log backup** — this truncates the inactive portion of the log (`BACKUP LOG [db] TO DISK = ...`), minimizing the active log footprint so the shrink can reclaim maximum space.
+> 3. **Shrink the log to minimum** — `DBCC SHRINKFILE(log_logical_name, 1)` reduces the log file to its smallest possible size. This is the only legitimate use of shrink on a log file — a one-time reset, not a recurring operation.
+> 4. **Grow the log back in a single large increment** — `ALTER DATABASE [db] MODIFY FILE (NAME = log_logical_name, SIZE = <target>MB)` where the target is the log's expected working size. Use a single allocation of 1,024–4,096 MB to produce 8–16 uniformly sized VLFs (per the tiered VLF creation rules above).
+> 5. **Verify the new VLF count** — query `sys.dm_db_log_info(DB_ID())` and confirm the count dropped to the expected value (e.g., 8 VLFs for a 1,024 MB allocation, 16 for a 2,048 MB+ allocation).
 
 > [!quote] Korotkevitch
 >
@@ -613,9 +686,26 @@ ORDER BY database_name, file_id;
 >
 > Pre-size files based on forecasted workload, use fixed growth increments (512 MB–4 GB for data, 512 MB–2 GB for log), and monitor autogrowth events. If growth events occur more than occasionally, resize proactively.
 
+**How to choose the right growth increment.** The 512 MB–4 GB range for data files is wide because the right value depends on three factors: **current file size**, **daily growth rate**, and **acceptable growth-event frequency**. The principle is that a single autogrowth event should buy enough headroom that the next event does not fire for days or weeks, not minutes. A 50 GB database growing at 500 MB/day should use a 2–4 GB increment so growth fires at most once a week; a 500 GB database growing at 5 GB/day needs a 4 GB increment or larger. A 10 GB dev database growing at 100 MB/day can use 512 MB and still fire less than once a week. If growth events fire more than once per ETL cycle or per business day, the increment is too small — double it. If the increment is so large that a single growth event causes a visible I/O stall (monitor wait type `PREEMPTIVE_OS_WRITEFILEGATHER`), reduce it slightly or pre-size more aggressively so autogrowth rarely fires at all.
+
+For **log files**, the same logic applies but the stakes are higher because log growth must be zero-initialized and blocks writes during the event. The 512 MB–2 GB range reflects this: a log sized at 4 GB with a 512 MB increment survives most burst workloads, while a 32 GB log on a high-throughput warehouse should use 1–2 GB increments. The VLF tiering rules (above) also matter: increments of 1,024 MB produce 8 VLFs of 128 MB each — a well-balanced size for most workloads.
+
+**Why `stoxx_db` uses 128 MB instead of 64 MB for its `FG_Current` files.** The 64 MB default inherited by `stoxx` is acceptable for databases under 10 GB, but `FG_Current` was pre-sized at 512 MB total (2 × 256 MB) with the expectation that bronze and silver tables will grow as new instruments and history are loaded. At 128 MB increments, an autogrowth event on each file adds meaningful headroom without being so large that it causes a noticeable pause on the containerized instance. The `PRIMARY` and `FG_Archive` files use 64 MB because their growth rate is expected to be much lower — metadata and gold-layer tables grow slowly.
+
 > [!tip] Healthy growth
 >
-> A healthy production database may still use autogrowth, but growth events should be infrequent, intentional, monitored, and sized in meaningful fixed increments.
+> A healthy production database may still use autogrowth, but growth events should be **infrequent**, **intentional**, **monitored**, and sized in meaningful fixed increments.
+>
+> "Intentional" means the operator, not the workload, decides when files grow. Instead of letting autogrowth fire reactively when space runs out mid-query, schedule periodic capacity reviews (monthly or quarterly) and **pre-size files ahead of projected need** using `ALTER DATABASE ... MODIFY FILE (NAME = ..., SIZE = ...)`. This command extends the file immediately, during a maintenance window, without blocking user activity — unlike autogrowth, which fires mid-workload and can stall writes.
+>
+> **To trigger a deliberate growth event:**
+>
+> ```sql
+> -- Extend a data file to 1024 MB during a maintenance window
+> ALTER DATABASE [stoxx_db] MODIFY FILE (NAME = N'stoxx_db_Current_01', SIZE = 1024MB);
+> ```
+>
+> If the file is already larger than the specified size, the command is a no-op. If the target is larger, the file is extended immediately. This is the production-grade alternative to relying on autogrowth — the operator grows files proactively based on capacity forecasts, and autogrowth serves only as a safety net for unexpected surges.
 
 #### Show `MAXSIZE` caps for every file on both databases
 
@@ -1622,11 +1712,11 @@ ORDER BY fg.data_space_id;
 
 | data_space_id | filegroup | type_desc | is_default | is_read_only |
 |---|---|---|---|---|
-| 1 | PRIMARY | ROWS_FILEGROUP | True | False |
-| 2 | FG_Current | ROWS_FILEGROUP | False | False |
+| 1 | PRIMARY | ROWS_FILEGROUP | False | False |
+| 2 | FG_Current | ROWS_FILEGROUP | True | False |
 | 3 | FG_Archive | ROWS_FILEGROUP | False | False |
 
-*Three filegroups: the mandatory `PRIMARY` (still flagged as the default target for new objects), a user-defined `FG_Current` for active operational data, and a user-defined `FG_Archive` for cold historical data. This is the production baseline pattern — hot and cold data live in separate filegroups so the cold tier can be marked `READ_ONLY` and excluded from routine backups.*
+*Three filegroups: `PRIMARY` is present and mandatory but is not the default (`is_default = False`) — the default was transferred to `FG_Current` via `ALTER DATABASE stoxx_db MODIFY FILEGROUP [FG_Current] DEFAULT` during post-creation configuration. `FG_Archive` is a regular user-defined filegroup for cold historical data. This is the production baseline pattern — user data lands in `FG_Current` by default, hot and cold data live in separate filegroups, and the cold tier can be marked `READ_ONLY` and excluded from routine backups.*
 
 *List every data and log file in `stoxx_db` joined to its filegroup.*
 
@@ -2444,10 +2534,7 @@ Tiny defaults cause:
 
 ### Data file growth | recommended fixed-size increments by database size
 
-Choose increments that are:
-- large enough to avoid constant growth
-- small enough not to create huge unnecessary reservations
-- aligned with storage behavior and monitoring cadence
+The increment must be large enough that growth events are rare (days or weeks apart, not minutes), but small enough that a single event does not cause a visible I/O stall. The primary inputs to the decision are **current file size**, **daily net growth rate**, and **acceptable growth-event frequency**. A growth event should buy enough headroom that the next event does not fire for at least several days under normal workload.
 
 **Recommended ranges:**
 
@@ -2457,6 +2544,10 @@ Choose increments that are:
 | 10–100 GB | 512 MB–1 GB | Standard production range |
 | 100 GB–1 TB | 1–4 GB | Balances frequency against reservation |
 | > 1 TB | 4–8 GB | Large databases; fewer but larger events |
+
+**Concrete examples:** A 10 GB database growing at 100 MB/day should use 512 MB so growth fires at most every 5 days. A 200 GB warehouse growing at 2 GB/day during ETL should use 4 GB so growth fires at most twice per week. The `stoxx_db` data files use 128 MB (`FG_Current`) and 64 MB (`PRIMARY`, `FG_Archive`) because the database is lab-scale (< 1 GB total data) and growth rate is modest — increments are sized to the actual scale, not to a generic recommendation.
+
+**Feedback signal:** If autogrowth events fire more than once per ETL cycle or per business day, the increment is too small — double it. If a single growth event causes a wait type `PREEMPTIVE_OS_WRITEFILEGATHER` visible in `sys.dm_os_wait_stats`, the event is too large for the storage tier — reduce the increment or pre-size more aggressively so autogrowth rarely fires at all. The detailed decision logic for choosing a specific value within these ranges is covered in the [autogrowth comparison](#compare-autogrowth-across-stoxx-and-stoxx_db) section above.
 
 Always use fixed-size increments, never percentages.
 
@@ -2476,16 +2567,18 @@ Log growth requires zero-initialization (IFI does not apply to log files) and di
 | 50–200 GB | 1–2 GB | Heavy write or ETL workloads |
 | > 200 GB | 2–4 GB | Large warehouse or bulk-load scenarios |
 
+**Concrete examples:** A 4 GB log on an OLTP system that processes 500 MB of log per day between log backups should use 512 MB increments — growth fires at most once every few days even if a burst exceeds the forecast. A 50 GB log on a warehouse that generates 10 GB of log during nightly ETL should use 1 GB increments so a single growth event covers several hours of burst. The `stoxx_db` log uses 128 MB increments on a 256 MB pre-sized file because the database is lab-scale with minimal write volume — and even at that scale, VLF creation rules produce 8 well-sized VLFs per growth event (128 MB falls in the 64 MB–1 GB tier = 8 VLFs).
+
 > [!tip] 1,024 MB cap
 >
-> Microsoft recommends not setting `FILEGROWTH` above 1,024 MB for transaction logs. Larger growth events take longer to zero-initialize and produce fewer, oversized VLFs.
+> Microsoft recommends not setting `FILEGROWTH` above 1,024 MB for transaction logs. Larger growth events take longer to zero-initialize and produce fewer, oversized VLFs. A 1,024 MB growth event creates 8 VLFs of 128 MB each — a well-balanced size for most production workloads. A 2,048 MB event creates 16 VLFs of 128 MB, which is still healthy but doubles the zero-initialization time.
 
-Factors to model:
-- peak ETL windows
-- large index rebuilds
-- long-running transactions
-- AG/log shipping/replication lag
-- log backup frequency
+**Factors to model** when sizing the log pre-allocation and growth increment:
+- **peak ETL windows** — the largest single-batch write burst between log backups
+- **large index rebuilds** — `ALTER INDEX ... REBUILD` on a 100 GB table can generate 20+ GB of log
+- **long-running transactions** — hold log space pinned for their entire duration
+- **AG/log shipping/replication lag** — a lagging secondary prevents log truncation on the primary
+- **log backup frequency** — more frequent log backups (e.g., every 5 minutes) allow the log to reclaim space faster, reducing the required pre-allocation
 
 ### VLF strategy | pre-size the log to minimize virtual log file proliferation
 
@@ -2902,16 +2995,8 @@ It often reduces reader/writer blocking significantly.
 - more version-store monitoring requirements
 - more need to understand long-running transactions
 
-> [!warning] TempDB dependency
->
-> Enabling RCSI without proper TempDB design is incomplete engineering.
-
-> [!success] Version store readiness
->
-> Before enabling RCSI, ensure TempDB data files are on fast storage, pre-sized adequately, and monitored for version store growth. Set up alerts on `tempdb` free space and `version_store_reserved_page_count` to detect runaway long-running transactions.
-
 **Example:**
-A reporting-heavy OLTP database may benefit from RCSI because it allows dashboards to read without blocking transactions.
+A reporting-heavy OLTP database may benefit from RCSI because it allows dashboards to read without blocking transactions. The TempDB readiness checklist for enabling RCSI is covered in the [Isolation configuration inventory](#isolation-configuration-inventory--allow_snapshot_isolation-and-read_committed_snapshot-state) section above.
 
 ---
 

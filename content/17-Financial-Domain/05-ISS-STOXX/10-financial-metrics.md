@@ -4,7 +4,7 @@ description: "Comprehensive glossary of return calculations, risk metrics, volat
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - financial-metrics
 aliases:

@@ -1,5 +1,5 @@
 ---
-title: "02 - Terraform: Compute and Storage Blocks"
+title: "02 - Compute and Storage Blocks"
 tags: [terraform, gcp, compute, gcs]
 aliases:
   - terraform-compute-storage
@@ -18,7 +18,8 @@ status: complete
 
 # Terraform Block Library — GCP Compute & Storage
 
-> [!quote]
+> [!quote] Werner Vogels on invisible infrastructure
+>
 > "The best infrastructure is the infrastructure you don't have to think about."
 >
 > — **Werner Vogels**, AWS re:Invent keynote
@@ -26,36 +27,36 @@ status: complete
 Copy-paste Terraform resource blocks for provisioning GCP Compute Engine VMs, disks, snapshots, and Cloud Storage buckets. Each resource type is grouped at H3 with operational variants at H4. Every block is self-contained — copy it, rename the resource, wire your variables, and run `terraform plan`.
 
 > [!info] Assumed variables
+>
 > All blocks in this file reference shared input variables (`var.project_id`, `var.env`, `var.region`, `var.zone`, `var.vpc_network`, `var.subnetwork`). See the [Variables Reference](#variables-reference) section at the bottom for the full list and types. Define them in your `variables.tf`.
 
 > [!tip] GCP provider documentation
+>
 > For the canonical argument reference of each resource, see the [Google Cloud Terraform provider registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs). The blocks here track provider version **5.x** syntax.
-
----
 
 ## Compute Engine Blocks
 
 Terraform resources for GCP Compute Engine — virtual machines, persistent disks, snapshots, snapshot scheduling policies, and VM start/stop schedules. Cross-reference the `gcloud` equivalents in [VM lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) and [Disks and snapshots](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots).
-
----
 
 ### google_compute_instance
 
 The `google_compute_instance` resource provisions a single GCP Compute Engine virtual machine. Changing `zone` or `machine_type` (on certain families) forces resource replacement — Terraform destroys the existing VM and creates a new one, which means **data loss** on any attached ephemeral disks. The Terraform service account needs `roles/compute.instanceAdmin.v1` on the project.
 
 > [!danger] Force-replacement arguments
+>
 > Changing `zone`, `boot_disk.initialize_params.image`, or switching `machine_type` between incompatible families triggers a destroy-then-create cycle. For stateful VMs (databases, orchestrators), this means downtime and potential data loss on the boot disk.
 
 > [!success] Protect stateful VMs
+>
 > Use `lifecycle { prevent_destroy = true }` on any VM with persistent state. Use `deletion_protection = true` at the GCP level as a second safety net. Always store data on a separately managed `google_compute_disk`.
-
----
 
 #### google_compute_instance | Database server
 
 A long-lived, single-node database VM with private-only networking, a dedicated SSD data disk, OS-level hardening (Shielded VM), and a service account scoped to minimum permissions. Typical for PostgreSQL, MySQL, or SQL Server on Linux instances that should never have a public IP.
 
 The data disk is created as a separate `google_compute_disk` resource so it survives `terraform destroy` on the VM. The startup script formats and mounts the data disk on first boot. OS Login with IAP replaces static SSH keys. The `ignore_changes` on `startup-script` prevents Terraform from detecting drift caused by manual debugging sessions.
+
+*Create a standalone SSD data disk for the database server.*
 
 ```hcl
 resource "google_compute_disk" "db_data" {
@@ -70,6 +71,8 @@ resource "google_compute_disk" "db_data" {
   }
 }
 ```
+
+*Provision a private database VM with SSD data disk, Shielded VM, and OS Login.*
 
 ```hcl
 resource "google_compute_instance" "db_server" {
@@ -169,15 +172,16 @@ resource "google_compute_instance" "db_server" {
 | `lifecycle.ignore_changes` | No | Prevents Terraform from detecting drift on specified attributes |
 
 > [!todo] `terraform plan` output
+>
 > Run `terraform plan` with this block in your project to generate the plan output. Not fabricated here.
-
----
 
 #### google_compute_instance | Orchestration server (Airflow)
 
 A single VM running Apache Airflow (or a similar orchestrator) via Docker Compose. Container-Optimized OS (COS) handles Docker out of the box. An ephemeral public IP is included so the scheduler can reach external APIs — lock it down with firewall tags. The `pd-balanced` boot disk is sufficient since the OS carries only container layers and logs; all DAG state lives in the metadata database and GCS.
 
 The `user-data` metadata key is COS-specific — it uses `cloud-init` syntax to pull and run the Airflow Docker image on first boot. The `access_config` block without a `nat_ip` lets GCP assign an ephemeral public IP automatically. Remove the entire `access_config` block for private-only networking with Cloud NAT.
+
+*Provision an Airflow orchestrator on Container-Optimized OS with ephemeral public IP.*
 
 ```hcl
 resource "google_compute_instance" "airflow" {
@@ -246,12 +250,12 @@ resource "google_compute_instance" "airflow" {
 | `scheduling.preemptible` | No | `false` — DAGs must not be interrupted by preemption |
 
 > [!warning] Sensitive connection string
+>
 > The `airflow_db_conn` variable contains a database connection string with credentials. It is marked `sensitive = true` in the variable definition, but it will still appear in the VM metadata in the GCP console.
 
 > [!success] Use Secret Manager
+>
 > Store the connection string in [Secret Manager](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) and fetch it at runtime inside the container instead of baking it into metadata.
-
----
 
 #### google_compute_instance | Spot / preemptible worker
 
@@ -260,6 +264,8 @@ Batch processing, CI runners, ML training jobs, or any fault-tolerant workload w
 The `provisioning_model = "SPOT"` is the current-generation API (provider 4.x+). Legacy `PREEMPTIBLE` still works but is deprecated. Spot VMs cannot live-migrate, so `on_host_maintenance` must be `TERMINATE`. The `ignore_changes = [scheduling]` prevents Terraform from detecting drift when GCP modifies scheduling metadata on preempted VMs.
 
 Private-only networking is shown here — use Cloud NAT for outbound internet access.
+
+*Provision a cost-optimized Spot VM for fault-tolerant batch workloads.*
 
 ```hcl
 resource "google_compute_instance" "spot_worker" {
@@ -323,15 +329,16 @@ resource "google_compute_instance" "spot_worker" {
 | `lifecycle.ignore_changes` | No | `[scheduling]` prevents drift detection from GCP-managed scheduling changes |
 
 > [!question] Spot VM vs standard VM
+>
 > Use spot VMs for fault-tolerant, stateless workloads (batch ETL, CI/CD runners, ML training). Use standard VMs for databases, orchestrators, and anything that cannot tolerate interruption. For horizontally scalable services, consider a MIG with a mix of spot and standard instances.
-
----
 
 ### google_compute_instance_template
 
 The `google_compute_instance_template` resource creates a reusable VM blueprint for managed instance groups. Templates are immutable — any change creates a new template. Use `create_before_destroy` in the lifecycle block to ensure the new template exists before the old one is removed, preventing downtime during updates. Templates are regional (not zonal) and cannot reference external disks — all disk configuration is inline.
 
 Use case: stateless, horizontally scalable services — web frontends, API backends, data transformation workers.
+
+*Create a reusable VM blueprint for managed instance groups.*
 
 ```hcl
 resource "google_compute_instance_template" "app" {
@@ -393,13 +400,14 @@ resource "google_compute_instance_template" "app" {
 | `lifecycle.create_before_destroy` | No | Creates the new template before destroying the old one — prevents downtime |
 
 > [!tip] Instances behind a load balancer
+>
 > Omit the `access_config` block in `network_interface` — instances behind a load balancer do not need public IPs. Outbound traffic can route through Cloud NAT.
-
----
 
 ### google_compute_instance_group_manager
 
 The `google_compute_instance_group_manager` creates and manages a fleet of identical VMs from an instance template. The MIG handles auto-healing (replacing unhealthy instances) and rolling updates (replacing instances when the template changes). The `target_size` sets the initial fleet size but is overridden by an autoscaler when attached.
+
+*Create a managed fleet of identical VMs with auto-healing and rolling updates.*
 
 ```hcl
 resource "google_compute_instance_group_manager" "app" {
@@ -450,13 +458,14 @@ resource "google_compute_instance_group_manager" "app" {
 | `named_port` | No | Named port mapping used by the load balancer backend service |
 
 > [!info] Regional MIG for high availability
+>
 > A single-zone MIG has all instances in one zone. For production, use `google_compute_region_instance_group_manager` to spread instances across multiple zones in a region — surviving a zone outage without manual intervention.
-
----
 
 ### google_compute_health_check
 
 The `google_compute_health_check` defines how GCP determines whether a VM instance is healthy. Used by both the MIG (for auto-healing) and the load balancer (for traffic routing). An instance that fails `unhealthy_threshold` consecutive checks is marked unhealthy — the MIG replaces it, and the load balancer stops routing traffic to it.
+
+*Define an HTTP health check for MIG auto-healing and load balancer routing.*
 
 ```hcl
 resource "google_compute_health_check" "app" {
@@ -483,11 +492,11 @@ resource "google_compute_health_check" "app" {
 | `http_health_check.port` | Yes | Port to probe on each instance |
 | `http_health_check.request_path` | No | Endpoint path — must return HTTP 200 when the app is ready |
 
----
-
 ### google_compute_autoscaler
 
 The `google_compute_autoscaler` adjusts the number of instances in a MIG based on a scaling metric. The most common metric is CPU utilization — the autoscaler adds instances when average CPU exceeds the target and removes instances when it drops below. The `cooldown_period` prevents rapid scale oscillations.
+
+*Scale the MIG between 2 and 10 instances based on 70% CPU target.*
 
 ```hcl
 resource "google_compute_autoscaler" "app" {
@@ -520,6 +529,8 @@ resource "google_compute_autoscaler" "app" {
 #### MIG architecture
 
 How the instance template, MIG, health check, and autoscaler resources relate:
+
+*Visualize how instance template, MIG, health check, and autoscaler wire together.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -554,17 +565,19 @@ flowchart TD
     HC -.->|"probe :8080/health"| VMN
 ```
 
----
-
 ### google_compute_disk
 
 A standalone persistent disk that outlives its VM. Use when you need a data volume (database data directory, shared NFS-style volume) that survives `terraform destroy` on the instance. Always create data disks as separate resources rather than inline in the VM block. Disk size can be increased but never decreased — GCP does not support shrinking persistent disks. See [Disks and snapshots](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots) for `gcloud` equivalents.
 
 > [!warning] Disk size cannot be reduced
+>
 > Once a persistent disk is created, you can increase its size in-place (non-destructive) but never decrease it. Plan capacity carefully — oversizing wastes money, undersizing requires migration.
 
 > [!success] Right-size with monitoring
+>
 > Use Cloud Monitoring disk utilization metrics to right-size before provisioning. Start conservative and grow as needed.
+
+*Create a persistent SSD disk that outlives its VM.*
 
 ```hcl
 resource "google_compute_disk" "data" {
@@ -594,13 +607,13 @@ resource "google_compute_disk" "data" {
 | `physical_block_size_bytes` | No | `4096` (default) or `16384` — match the OS block size |
 | `lifecycle.prevent_destroy` | No | `true` blocks accidental deletion — Terraform plan will fail if destroy is attempted |
 
----
-
 ### google_compute_attached_disk
 
 Attaches a standalone `google_compute_disk` to an existing VM. Use this resource when the disk and the VM are managed in separate Terraform modules or when a disk needs to be detached and reattached to different VMs.
 
 In `READ_ONLY` mode, a disk can be attached to multiple VMs simultaneously — useful for sharing static datasets.
+
+*Attach a standalone disk to a VM in read-write mode.*
 
 ```hcl
 resource "google_compute_attached_disk" "data_attach" {
@@ -621,13 +634,13 @@ resource "google_compute_attached_disk" "data_attach" {
 | `mode` | No | `READ_WRITE` (default) or `READ_ONLY` for multi-reader scenarios |
 | `device_name` | No | Device path inside the guest OS: `/dev/disk/by-id/google-<name>` |
 
----
-
 ### google_compute_snapshot
 
 A point-in-time backup of a persistent disk. Snapshots are incremental after the first — only changed blocks are stored, reducing cost and time. Stored in Cloud Storage automatically and charged at GCS rates. Use before risky operations (OS upgrades, schema migrations). For recurring backups, use `google_compute_resource_policy` instead.
 
 The `storage_locations` argument controls where snapshot data is stored. Use a multi-region value (`"us"`, `"eu"`, `"asia"`) for resilience or a single region (`"us-central1"`) for locality. Omit to use the GCP default (same region as the source disk).
+
+*Take a manual point-in-time backup of the data disk.*
 
 ```hcl
 resource "google_compute_snapshot" "db_backup" {
@@ -656,21 +669,20 @@ resource "google_compute_snapshot" "db_backup" {
 | `snapshot_encryption_key.raw_key` | No | Base64-encoded AES-256 key for CMEK encryption |
 
 > [!tip] CMEK encryption
+>
 > For compliance-sensitive workloads, encrypt snapshots with a Customer-Managed Encryption Key (CMEK) using the `snapshot_encryption_key` block. The key must be in the same region as the snapshot storage location.
-
----
 
 ### google_compute_resource_policy
 
 A resource policy defines scheduled operations on Compute Engine resources — automated snapshots or VM start/stop schedules. Policies are regional and are attached to disks or VMs via dedicated attachment resources.
-
----
 
 #### google_compute_resource_policy | Scheduled snapshot
 
 Automated daily snapshots with retention so you don't need manual snapshots. Attach the policy to any disk. GCP handles the schedule, incremental snapshots, and deletion of expired snapshots. The `on_source_disk_delete` argument controls whether auto-snapshots are preserved or deleted when the source disk is destroyed.
 
 Setting `guest_flush = true` flushes OS write buffers before the snapshot for application-consistent backups — this requires the QEMU guest agent installed on the VM.
+
+*Define daily automated snapshots with 7-day retention.*
 
 ```hcl
 resource "google_compute_resource_policy" "daily_snapshot" {
@@ -702,6 +714,8 @@ resource "google_compute_resource_policy" "daily_snapshot" {
 }
 ```
 
+*Attach the snapshot policy to the data disk.*
+
 ```hcl
 resource "google_compute_disk_resource_policy_attachment" "data_snapshot" {
   name = google_compute_resource_policy.daily_snapshot.name
@@ -721,13 +735,13 @@ resource "google_compute_disk_resource_policy_attachment" "data_snapshot" {
 | `storage_locations` | No | Where to store snapshots — multi-region or single region |
 | `guest_flush` | No | `true` flushes OS buffers before snapshot (requires QEMU guest agent) |
 
----
-
 #### google_compute_resource_policy | VM start/stop (business hours)
 
 Dev/test VMs and non-critical batch VMs that only need to run during business hours. Start/stop scheduling can cut compute costs by ~65% for a VM that runs 9 hours/day on weekdays instead of 24/7. Schedules use IANA timezone names — use `"UTC"` to avoid daylight saving time surprises.
 
 The Compute Engine service agent (`<project-number>@cloudservices.gserviceaccount.com`) needs `roles/compute.instanceAdmin.v1` on the VM to start and stop it. The IAM binding must be created before attaching the schedule.
+
+*Schedule business-hours start/stop for dev VMs.*
 
 ```hcl
 resource "google_compute_resource_policy" "business_hours" {
@@ -748,6 +762,8 @@ resource "google_compute_resource_policy" "business_hours" {
 }
 ```
 
+*Grant the Compute Engine service agent permission to start/stop the VM.*
+
 ```hcl
 resource "google_compute_instance_iam_member" "schedule_actor" {
   instance_name = google_compute_instance.db_server.name
@@ -756,6 +772,8 @@ resource "google_compute_instance_iam_member" "schedule_actor" {
   member        = "serviceAccount:${var.project_number}@cloudservices.gserviceaccount.com"
 }
 ```
+
+*Attach the schedule policy to the database server.*
 
 ```hcl
 resource "google_compute_resource_policy_attachment" "biz_hours_attach" {
@@ -774,30 +792,31 @@ resource "google_compute_resource_policy_attachment" "biz_hours_attach" {
 | `vm_stop_schedule.schedule` | Yes | Cron expression for stop time |
 
 > [!tip] Cost savings estimate
+>
 > A VM running 9 hours/day × 5 days/week instead of 24/7 saves approximately 65% on compute costs. Apply this pattern to all non-production VMs that don't need to run overnight or on weekends.
-
----
 
 ## Cloud Storage Blocks
 
 Terraform resources for GCS buckets, IAM bindings, object uploads, and Pub/Sub notifications. Cross-reference the `gsutil` and `gcloud` equivalents in [GCS buckets and lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) and [GCS object operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
-
----
 
 ### google_storage_bucket
 
 The `google_storage_bucket` resource provisions a GCS bucket. Bucket names are globally unique across all of GCP. Changing `location` forces resource replacement — Terraform destroys the bucket and creates a new one, which means **all objects are deleted**. The Terraform service account needs `roles/storage.admin` on the project.
 
 > [!danger] Force-replacement on location change
+>
 > Changing the `location` argument on a `google_storage_bucket` triggers a destroy-then-create cycle. Terraform deletes **all objects** in the bucket before recreating it in the new location. This is unrecoverable without external backups.
 
 > [!success] Protect production buckets
+>
 > Set `force_destroy = false` (default) so Terraform refuses to destroy a bucket that contains objects. Add `lifecycle { prevent_destroy = true }` for stateful buckets (data lake, state backend).
 
 > [!danger] `force_destroy = true`
+>
 > When `force_destroy = true`, `terraform destroy` silently deletes **every object** in the bucket before destroying the bucket itself. This is irreversible.
 
 > [!success] Reserve for ephemeral buckets only
+>
 > Only set `force_destroy = true` on temporary, CI/CD, or test buckets that contain no valuable data.
 
 | Argument | Required | Description |
@@ -811,11 +830,11 @@ The `google_storage_bucket` resource provisions a GCS bucket. Bucket names are g
 | `versioning.enabled` | No | `true` enables object versioning — keeps history of every object version |
 | `lifecycle_rule` | No | Auto-tiering and cleanup rules — see the Storage Class Decision Guide below |
 
----
-
 #### google_storage_bucket | General purpose (versioning + lifecycle)
 
 A versatile bucket for application artifacts, exports, or backups. Versioning enabled to recover accidentally overwritten objects. Lifecycle rules automatically tier objects through STANDARD → NEARLINE (30 days) → COLDLINE (90 days) → ARCHIVE (365 days) and prune old non-current versions to keep only the 3 most recent.
+
+*Provision a versioned bucket with STANDARD → NEARLINE → COLDLINE → ARCHIVE tiering.*
 
 ```hcl
 resource "google_storage_bucket" "general" {
@@ -876,11 +895,11 @@ resource "google_storage_bucket" "general" {
 }
 ```
 
----
-
 #### google_storage_bucket | Landing zone (data ingestion)
 
 Entry point for raw, untransformed data from external producers (APIs, SFTP uploads, IoT devices, event streams). Versioning disabled — raw files are append-only. Objects stay as STANDARD for 30 days (frequent access during initial processing), transition to NEARLINE, then are deleted after 180 days (adjust to your compliance window). Incomplete multipart uploads are aborted after 1 day to avoid paying for partial data. Co-locate this bucket in the same region as your Dataflow or Dataproc cluster.
+
+*Provision a raw data ingestion bucket with 180-day retention.*
 
 ```hcl
 resource "google_storage_bucket" "landing_zone" {
@@ -930,11 +949,11 @@ resource "google_storage_bucket" "landing_zone" {
 }
 ```
 
----
-
 #### google_storage_bucket | Terraform state backend
 
 Stores Terraform remote state. This bucket must exist **before** the `backend "gcs"` configuration references it — bootstrap it with a separate root module or create it manually once. Key requirements: versioning on (recover corrupted state), public access prevention enforced, uniform IAM, lifecycle rule to prune old state versions.
+
+*Provision a state backend bucket with versioning and public access prevention.*
 
 ```hcl
 resource "google_storage_bucket" "tf_state" {
@@ -977,12 +996,15 @@ resource "google_storage_bucket" "tf_state" {
 ```
 
 > [!todo] Bootstrap workflow
+>
 > 1. Create the state bucket manually or with a separate Terraform root module that uses local state
 > 2. Add the `backend "gcs"` block to your main project's `backend.tf`
 > 3. Run `terraform init` — Terraform migrates the local state to GCS
 > 4. Enable state locking (automatic with GCS backend) to prevent concurrent modifications
 
 Reference in `backend.tf` after the bucket is created:
+
+*Reference the state bucket in the backend configuration.*
 
 ```hcl
 terraform {
@@ -994,18 +1016,20 @@ terraform {
 ```
 
 > [!warning] State bucket deletion
+>
 > Losing or corrupting the state file means Terraform no longer knows what resources it manages. Recovery requires manual `terraform import` of every resource.
 
 > [!success] Always use remote state with versioning
+>
 > GCS backend with `versioning.enabled = true` lets you roll back to a previous state version. Combined with `public_access_prevention = "enforced"`, this is the safest state storage pattern.
-
----
 
 #### google_storage_bucket | Data lake
 
 Central repository for all analytical data — raw, curated, and aggregated layers. Versioning enabled to protect curated objects against accidental overwrites. Lifecycle rules tier objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE using `matches_storage_class` conditions to ensure objects follow the full tiering path. Co-locate with your BigQuery dataset for zero-cost data loading.
 
 GCS is a flat namespace — the `/` separator is a convention enforced by tools. Placeholder objects create the expected folder hierarchy (`raw/`, `curated/`, `aggregated/`).
+
+*Provision a multi-tiered data lake bucket with folder placeholders.*
 
 ```hcl
 resource "google_storage_bucket" "data_lake" {
@@ -1081,6 +1105,8 @@ resource "google_storage_bucket" "data_lake" {
 
 Folder structure placeholders — create `.keep` objects to materialize the expected directory hierarchy:
 
+*Create `.keep` objects to materialize the data lake folder hierarchy.*
+
 ```hcl
 resource "google_storage_bucket_object" "raw_placeholder" {
   name    = "raw/.keep"
@@ -1101,13 +1127,13 @@ resource "google_storage_bucket_object" "aggregated_placeholder" {
 }
 ```
 
----
-
 ### google_storage_bucket_iam_member
 
 Grants a single role to a single member on a bucket. This is **additive** — it does not affect other bindings on the same bucket. Use when different teams or Terraform modules manage different roles independently. This is the preferred IAM pattern in Terraform because it avoids unintentional permission revocation. See [Service accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for IAM concepts.
 
 The `member` argument uses the format `serviceAccount:`, `user:`, `group:`, or `domain:` followed by the identity.
+
+*Grant read-only access to the data lake.*
 
 ```hcl
 resource "google_storage_bucket_iam_member" "reader" {
@@ -1117,6 +1143,8 @@ resource "google_storage_bucket_iam_member" "reader" {
 }
 ```
 
+*Grant read-write access.*
+
 ```hcl
 resource "google_storage_bucket_iam_member" "writer" {
   bucket = google_storage_bucket.data_lake.name
@@ -1124,6 +1152,8 @@ resource "google_storage_bucket_iam_member" "writer" {
   member = "serviceAccount:${var.writer_service_account}"
 }
 ```
+
+*Grant bucket listing to the data team group.*
 
 ```hcl
 resource "google_storage_bucket_iam_member" "group_list" {
@@ -1146,17 +1176,19 @@ resource "google_storage_bucket_iam_member" "group_list" {
 | `roles/storage.legacyBucketReader` | List bucket contents (`gsutil ls`) — does NOT allow object reads |
 | `roles/storage.admin` | Full bucket and object admin — use sparingly |
 
----
-
 ### google_storage_bucket_iam_binding
 
 Manages the **entire** list of members for a given role on a bucket. This is **authoritative** for that role — any member with the specified role who is not listed in the `members` array will be **removed** by Terraform. Use when the team that owns the bucket also owns all access grants for a given role.
 
 > [!warning] Authoritative binding removes unlisted members
+>
 > `iam_binding` removes any member with the specified role that is not in the `members` list. If other Terraform modules or manual grants have added members for this role, they will be revoked on the next `terraform apply`.
 
 > [!success] Use `iam_member` when multiple teams manage access
+>
 > If different teams or modules grant different roles on the same bucket, use `google_storage_bucket_iam_member` (additive) instead. Reserve `iam_binding` for cases where a single Terraform module is the authoritative source for a role.
+
+*Authoritatively set object viewers on the landing zone bucket.*
 
 ```hcl
 resource "google_storage_bucket_iam_binding" "landing_readers" {
@@ -1178,9 +1210,8 @@ resource "google_storage_bucket_iam_binding" "landing_readers" {
 | `members` | Yes | Complete list of identities that should have this role — all others are removed |
 
 > [!question] `iam_member` vs `iam_binding` vs `iam_policy`
+>
 > Use `iam_member` (additive) when multiple modules manage different roles independently. Use `iam_binding` (authoritative per role) when one module owns all grants for a specific role. Avoid `iam_policy` (authoritative for all roles) unless you are managing the bucket's entire IAM policy in a single Terraform module — it will remove all roles not explicitly declared.
-
----
 
 ### google_storage_bucket_object
 
@@ -1188,11 +1219,11 @@ Uploads a file or inline content to a GCS bucket. Use to seed buckets with confi
 
 Use `source` for local files or `content` for inline strings — only one can be specified per resource.
 
----
-
 #### google_storage_bucket_object | Upload a local file
 
 Upload a file from the local filesystem (relative to the module root) to a GCS bucket. Set `content_type` correctly for browser-based downloads.
+
+*Upload a local config file to GCS.*
 
 ```hcl
 resource "google_storage_bucket_object" "config" {
@@ -1203,11 +1234,11 @@ resource "google_storage_bucket_object" "config" {
 }
 ```
 
----
-
 #### google_storage_bucket_object | Upload inline content
 
 Create an object directly from a string — no local file needed. Useful for seed data, SQL schemas, or small configuration snippets.
+
+*Create a SQL seed file directly in GCS from inline content.*
 
 ```hcl
 resource "google_storage_bucket_object" "seed_sql" {
@@ -1233,8 +1264,6 @@ resource "google_storage_bucket_object" "seed_sql" {
 | `content_type` | No | MIME type — set correctly for browser downloads (`application/json`, `text/plain`, etc.) |
 | `metadata` | No | Custom HTTP headers — e.g., `{ "Cache-Control" = "no-cache" }` |
 
----
-
 ### google_storage_notification
 
 Creates a notification configuration on a GCS bucket that publishes messages to a Pub/Sub topic when objects are created, deleted, or modified. This is the foundation for event-driven data ingestion pipelines — when a file lands in the landing zone, a Cloud Function or Dataflow job processes it immediately with no polling required. See [Pub/Sub messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) for Pub/Sub concepts and [Pub/Sub topics and subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for `gcloud` equivalents.
@@ -1245,6 +1274,8 @@ The `depends_on` is critical: if the notification is created before the IAM bind
 
 First, create the Pub/Sub topic and grant GCS permission to publish:
 
+*Create a Pub/Sub topic for bucket event notifications.*
+
 ```hcl
 resource "google_pubsub_topic" "bucket_events" {
   name    = "${var.env}-bucket-events"
@@ -1253,6 +1284,8 @@ resource "google_pubsub_topic" "bucket_events" {
   message_retention_duration = "86600s"
 }
 ```
+
+*Grant GCS permission to publish to the events topic.*
 
 ```hcl
 data "google_storage_project_service_account" "gcs_account" {
@@ -1267,6 +1300,8 @@ resource "google_pubsub_topic_iam_member" "gcs_publisher" {
 ```
 
 Then create the notification:
+
+*Trigger a Pub/Sub message when objects are finalized in the landing zone.*
 
 ```hcl
 resource "google_storage_notification" "landing_notify" {
@@ -1298,6 +1333,8 @@ resource "google_storage_notification" "landing_notify" {
 | `depends_on` | No | Must reference the IAM binding to ensure GCS can publish before the notification is created |
 
 Finally, create a pull subscription for consumers:
+
+*Create a pull subscription for landing zone events.*
 
 ```hcl
 resource "google_pubsub_subscription" "landing_events_sub" {
@@ -1333,6 +1370,8 @@ resource "google_pubsub_subscription" "landing_events_sub" {
 
 How the bucket notification, Pub/Sub topic, subscription, and consumer fit together:
 
+*Visualize the event flow from GCS object upload through Pub/Sub to consumer processing.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -1363,11 +1402,11 @@ sequenceDiagram
     C->>S: ACK message
 ```
 
----
-
 ## Variables Reference
 
 The blocks above assume the following input variables. Define them in your `variables.tf`:
+
+*Declare all input variables referenced by the blocks in this file.*
 
 ```hcl
 variable "project_id" {
@@ -1492,13 +1531,9 @@ variable "analytics_group" {
 | `subnetwork` | `string` | — | `network_interface` blocks |
 | `airflow_db_conn` | `string` (sensitive) | — | Airflow metadata DB connection string |
 
----
-
 ## Quick Reference
 
 Summary of all Terraform resource types covered in this file, their primary use cases, and the key arguments that differentiate each configuration.
-
----
 
 ### Resource Cheat Sheet
 
@@ -1518,8 +1553,6 @@ Summary of all Terraform resource types covered in this file, their primary use 
 | `google_storage_bucket_object`          | Upload file or inline content        | `name`, `bucket`, `source` or `content`                        |
 | `google_storage_notification`           | Pub/Sub trigger on bucket events     | `event_types`, `topic`, `object_name_prefix`                   |
 
----
-
 ### Storage Class Decision Guide
 
 GCS offers four storage classes with different cost profiles. Objects transition between classes via `lifecycle_rule` blocks. Minimum storage duration means you are charged for at least that duration even if the object is deleted or moved sooner.
@@ -1532,7 +1565,10 @@ GCS offers four storage classes with different cost profiles. Objects transition
 | ARCHIVE | 365 days | High | Accessed < once per year (compliance, DR) |
 
 > [!tip] Match lifecycle rules to access patterns
+>
 > Lifecycle rules should align to your actual access patterns. Over-tiering (moving to ARCHIVE too early) causes high retrieval costs when data is accessed. Under-tiering (keeping everything in STANDARD) means paying premium storage rates unnecessarily. Use Cloud Monitoring storage metrics to validate your tiering assumptions.
+
+*Illustrate the GCS storage class tiering path and minimum storage duration thresholds.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

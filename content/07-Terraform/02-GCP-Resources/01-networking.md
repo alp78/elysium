@@ -1,5 +1,5 @@
 ---
-title: "01 - Terraform: Networking"
+title: "01 - Networking"
 tags: [terraform, gcp, networking]
 aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules terraform, Cloud NAT terraform]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."
@@ -10,7 +10,8 @@ status: complete
 
 # Terraform Networking — VPC, Subnet, NAT, and Firewall Rules
 
-> [!quote]
+> [!quote] John Gage on networked computing
+>
 > "The network is the computer."
 >
 > — **John Gage**, Sun Microsystems (1984)
@@ -86,7 +87,7 @@ flowchart TD
 
 These two resources form the network foundation. The VPC is the logical container; the subnet defines the actual IP range where VMs receive addresses. Every other resource in this file depends on these two.
 
-> [!info] Assumed Variables
+> [!info] Assumed variables
 >
 > The HCL blocks in this file reference variables and resources defined elsewhere in the Terraform project:
 > - `var.region` — the GCP region (e.g., `europe-west1`), defined in `variables.tf`
@@ -105,6 +106,8 @@ These two resources form the network foundation. The VPC is the logical containe
 Provisions a **Virtual Private Cloud** — an isolated private network in GCP. All VMs, Cloud Run services, and internal traffic flow through this network. Setting `auto_create_subnetworks = false` creates a **custom mode VPC** where you define subnets explicitly — the production best practice. When `true` (the GCP default if omitted), GCP automatically creates one subnet per region with predetermined IP ranges, which removes control over addressing.
 
 Changing `name` or `auto_create_subnetworks` forces resource replacement (destroy + recreate). The `routing_mode` argument (not shown here — defaults to `REGIONAL`) controls whether Cloud Routers advertise routes only within their region or across all regions in the VPC. Use `GLOBAL` for multi-region VPCs with shared VPN/Interconnect.
+
+*Provision a custom-mode VPC with explicit subnet control.*
 
 ```hcl
 resource "google_compute_network" "main" {
@@ -126,6 +129,8 @@ Provisions a **subnet** — a contiguous block of private IP addresses within th
 
 The `network` argument creates an implicit Terraform dependency: the VPC must exist before the subnet. Terraform resolves `.id` to the full resource path at apply time. Changing `name`, `ip_cidr_range`, `region`, or `network` forces replacement.
 
+*Create a /24 subnet in europe-west1 within the VPC.*
+
 ```hcl
 resource "google_compute_subnetwork" "main" {
   name          = "data-pipeline-subnet"
@@ -144,11 +149,11 @@ resource "google_compute_subnetwork" "main" {
 | `private_ip_google_access` | No | When `true`, VMs without external IPs can reach Google APIs (Cloud Storage, BigQuery, Secret Manager, Artifact Registry) over Google's internal network without routing through Cloud NAT. GCP default: `false`. |
 | `log_config` | No | Enables VPC Flow Logs for the subnet. Sub-arguments: `aggregation_interval` (default `INTERVAL_5_SEC`), `flow_sampling` (float 0–1, default `0.5`), `metadata` (`INCLUDE_ALL_METADATA` or `EXCLUDE_ALL_METADATA`). |
 
-> [!tip] Enable Private Google Access on Private Subnets
+> [!tip] Enable Private Google Access on private subnets
 >
 > Add `private_ip_google_access = true` to any subnet serving VMs without external IPs. Without it, API calls to Google services (Secret Manager, Cloud Logging, Artifact Registry) must route through Cloud NAT — adding latency and consuming NAT ports. With Private Google Access, this traffic stays on Google's internal backbone and bypasses NAT entirely.
 
-> [!question] VPC Flow Logs — When to Enable
+> [!question] VPC Flow Logs — when to enable
 >
 > VPC Flow Logs capture metadata about every network flow (source/destination IP, port, protocol, bytes) and export to Cloud Logging. Enable them when you need network troubleshooting, compliance audit trails, or traffic analysis. They add cost (Cloud Logging ingestion) — use `flow_sampling < 1.0` in production to reduce volume while maintaining statistical visibility. Set `aggregation_interval = "INTERVAL_10_MIN"` for cost-sensitive environments.
 
@@ -159,6 +164,8 @@ Cloud NAT requires a Cloud Router as its control plane. The router provides dyna
 ### google_compute_router
 
 Provisions a **Cloud Router** — a virtual router that provides dynamic routing for the VPC. Required as the control plane for Cloud NAT. Routers are regional and must be in the same region as the subnets they serve. Changing `name`, `region`, or `network` forces replacement.
+
+*Create a Cloud Router in the same region as the subnet.*
 
 ```hcl
 resource "google_compute_router" "main" {
@@ -177,6 +184,8 @@ resource "google_compute_router" "main" {
 ### google_compute_router_nat
 
 Provisions a **Cloud NAT gateway** — allows VMs without public IPs to make outbound connections to the internet. The SQL Server VM has no public IP but needs to download packages during startup bootstrap. NAT is outbound-only — external traffic cannot initiate inbound connections through it.
+
+*Provision a Cloud NAT gateway with automatic IP allocation covering all subnets.*
 
 ```hcl
 resource "google_compute_router_nat" "main" {
@@ -198,15 +207,15 @@ resource "google_compute_router_nat" "main" {
 | `min_ports_per_vm` | No | Minimum NAT ports allocated per VM. GCP default: `64`. Increase for workloads with high concurrent outbound connections. |
 | `enable_dynamic_port_allocation` | No | When `true`, Cloud NAT scales port usage automatically between `min_ports_per_vm` and `max_ports_per_vm`. Recommended for bursty workloads. |
 
-> [!info] Why Cloud NAT Instead of Public IPs
+> [!info] Why Cloud NAT instead of public IPs
 >
 > The SQL VM must never be directly reachable from the internet. Cloud NAT provides outbound-only connectivity — external traffic can flow out (for package downloads, API calls) but nothing can initiate a connection in. This is the standard security posture for backend VMs in production.
 
-> [!warning] Cloud NAT Port Exhaustion Under High Concurrency
+> [!warning] Cloud NAT port exhaustion under high concurrency
 >
 > Cloud NAT allocates 64 ports per VM by default. If a pipeline opens many concurrent outbound connections (e.g., hundreds of parallel API calls), you can exhaust the NAT port pool and see `RESOURCE_EXHAUSTED` errors. Increase `min_ports_per_vm` or enable dynamic allocation.
 
-> [!success] Safe Pattern — Enable Dynamic Port Allocation
+> [!success] Safe pattern — enable dynamic port allocation
 >
 > Add `enable_dynamic_port_allocation = true` and set `min_ports_per_vm = 256` (or higher) in the `google_compute_router_nat` resource for workloads with bursty outbound concurrency. Dynamic allocation lets Cloud NAT scale port usage automatically, preventing `RESOURCE_EXHAUSTED` errors without permanently reserving a large static port range.
 
@@ -214,7 +223,7 @@ resource "google_compute_router_nat" "main" {
 
 GCP firewalls are **stateful** — if outbound traffic is allowed, the return traffic is automatically allowed. Rules are evaluated by priority (lower number = higher priority). The default posture is to deny all ingress and allow all egress. All rules in this section use `direction = "INGRESS"` (the GCP default when omitted). These VPC-level firewall rules complement any OS-level [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) configured inside the VMs themselves.
 
-> [!question] Network Tags vs Service Account Targeting
+> [!question] Network tags vs service account targeting
 >
 > This project uses `target_tags` to scope firewall rules to specific VMs. This is the simpler approach, but network tags have a governance limitation: any principal with `roles/compute.instanceAdmin` can add or remove tags on any VM, potentially gaining network access.
 >
@@ -225,6 +234,8 @@ GCP firewalls are **stateful** — if outbound traffic is allowed, the return tr
 ### google_compute_firewall | SQL Server Port 1433
 
 Allows TCP traffic on port 1433 (SQL Server) from within the VPC subnet only. Cloud Run services connected via direct VPC egress and the Airflow VM can query the database, but nothing from the public internet can reach this port.
+
+*Allow TCP 1433 from the VPC subnet to VMs tagged `sql`.*
 
 ```hcl
 resource "google_compute_firewall" "allow_sql" {
@@ -254,6 +265,8 @@ resource "google_compute_firewall" "allow_sql" {
 ### google_compute_firewall | Airflow Web UI Port 8080
 
 Allows TCP traffic on port 8080 (Airflow web UI) from the IAP tunnel range and optionally from the admin's public IP. The `compact(concat(...))` Terraform function chain merges two lists and removes empty strings, producing a dynamic source range that always includes IAP and conditionally includes the admin IP.
+
+*Allow TCP 8080 from the IAP tunnel range and optionally the admin IP to VMs tagged `airflow`.*
 
 ```hcl
 resource "google_compute_firewall" "allow_airflow_ui" {
@@ -286,6 +299,8 @@ resource "google_compute_firewall" "allow_airflow_ui" {
 
 Allows TCP traffic on port 8126 (Datadog APM trace intake) from within the VPC subnet. Cloud Run pipeline jobs connected to the VPC send APM traces to the Datadog Agent running on the Airflow VM.
 
+*Allow TCP 8126 from the VPC subnet to VMs tagged `airflow` for Datadog APM trace intake.*
+
 ```hcl
 resource "google_compute_firewall" "allow_apm" {
   name    = "data-pipeline-allow-apm"
@@ -313,6 +328,8 @@ resource "google_compute_firewall" "allow_apm" {
 ### google_compute_firewall | SSH via IAP Tunnel Port 22
 
 Allows TCP traffic on port 22 (SSH) from the IAP tunnel range only. SSH is not open to the internet — the only way to reach either VM is through `gcloud compute ssh`, which authenticates via Google identity and routes through IAP. See [IAP tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) for the full connection workflow and troubleshooting.
+
+*Allow TCP 22 from the IAP tunnel range to VMs tagged `airflow` and `sql`.*
 
 ```hcl
 resource "google_compute_firewall" "allow_iap" {
@@ -342,6 +359,8 @@ resource "google_compute_firewall" "allow_iap" {
 
 A **belt-and-suspenders** catch-all that blocks all ingress traffic not explicitly allowed by higher-priority rules. GCP already has an implicit deny at priority 65534, but this explicit rule at 65000 provides defense-in-depth and visibility in `gcloud compute firewall-rules list` output.
 
+*Block all ingress traffic not matched by a higher-priority allow rule at priority 65000.*
+
 ```hcl
 resource "google_compute_firewall" "deny_all_ingress" {
   name     = "data-pipeline-deny-all-ingress"
@@ -365,23 +384,23 @@ resource "google_compute_firewall" "deny_all_ingress" {
 | `source_ranges` | Yes | `["0.0.0.0/0"]` — all IPv4 addresses (the entire internet). |
 | `log_config` | No | Not set here. Add `log_config { metadata = "INCLUDE_ALL_METADATA" }` to any rule where you need audit logging of matched packets. Firewall logs export to Cloud Logging. |
 
-> [!info] Firewall Evaluation Order
+> [!info] Firewall evaluation order
 >
 > GCP evaluates all rules in priority order. The `allow_sql` rule (priority 1000, the default) takes precedence over `deny_all_ingress` (priority 65000). If a packet matches an allow rule first, it's admitted. If no allow rule matches, this deny catches it.
 
-> [!danger] Overly Broad Source Ranges on Allow Rules
+> [!danger] Overly broad source ranges on allow rules
 >
 > Setting `source_ranges = ["0.0.0.0/0"]` on any **allow** rule exposes that port to the entire internet. This is the most common cause of database breaches in cloud environments. Always restrict source ranges to known CIDR blocks (VPC subnet, IAP range, office IP). If you need temporary access, use IAP tunneling instead of opening ports.
 
-> [!success] Safe Pattern — Restrict Source Ranges
+> [!success] Safe pattern — restrict source ranges
 >
 > Always scope `source_ranges` to the narrowest possible CIDR. For database ports, use only the VPC subnet (`10.0.0.0/24`). For SSH, use only the IAP range (`35.235.240.0/20`). For admin UI access, use a specific office or home IP with a `/32` mask. Never set `0.0.0.0/0` on any allow rule.
 
-> [!danger] Force-Replacement Triggers on Firewall Rules
+> [!danger] Force-replacement triggers on firewall rules
 >
 > Changing `name` or `network` on a `google_compute_firewall` resource forces Terraform to destroy the existing rule and create a new one. During the gap between destroy and create, traffic that was previously allowed will be **blocked** by the deny-all rule. For production VPCs, use `lifecycle { create_before_destroy = true }` to ensure the new rule exists before the old one is removed.
 
-> [!success] Safe Pattern — Create Before Destroy on Firewall Rules
+> [!success] Safe pattern — create before destroy on firewall rules
 >
 > Add a `lifecycle` block to firewall rules that protect critical traffic paths:
 > ```hcl
@@ -409,11 +428,15 @@ Run these `gcloud` commands after `terraform apply` to verify that the networkin
 
 List all VPCs filtered by the project network name.
 
+*Verify that the VPC was created with the expected name.*
+
 ```bash
 gcloud compute networks list --filter="name=data-pipeline-vpc"
 ```
 
 List subnets associated with the VPC to confirm the CIDR range and region.
+
+*Verify the subnet CIDR range and region assignment.*
 
 ```bash
 gcloud compute networks subnets list --filter="network:data-pipeline-vpc"
@@ -423,11 +446,15 @@ gcloud compute networks subnets list --filter="network:data-pipeline-vpc"
 
 List all firewall rules on the VPC with their direction, priority, and allowed ports.
 
+*Verify all firewall rules are present with correct priorities and source ranges.*
+
 ```bash
 gcloud compute firewall-rules list --filter="network:data-pipeline-vpc" --format="table(name, direction, priority, sourceRanges, allowed)"
 ```
 
 Describe a specific rule to inspect all fields including target tags and log configuration.
+
+*Verify target tags and log configuration on the SQL allow rule.*
 
 ```bash
 gcloud compute firewall-rules describe allow-sql-from-airflow
@@ -437,6 +464,8 @@ gcloud compute firewall-rules describe allow-sql-from-airflow
 
 List NAT gateways attached to the Cloud Router to confirm allocation mode and subnet coverage.
 
+*Verify the NAT gateway allocation mode and subnet coverage configuration.*
+
 ```bash
 gcloud compute routers nats list --router=data-pipeline-router --region=europe-west1
 ```
@@ -444,12 +473,12 @@ gcloud compute routers nats list --router=data-pipeline-router --region=europe-w
 ## Related
 
 **Terraform configuration:**
-- [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) — the VMs that attach to this network
-- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — Cloud Run direct VPC egress using this subnet
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and secrets used by the VMs
-- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — the conditional `admin_ip` firewall rule pattern
-- [tf-foundation-and-networking](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-foundation-and-networking) — Block Library quick-reference for networking resources
-- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — `var.region` and `var.admin_ip` definitions
+- [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute) — the VMs that attach to this network
+- [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run direct VPC egress using this subnet
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — service accounts and secrets used by the VMs
+- [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — the conditional `admin_ip` firewall rule pattern
+- [foundation-and-networking](https://alp78.github.io/elysium/07-Terraform/Block-Library/foundation-and-networking) — Block Library quick-reference for networking resources
+- [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — `var.region` and `var.admin_ip` definitions
 
 **GCP services:**
 - [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) — VPC Service Controls for additional perimeter security

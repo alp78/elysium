@@ -413,7 +413,7 @@ How storage maps to the [medallion-architecture](https://alp78.github.io/elysium
 | Restrict data access to VPC | **VPC Service Controls** | Prevents data exfiltration. See [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) |
 | Encrypt data at rest (SQL Server) | **TDE** | Transparent Data Encryption. See [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption) |
 | API authentication | **OAuth 2.0 / API keys** | OAuth for user-context, API keys for service-context |
-| Secret management | **Secret Manager** | Never hardcode credentials. See [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
+| Secret management | **Secret Manager** | Never hardcode credentials. See [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) |
 | Network between VMs | **VPC + firewall rules** | Least-privilege firewall rules. See [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) |
 
 ---
@@ -518,16 +518,16 @@ When work is triggered by events rather than time:
 > - **If it is temporary, use gcloud CLI.** Do not pollute Terraform state with throwaway resources.
 > - **If you are learning, use Console.** Then translate to Terraform once you understand the resource.
 >
-> See [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) for the apply workflow and [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) for the full IaC reference.
+> See [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) for the apply workflow and [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) for the full IaC reference.
 
 ### Terraform-Specific Decisions
 
 | Decision | Recommendation | Why |
 |----------|---------------|-----|
-| State backend | **GCS bucket** | Remote, lockable, versioned. See [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) |
-| Module structure | **One module per logical resource group** | VM + disk + firewall = one module. See [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) |
+| State backend | **GCS bucket** | Remote, lockable, versioned. See [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) |
+| Module structure | **One module per logical resource group** | VM + disk + firewall = one module. See [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) |
 | Variable management | **tfvars files per environment** | `dev.tfvars`, `prod.tfvars` — same code, different values |
-| Secret handling | **Secret Manager** (referenced, not stored in state) | Never put secrets in tfvars or state. See [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
+| Secret handling | **Secret Manager** (referenced, not stored in state) | Never put secrets in tfvars or state. See [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) |
 | Plan review | **Always `terraform plan` before `apply`** | No blind applies. Review the diff. |
 | Import existing resources | **`terraform import` + write matching config** | Brings Console-created resources under management |
 | Provider versioning | **Pin major + minor version** | `~> 5.0` allows patch updates, blocks breaking changes |
@@ -798,7 +798,7 @@ Many decisions are not pure build or pure buy. The "semi-build" pattern uses a m
 | SQL transforms | **dbt tests** (schema + custom) | dbt test | On every PR, before deploy |
 | Python pipeline code | **Unit tests** (pytest) | pytest | On every PR. See python pipeline execution |
 | API endpoints | **Integration tests** | pytest + httpx | On every PR |
-| Infrastructure | **Terraform plan review** | terraform plan | On every PR. See [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) |
+| Infrastructure | **Terraform plan review** | terraform plan | On every PR. See [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) |
 | Data quality | **Row counts, null checks, uniqueness** | dbt tests or custom SQL | After every pipeline run |
 | End-to-end pipeline | **Smoke test on staging** | Custom script | Before production deploy |
 | Docker images | **Container scan + build test** | Trivy, `docker build` | On every PR. See [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) |
@@ -932,14 +932,14 @@ For rapid lookup when you just need the answer:
 | ...call an API and load results | Python | [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
 | ...schedule a daily job | Cloud Scheduler + Cloud Run Job | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) |
 | ...orchestrate 10+ dependent jobs | Airflow | [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) |
-| ...provision a VM | Terraform | [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) |
+| ...provision a VM | Terraform | [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute) |
 | ...do a quick one-off query in BigQuery | bq CLI or Console | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) |
 | ...move files between servers | Bash (rsync/scp) | [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer) |
 | ...build a dashboard | Blazor (C#) or Looker | — |
 | ...store pipeline state | Firestore | [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) |
 | ...send data between services | Pub/Sub | [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) |
 | ...monitor SQL Server | Datadog | [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) |
-| ...version-control infrastructure | Terraform + Git | [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) |
+| ...version-control infrastructure | Terraform + Git | [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) |
 | ...containerize a Python pipeline | Docker | [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) |
 | ...test data quality | dbt tests | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
 | ...parse a log file quickly | Bash (grep/awk) | [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) |
@@ -975,7 +975,7 @@ For rapid lookup when you just need the answer:
 #### Implementation details
 - [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) / [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) / [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — orchestration
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless compute patterns
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) / [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) — IaC
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) / [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — IaC
 - [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — SQL transform management
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline reliability patterns
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze/Silver/Gold layering

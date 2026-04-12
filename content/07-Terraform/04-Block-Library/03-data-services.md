@@ -1,6 +1,6 @@
 ---
-title: "03 - Terraform: Data Services Blocks"
-tags: [terraform, gcp, bigquery, firestore, dataflow, cloud-sql, monitoring, logging, billing]
+title: "03 - Data Services Blocks"
+tags: [terraform, gcp, bigquery, firestore, monitoring, logging, billing]
 aliases:
   - terraform data services
   - BigQuery terraform blocks
@@ -19,7 +19,8 @@ status: complete
 
 # Terraform — GCP Data Services Block Library
 
-> [!quote]
+> [!quote] Werner Vogels on automation
+>
 > "Automate everything that doesn't require high judgment."
 >
 > — **Werner Vogels**, AWS re:Invent keynote
@@ -27,6 +28,7 @@ status: complete
 This note is an atomic block library for GCP data services. Each block is self-contained and production-ready. Copy a block, swap names, wire in your variables, and apply. Blocks are grouped by service and then by resource type within each service. Every section opens with a brief **when to use** paragraph so you can scan quickly.
 
 > [!info] Assumed variables
+>
 > All blocks in this library reference shared Terraform variables. Define these in your root module or `variables.tf`:
 >
 > | Variable | Type | Description |
@@ -37,9 +39,7 @@ This note is an atomic block library for GCP data services. Each block is self-c
 > | `var.network_name` | `string` | VPC network name |
 > | `var.subnet_name` | `string` | VPC subnetwork name |
 >
-> Service-specific variables (e.g. `var.pipeline_sa_email`, `var.data_bucket`) are documented in the block where they first appear. See [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) for conventions.
-
----
+> Service-specific variables (e.g. `var.pipeline_sa_email`, `var.data_bucket`) are documented in the block where they first appear. See [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) for conventions.
 
 ## BigQuery Blocks
 
@@ -69,8 +69,6 @@ flowchart TD
   P --> RES["google_bigquery_reservation<br/>(committed slots)"]
 ```
 
----
-
 ### google_bigquery_dataset
 
 Use `google_bigquery_dataset` whenever you need a new logical namespace. A dataset is the container for tables, views, routines, and models. You must create a dataset before you can create any child resources. The `location` argument is immutable after creation — changing it in HCL forces Terraform to destroy and recreate the dataset. Choose the region that co-locates with your Dataflow jobs and GCS buckets to avoid inter-region egress charges.
@@ -78,10 +76,14 @@ Use `google_bigquery_dataset` whenever you need a new logical namespace. A datas
 The `dataset_id` is the identifier used in SQL as `project.dataset.table`. The `friendly_name` is a human-readable label shown in the BigQuery Console. Setting `default_table_expiration_ms` to `null` means tables persist forever; set it to a value like `2592000000` (30 days) for ephemeral staging datasets. The `delete_contents_on_destroy` flag controls whether `terraform destroy` also deletes all tables inside the dataset. The inline `access` blocks grant dataset-level roles: `READER`, `WRITER`, or `OWNER`. Prefer `google_bigquery_dataset_iam_member` (below) for dynamic grants managed from modules.
 
 > [!danger] Changing `location` destroys the dataset
+>
 > The `location` argument is immutable in the GCP API. If you change it in Terraform, the plan shows `# forces replacement` — Terraform will destroy the existing dataset (and all its tables) then create a new one in the target region.
 
 > [!success] Protect production datasets
+>
 > Add `lifecycle { prevent_destroy = true }` to any dataset containing production data. This causes `terraform plan` to fail rather than proposing a destroy.
+
+*Provisions a BigQuery dataset with location, expiration policy, labels, and inline access grants.*
 
 ```hcl
 resource "google_bigquery_dataset" "analytics" {
@@ -121,9 +123,8 @@ resource "google_bigquery_dataset" "analytics" {
 | `access` | No | Inline dataset-level role grants (`READER`, `WRITER`, `OWNER`); additive with IAM resources |
 
 > [!todo] `terraform plan` output
+>
 > Run `terraform plan` against a real project to capture the plan output for this block and paste it here as a ` ```text ` cell.
-
----
 
 ### google_bigquery_table
 
@@ -145,10 +146,14 @@ Use `google_bigquery_table` for native tables stored in BigQuery's managed colum
 The `dataset_id` references the parent dataset and creates an implicit dependency. Setting `deletion_protection = true` prevents `terraform destroy` from deleting the table — Terraform exits with an error instead. The `require_partition_filter` flag inside `time_partitioning` forces every query against this table to include a partition filter, preventing accidental full-table scans. The `schema` argument accepts a JSON-encoded array of column definitions with `name`, `type`, `mode` (`REQUIRED`, `NULLABLE`, `REPEATED`), and `description`.
 
 > [!warning] Missing `deletion_protection` on production tables
+>
 > If `deletion_protection` is `false` (the default), `terraform destroy` or removing the resource from config will delete the table and all its data.
 
 > [!success] Always protect stateful tables
+>
 > Set `deletion_protection = true` on all fact and dimension tables. For additional safety, add `lifecycle { prevent_destroy = true }` in the resource block.
+
+*Provisions a native BigQuery table with DAY time partitioning on a DATE column, two-column clustering, and a JSON-encoded schema.*
 
 ```hcl
 resource "google_bigquery_table" "events_fact" {
@@ -231,11 +236,11 @@ resource "google_bigquery_table" "events_fact" {
 | `clustering` | No | Up to 4 columns for intra-partition sorting; most selective first |
 | `schema` | Yes | JSON-encoded array of column definitions (`name`, `type`, `mode`, `description`) |
 
----
-
 #### google_bigquery_table | Range partitioning
 
 Use range partitioning when your natural partition key is an integer (e.g. a shard ID, account tier, or sequential customer ID range) rather than a date. BigQuery creates one partition per range interval. The `field` must be an `INTEGER` column. The `range` block defines the inclusive lower bound (`start`), exclusive upper bound (`end`), and the width of each bucket (`interval`). Rows with values outside the defined range go into an `__UNPARTITIONED__` overflow partition.
+
+*Provisions a BigQuery table with integer range partitioning, bucketing rows by `account_tier_id` in intervals of 100.*
 
 ```hcl
 resource "google_bigquery_table" "accounts_by_tier" {
@@ -289,11 +294,11 @@ resource "google_bigquery_table" "accounts_by_tier" {
 | `range_partitioning.range.end` | Yes | Exclusive upper bound of the last partition |
 | `range_partitioning.range.interval` | Yes | Width of each partition bucket |
 
----
-
 #### google_bigquery_table | Ingestion-time partitioning
 
 Use ingestion-time partitioning when you load data via streaming inserts or batch loads and do not have an explicit date column in the schema. Omit the `field` argument (or set it to `null`) and BigQuery automatically assigns a partition based on the load timestamp. Query these tables using the `_PARTITIONTIME` pseudo-column as a filter. Setting `expiration_ms` to `7776000000` (90 days) automatically drops partitions older than 90 days — useful for raw landing zones where data is processed and moved to curated tables.
+
+*Provisions a BigQuery table with ingestion-time DAY partitioning and a 90-day partition expiration, using `_PARTITIONTIME` for filtering.*
 
 ```hcl
 resource "google_bigquery_table" "raw_events" {
@@ -330,13 +335,13 @@ resource "google_bigquery_table" "raw_events" {
 }
 ```
 
----
-
 #### google_bigquery_table | External table (GCS Parquet)
 
 Use an external table when data lives in GCS and you want to query it with SQL without loading it into BigQuery native storage. This is ideal for Parquet files produced by Dataflow, CSV exports, or JSON log archives. Dropping an external table does not delete the underlying GCS files — it only removes the metadata definition. The `external_data_configuration` block replaces the `schema` + storage model of a native table. Supported formats: `PARQUET`, `CSV`, `NEWLINE_DELIMITED_JSON`, `AVRO`, `ORC`.
 
 For Parquet files, set `autodetect = true` to let BigQuery read column names and types from file metadata. The `hive_partitioning_options` block enables partition pruning based on directory structure (e.g. `year=2024/month=01/`). The `source_uri_prefix` tells BigQuery where the directory tree starts. Setting `mode = "AUTO"` infers partition keys automatically.
+
+*Provisions an external BigQuery table over GCS Parquet files with schema autodetect and hive partition pruning.*
 
 ```hcl
 resource "google_bigquery_table" "external_parquet" {
@@ -371,11 +376,11 @@ resource "google_bigquery_table" "external_parquet" {
 | `hive_partitioning_options.source_uri_prefix` | No | Root GCS prefix for partition discovery |
 | `hive_partitioning_options.require_partition_filter` | No | `true` forces partition pruning in queries |
 
----
-
 #### google_bigquery_table | External table (GCS CSV)
 
 Use a CSV-backed external table when the source data is comma-separated and you need explicit control over parsing. Set `autodetect = false` and provide a `schema` argument. The `csv_options` block configures the quote character, header row skip count, field delimiter, and whether quoted newlines are allowed.
+
+*Provisions an external BigQuery table over GCS CSV files with explicit schema and CSV parsing options.*
 
 ```hcl
 resource "google_bigquery_table" "external_csv" {
@@ -414,11 +419,11 @@ resource "google_bigquery_table" "external_csv" {
 | `csv_options.field_delimiter` | No | Column separator; default `,` |
 | `csv_options.allow_quoted_newlines` | No | Whether newlines inside quoted strings are allowed; default `false` |
 
----
-
 #### google_bigquery_table | View
 
 Use a `google_bigquery_table` with a `view` block to define a SQL view. Views are virtual — they store only the query definition, not data. Use views to expose a clean, stable interface on top of raw or partitioned tables, apply row-level filters, or join multiple tables into a denormalized shape. Views can be safely destroyed and recreated since they contain no data. Always set `use_legacy_sql = false` — legacy SQL is deprecated and incompatible with standard SQL features like `STRUCT`, `ARRAY`, and `WITH` clauses.
+
+*Defines a SQL view that filters the events fact table to the last 30 days using standard SQL.*
 
 ```hcl
 resource "google_bigquery_table" "events_last_30d" {
@@ -450,11 +455,11 @@ resource "google_bigquery_table" "events_last_30d" {
 | `view.query` | Yes | Standard SQL query that defines the view |
 | `view.use_legacy_sql` | No | Must be `false` for standard SQL; default `true` (legacy, deprecated) |
 
----
-
 #### google_bigquery_table | Materialized view
 
 Use a materialized view when a view is too slow because its underlying query is expensive and runs frequently. BigQuery pre-computes and caches the result, then automatically refreshes it when the base table changes. Materialized views must query a single base table and cannot use non-deterministic functions (`CURRENT_TIMESTAMP()`, `RAND()`, etc.). Setting `enable_refresh = true` enables automatic refresh. The `refresh_interval_ms` sets the minimum time between refreshes — `1800000` ms equals 30 minutes. BigQuery does not charge for automatic refreshes; it only charges for the bytes stored in the materialized view.
+
+*Provisions a BigQuery materialized view that pre-computes daily revenue aggregates with automatic 30-minute refresh.*
 
 ```hcl
 resource "google_bigquery_table" "mv_daily_revenue" {
@@ -488,8 +493,6 @@ resource "google_bigquery_table" "mv_daily_revenue" {
 | `materialized_view.enable_refresh` | No | `true` enables automatic refresh; default `true` |
 | `materialized_view.refresh_interval_ms` | No | Minimum ms between refreshes; default `1800000` (30 min) |
 
----
-
 ### google_bigquery_routine
 
 Use `google_bigquery_routine` to define reusable functions (UDFs) or stored procedures. SQL UDFs are fast and portable. JavaScript UDFs are slower but useful for complex string manipulation or external library logic that cannot be expressed in SQL. Store routines in a shared utilities dataset so all datasets can call them. The `routine_type` is `SCALAR_FUNCTION` for UDFs that return a single value per row, or `PROCEDURE` for stored procedures called with `CALL`.
@@ -497,6 +500,8 @@ Use `google_bigquery_routine` to define reusable functions (UDFs) or stored proc
 #### google_bigquery_routine | SQL UDF
 
 A SQL UDF that normalizes an email address to lowercase and trims whitespace. The `routine_id` becomes the function name callable in SQL as `dataset.normalize_email(raw_email)`. The `arguments` block defines input parameters with name and JSON-encoded type. The `return_type` specifies the output type. The `definition_body` contains the SQL expression.
+
+*Registers a SQL scalar UDF that returns a lowercase, trimmed email string.*
 
 ```hcl
 resource "google_bigquery_routine" "normalize_email" {
@@ -525,11 +530,11 @@ resource "google_bigquery_routine" "normalize_email" {
 | `return_type` | No | JSON-encoded return type; required for `SCALAR_FUNCTION` |
 | `definition_body` | Yes | Function body (SQL expression or JavaScript code) |
 
----
-
 #### google_bigquery_routine | JavaScript UDF
 
 A JavaScript UDF that parses a JSON string and extracts a campaign name. JavaScript UDFs run in BigQuery's V8 sandbox and are slower than SQL UDFs but support arbitrary string manipulation, regex, and JSON parsing that would be verbose in SQL. The `definition_body` must return the same type declared in `return_type`.
+
+*Registers a JavaScript scalar UDF that parses a JSON properties string and returns the `campaign` field.*
 
 ```hcl
 resource "google_bigquery_routine" "extract_campaign" {
@@ -556,13 +561,13 @@ resource "google_bigquery_routine" "extract_campaign" {
 }
 ```
 
----
-
 ### google_bigquery_dataset_iam_member
 
 Use `google_bigquery_dataset_iam_member` to grant roles at the dataset level. This resource is additive — it does not replace the `access` blocks inside the `google_bigquery_dataset` resource. Prefer this resource when the grantee is determined at runtime or when granting access from a module. The `member` argument uses the IAM principal format: `serviceAccount:email`, `group:email`, or `user:email`. For IAM concepts and service account management, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
 
 Common BigQuery roles: `roles/bigquery.dataViewer` (read tables), `roles/bigquery.dataEditor` (create/update/delete tables), `roles/bigquery.user` (run queries — project-level, not dataset-level). A user needs both `dataViewer` on the dataset and `bigquery.user` on the project to query tables.
+
+*Grants `roles/bigquery.dataEditor` on the dataset to a pipeline service account.*
 
 ```hcl
 resource "google_bigquery_dataset_iam_member" "pipeline_editor" {
@@ -572,6 +577,8 @@ resource "google_bigquery_dataset_iam_member" "pipeline_editor" {
   member     = "serviceAccount:${var.pipeline_sa_email}"
 }
 ```
+
+*Grants `roles/bigquery.dataViewer` on the dataset to an analyst group.*
 
 ```hcl
 resource "google_bigquery_dataset_iam_member" "analysts_viewer" {
@@ -583,6 +590,8 @@ resource "google_bigquery_dataset_iam_member" "analysts_viewer" {
 ```
 
 The `google_project_iam_member` resource below grants `roles/bigquery.user` at the project level, which is required to run queries. Combined with `dataViewer` on the dataset, this gives full read access.
+
+*Grants `roles/bigquery.user` at the project level so the analyst group can run queries.*
 
 ```hcl
 resource "google_project_iam_member" "analyst_bq_user" {
@@ -599,13 +608,13 @@ resource "google_project_iam_member" "analyst_bq_user" {
 | `role` | Yes | IAM role to grant (e.g. `roles/bigquery.dataViewer`) |
 | `member` | Yes | IAM principal: `serviceAccount:`, `group:`, or `user:` prefix + email |
 
----
-
 ### google_bigquery_data_transfer_config
 
 Use `google_bigquery_data_transfer_config` to run a SQL query on a schedule without Airflow or Cloud Scheduler. This is the BigQuery-native way to run daily aggregation jobs, snapshot tables, or move data between datasets. The `data_source_id` is always `"scheduled_query"` for SQL-based transfers. The `schedule` argument accepts cron-like expressions (`"every 24 hours"`, `"every day 02:00"`). The `location` must match the dataset region. The service account specified in `service_account_name` must have `roles/bigquery.admin` or a combination of `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`.
 
 The `params` block contains the SQL query and controls how results are written. `write_disposition` can be `WRITE_APPEND` (add rows) or `WRITE_TRUNCATE` (replace table contents). The `partitioning_field` sets the partition column on the destination table.
+
+*Configures a scheduled SQL query that runs every 24 hours and appends yesterday's revenue aggregates to the destination table.*
 
 ```hcl
 resource "google_bigquery_data_transfer_config" "daily_revenue_agg" {
@@ -653,17 +662,19 @@ resource "google_bigquery_data_transfer_config" "daily_revenue_agg" {
 | `params.partitioning_field` | No | Column to partition the destination table by |
 | `service_account_name` | Yes | Service account email; needs `bigquery.admin` or `dataEditor` + `jobUser` |
 
----
-
 ### google_bigquery_connection
 
 Use `google_bigquery_connection` to let BigQuery query Cloud SQL or Cloud Spanner in place as if they were BigQuery tables. This enables `EXTERNAL_QUERY()` JOIN queries between BigQuery data and live operational database tables without ETL. The `connection_id` is the identifier referenced in the SQL `EXTERNAL_QUERY()` function. The `location` must match the BigQuery dataset and Cloud SQL instance region. The `cloud_sql.type` is `POSTGRES` or `MYSQL`.
 
 > [!warning] Credentials stored in Terraform state
+>
 > The `credential` block contains the database username and password. These values are stored in plaintext in the Terraform state file.
 
 > [!success] Use Secret Manager for production credentials
+>
 > Retrieve the password from Secret Manager using a `data "google_secret_manager_secret_version"` data source instead of `var.cloudsql_password`. See [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management).
+
+*Provisions a BigQuery federated query connection to a Cloud SQL PostgreSQL instance using database credentials.*
 
 ```hcl
 resource "google_bigquery_connection" "cloudsql_federated" {
@@ -696,8 +707,6 @@ resource "google_bigquery_connection" "cloudsql_federated" {
 | `cloud_sql.credential.username` | Yes | Database user with `SELECT` privileges |
 | `cloud_sql.credential.password` | Yes | Password for the database user |
 
----
-
 ### google_bigquery_reservation
 
 Use `google_bigquery_reservation` when you want dedicated slot capacity (Enterprise or Enterprise Plus editions) instead of on-demand pricing. The `slot_capacity` defines baseline slots always available to assigned projects. The `edition` can be `STANDARD`, `ENTERPRISE`, or `ENTERPRISE_PLUS` — each edition has different pricing and features. Setting `ignore_idle_slots = false` shares unused slots with the organization; `true` reserves them exclusively for the assigned projects.
@@ -705,7 +714,10 @@ Use `google_bigquery_reservation` when you want dedicated slot capacity (Enterpr
 A reservation alone does not route queries — you must also create a `google_bigquery_reservation_assignment` to bind the reservation to a project, folder, or organization. The `job_type` controls which workloads use the committed slots: `QUERY` (interactive queries), `PIPELINE` (BigQuery jobs like loads and exports), or `ML_EXTERNAL` (BigQuery ML).
 
 > [!info] Provider version
+>
 > `google_bigquery_reservation` requires `google` provider >= 4.48.0. The `edition` argument was added in provider 4.65.0.
+
+*Provisions a BigQuery Enterprise reservation with 100 committed slots and assigns it to the project for query workloads.*
 
 ```hcl
 resource "google_bigquery_reservation" "de_team" {
@@ -736,11 +748,11 @@ resource "google_bigquery_reservation_assignment" "de_project_assignment" {
 | `job_type` | Yes | `QUERY`, `PIPELINE`, or `ML_EXTERNAL` |
 | `reservation` | Yes | Reservation ID to assign |
 
----
-
 ### google_bigquery_dataset | Import existing dataset
 
 Use the `import` block (Terraform 1.5+) to bring an existing BigQuery dataset under Terraform management without destroying and recreating it. This is the standard pattern for adopting manually-created datasets into IaC. After import, run `terraform plan` to verify the config matches the existing state — any drift will show as a proposed change.
+
+*Imports an existing BigQuery dataset into Terraform state without destroying and recreating it.*
 
 ```hcl
 import {
@@ -750,15 +762,12 @@ import {
 ```
 
 > [!info] Terraform 1.5+ required
+>
 > The `import` block is a declarative alternative to `terraform import` CLI. It runs during `terraform plan` and can be committed to version control, making imports reviewable and repeatable.
-
----
 
 ## Firestore Blocks
 
 Firestore is GCP's serverless, scalable NoSQL document database. Native mode Firestore is the recommended choice for new projects. Terraform can manage the database instance, composite indexes, backup schedules, and security rules — but document data itself is managed at runtime (or seeded via `null_resource`). For data model concepts and `gcloud` operations, see [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations).
-
----
 
 ### google_firestore_database
 
@@ -767,13 +776,18 @@ Use `google_firestore_database` to provision the Firestore instance. A GCP proje
 The `concurrency_mode` controls transaction isolation: `OPTIMISTIC` (default) uses optimistic locking where conflicting transactions retry, while `PESSIMISTIC` provides serializable transactions at the cost of throughput. Set `app_engine_integration_mode = "DISABLED"` unless your project uses App Engine. The `deletion_policy` controls what happens on `terraform destroy`: `DELETE` destroys the database and all documents, `ABANDON` removes the resource from state without deleting the actual database.
 
 > [!danger] `deletion_policy = "DELETE"` destroys all data
+>
 > Setting `deletion_policy = "DELETE"` allows `terraform destroy` to permanently delete the Firestore database and every document inside it. There is no undo.
 
 > [!success] Use `ABANDON` in production
+>
 > Set `deletion_policy = "ABANDON"` for production databases. This ensures `terraform destroy` only removes the resource from Terraform state without touching the actual database. Pair with `lifecycle { prevent_destroy = true }`.
 
 > [!info] Provider version
+>
 > `google_firestore_database` requires `google` provider >= 4.64.0 or `google-beta`. Multi-database support (named databases other than `(default)`) requires provider >= 4.83.0.
+
+*Provisions the default Firestore Native-mode database with optimistic concurrency and no App Engine integration.*
 
 ```hcl
 resource "google_firestore_database" "main" {
@@ -798,8 +812,6 @@ resource "google_firestore_database" "main" {
 | `app_engine_integration_mode` | No | `DISABLED` (standalone) or `ENABLED` (App Engine) |
 | `deletion_policy` | No | `DELETE` (destroy database) or `ABANDON` (orphan without deleting) |
 
----
-
 ### google_firestore_index
 
 Use `google_firestore_index` to create composite indexes required for queries that filter or order by multiple fields. Firestore auto-creates single-field indexes but does not auto-create composite indexes. If a query needs a composite index and it does not exist, the query fails at runtime with an error linking to the Firebase console. Define all required indexes in Terraform to catch missing indexes at `terraform apply` time rather than at query time.
@@ -807,6 +819,8 @@ Use `google_firestore_index` to create composite indexes required for queries th
 Each `fields` block defines one field in the composite index. The `order` is `ASCENDING` or `DESCENDING`. For equality filters, `ASCENDING` is conventional. For range or ordering fields, match the `order` to your query's `ORDER BY` clause. Including `__name__` as the final field ensures stable cursor-based pagination.
 
 The first example creates a composite index on the `sessions` collection for queries that filter by `user_id` and order by `created_at` descending (most recent first).
+
+*Creates a composite Firestore index on `sessions` to support filtering by `user_id` ordered by `created_at` descending.*
 
 ```hcl
 resource "google_firestore_index" "sessions_by_user" {
@@ -827,6 +841,8 @@ resource "google_firestore_index" "sessions_by_user" {
 ```
 
 The second example supports a task queue pattern: filter by `status` (equality) and order by `priority` (ascending, so lowest number = highest urgency). The `__name__` field provides stable pagination.
+
+*Creates a composite Firestore index on `tasks` to support `status` equality filters ordered by `priority`, with stable cursor pagination via `__name__`.*
 
 ```hcl
 resource "google_firestore_index" "tasks_by_status_priority" {
@@ -859,13 +875,13 @@ resource "google_firestore_index" "tasks_by_status_priority" {
 | `fields.field_path` | Yes | Document field name, or `__name__` for the document ID |
 | `fields.order` | Yes | `ASCENDING` or `DESCENDING` |
 
----
-
 ### null_resource | Firestore document seed
 
 Terraform's `google_firestore_document` resource exists but is limited — it cannot easily handle subcollections or complex merge semantics. The most reliable pattern for seeding initial config documents is a `null_resource` with a `local-exec` provisioner running `gcloud firestore` or a small Python script. This runs on the machine executing `terraform apply`.
 
 The `triggers` block controls when the provisioner re-runs. Using `sha256(jsonencode(...))` of the desired document content means the provisioner re-executes only when the content changes. The `|| update` pattern handles both first-run (create) and subsequent runs (update) idempotently. The `depends_on` ensures the database exists before seeding.
+
+*Seeds a Firestore config document via `local-exec`, re-running only when the document content hash changes.*
 
 ```hcl
 resource "null_resource" "seed_app_config" {
@@ -900,13 +916,13 @@ resource "null_resource" "seed_app_config" {
 }
 ```
 
----
-
 ### google_firestore_backup_schedule
 
 Use `google_firestore_backup_schedule` to automatically back up Firestore data on a daily or weekly schedule. Backups protect against accidental deletions and data corruption. GCP stores backups in a managed location — you do not provision a GCS bucket yourself. The `retention` argument specifies how long backups are kept, in seconds. Use `daily_recurrence {}` (empty block) for daily backups at a GCP-managed time, or `weekly_recurrence { day = "SUNDAY" }` for weekly backups on a specific day.
 
 The first example retains daily backups for 7 days (604800 seconds). The second retains weekly backups for 14 weeks (8467200 seconds ≈ 98 days).
+
+*Configures a daily Firestore backup schedule with a 7-day retention window.*
 
 ```hcl
 resource "google_firestore_backup_schedule" "daily" {
@@ -918,6 +934,8 @@ resource "google_firestore_backup_schedule" "daily" {
   daily_recurrence {}
 }
 ```
+
+*Configures a weekly Sunday Firestore backup schedule with a 14-week retention window.*
 
 ```hcl
 resource "google_firestore_backup_schedule" "weekly" {
@@ -940,11 +958,11 @@ resource "google_firestore_backup_schedule" "weekly" {
 | `daily_recurrence` | No | Empty block; include for daily backups (mutually exclusive with `weekly_recurrence`) |
 | `weekly_recurrence.day` | No | Day of week: `MONDAY` through `SUNDAY` |
 
----
-
 ### google_firebaserules_ruleset
 
 Use `google_firebaserules_ruleset` and `google_firebaserules_release` together to deploy Firestore security rules from Terraform. Rules are defined in a `.rules` file checked into source control. This approach keeps rules version-controlled and prevents manual edits from drifting. The `source.files` block reads the rules file from the local filesystem using the `file()` function. The `google_firebaserules_release` resource activates the ruleset — its `name` must be `"cloud.firestore"` for Firestore databases.
+
+*Creates a Firestore security ruleset from a local `.rules` file.*
 
 ```hcl
 resource "google_firebaserules_ruleset" "firestore_rules" {
@@ -958,6 +976,8 @@ resource "google_firebaserules_ruleset" "firestore_rules" {
   }
 }
 ```
+
+*Activates the Firestore ruleset by creating a release named `cloud.firestore`.*
 
 ```hcl
 resource "google_firebaserules_release" "firestore_release" {
@@ -976,6 +996,8 @@ resource "google_firebaserules_release" "firestore_release" {
 
 Example `firestore.rules` file (managed alongside Terraform, not by Terraform itself):
 
+*Example Firestore security rules file granting users read/write access only to their own documents and read-only access to config documents.*
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -990,8 +1012,6 @@ service cloud.firestore {
   }
 }
 ```
-
----
 
 ## Dataflow Blocks
 
@@ -1017,10 +1037,9 @@ flowchart LR
 ```
 
 > [!question] Classic template vs Flex template
+>
 > - **Classic template:** Pre-compiled JAR or Python package stored in GCS. Use for Google-provided templates (GCS to BigQuery, Pub/Sub to BigQuery) or simple custom pipelines with fixed parameters.
 > - **Flex template:** Custom Docker container stored in Artifact Registry. Use for custom pipelines with dynamic parameters, complex dependencies, or Python/Java code that needs arbitrary libraries. More flexible but requires building and pushing a container image.
-
----
 
 ### google_dataflow_job
 
@@ -1031,6 +1050,8 @@ The `google_dataflow_job` resource runs both batch and streaming pipelines using
 Use this variant for a batch pipeline that reads data, transforms it, and writes results using a Google-provided classic template. The `template_gcs_path` points to the template spec file in GCS. The `parameters` block passes template-specific key-value pairs — the keys depend on the chosen template. The `temp_gcs_location` must be in the same region as the job.
 
 Worker VMs use `machine_type` for sizing (`n1-standard-4` is a balanced default). Dataflow autoscales between `num_workers` (initial count) and `max_workers` (ceiling). The `service_account_email` controls what the worker VMs can access — the SA needs read access to the source and write access to the sink. The `subnetwork` must use the full self-link format `regions/{region}/subnetworks/{name}`.
+
+*Runs a batch Dataflow job using the GCS Avro to BigQuery classic template, loading events into a fact table.*
 
 ```hcl
 resource "google_dataflow_job" "gcs_to_bq_batch" {
@@ -1076,8 +1097,6 @@ resource "google_dataflow_job" "gcs_to_bq_batch" {
 | `subnetwork` | No | Full subnetwork self-link: `regions/{region}/subnetworks/{name}` |
 | `on_delete` | No | `"drain"` (finish in-flight work) or `"cancel"` (stop immediately) |
 
----
-
 #### google_dataflow_job | Streaming
 
 Use `google_dataflow_job` with streaming parameters when you need a continuously running pipeline (Pub/Sub to BigQuery, Pub/Sub to GCS, etc.). Streaming jobs do not terminate — they run until explicitly stopped or until `terraform destroy` triggers the `on_delete` action. The service account needs `roles/pubsub.subscriber` on the source topic and `roles/bigquery.dataEditor` on the destination dataset. Streaming jobs autoscale based on Pub/Sub backlog; start with `num_workers = 1` and let Dataflow scale up to `max_workers`.
@@ -1085,10 +1104,14 @@ Use `google_dataflow_job` with streaming parameters when you need a continuously
 To deploy a new version of a running streaming job, set `update = true`. Terraform replaces the running job with the updated configuration using the same job name, preserving in-flight messages. Leave `update = false` (default) for first-time deployments.
 
 > [!warning] `on_delete = "cancel"` loses in-flight messages
+>
 > Using `"cancel"` on a streaming job stops it immediately, discarding any Pub/Sub messages currently being processed. These messages become unacknowledged and are redelivered, but any partial BigQuery writes may be lost.
 
 > [!success] Always use `on_delete = "drain"` for streaming
+>
 > The `"drain"` option finishes processing all in-flight messages and commits them to the sink before shutting down. This ensures no data loss during `terraform destroy` or job updates.
+
+*Runs a streaming Dataflow job using the Pub/Sub to BigQuery classic template, continuously consuming a topic into a raw events table.*
 
 ```hcl
 resource "google_dataflow_job" "pubsub_to_bq_streaming" {
@@ -1116,13 +1139,13 @@ resource "google_dataflow_job" "pubsub_to_bq_streaming" {
 }
 ```
 
----
-
 ### google_dataflow_flex_template_job
 
 Use `google_dataflow_flex_template_job` for custom pipelines packaged as Docker containers. Flex templates support dynamic parameters, Python or Java, and can include arbitrary dependencies. The `container_spec_gcs_path` points to a JSON spec file in GCS that references the container image in Artifact Registry.
 
 The `additional_experiments` list enables experimental features — `"enable_prime"` activates Dataflow Prime, which provides right-fitting autoscaling instead of fixed machine types. Set `enable_streaming_engine = true` for streaming Flex jobs to offload shuffle to Google's managed infrastructure. Set `ip_configuration = "WORKER_IP_PRIVATE"` to ensure workers have no public IPs (recommended for production VPCs).
+
+*Runs a custom Dataflow Flex Template job from a containerised pipeline, with Dataflow Prime and private worker IPs.*
 
 ```hcl
 resource "google_dataflow_flex_template_job" "custom_pipeline" {
@@ -1162,13 +1185,9 @@ resource "google_dataflow_flex_template_job" "custom_pipeline" {
 | `ip_configuration` | No | `WORKER_IP_PRIVATE` (no public IPs) or `WORKER_IP_UNSPECIFIED` |
 | `temp_location` | No | GCS path for temporary files |
 
----
-
 ## Cloud SQL Blocks
 
 Cloud SQL is GCP's managed relational database service supporting PostgreSQL, MySQL, and SQL Server. These blocks cover the most common configuration: a PostgreSQL instance with private IP (no public endpoint), automated backups, and point-in-time recovery. Use Cloud SQL alongside BigQuery for operational workloads that require ACID transactions and low-latency reads.
-
----
 
 ### google_sql_database_instance
 
@@ -1181,10 +1200,14 @@ The `backup_configuration` enables automated daily backups. Setting `point_in_ti
 Private IP configuration (`ipv4_enabled = false`) requires a VPC peering connection (`google_service_networking_connection`) to exist first, hence the `depends_on`. The `ssl_mode` controls encryption: `ENCRYPTED_ONLY` requires TLS but does not verify client certificates, while `TRUSTED_CLIENT_CERTIFICATE_REQUIRED` enforces mutual TLS. The `database_flags` block sets PostgreSQL server parameters — `max_connections`, `log_min_duration_statement` (slow query logging), and `cloudsql.enable_pg_cron` (scheduled SQL jobs).
 
 > [!danger] Changing `region` or major `database_version` forces replacement
+>
 > These arguments are immutable in the GCP API. Changing them in Terraform destroys the existing instance (and all databases, users, and data) then creates a new one.
 
 > [!success] Protect production instances
+>
 > Set `deletion_protection = true` and add `lifecycle { prevent_destroy = true }`. Before major version upgrades, use Cloud SQL's in-place major version upgrade feature instead of Terraform replacement.
+
+*Provisions a PostgreSQL 15 Cloud SQL instance with private IP, regional HA, SSD storage, daily backups, PITR, and slow query logging.*
 
 ```hcl
 resource "google_sql_database_instance" "analytics_pg" {
@@ -1263,13 +1286,13 @@ resource "google_sql_database_instance" "analytics_pg" {
 | `ip_configuration.ssl_mode` | No | `ENCRYPTED_ONLY` or `TRUSTED_CLIENT_CERTIFICATE_REQUIRED` |
 | `database_flags` | No | PostgreSQL server parameters as `name`/`value` pairs |
 
-For VPC networking details, see [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking).
-
----
+For VPC networking details, see [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking).
 
 ### google_sql_database
 
 Use `google_sql_database` to create a named database (schema namespace) within the Cloud SQL instance. Each logical application or service should have its own database to isolate data and permissions. The `charset` and `collation` default to `UTF8` and `en_US.UTF8` respectively, which is the universal default for PostgreSQL.
+
+*Creates a named PostgreSQL database within the Cloud SQL instance with UTF-8 charset and collation.*
 
 ```hcl
 resource "google_sql_database" "analytics" {
@@ -1289,8 +1312,6 @@ resource "google_sql_database" "analytics" {
 | `charset` | No | Character encoding; default `UTF8` |
 | `collation` | No | String sorting collation; default `en_US.UTF8` |
 
----
-
 ### google_sql_user
 
 Use `google_sql_user` to provision database users. In production, generate the password with `random_password` and store it in Secret Manager rather than hardcoding it. The `override_special` argument restricts special characters to a safe subset that works in most connection strings. IAM database authentication (`type = "CLOUD_IAM_SERVICE_ACCOUNT"`) is also available for Cloud SQL PostgreSQL and is preferred for service accounts.
@@ -1298,10 +1319,14 @@ Use `google_sql_user` to provision database users. In production, generate the p
 This block shows the complete pattern: generate a random password, create the database user, create a Secret Manager secret, and store the password as a secret version. Applications (Cloud Run, GKE) retrieve the password at runtime from Secret Manager. See [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) for Secret Manager concepts.
 
 > [!warning] Password stored in Terraform state
+>
 > The `random_password` result and `google_secret_manager_secret_version.secret_data` values are stored in plaintext in the Terraform state file. Ensure the state backend (GCS) has restricted access.
 
 > [!success] Encrypt state and restrict access
-> Use a GCS backend with encryption and IAM access controls. See [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend).
+>
+> Use a GCS backend with encryption and IAM access controls. See [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend).
+
+*Generates a random 32-character password, creates the Cloud SQL user, and stores the password in Secret Manager.*
 
 ```hcl
 resource "random_password" "db_password" {
@@ -1341,8 +1366,6 @@ resource "google_secret_manager_secret_version" "db_password" {
 | `replication.auto` | No | Empty block; GCP manages replication automatically |
 | `secret_data` (version) | Yes | The actual secret value |
 
----
-
 ## Monitoring and Logging Blocks
 
 Cloud Monitoring and Cloud Logging provide observability for GCP resources and custom application metrics. These blocks configure log exports, alert policies, notification channels, and dashboards declaratively. For `gcloud` CLI management of these services, see [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) and [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics).
@@ -1369,13 +1392,13 @@ flowchart LR
   EX --> DROP["Dropped<br/>(not stored)"]
 ```
 
----
-
 ### google_logging_project_sink
 
 Use `google_logging_project_sink` to export logs to BigQuery, GCS, or Pub/Sub for long-term retention and analysis. Logs stay in Cloud Logging for only 30 days by default — a BigQuery sink lets you query historical logs with SQL, and a GCS sink provides cheaper archival storage. The `filter` argument uses Cloud Logging filter syntax to select which logs to export. Setting `unique_writer_identity = true` creates a dedicated service account for the sink — you must grant this SA write access to the destination resource.
 
 The first example exports BigQuery data access audit logs to a BigQuery dataset with daily partitioned tables (`use_partitioned_tables = true`), which significantly reduces query cost when filtering by date.
+
+*Exports BigQuery data access audit logs to a partitioned BigQuery dataset and grants the sink writer identity `dataEditor` access.*
 
 ```hcl
 resource "google_logging_project_sink" "bq_audit_to_bq" {
@@ -1407,6 +1430,8 @@ resource "google_bigquery_dataset_iam_member" "sink_writer" {
 
 The second example archives Cloud Run application logs to GCS for long-term retention (cheaper than BigQuery for write-heavy, infrequent-read workloads). The sink SA needs `roles/storage.objectCreator` on the target bucket.
 
+*Archives Cloud Run application logs to a GCS bucket and grants the sink writer identity `objectCreator` access.*
+
 ```hcl
 resource "google_logging_project_sink" "app_logs_to_gcs" {
   name        = "app-logs-to-gcs-archive"
@@ -1436,13 +1461,13 @@ resource "google_storage_bucket_iam_member" "sink_gcs_writer" {
 | `bigquery_options.use_partitioned_tables` | No | `true` writes to daily partitioned tables |
 | `unique_writer_identity` | No | `true` creates a dedicated SA for the sink (recommended) |
 
----
-
 ### google_logging_project_exclusion
 
 Use `google_logging_project_exclusion` to drop high-volume, low-value logs before they consume Cloud Logging quota or fill your exported sinks. Logs matching the `filter` are permanently dropped — they are never stored in Cloud Logging and never exported to sinks. Common exclusions are DEBUG-level application logs, health check requests, and Cloud Run container lifecycle events. Set `disabled = true` to temporarily pause an exclusion without deleting it.
 
 The first example drops all DEBUG-severity logs from Cloud Run services.
+
+*Permanently drops DEBUG-severity Cloud Run logs to reduce Cloud Logging ingestion costs.*
 
 ```hcl
 resource "google_logging_project_exclusion" "debug_logs" {
@@ -1460,6 +1485,8 @@ resource "google_logging_project_exclusion" "debug_logs" {
 ```
 
 The second example drops successful health check requests (`200 OK` from `/healthz`), which are extremely high volume with zero signal value.
+
+*Permanently drops successful `/healthz` load balancer probe logs from Cloud Run to eliminate high-volume noise.*
 
 ```hcl
 resource "google_logging_project_exclusion" "health_check_logs" {
@@ -1485,8 +1512,6 @@ resource "google_logging_project_exclusion" "health_check_logs" {
 | `filter` | Yes | Cloud Logging filter; matching logs are permanently dropped |
 | `disabled` | No | `true` pauses the exclusion without deleting; default `false` |
 
----
-
 ### google_monitoring_alert_policy
 
 Use `google_monitoring_alert_policy` to create alerting conditions on GCP metrics. Alert policies consist of conditions (the metric threshold), notification channels (where to send alerts), and optional documentation (runbook text shown in the alert UI). The `combiner` controls how multiple conditions interact: `OR` fires the alert if any condition triggers, `AND` requires all conditions to fire simultaneously. Keep conditions specific to avoid alert fatigue.
@@ -1494,6 +1519,8 @@ Use `google_monitoring_alert_policy` to create alerting conditions on GCP metric
 Each `condition_threshold` block defines a metric filter, comparison operator (`COMPARISON_GT`, `COMPARISON_LT`, etc.), threshold value, and duration. The `duration` controls how long the condition must persist before alerting — `"0s"` alerts immediately, `"300s"` requires 5 minutes of sustained breach. The `aggregations` block controls how time-series data is aligned and reduced: `alignment_period` sets the window size, `per_series_aligner` aggregates within each series, and `cross_series_reducer` combines multiple series. The `alert_strategy.auto_close` auto-resolves the alert after the specified duration if it stops firing.
 
 The first example alerts when daily BigQuery bytes scanned exceeds 1 TB.
+
+*Creates an alert policy that fires when daily BigQuery bytes scanned exceeds 1 TB, with email notification and 24-hour auto-close.*
 
 ```hcl
 resource "google_monitoring_alert_policy" "bq_bytes_scanned" {
@@ -1534,6 +1561,8 @@ resource "google_monitoring_alert_policy" "bq_bytes_scanned" {
 ```
 
 The second example alerts when a Dataflow streaming job enters a failed state. The `duration = "60s"` avoids transient state flickers. The `ALIGN_MAX` aligner ensures a brief failure is not averaged away. This policy also publishes to Pub/Sub for automated remediation.
+
+*Creates an alert policy that fires when a Dataflow job enters `JOB_STATE_FAILED` for more than 60 seconds, notifying email and Pub/Sub channels.*
 
 ```hcl
 resource "google_monitoring_alert_policy" "dataflow_job_failed" {
@@ -1583,13 +1612,13 @@ resource "google_monitoring_alert_policy" "dataflow_job_failed" {
 | `alert_strategy.auto_close` | No | Auto-resolve after this duration if condition stops firing |
 | `documentation.content` | No | Runbook text shown in alert UI |
 
----
-
 ### google_monitoring_notification_channel
 
 Use `google_monitoring_notification_channel` to define where alert notifications are delivered. Create separate channels for each delivery method. Supported types: `email`, `sms`, `pagerduty`, `slack`, `pubsub`, `webhook_tokenauth`. The `labels` block contains type-specific configuration (email address, Pub/Sub topic, etc.). Set `enabled = false` to temporarily silence a channel during maintenance without deleting it.
 
 The first example sends alerts to the data engineering team via email.
+
+*Configures an email notification channel for the data engineering team.*
 
 ```hcl
 resource "google_monitoring_notification_channel" "email_data_team" {
@@ -1606,6 +1635,8 @@ resource "google_monitoring_notification_channel" "email_data_team" {
 ```
 
 The second example publishes alert payloads to a Pub/Sub topic for programmatic handling (e.g. auto-remediation via Cloud Function).
+
+*Configures a Pub/Sub notification channel that publishes alert payloads to a topic for automated remediation.*
 
 ```hcl
 resource "google_monitoring_notification_channel" "pubsub_alerts" {
@@ -1628,13 +1659,13 @@ resource "google_monitoring_notification_channel" "pubsub_alerts" {
 | `labels` | Yes | Type-specific config (e.g. `email_address` for email, `topic` for pubsub) |
 | `enabled` | No | `false` disables without deleting; default `true` |
 
----
-
 ### google_monitoring_uptime_check_config
 
 Use `google_monitoring_uptime_check_config` to verify that an HTTP endpoint is reachable and returns the expected response. Uptime checks run from multiple GCP regions simultaneously and fire an alert if the check fails from a configurable number of regions. The `period` controls check frequency: `60s`, `300s`, `600s`, or `900s`. The `timeout` must be less than or equal to the period.
 
 The `http_check` block configures the probe: `path` is the URL path to hit, `port` is the target port, `use_ssl` enables HTTPS, and `validate_ssl` verifies the certificate. The `content_matchers` block optionally validates specific text in the response body. The `monitored_resource` block specifies the endpoint — `host` is the Cloud Run service URL without the `https://` scheme. Running checks from multiple `selected_regions` prevents false positives caused by regional outages.
+
+*Provisions an HTTPS uptime check on `/healthz` that verifies the response contains `ok`, probing from USA, Europe, and Asia Pacific every 60 seconds.*
 
 ```hcl
 resource "google_monitoring_uptime_check_config" "dashboard_health" {
@@ -1681,13 +1712,13 @@ resource "google_monitoring_uptime_check_config" "dashboard_health" {
 | `monitored_resource.labels.host` | Yes | Endpoint hostname (without `https://`) |
 | `selected_regions` | No | List of regions: `"USA"`, `"EUROPE"`, `"ASIA_PACIFIC"`, `"SOUTH_AMERICA"` |
 
----
-
 ### google_monitoring_metric_descriptor
 
 Use `google_monitoring_metric_descriptor` to register a custom metric type that your application code writes to Cloud Monitoring. Define the metric once in Terraform so it appears in the Metrics Explorer and can be referenced in alert policies and dashboards before any data is written.
 
 The `type` must start with `custom.googleapis.com/` or `external.googleapis.com/`. The `metric_kind` defines the time-series semantics: `GAUGE` is an instantaneous value (e.g. current queue depth), `CUMULATIVE` is an ever-increasing counter (e.g. total requests), `DELTA` is the change within an interval (e.g. requests per minute). The `value_type` specifies the data type: `INT64`, `DOUBLE`, `STRING`, `BOOL`, or `DISTRIBUTION`. The `unit` follows the UCUM standard: `"1"` for dimensionless counts, `"By"` for bytes, `"s"` for seconds, `"{records}"` for custom units. The `labels` blocks add dimensions to the metric — these are filterable in charts and alerts as `metric.labels.{key}`.
+
+*Registers a custom GAUGE metric for pipeline records processed, with `pipeline_name` and `environment` label dimensions.*
 
 ```hcl
 resource "google_monitoring_metric_descriptor" "pipeline_records_processed" {
@@ -1722,16 +1753,17 @@ resource "google_monitoring_metric_descriptor" "pipeline_records_processed" {
 | `labels.key` | No | Label name; referenced as `metric.labels.{key}` in filters |
 | `labels.value_type` | No | `STRING`, `BOOL`, or `INT64` |
 
----
-
 ### google_monitoring_dashboard
 
 Use `google_monitoring_dashboard` to provision a Cloud Monitoring dashboard as code. Dashboards are defined as JSON using the GCP Monitoring dashboard spec format. The easiest workflow is to build the dashboard in the GCP Console, then export the JSON with `gcloud monitoring dashboards describe` and paste it into Terraform.
 
 > [!tip] Export existing dashboards
+>
 > Run `gcloud monitoring dashboards list --project=PROJECT_ID` to find the dashboard ID, then `gcloud monitoring dashboards describe DASHBOARD_ID --format=json` to export the full JSON spec. Paste the JSON into the `dashboard_json` argument.
 
 This example creates a three-widget dashboard: BigQuery daily row counts (line chart), Dataflow streaming system lag (line chart), and Firestore read operations per second (scorecard with spark line). The `gridLayout` with `columns = "2"` arranges widgets in a two-column grid.
+
+*Provisions a two-column monitoring dashboard with BigQuery scan volume, Dataflow system lag, and Firestore read ops/s widgets.*
 
 ```hcl
 resource "google_monitoring_dashboard" "data_pipeline" {
@@ -1801,13 +1833,9 @@ resource "google_monitoring_dashboard" "data_pipeline" {
 }
 ```
 
----
-
 ## Budget Block
 
 Cloud Billing budgets set spending thresholds and trigger notifications or automated actions when costs approach or exceed the budget. Always create a budget for each active GCP project — it is the first line of defence against runaway costs. For billing concepts and cost monitoring via `gcloud`, see [gcp-cost-monitoring-and-budgets](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets).
-
----
 
 ### google_billing_budget
 
@@ -1816,10 +1844,14 @@ Use `google_billing_budget` to define monthly spend limits with tiered threshold
 The `budget_filter` scopes the budget to specific projects or services. The `amount` block sets the budget ceiling — either a fixed `specified_amount` or `last_period_amount {}` (uses last month's spend as the baseline). The `threshold_rules` define notification tiers as percentages of the budget. The `spend_basis` controls whether the threshold is evaluated against actual spend (`CURRENT_SPEND`) or projected end-of-month spend (`FORECASTED_SPEND`). The `all_updates_rule` configures notification delivery — Pub/Sub topics for programmatic handling and monitoring channels for human-readable alerts.
 
 > [!warning] Budgets do not stop spending
+>
 > A billing budget only sends notifications when thresholds are crossed. It does not automatically cap spending or disable resources. To enforce hard spending limits, pair the budget with a Cloud Function that disables billing on the project when triggered via Pub/Sub.
 
 > [!success] Pair with automated enforcement
+>
 > Create a Cloud Function subscribed to the budget's Pub/Sub topic that calls `cloudbilling.projects.updateBillingInfo` to disable billing when spend exceeds the budget. See [GCP billing programmatic notifications](https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications).
+
+*Configures a $2,000 monthly billing budget with tiered threshold alerts at 50%, 90%, 100%, and 120% forecasted, publishing to Pub/Sub and email.*
 
 ```hcl
 resource "google_billing_budget" "data_platform" {
@@ -1881,8 +1913,6 @@ resource "google_billing_budget" "data_platform" {
 | `all_updates_rule.pubsub_topic` | No | Pub/Sub topic for programmatic budget alerts |
 | `all_updates_rule.monitoring_notification_channels` | No | List of notification channel IDs |
 
----
-
 ## Table Schema Reference
 
 Complete schema examples for a fact table and a dimension table, suitable for copy-paste and inline use in the `schema` argument of `google_bigquery_table`.
@@ -1890,6 +1920,8 @@ Complete schema examples for a fact table and a dimension table, suitable for co
 ### Fact table schema (Orders)
 
 An e-commerce orders fact table partitioned by `order_date` and clustered by `customer_id` and `product_id`. Uses `NUMERIC` type for monetary values to avoid floating-point rounding errors. The `metadata` column uses `JSON` type for flexible, schema-on-read attributes.
+
+*BigQuery fact table schema for an orders table: partitioned by `order_date`, clustered by `customer_id` and `product_id`, with monetary columns typed as `NUMERIC`.*
 
 ```hcl
 schema = jsonencode([
@@ -1984,6 +2016,8 @@ schema = jsonencode([
 
 A customer dimension table using SCD Type 1 (overwrites on change). The `lifetime_orders` and `lifetime_revenue_usd` columns are pre-computed aggregates updated by nightly ETL, trading freshness for query simplicity. The `is_active` boolean enables filtering inactive accounts.
 
+*BigQuery dimension table schema for customers: SCD Type 1, with pre-computed lifetime aggregates and an `is_active` boolean.*
+
 ```hcl
 schema = jsonencode([
   {
@@ -2073,17 +2107,15 @@ schema = jsonencode([
 ])
 ```
 
----
-
 ## Cross-References
 
 **Folder 07 — Terraform:**
 
-- IAM for pipeline service accounts — [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets)
-- VPC and private networking for Cloud SQL and Dataflow workers — [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking)
-- Cloud Run jobs that load data into BigQuery — [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run)
-- Variable definitions for `var.region`, `var.project_id`, `var.environment` — [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs)
-- Managing BigQuery dataset state after manual schema changes — [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management)
+- IAM for pipeline service accounts — [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets)
+- VPC and private networking for Cloud SQL and Dataflow workers — [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking)
+- Cloud Run jobs that load data into BigQuery — [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run)
+- Variable definitions for `var.region`, `var.project_id`, `var.environment` — [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs)
+- Managing BigQuery dataset state after manual schema changes — [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management)
 
 **Folder 06 — GCP (gcloud CLI equivalents):**
 
@@ -2098,4 +2130,5 @@ schema = jsonencode([
 - GCS buckets and lifecycle — [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)
 
 > [!info] Missing Folder 06 coverage
+>
 > No dedicated Dataflow or Cloud SQL pages exist in `06-GCP/`. These GCP services are only covered via Terraform blocks in this file.

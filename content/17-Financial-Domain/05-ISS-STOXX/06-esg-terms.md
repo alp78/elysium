@@ -4,7 +4,7 @@ description: "Supporting glossary for labelled-debt and climate-transition terms
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - esg
 aliases:

@@ -5,7 +5,7 @@ tags:
   - tsql
   - data-engineering
   - patterns
-  - schema-design
+  - schema
   - medallion
   - security
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
@@ -209,13 +209,7 @@ The live layout is a mostly-correct layered design with one clear weakness: `bro
 | `demo_table_count` in `dbo` | `14` | Warning in production, expected in a lab | Demos mixed with production-shaped objects. | Fine for this sandbox. For promotion to production, demos should move to an isolated `demo` or `lab` schema, not stay in `dbo`. |
 | `explicit_schema_permission_rows` | `0` across all four schemas | Warning in a production warehouse | No schema-level permissions are in effect. | The database is *ready* for schema-based security but is not using it yet. See [#Cross-Schema Security](#cross-schema-security) for the repair pattern. |
 
-> [!warning] `dbo` carrying the largest row count is a governance smell
->
-> In a production data platform, the layer schemas should dominate row counts because the business data lives there. When `dbo` carries more rows than `bronze + silver + gold` combined, it means the default schema has become a fallback dumping ground — and future grants, audits, and cleanup tasks will all suffer.
-
-> [!success] Keep `dbo` near-empty in a production platform
->
-> Treat `dbo` as a system-owned namespace only. Put every production-facing object in the layer schema that matches its maturity. Keep demos in an explicit `demo` schema so they can be dropped in one command without touching production-shaped tables.
+**`dbo` carrying the largest row count is a governance smell.** In a production data platform, the layer schemas should dominate row counts because the business data lives there. When `dbo` carries more rows than `bronze + silver + gold` combined, it means the default schema has become a fallback dumping ground — and future grants, audits, and cleanup tasks will all suffer. **Treat `dbo` as a system-owned namespace only.** Put every production-facing object in the layer schema that matches its maturity. Keep demos in an explicit `demo` schema so they can be dropped in one command without touching production-shaped tables. The full security argument for this rule is covered in [Cross-Schema Security](#cross-schema-security) below.
 
 ### Representative table layout by schema
 
@@ -945,13 +939,7 @@ Recommended defaults:
 - Keep metadata columns explicit and consistent across every landing table: `_ingested_at`, `_source_file`, `_batch_id`, `_index`. Fix the spelling once and never deviate.
 - Prefer predictable index names: `PK_<table>` for primary keys, `UX_<table>_<cols>` for unique indexes, `IX_<table>_<cols>` for non-unique indexes.
 
-> [!warning] Do not name schemas after tools
->
-> Schemas named `airflow`, `dbt`, `spark`, `fivetran`, `airbyte`, or any other ingestion/orchestration tool become meaningless the moment the tool is replaced. Tool names change on a timescale of years; data meaning should not.
-
-> [!success] Name schemas after the data boundary they represent
->
-> Good schema names describe *what the data is* or *who owns it*, not *how it was loaded*: `bronze`, `silver`, `gold`, `stg_yfinance`, `finance`, `audit`, `contract`. Every one of those names still makes sense if the underlying orchestrator is swapped out.
+**Never name schemas after tools** (`airflow`, `dbt`, `spark`, `fivetran`, `airbyte`) — tool names change on a timescale of years and the schema becomes meaningless the moment the tool is replaced. **Name schemas after the data boundary they represent**: `bronze`, `silver`, `gold`, `stg_yfinance`, `finance`, `audit`, `contract`. Every one of those names still makes sense if the underlying orchestrator is swapped out.
 
 ### Reserved words in table design
 
@@ -1331,7 +1319,7 @@ The 11 rows confirm the complete schema-level security surface for the two demo 
 | `class_desc` | `SCHEMA` | Expected | Every row in the output is at the schema class. | Confirms the `WHERE class = 3` filter worked — no accidental object-level or database-level rows leaking in. |
 | `permission_name` for `demo_etl_writer` | `SELECT`, `INSERT`, `UPDATE`, `DELETE` | Expected | Four individual rows per granted schema. | `GRANT` on multiple permissions is normalized to one row each in the catalog view. |
 | `state_desc = 'GRANT'` | 9 rows | Healthy | Standard grants across both roles. | Expected majority state for a well-adopted role model. |
-| `state_desc = 'DENY'` | 2 rows | Intentional | The dashboard role is hard-blocked from `bronze` and `silver`. | These rows are the core of the separation contract. Any attempt to read from those schemas will fail regardless of other role memberships. |
+| `state_desc = 'DENY'` | 2 rows | Issued explicitly via `DENY SELECT ON SCHEMA::bronze/silver TO demo_dashboard_reader` | The dashboard role is hard-blocked from `bronze` and `silver`. | These rows are the core of the separation contract. Any attempt to read from those schemas will fail regardless of other role memberships. Verify with the schema-permissions query above; an accidental DENY would appear as an unexpected row that was not part of the bootstrap batch. |
 | `state_desc = 'GRANT_WITH_GRANT_OPTION'` | 0 rows | Healthy | No role has been granted the ability to re-grant these permissions to others. | Appropriate — re-granting schema permissions should be a deliberate decision, not a side effect of the default pattern. |
 | `state_desc = 'REVOKE'` | 0 rows | Healthy | No column-exception revokes in effect. | Simple, unambiguous security surface. |
 
@@ -1345,7 +1333,12 @@ The 11 rows confirm the complete schema-level security surface for the two demo 
 
 ### Clean up the demo security objects
 
-After capturing the live security surface, every demo object created in this section must be cleaned up. The cleanup is a sequence of four steps: revoke the grants and denies, drop each role, and re-run the baseline query to confirm the schema-level permission surface is empty again.
+After capturing the live security surface, every demo object created in this section must be cleaned up. The cleanup is a sequence of four steps:
+
+1. **Revoke all grants and denies** — `REVOKE SELECT, INSERT, UPDATE, DELETE ON SCHEMA::<schema> FROM <role>` for each schema/role pair.
+2. **Drop the ETL role** — `DROP ROLE [demo_etl_writer]`.
+3. **Drop the dashboard role** — `DROP ROLE [demo_dashboard_reader]`.
+4. **Re-run the baseline permission query** — confirm the `sys.database_permissions` surface returns zero rows for the demo schemas.
 
 #### Revoke all demo grants and denies
 
@@ -1449,7 +1442,7 @@ The anti-patterns below are each individually tempting in the short term and eac
 
 ## Current Recommendation for `stoxx`
 
-The live `stoxx` database already has the right structural backbone — `bronze`, `silver`, and `gold` exist, they carry the majority of the real medallion flow, and the schema-layering audit at the top of this note confirmed the row distribution matches the intended layer semantics. The remaining work is about **using** that structure, not creating it.
+The live `stoxx` database already has the right structural backbone — `bronze`, `silver`, and `gold` exist, they carry the majority of the real medallion flow, and the schema-layering audit at the top of this note confirmed the row distribution matches the intended layer semantics. The remaining work is about **using** that structure — applying schema-level grants, enforcing the no-new-dbo-objects rule, and adopting schema-aligned roles — not creating it.
 
 - Keep `bronze`, `silver`, and `gold` as the primary production schemas. They are already in place with contiguous ids `5`, `6`, `7` and do not need any bootstrap work.
 - Stop letting `dbo` grow as a mixed-purpose default landing area. Every new production-facing object should land in a layer schema from day one; any migration of existing `dbo` objects into layer schemas should be treated as a planned refactor, not an opportunistic cleanup.

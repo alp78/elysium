@@ -4,7 +4,7 @@ description: "Comprehensive glossary of board structure, proxy voting, executive
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - corporate-governance
 aliases:

@@ -5,9 +5,6 @@ tags:
   - tsql
   - data-engineering
   - patterns
-  - bulk-loading
-  - pyodbc
-  - bcp
   - etl
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
 description: "Production loading patterns for SQL Server: full refresh, staged validation, upsert, bulk-load interfaces, and minimal-logging decisions."

@@ -1,6 +1,6 @@
 ---
-title: "03 - Terraform: IAM and Secrets"
-tags: [terraform, gcp, security, iam, secret-manager]
+title: "03 - IAM and Secrets"
+tags: [terraform, gcp, security, iam]
 aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, GCP IAM bindings terraform, google_service_account]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, conditional Datadog resources, and CI/CD service account setup."
 created: 2026-03-22
@@ -10,21 +10,22 @@ status: complete
 
 # Terraform IAM and Secrets
 
-> [!quote]
+> [!quote] Kelsey Hightower on raw cloud access
+>
 > "Give an agent raw cloud access and you get the same thing you get when you hand a developer raw Terraform — well-intentioned decisions made without context."
 >
 > — **Kelsey Hightower**, Twitter
 
 This note covers Terraform resources for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. The guiding principle is **one service account per workload** with least-privilege access — each workload gets its own service account with the minimum permissions it needs. Service accounts have no permissions by default and only gain access through explicit IAM bindings (covered in the IAM Bindings section). For the underlying GCP IAM concepts — roles, policies, and the principal hierarchy — see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
 
-> [!info] Assumed Variables
+> [!info] Assumed variables
 >
 > All HCL blocks in this note reference the following variables, defined elsewhere in the Terraform configuration:
 > - `var.project_id` — the GCP project ID
 > - `var.db_password` — the database password value (marked `sensitive` in the variable definition)
 > - `var.dd_api_key` — the Datadog API key (empty string disables Datadog resources)
 
-> [!info] Required APIs and Permissions
+> [!info] Required APIs and permissions
 >
 > Before creating these resources, the following APIs must be enabled on the GCP project:
 > - `iam.googleapis.com` — Identity and Access Management
@@ -79,13 +80,11 @@ flowchart LR
     S1 --> SM
 ```
 
----
-
 ## Service Accounts
 
 A **service account** is a non-human identity that a workload runs as. The standard GCP pattern is one service account per service, each with the minimum permissions it needs. The service accounts themselves have no permissions by default — they only gain access through explicit IAM bindings.
 
-> [!tip] Naming Convention
+> [!tip] Naming convention
 >
 > Prefix service account IDs with the project or workload name (e.g., `data-pipeline-pipeline`, `data-pipeline-dashboard`). This makes it easy to filter and audit accounts with `gcloud iam service-accounts list --filter="email~data-pipeline"`.
 
@@ -96,6 +95,8 @@ The `google_service_account` resource creates a GCP service account. Changing th
 #### google_service_account | Core workload accounts
 
 Three service accounts serve the core workloads: the data pipeline, the dashboard, and the orchestrator.
+
+*Create the pipeline workload service account.*
 
 ```hcl
 resource "google_service_account" "pipeline" {
@@ -122,6 +123,8 @@ The three core accounts and their workload assignments:
 
 For broader deployments, define one service account per workload type with descriptive names and descriptions.
 
+*Create the pipeline runner service account for Airflow DAGs and Cloud Run containers.*
+
 ```hcl
 resource "google_service_account" "pipeline_runner" {
   account_id   = "pipeline-runner"
@@ -129,6 +132,8 @@ resource "google_service_account" "pipeline_runner" {
   description  = "Used by Airflow DAGs and Cloud Run pipeline containers"
 }
 ```
+
+*Create the dashboard read-only service account for the Blazor frontend.*
 
 ```hcl
 resource "google_service_account" "dashboard" {
@@ -138,6 +143,8 @@ resource "google_service_account" "dashboard" {
 }
 ```
 
+*Create the Pub/Sub push invoker service account.*
+
 ```hcl
 resource "google_service_account" "pubsub_invoker" {
   account_id   = "pubsub-invoker"
@@ -145,15 +152,13 @@ resource "google_service_account" "pubsub_invoker" {
 }
 ```
 
-> [!danger] Never Use Primitive Roles
+> [!danger] Never use primitive roles
 >
 > Never assign `roles/editor` or `roles/owner` to service accounts. These grant thousands of permissions across all project resources.
 
-> [!success] Use Fine-Grained Predefined Roles
+> [!success] Use fine-grained predefined roles
 >
 > Assign the narrowest predefined role that covers the workload's needs (e.g., `roles/bigquery.dataEditor`, `roles/storage.objectCreator`). If no predefined role is narrow enough, create a custom role.
-
----
 
 ## IAM Bindings
 
@@ -166,7 +171,7 @@ IAM bindings connect a **member** (service account) to a **role** (set of permis
 
 Resource-level bindings are more restrictive — they apply only to one resource, not the whole project — and don't appear on the project IAM page. You must inspect the specific resource's permissions tab.
 
-> [!info] Resource vs Project IAM
+> [!info] Resource vs project IAM
 >
 > `data-pipeline-pipeline` and `data-pipeline-dashboard` appear to have "no roles" in the GCP Console's project IAM page, but they have resource-level bindings on specific secrets. This is intentional and more secure — they can only access their specific secrets, not any other project resources.
 
@@ -177,6 +182,8 @@ The `google_secret_manager_secret_iam_member` resource grants a single role to a
 #### google_secret_manager_secret_iam_member | Pipeline secret access
 
 Grants the pipeline service account read access to the database password secret. The binding is scoped to this one secret — the pipeline cannot access any other secret in the project.
+
+*Grant secret read access to the pipeline SA on the db-password secret.*
 
 ```hcl
 resource "google_secret_manager_secret_iam_member" "pipeline_secret" {
@@ -209,6 +216,8 @@ The `google_project_iam_member` resource grants a single role to a single member
 
 The Airflow service account needs project-level roles to trigger and monitor Cloud Run jobs.
 
+*Grant the Airflow SA the Cloud Run invoker role at project level.*
+
 ```hcl
 resource "google_project_iam_member" "airflow_run_invoker" {
   project = var.project_id
@@ -235,6 +244,8 @@ The three roles assigned to the Airflow account:
 
 In broader deployments, grant specific roles to each service account — never `roles/editor` or `roles/owner`.
 
+*Grant the pipeline SA BigQuery data editor access at project level.*
+
 ```hcl
 resource "google_project_iam_member" "pipeline_bq_editor" {
   project = var.project_id
@@ -243,6 +254,8 @@ resource "google_project_iam_member" "pipeline_bq_editor" {
 }
 ```
 
+*Grant the dashboard SA BigQuery read-only access at project level.*
+
 ```hcl
 resource "google_project_iam_member" "dashboard_bq_viewer" {
   project = var.project_id
@@ -250,6 +263,8 @@ resource "google_project_iam_member" "dashboard_bq_viewer" {
   member  = "serviceAccount:${google_service_account.dashboard.email}"
 }
 ```
+
+*Grant the pipeline SA GCS object creator access at project level.*
 
 ```hcl
 resource "google_project_iam_member" "pipeline_gcs_writer" {
@@ -280,21 +295,19 @@ resource "google_project_iam_member" "pipeline_gcs_writer" {
 > ```
 > This reduces repetition and makes role additions a single-line change in the `locals` block.
 
----
-
 ## Secret Manager
 
 Secret Manager uses a **two-level structure**: the **secret** (a named container) and one or more **versions** (the actual values). This is why there are two Terraform resources per secret — one for the container, one for the value. The container defines the name and replication policy; the version holds the actual sensitive data. You can have multiple versions (e.g., after rotating a password) and Cloud Run references `version = "latest"` to always get the newest one. For the operational side of working with secrets — rotation, access auditing, and application integration patterns — see [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management).
 
-> [!danger] Secret Data in Terraform State
+> [!danger] Secret data in Terraform state
 >
 > The `secret_data` argument value is stored in **plaintext** in the Terraform state file. Anyone with read access to the state can read all secret values.
 
-> [!success] Encrypt State at Rest
+> [!success] Encrypt state at rest
 >
-> Always use a remote backend (GCS) with encryption enabled and restrict access to the state bucket. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for bucket configuration and [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) for backend setup.
+> Always use a remote backend (GCS) with encryption enabled and restrict access to the state bucket. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for bucket configuration and [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) for backend setup.
 
-> [!info] Provider v5.0+ Replication Syntax
+> [!info] Provider v5.0+ replication syntax
 >
 > The `replication { auto {} }` block syntax replaced the older `replication { automatic = true }` in Google provider v5.0. If upgrading from an older provider version, update the replication block to avoid deprecation warnings.
 
@@ -305,6 +318,8 @@ The `google_secret_manager_secret` resource creates a secret container in GCP. C
 #### google_secret_manager_secret | Auto-replicated secret container
 
 Creates a secret with automatic replication — GCP replicates the secret data across multiple regions for durability.
+
+*Create an auto-replicated secret container for the database password.*
 
 ```hcl
 resource "google_secret_manager_secret" "db_password" {
@@ -321,11 +336,11 @@ resource "google_secret_manager_secret" "db_password" {
 | `secret_id` | Yes | Name of the secret in GCP. Used by Cloud Run to reference it: `secret = "data-pipeline-db-password"`. |
 | `replication.auto` | Yes | Automatic replication — GCP manages region placement. The alternative `user_managed` lets you specify exact regions for data residency requirements. |
 
-> [!warning] Missing prevent_destroy on Production Secrets
+> [!warning] Missing `prevent_destroy` on production secrets
 >
 > Without `lifecycle { prevent_destroy = true }`, a `terraform destroy` or accidental removal from config will permanently delete the secret and all its versions.
 
-> [!success] Protect Stateful Resources
+> [!success] Protect stateful resources
 >
 > Add a lifecycle block to secrets holding production credentials:
 > ```hcl
@@ -347,6 +362,8 @@ The `google_secret_manager_secret_version` resource creates a version within a s
 
 Stores the database password as a secret version. The value comes from a sensitive variable — never hardcode secrets in HCL files.
 
+*Store the database password as an immutable secret version.*
+
 ```hcl
 resource "google_secret_manager_secret_version" "db_password" {
   secret      = google_secret_manager_secret.db_password.id
@@ -359,15 +376,15 @@ resource "google_secret_manager_secret_version" "db_password" {
 | `secret` | Yes | The parent secret this version belongs to. |
 | `secret_data` | Yes | The actual secret value. Terraform stores this in state (encrypted in the GCS backend). Cloud Run reads it at container startup via `value_source.secret_key_ref`. |
 
----
-
 ## Conditional Datadog Resources
 
-The Datadog integration uses a conditional creation pattern — resources are only created when the `var.dd_api_key` variable is non-empty. This uses Terraform's `count` meta-argument as a conditional: `count = 0` skips the resource entirely, `count = 1` creates it. See [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) for the full pattern.
+The Datadog integration uses a conditional creation pattern — resources are only created when the `var.dd_api_key` variable is non-empty. This uses Terraform's `count` meta-argument as a conditional: `count = 0` skips the resource entirely, `count = 1` creates it. See [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) for the full pattern.
 
 ### google_service_account | Conditional Datadog account
 
 The Datadog service account is only created if a Datadog API key is provided.
+
+*Create the Datadog service account only when an API key is provided.*
 
 ```hcl
 resource "google_service_account" "datadog" {
@@ -393,13 +410,15 @@ The Datadog service account receives three read-only roles for observability:
 | `roles/compute.viewer` | Read Compute Engine metadata (VM names, zones, machine types). |
 | `roles/cloudasset.viewer` | Read Cloud Asset Inventory (resource discovery across the project). |
 
-> [!info] No Write or Admin Roles
+> [!info] No write or admin roles
 >
 > The Datadog integration can only observe — it cannot modify any resource. This is the correct least-privilege posture for a monitoring integration.
 
 ### google_secret_manager_secret_version | Conditional Datadog API key
 
 The secret container (`dd_api_key`) is always created, but the version (the actual key value) is only created when `dd_api_key` is provided. This means the secret exists as a placeholder even when Datadog is disabled — avoiding a Terraform error if you later enable it.
+
+*Store the Datadog API key as a secret version only when provided.*
 
 ```hcl
 resource "google_secret_manager_secret_version" "dd_api_key" {
@@ -409,23 +428,23 @@ resource "google_secret_manager_secret_version" "dd_api_key" {
 }
 ```
 
----
-
 ## CI/CD Service Account
 
 A dedicated service account for GitHub Actions CI/CD pipelines. For the full GitHub Actions workflow that uses this account, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
 
-> [!warning] SA Key Export for CI
+> [!warning] SA key export for CI
 >
 > The traditional approach stores a JSON key as a GitHub Actions secret (`GCP_SA_KEY`). SA keys are long-lived credentials that can be exfiltrated and are difficult to audit.
 
-> [!success] Prefer Workload Identity Federation
+> [!success] Prefer Workload Identity Federation (WIF)
 >
 > Workload Identity Federation (WIF) lets GitHub Actions authenticate directly without exporting a key. The GitHub OIDC token is exchanged for short-lived GCP credentials, eliminating the need for stored secrets. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for WIF configuration.
 
 ### google_service_account | CI/CD account
 
 Creates the CI/CD service account used by GitHub Actions.
+
+*Create the CI/CD service account for GitHub Actions deployments.*
 
 ```hcl
 resource "google_service_account" "ci" {
@@ -438,6 +457,8 @@ resource "google_service_account" "ci" {
 
 The CI account needs two project-level roles: push images to Artifact Registry and deploy to Cloud Run.
 
+*Grant the CI SA Artifact Registry writer access at project level.*
+
 ```hcl
 resource "google_project_iam_member" "ci_registry" {
   project = var.project_id
@@ -445,6 +466,8 @@ resource "google_project_iam_member" "ci_registry" {
   member  = "serviceAccount:${google_service_account.ci.email}"
 }
 ```
+
+*Grant the CI SA Cloud Run developer access at project level.*
 
 ```hcl
 resource "google_project_iam_member" "ci_run" {
@@ -463,6 +486,8 @@ resource "google_project_iam_member" "ci_run" {
 
 When GitHub Actions deploys a Cloud Run job, it must specify which service account the job runs as. The `roles/iam.serviceAccountUser` role allows the CI account to assign the pipeline identity without being able to use the pipeline account's permissions directly.
 
+*Grant the CI SA act-as (serviceAccountUser) permission on the pipeline SA.*
+
 ```hcl
 resource "google_service_account_iam_member" "ci_act_as_pipeline" {
   service_account_id = google_service_account.pipeline.name
@@ -477,11 +502,9 @@ resource "google_service_account_iam_member" "ci_act_as_pipeline" {
 | `role` | Yes | `roles/iam.serviceAccountUser` grants the "act as" permission. Visible in GCP under the target SA → Permissions → "Principals with access to this service account." |
 | `member` | Yes | The principal receiving the act-as permission. |
 
-> [!info] Least Privilege Chain
+> [!info] Least privilege chain
 >
 > The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads.
-
----
 
 ## Verification Commands
 
@@ -493,6 +516,8 @@ These `gcloud` commands verify the resources created by the Terraform configurat
 
 Lists all service accounts matching the project prefix.
 
+*List all service accounts with the data-pipeline prefix.*
+
 ```bash
 gcloud iam service-accounts list --filter="email~data-pipeline"
 ```
@@ -501,6 +526,8 @@ gcloud iam service-accounts list --filter="email~data-pipeline"
 
 Shows which principals can impersonate (act as) the pipeline service account.
 
+*Verify which principals hold act-as permission on the pipeline SA.*
+
 ```bash
 gcloud iam service-accounts get-iam-policy data-pipeline-pipeline@data-platform-prod.iam.gserviceaccount.com
 ```
@@ -508,6 +535,8 @@ gcloud iam service-accounts get-iam-policy data-pipeline-pipeline@data-platform-
 #### View project-level roles for a service account
 
 Shows the project-level IAM roles bound to the Airflow service account.
+
+*Verify the project-level roles assigned to the Airflow SA.*
 
 ```bash
 gcloud projects get-iam-policy data-platform-prod \
@@ -522,15 +551,21 @@ gcloud projects get-iam-policy data-platform-prod \
 
 Lists all secrets matching the project prefix.
 
+*List all secrets with the data-pipeline prefix.*
+
 ```bash
 gcloud secrets list --filter="name~data-pipeline"
 ```
 
 #### View secret versions
 
+*List all versions of the database password secret.*
+
 ```bash
 gcloud secrets versions list data-pipeline-db-password
 ```
+
+*List all versions of the Datadog API key secret.*
 
 ```bash
 gcloud secrets versions list data-pipeline-dd-api-key
@@ -540,25 +575,27 @@ gcloud secrets versions list data-pipeline-dd-api-key
 
 Shows which principals have access to the database password secret.
 
+*Verify which principals hold secretAccessor on the db-password secret.*
+
 ```bash
 gcloud secrets get-iam-policy data-pipeline-db-password
 ```
 
 #### Access the latest secret value
 
-> [!danger] Prints Secret to Terminal
+> [!danger] Prints secret to terminal
 >
 > This command outputs the secret value in plaintext. Only use in secure environments — never in shared terminals, CI logs, or screen recordings.
 
-> [!success] Use Secret References Instead
+> [!success] Use secret references instead
 >
 > In application code and Cloud Run, reference secrets via `value_source.secret_key_ref` or environment variable injection rather than accessing the value directly.
+
+*Access the latest version of the database password secret (outputs plaintext — secure environments only).*
 
 ```bash
 gcloud secrets versions access latest --secret=data-pipeline-db-password
 ```
-
----
 
 ## Related
 
@@ -569,11 +606,11 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS backend for Terraform state encryption
 
 **Terraform references:**
-- [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) — the VMs assigned service accounts
-- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — how secrets are injected into Cloud Run containers
-- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — the `count` pattern for optional Datadog resources
-- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — the CI service account's primary use case
-- [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) — remote backend configuration for state encryption
+- [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute) — the VMs assigned service accounts
+- [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — how secrets are injected into Cloud Run containers
+- [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — the `count` pattern for optional Datadog resources
+- [registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci) — the CI service account's primary use case
+- [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — remote backend configuration for state encryption
 
 **CI/CD integration:**
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflow using the CI service account

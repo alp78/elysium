@@ -1,6 +1,6 @@
 ---
 title: "02 - Windows Scheduling"
-tags: [orchestration, scheduling, task-scheduler]
+tags: [orchestration, scheduling]
 aliases:
   - Task Scheduler
   - schtasks

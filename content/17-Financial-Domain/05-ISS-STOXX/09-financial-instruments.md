@@ -4,7 +4,7 @@ description: "Comprehensive glossary of derivatives, ETFs, structured products, 
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - financial-metrics
 aliases:

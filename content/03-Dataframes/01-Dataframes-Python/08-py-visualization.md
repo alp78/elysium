@@ -1,6 +1,6 @@
 ---
 title: "08 - Visualization - Python"
-tags: [python, pandas, polars, dataframes, matplotlib, seaborn, bokeh, plotly]
+tags: [python, pandas, polars, dataframes, visualization]
 aliases:
   - matplotlib, seaborn, bokeh, plotting, charts
 description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, bokeh, plotly). Side-by-side executable examples with cell outputs and interactive embeds."

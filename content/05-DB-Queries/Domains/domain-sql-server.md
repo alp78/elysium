@@ -2,7 +2,7 @@
 title: "Domain: SQL Server"
 tags:
   - domain
-  - db-queries
+  - database
 ---
 
 # SQL Server

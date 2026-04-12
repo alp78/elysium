@@ -4,7 +4,7 @@ description: "Comprehensive glossary of STOXX, DAX, and EURO STOXX index familie
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - index-construction
 aliases:

@@ -1,6 +1,6 @@
 ---
 title: "01 - Observability Strategy Matrix"
-tags: [observability, monitoring, alerting, dashboards, sla, datadog, gcp, cloud-monitoring, cloud-logging, sql-server, airflow, bigquery, cloud-run, pubsub, firestore, pipeline, on-call]
+tags: [observability, monitoring, alerting, dashboards, sla, datadog, gcp, sql-server, airflow, bigquery, pipeline, on-call]
 aliases: [monitoring strategy, what to monitor, observability matrix]
 description: "What to monitor for every component: metrics, logs, alerts, dashboards — the strategy layer above tool configuration."
 created: 2026-03-29

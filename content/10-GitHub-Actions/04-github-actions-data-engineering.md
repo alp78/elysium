@@ -463,7 +463,7 @@ jobs:
 
 ## Terraform Automation
 
-These workflows implement the plan-on-PR, apply-on-merge pattern for infrastructure changes. The plan output is posted as a PR comment for review. On merge to `main`, the apply runs automatically against the `production` environment. For Terraform fundamentals, see [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
+These workflows implement the plan-on-PR, apply-on-merge pattern for infrastructure changes. The plan output is posted as a PR comment for review. On merge to `main`, the apply runs automatically against the `production` environment. For Terraform fundamentals, see [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy).
 
 ### Terraform Plan as PR Comment
 
@@ -1586,7 +1586,7 @@ steps:
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker build/push commands used in deploy workflows
 
 **Terraform (Chapter 07):**
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform plan/apply lifecycle
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — Terraform plan/apply lifecycle
 
 **GCP (Chapter 06):**
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM fundamentals and Workload Identity Federation

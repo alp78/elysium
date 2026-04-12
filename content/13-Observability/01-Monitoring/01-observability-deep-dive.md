@@ -1,6 +1,6 @@
 ---
 title: "01 - Observability Deep Dive"
-tags: [monitoring, observability, python, sql, datadog, polars]
+tags: [monitoring, observability, python, sql, datadog]
 aliases: [DataDog pipeline monitoring, data lineage, data catalog, data quality framework, schema drift, data drift, entitlement, Great Expectations, data freshness]
 description: "Observability deep dive for data engineering: DataDog custom metrics and APM traces for pipeline health, data freshness tracking, data lineage implementation, data catalog tooling, data quality frameworks (Great Expectations + SQL checks), and automated schema and statistical drift detection for financial pipelines."
 created: 2026-03-22

@@ -1,6 +1,9 @@
 ---
 title: "02 - Firestore for Data Engineering — C#"
-tags: [csharp, nosql, gcp, firestore, fundamentals]
+tags:
+  - nosql
+  - gcp
+  - firestore
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
 created: 2026-03-22
@@ -10,7 +13,8 @@ status: complete
 
 # Firestore for Data Engineering — C#
 
-> [!quote]
+> [!quote] Edgar F. Codd on database value
+>
 > "The value of a database is in direct proportion to the ease with which data can be stored and retrieved."
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
@@ -113,6 +117,11 @@ Initializes the Firestore SDK and REST clients, defines field extraction and ind
 
 #### C# | suppress CS1701 assembly version warnings
 
+**When to run:** First cell in every C# Polyglot Notebook session using NuGet packages on .NET 10.
+**Trigger:** Opening a new notebook or restarting the kernel.
+**Context:** Kernel configuration — modifies warning level via reflection on `CSharpKernel`. No side effects on Firestore state.
+**Purpose:** Eliminate CS1701 noise from subsequent output cells so real errors are visible.
+
 The Polyglot Notebooks kernel emits CS1701 assembly version warnings when loading NuGet packages on .NET 10. This cell suppresses them globally so subsequent output stays clean.
 
 *Suppress CS1701 assembly version warnings in the Polyglot Notebooks C# kernel.*
@@ -138,7 +147,7 @@ Warnings suppressed
 ```
 
 
-### SDK and REST Client Initialization
+### C# | Firestore SDK + REST | client initialization
 
 This cell:
 
@@ -169,6 +178,11 @@ This cell:
 > - **REST client** — used for collection reads, filtered queries, and collection group queries. This is the .NET 10 workaround; in .NET 8/9 the SDK handles everything.
 
 #### C# | Firestore SDK + REST | load packages, create FirestoreDb, HTTP client, and OAuth2 token
+
+**When to run:** Once per session, immediately after the warning suppression cell.
+**Trigger:** Starting a new notebook session or after kernel restart.
+**Context:** Session initialization — sets credentials, creates SDK client and REST HTTP client. Must run before any read or write cell.
+**Purpose:** Provide both `db` (SDK) and `http` + `token` (REST) clients that all subsequent cells depend on.
 
 *Load NuGet packages, construct `FirestoreDb`, an `HttpClient`, and an OAuth2 access token for REST calls.*
 
@@ -205,11 +219,16 @@ Connected to Firestore (SDK + REST).
 ```
 
 
-### SDK-Only Connection — `FirestoreDbBuilder`
+### C# | Firestore SDK | connect to a named database — `FirestoreDbBuilder`
 
 The setup above creates both an SDK client and a REST client for the `(default)` database. When targeting a **named database** (e.g. `main`), use `FirestoreDbBuilder` with an explicit `DatabaseId`. This approach is SDK-only and does not require a REST client.
 
 #### C# | FirestoreDbBuilder | connect to a named database
+
+**When to run:** When targeting a named database (not `(default)`) in a multi-database project.
+**Trigger:** Project uses named databases (e.g., `main`, `staging`, `analytics`) instead of the default.
+**Context:** SDK-only; no REST equivalent. Read-only setup — does not modify Firestore state.
+**Purpose:** Return a `FirestoreDb` pointing to the named database so all subsequent SDK calls target the correct instance.
 
 *Connect to a named Firestore database using `FirestoreDbBuilder` with `DatabaseId`.*
 
@@ -217,7 +236,7 @@ The setup above creates both an SDK client and a REST client for the `(default)`
 var dbMain = new FirestoreDbBuilder { ProjectId = "bq-wh-nb", DatabaseId = "main" }.Build();
 ```
 
-### REST Query Helper — `RestQuery()`
+### C# | Firestore REST API | query helper — `RestQuery()`
 
 Firestore REST API uses **structured queries** — a JSON body describing the filter,
 ordering, and limit. This helper sends the query and returns a list of parsed document elements.
@@ -232,6 +251,11 @@ This cell:
 Used by all filter/query cells below.
 
 #### C# | REST API | define RestQuery() helper
+
+**When to run:** Once per session, after client initialization.
+**Trigger:** Session setup — required before any cell that uses `RestQuery()`.
+**Context:** Defines a local helper function in the notebook kernel. No Firestore writes. Used by all filtered query cells below.
+**Purpose:** Provide a reusable `RestQuery(queryJson)` wrapper that handles POST, JSON parsing, and document extraction so query cells stay concise.
 
 *Define `RestQuery()` to POST a structured query to `runQuery` and return the parsed document fields.*
 
@@ -260,7 +284,7 @@ RestQuery() helper loaded.
 ```
 
 
-### Field Extraction Helpers
+### C# | Firestore REST API | field extraction helpers
 
 Firestore REST API wraps every field value in a type envelope:
 
@@ -275,6 +299,11 @@ These helpers unwrap the type envelope and return the native C# value.
 Without them, every field access would need 2 levels of `TryGetProperty()`.
 
 #### C# | REST API | define GetStr, GetDbl, GetBool, GetInt field helpers
+
+**When to run:** Once per session, after client initialization and before any REST read cell.
+**Trigger:** Session setup — all REST field extraction depends on these helpers.
+**Context:** Defines local helper functions in the notebook kernel. Pure read helpers; no Firestore writes.
+**Purpose:** Unwrap Firestore's REST type envelopes (`stringValue`, `doubleValue`, `booleanValue`, `integerValue`) into native C# types without boilerplate in every query cell.
 
 *Define `GetStr`, `GetDbl`, `GetBool`, and `GetInt` helpers that unwrap the Firestore REST type envelope.*
 
@@ -303,7 +332,7 @@ Field extraction helpers loaded: GetStr, GetDbl, GetBool, GetInt
 ```
 
 
-### Index Utility — `EnsureIndex()`
+### C# | Firestore Admin REST API | index utility — `EnsureIndex()`
 
 Firestore requires **explicit indexes** for:
 - **Compound queries**: filtering on two fields (e.g., `country == "Germany"` AND `price < 200`)
@@ -321,6 +350,11 @@ Called automatically before queries that need an index.
 
 #### C# | Admin REST API | set base URL for index management
 
+**When to run:** Once per session, before any cell that calls `EnsureIndex()` or `EnsureFieldExemption()`.
+**Trigger:** Session setup — required by the index management utilities.
+**Context:** Variable assignment only; no HTTP calls made. Admin API requires the same ADC credentials as the data API.
+**Purpose:** Store the Admin API base URL so index utility functions reference the correct project and database without repeating the path.
+
 The Firestore Admin REST API manages index creation and field exemptions. The base URL encodes both the project ID and database name.
 
 *Set the Admin API base URL used by `EnsureIndex()` and `EnsureFieldExemption()`.*
@@ -331,6 +365,11 @@ var adminBaseUrl = "https://firestore.googleapis.com/v1/"
 ```
 
 #### C# | Admin REST API | EnsureIndex() — create composite or collection group indexes
+
+**When to run:** Before the first query that requires a composite or collection group index, and in session setup.
+**Trigger:** A compound filter or collection group query is about to run and the index may not exist yet.
+**Context:** Admin REST API call — creates index resources in Firestore. Idempotent; safe to call repeatedly. Polls until index reaches `READY` state before returning.
+**Purpose:** Guarantee the required index exists and is ready before the dependent query executes, preventing `FAILED_PRECONDITION` errors.
 
 Routes to the correct method based on field count and scope. Multi-field indexes use POST to the indexes endpoint. Single-field collection group indexes use the field exemption PATCH endpoint. Idempotent — safe to call multiple times.
 
@@ -403,6 +442,11 @@ async Task EnsureIndex(string collection,
 ```
 
 #### C# | Admin REST API | EnsureFieldExemption() — single-field collection group exemption
+
+**When to run:** Before any collection group query that filters or orders by a single field across subcollections.
+**Trigger:** A `CollectionGroup` query is planned on a field that Firestore has not auto-indexed for `COLLECTION_GROUP` scope.
+**Context:** Admin REST PATCH call — modifies field index config. Preserves existing `COLLECTION`-scoped indexes before applying changes. Idempotent.
+**Purpose:** Enable cross-subcollection queries on a specific field without creating a full composite index, satisfying Firestore's collection group query requirements.
 
 Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries, a field exemption must be created via PATCH. This function checks if the exemption already exists and waits if it is still building.
 
@@ -519,11 +563,16 @@ EnsureIndex() utility loaded.
 ```
 
 
-### Verify Connection — List Collections
+### C# | Firestore REST API | verify connection — list collections
 
 Run this after setup to confirm the connection works and data is populated.
 
 #### C# | REST API | count documents per collection
+
+**When to run:** After client initialization to confirm the connection and data population are correct.
+**Trigger:** Session startup or after seeding/resetting the Firestore dataset.
+**Context:** REST GET calls — read-only, no state changes. Requires `http` client and `baseUrl` from setup.
+**Purpose:** Verify connectivity to Firestore and confirm expected document counts in each collection before running queries.
 
 Calls the REST API for each known collection with `pageSize=1000`, counts documents in each JSON response, and prints a summary table.
 
@@ -555,9 +604,28 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
 
 Covers single-document reads, multi-document fetches, and full-collection list operations using the SDK on .NET 8/9 and the REST API on .NET 10.
 
-### Get a Single Document by ID
+**`stocks` collection — field reference**
+
+| Field | Type | Description |
+|---|---|---|
+| `short_name` | string | Display name of the stock (e.g., "ASML HOLDING") |
+| `sector` | string | Industry classification (e.g., "Technology", "Financial Services") |
+| `country` | string | Country of listing (e.g., "Germany", "France", "Netherlands") |
+| `current_price` | float | Most recent closing price in EUR |
+| `is_active` | bool | Whether the stock is currently in the index |
+| `index_weight` | float | Proportional weight in the Euro Stoxx 50 index (all weights sum to 1.0) |
+| `symbol` | string | Ticker symbol used as the document ID (e.g., "ASML.AS") |
+| `scores` | map | Nested map with `composite` (float), `momentum` (float), `value` (float), `sentiment` (float), `rank` (int) |
+| `tags` | array | List of lowercase classification tags (e.g., `["technology", "netherlands", "euro_stoxx_50"]`) |
+
+### C# | Firestore SDK | get a single document by ID
 
 #### C# | Firestore SDK | fetch a document and read its fields
+
+**When to run:** When you need to inspect a specific stock's flat fields, nested map, and array in a single round-trip.
+**Trigger:** Ad-hoc inspection, pipeline health check, or debugging a specific stock document.
+**Context:** SDK read on `.NET 8/9` (and single-document reads work on .NET 10). Read-only; no state changes.
+**Purpose:** Demonstrate full field-type coverage: flat string/double/bool, nested `scores` map via `GetValue<Dictionary>`, and `tags` array.
 
 This cell:
 
@@ -598,11 +666,16 @@ Document: ASML.AS
 ```
 
 
-### List Documents (Top 10)
+### C# | Firestore SDK + REST | list documents (top 10)
 
 Both the `Google.Cloud.Firestore` SDK and the REST API can list documents from a collection. The SDK version is more concise; the REST version works on .NET 10 where SDK collection reads are broken.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | list first 10 documents
+
+**When to run:** To spot-check stock data or verify collection population on .NET 8/9.
+**Trigger:** Collection health check or exploratory data inspection at the start of a session.
+**Context:** SDK collection read — works on .NET 8/9; fails on .NET 10 due to `AsyncInterfaces` issue. Read-only.
+**Purpose:** List the first 10 stock documents with symbol, name, and price to confirm expected data is present.
 
 Fetches the first 10 stock documents using `Limit(10).GetSnapshotAsync()` and prints symbol, name, and price from each snapshot.
 
@@ -632,7 +705,12 @@ foreach (var doc in snapshot.Documents)
   BAS.DE       BASF SE              price=   47.74
 ```
 
-#### Firestore REST API
+#### C# | REST API | list first 10 documents
+
+**When to run:** To spot-check stock data on .NET 10 where SDK collection reads are unavailable.
+**Trigger:** Collection health check or exploratory data inspection at the start of a .NET 10 session.
+**Context:** REST GET call — works on all .NET versions including .NET 10. Read-only.
+**Purpose:** List the first 10 stock documents with symbol, name, and price as the .NET 10-safe alternative to the SDK version above.
 
 Calls REST API `GET .../documents/stocks?pageSize=10`, parses the JSON response, and extracts symbol, short_name, and price from each document.
 
@@ -668,9 +746,14 @@ if (listJson.RootElement.TryGetProperty("documents", out var docs))
   BAS.DE       BASF SE              price=   47.74
 ```
 
-### Get Multiple Documents by ID
+### C# | Firestore SDK | get multiple documents by ID
 
 #### C# | Firestore SDK | fetch multiple documents individually
+
+**When to run:** When you need specific documents by known ID and round-trip count is acceptable.
+**Trigger:** Targeted multi-document lookup by symbol list — not a filtered query.
+**Context:** SDK individual `GetSnapshotAsync()` calls in a loop — works on .NET 10 for single-document reads. Read-only.
+**Purpose:** Fetch 3 specific stock documents by symbol and print name and price; demonstrate that .NET 10 supports individual document reads via the SDK even when collection reads fail.
 
 This cell:
 
@@ -705,11 +788,24 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
 
 Firestore supports equality, range, `IN`, `NOT-IN`, `array_contains`, and `array_contains_any` operators. Each query returns at most **1 MB** of data or **1,000 documents**, whichever limit is reached first. For larger result sets, use pagination with cursors.
 
+| Operator | SDK Method | REST Operator | Description | Index Requirement |
+|---|---|---|---|---|
+| `==` | `WhereEqualTo()` | `EQUAL` | Exact equality match | Auto-indexed |
+| `!=` | `WhereNotEqualTo()` | `NOT_EQUAL` | Not equal | Auto-indexed |
+| `<` | `WhereLessThan()` | `LESS_THAN` | Less than | Auto-indexed; composite if combined with `OrderBy` on a different field |
+| `>` | `WhereGreaterThan()` | `GREATER_THAN` | Greater than | Same as `<` |
+| `<=` | `WhereLessThanOrEqualTo()` | `LESS_THAN_OR_EQUAL` | Less than or equal | Same as `<` |
+| `>=` | `WhereGreaterThanOrEqualTo()` | `GREATER_THAN_OR_EQUAL` | Greater than or equal | Same as `>` |
+| `in` | `WhereIn()` | `IN` | Matches any value in list (max 30) | Auto-indexed; composite with `OrderBy` |
+| `not-in` | `WhereNotIn()` | `NOT_IN` | Excludes matching values (max 10) | Auto-indexed |
+| `array_contains` | `WhereArrayContains()` | `ARRAY_CONTAINS` | Array field contains value | Auto-indexed; one per query |
+| `array_contains_any` | `WhereArrayContainsAny()` | `ARRAY_CONTAINS_ANY` | Array contains any from list (max 30) | Auto-indexed; one per query |
+
 > [!info] Cross-Engine — No JOINs in Firestore
 >
 > Firestore has no JOIN support. For relational-style queries across collections, denormalize the data model or perform client-side joins. BigQuery and SQL Server support all standard JOIN types; SQL Server adds `CROSS APPLY` / `OUTER APPLY`.
 
-### Equality Filter
+### C# | Firestore SDK + REST | equality filter
 
 > [!warning] Reads Billed per Document Returned
 >
@@ -721,7 +817,12 @@ Firestore supports equality, range, `IN`, `NOT-IN`, `array_contains`, and `array
 
 Both the SDK and REST API support equality filters. The SDK uses `WhereEqualTo()`; the REST API uses a `fieldFilter` with `EQUAL` operator.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | equality filter — stocks by country
+
+**When to run:** To list all stocks belonging to a specific country on .NET 8/9.
+**Trigger:** Country-level breakdown or validation that all German constituents are present.
+**Context:** SDK `WhereEqualTo` query — collection read; fails on .NET 10. Read-only; uses auto-index.
+**Purpose:** Return all stocks matching a single-field equality filter ordered by Firestore's default document ID order.
 
 Filters stocks where `country == "Germany"` using `WhereEqualTo()` and limits to 15 results.
 
@@ -759,7 +860,12 @@ foreach (var doc in germanDocs.Documents)
   SIE.DE       Industrials
 ```
 
-#### Firestore REST API
+#### C# | REST API | equality filter — stocks by country
+
+**When to run:** To list all stocks belonging to a specific country on .NET 10 (or as a REST reference pattern).
+**Trigger:** Country-level breakdown or constituent validation — .NET 10-safe workaround for the SDK version above.
+**Context:** REST POST to `runQuery` — works on all .NET versions. Read-only; uses auto-index.
+**Purpose:** Demonstrate the REST `fieldFilter` + `EQUAL` operator equivalent of `WhereEqualTo()` for single-field equality queries.
 
 Sends a structured query to the REST API filtering `country == "Germany"` and returns German stocks with their sector.
 
@@ -807,11 +913,16 @@ foreach (var fdoc in await RestQuery(germanQuery))
   SIE.DE       Industrials
 ```
 
-### Range Filter with Ordering
+### C# | Firestore SDK + REST | range filter with ordering
 
 Both the SDK and REST API support range filters with ordering. The SDK chains `WhereGreaterThan()` with `OrderByDescending()`; the REST API uses `GREATER_THAN` operator and `orderBy` in the structured query.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | range filter with ordering — price above threshold
+
+**When to run:** To identify high-price constituents for portfolio concentration checks or display on .NET 8/9.
+**Trigger:** Price threshold screening — e.g., flagging stocks above a configurable price band.
+**Context:** SDK `WhereGreaterThan` + `OrderByDescending` — requires a composite index when ordering on the same filtered field. Read-only.
+**Purpose:** Return stocks above a price threshold in descending price order for high-value constituent inspection.
 
 Filters stocks where `current_price > 500` and orders by price descending.
 
@@ -841,7 +952,12 @@ foreach (var doc in rangeDocs.Documents)
   MUV2.DE      price=526.20
 ```
 
-#### Firestore REST API
+#### C# | REST API | range filter with ordering — price above threshold
+
+**When to run:** To identify high-price constituents on .NET 10 or as a REST reference pattern.
+**Trigger:** Price threshold screening — .NET 10-safe alternative to the SDK version above.
+**Context:** REST POST to `runQuery` with `GREATER_THAN` operator and `orderBy` clause. Read-only.
+**Purpose:** Demonstrate the REST structured query equivalent of `WhereGreaterThan` + `OrderByDescending` for range filters with sorting.
 
 Filters stocks where `current_price > 500` and orders by price descending using a structured query.
 
@@ -881,11 +997,16 @@ foreach (var fdoc in await RestQuery(rangeQuery))
   MUV2.DE      price=526.20
 ```
 
-### Compound Filters (AND)
+### C# | Firestore SDK + REST | compound filters (AND)
 
 Both the SDK and REST API support compound AND filters. The SDK chains multiple `Where*()` calls; the REST API uses a `compositeFilter` with `AND` operator. Both require a composite index.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | compound AND filter — country and price range
+
+**When to run:** To screen constituents within a country-price band on .NET 8/9.
+**Trigger:** Multi-criteria screening — e.g., finding affordable French stocks for basket construction.
+**Context:** SDK compound query — requires a composite index on `(country, current_price)`. Collection read; fails on .NET 10.
+**Purpose:** Apply two simultaneous field filters with the SDK's chained `Where*()` API, demonstrating compound AND queries that need a composite index.
 
 Filters French stocks priced under 200 by chaining `WhereEqualTo("country", "France")` and `WhereLessThan("current_price", 200)`.
 
@@ -918,7 +1039,12 @@ foreach (var doc in compoundDocs.Documents)
   AI.PA        AIR LIQUIDE          price=168.02
 ```
 
-#### Firestore REST API
+#### C# | REST API | compound AND filter — country and price range
+
+**When to run:** To screen constituents within a country-price band on .NET 10 or as a REST reference pattern.
+**Trigger:** Multi-criteria screening — .NET 10-safe alternative to the SDK compound filter above.
+**Context:** REST `compositeFilter` with `AND` operator — requires a composite index on `(country, current_price)`. Calls `EnsureIndex()` first to guarantee the index exists.
+**Purpose:** Demonstrate the REST `compositeFilter` → `filters[]` structure that maps to SDK chained `Where*()` calls, including automatic index provisioning.
 
 Filters `country == "France"` AND `current_price < 200` using a `compositeFilter` with `AND` operator. Requires a composite index.
 
@@ -969,11 +1095,16 @@ foreach (var fdoc in await RestQuery(compoundQuery))
 ```
 
 
-### Array Contains
+### C# | Firestore SDK + REST | array contains
 
 Both the SDK and REST API can filter on array membership. The SDK uses `WhereArrayContains()`; the REST API uses the `ARRAY_CONTAINS` operator.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | array_contains filter — tags membership
+
+**When to run:** To find stocks matching a classification tag on .NET 8/9.
+**Trigger:** Tag-based stock discovery — e.g., listing all `"germany"` or `"technology"` tagged stocks.
+**Context:** SDK `WhereArrayContains` query — auto-indexed; one `array_contains` filter allowed per query. Collection read; fails on .NET 10.
+**Purpose:** Return all stocks whose `tags` array includes a specific value, demonstrating Firestore's array membership filter.
 
 Filters stocks where the `tags` array contains `"germany"` using `WhereArrayContains()`.
 
@@ -1011,7 +1142,12 @@ foreach (var doc in arrayDocs.Documents)
   SIE.DE       Germany
 ```
 
-#### Firestore REST API
+#### C# | REST API | array_contains filter — tags membership
+
+**When to run:** To find stocks matching a classification tag on .NET 10 or as a REST reference pattern.
+**Trigger:** Tag-based stock discovery — .NET 10-safe alternative to the SDK `WhereArrayContains` above.
+**Context:** REST `ARRAY_CONTAINS` operator in a `fieldFilter` — auto-indexed. Read-only.
+**Purpose:** Demonstrate the REST `ARRAY_CONTAINS` operator that maps to the SDK's `WhereArrayContains()`, returning matching documents without client-side array scanning.
 
 Filters stocks where the `tags` array contains `"germany"` using the `ARRAY_CONTAINS` operator in a structured query.
 
@@ -1059,11 +1195,16 @@ foreach (var fdoc in await RestQuery(arrayQuery))
   SIE.DE       Germany
 ```
 
-### Array Contains Any
+### C# | Firestore SDK + REST | array contains any
 
 Both the SDK and REST API support `array_contains_any` to match documents whose array field contains any value from a list. Returns French OR Dutch stocks in this example.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | array_contains_any filter — multi-country tags
+
+**When to run:** To find stocks matching any of several tags in one query on .NET 8/9.
+**Trigger:** Multi-country or multi-classification stock discovery — e.g., combined French and Dutch constituent list.
+**Context:** SDK `WhereArrayContainsAny` — auto-indexed; only one array-contains filter per query; up to 30 values. Collection read; fails on .NET 10.
+**Purpose:** Return stocks whose `tags` array contains any value from a provided list, avoiding multiple separate queries.
 
 Filters stocks where `tags` contains any of `["france", "netherlands"]` using `WhereArrayContainsAny()`.
 
@@ -1101,7 +1242,12 @@ foreach (var doc in acaDocs.Documents)
   OR.PA        France
 ```
 
-#### Firestore REST API
+#### C# | REST API | array_contains_any filter — multi-country tags
+
+**When to run:** To find stocks matching any of several tags in one query on .NET 10 or as a REST reference pattern.
+**Trigger:** Multi-country or multi-classification stock discovery — .NET 10-safe alternative to SDK `WhereArrayContainsAny`.
+**Context:** REST `ARRAY_CONTAINS_ANY` operator with `arrayValue` value type — auto-indexed; up to 30 values. Read-only.
+**Purpose:** Demonstrate the REST `ARRAY_CONTAINS_ANY` operator with the `arrayValue` value format required to pass a list of match targets.
 
 Filters stocks where `tags` contains any of `["france", "netherlands"]` using the `ARRAY_CONTAINS_ANY` operator.
 
@@ -1149,11 +1295,16 @@ foreach (var fdoc in await RestQuery(acaQuery))
   OR.PA        France
 ```
 
-### IN and NOT-IN Filters
+### C# | Firestore REST API | IN and NOT-IN filters
 
 The `IN` operator matches documents where a field equals any value in a list (up to 30 values). `NOT_IN` returns documents where the field does not match any value in the list and the field exists.
 
 #### C# | REST API | IN filter on sector field
+
+**When to run:** To retrieve stocks belonging to any of several sectors in a single query.
+**Trigger:** Sector-based basket construction or sectoral breakdown — e.g., combined Technology + Healthcare list.
+**Context:** REST `IN` operator — auto-indexed; up to 30 values; one `IN` filter per query. Read-only.
+**Purpose:** Demonstrate the REST `IN` operator that matches documents where the field equals any value in an `arrayValue` list, as an alternative to multiple equality queries.
 
 > [!info] IN Operator Limit: 30 Values
 >
@@ -1206,11 +1357,16 @@ foreach (var r in inResults)
 ```
 
 
-### Ordering and Limiting
+### C# | Firestore SDK + REST | ordering and limiting
 
 Both the SDK and REST API support ordering by nested fields using dot notation. This example orders stocks by `scores.composite` descending and takes the top 5.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | order by nested map field — top 5 by composite score
+
+**When to run:** To rank the top constituents by composite score on .NET 8/9.
+**Trigger:** Index weighting review, score-based rebalancing, or dashboard top-performers display.
+**Context:** SDK `OrderByDescending` with dot-notation nested field — requires a single-field index on `scores.composite`. Collection read; fails on .NET 10.
+**Purpose:** Return the top 5 stocks by nested `scores.composite` value, demonstrating dot-notation ordering on map fields.
 
 Orders by `scores.composite` descending and limits to 5 documents using `OrderByDescending()`.
 
@@ -1239,7 +1395,12 @@ foreach (var doc in topDocs.Documents)
   # 5 ABI.BR       score=0.38521031359211527
 ```
 
-#### Firestore REST API
+#### C# | REST API | order by nested map field — top 5 by composite score
+
+**When to run:** To rank the top constituents by composite score on .NET 10 or as a REST reference pattern.
+**Trigger:** Score-based ranking — .NET 10-safe alternative to the SDK ordering above.
+**Context:** REST `orderBy` clause with dot-notation field path — reads nested `mapValue.fields` to extract the composite and rank values. Read-only.
+**Purpose:** Demonstrate dot-notation ordering in a REST structured query and show how to navigate the `mapValue` envelope to extract nested scores in the response.
 
 Orders stocks by `scores.composite` descending using the `orderBy` clause in a structured query and limits to 5.
 
@@ -1282,11 +1443,16 @@ foreach (var fdoc in await RestQuery(topQuery))
 
 Demonstrates querying on dot-notation nested map fields and reading nested map values from Firestore documents using both the SDK and REST API.
 
-### Query on Nested Map Fields
+### C# | Firestore SDK + REST | query on nested map fields
 
 Both the SDK and REST API use dot notation to query nested map fields. This example filters stocks where `scores.momentum > 0.05` and orders by momentum descending.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | filter on nested map field with dot notation — high momentum stocks
+
+**When to run:** To identify high-momentum constituents for momentum-factor-based analysis on .NET 8/9.
+**Trigger:** Momentum factor screening — e.g., identifying outperformers for factor tilt or rebalancing.
+**Context:** SDK `WhereGreaterThan` with dot-notation path on nested map — requires a composite index on `(scores.momentum, scores.momentum)` for filter + order on the same path. Collection read; fails on .NET 10.
+**Purpose:** Return the top momentum stocks filtered and sorted on a nested map field using dot notation, demonstrating `scores.momentum` path access.
 
 Filters on `scores.momentum > 0.05` using `WhereGreaterThan()` with dot notation and orders descending.
 
@@ -1321,7 +1487,12 @@ foreach (var doc in momentumDocs.Documents)
   SU.PA        momentum=0.5632576742927043
 ```
 
-#### Firestore REST API
+#### C# | REST API | filter on nested map field with dot notation — high momentum stocks
+
+**When to run:** To identify high-momentum constituents on .NET 10 or as a REST reference pattern.
+**Trigger:** Momentum factor screening — .NET 10-safe alternative to the SDK nested filter above.
+**Context:** REST `GREATER_THAN` on a dot-notation field path — navigates `mapValue.fields` structure in the response. Read-only.
+**Purpose:** Demonstrate REST filtering on nested map fields using dot-notation field paths, and show response navigation through the `scores.mapValue.fields` envelope.
 
 Filters stocks where `scores.momentum > 0.05` using a `fieldFilter` with dot-notation field path and orders descending.
 
@@ -1369,9 +1540,14 @@ foreach (var fdoc in await RestQuery(momentumQuery))
 ```
 
 
-### Read Nested Maps from Documents
+### C# | Firestore REST API | read nested maps from documents
 
 #### C# | REST API | unwrap mapValue envelope to read nested map fields
+
+**When to run:** To inspect `metadata` map fields inside alert documents for source and run traceability.
+**Trigger:** Pipeline incident investigation or alert audit — reading nested metadata to trace the origin of an alert.
+**Context:** REST query on `alerts` collection — reads nested `mapValue.fields` envelope; two levels of unwrapping required. Read-only.
+**Purpose:** Demonstrate how to navigate Firestore's REST `mapValue.fields` double-envelope to extract key-value pairs from a nested map field.
 
 This cell:
 
@@ -1435,11 +1611,27 @@ foreach (var fdoc in await RestQuery(alertMetaQuery))
 
 Subcollections are ideal for unbounded data like per-symbol price history. Each entry becomes its own document with no practical document-size ceiling. Covers reading, filtering, and querying within subcollections.
 
-### Read a Subcollection
+**`prices` subcollection — field reference** (path: `stocks/{symbol}/prices/{date}`)
+
+| Field | Type | Description |
+|---|---|---|
+| `date` | string | Trading date in `YYYY-MM-DD` format, used as the document ID |
+| `open` | float | Opening price in EUR |
+| `high` | float | Intraday high in EUR |
+| `low` | float | Intraday low in EUR |
+| `close` | float | Closing price in EUR |
+| `volume` | int | Number of shares traded |
+
+### C# | Firestore SDK + REST | read a subcollection
 
 Both the SDK and REST API can read subcollections. This example reads `stocks/ASML.AS/prices` ordered by date descending, taking the last 5 trading days with OHLCV data.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | read prices subcollection — last 5 trading days
+
+**When to run:** To retrieve OHLCV price history for a specific stock on .NET 8/9.
+**Trigger:** Daily price review, data freshness check, or charting source for a single constituent.
+**Context:** SDK subcollection read via `Document().Collection()` chaining — collection read on .NET 8/9. Read-only.
+**Purpose:** Return the 5 most recent OHLCV records from `stocks/ASML.AS/prices` ordered by date descending, demonstrating SDK subcollection navigation.
 
 Navigates to the `prices` subcollection under `stocks/ASML.AS` using `Document().Collection()` chaining, then orders by date descending.
 
@@ -1469,7 +1661,12 @@ foreach (var doc in priceDocs.Documents)
   2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
 ```
 
-#### Firestore REST API
+#### C# | REST API | read prices subcollection — last 5 trading days
+
+**When to run:** To retrieve OHLCV price history for a specific stock on .NET 10 or as a REST reference pattern.
+**Trigger:** Daily price review or data freshness check — .NET 10-safe alternative to the SDK subcollection read above.
+**Context:** REST POST to `{baseUrl}/stocks/ASML.AS:runQuery` — targets subcollection directly by including it in the parent document path. Read-only.
+**Purpose:** Demonstrate the REST approach to subcollection reads by targeting the parent document path in the `runQuery` URL.
 
 Reads `stocks/ASML.AS/prices` via REST, orders by `date` descending, and takes the top 5.
 
@@ -1508,11 +1705,16 @@ foreach (var item in priceResults.RootElement.EnumerateArray())
   2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
 ```
 
-### Query Within a Subcollection
+### C# | Firestore SDK + REST | query within a subcollection
 
 Both the SDK and REST API can filter within a single subcollection. This example queries `stocks/ASML.AS/prices` where `close > 700`, ordered by close descending. Only ASML's prices are searched — not other stocks.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | filter within a subcollection — ASML days above close threshold
+
+**When to run:** To find all trading days where a specific stock's close exceeded a threshold on .NET 8/9.
+**Trigger:** Price-level analysis — e.g., identifying days when ASML traded above a target close for backtesting or reporting.
+**Context:** SDK subcollection `WhereGreaterThan` + `OrderByDescending` — operates on a single stock's `prices` subcollection only. Collection read; fails on .NET 10.
+**Purpose:** Return days where ASML's close exceeded 700, demonstrating filtered queries within a single parent document's subcollection.
 
 Filters ASML's price subcollection for days with close above 700 using `WhereGreaterThan()` and `OrderByDescending()`.
 
@@ -1547,7 +1749,12 @@ foreach (var doc in subDocs.Documents)
   2026-01-30: close=1215.60
 ```
 
-#### Firestore REST API
+#### C# | REST API | filter within a subcollection — ASML days above close threshold
+
+**When to run:** To find high-close trading days for a specific stock on .NET 10 or as a REST reference pattern.
+**Trigger:** Price-level analysis — .NET 10-safe alternative to the SDK subcollection filter above.
+**Context:** REST `GREATER_THAN` filter on `stocks/ASML.AS:runQuery` endpoint — scoped to one stock's subcollection. Read-only.
+**Purpose:** Demonstrate REST filtering within a single stock's `prices` subcollection by scoping the query URL to the parent document path.
 
 Queries `stocks/ASML.AS/prices` where `close > 700` using a structured query with `GREATER_THAN` operator.
 
@@ -1602,23 +1809,17 @@ foreach (var item in subResults.RootElement.EnumerateArray())
 
 Covers document creation and overwrite with `SetAsync`, field-level atomic updates with `UpdateAsync`, and permanent deletion with `DeleteAsync`.
 
-### Set — Create or Overwrite
+### C# | Firestore SDK | set — create or overwrite
 
-> [!danger] Document Size Limit — 1 MiB
+> [!danger] Document write boundaries — size and throughput
 >
-> A single Firestore document cannot exceed 1,048,576 bytes. If you store arrays that grow over time, they WILL eventually hit this limit. Move growing arrays to a subcollection.
+> - **1 MiB size limit.** A single document cannot exceed 1,048,576 bytes including all field names, values, and nested data. Unbounded arrays (price history, audit log entries) will eventually breach this limit — move them to a subcollection where each entry becomes its own document.
+> - **~1 write/sec per document.** Higher rates cause contention and increased latency. Multiple concurrent writers to the same document queue and slow down.
 
-> [!success] Safe Pattern
+> [!success] Safe patterns for size and throughput
 >
-> Never store unbounded arrays (e.g., price history, audit log entries) directly in a document. Use a subcollection instead — each entry becomes its own document with no practical size ceiling. For fixed-size arrays (e.g., a watchlist of up to 50 symbols), a document field is safe.
-
-> [!warning] Document Write Hotspot — 1 write/sec
->
-> A single document can sustain ~1 write per second. Higher rates cause contention. Use sharded counters or separate documents for high-write scenarios.
-
-> [!success] Safe Pattern
->
-> For counters updated by multiple writers, use a sharded counter pattern: split the counter across N shard documents (e.g., `counters/hits_0` … `counters/hits_9`), write to a random shard, and sum all shards at read time. For per-symbol pipelines, write to separate documents per symbol rather than aggregating into one shared document.
+> - **Unbounded data → subcollection.** Reserve document-level arrays for fixed-size lists (e.g., a watchlist capped at 50 symbols). Use subcollections for anything that grows without bound.
+> - **Hot counters → sharded writes.** Split the counter across N shard documents (`counters/hits_0` … `counters/hits_9`), write to a randomly chosen shard, and sum all shards at read time. For per-symbol pipelines, write to separate documents per symbol.
 
 This cell:
 
@@ -1635,6 +1836,11 @@ This cell:
 > Use `SetAsync(data, SetOptions.MergeAll)` for upserts, and `UpdateAsync(fields)` when you only want to touch specific fields on an existing document. Reserve bare `SetAsync(data)` for explicit full-document replacements where you intentionally want to clear all other fields.
 
 #### C# | Firestore SDK | create, update, and delete a watchlist document
+
+**When to run:** To test the full write lifecycle (create → update → delete) in a safe test document.
+**Trigger:** Write pattern validation or development testing against the live Firestore instance.
+**Context:** SDK `SetAsync` + `UpdateAsync` + `DeleteAsync` — state-changing writes. Creates and removes `watchlists/test_cs`; leaves no residual data.
+**Purpose:** Demonstrate the complete SDK write lifecycle with `SetAsync` (create), `UpdateAsync` with `ArrayUnion`/`Increment` (partial update), and `DeleteAsync` (removal).
 
 *Create, merge-update, and delete a test watchlist document using the SDK.*
 
@@ -1669,9 +1875,14 @@ Deleted test_cs
 ```
 
 
-### Update — ArrayUnion, Increment, ServerTimestamp
+### C# | Firestore SDK | update — ArrayUnion, Increment, ServerTimestamp
 
 #### C# | Firestore SDK | atomic array and counter updates
+
+**When to run:** When updating a watchlist's symbol membership or counters without reading the document first.
+**Trigger:** Symbol addition/removal from a watchlist, or incrementing a stock count after a pipeline step.
+**Context:** SDK `UpdateAsync` with `FieldValue` transforms — atomic server-side operations; no read required. State-changing. Creates and removes `watchlists/test_update_cs`.
+**Purpose:** Demonstrate all four atomic field transforms: `ArrayUnion`, `ArrayRemove`, `Increment`, and `ServerTimestamp` in a single `UpdateAsync` call.
 
 This cell:
 
@@ -1714,9 +1925,14 @@ Deleted test_update_cs
 ```
 
 
-### Delete a Document
+### C# | Firestore SDK | delete a document
 
 #### C# | Firestore SDK | delete and verify document removal
+
+**When to run:** When permanently removing a document and confirming the deletion completed.
+**Trigger:** Watchlist cleanup, test document teardown, or user-initiated delete that requires verification.
+**Context:** SDK `DeleteAsync` + `GetSnapshotAsync` verification — state-changing; creates then removes `watchlists/test_delete_cs`.
+**Purpose:** Demonstrate the create → delete → verify pattern and confirm `Exists == false` after `DeleteAsync`.
 
 This cell:
 
@@ -1766,9 +1982,14 @@ Covers atomic multi-write batches and optimistic-concurrency transactions using 
 >
 > Firestore transactions use optimistic concurrency (retry on conflict) and are limited to 500 operations per batch/transaction. SQL Server provides full ACID with pessimistic locking and no operation-count limit. BigQuery has limited multi-statement transactions scoped to a single query job.
 
-### Batch — Atomic Multi-Write
+### C# | Firestore SDK | batch — atomic multi-write
 
 #### C# | Firestore SDK | create and commit a write batch
+
+**When to run:** When writing multiple related documents that must all succeed or all fail together.
+**Trigger:** Batch alert insertion, multi-symbol price update, or any multi-document atomic write operation.
+**Context:** SDK `WriteBatch` — creates 3 alert test documents and deletes them after verification. Maximum 500 operations per batch. State-changing.
+**Purpose:** Demonstrate `WriteBatch` creation, `Set` staging for multiple documents, and atomic `CommitAsync` — including post-commit cleanup.
 
 This cell:
 
@@ -1806,9 +2027,14 @@ Cleaned up
 ```
 
 
-### Transaction — Acknowledge an Alert
+### C# | Firestore SDK | transaction — acknowledge an alert
 
 #### C# | Firestore SDK | read-modify-write with optimistic concurrency
+
+**When to run:** When acknowledging an alert where a concurrent update might race — the transaction ensures only one acknowledgement is recorded.
+**Trigger:** Alert acknowledgement workflow — operator marks a high-severity alert as handled.
+**Context:** SDK `RunTransactionAsync` — reads `alerts/alert_001`, conditionally updates if not already acknowledged, then resets for re-run. State-changing; retries automatically on conflict.
+**Purpose:** Demonstrate the Firestore read-modify-write pattern with idempotency guard (`if acked → skip`), automatic retry semantics, and state reset for notebook re-runs.
 
 This cell:
 
@@ -1859,7 +2085,7 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 
 Real-time listeners push document and collection changes to the client as they happen. On .NET 8/9 the SDK `Listen()` method is used directly; on .NET 10 the listener fails and requires a REST polling workaround.
 
-### on_snapshot Push Notifications
+### C# | Firestore SDK | on_snapshot push notifications
 
 > [!warning] .NET 10 Listeners Fail
 >
@@ -1870,6 +2096,11 @@ Real-time listeners push document and collection changes to the client as they h
 > On .NET 10, replace real-time listeners with a REST polling loop: call `runQuery` on a short interval (e.g., every 5–10 seconds) and compare results against a local snapshot to detect changes. For production event-driven workflows, use a Cloud Pub/Sub trigger or Cloud Function instead of an in-process listener.
 
 #### C# | Firestore SDK | attach and stop a real-time collection listener
+
+**When to run:** On .NET 8/9 when live change notifications are needed for a filtered collection (e.g., a Blazor dashboard).
+**Trigger:** Dashboard initialization or monitoring session start — subscribe to document changes as they occur.
+**Context:** SDK `Listen()` — .NET 8/9 only; fails on .NET 10 due to `AsyncInterfaces` issue. Requires explicit `StopAsync()` to release the gRPC stream.
+**Purpose:** Show the `Listen()` → callback → `StopAsync()` lifecycle for attaching and cleanly stopping a real-time Firestore listener.
 
 In a real .NET 8/9 project, attach a listener via `Listen()` and dispose it with `StopAsync()` when done.
 
@@ -1897,9 +2128,14 @@ Firestore added server-side `COUNT`, `SUM`, and `AVG` aggregation queries in 202
 >
 > Firestore aggregation is limited to COUNT, SUM, and AVG over a single field with no GROUP BY, HAVING, or window functions. For complex aggregation (pivots, percentiles, multi-dimensional rollups), export data to BigQuery. SQL Server and BigQuery support the full SQL aggregation spectrum.
 
-### COUNT — Server-Side
+### C# | Firestore REST API | COUNT — server-side
 
 #### C# | REST API | count stocks per country with runAggregationQuery
+
+**When to run:** To get a constituent count breakdown by country without downloading all 50 stock documents.
+**Trigger:** Index composition audit, dashboard summary panel, or validation that country membership matches expected counts.
+**Context:** REST `runAggregationQuery` — server-side COUNT; costs 1 read per aggregation regardless of document count. Works on all .NET versions including .NET 10.
+**Purpose:** Demonstrate server-side COUNT per country using `runAggregationQuery`, which is 50× cheaper than reading all documents and counting client-side.
 
 This cell runs a server-side `COUNT` aggregation for each country. Each aggregation query costs 1 read operation regardless of how many documents match — much cheaper than streaming all documents.
 
@@ -1957,9 +2193,14 @@ foreach (var country in new[] { "Germany", "France", "Netherlands", "Italy", "Sp
 ```
 
 
-### SUM and AVG — Server-Side
+### C# | Firestore REST API | SUM and AVG — server-side
 
 #### C# | REST API | aggregate index weight sum, price average, and document count
+
+**When to run:** To validate index weight integrity and compute collection-wide price statistics in one round-trip.
+**Trigger:** Post-rebalance weight verification — confirm all 50 weights sum to 1.0; or daily analytics summary.
+**Context:** REST `runAggregationQuery` with multiple aggregations in one request — SUM + AVG + COUNT costs 1 read total. Works on all .NET versions including .NET 10.
+**Purpose:** Demonstrate multiple simultaneous server-side aggregations (SUM, AVG, COUNT) in a single `runAggregationQuery` request to minimize read costs.
 
 This cell runs three server-side aggregations across all 50 stocks:
 
@@ -2012,6 +2253,7 @@ Average stock price: 234.17
 Total stocks: 50
 ```
 
+**Total index weight = 1.0000** confirms the weights are well-formed — all 50 constituents sum to exactly 100% of the index. A value deviating from 1.0 would indicate a missing stock or a weight calculation error in the loader. **Average price of 234.17 EUR** across 50 stocks is dominated by high-priced outliers (Hermes at ~1,900, Rheinmetall at ~1,550) — the median would be significantly lower.
 
 ## Collection Group Queries
 
@@ -2021,11 +2263,16 @@ Collection group queries search across all subcollections with the same name in 
 >
 > Collection group queries are Firestore's equivalent of querying across partitions. BigQuery achieves this with partition pruning on partitioned tables. SQL Server uses partitioned views or `UNION ALL` across multiple tables.
 
-### Query Across ALL Subcollections
+### C# | Firestore SDK + REST | query across ALL subcollections
 
 Both the SDK and REST API support collection group queries that search across all subcollections with the same name. The SDK uses `CollectionGroup()`; the REST API uses `allDescendants: true`. Requires a field exemption for `close` on the `prices` collection group.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | collection group query — highest closes across all stocks
+
+**When to run:** To find the highest closing prices across all 50 stocks in a single query on .NET 8/9.
+**Trigger:** Daily top-performers report, outlier detection, or cross-stock price comparison.
+**Context:** SDK `CollectionGroup("prices")` — searches all `prices` subcollections simultaneously; requires a `COLLECTION_GROUP` index on `close`. Collection read; fails on .NET 10.
+**Purpose:** Demonstrate how a single `CollectionGroup` query replaces 50 individual subcollection queries, and show parent symbol extraction from `doc.Reference.Parent.Parent.Id`.
 
 Queries all `prices` subcollections across all stocks using `CollectionGroup("prices")`, ordered by `close` descending. Extracts the parent stock symbol from the document reference path.
 
@@ -2059,7 +2306,12 @@ foreach (var doc in cgDocs.Documents)
   RMS.PA       2026-02-09  close=   2072.00
 ```
 
-#### Firestore REST API
+#### C# | REST API | collection group query — highest closes across all stocks
+
+**When to run:** To find the highest closing prices across all stocks on .NET 10 or as a REST reference pattern.
+**Trigger:** Cross-stock price comparison — .NET 10-safe alternative to the SDK `CollectionGroup` above.
+**Context:** REST `allDescendants: true` in `from` clause — searches all `prices` subcollections; requires `EnsureFieldExemption` for `close`. Read-only.
+**Purpose:** Demonstrate the REST collection group query using `allDescendants: true`, and show parent symbol extraction from the document path segments.
 
 Sends a collection group query with `allDescendants: true` for `prices`, ordered by `close` descending, and extracts the parent symbol from the document path.
 
@@ -2108,11 +2360,16 @@ foreach (var item in cgResults.RootElement.EnumerateArray())
 ```
 
 
-### Collection Group — Filter by Date
+### C# | Firestore SDK + REST | collection group — filter by date
 
 Both the SDK and REST API can combine collection group queries with equality filters. This example dynamically finds the latest available date from ASML's prices, then queries all `prices` subcollections for that date.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | collection group filter by date — all prices on a trading day
+
+**When to run:** To retrieve a full cross-stock price snapshot for a specific trading date on .NET 8/9.
+**Trigger:** End-of-day processing, daily snapshot comparison, or cross-stock close analysis for a single date.
+**Context:** SDK `CollectionGroup` + `WhereEqualTo` — dynamically discovers the latest date from ASML before querying. Collection read; fails on .NET 10. Requires `COLLECTION_GROUP` index on `date`.
+**Purpose:** Show how to combine a date lookup with a collection group equality filter to retrieve all stocks' prices for a single trading day.
 
 Finds the latest date from ASML's prices, then queries all `prices` subcollections for that date using `CollectionGroup("prices")` with `WhereEqualTo()`.
 
@@ -2154,7 +2411,12 @@ foreach (var doc in dateDocs.Documents)
   SAF.PA       close=    315.40  volume=     160'065
 ```
 
-#### Firestore REST API
+#### C# | REST API | collection group filter by date — all prices on a trading day
+
+**When to run:** To retrieve a full cross-stock price snapshot for a specific trading date on .NET 10 or as a REST reference pattern.
+**Trigger:** End-of-day snapshot — .NET 10-safe alternative to the SDK collection group date filter above.
+**Context:** REST `allDescendants: true` with `EQUAL` date filter — requires `EnsureFieldExemption` for `date`. Dynamic date lookup from ASML subcollection via REST before main query. Read-only.
+**Purpose:** Show the two-step REST pattern: first fetch the latest available date, then pass it into a collection group equality filter to get a cross-stock snapshot.
 
 Dynamically finds the latest date, then queries all `prices` subcollections for that date using `allDescendants: true` with an equality filter.
 
@@ -2224,11 +2486,16 @@ foreach (var fdoc in dateDocs)
 
 Firestore does not support offset-based pagination. Use cursor-based pagination: advance the cursor to the last document of each page with `StartAfter()` (SDK) or follow the `nextPageToken` from the REST response.
 
-### Cursor-Based Pagination
+### C# | Firestore SDK + REST | cursor-based pagination
 
 Both the SDK and REST API support cursor-based pagination. The SDK uses `StartAfter()` with the last document snapshot; the REST API uses `pageToken` from the response. Both examples fetch 5 stocks per page, stopping after 2 pages.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | cursor-based pagination with StartAfter()
+
+**When to run:** To iterate large collections in pages without loading everything at once on .NET 8/9.
+**Trigger:** Full collection traversal — e.g., export, batch processing, or a paginated UI list.
+**Context:** SDK `StartAfter(lastDocument).Limit(pageSize)` pattern — creates a new query per page using the previous page's last document as cursor. Collection read; fails on .NET 10.
+**Purpose:** Demonstrate cursor-based pagination where the previous page's last document snapshot becomes the `StartAfter` cursor for the next page.
 
 Paginates through stocks 5 at a time using `OrderBy("symbol").Limit(5)` and advancing the cursor with `StartAfter()` on the last document of each page.
 
@@ -2271,7 +2538,12 @@ for (int page = 1; page <= 2; page++)
   BAS.DE       BASF SE
 ```
 
-#### Firestore REST API
+#### C# | REST API | cursor-based pagination with pageToken
+
+**When to run:** To iterate large collections in pages on .NET 10 or as a REST reference pattern.
+**Trigger:** Full collection traversal — .NET 10-safe alternative to the SDK `StartAfter()` pagination above.
+**Context:** REST GET with `pageSize` and `pageToken` query parameters — the token for each subsequent page is extracted from the previous response's `nextPageToken` field. Read-only.
+**Purpose:** Demonstrate REST-native cursor pagination using `nextPageToken` continuation, contrasting with the SDK's document-snapshot-based `StartAfter()` approach.
 
 Fetches stocks 5 at a time using `pageSize` and follows `nextPageToken` from each response to get the next page.
 
@@ -2325,11 +2597,40 @@ for (int page = 1; page <= 2; page++)
 
 ## Maintenance & Monitoring
 
-### List Collections and Document Counts
+**`alerts` collection — field reference**
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | string | Alert category: `PRICE_DROP`, `MOMENTUM_FLIP`, `VOLUME_SPIKE`, `WEIGHT_CHANGE`, `RANK_CHANGE` |
+| `severity` | string | `HIGH`, `MEDIUM`, or `LOW` |
+| `acknowledged` | bool | Whether the alert has been handled |
+| `acknowledged_at` | timestamp | When the alert was acknowledged (null if unacknowledged) |
+| `acknowledged_by` | string | Who acknowledged the alert |
+| `symbol` | string | Stock ticker that triggered the alert |
+| `message` | string | Human-readable alert description |
+| `created_at` | timestamp | When the alert was created |
+| `tags` | array | Classification tags |
+| `metadata` | map | Nested map with `source` (string: "scheduler", "manual", "cloud_function") and `run_id` (string) |
+
+**`pipeline_runs` collection — field reference**
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | string | Run outcome: `SUCCESS`, `FAILED`, `RUNNING` |
+| `started_at` | timestamp | When the pipeline run began |
+| `rows_loaded` | int | Number of rows processed |
+| `steps` | array of maps | Each map has `name` (string), `status` (string), `duration_ms` (int) |
+
+### C# | Firestore SDK + REST | list collections and document counts
 
 Both the SDK and REST API can enumerate root collections and count documents. The SDK discovers collections automatically via `ListRootCollectionsAsync()`; the REST version iterates a hardcoded list.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | list root collections and count documents
+
+**When to run:** To audit the full set of root collections and their document counts on .NET 8/9.
+**Trigger:** Post-deployment health check, data population validation, or collection discovery on an unfamiliar project.
+**Context:** SDK `ListRootCollectionsAsync()` — automatically discovers all top-level collections without knowing their names. Collection reads; fails on .NET 10.
+**Purpose:** Enumerate all root collections dynamically and return a server-side document count for each, without needing a hardcoded collection list.
 
 Lists all root collections and counts documents in each using `ListRootCollectionsAsync()` and `Limit(1000).GetSnapshotAsync()`.
 
@@ -2354,7 +2655,12 @@ await foreach (var coll in db.ListRootCollectionsAsync())
   watchlists               3 documents
 ```
 
-#### Firestore REST API
+#### C# | REST API | list root collections and count documents
+
+**When to run:** To audit document counts across known collections on .NET 10 or as a REST reference pattern.
+**Trigger:** Post-deployment health check or data validation — .NET 10-safe alternative to the SDK collection discovery above.
+**Context:** REST GET calls on a hardcoded collection list — does not auto-discover collections; `pageSize=1000` caps the count at 1000. Read-only.
+**Purpose:** Provide a .NET 10-compatible alternative to SDK collection enumeration using simple REST GET calls against each known collection name.
 
 Iterates 6 known collections, counts documents in each via REST `GET` with `pageSize=1000`, and prints a summary table.
 
@@ -2382,11 +2688,16 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
 ```
 
 
-### List Subcollections
+### C# | Firestore SDK + REST | list subcollections
 
 Both the SDK and REST API can list subcollections under a document. The SDK uses `ListCollectionsAsync()` to discover them; the REST version queries the known subcollection directly.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | discover subcollections under a parent document
+
+**When to run:** To discover what subcollections exist under a parent document without knowing the schema in advance on .NET 8/9.
+**Trigger:** Schema exploration, data model validation, or debugging unexpected subcollection growth.
+**Context:** SDK `ListCollectionsAsync()` on a `DocumentReference` — returns subcollection references dynamically. Collection read; fails on .NET 10.
+**Purpose:** Enumerate subcollections under `stocks/ASML.AS` and sample one document from each to confirm structure and content.
 
 Lists subcollections under `stocks/ASML.AS` using `ListCollectionsAsync()` and prints a sample document from each.
 
@@ -2412,7 +2723,12 @@ await foreach (var sub in db.Collection("stocks").Document("ASML.AS").ListCollec
     Sample: date=2026-01-30, close=1215.60
 ```
 
-#### Firestore REST API
+#### C# | REST API | discover subcollections under a parent document
+
+**When to run:** To confirm that a specific subcollection exists and is populated on .NET 10 or as a REST reference pattern.
+**Trigger:** Schema validation — .NET 10-safe alternative to SDK `ListCollectionsAsync()`.
+**Context:** REST GET on `stocks/ASML.AS/prices?pageSize=1` — requires knowing the subcollection name; does not auto-discover. Read-only.
+**Purpose:** Demonstrate REST subcollection access by querying a known subcollection path and sampling the first document.
 
 Queries the known `prices` subcollection under `stocks/ASML.AS` via REST and prints a sample document.
 
@@ -2440,11 +2756,16 @@ if (subCollJson.RootElement.TryGetProperty("documents", out var subDocs))
 ```
 
 
-### Find Stale Documents
+### C# | Firestore SDK + REST | find stale documents
 
 Both the SDK and REST API can filter on timestamp fields. This example queries `pipeline_runs` started more than 48 hours ago for freshness monitoring. The SDK uses `Timestamp.FromDateTime()`; the REST API uses an ISO 8601 `timestampValue`.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | find stale documents — pipeline runs older than 48 hours
+
+**When to run:** To identify pipeline runs that are overdue for archiving or alerting on .NET 8/9.
+**Trigger:** Daily monitoring job or freshness check — flag runs that started more than 48 hours ago.
+**Context:** SDK `WhereLessThan` on a `Timestamp` field — requires a composite index on `(started_at, __name__)` for ordering on a different field. Collection read; fails on .NET 10.
+**Purpose:** Return pipeline run documents older than a computed timestamp cutoff, demonstrating SDK timestamp comparison with `Timestamp.FromDateTime()`.
 
 Filters pipeline runs older than 48 hours using `WhereLessThan()` with a `Timestamp` cutoff.
 
@@ -2472,7 +2793,14 @@ foreach (var doc in staleDocs.Documents)
   run_013: status=SUCCESS
 ```
 
-#### Firestore REST API
+All three stale runs completed successfully — they are simply old. In a production freshness monitor, the absence of `FAILED` in this set is healthy. The concern would be if no runs appear at all within the 48-hour window (pipeline stopped running) or if `RUNNING` entries persist beyond the expected duration (hung pipeline).
+
+#### C# | REST API | find stale documents — pipeline runs older than 48 hours
+
+**When to run:** To identify stale pipeline runs on .NET 10 or as a REST reference pattern.
+**Trigger:** Daily freshness monitoring — .NET 10-safe alternative to the SDK timestamp filter above.
+**Context:** REST `LESS_THAN` filter with `timestampValue` in ISO 8601 format — computed from `DateTime.UtcNow.AddHours(-48)`. Read-only.
+**Purpose:** Demonstrate how to pass a computed timestamp as a REST `timestampValue` for range filtering on timestamp fields.
 
 Queries `pipeline_runs` where `started_at < cutoff` using `LESS_THAN` filter on the timestamp field.
 
@@ -2511,11 +2839,16 @@ foreach (var fdoc in await RestQuery(staleQuery))
   run_013: status=SUCCESS
 ```
 
-### Find Failed Pipeline Runs
+### C# | Firestore SDK + REST | find failed pipeline runs
 
 Both the SDK and REST API can filter pipeline runs by status. This example returns runs where `status == "FAILED"`.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | filter failed pipeline runs by status
+
+**When to run:** To list all runs that ended in failure for incident investigation on .NET 8/9.
+**Trigger:** Incident triage, daily pipeline health check, or on-call alert that pipeline failures were detected.
+**Context:** SDK `WhereEqualTo("status", "FAILED")` — single-field equality filter, auto-indexed. Collection read; fails on .NET 10.
+**Purpose:** Return all `FAILED` pipeline run documents so the operator can identify which runs and which steps require remediation.
 
 Filters pipeline runs with `WhereEqualTo("status", "FAILED")`.
 
@@ -2543,7 +2876,14 @@ foreach (var doc in failedDocs.Documents)
   run_010: status=FAILED
 ```
 
-#### Firestore REST API
+Five failed runs out of 15 total (33% failure rate). The SDK result shows only the status — to identify which step broke in each run, inspect the `steps` array field client-side (each step has `name`, `status`, and `duration_ms`). In production, extend this query to extract the failing step name and route to the appropriate alert channel.
+
+#### C# | REST API | filter failed pipeline runs by status
+
+**When to run:** To list failed pipeline runs on .NET 10 or as a REST reference pattern.
+**Trigger:** Incident triage — .NET 10-safe alternative to the SDK status filter above.
+**Context:** REST `EQUAL` field filter on `status` — auto-indexed. Read-only.
+**Purpose:** Return all `FAILED` pipeline run documents via REST, demonstrating the direct `EQUAL` filter equivalent of SDK `WhereEqualTo`.
 
 Queries `pipeline_runs` where `status == "FAILED"` using an `EQUAL` field filter and inspects the `steps` array.
 
@@ -2581,11 +2921,16 @@ foreach (var fdoc in await RestQuery(failedQuery))
 ```
 
 
-### Unacknowledged Critical Alerts
+### C# | Firestore SDK + REST | unacknowledged critical alerts
 
 Both the SDK and REST API support compound equality filters. This example returns alerts where `severity == "HIGH"` AND `acknowledged == false` — alerts needing immediate attention. Requires a composite index.
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | compound filter — unacknowledged high-severity alerts
+
+**When to run:** To surface active high-priority alerts requiring immediate operator attention on .NET 8/9.
+**Trigger:** On-call dashboard load, monitoring sweep, or alert escalation check.
+**Context:** SDK compound `WhereEqualTo` chain on `(severity, acknowledged)` — requires a composite index. Collection read; fails on .NET 10.
+**Purpose:** Return all unacknowledged HIGH-severity alerts so operators can prioritize their response queue.
 
 Chains `WhereEqualTo("severity", "HIGH")` and `WhereEqualTo("acknowledged", false)` to find unacknowledged high-severity alerts.
 
@@ -2616,7 +2961,12 @@ foreach (var doc in alertDocs.Documents)
   alert_020: DHL.DE — DHL.DE triggered price drop alert
 ```
 
-#### Firestore REST API
+#### C# | REST API | compound filter — unacknowledged high-severity alerts
+
+**When to run:** To surface unacknowledged high-severity alerts on .NET 10 or as a REST reference pattern.
+**Trigger:** Alert triage — .NET 10-safe alternative to the SDK compound alert filter above.
+**Context:** REST `compositeFilter` with `AND` — requires composite index on `(severity, acknowledged)`. Calls `EnsureIndex()` first. Read-only.
+**Purpose:** Demonstrate the REST `compositeFilter` structure for compound boolean equality filters, including `booleanValue` format for the `acknowledged` field.
 
 Uses a `compositeFilter` with `AND` operator to filter `severity == "HIGH"` and `acknowledged == false`. Requires a composite index.
 
@@ -2664,11 +3014,16 @@ foreach (var fdoc in await RestQuery(alertQuery))
 ```
 
 
-### Read Application Config
+### C# | Firestore SDK + REST | read application config
 
 Both the SDK and REST API can read singleton config documents. Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
 
-#### Google.Cloud.Firestore SDK
+#### C# | Firestore SDK | read singleton config document with ToDictionary()
+
+**When to run:** To inspect the current pipeline configuration values or validate a config update was applied.
+**Trigger:** Post-deployment config check or troubleshooting a pipeline parameter change.
+**Context:** SDK single-document read — works on .NET 10 (single-doc reads unaffected by `AsyncInterfaces` issue). Read-only.
+**Purpose:** Read all config fields via `ToDictionary()` in one call; note that nested objects render as .NET type names — see the `[!info]` callout below for how to access their values.
 
 Reads `config/pipeline` using `GetSnapshotAsync()` and iterates all key-value pairs via `ToDictionary()`.
 
@@ -2694,8 +3049,16 @@ foreach (var kv in configDoc.ToDictionary())
   alert_thresholds: System.Collections.Generic.Dictionary`2[System.String,System.Object]
 ```
 
+> [!info] SDK ToDictionary() displays raw .NET type names
+>
+> `ToDictionary()` renders nested objects and arrays as their .NET type names (`System.Collections.Generic.List`, `System.Collections.Generic.Dictionary`). The REST API version below shows the actual values. To access nested values in the SDK, use `GetValue<T>()` with the specific type instead of iterating the dictionary.
 
-#### Firestore REST API
+#### C# | REST API | read singleton config document with typed envelope unwrapping
+
+**When to run:** To inspect config values including nested maps and arrays in their actual form (not .NET type names).
+**Trigger:** Config inspection or troubleshooting — REST shows actual nested values where SDK `ToDictionary()` shows type names.
+**Context:** REST GET on `config/pipeline` and `config/display` — returns typed envelopes unwrapped inline via `EnumerateObject().First()`. Read-only.
+**Purpose:** Show REST config reads that reveal actual nested array and map values, complementing the SDK version above where `ToDictionary()` renders nested types as `.NET type names`.
 
 Reads `config/pipeline` and `config/display` via REST `GET` requests and prints all key-value pairs. The REST API returns typed envelopes that are unwrapped inline.
 

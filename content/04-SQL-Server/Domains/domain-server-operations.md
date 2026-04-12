@@ -31,6 +31,8 @@ mindmap
 
 > [!abstract]- [[06-essential-dba-queries]]
 
+> [!abstract]- [[18-dynamic-management-views]]
+
 > [!abstract]- [[01-server-configuration]]
 
 > [!abstract]- [[11-memory-and-buffer-pool]]

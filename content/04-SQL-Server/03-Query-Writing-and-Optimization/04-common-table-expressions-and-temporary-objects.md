@@ -1,6 +1,6 @@
 ---
 title: "04 - Common Table Expressions and Temporary Objects"
-tags: [sql, sql-server, tsql, cte, recursive-cte, temp-table, table-variable, tvp, derived-table, itvf, tempdb, maxrecursion]
+tags: [sql, sql-server, tsql, cte, tempdb]
 aliases: [CTE reference, temp tables, table variables, TVPs, derived tables, inline TVFs]
 description: "T-SQL reference for derived tables, VALUES constructors, CTEs, recursive CTEs, temporary tables, table variables, inline table-valued functions, and table-valued parameters with a decision matrix and tested demos."
 created: 2026-04-08

@@ -89,7 +89,7 @@ Firestore handles ~1 write/second per document and up to 10,000 writes/second at
 **Real-time serving layer**
 Gold scores computed in BigQuery are written to Firestore (`stocks` collection) so dashboards can read them instantly with sub-10ms latency, instead of querying BigQuery every time (which costs money and takes seconds)
 
-For Firestore querying patterns, composite index design, and cost-optimized query structures, see [Firestore Python queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-python) and [Firestore C# queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-csharp). For IaC provisioning of Firestore databases, indexes, and IAM bindings, see [Terraform data services](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-data-services).
+For Firestore querying patterns, composite index design, and cost-optimized query structures, see [Firestore Python queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-python) and [Firestore C# queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-csharp). For IaC provisioning of Firestore databases, indexes, and IAM bindings, see [Terraform data services](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services).
 
 ---
 

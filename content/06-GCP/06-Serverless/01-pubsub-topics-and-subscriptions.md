@@ -306,7 +306,7 @@ flowchart TD
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Pub/Sub delivery failures appear in Cloud Logging
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler can publish to Pub/Sub topics on a cron schedule
-- [Terraform Pub/Sub blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-iam-secrets-serverless) — Provision topics, subscriptions, and IAM bindings as infrastructure-as-code
+- [Terraform Pub/Sub blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/iam-secrets-serverless) — Provision topics, subscriptions, and IAM bindings as infrastructure-as-code
 - [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) — Python `google-cloud-pubsub` client library for publishing and consuming
 - [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) — C# `Google.Cloud.PubSub.V1` client library for publishing and consuming
 

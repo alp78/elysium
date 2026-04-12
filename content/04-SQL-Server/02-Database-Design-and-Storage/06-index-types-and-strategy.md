@@ -90,13 +90,13 @@ A heap is a table with no clustered index. Row pages are allocated as they are n
 
 The defining property of a heap is that rows do not move after they are inserted — unless an update grows the row past what its page can hold, in which case SQL Server leaves a forwarding pointer in the old slot and moves the row. That forwarding pointer is a **forwarding record**, and every read that follows the old RID pays one extra page read. Forwarding records accumulate silently. Only `ALTER TABLE ... REBUILD` clears them.
 
-> [!warning] Heaps degrade silently under update workloads
+> [!danger] Heaps with updates degrade silently — and nonclustered indexes make it worse
 >
-> The performance damage from forwarding records is invisible in most dashboards. A heap-based transactional table can run fine for months, then hit a wall as forwarding-record density climbs. The only routine telemetry that exposes this is `sys.dm_db_index_physical_stats(... 'DETAILED')` which surfaces `forwarded_record_count` on heaps specifically.
+> The performance damage from forwarding records is invisible in most dashboards. A heap-based transactional table can run fine for months, then hit a wall as forwarding-record density climbs. The only routine telemetry that exposes this is `sys.dm_db_index_physical_stats(... 'DETAILED')` which surfaces `forwarded_record_count` on heaps specifically. When nonclustered indexes exist on the heap, every update that causes a forwarding record also forces each NC index to leave its RID pointer pointing to the forwarded row — read paths pay the forwarding hop on every NC lookup, and `forwarded_record_count` climbs continuously. This is the default failure mode of "we'll add a clustered index later."
 
-> [!success] Use a clustered table when updates are frequent
+> [!success] Decide the clustered shape first, then add nonclustered indexes
 >
-> A clustered B-tree has no forwarding records. An in-place update that no longer fits triggers a page split, which is itself expensive but at least produces a predictable and measurable cost signal (fragmentation and `leaf_allocation_count`) that every standard maintenance job can detect.
+> A clustered B-tree has no forwarding records. An in-place update that no longer fits triggers a page split, which is itself expensive but at least produces a predictable and measurable cost signal (fragmentation and `leaf_allocation_count`) that every standard maintenance job can detect. Always decide the clustered shape before adding any nonclustered indexes — every NC index structurally depends on it, and retrofitting a clustered index to a heap with heavy NC coverage requires rebuilding every NC index as part of the operation.
 
 #### What a clustered index actually is
 
@@ -127,13 +127,7 @@ In production data warehouses and analytical platforms, clustered is the safe de
 
 Any durable transactional or reporting table that sees updates should have a clustered index. Period.
 
-> [!danger] Heaps with updates and nonclustered indexes is the worst combination
->
-> A heap with nonclustered indexes is particularly fragile because every update that causes a forwarding record also forces each nonclustered index to leave its RID pointer pointing to the forwarded (not the forwarding) row. Read paths now pay the forwarding hop on every NC lookup, and `sys.dm_db_index_physical_stats` `forwarded_record_count` climbs continuously. This is the default failure mode of "we'll add a clustered index later."
-
-> [!success] Add the clustered index before the first nonclustered index
->
-> Always decide the clustered shape first. Every nonclustered index structurally depends on it, and retrofitting a clustered index to a heap with heavy nonclustered coverage requires rebuilding every NC index as part of the operation.
+**The heap + nonclustered + updates combination is the worst storage pattern in SQL Server.** Any durable transactional or reporting table that sees updates should have a clustered index. Period.
 
 ### Clustered Index | Choosing The Clustering Key
 
@@ -170,13 +164,7 @@ The main design questions for a nonclustered index are:
 
 Composite key order is the rule most often gotten wrong. SQL Server can seek on any prefix of the key, but not on a suffix without the prefix. `(symbol, date)` can seek on `symbol` alone, or on `symbol + date`. It cannot seek on `date` alone — that would require a full index scan. Put equality predicates first, then range predicates, then columns only used for sorting.
 
-> [!warning] Nonclustered indexes on a heap are the most fragile combination
->
-> Every NC index on a heap points to RIDs. Any update that causes a forwarding record invalidates the implicit cost model of the NC seek, because the seek now lands on a forwarded row and pays an extra page read. If the table is durable and takes updates, make it clustered before adding nonclustered indexes.
-
-> [!success] Clustered-first, then narrow nonclustered indexes
->
-> Add the clustered index first. Then add nonclustered indexes only for predicate shapes you can prove the workload runs. Add INCLUDE columns only after you can show a hot stable projection list. Reevaluate every index against its write cost using `sys.dm_db_index_usage_stats` and `sys.dm_db_index_operational_stats`.
+**NC indexes on a heap point to RIDs** — any update that causes a forwarding record invalidates the cost model of the NC seek. Add the clustered index first, then add nonclustered indexes only for predicate shapes you can prove the workload runs. Add INCLUDE columns only after you can show a hot stable projection list. Reevaluate every index against its write cost using `sys.dm_db_index_usage_stats` and `sys.dm_db_index_operational_stats`.
 
 ### Columnstore Index | Scan And Compression-Heavy Workloads
 
@@ -394,7 +382,7 @@ ORDER BY ps.used_page_count DESC;
 | `gold.index_performance` | `PK__index_pe__3213E83FBBB2393E` | `CLUSTERED` | 1 | 1 | 0.66 | 5351 |
 | `silver.oil20_ohlcv` | `IX_silver_oil20_ohlcv_symbol_date` | `NONCLUSTERED` | 1 | 0 | 0.64 | 25080 |
 
-_The dominant real storage pattern in `stoxx` is consistent: clustered primary keys hold the main storage surface, and narrow unique nonclustered lookup indexes support business-key access on the OHLCV fact tables. That is exactly what a healthy rowstore-first analytical staging model often looks like._
+_The dominant real storage pattern in `stoxx` is consistent: clustered primary keys hold the main storage surface, and narrow unique nonclustered lookup indexes support business-key access on the OHLCV fact tables. This matches the expected profile of a rowstore-first analytical staging model — storage is dominated by base data (clustered PKs), not by auxiliary NC indexes, the NC-to-clustered size ratio stays well below 50%, and zero forwarding records appear on any heap._
 
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
@@ -405,7 +393,7 @@ _The dominant real storage pattern in `stoxx` is consistent: clustered primary k
 
 ### `sys.indexes` | detect heaps
 
-Heaps are not inherently wrong, but they are specialized. In a production system, a heap should exist because it was chosen deliberately, not because a clustered index was forgotten.
+Heaps are not inherently wrong, but they are specialized. In a production system, a heap should exist because the design review concluded that the table's workload matches a legitimate heap use case (truncate-reload staging, write-once log sink, covering-NC-only access) — not because a clustered index was forgotten. The way to verify intent is to check whether the table's DDL or design document explicitly states "heap by design" and whether the table's access pattern matches one of the three legitimate cases listed above.
 
 #### `sys.indexes` | identify user tables that are heaps
 
@@ -438,7 +426,7 @@ _Only one user table is currently a heap. That is fine for a disposable or stagi
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
 | Result set empty | No heaps | ✅ in most OLTP/reporting databases | Every user table has a clustered shape. | Good default for predictable row access and reduced forwarding-record risk. |
-| One or few deliberate heaps | Depends | A heap exists intentionally. | Acceptable for truncate-reload staging or narrow ETL patterns. |
+| One or few heaps matching a legitimate use case | Depends | A heap exists for a documented reason (truncate-reload staging, write-once sink, NC-only access). Verify by checking `sys.dm_db_index_physical_stats` for zero `forwarded_record_count` and confirming the table is not join-probed. | Acceptable when the workload matches; flag for review if forwarding records appear or the table starts receiving updates. |
 | Many heaps | ❌ | Clustered design has likely been skipped broadly. | Review immediately; scans, forwarding records, and maintenance complexity often rise. |
 
 ### `sys.index_columns` | confirm key order and sort direction
@@ -509,7 +497,9 @@ The textbook thresholds from Microsoft's index-maintenance guidance are:
 - `5 %–30 %` — `ALTER INDEX ... REORGANIZE` (online, incremental, low-impact).
 - `> 30 %` — `ALTER INDEX ... REBUILD` (higher-impact, rebuilds statistics, online if Enterprise).
 
-These are starting points, not absolute rules. Very small indexes (under ~1000 pages) rarely justify any maintenance because fragmentation has no measurable read impact at that scale. Very write-hot indexes may justify rebuilding earlier, or lowering `fill_factor` to absorb splits in advance.
+These are starting points, not absolute rules. The inputs that push you toward action within the 5–30% band are **index size** (fragmentation on a 10-page index is noise; on a 100,000-page index it costs real scan I/O), **workload type** (a range-scan-heavy analytics workload feels fragmentation more than a point-lookup OLTP workload), and **page density** (check `avg_page_space_used_in_percent` — if it drops below 70% alongside rising fragmentation, the index is both sparse and scattered). Very small indexes (under ~1,000 pages) rarely justify any maintenance. Very write-hot indexes may justify rebuilding earlier, or lowering `fill_factor` to absorb splits in advance.
+
+**Concrete example:** The `IX_silver_eurostoxx50_ohlcv_symbol_date` index on stoxx shows 40.59% fragmentation at 894 leaf pages — this crosses the 30% rebuild threshold and the page count is large enough to matter. The correct action is `ALTER INDEX [IX_silver_eurostoxx50_ohlcv_symbol_date] ON silver.eurostoxx50_ohlcv REBUILD WITH (ONLINE = ON)` (or without `ONLINE` on Standard Edition). **Feedback signal:** after the rebuild, re-run the `sys.dm_db_index_physical_stats` query — `avg_fragmentation_in_percent` should drop below 1% and `avg_page_space_used_in_percent` should rise to ~99%. If fragmentation returns to 30%+ within days, the root cause is the insert pattern (non-sequential key), and lowering `fill_factor` (e.g., to 90%) on the next rebuild is the appropriate response.
 
 > [!warning] SAMPLED and DETAILED modes are not free
 >
@@ -1543,7 +1533,7 @@ _This output captures the main design surface clearly: clustered PK, unique nonc
 | `is_primary_key` | `1` on `NONCLUSTERED` | Depends | PK backed by NC index, usually because a clustered index already existed | Legitimate pattern when clustering key is different from the business PK |
 | `has_filter` | `1` with low `rows` | ✅ | Filter catches a small hot subset | Classic filtered-index win |
 | `fill_factor` | `0` | Default | 100 % full at build time | Fine for read-mostly or append-only indexes |
-| `fill_factor` | `70–90` | Depends | Deliberate headroom for page splits | Only justified when `leaf_allocation_count` shows frequent splits on this index |
+| `fill_factor` | `70–90` | Depends | Deliberate headroom for page splits | Set to 90% first; if `leaf_allocation_count` in `sys.dm_db_index_operational_stats` still shows frequent splits after one workload cycle, drop to 80%. Below 70% wastes > 30% of leaf space — only justified for extreme random-insert patterns. All stoxx indexes currently use 0 (= 100% fill) because the workload is append-heavy with minimal mid-tree inserts. |
 | `fill_factor` | `< 70` | ❌ | Wastes page space without clear benefit | Rebuild at default unless measured contention justifies the lower value |
 | `optimize_for_sequential_key` | `1` on a sequential-clustered PK | ✅ | Last-page contention mitigation enabled | Appropriate for write-hot identity/sequence clustered keys |
 | `optimize_for_sequential_key` | `1` on a non-sequential index | ❌ | No benefit; fixed scheduling overhead | Rebuild without the option |

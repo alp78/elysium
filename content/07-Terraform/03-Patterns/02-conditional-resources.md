@@ -1,5 +1,5 @@
 ---
-title: "02 - Terraform Conditional Resources"
+title: "02 - Conditional Resources"
 tags: [terraform, iac]
 aliases: [terraform conditional, terraform count, terraform for_each, optional resources terraform, terraform ternary]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
@@ -10,7 +10,8 @@ status: complete
 
 # Terraform Conditional Resources
 
-> [!quote]
+> [!quote] John Ousterhout on flexibility and complexity
+>
 > "Flexibility in software is a double-edged sword. Every option you add also adds complexity."
 >
 > — **John Ousterhout**, *A Philosophy of Software Design* (2018)
@@ -25,13 +26,15 @@ The `count` meta-argument controls how many instances of a resource Terraform cr
 
 A ternary expression evaluates a condition and returns `1` (create) or `0` (skip). When a variable is empty or a feature flag is false, the resource is not created at all.
 
+*Toggle resource creation based on whether the API key variable is non-empty.*
+
 ```hcl
 count = var.dd_api_key != "" ? 1 : 0
 ```
 
 When `count` is present on a resource, Terraform tracks it as a list in state — even when `count = 1`. All references to the resource must use index notation: `google_service_account.datadog[0].email`. If `count` changes from `1` to `0` on an existing resource, Terraform plans a destroy action for that resource.
 
-> [!tip] Cleaner Access with `one()` (Terraform 0.15+)
+> [!tip] Cleaner access with `one()` (Terraform 0.15+)
 >
 > The `one()` function accepts a list of zero or one elements and returns either the element or `null`. This avoids the `[0]` index that errors when the list is empty:
 >
@@ -51,6 +54,8 @@ The data pipeline project makes Datadog entirely optional — when `dd_api_key` 
 
 The service account is only created when a Datadog API key is provided. The `count` ternary checks if the variable is non-empty.
 
+*Create the Datadog service account only when an API key is provided.*
+
 ```hcl
 resource "google_service_account" "datadog" {
   count        = var.dd_api_key != "" ? 1 : 0
@@ -62,6 +67,8 @@ resource "google_service_account" "datadog" {
 #### Conditional IAM binding
 
 All IAM bindings for Datadog also use `count` with the same condition. The `[0]` index on `google_service_account.datadog[0].email` is required because any resource with `count` is tracked as a list in state — even when `count = 1`.
+
+*Grant the monitoring viewer role only when the Datadog SA exists.*
 
 ```hcl
 resource "google_project_iam_member" "datadog_monitoring" {
@@ -76,6 +83,8 @@ resource "google_project_iam_member" "datadog_monitoring" {
 
 The Datadog secret container (`google_secret_manager_secret`) is always created so the slot exists in the project, but the version containing the actual key value is only created when the key is provided. This "always create the container, conditionally create the value" pattern means enabling Datadog later requires only one `terraform apply`, not a refactor.
 
+*Store the Datadog API key only when provided.*
+
 ```hcl
 resource "google_secret_manager_secret_version" "dd_api_key" {
   count       = var.dd_api_key != "" ? 1 : 0
@@ -87,6 +96,8 @@ resource "google_secret_manager_secret_version" "dd_api_key" {
 ### Conditional Firewall with Dynamic IP
 
 The Airflow UI firewall rule conditionally includes the admin's IP address in its source ranges. Rather than toggling the entire resource with `count`, this pattern uses `compact(concat(...))` to build a dynamic list of CIDR ranges where optional elements are included or excluded based on a variable.
+
+*Build a dynamic source range that always includes IAP and conditionally includes the admin IP.*
 
 ```hcl
 resource "google_compute_firewall" "allow_airflow_ui" {
@@ -123,7 +134,7 @@ The result is that `source_ranges` always contains the IAP proxy range (`35.235.
 
 When a resource uses `count`, any reference to it must account for the possibility that it does not exist. Referencing a `count`-gated resource without an index causes a plan error when `count = 0`.
 
-> [!danger] Direct Reference Without Index
+> [!danger] Direct reference without index
 >
 > Referencing a `count`-gated resource without the `[0]` index causes Terraform to fail during plan when the resource does not exist:
 >
@@ -131,7 +142,7 @@ When a resource uses `count`, any reference to it must account for the possibili
 > member = "serviceAccount:${google_service_account.datadog.email}"
 > ```
 
-> [!success] Guard with Matching count Condition
+> [!success] Guard with matching `count` condition
 >
 > Place the same `count` condition on the dependent resource so it is also skipped when the parent does not exist. Always use the `[0]` index when referencing:
 >
@@ -142,8 +153,6 @@ When a resource uses `count`, any reference to it must account for the possibili
 > }
 > ```
 
----
-
 ## for_each — Multiple Instances from a Collection
 
 The `for_each` meta-argument creates one resource instance per element in a map or set. Unlike `count`, which uses numeric indices, `for_each` assigns each instance a string key derived from the map key or set element. This makes additions and removals safe — Terraform targets only the specific key that changed, without renumbering or recreating other instances.
@@ -151,6 +160,8 @@ The `for_each` meta-argument creates one resource instance per element in a map 
 ### Map Iteration Pattern
 
 Pass a map to `for_each` to create one resource per key-value pair. Inside the resource block, `each.key` returns the map key and `each.value` returns the corresponding value.
+
+*Create one BigQuery dataset per environment using map keys as identifiers.*
 
 ```hcl
 variable "environments" {
@@ -173,9 +184,13 @@ This creates two datasets: `pipeline_dev` and `pipeline_prod`. Removing the `dev
 
 Reference a specific instance by its string key. To iterate over all instances in an output, use a `for` expression.
 
+*Reference a specific `for_each` instance by its string key.*
+
 ```hcl
 google_bigquery_dataset.env_dataset["prod"].dataset_id
 ```
+
+*Output all dataset IDs as a map using a `for` expression.*
 
 ```hcl
 output "dataset_ids" {
@@ -183,7 +198,7 @@ output "dataset_ids" {
 }
 ```
 
-> [!info] for_each Limitations
+> [!info] `for_each` limitations
 >
 > - **Must be known at plan time** — the map or set passed to `for_each` cannot depend on resource attributes that are only computed during apply. If the set depends on a remote value, use an intermediate `local` with a static key set.
 > - **No sensitive values as keys** — Terraform always displays instance keys in plan output. Using a sensitive variable as a key produces a hard error.
@@ -193,6 +208,8 @@ output "dataset_ids" {
 #### for_each with modules (Terraform 0.13+)
 
 Terraform 0.13 introduced `for_each` support on `module` blocks, allowing multiple instances of a module from a single declaration. Module instances are addressed as `module.name["key"]`. Modules called with `for_each` must not contain their own `provider` blocks — this is incompatible with multi-instance module calls.
+
+*Create one module instance per environment using `for_each` on the module block.*
 
 ```hcl
 module "dataset" {
@@ -215,17 +232,19 @@ The two meta-arguments serve different purposes. Use `count` for binary conditio
 | **Removal behavior** | Removing an element renumbers all subsequent instances | Removing a key deletes only that instance |
 | **Refactoring** | Risky — index shift destroys and recreates | Safe — key changes are explicit |
 
-> [!warning] count Index Shift
+> [!warning] `count` index shift
 >
 > If you use `count = 3` to create 3 instances and then remove the first, Terraform renumbers index `[1]` to `[0]` and `[2]` to `[1]`, causing TWO resources to be destroyed and recreated. Use `for_each` with a map whenever the instances have distinct identities.
 
-> [!success] Safe Pattern — Use for_each with Distinct Keys
+> [!success] Safe pattern — use `for_each` with distinct keys
 >
 > Replace `count`-based repetition with `for_each` over a map or set when instances have unique identities. Removing a key deletes only that instance without renumbering others: `for_each = toset(["dashboard", "pipeline", "airflow"])`. Reserve `count` for binary conditional creation (`count = var.enable_x ? 1 : 0`).
 
 ### Dynamic Blocks
 
 A `dynamic` block generates repeated nested blocks inside a resource. Use it when the number of nested blocks (such as firewall `allow` rules or IAM `binding` entries) varies based on input variables. The `dynamic` keyword replaces the nested block name, and `for_each` iterates over a collection to produce one nested block per element.
+
+*Generate one `allow` block per port in the `allowed_ports` variable.*
 
 ```hcl
 resource "google_compute_firewall" "example" {
@@ -250,6 +269,8 @@ With `var.allowed_ports = ["80", "443", "8080"]`, this creates three `allow` blo
 
 The `iterator` argument overrides the default iterator name. This is required when a nested block type shares a name with an outer variable or when nesting multiple `dynamic` blocks where the default names would collide.
 
+*Use a custom iterator name to avoid naming collisions in nested dynamic blocks.*
+
 ```hcl
 dynamic "origin" {
   for_each = var.origins
@@ -261,12 +282,10 @@ dynamic "origin" {
 }
 ```
 
-> [!info] Dynamic Block Limitations
+> [!info] Dynamic block limitations
 >
 > - **Cannot generate meta-argument blocks** — `lifecycle`, `provisioner`, and `connection` blocks cannot be produced with `dynamic`. Terraform processes these before expression evaluation.
 > - **Avoid overuse** — HashiCorp recommends writing nested blocks literally where possible. Excessive use of `dynamic` makes configuration harder to read and signals that the module may not be creating a useful abstraction.
-
----
 
 ## Ternary Operator Patterns
 
@@ -280,6 +299,8 @@ Each form serves a different purpose — from constructing environment-aware nam
 
 Embed a ternary inside string interpolation to produce environment-specific names or labels. The condition selects between two string fragments.
 
+*Produce environment-specific resource names using inline ternary.*
+
 ```hcl
 name = "data-pipeline-${var.environment == "prod" ? "api" : "api-dev"}"
 ```
@@ -287,6 +308,8 @@ name = "data-pipeline-${var.environment == "prod" ? "api" : "api-dev"}"
 #### Boolean flag ternary
 
 Set a boolean argument based on an environment or feature flag. This pattern is common for `deletion_protection`, `force_destroy`, and similar safety toggles.
+
+*Toggle deletion protection based on the environment.*
 
 ```hcl
 deletion_protection = var.environment == "prod" ? true : false
@@ -296,6 +319,8 @@ deletion_protection = var.environment == "prod" ? true : false
 
 The most common ternary use — gating resource creation with `count`. A truthy condition creates one instance, a falsy condition creates none.
 
+*Gate resource creation with a boolean feature flag.*
+
 ```hcl
 count = var.enable_monitoring ? 1 : 0
 ```
@@ -304,11 +329,13 @@ count = var.enable_monitoring ? 1 : 0
 
 Chains multiple conditions to select from three or more values. Use sparingly — nested ternaries become unreadable quickly. For three or more branches, consider a `local` map lookup instead.
 
+*Select machine type from three options using chained ternaries.*
+
 ```hcl
 machine_type = var.environment == "prod" ? "e2-standard-4" : (var.environment == "staging" ? "e2-standard-2" : "e2-medium")
 ```
 
-> [!tip] Replace Nested Ternaries with Map Lookups
+> [!tip] Replace nested ternaries with map lookups
 >
 > When selecting from more than two values, a `local` map is clearer and easier to extend:
 >
@@ -324,8 +351,6 @@ machine_type = var.environment == "prod" ? "e2-standard-4" : (var.environment ==
 > machine_type = local.machine_types[var.environment]
 > ```
 
----
-
 ## Migrating from count to for_each
 
 Refactoring a resource from `count` to `for_each` changes its state address — Terraform sees the old indexed instances as deleted and the new keyed instances as new, planning a destroy-and-recreate cycle. The `moved` block (Terraform 1.1+) tells Terraform that a resource has been relocated without requiring destruction.
@@ -333,6 +358,8 @@ Refactoring a resource from `count` to `for_each` changes its state address — 
 ### moved Block Syntax
 
 A `moved` block maps an old state address to a new one. Terraform updates the state file during the next `terraform apply` without destroying the resource. Each integer index from the `count`-based resource must be explicitly mapped to the corresponding string key in the `for_each`-based resource.
+
+*Map numeric `count` indexes to string `for_each` keys during migration.*
 
 ```hcl
 moved {
@@ -346,19 +373,17 @@ moved {
 }
 ```
 
-> [!danger] Migration Without moved Blocks
+> [!danger] Migration without `moved` blocks
 >
 > Switching from `count` to `for_each` without `moved` blocks causes Terraform to plan destruction of all existing instances (addressed by index) and creation of new instances (addressed by key). For stateful resources like databases, buckets, or VMs, this means data loss.
 
-> [!success] Declare moved Blocks Before Applying
+> [!success] Declare `moved` blocks before applying
 >
 > Add `moved` blocks mapping every `[index]` to its `["key"]` equivalent before running `terraform apply`. Terraform updates the state addresses in-place without touching the real infrastructure. Remove the `moved` blocks after all environments have been updated.
 
-> [!info] moved Block Scope
+> [!info] `moved` block scope
 >
 > `moved` blocks work within a single Terraform configuration. Cross-stack migrations (moving a resource between separate state files) require the imperative `terraform state mv` command or third-party tools like `tfmigrate`.
-
----
 
 ## Decision Guide
 
@@ -400,12 +425,12 @@ flowchart TD
 
 **Terraform chapter**
 
-- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — the variables that drive `count` conditions
-- [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) — state address changes when switching between `count` and `for_each`
-- [terraform-resource-dependencies](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-resource-dependencies) — how Terraform resolves dependencies for conditional resources
-- [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) — `for_each` with modules for multi-environment patterns
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — real-world use of conditional Datadog resources
-- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — the conditional admin IP firewall rule
+- [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — the variables that drive `count` conditions
+- [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — state address changes when switching between `count` and `for_each`
+- [resource-dependencies](https://alp78.github.io/elysium/07-Terraform/Patterns/resource-dependencies) — how Terraform resolves dependencies for conditional resources
+- [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — `for_each` with modules for multi-environment patterns
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — real-world use of conditional Datadog resources
+- [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking) — the conditional admin IP firewall rule
 
 **GCP services (Folder 06)**
 

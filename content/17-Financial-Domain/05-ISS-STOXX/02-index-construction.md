@@ -4,7 +4,7 @@ description: "Comprehensive glossary of index construction terms extracted from 
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - index-construction
 aliases:

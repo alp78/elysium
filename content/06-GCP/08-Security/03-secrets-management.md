@@ -149,7 +149,7 @@ version: 1
 
 ### Terraform Provisioning
 
-The Terraform blocks below are part of the broader [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) module that provisions both IAM bindings and Secret Manager resources together.
+The Terraform blocks below are part of the broader [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) module that provisions both IAM bindings and Secret Manager resources together.
 
 ```hcl
 resource "google_secret_manager_secret" "db_password" {
@@ -404,7 +404,7 @@ Common misconfigurations that introduce credential exposure risk, ordered by sev
 
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — Identity model and connection patterns that determine how secrets are consumed
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account design
-- [tf-iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-iam-secrets-serverless) — Terraform blocks for secrets and IAM
+- [iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/iam-secrets-serverless) — Terraform blocks for secrets and IAM
 - [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — Workload Identity Federation setup
 - [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Airflow configuration and connections
 - [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — Rule 9: Automate Everything

@@ -4,7 +4,7 @@ description: "Comprehensive glossary of data collection, quality, coverage, esti
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - index-construction
 aliases:

@@ -2,7 +2,7 @@
 title: "Domain: BigQuery"
 tags:
   - domain
-  - db-queries
+  - database
 ---
 
 # BigQuery

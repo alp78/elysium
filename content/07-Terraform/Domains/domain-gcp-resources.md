@@ -19,12 +19,12 @@ mindmap
     (registry, CI)
 ```
 
-> [!abstract]- [[01-terraform-networking]]
+> [!abstract]- [[01-networking]]
 
-> [!abstract]- [[02-terraform-compute]]
+> [!abstract]- [[02-compute]]
 
-> [!abstract]- [[03-terraform-iam-and-secrets]]
+> [!abstract]- [[03-iam-and-secrets]]
 
-> [!abstract]- [[04-terraform-cloud-run]]
+> [!abstract]- [[04-cloud-run]]
 
-> [!abstract]- [[05-terraform-registry-and-ci]]
+> [!abstract]- [[05-registry-and-ci]]

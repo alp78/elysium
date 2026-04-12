@@ -3,7 +3,6 @@ title: "02 - sqlcmd Connection and Usage"
 tags:
   - sql-server
   - administration
-  - sqlcmd
 aliases:
   - sqlcmd
   - SQL Server command-line client

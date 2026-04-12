@@ -1,6 +1,6 @@
 ---
 title: "07 - Advanced Types and Interop - C#"
-tags: [csharp, deedle, polars, dataframes]
+tags: [csharp, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
 description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [07_py_types_interop](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/07_py_types_interop) for the Python equivalent."

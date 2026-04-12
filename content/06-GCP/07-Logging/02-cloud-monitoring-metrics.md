@@ -1,6 +1,6 @@
 ---
 title: "02 - Cloud Monitoring Metrics"
-tags: [observability, cloud-monitoring, gcp, monitoring]
+tags: [observability, gcp, monitoring]
 aliases: [Cloud Monitoring, GCP metrics, time series, gcloud monitoring, VM CPU metrics, Cloud Monitoring metrics descriptors, BigQuery metrics]
 description: "How to query Cloud Monitoring time-series metrics using the gcloud CLI — listing available metric types and reading historical metric data for capacity planning, right-sizing, and pipeline health monitoring."
 created: 2026-03-22

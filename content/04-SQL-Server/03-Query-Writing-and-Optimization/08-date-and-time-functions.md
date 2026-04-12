@@ -1,6 +1,6 @@
 ---
 title: "08 - Date and Time Functions"
-tags: [sql, sql-server, tsql, date, time, datetime2, datetimeoffset, dateadd, datediff, datepart, eomonth, datefromparts, iso-8601, at-time-zone, dst, half-open-range, sargability, time-zone]
+tags: [sql, sql-server, tsql, date, time, time-zone]
 aliases: [datetime functions, AT TIME ZONE, DATEDIFF, DATEADD, EOMONTH, datetimeoffset, DATEPART]
 description: "T-SQL reference for SQL Server date and time types, current-time functions, DATEADD, DATEDIFF, DATEDIFF_BIG, DATEPART, DATENAME, EOMONTH, DATEFROMPARTS, ISO 8601 literals, AT TIME ZONE, DST, SARGability, and production-safe temporal query patterns."
 created: 2026-03-22

@@ -1,6 +1,6 @@
 ---
 title: "02 - VM SSH and File Transfer"
-tags: [gcp, compute-engine, ssh, iap]
+tags: [gcp, compute, ssh, iap]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
 created: 2026-03-22
@@ -73,7 +73,7 @@ a1b2c3d4e5f6   airflow   0.12%   512MiB / 15.5GiB    3.22%
 
 ## File Transfer via SCP
 
-`gcloud compute scp` wraps `scp` over the IAP tunnel, allowing you to copy files between your local machine and a VM without the VM needing a public IP. The `hostname:path` convention mirrors standard `scp` syntax — the remote side is prefixed with the VM name. The transfer patterns here complement the general [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) commands. For VM provisioning via IaC, see [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute).
+`gcloud compute scp` wraps `scp` over the IAP tunnel, allowing you to copy files between your local machine and a VM without the VM needing a public IP. The `hostname:path` convention mirrors standard `scp` syntax — the remote side is prefixed with the VM name. The transfer patterns here complement the general [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) commands. For VM provisioning via IaC, see [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute).
 
 ### gcloud compute scp
 

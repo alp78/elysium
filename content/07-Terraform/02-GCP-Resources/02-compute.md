@@ -1,5 +1,5 @@
 ---
-title: "02 - Terraform: Compute"
+title: "02 - Compute"
 tags: [terraform, gcp, compute]
 aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimized OS, COS, startup script terraform]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."
@@ -10,20 +10,22 @@ status: complete
 
 # Terraform Compute — Virtual Machine Instances
 
-> [!quote]
+> [!quote] Mitchell Hashimoto on infrastructure operations
+>
 > "Cloud providers have tricked us into believing that we're all too dumb to operate our own infrastructure, at any scale."
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
 This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestrator VM and the SQL Server database VM. These are the two compute instances in the example infrastructure.
 
-> [!info] Assumed Variables
+> [!info] Assumed variables
+>
 > All code cells in this note reference variables and resources defined elsewhere in the Terraform configuration:
 > - `var.zone` — the GCP zone (e.g., `europe-west1-b`)
 > - `var.db_password` — the SQL Server SA password (marked `sensitive` in variables)
 > - `var.dd_api_key` — the Datadog API key (marked `sensitive` in variables)
-> - `google_compute_subnetwork.main` — the VPC subnet resource from [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking)
-> - `google_service_account.airflow` / `google_service_account.pipeline` — service account resources from [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets)
+> - `google_compute_subnetwork.main` — the VPC subnet resource from [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking)
+> - `google_service_account.airflow` / `google_service_account.pipeline` — service account resources from [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets)
 
 ## Architecture Context
 
@@ -65,15 +67,16 @@ flowchart TD
 ```
 
 > [!question] Container-Optimized OS vs Ubuntu
+>
 > Both VMs use `google_compute_instance` but with fundamentally different OS images. Choose based on workload type:
 > - **Container-Optimized OS (COS):** Minimal, hardened, auto-updating. No package manager — workloads must be containerized. Ideal for Docker-based services like Airflow.
 > - **Ubuntu LTS:** Full-featured with `apt`. Required when software must be installed as system packages (e.g., SQL Server, which does not support COS).
 
----
-
 ## google_compute_instance | Airflow Orchestrator VM
 
 The Airflow orchestrator VM. Runs 4-5 Docker containers: webserver, scheduler, triggerer, PostgreSQL, and optionally the Datadog Agent. This is a zonal resource requiring the Compute Engine API (`compute.googleapis.com`) to be enabled. The Terraform service account needs the `roles/compute.instanceAdmin.v1` role to create and manage instances.
+
+*Declare the Airflow orchestrator VM with E2 shared-core sizing.*
 
 ```hcl
 resource "google_compute_instance" "airflow" {
@@ -91,19 +94,23 @@ resource "google_compute_instance" "airflow" {
 | `zone` | Yes | `europe-west1-b`. VMs are zonal (tied to a specific datacenter), unlike Cloud Run which is regional. **Changing this forces a new resource.** |
 | `tags` | No | **Network tags** — firewall rules target VMs by tag, not by name. This VM matches rules with `target_tags = ["airflow"]` (ports 8080, 8126, 22). |
 
-> [!danger] Force-Replacement Triggers
+> [!danger] Force-replacement triggers
+>
 > Changing any of these arguments destroys the VM and creates a new one. Data on the boot disk is lost:
 > - `name` — the instance identity
 > - `zone` — VMs cannot be moved between zones
 > - `boot_disk.initialize_params.image` — changing the OS image
 > - `boot_disk.initialize_params.size` — shrinking the disk (increasing is in-place)
 
-> [!success] Safe Approach
+> [!success] Safe approach
+>
 > For in-place updates (machine type, metadata, tags, labels), set `allow_stopping_for_update = true`. For disk changes, use a separate `google_compute_attached_disk` resource instead of resizing the boot disk. Always run `terraform plan` before `terraform apply` to check for `# forces replacement` in the output.
 
 ### Boot Disk — Container-Optimized OS
 
 The boot disk configuration specifies the OS image, disk size, and [disk type](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots). Changing the image forces a new resource; increasing size is an in-place update.
+
+*Configure Container-Optimized OS on a 20 GB balanced persistent disk.*
 
 ```hcl
 boot_disk {
@@ -125,6 +132,8 @@ boot_disk {
 
 The network interface places the VM in a VPC subnet and optionally assigns a public IP. An empty `access_config` block requests an ephemeral public IP for SSH and Airflow UI access.
 
+*Place the VM in the VPC subnet with an ephemeral public IP.*
+
 ```hcl
 network_interface {
   subnetwork = google_compute_subnetwork.main.id
@@ -138,12 +147,15 @@ network_interface {
 | `subnetwork` | Yes | Places the VM in the `data-pipeline-subnet` (10.0.0.0/24). It receives a private IP like `10.0.0.2`. |
 | `access_config {}` | No | An empty block requests an **ephemeral public IP**. This IP changes on VM restart. Needed for direct browser access to the Airflow UI and for SSH. If this block is omitted entirely (as in the SQL VM), the VM has no public IP. |
 
-> [!info] Ephemeral vs Static IP
+> [!info] Ephemeral vs static IP
+>
 > An ephemeral IP changes every time the VM is stopped and started. If external clients or DNS records depend on a stable address, reserve a static IP with `google_compute_address` and assign it via `access_config { nat_ip = google_compute_address.airflow.address }`. Static IPs incur charges when not attached to a running VM.
 
 ### Service Account
 
 The [service account](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) attached to this VM determines its GCP API identity. All API calls from the VM (e.g., triggering Cloud Run jobs, reading GCS buckets) use this identity.
+
+*Attach the Airflow service account with full API scope (IAM controls actual access).*
 
 ```hcl
 service_account {
@@ -154,12 +166,14 @@ service_account {
 
 | Argument | Required | Description |
 |---|---|---|
-| `email` | Yes | The GCP service account this VM runs as. References the `google_service_account.airflow` resource defined in [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets). |
+| `email` | Yes | The GCP service account this VM runs as. References the `google_service_account.airflow` resource defined in [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets). |
 | `scopes` | Yes | **OAuth scopes** — a legacy access control layer. `cloud-platform` is the broadest scope (all GCP APIs). Actual permissions are controlled by IAM roles on the service account, not scopes. Setting `cloud-platform` here is standard practice — it means "let IAM decide." |
 
 ### Metadata — Startup Script and OS Login
 
 GCE instance metadata is a key-value store accessible from within the VM at `http://metadata.google.internal`. Terraform writes these values at create time and updates them in-place on changes.
+
+*Pass the startup script and enable OS Login via instance metadata.*
 
 ```hcl
 metadata = {
@@ -202,6 +216,8 @@ The startup script (`airflow-startup.sh`) runs on every boot and is idempotent �
 
 [Shielded VM](https://cloud.google.com/compute/shielded-vm/docs/shielded-vm) features harden the boot process against tampering. All three options are enabled — this is recommended for production workloads.
 
+*Enable all three Shielded VM security features.*
+
 ```hcl
 shielded_instance_config {
   enable_secure_boot          = true
@@ -220,21 +236,27 @@ shielded_instance_config {
 
 Certain in-place updates require the VM to be stopped before Terraform can apply the change. Without this argument, Terraform errors out instead of stopping the VM.
 
+*Allow Terraform to stop the VM for in-place updates like machine type changes.*
+
 ```hcl
 allow_stopping_for_update = true
 ```
 
 Changes that require a VM stop include: `machine_type`, `min_cpu_platform`, `service_account`, `enable_display`, and some `scheduling` options. During the stop-start cycle, the VM is unavailable — plan maintenance windows accordingly.
 
-> [!warning] Downtime During Apply
+> [!warning] Downtime during apply
+>
 > With `allow_stopping_for_update = true`, a `terraform apply` that changes `machine_type` will stop the VM, apply the change, and restart it. This causes **downtime** for any services running on the VM (Airflow UI, scheduled DAGs).
 
-> [!success] Safe Approach
+> [!success] Safe approach
+>
 > Schedule `machine_type` changes during maintenance windows. For zero-downtime upgrades, consider using a [managed instance group](https://cloud.google.com/compute/docs/instance-groups) with rolling updates instead of standalone instances.
 
 ### Lifecycle Meta-Arguments
 
 Lifecycle meta-arguments control how Terraform handles resource changes. These are critical for stateful compute instances.
+
+*Protect against accidental destruction and ignore externally managed metadata changes.*
 
 ```hcl
 lifecycle {
@@ -250,11 +272,11 @@ lifecycle {
 | `create_before_destroy` | Creates the replacement resource before destroying the old one. Reduces downtime but requires that two instances can coexist briefly (unique names, no port conflicts). |
 | `replace_triggered_by` | Forces replacement when a referenced resource or attribute changes. Useful for rotating VMs when a startup script or service account changes. |
 
----
-
 ## google_compute_instance | SQL Server Database VM
 
 The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). This is a stateful instance — the boot disk holds database files, transaction logs, and TempDB. For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration).
+
+*Declare the SQL Server database VM with no public IP.*
 
 ```hcl
 resource "google_compute_instance" "sql" {
@@ -272,15 +294,19 @@ resource "google_compute_instance" "sql" {
 | `zone` | Yes | Must match the Airflow VM's zone for low-latency private network communication. Changing forces a new resource. |
 | `tags` | No | Matches firewall rules for port 1433 (SQL) and port 22 (SSH via IAP). |
 
-> [!warning] Stateful VM Without `prevent_destroy`
+> [!warning] Stateful VM without `prevent_destroy`
+>
 > This VM stores SQL Server database files directly on the boot disk. An accidental `terraform destroy` or removal from config deletes the VM **and all data**. There is no automatic backup unless configured at the SQL Server level.
 
-> [!success] Add Lifecycle Protection
+> [!success] Add lifecycle protection
+>
 > Add `lifecycle { prevent_destroy = true }` to the resource block. For additional safety, create scheduled [disk snapshots](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots) as a backup mechanism.
 
 ### Boot Disk — Ubuntu with SSD
 
 The SQL VM uses a full Ubuntu image with an SSD [persistent disk](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots) for database I/O performance.
+
+*Configure Ubuntu 22.04 LTS on a 30 GB SSD persistent disk for database I/O.*
 
 ```hcl
 boot_disk {
@@ -300,7 +326,9 @@ boot_disk {
 
 ### Network Interface — No Public IP
 
-No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via [IAP tunnel](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) for SSH). Outbound internet access is provided by [Cloud NAT](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking#resource-cloud-nat) for package installation.
+No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via [IAP tunnel](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) for SSH). Outbound internet access is provided by [Cloud NAT](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking#resource-cloud-nat) for package installation.
+
+*Place the VM in the VPC subnet with no public IP — reachable only via private IP and IAP.*
 
 ```hcl
 network_interface {
@@ -315,6 +343,8 @@ network_interface {
 ### Metadata — Startup Script with Credentials
 
 The SQL VM passes sensitive values (database password, monitoring API key) through instance metadata. The startup script reads these at boot via `curl` to the metadata server.
+
+*Pass the startup script, database password, and API key via instance metadata.*
 
 ```hcl
 metadata = {
@@ -332,10 +362,12 @@ metadata = {
 | `dd-api-key` | No | The Datadog API key, passed via instance metadata. The startup script reads it and installs the Datadog Agent if non-empty. Same opt-in pattern as the Airflow VM. |
 | `enable-oslogin` | No | Enables IAM-based SSH access, same as the Airflow VM. |
 
-> [!warning] Credentials in Instance Metadata
+> [!warning] Credentials in instance metadata
+>
 > Instance metadata is readable by any process running on the VM (and by any user with `compute.instances.get` IAM permission on the project). The SA password and API key are stored in plain text in both the metadata and the Terraform state file.
 
-> [!success] Use Secret Manager Instead
+> [!success] Use Secret Manager instead
+>
 > For production workloads, store credentials in [Secret Manager](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) and have the startup script fetch them via the Secret Manager API. This limits access to the service account's IAM bindings and provides audit logging of secret access.
 
 ### SQL Server Startup Script Execution Flow
@@ -355,13 +387,13 @@ Unlike the Airflow script which is idempotent, the SQL Server script (`sql-start
 11. **Start agent** — enables and starts the `datadog-agent` systemd service
 12. **Create marker file** — prevents re-running the installation
 
----
-
 ## Verification Commands
 
 After `terraform apply`, verify the instances with `gcloud` commands. See [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) for more instance management operations and [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer) for SSH patterns.
 
 ### List all VMs
+
+*List all VMs whose names contain `data-pipeline`, showing zone, machine type, internal IP, external IP, and status.*
 
 ```bash
 gcloud compute instances list --filter="name~data-pipeline"
@@ -369,7 +401,7 @@ gcloud compute instances list --filter="name~data-pipeline"
 
 ### Describe a VM
 
-Shows IPs, tags, service account, machine type, and disk configuration.
+*Show full instance metadata including IPs, tags, service account, machine type, and disk configuration.*
 
 ```bash
 gcloud compute instances describe data-pipeline-airflow --zone=europe-west1-b
@@ -377,9 +409,13 @@ gcloud compute instances describe data-pipeline-airflow --zone=europe-west1-b
 
 ### Get specific IP addresses
 
+*Extract the private IP of the SQL VM (no public IP — use this address for VPC-internal connections).*
+
 ```bash
 gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b --format="value(networkInterfaces[0].networkIP)"
 ```
+
+*Extract the ephemeral public IP of the Airflow VM for browser access to the Airflow UI.*
 
 ```bash
 gcloud compute instances describe data-pipeline-airflow --zone=europe-west1-b --format="value(networkInterfaces[0].accessConfigs[0].natIP)"
@@ -389,9 +425,13 @@ gcloud compute instances describe data-pipeline-airflow --zone=europe-west1-b --
 
 Connect to either VM through [IAP tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling), which does not require a public IP.
 
+*Open an SSH session to the Airflow VM through an IAP tunnel using your GCP identity.*
+
 ```bash
 gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b --tunnel-through-iap
 ```
+
+*Open an SSH session to the SQL VM through an IAP tunnel — the only SSH path since it has no public IP.*
 
 ```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
@@ -401,13 +441,15 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 If VMs were created manually or via `gcloud` before Terraform adoption, import them into state rather than recreating them.
 
-> [!todo] Import Workflow
+> [!todo] Import workflow
+>
 > 1. Write the `google_compute_instance` resource block in your `.tf` file matching the existing VM's configuration
 > 2. Run `terraform import google_compute_instance.<name> projects/<project>/zones/<zone>/instances/<instance-name>`
 > 3. Run `terraform plan` — the output should show `No changes` if the config matches
 > 4. Fix any drift (arguments in the real VM that differ from your config) until the plan is clean
 
-> [!info] Terraform 1.5+ Import Blocks
+> [!info] Terraform 1.5+ import blocks
+>
 > Declarative import blocks allow importing without CLI commands. Add to your config:
 > ```hcl
 > import {
@@ -417,16 +459,17 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 > ```
 > Run `terraform plan` to preview the import, then `terraform apply` to execute it. The `import` block can be removed after the resource is in state.
 
-> [!info] Instance Templates and Managed Instance Groups
+> [!info] Instance templates and managed instance groups
+>
 > Standalone `google_compute_instance` resources are suitable for unique, long-lived VMs (like this Airflow orchestrator and SQL Server). For horizontally scalable workloads, consider `google_compute_instance_template` + `google_compute_instance_group_manager` which provide autoscaling, rolling updates, and automatic healing.
 
 ## Related
 
 **Terraform configuration:**
-- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — the VPC, subnet, and firewall rules these VMs attach to
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — the service accounts assigned to these VMs
-- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — Cloud Run resources that connect to the SQL VM's private IP
-- [tf-compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-compute-and-storage) — reusable HCL blocks for compute and storage resources
+- [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking) — the VPC, subnet, and firewall rules these VMs attach to
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — the service accounts assigned to these VMs
+- [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run resources that connect to the SQL VM's private IP
+- [compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/compute-and-storage) — reusable HCL blocks for compute and storage resources
 
 **GCP services:**
 - [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — starting, stopping, resizing, and live migration of GCE instances

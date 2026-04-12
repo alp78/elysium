@@ -1,6 +1,6 @@
 ---
 title: "06 - Point-in-Time Integrity Logic"
-tags: [performance, sql-server, tsql, temporal, auditability, financial-data]
+tags: [performance, sql-server, tsql, temporal-tables, auditability, financial-data]
 aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight normalization, constituent list, rebalancing, index reconstitution, SCD Type 2, temporal join]
 description: "Production patterns for point-in-time integrity in SQL Server: daily snapshot retrieval, valid-time reference data, system-versioned corrections, weight-sum gates, temporal joins, and reconciliation checks."
 created: 2026-03-22

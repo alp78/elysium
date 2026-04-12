@@ -4,7 +4,7 @@ description: "Comprehensive glossary of ESG scores, risk ratings, controversy ra
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - esg
 aliases:

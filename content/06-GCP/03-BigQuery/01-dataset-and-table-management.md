@@ -1,16 +1,18 @@
 ---
 title: "01 - Dataset and Table Management"
-tags: [bigquery, gcp]
+tags:
+  - bigquery
+  - gcp
 aliases: [BigQuery datasets, BigQuery tables, bq ls, bq show, bq mk, BQ schema, BigQuery table management]
 description: "How to list, inspect, create, and delete BigQuery datasets and tables using the bq CLI — including schemas, metadata, partitioning, and clustering configuration."
 created: 2026-03-22
-updated: 2026-04-05
+updated: 2026-04-12
 status: complete
 ---
 
 # BigQuery Dataset and Table Management
 
-> [!quote]
+> [!quote] Kurt Bollacker on Data Stewardship
 > "Data that is loved tends to survive."
 >
 > — **Kurt Bollacker**, data scientist and engineer
@@ -52,144 +54,331 @@ flowchart TD
 
 Listing operations require `roles/bigquery.metadataViewer` or `roles/bigquery.dataViewer` on the project or dataset. Results are scoped to the active project unless `--project_id` is specified.
 
-### bq ls — list datasets and tables
+### bq | ls | list datasets and tables
 
-#### bq ls — list all datasets in the project
+#### List all datasets in the project
+
+**When to run:** after setting the active project with `gcloud config set project` or when confirming which datasets exist before creating tables or running queries.
+**Trigger:** beginning of any BigQuery operational session, or verifying that a Terraform-provisioned dataset landed correctly.
+**Context:** `bq ls` is a read-only CLI command. Requires `roles/bigquery.metadataViewer` on the project. No cost incurred — metadata operations are free.
+**Purpose:** enumerate all dataset IDs in the active project to confirm resource inventory before proceeding to table-level operations.
 
 `bq ls` without arguments returns all dataset IDs in the active project. Use `bq show` to inspect metadata for a specific dataset.
+
+*List all datasets in the active project.*
 
 ```bash
 bq ls
 ```
 
 ```text
-  datasetId
-  -----------
-  my_dataset
-  raw_data
-  staging
+   datasetId
+ --------------
+  stoxx_bronze
+  stoxx_gold
+  stoxx_silver
 ```
 
-#### bq ls — list tables in a dataset
+The output shows three datasets in the `bq-wh-nb` project, following a medallion architecture (bronze → silver → gold). Each dataset ID is the namespace used when referencing tables: `stoxx_bronze.eurostoxx50_ohlcv`.
 
-Passing a dataset ID lists all tables, views, and materialized views in that dataset, along with their type, row count, and uncompressed size.
+#### List tables in a dataset
+
+**When to run:** after confirming datasets exist, or when investigating what tables are available for querying.
+**Trigger:** onboarding to a new dataset, verifying a pipeline loaded the expected tables, or auditing table types (TABLE vs VIEW vs MATERIALIZED_VIEW).
+**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset.
+**Purpose:** enumerate all tables, views, and materialized views in a dataset along with their type, partitioning, and clustering configuration.
+
+Passing a dataset ID lists all resources in that dataset. The `Time Partitioning` column shows the partition granularity and field; `Clustered Fields` shows the clustering key columns in priority order.
+
+| Column | Meaning |
+|---|---|
+| `tableId` | Table, view, or materialized view name within the dataset |
+| `Type` | Resource type: `TABLE`, `VIEW`, or `MATERIALIZED_VIEW` |
+| `Labels` | Key-value labels attached to the resource (empty if none) |
+| `Time Partitioning` | Partition granularity and field (e.g., `DAY (field: date)`) — blank for non-partitioned tables |
+| `Clustered Fields` | Comma-separated clustering columns in priority order — blank if unclustered |
+
+*List all tables and views in the `stoxx_gold` dataset.*
 
 ```bash
-bq ls my_dataset
+bq ls stoxx_gold
 ```
 
 ```text
-   tableId         Type               Labels   Time Partitioning   Clustered Fields
- ------------ -------------------- -------- ------------------- ------------------
-  ohlcv        TABLE                           DAY                 symbol,_index
-  prices_view  VIEW
-  mv_summary   MATERIALIZED_VIEW
+       tableId        Type    Labels   Time Partitioning   Clustered Fields
+ ------------------- ------- -------- ------------------- ------------------
+  index_performance   TABLE
+  scores_daily        TABLE
+  scores_quarterly    TABLE
+  v_latest_prices     VIEW
+  v_stock_dashboard   VIEW
 ```
+
+The `stoxx_gold` dataset contains three base tables and two views. None of these tables are currently partitioned or clustered — the gold layer aggregates are small enough (5,351 rows in `index_performance`) that full table scans are negligible cost. Views (`v_latest_prices`, `v_stock_dashboard`) appear with `Type: VIEW` and have no physical storage metrics.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--project_id` | `bq ls --project_id=other-project` | List datasets in a project other than the active one |
-| `--max_results` | `bq ls --max_results=50` | Limit the number of results returned |
+| `--max_results` | `bq ls --max_results=50` | Limit the number of results returned (default: 50) |
 | `--format` | `bq ls --format=json` | Output format: `json`, `prettyjson`, `csv`, `sparse`, `pretty` |
+| `--filter` | `bq ls --filter labels.env:prod` | Filter datasets or tables by label key-value pairs |
+| `-a` / `--all` | `bq ls -a` | Show all datasets including hidden ones (prefixed with `_`) |
+| `-d` | `bq ls -d` | List datasets only (default behavior without a dataset argument) |
 
 ## Inspecting Schema and Metadata
 
-`bq show` retrieves the column schema or full table metadata. The `--format=prettyjson` flag renders human-readable JSON. Full metadata includes `numRows`, `numBytes` (uncompressed, in bytes), `type` (`TABLE` | `VIEW` | `MATERIALIZED_VIEW`), `timePartitioning` (partition column and granularity), `clustering` (clustering columns in priority order), and `expirationTime`.
+`bq show` retrieves the column schema or full table metadata. The `--format=prettyjson` flag renders human-readable JSON. Full metadata includes `numRows`, `numBytes` (uncompressed logical bytes), `type` (`TABLE` | `VIEW` | `MATERIALIZED_VIEW`), `timePartitioning` (partition column and granularity), `clustering` (clustering columns in priority order), and `expirationTime` (present only on tables with a configured TTL).
 
-### bq show — schema and metadata
+### bq | show | schema and metadata
 
-#### bq show --schema — column definitions only
+#### Retrieve column definitions only
 
-The `--schema` flag returns only the column definitions as a JSON array. Each entry contains `name`, `type`, `mode` (`NULLABLE` | `REQUIRED` | `REPEATED`), optionally `description`, and nested `fields` for `STRUCT` columns.
+**When to run:** when validating that a table's schema matches the expected column names, types, and modes — before running data loads, building views, or writing application queries against the table.
+**Trigger:** pipeline onboarding, schema drift investigation, or verifying a `bq update` schema change was applied.
+**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. The output is a JSON array — each entry contains `name`, `type`, `mode`, optionally `description`, and nested `fields` for `STRUCT` columns.
+**Purpose:** confirm the exact column definitions without the noise of full table metadata.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `name` | string | Column name |
+| `type` | string | BigQuery data type (`STRING`, `INTEGER`, `FLOAT`, `DATE`, `DATETIME`, `TIMESTAMP`, `BOOLEAN`, `STRUCT`, etc.) |
+| `mode` | string | Nullability: `NULLABLE` (default — accepts NULL), `REQUIRED` (NOT NULL), or `REPEATED` (array of that type) |
+| `description` | string | Optional column description set at table creation or via `bq update` |
+| `fields` | array | Nested field definitions — present only for `STRUCT` / `RECORD` columns |
+
+*Return the schema of `stoxx_bronze.eurostoxx50_ohlcv` as a formatted JSON array.*
 
 ```bash
-bq show --schema --format=prettyjson my_dataset.my_table
+bq show --schema --format=prettyjson stoxx_bronze.eurostoxx50_ohlcv
 ```
 
 ```text
 [
   {
+    "mode": "NULLABLE",
+    "name": "id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "_ingested_at",
+    "type": "DATETIME"
+  },
+  {
+    "mode": "NULLABLE",
     "name": "symbol",
-    "type": "STRING",
-    "mode": "REQUIRED"
+    "type": "STRING"
   },
   {
+    "mode": "NULLABLE",
     "name": "date",
-    "type": "DATE",
-    "mode": "REQUIRED"
+    "type": "DATE"
   },
   {
+    "mode": "NULLABLE",
+    "name": "open",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "high",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "low",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
     "name": "close",
-    "type": "FLOAT",
-    "mode": "NULLABLE"
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "adj_close",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "volume",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "dividends",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "stock_splits",
+    "type": "FLOAT"
   }
 ]
 ```
 
-#### bq show — full table metadata
+The schema shows 12 columns, all `NULLABLE`. The `_ingested_at` DATETIME tracks when the pipeline loaded the row. OHLCV price columns use `FLOAT` (64-bit double precision) — sufficient for stock prices but not for index-level calculations requiring exact decimal arithmetic (use `NUMERIC` for those). The `id` column is the source database surrogate key carried through the pipeline for lineage.
 
-Without `--schema`, the full resource metadata is returned. For operational monitoring: divide `numBytes` by 1,073,741,824 for GB; `timePartitioning.field` and `clustering.fields` confirm the table's physical layout; `expirationTime` is present only on tables with a configured TTL.
+#### Retrieve full table metadata
+
+**When to run:** when investigating a table's physical layout (partitioning, clustering), storage footprint, or time travel retention — before making decisions about table migration, cost optimization, or deletion.
+**Trigger:** storage audit, cost investigation, verifying that partitioning/clustering was applied at creation, or checking `numRows` / `numBytes` for capacity planning.
+**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. Returns the full BigQuery table resource as JSON.
+**Purpose:** confirm the table's physical configuration, storage size, row count, and time travel overhead in a single call.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | Fully qualified table ID: `project:dataset.table` |
+| `type` | string | Resource type: `TABLE`, `VIEW`, `MATERIALIZED_VIEW`, or `EXTERNAL` |
+| `numRows` | string | Total row count (returned as string, not integer) |
+| `numBytes` | string | Uncompressed logical size in bytes — divide by 1,073,741,824 for GB |
+| `numActiveLogicalBytes` | string | Logical bytes for active (non-time-travel) data |
+| `numTimeTravelPhysicalBytes` | string | Physical bytes consumed by time travel snapshots |
+| `location` | string | Dataset region (e.g., `europe-west1`) — inherited from the dataset |
+| `timePartitioning` | object | Partition configuration: `.type` (DAY/MONTH/YEAR) and `.field` (partition column) — absent on non-partitioned tables |
+| `clustering` | object | `.fields` array of clustering columns in priority order — absent on unclustered tables |
+| `creationTime` | string | Unix epoch milliseconds when the table was created |
+| `lastModifiedTime` | string | Unix epoch milliseconds of the last schema or data modification |
+| `maxTimeTravelHours` | string | Time travel window in hours (dataset-level setting, default `168` = 7 days) |
+
+*Return the full metadata for `stoxx_bronze.eurostoxx50_ohlcv`.*
 
 ```bash
-bq show --format=prettyjson my_dataset.my_table
+bq show --format=prettyjson stoxx_bronze.eurostoxx50_ohlcv
 ```
 
 ```text
 {
+  "creationTime": "1774196958550",
+  "etag": "dZhzM961jSAPioXYzUJjsg==",
+  "id": "bq-wh-nb:stoxx_bronze.eurostoxx50_ohlcv",
   "kind": "bigquery#table",
-  "id": "my-project:my_dataset.my_table",
-  "type": "TABLE",
-  "numRows": "18420531",
-  "numBytes": "2147483648",
-  "timePartitioning": {
-    "type": "DAY",
-    "field": "date"
+  "lastModifiedTime": "1775846537960",
+  "location": "europe-west1",
+  "numActiveLogicalBytes": "4724",
+  "numActivePhysicalBytes": "9739",
+  "numBytes": "4724",
+  "numCurrentPhysicalBytes": "4876",
+  "numLongTermBytes": "0",
+  "numLongTermLogicalBytes": "0",
+  "numLongTermPhysicalBytes": "0",
+  "numRows": "50",
+  "numTimeTravelPhysicalBytes": "4863",
+  "numTotalLogicalBytes": "4724",
+  "numTotalPhysicalBytes": "9739",
+  "schema": { ... },
+  "tableReference": {
+    "datasetId": "stoxx_bronze",
+    "projectId": "bq-wh-nb",
+    "tableId": "eurostoxx50_ohlcv"
   },
-  "clustering": {
-    "fields": ["symbol", "_index"]
-  },
-  "creationTime": "1710000000000",
-  "lastModifiedTime": "1712000000000"
+  "type": "TABLE"
 }
 ```
 
-| Flag | Syntax | Description |
-|---|---|---|
-| `--schema` | `bq show --schema my_dataset.table` | Return column schema only (JSON array) |
-| `--format` | `bq show --format=prettyjson ...` | Output format: `json`, `prettyjson`, `csv`, `sparse`, `pretty` |
-| `--project_id` | `bq show --project_id=other-project my_dataset.table` | Inspect a table in a project other than the active one |
+This table contains 50 rows consuming 4,724 logical bytes (~4.6 KB). `numTimeTravelPhysicalBytes` of 4,863 shows that time travel snapshots exist (the table was modified since creation). `numLongTermBytes` is 0 because no data has been untouched for 90+ days — once data ages past 90 days, BigQuery automatically moves it to long-term storage at half the active storage price. The table is located in `europe-west1`, has no partitioning or clustering (absent from the output), and no expiration set.
 
-## Creating Datasets
+#### Retrieve dataset metadata
 
-A dataset is the top-level namespace for BigQuery tables within a project. It defines data residency (location), default table expiration, and access controls. All tables in a dataset inherit its location — cross-region joins between datasets are not supported and will fail at query time.
+**When to run:** when verifying a dataset's region, access controls, or time travel configuration — especially after Terraform provisioning or manual creation.
+**Trigger:** data residency audit, IAM review, or confirming `maxTimeTravelHours` before relying on time travel for recovery.
+**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset.
+**Purpose:** confirm dataset-level settings that are inherited by all tables within it.
 
-**Required IAM role:** `roles/bigquery.dataOwner` or `roles/bigquery.admin`.
-
-### bq mk --dataset — create a dataset
+*Return the full metadata for the `stoxx_bronze` dataset.*
 
 ```bash
-bq mk --dataset --location=EU --description="data pipeline data" project_data
+bq show --format=prettyjson stoxx_bronze
 ```
 
 ```text
-Dataset 'my-project:project_data' successfully created.
+{
+  "access": [
+    {
+      "role": "WRITER",
+      "specialGroup": "projectWriters"
+    },
+    {
+      "role": "OWNER",
+      "specialGroup": "projectOwners"
+    },
+    {
+      "role": "OWNER",
+      "userByEmail": "bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com"
+    },
+    {
+      "role": "READER",
+      "specialGroup": "projectReaders"
+    }
+  ],
+  "creationTime": "1774196927921",
+  "datasetReference": {
+    "datasetId": "stoxx_bronze",
+    "projectId": "bq-wh-nb"
+  },
+  "id": "bq-wh-nb:stoxx_bronze",
+  "kind": "bigquery#dataset",
+  "lastModifiedTime": "1774196927921",
+  "location": "europe-west1",
+  "maxTimeTravelHours": "168",
+  "type": "DEFAULT"
+}
+```
+
+The `access` array shows four ACL entries: the service account `bq-wh-sa` has `OWNER` access (used by the data pipeline), and the standard project-level groups (`projectOwners`, `projectWriters`, `projectReaders`) have their default roles. `maxTimeTravelHours: 168` (7 days) is the default — deleted or modified data can be recovered via `FOR SYSTEM_TIME AS OF` within this window. `location: europe-west1` is permanent and determines where all queries against this dataset must execute.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--schema` | `bq show --schema dataset.table` | Return column schema only (JSON array) — not applicable to datasets |
+| `--format` | `bq show --format=prettyjson ...` | Output format: `json`, `prettyjson`, `csv`, `sparse`, `pretty` |
+| `--project_id` | `bq show --project_id=other-project dataset.table` | Inspect a resource in a project other than the active one |
+| `--view` | `bq show --view dataset.view_name` | Return the SQL query definition of a view |
+| `--encryption_configuration` | `bq show --encryption_configuration dataset.table` | Display the CMEK encryption key used by the table |
+
+## Creating Datasets
+
+A dataset is the top-level namespace for BigQuery tables within a project. It defines data residency (location), default table expiration, and access controls. All tables in a dataset inherit its location — cross-region joins between datasets are not supported and will fail at query time. Moving data between regions requires exporting to Cloud Storage, transferring the object to the target region, and loading into a new dataset — there is no in-place region migration.
+
+**Required IAM role:** `roles/bigquery.dataOwner` or `roles/bigquery.admin`.
+
+### bq | mk --dataset | create a dataset
+
+#### Create a dataset with explicit location
+
+**When to run:** when setting up a new data layer (bronze, silver, gold) or isolating a workload into its own namespace with specific residency requirements.
+**Trigger:** project initialization, new pipeline onboarding, or Terraform plan requiring a manually provisioned dataset.
+**Context:** state-changing operation. Requires `roles/bigquery.dataOwner` or `roles/bigquery.admin`. The dataset is created immediately and is visible to all project members with appropriate IAM roles.
+**Purpose:** provision a dataset namespace with explicit region, description, and optional default table expiration.
+
+*Create a dataset in `europe-west1` with a descriptive label.*
+
+```bash
+bq mk --dataset --location=europe-west1 --description="Temporary demo dataset for vault documentation" demo_staging
+```
+
+```text
+Dataset 'bq-wh-nb:demo_staging' successfully created.
 ```
 
 > [!warning] Dataset Location Is Permanent
 >
-> The `--location` flag sets data residency for all tables in the dataset. Once created, location cannot be changed. For EU data residency compliance, always specify `--location=EU` (multi-region EU) or a specific European region like `europe-west1`.
+> The `--location` flag sets data residency for all tables in the dataset. Once created, location cannot be changed — the only migration path is: export to Cloud Storage → transfer to the target region → load into a new dataset. For EU data residency compliance, always specify `--location=EU` (multi-region EU) or a specific European region like `europe-west1`.
 
 > [!success] Always Specify Location at Dataset Creation
 >
-> Pass `--location=EU` (or the appropriate region) explicitly when running `bq mk --dataset`. Enforce this in Terraform with a `location` variable so the correct region is set consistently across all environments and cannot be omitted.
+> Pass `--location=europe-west1` (or the appropriate region) explicitly when running `bq mk --dataset`. Enforce this in Terraform with a `location` variable so the correct region is set consistently across all environments and cannot be omitted. If `--location` is omitted, the dataset defaults to `US` multi-region.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--dataset` | `bq mk --dataset` | Required flag to indicate dataset creation (vs. table) |
-| `--location` | `--location=EU` | Data residency region. Multi-region: `US`, `EU`. Single-region: `europe-west1`, `us-central1`, etc. Cannot be changed after creation. |
+| `--location` | `--location=europe-west1` | Data residency region. Multi-region: `US`, `EU`. Single-region: `europe-west1`, `us-central1`, etc. Cannot be changed after creation. Defaults to `US` if omitted. |
 | `--description` | `--description="..."` | Human-readable description attached to the dataset |
-| `--default_table_expiration` | `--default_table_expiration=86400` | Default TTL in seconds applied to all new tables in the dataset (86400 = 1 day) |
+| `--default_table_expiration` | `--default_table_expiration=86400` | Default TTL in seconds applied to all new tables in the dataset (86400 = 1 day). Can be overridden per-table. |
+| `--default_partition_expiration` | `--default_partition_expiration=2592000` | Default TTL in seconds for individual partitions (2592000 = 30 days). Useful for time-series data with a retention policy. |
+| `--max_time_travel_hours` | `--max_time_travel_hours=168` | Time travel window in hours (48–168). Default: 168 (7 days). Reducing saves storage cost but narrows the recovery window. |
+| `--storage_billing_model` | `--storage_billing_model=PHYSICAL` | Billing model for storage: `LOGICAL` (default, uncompressed size) or `PHYSICAL` (compressed size — typically 40–60% cheaper for columnar data). |
 | `--project_id` | `--project_id=other-project` | Create the dataset in a project other than the active one |
+| `--label` | `--label=env:prod` | Attach a key-value label to the dataset for filtering and cost attribution |
 
 ## Creating Tables
 
@@ -211,74 +400,141 @@ Tables must be created within an existing dataset. The schema can be defined inl
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A{Time-series data?} -- Yes --> B{Rows above 1M?}
-    A -- No --> C[No partitioning\nbq mk with inline schema]
-    B -- Yes --> D[Partition by DATE or TIMESTAMP\n--time_partitioning_field=date]
-    B -- No --> C
+    A{Time-series data?} --> YES1([YES])
+    A --> NO1([NO])
+    YES1 --> B{Rows above 1M?}
+    NO1 --> C[No partitioning\nbq mk with inline schema]
+    B --> YES2([YES])
+    B --> NO2([NO])
+    YES2 --> D[Partition by DATE or TIMESTAMP\n--time_partitioning_field=date]
+    NO2 --> C
     D --> E{Frequent filter columns?}
-    E -- Yes --> F[Add clustering up to 4 cols\n--clustering_fields=symbol,index]
-    E -- No --> G[Partitioned only]
+    E --> YES3([YES])
+    E --> NO3([NO])
+    YES3 --> F[Add clustering up to 4 cols\n--clustering_fields=symbol,index]
+    NO3 --> G[Partitioned only]
     style A fill:#292e42,stroke:#565f89
     style C fill:#1a1b26,stroke:#565f89
     style F fill:#1a1b26,stroke:#565f89
     style G fill:#1a1b26,stroke:#565f89
+    style YES1 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style YES2 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style YES3 fill:#1f3b2d,stroke:#73d13d,color:#c0caf5
+    style NO1 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+    style NO2 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
+    style NO3 fill:#4a1f24,stroke:#db4b4b,color:#c0caf5
 ```
 
-### bq mk --table — create a table
+### bq | mk --table | create a table
 
-#### bq mk --table — basic inline schema
+#### Create a table with inline schema
 
-Inline schema uses `column_name:TYPE` pairs. Use this for quick table creation in development; for production tables with many columns or `STRUCT`/`ARRAY` types, use a JSON schema file instead. Supported types in inline schema: `STRING`, `INTEGER`, `FLOAT`, `NUMERIC`, `BIGNUMERIC`, `BOOLEAN`, `DATE`, `DATETIME`, `TIMESTAMP`, `BYTES`, `JSON`, `GEOGRAPHY`.
+**When to run:** when provisioning a new table for development, prototyping, or small reference data that does not require partitioning.
+**Trigger:** pipeline development, manual table setup, or creating a staging area for ad-hoc loads.
+**Context:** state-changing operation. Requires `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`. The table is created in the specified dataset and inherits the dataset's location.
+**Purpose:** create a table with an explicit column schema using the compact inline `column:TYPE` syntax.
+
+Inline schema uses `column_name:TYPE` pairs separated by commas. Use this for quick table creation in development; for production tables with many columns or `STRUCT`/`ARRAY` types, use a JSON schema file instead. Supported types in inline schema: `STRING`, `INTEGER`, `FLOAT`, `NUMERIC`, `BIGNUMERIC`, `BOOLEAN`, `DATE`, `DATETIME`, `TIMESTAMP`, `BYTES`, `JSON`, `GEOGRAPHY`.
+
+*Create an OHLCV table with 7 columns using inline schema.*
 
 ```bash
-bq mk --table project_data.ohlcv symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,low:FLOAT,close:FLOAT,volume:INTEGER
+bq mk --table demo_staging.ohlcv_demo symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,low:FLOAT,close:FLOAT,volume:INTEGER
 ```
 
 ```text
-Table 'my-project:project_data.ohlcv' successfully created.
+Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully created.
 ```
 
-#### bq mk --table — partitioned and clustered table
+#### Create a partitioned and clustered table
 
-`--time_partitioning_field` sets the partition column (`DATE` or `TIMESTAMP`) and `--time_partitioning_type` controls granularity (`DAY` | `MONTH` | `YEAR`). `--clustering_fields` accepts up to 4 comma-separated columns for within-partition sorting. A query filtering on `date` scans only matching partitions; clustering on `symbol` further narrows reads to the relevant data blocks within each partition.
+**When to run:** when creating a table that will hold time-series data exceeding ~1 million rows, where query patterns consistently filter on a date column and one or more categorical columns.
+**Trigger:** production table provisioning for OHLCV prices, signals, pipeline runs, or any dataset with a natural time dimension.
+**Context:** state-changing, immutable configuration. `--time_partitioning_field`, `--time_partitioning_type`, and `--clustering_fields` cannot be changed after creation — the only migration path is `CREATE TABLE ... AS SELECT` into a new table with the correct settings.
+**Purpose:** create a table with physical partitioning by date and within-partition clustering to minimize scanned bytes and query cost.
 
-The positional argument at the end is either a path to a JSON schema file or an inline schema string. For `STRUCT`/`ARRAY` columns or schemas with more than ~10 columns, use a JSON file.
+> [!info]- Clause-by-Clause Breakdown
+>
+> - `--time_partitioning_field=date` — the `DATE` or `TIMESTAMP` column to partition by. BigQuery creates one physical partition per granularity unit. Queries filtering on this column scan only the matching partitions.
+> - `--time_partitioning_type=DAY` — partition granularity. `DAY` creates one partition per calendar day (most common for daily OHLCV data). `MONTH` and `YEAR` are appropriate for lower-frequency data or tables where daily partitions would create excessive partition metadata (BigQuery limit: 4,000 partitions per table).
+> - `--clustering_fields=symbol` — within each partition, data is physically sorted by these columns (up to 4, comma-separated). A query filtering on `symbol` within a date range reads only the relevant data blocks, further reducing scan cost.
+> - The positional argument at the end is either a path to a JSON schema file or an inline schema string. For `STRUCT`/`ARRAY` columns or schemas with more than ~10 columns, use a JSON file.
+
+*Create a day-partitioned, symbol-clustered OHLCV table.*
 
 ```bash
 bq mk --table \
   --time_partitioning_field=date \
   --time_partitioning_type=DAY \
-  --clustering_fields=symbol,_index \
-  project_data.ohlcv \
-  schema.json
+  --clustering_fields=symbol \
+  demo_staging.ohlcv_partitioned \
+  symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,low:FLOAT,close:FLOAT,volume:INTEGER
 ```
 
 ```text
-Table 'my-project:project_data.ohlcv' successfully created.
+Table 'bq-wh-nb:demo_staging.ohlcv_partitioned' successfully created.
 ```
 
-> [!tip] Partition and Cluster by Default
+> [!warning] Partitioning and Clustering Are Immutable After Creation
 >
-> For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for the full cost impact.
+> `bq update` can add nullable columns and change table expiration, but cannot alter partitioning keys or clustering columns. To change these on an existing table, create a new table with the correct configuration and migrate with `CREATE TABLE new_table AS SELECT ... FROM old_table` or `bq cp`.
 
-> [!warning] Partitioning and Clustering Cannot Be Changed After Creation
+> [!success] Partition and Cluster by Default for Time-Series Data
 >
-> `bq update` can add nullable columns and change table expiration, but cannot alter partitioning keys or clustering columns. To change these on an existing table, create a new table with the correct configuration and migrate with `CREATE TABLE AS SELECT` or `bq cp`.
+> For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `_index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. The `stoxx_bronze` OHLCV tables are small enough (50 rows) that partitioning is unnecessary, but production pipelines loading daily prices across thousands of symbols should always partition by date and cluster by symbol. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for the full cost impact.
 
-> [!success] Use `bq update` for Schema Evolution
->
-> To add a new nullable column to an existing table: `bq update my_dataset.my_table new_column:STRING`. Removing columns or changing types requires a full table migration — `CREATE TABLE new_table AS SELECT ... FROM old_table`.
+#### Create a table with expiration
 
-#### bq mk --table — table with expiration
+**When to run:** when creating temporary staging, scratch, or intraday tables that should be automatically cleaned up after a fixed period.
+**Trigger:** ETL staging loads, temporary materialization for debugging, or short-lived demo tables.
+**Context:** state-changing. The `--expiration` flag sets a TTL in seconds from creation time. After expiration, BigQuery automatically deletes the table — no manual cleanup or scheduled job required.
+**Purpose:** provision a self-destructing table to avoid orphaned staging data and unnecessary storage costs.
 
-`--time_to_expiration` sets the table's TTL in seconds from creation time. After expiration, BigQuery automatically deletes the table. Use this for temporary staging tables and intraday scratch tables to avoid manual cleanup and unnecessary storage costs.
+*Create a scratch table that auto-deletes after 24 hours (86,400 seconds).*
 
 ```bash
-bq mk --table --time_to_expiration=86400 project_data.staging_load symbol:STRING,date:DATE,value:FLOAT
+bq mk --table --expiration=86400 demo_staging.scratch_load symbol:STRING,date:DATE,value:FLOAT
 ```
 
 ```text
-Table 'my-project:project_data.staging_load' successfully created.
+Table 'bq-wh-nb:demo_staging.scratch_load' successfully created.
+```
+
+#### Schema evolution with bq update
+
+**When to run:** when a pipeline or application requires new columns on an existing table, or when updating table metadata (description, labels, expiration).
+**Trigger:** schema change request, adding a new metric column, attaching labels for cost attribution, or extending/shortening a table's TTL.
+**Context:** state-changing but non-destructive for additive changes. `bq update` can add new `NULLABLE` columns (appended to the end of the schema) and modify table metadata. It cannot remove columns, change column types, or alter partitioning/clustering.
+**Purpose:** evolve a table's schema or metadata without recreating the table.
+
+Adding a nullable column requires providing a JSON schema file containing the full schema with the new column appended. The `bq` CLI does not support adding a single column inline — the entire schema must be specified. Removing columns or changing types requires a full table migration — `CREATE TABLE new_table AS SELECT ... FROM old_table`. Relaxing a column from `REQUIRED` to `NULLABLE` is also supported.
+
+> [!info]- Adding a Column via bq update
+>
+> 1. Export the current schema: `bq show --schema --format=json dataset.table > schema.json`
+> 2. Edit `schema.json` to append the new column definition (must be `NULLABLE`)
+> 3. Apply: `bq update dataset.table schema.json`
+>
+> The new column appears at the end of the schema with NULL values in all existing rows.
+
+*Add a new `currency` column by providing the full schema with the new field appended.*
+
+```bash
+bq update demo_staging.ohlcv_demo schema_with_currency.json
+```
+
+```text
+Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully updated.
+```
+
+*Attach a label for cost attribution.*
+
+```bash
+bq update --set_label env:staging demo_staging.ohlcv_demo
+```
+
+```text
+Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully updated.
 ```
 
 | Flag | Syntax | Description |
@@ -287,78 +543,307 @@ Table 'my-project:project_data.staging_load' successfully created.
 | `--time_partitioning_field` | `--time_partitioning_field=date` | Column to partition by (`DATE` or `TIMESTAMP`). Immutable after creation. |
 | `--time_partitioning_type` | `--time_partitioning_type=DAY` | Partition granularity: `DAY`, `MONTH`, or `YEAR`. Immutable after creation. |
 | `--clustering_fields` | `--clustering_fields=symbol,_index` | Up to 4 comma-separated columns for within-partition clustering. Immutable after creation. |
-| `--time_to_expiration` | `--time_to_expiration=86400` | TTL in seconds from creation. Table is auto-deleted after this period. |
+| `--expiration` | `--expiration=86400` | TTL in seconds from creation. Table is auto-deleted after this period. |
+| `--require_partition_filter` | `--require_partition_filter=true` | Reject queries that do not filter on the partition column — prevents accidental full-table scans. |
 | `--schema` | `--schema=schema.json` | Path to a JSON schema file (alternative to inline schema string) |
+| `--description` | `--description="Daily OHLCV prices"` | Human-readable description attached to the table |
+| `--label` | `--label=env:prod` | Attach a key-value label for filtering and cost attribution |
+| `--encryption_configuration` | `--encryption_configuration=kmsKeyName=projects/.../...` | CMEK encryption key for the table (inherits dataset default if unset) |
 | `--project_id` | `--project_id=other-project` | Create the table in a project other than the active one |
 
-### bq cp — copy a table
+### bq | cp | copy a table
 
-`bq cp` copies a table to a new destination within the same region. The destination dataset must already exist. By default the command fails if the destination table already exists — use `-f` to overwrite or `-a` to append rows.
+#### Copy a table to a backup
+
+**When to run:** before destructive operations (schema migration, table recreation, bulk deletes), or when creating point-in-time snapshots outside the time travel window.
+**Trigger:** pre-migration safety net, creating a test copy for development, or duplicating a table for a different consumer.
+**Context:** state-changing — creates a new table at the destination. The destination dataset must already exist and must be in the same region as the source. Requires `roles/bigquery.dataEditor` on the destination dataset. The copy job runs server-side and does not transfer data through the client.
+**Purpose:** create an independent copy of a table's data and schema for backup, testing, or migration purposes.
+
+`bq cp` copies a table to a new destination within the same region. By default the command fails if the destination table already exists — use `-f` to overwrite or `-a` to append rows.
+
+*Copy the demo OHLCV table to a backup.*
 
 ```bash
-bq cp project_data.ohlcv project_data.ohlcv_backup
+bq cp demo_staging.ohlcv_demo demo_staging.ohlcv_demo_backup
 ```
 
 ```text
-Table 'my-project:project_data.ohlcv' successfully copied to 'my-project:project_data.ohlcv_backup'
+Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully copied to 'bq-wh-nb:demo_staging.ohlcv_demo_backup'
 ```
+
+> [!tip] Time Travel Recovery via bq cp
+>
+> `bq cp` can recover a deleted or modified table within the time travel window by copying from a point-in-time snapshot: `bq cp dataset.table@<unix_ms> dataset.table_recovered`. The `@<unix_ms>` decorator references the table state at that Unix epoch millisecond timestamp. This is the CLI equivalent of `FOR SYSTEM_TIME AS OF` in SQL. Caveat: recovery fails if a new table with the same ID has been created since deletion.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `-f` | `bq cp -f src dst` | Overwrite the destination table if it already exists |
-| `-a` | `bq cp -a src dst` | Append source rows to the destination table |
-| `-n` | `bq cp -n src dst` | No-clobber: fail if the destination already exists (default) |
+| `-a` | `bq cp -a src dst` | Append source rows to the destination table (schemas must be compatible) |
+| `-n` | `bq cp -n src dst` | No-clobber: fail if the destination already exists (default behavior) |
+| `--no_clobber` | `bq cp --no_clobber src dst` | Long form of `-n` |
 | `--project_id` | `bq cp --project_id=other src dst` | Copy from a project other than the active one |
+| `--destination_kms_key` | `bq cp --destination_kms_key=projects/... src dst` | Encrypt the destination table with a CMEK key |
 
 ## Deleting Tables and Datasets
 
-Deletion operations bypass the confirmation prompts used by the BigQuery Console. Table deletion is permanent once the time travel window has expired. BigQuery retains snapshots of deleted tables for 7 days by default (the time travel window), allowing recovery via `FOR SYSTEM_TIME AS OF` queries during that period.
+Deletion operations bypass the confirmation prompts used by the BigQuery Console. Table deletion is permanent once the time travel window has expired. BigQuery retains snapshots of deleted tables for the `maxTimeTravelHours` setting (default 168 hours = 7 days), allowing recovery via `FOR SYSTEM_TIME AS OF` queries or `bq cp table@<unix_ms>` during that period. Recovery fails if a new table with the same ID has been created since deletion (e.g., by a streaming pipeline with `CREATE_IF_NOT_EXISTS` disposition).
 
 **Required IAM role:** `roles/bigquery.dataOwner` or `roles/bigquery.admin`.
 
-### bq rm — delete operations
+### bq | rm | delete tables and datasets
 
-#### bq rm -f — delete a table
+#### Delete a single table
 
-The `-f` flag suppresses the confirmation prompt. Without it, the CLI prompts for interactive confirmation.
+**When to run:** when decommissioning a table that is no longer needed, cleaning up temporary staging data, or removing a table before recreating it with different partitioning/clustering.
+**Trigger:** pipeline cleanup, post-migration verification (old table confirmed unused), or removing orphaned scratch tables.
+**Context:** state-changing and destructive. The `-f` flag suppresses the interactive confirmation prompt. Without `-f`, the CLI prompts for `y/N` confirmation. The table remains recoverable within the time travel window.
+**Purpose:** permanently remove a table from the dataset.
+
+*Delete the backup table created by the `bq cp` example.*
 
 ```bash
-bq rm -f my_dataset.my_table
+bq rm -f demo_staging.ohlcv_demo_backup
 ```
 
-```text
-Table 'my-project:my_dataset.my_table' successfully deleted.
-```
+The `bq rm -f` command produces no output on success — the table is deleted silently. Verify deletion with `bq ls demo_staging` or `bq show demo_staging.ohlcv_demo_backup` (which will return `Not found`).
 
 > [!danger] Table Deletion Is Irreversible After the Time Travel Window
 >
-> `bq rm -f` deletes the table immediately. BigQuery time travel allows recovery within the retention window (7 days by default): `SELECT * FROM my_dataset.my_table FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)`. After the window closes, the data is permanently gone. There is no recycle bin or soft-delete.
+> `bq rm -f` deletes the table immediately. BigQuery time travel allows recovery within the retention window (7 days by default):
+>
+> - **SQL recovery:** `SELECT * FROM dataset.table FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)`
+> - **CLI recovery:** `bq cp dataset.table@<unix_ms> dataset.table_recovered`
+>
+> After the window closes, the data is permanently gone. There is no recycle bin or soft-delete. Recovery also fails if a new table with the same ID was created since deletion.
 
 > [!success] Snapshot Before Destructive Operations
 >
-> Before deleting a table that may be needed: create a snapshot with `CREATE SNAPSHOT TABLE my_dataset.my_table_snap_20260405 CLONE my_dataset.my_table;` (run via `bq query`). Snapshots persist independently of the time travel window and consume only incremental storage for changed bytes.
+> Before deleting a table that may be needed: create a snapshot with `CREATE SNAPSHOT TABLE dataset.table_snap_20260412 CLONE dataset.table;` (run via `bq query`). Snapshots persist independently of the time travel window and consume only incremental storage for changed bytes.
 
-#### bq rm -r -f — delete a dataset recursively
+#### Delete a dataset recursively
 
-The `-r` flag enables recursive deletion, removing all tables within the dataset before deleting the dataset itself. Combine with `-f` to skip confirmation. This operation is not reversible.
+**When to run:** when decommissioning an entire data layer, tearing down a demo environment, or cleaning up after a failed migration.
+**Trigger:** environment teardown, project cleanup, or removing an entire dataset namespace that is confirmed unused.
+**Context:** state-changing and destructive. The `-r` flag removes all tables within the dataset before deleting the dataset itself. Combined with `-f` to skip confirmation. This operation is not individually reversible — each table within is subject to its own time travel window.
+**Purpose:** remove a dataset and all its contents in a single operation.
+
+> [!info]- Clause-by-Clause Breakdown
+>
+> - `-r` — recursive: delete all tables, views, and materialized views in the dataset before deleting the dataset itself. Without `-r`, BigQuery refuses to delete a non-empty dataset.
+> - `-f` — force: skip the interactive `y/N` confirmation prompt. Required for non-interactive scripts and CI/CD pipelines.
+
+*Delete the demo dataset and all its remaining tables.*
 
 ```bash
-bq rm -r -f my_dataset
+bq rm -r -f demo_staging
 ```
 
-```text
-Dataset 'my-project:my_dataset' successfully deleted.
-```
+The `bq rm -r -f` command produces no output on success. Verify with `bq ls` — the dataset no longer appears in the list.
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `-f` | `bq rm -f my_dataset.table` | Force deletion without confirmation prompt |
-| `-r` | `bq rm -r my_dataset` | Recursively delete all tables before deleting the dataset |
-| `--project_id` | `bq rm --project_id=other -f my_dataset.table` | Delete from a project other than the active one |
+| `-f` | `bq rm -f dataset.table` | Force deletion without confirmation prompt |
+| `-r` | `bq rm -r dataset` | Recursively delete all tables before deleting the dataset |
+| `-d` | `bq rm -d dataset` | Delete an empty dataset (fails if dataset contains tables) |
+| `--project_id` | `bq rm --project_id=other -f dataset.table` | Delete from a project other than the active one |
+
+## Row Preview
+
+`bq head` returns a sample of rows from a table without creating a query job. It does not appear in query history and incurs no query charges — it reads directly from the storage API. Use it for quick data validation after loading, or to confirm column content before writing queries.
+
+### bq | head | preview table rows
+
+#### Preview rows from a table
+
+**When to run:** after a data load completes, or when investigating column content before writing a query.
+**Trigger:** post-load validation, data exploration, or confirming that a `bq cp` operation preserved data correctly.
+**Context:** read-only, free operation (no query job created). Requires `roles/bigquery.dataViewer`. Returns rows in a tabular format. Default row count is 100; use `-n` to limit.
+**Purpose:** quickly inspect actual data values without incurring query costs.
+
+*Preview the first 3 rows of `stoxx_bronze.eurostoxx50_ohlcv`.*
+
+```bash
+bq head -n 3 stoxx_bronze.eurostoxx50_ohlcv
+```
+
+```text
++-------+----------------------------+---------+------------+--------+--------+--------+--------+-----------+--------+-----------+--------------+
+|  id   |        _ingested_at        | symbol  |    date    |  open  |  high  |  low   | close  | adj_close | volume | dividends | stock_splits |
++-------+----------------------------+---------+------------+--------+--------+--------+--------+-----------+--------+-----------+--------------+
+| 67740 | 2026-04-07T23:28:23.142987 | ASML.AS | 2026-04-07 | 1123.4 | 1139.8 | 1100.2 | 1113.8 |    1113.8 | 747131 |       0.0 |          0.0 |
+| 67756 | 2026-04-07T23:28:23.142987 | MC.PA   | 2026-04-07 |  475.0 | 481.95 | 464.65 | 466.85 |    466.85 | 446476 |       0.0 |          0.0 |
+| 67772 | 2026-04-07T23:28:23.142987 | RMS.PA  | 2026-04-07 | 1682.0 | 1712.0 | 1643.0 | 1648.5 |    1648.5 |  75005 |       0.0 |          0.0 |
++-------+----------------------------+---------+------------+--------+--------+--------+--------+-----------+--------+-----------+--------------+
+```
+
+The output shows ASML, LVMH (MC.PA), and Hermès (RMS.PA) from the EURO STOXX 50 universe, all ingested on 2026-04-07. The `_ingested_at` DATETIME carries microsecond precision from the pipeline. `adj_close` equals `close` (no corporate actions on these dates). `dividends` and `stock_splits` are zero — non-zero values appear on ex-dividend dates and split-effective dates respectively.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-n` / `--max_rows` | `bq head -n 10 dataset.table` | Number of rows to return (default: 100) |
+| `--start_row` | `bq head --start_row=50 dataset.table` | Skip to this row index before reading |
+| `--selected_fields` | `bq head --selected_fields="symbol,date,close" dataset.table` | Comma-separated column subset to return |
+
+## Programmatic Introspection with INFORMATION_SCHEMA
+
+`INFORMATION_SCHEMA` views provide SQL-queryable metadata about datasets, tables, columns, partitions, and storage. Unlike `bq show` (which returns metadata for a single resource), `INFORMATION_SCHEMA` queries can join, filter, and aggregate across all resources in a dataset or region. These queries are free — they do not scan user data.
+
+### bq query | INFORMATION_SCHEMA | dataset and table introspection
+
+#### List all datasets with location and creation time
+
+**When to run:** when auditing all datasets in a project for region compliance, or confirming that Terraform-provisioned datasets landed in the correct region.
+**Trigger:** data residency audit, project onboarding, or post-Terraform verification.
+**Context:** read-only GoogleSQL query against `region-<region>.INFORMATION_SCHEMA.SCHEMATA`. Requires `roles/bigquery.metadataViewer`. Must specify the region qualifier. Free — no bytes scanned.
+**Purpose:** enumerate all datasets in a region with their creation timestamps in a single tabular view.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `schema_name` | STRING | Dataset ID |
+| `location` | STRING | Region where the dataset resides (e.g., `europe-west1`) |
+| `creation_time` | TIMESTAMP | When the dataset was created |
+
+*List all datasets in `europe-west1`.*
+
+```bash
+bq query --nouse_legacy_sql \
+  'SELECT schema_name, location, creation_time
+   FROM `bq-wh-nb.region-europe-west1.INFORMATION_SCHEMA.SCHEMATA`'
+```
+
+```text
++--------------+--------------+---------------------+
+| schema_name  |   location   |    creation_time    |
++--------------+--------------+---------------------+
+| stoxx_silver | europe-west1 | 2026-03-22 16:28:49 |
+| stoxx_gold   | europe-west1 | 2026-03-22 16:28:50 |
+| stoxx_bronze | europe-west1 | 2026-03-22 16:28:47 |
++--------------+--------------+---------------------+
+```
+
+All three medallion-layer datasets were created within 3 seconds of each other, confirming they were provisioned by the same Terraform apply. All reside in `europe-west1` — consistent with the data residency requirement.
+
+#### List tables with type and creation time
+
+**When to run:** when auditing a dataset's contents programmatically, or building an inventory of tables and views for documentation or monitoring.
+**Trigger:** dataset audit, identifying stale tables, or verifying that a pipeline created the expected resources.
+**Context:** read-only query against `dataset.INFORMATION_SCHEMA.TABLES`. Free — no bytes scanned.
+**Purpose:** enumerate all tables and views in a dataset with their types and creation timestamps.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `table_name` | STRING | Table or view name |
+| `table_type` | STRING | `BASE TABLE`, `VIEW`, `MATERIALIZED VIEW`, `CLONE`, `SNAPSHOT`, or `EXTERNAL` |
+| `creation_time` | TIMESTAMP | When the resource was created |
+
+*List all tables and views in `stoxx_gold`.*
+
+```bash
+bq query --nouse_legacy_sql \
+  'SELECT table_name, table_type, creation_time
+   FROM `bq-wh-nb.stoxx_gold.INFORMATION_SCHEMA.TABLES`'
+```
+
+```text
++-------------------+------------+---------------------+
+|    table_name     | table_type |    creation_time    |
++-------------------+------------+---------------------+
+| index_performance | BASE TABLE | 2026-03-22 16:29:54 |
+| scores_daily      | BASE TABLE | 2026-03-22 16:30:11 |
+| scores_quarterly  | BASE TABLE | 2026-03-22 16:30:15 |
+| v_latest_prices   | VIEW       | 2026-03-22 16:49:21 |
+| v_stock_dashboard | VIEW       | 2026-03-22 16:49:45 |
++-------------------+------------+---------------------+
+```
+
+The gold layer contains three base tables and two views. The views were created ~19 minutes after the tables — consistent with a two-phase Terraform apply where tables are provisioned first and views second (views depend on tables).
+
+#### Inspect column schema via INFORMATION_SCHEMA
+
+**When to run:** when comparing schemas across tables, auditing column types programmatically, or checking for partitioning and clustering metadata at the column level.
+**Trigger:** schema drift investigation, cross-table schema comparison, or verifying that a migration preserved column definitions.
+**Context:** read-only query against `dataset.INFORMATION_SCHEMA.COLUMNS`. Free — no bytes scanned. Returns canonical type names (`INT64`, `FLOAT64`) rather than the aliases (`INTEGER`, `FLOAT`) used by the `bq` CLI.
+**Purpose:** retrieve column-level metadata including data types, nullability, and partitioning/clustering status in a queryable format.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `table_name` | STRING | Table the column belongs to |
+| `column_name` | STRING | Column name |
+| `data_type` | STRING | Canonical BigQuery type (`INT64`, `FLOAT64`, `STRING`, `DATE`, etc.) |
+| `is_nullable` | STRING | `YES` if the column accepts NULL, `NO` if REQUIRED |
+| `ordinal_position` | INT64 | 1-based column position in the schema |
+| `is_partitioning_column` | STRING | `YES` if this column is the partition key, `NO` otherwise |
+| `clustering_ordinal_position` | INT64 | Position in the clustering key (1–4), or NULL if not a clustering column |
+
+*List all columns for `stoxx_bronze.eurostoxx50_ohlcv` with type and nullability.*
+
+```bash
+bq query --nouse_legacy_sql \
+  'SELECT table_name, column_name, data_type, is_nullable, ordinal_position
+   FROM `bq-wh-nb.stoxx_bronze.INFORMATION_SCHEMA.COLUMNS`
+   WHERE table_name = "eurostoxx50_ohlcv"
+   ORDER BY ordinal_position'
+```
+
+```text
++-------------------+--------------+-----------+-------------+------------------+
+|    table_name     | column_name  | data_type | is_nullable | ordinal_position |
++-------------------+--------------+-----------+-------------+------------------+
+| eurostoxx50_ohlcv | id           | INT64     | YES         |                1 |
+| eurostoxx50_ohlcv | _ingested_at | DATETIME  | YES         |                2 |
+| eurostoxx50_ohlcv | symbol       | STRING    | YES         |                3 |
+| eurostoxx50_ohlcv | date         | DATE      | YES         |                4 |
+| eurostoxx50_ohlcv | open         | FLOAT64   | YES         |                5 |
+| eurostoxx50_ohlcv | high         | FLOAT64   | YES         |                6 |
+| eurostoxx50_ohlcv | low          | FLOAT64   | YES         |                7 |
+| eurostoxx50_ohlcv | close        | FLOAT64   | YES         |                8 |
+| eurostoxx50_ohlcv | adj_close    | FLOAT64   | YES         |                9 |
+| eurostoxx50_ohlcv | volume       | INT64     | YES         |               10 |
+| eurostoxx50_ohlcv | dividends    | FLOAT64   | YES         |               11 |
+| eurostoxx50_ohlcv | stock_splits | FLOAT64   | YES         |               12 |
++-------------------+--------------+-----------+-------------+------------------+
+```
+
+Note that `INFORMATION_SCHEMA.COLUMNS` returns canonical type names (`INT64`, `FLOAT64`) while `bq show --schema` returns aliases (`INTEGER`, `FLOAT`). Both refer to the same underlying storage types. All 12 columns are `NULLABLE` (`is_nullable = YES`) — the bronze layer does not enforce NOT NULL constraints, deferring data quality checks to the silver/gold layers.
+
+## Cost Estimation with Dry Runs
+
+`bq query --dry_run` validates a query and reports how many bytes it would scan without actually executing it. This is essential for cost estimation before running expensive queries — BigQuery on-demand pricing is $6.25 per TB scanned (as of 2026).
+
+### bq query | --dry_run | estimate query cost
+
+#### Estimate bytes scanned before execution
+
+**When to run:** before executing any query against large tables, especially when developing new queries or modifying existing ones.
+**Trigger:** writing a new query, changing filter conditions, or adding/removing columns from a SELECT.
+**Context:** read-only, free operation. The query is parsed and validated but not executed — no slot time consumed and no bytes billed. Requires `roles/bigquery.jobUser`.
+**Purpose:** determine the cost impact of a query before committing to execution.
+
+*Estimate bytes scanned for a filtered query against the bronze OHLCV table.*
+
+```bash
+bq query --nouse_legacy_sql --dry_run \
+  'SELECT symbol, date, close
+   FROM `bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`
+   WHERE date >= "2026-04-01"'
+```
+
+```text
+Query successfully validated. Assuming the tables are not modified, running this query will process 1164 bytes of data.
+```
+
+The query would scan 1,164 bytes (~1.1 KB) — trivial for this 50-row table. For production tables with millions of rows, this output is the primary tool for estimating cost: divide bytes by 1,099,511,627,776 (1 TB) and multiply by $6.25 for on-demand pricing. A partitioned table scanned with a partition filter will report significantly fewer bytes than the full table size.
 
 ## Column Types Reference
 
-BigQuery uses canonical type names; shorter aliases are accepted in `bq` CLI inline schemas and `CREATE TABLE` DDL. The `mode` field controls nullability: `NULLABLE` (default), `REQUIRED` (NOT NULL equivalent), or `REPEATED` (array of that type — equivalent to wrapping the column in `ARRAY<>`).
+BigQuery uses canonical type names; shorter aliases are accepted in `bq` CLI inline schemas and `CREATE TABLE` DDL. The `mode` field controls nullability and array semantics.
+
+| Mode | Schema JSON | SQL Equivalent | Meaning |
+|---|---|---|---|
+| `NULLABLE` | `"mode": "NULLABLE"` | Default (no constraint) | Column accepts NULL values. This is the default when mode is omitted. |
+| `REQUIRED` | `"mode": "REQUIRED"` | `NOT NULL` | Column rejects NULL — inserts and updates with NULL values fail. Cannot be added to an existing table via `bq update` (only NULLABLE columns can be added). |
+| `REPEATED` | `"mode": "REPEATED"` | `ARRAY<type>` | Column stores an ordered array of values of the declared type. Cannot be set via inline schema (`column:TYPE`) — requires a JSON schema file. |
 
 | Type (canonical) | Alias | Description |
 |---|---|---|
@@ -391,13 +876,22 @@ BigQuery uses canonical type names; shorter aliases are accepted in `bq` CLI inl
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled before any `bq` command works
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` required
 - [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — SQL query patterns, window functions, and cost optimization against BQ tables
-- [BigQuery Terraform provisioning](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-data-services) — IaC definitions for datasets, tables, and IAM bindings via `google_bigquery_dataset` and `google_bigquery_table`
+- [BigQuery Terraform provisioning](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — IaC definitions for datasets, tables, and IAM bindings via `google_bigquery_dataset` and `google_bigquery_table`
 
 ## References
 
-- [BigQuery data types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types)
-- [Creating and using tables](https://cloud.google.com/bigquery/docs/tables)
-- [Partitioned tables](https://cloud.google.com/bigquery/docs/partitioned-tables)
-- [Clustered tables](https://cloud.google.com/bigquery/docs/clustered-tables)
-- [BigQuery time travel](https://cloud.google.com/bigquery/docs/time-travel)
-- [BigQuery pricing](https://cloud.google.com/bigquery/pricing)
+- [bq CLI reference](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference) — Complete flag reference for all `bq` subcommands
+- [BigQuery data types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types) — Canonical type names, aliases, and storage semantics
+- [Creating and using tables](https://cloud.google.com/bigquery/docs/tables) — Table creation, schema definition, and management
+- [Managing table schemas](https://cloud.google.com/bigquery/docs/managing-table-schemas) — Schema evolution, adding/relaxing columns
+- [Partitioned tables](https://cloud.google.com/bigquery/docs/partitioned-tables) — Partitioning strategies and partition limits (4,000 per table)
+- [Clustered tables](https://cloud.google.com/bigquery/docs/clustered-tables) — Clustering behavior, column limits, and automatic re-clustering
+- [BigQuery time travel](https://cloud.google.com/bigquery/docs/time-travel) — Recovery window, `FOR SYSTEM_TIME AS OF`, and `@<unix_ms>` decorator
+- [BigQuery pricing](https://cloud.google.com/bigquery/pricing) — On-demand ($6.25/TB), flat-rate, and storage pricing
+- [INFORMATION_SCHEMA introduction](https://cloud.google.com/bigquery/docs/information-schema-intro) — Available views and region/dataset scoping syntax
+- [Authorized views](https://cloud.google.com/bigquery/docs/authorized-views) — Granting view-level access to source datasets
+- [Column-level security](https://cloud.google.com/bigquery/docs/column-level-security-intro) — Policy tags and Fine-Grained Reader role
+- [Customer-managed encryption keys](https://cloud.google.com/bigquery/docs/customer-managed-encryption) — CMEK setup, key rotation, and recovery implications
+- *Google BigQuery: The Definitive Guide* — Dataset location enforcement, time travel recovery limits, `bq cp @<unix_ms>` patterns `[ChromaDB]`
+- *Learning Google BigQuery* — `bq mk`, `bq load`, and CLI setup workflows `[ChromaDB]`
+- *Data Engineering Design Patterns* — `CLUSTER BY` DDL with partition combination, filter column ordering `[ChromaDB]`

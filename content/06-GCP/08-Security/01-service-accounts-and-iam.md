@@ -1,6 +1,6 @@
 ---
 title: "01 - Service Accounts and IAM"
-tags: [security, gcp, iam, service-accounts]
+tags: [security, gcp, iam]
 aliases: [GCP service accounts, IAM bindings, GCP IAM roles, least privilege GCP, service account keys, Workload Identity, IAM policy, gcloud iam]
 description: "How to create GCP service accounts, generate and rotate keys, grant minimum IAM roles for data pipeline workloads, and verify permissions — implementing least-privilege access as the baseline security standard."
 created: 2026-03-22
@@ -202,7 +202,7 @@ gcloud iam service-accounts keys delete KEY_ID \
 
 IAM bindings attach an identity (service account, user, or group) to a role on a resource. A binding on the project applies to all resources in that project; a binding scoped to a specific resource (dataset, bucket) is preferred for least-privilege.
 
-For declarative, version-controlled IAM bindings, [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) provides the Terraform equivalent of these `gcloud` commands.
+For declarative, version-controlled IAM bindings, [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) provides the Terraform equivalent of these `gcloud` commands.
 
 ### gcloud | Project-level IAM bindings
 
@@ -472,7 +472,7 @@ See [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-a
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — Grant `roles/storage.objectAdmin` on specific buckets only
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — BigQuery roles required for table access
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — IAM policies are project-scoped
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — Declarative IAM bindings and secret access in Terraform
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — Declarative IAM bindings and secret access in Terraform
 
 ## References
 

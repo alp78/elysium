@@ -3,12 +3,8 @@ title: "02 - Storage Internals"
 tags:
   - sql-server
   - storage-internals
-  - pages
   - transaction-log
-  - vlf
   - tempdb
-  - heap
-  - page-splits
 aliases: [SQL Server pages, extents, WAL, write-ahead logging, VLF, forwarding records, page splits, tempdb internals]
 description: "Production guide to SQL Server storage internals: file layout, 8 KB pages, write-ahead logging, log and VLF health, heap forwarding records, page splits, and tempdb behavior, grounded in live stoxx output."
 created: 2026-03-22
@@ -240,8 +236,8 @@ WHERE d.database_id = DB_ID();
 | `recovery_model_desc` | `SIMPLE` | ⚠ | Log is truncated automatically at checkpoints. | Simpler operations, but no point-in-time recovery through log backups. |
 | `recovery_model_desc` | `BULK_LOGGED` | ⚠ | Reduced logging for some bulk operations. | Can help load workloads, but complicates recovery semantics. |
 | `used_log_pct` | `< 70%` | &#9989; | Comfortable headroom. | Usually not urgent if the trend is stable. |
-| `used_log_pct` | `70% - 90%` | ⚠ | Meaningful pressure. | Watch active transactions, backups, and reuse waits. |
-| `used_log_pct` | `> 90%` | &#10060; | High pressure. | Growth or log-full conditions may be close. |
+| `used_log_pct` | `70% - 90%` | ⚠ | Meaningful pressure. | Whether this is safe or urgent depends on two factors: **how much absolute free space remains** (70% of a 2 TB log still leaves 600 GB; 70% of a 1 GB log leaves only 300 MB) and **how fast the active portion is growing** (a log at 75% but stable between log backups is fine; a log at 75% and climbing during ETL with no log backup scheduled is not). The `stoxx` log shows 65.93% used on a 968 MB log — ~330 MB free — which is comfortable for this lab workload but would be marginal for a production database with heavy write bursts. |
+| `used_log_pct` | `> 90%` | &#10060; | High pressure. | Growth or log-full conditions may be close. **Feedback signal:** if `log_reuse_wait_desc` is `LOG_BACKUP`, take an immediate log backup (`BACKUP LOG [db] TO DISK = ...`). If it is `ACTIVE_TRANSACTION`, find the blocking session with `DBCC OPENTRAN` and resolve it. If the log is both > 90% full and has no autogrowth headroom (`MAXSIZE` reached), writes will fail with error 9002. |
 | `log_since_last_backup_mb` | Low and resetting | &#9989; | Log backups are occurring. | Inactive VLFs can become reusable. |
 | `log_since_last_backup_mb` | High and monotonically increasing | &#10060; | Log backup chain is not keeping up. | Expect persistent log growth in `FULL` recovery. |
 
@@ -279,8 +275,8 @@ FROM sys.dm_db_log_info(DB_ID());
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
 | `vlf_count` | `< 50` | &#9989; | Usually healthy for small and medium logs. | Recovery and log scans are unlikely to be impaired by VLF sprawl alone. |
-| `vlf_count` | `50 - 200` | ⚠ | Worth monitoring. | Often acceptable, but confirm growth behavior and backup cadence. |
-| `vlf_count` | `> 200` | &#10060; | Often excessive. | Recovery, startup, and log-management tasks can become slower. |
+| `vlf_count` | `50 - 200` | ⚠ | Worth monitoring. | Often acceptable, but confirm growth behavior and backup cadence. A 1 GB log pre-sized in a single allocation produces 8 VLFs; a 1 GB log grown from 1 MB by repeated 64 MB autogrowth events produces ~125 VLFs. The same final size, very different VLF count — the difference is the growth history. |
+| `vlf_count` | `> 200` | &#10060; | Often excessive. | Recovery, startup, and log-management tasks can become slower. The `stoxx` log has 43 VLFs for 968 MB because it grew through repeated 64 MB increments from the default 1 MB starting size — each 64 MB event created 4 VLFs (per the < 64 MB tier). If the 968 MB had been pre-sized in a single allocation, it would have produced 8 VLFs of ~121 MB each. **Feedback signal:** if `DBCC CHECKDB` or `RESTORE` runtimes increase disproportionately to database size, query `sys.dm_db_log_info` and check whether VLF count is in the hundreds — a log rebuild (shrink + single pre-size) is the fix. |
 | `active_vlf_count` | Much lower than `vlf_count` | &#9989; | Good reuse headroom exists. | The log has inactive regions available for reuse. |
 | `active_vlf_count` | Close to `vlf_count` | ⚠ | Most of the log is active. | Growth pressure is more likely if heavy logging continues. |
 
@@ -344,9 +340,7 @@ ORDER BY [Current LSN] DESC;
 
 A heap is a table with no clustered index, so rows are stored in no particular key order. When an `UPDATE` widens a row beyond the free space remaining on its current page, SQL Server does not reorganize the heap; it moves the row to a page with enough space and leaves a forwarding pointer on the original page. Every subsequent read that lands on the original page pays an extra I/O to follow the pointer. Forwarding records therefore act as a structural tax that grows over time on any mutable heap, and `sys.dm_db_index_physical_stats` exposes their count directly.
 
-> [!example] Mutable heaps age poorly
->
-> A disposable heap with 200 narrow rows is used below to reproduce the failure mode: widening half the rows forces forwarding pointers to appear, which would otherwise require a long-running production workload to observe.
+**Mutable heaps age poorly.** A disposable heap with 200 narrow rows is used below to reproduce the failure mode: widening half the rows forces forwarding pointers to appear, which would otherwise require a long-running production workload to observe.
 
 ### Setup | create a heap with 200 narrow rows
 
@@ -489,9 +483,7 @@ A page split occurs when an `INSERT` or `UPDATE` needs to place a row on a leaf 
 >
 > Combine `avg_fragmentation_in_percent` with `page_count` and the workload type before deciding to rebuild. Treat indexes below ~1,000 pages as noise regardless of percentage, focus maintenance on large indexes with sustained range scans, and prefer targeted fill-factor tuning over blind rebuilds for known hot-spot patterns.
 
-> [!example] Widening updates force page splits
->
-> A disposable clustered table with 200 narrow rows is used below to reproduce the split mechanism: widening every row forces the leaf level to allocate additional pages, and the fragmentation column reflects the result.
+**Widening updates force page splits.** A disposable clustered table with 200 narrow rows is used below to reproduce the split mechanism: widening every row forces the leaf level to allocate additional pages, and the fragmentation column reflects the result.
 
 ### Setup | create a clustered table with 200 narrow rows
 
@@ -678,9 +670,9 @@ The following recommendations translate the storage internals covered in the pre
 
 - Use fixed MB growth, not percent growth, for both data and log files.
 - Do not leave primary data files effectively uncapped in production unless the underlying storage layer is explicitly managed and monitored.
-- In `FULL` recovery, monitor `log_since_last_backup_mb` and the actual log-backup cadence together. A healthy backup strategy is what makes log reuse possible.
+- In `FULL` recovery, monitor `log_since_last_backup_mb` and the actual log-backup cadence together. Log reuse depends on regular log backups — schedule them at intervals short enough that the log never approaches its `MAXSIZE` between backups (every 5–15 minutes for write-heavy OLTP, every 30–60 minutes for lighter workloads). If `log_since_last_backup_mb` climbs monotonically across multiple checks, the backup chain is absent or stalled and the log will eventually fill.
 - Avoid mutable heaps for long-lived OLTP or frequently updated tables. Forwarding records are a structural tax, not a cosmetic issue.
-- Treat page splits as a design signal first. Sequential clustering, narrower rows, lower churn, and targeted fill factor changes usually matter more than blind rebuilds.
+- Treat page splits as a design signal first. Sequential clustering, narrower rows, and lower churn usually matter more than blind rebuilds. When `leaf_allocation_count` in `sys.dm_db_index_operational_stats` shows a specific index splitting frequently, lower that index's `fill_factor` (e.g., from the default 100% to 90% or 80%) with `ALTER INDEX [ix] ON [table] REBUILD WITH (FILLFACTOR = 90)`, then re-check `leaf_allocation_count` over the next workload cycle to confirm splits decreased — if they did not, the root cause is key choice, not fill factor.
 - Watch `tempdb` version store and internal object space when troubleshooting snapshot workloads, spills, or online maintenance.
 
 

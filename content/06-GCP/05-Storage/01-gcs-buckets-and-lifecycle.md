@@ -262,7 +262,7 @@ gcloud storage ls -a gs://data-pipeline-pipeline-data/file.csv
 
 > [!tip] Terraform Provisioning
 >
-> For reproducible bucket provisioning with versioning and lifecycle rules baked in, use [Terraform storage blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-compute-and-storage) instead of manual `gcloud` commands.
+> For reproducible bucket provisioning with versioning and lifecycle rules baked in, use [Terraform storage blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/compute-and-storage) instead of manual `gcloud` commands.
 
 ### Soft Delete
 
@@ -375,7 +375,7 @@ Key GCS limits relevant to data engineering pipelines:
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — Loading bucket contents into BigQuery; exporting BigQuery to buckets
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/storage.objectAdmin` on specific buckets (not the project)
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `storage.googleapis.com` is usually enabled by default
-- [tf-compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-compute-and-storage) — Terraform provisioning of GCS buckets with lifecycle rules, versioning, and retention
+- [compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/compute-and-storage) — Terraform provisioning of GCS buckets with lifecycle rules, versioning, and retention
 - [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) — FinOps cost optimization strategies including storage class selection
 
 ## References

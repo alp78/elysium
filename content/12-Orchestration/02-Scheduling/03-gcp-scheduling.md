@@ -785,7 +785,7 @@ Cloud Run Job (Docker container)
 ### Full Setup: Scheduler to Cloud Run Job
 
 ```bash
-# Step 1: Ensure the Cloud Run Job exists (for Terraform-managed jobs, see [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run))
+# Step 1: Ensure the Cloud Run Job exists (for Terraform-managed jobs, see [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run))
 gcloud run jobs describe my-etl-job --region=europe-west1
 # If it doesn't exist, create/deploy it first via gcloud run jobs create or CI/CD
 

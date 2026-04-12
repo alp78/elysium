@@ -8,7 +8,6 @@ tags:
   - ci-cd
   - dbt
   - python
-  - pytest
   - github-actions
 aliases:
   - "Testing Strategy"

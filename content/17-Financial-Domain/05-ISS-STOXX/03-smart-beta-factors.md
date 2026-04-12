@@ -4,7 +4,7 @@ description: "Comprehensive glossary of factor investing, smart beta strategies,
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - smart-beta
 aliases:

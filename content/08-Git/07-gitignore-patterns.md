@@ -284,7 +284,7 @@ terraform.tfvars
 .terraform.lock.hcl
 ```
 
-See [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) for context on what `terraform.tfvars` contains.
+See [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) for context on what `terraform.tfvars` contains.
 
 ## Global .gitignore
 
@@ -482,7 +482,7 @@ git push --force --all
 - [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — force-push after history rewrite
 - [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — history rewriting with filter-repo and BFG
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI secrets that must never be committed
-- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — terraform.tfvars that must be gitignored
+- [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — terraform.tfvars that must be gitignored
 
 ## References
 

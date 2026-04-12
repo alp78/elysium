@@ -1,6 +1,6 @@
 ---
-title: "05 - Terraform: Registry and CI"
-tags: [terraform, gcp, artifact-registry, ci-cd]
+title: "05 - Registry and CI"
+tags: [terraform, gcp, ci-cd]
 aliases: [terraform Artifact Registry, terraform CI service account, docker registry terraform, cleanup policies terraform]
 description: "Terraform configuration for GCP Artifact Registry (Docker image storage with cleanup policies) and the CI/CD service account used by GitHub Actions to push images and deploy Cloud Run services."
 created: 2026-03-22
@@ -10,7 +10,8 @@ status: complete
 
 # Terraform Artifact Registry and CI Service Account
 
-> [!quote]
+> [!quote] Mitchell Hashimoto on earning developer trust
+>
 > "Winning developers means earning their trust over many years through great software."
 >
 > — **Mitchell Hashimoto**, HashiConf talk
@@ -21,7 +22,7 @@ This note covers `registry.tf` and `ci.tf` — the Docker image registry and the
 
 Artifact Registry is GCP's container image storage service, the successor to the deprecated Container Registry. Docker images are pushed here by GitHub Actions and pulled by Cloud Run at deployment time. This section covers the Terraform resource that provisions the repository and its automated cleanup policies.
 
-> [!info] Assumed Variables and Prerequisites
+> [!info] Assumed variables and prerequisites
 >
 > - `var.region` — GCP region (e.g., `europe-west1`)
 > - `var.project_id` — GCP project ID
@@ -33,6 +34,8 @@ Artifact Registry is GCP's container image storage service, the successor to the
 Provisions a Docker image repository in Artifact Registry. Cloud Run services and jobs pull images from this repository at deploy time, so co-locating the registry in the same region as Cloud Run minimizes pull latency.
 
 The `format` argument is immutable — changing it forces resource replacement. The `location` and `repository_id` arguments are also immutable; changing either one destroys the existing repository and creates a new one.
+
+*Provision a Docker repository with keep-5 and delete-untagged cleanup policies.*
 
 ```hcl
 resource "google_artifact_registry_repository" "data-pipeline" {
@@ -68,11 +71,11 @@ resource "google_artifact_registry_repository" "data-pipeline" {
 | `cleanup_policies` | No | Automated lifecycle rules for image retention and deletion. Multiple policies can coexist. |
 | `cleanup_policy_dry_run` | No | Set to `true` to log which images would be affected by cleanup policies without actually deleting them. Use this to validate policies before enforcement. Default: `false`. |
 
-> [!danger] Force-Replacement Triggers
+> [!danger] Force-replacement triggers
 >
 > Changing `location`, `repository_id`, or `format` destroys the repository and all its images, then creates a new empty repository. This is **permanent data loss** — deleted images cannot be recovered.
 
-> [!success] Protect with Lifecycle Rules
+> [!success] Protect with lifecycle rules
 >
 > Add `lifecycle { prevent_destroy = true }` to production registries. If a replacement is genuinely needed, first push all images to the new repository, update all Cloud Run references, then remove the old resource from state with `terraform state rm` before deleting it from config.
 
@@ -85,13 +88,15 @@ Two policies work together to prevent unbounded storage growth. Without cleanup 
 | `keep-latest-5` | `KEEP` | `keep_count = 5` | Retains the 5 most recent image versions per tag. Older versions become candidates for deletion. |
 | `delete-untagged` | `DELETE` | `tag_state = UNTAGGED` | Deletes images that have no tag (e.g., after a newer image takes the `latest` tag, the old one becomes untagged). Prevents orphaned layers from consuming storage. |
 
-> [!tip] Validate Before Enforcing
+> [!tip] Validate before enforcing
 >
 > Set `cleanup_policy_dry_run = true` when first adding cleanup policies. Artifact Registry will log which images would be affected in Cloud Logging without actually deleting them. Once satisfied, set it back to `false` to enable enforcement. With daily deployments and a 5-version retention window, storage stays bounded to approximately 5× the image size per repository.
 
 #### Lifecycle Meta-Arguments
 
 Production registries should be protected from accidental deletion. The `prevent_destroy` meta-argument causes Terraform to error if a plan would destroy the repository.
+
+*Protect the production registry from accidental deletion.*
 
 ```hcl
 resource "google_artifact_registry_repository" "data-pipeline" {
@@ -117,7 +122,7 @@ Images are referenced as:
 - `europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/pipeline:latest`
 - `europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/dashboard:latest`
 
-> [!todo] Import Existing Artifact Registry Repository
+> [!todo] Import existing Artifact Registry repository
 >
 > To bring an existing repository under Terraform management:
 >
@@ -134,23 +139,23 @@ Images are referenced as:
 > }
 > ```
 
----
-
 ## CI/CD Service Account
 
 A dedicated service account for GitHub Actions with narrowly scoped permissions. This account can push Docker images and deploy Cloud Run revisions, but cannot access databases, read secrets, or modify IAM policies. Its credentials are stored as a GitHub Actions secret (`GCP_SA_KEY`).
 
-> [!info] Assumed Variables and Dependencies
+> [!info] Assumed variables and dependencies
 >
 > - `var.project_id` — GCP project ID
-> - `google_service_account.pipeline` — Pipeline workload SA (defined in [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets))
-> - `google_service_account.dashboard` — Dashboard workload SA (defined in [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets))
+> - `google_service_account.pipeline` — Pipeline workload SA (defined in [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets))
+> - `google_service_account.dashboard` — Dashboard workload SA (defined in [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets))
 > - Required API: `iam.googleapis.com`
 > - Required IAM role for the Terraform service account: `roles/iam.serviceAccountAdmin`
 
 ### google_service_account | CI Runner
 
 Creates the service account identity that GitHub Actions authenticates as when deploying to GCP. The `account_id` is immutable — changing it forces replacement, which invalidates any existing keys or Workload Identity bindings.
+
+*Create the GitHub Actions CI/CD service account.*
 
 ```hcl
 resource "google_service_account" "ci" {
@@ -167,6 +172,8 @@ resource "google_service_account" "ci" {
 ### google_project_iam_member | CI Registry and Cloud Run Access
 
 Grants project-level IAM roles to the CI service account. Each `google_project_iam_member` resource adds a single role binding without overwriting existing bindings for that role (unlike `google_project_iam_binding` which is authoritative).
+
+*Grant Artifact Registry write access and Cloud Run deploy access to the CI account.*
 
 ```hcl
 resource "google_project_iam_member" "ci_registry" {
@@ -197,6 +204,8 @@ resource "google_project_iam_member" "ci_run" {
 
 Grants the CI service account permission to **act as** the workload service accounts when deploying Cloud Run services and jobs. When GitHub Actions deploys a Cloud Run revision, it must specify which service account the workload runs as — the `roles/iam.serviceAccountUser` role on the target SA authorizes this without granting the CI account the target SA's own permissions.
 
+*Allow the CI account to act as the pipeline SA and dashboard SA when deploying Cloud Run workloads.*
+
 ```hcl
 resource "google_service_account_iam_member" "ci_act_as_pipeline" {
   service_account_id = google_service_account.pipeline.name
@@ -217,9 +226,9 @@ resource "google_service_account_iam_member" "ci_act_as_dashboard" {
 | `role` | Yes | IAM role to grant on the target service account. |
 | `member` | Yes | The identity receiving the role. Format: `serviceAccount:<email>`. |
 
-> [!info] Least Privilege Chain
+> [!info] Least privilege chain
 >
-> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) for the full IAM design and [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for GCP IAM fundamentals.
+> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) for the full IAM design and [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for GCP IAM fundamentals.
 
 ## Verification
 
@@ -227,11 +236,15 @@ Use `gcloud` commands to verify the Terraform-provisioned resources match expect
 
 ### List repositories
 
+*List all Artifact Registry repositories in the deployment region.*
+
 ```bash
 gcloud artifacts repositories list --location=europe-west1
 ```
 
 ### List Docker images
+
+*List all Docker image versions stored in the data-pipeline repository.*
 
 ```bash
 gcloud artifacts docker images list europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline
@@ -239,11 +252,15 @@ gcloud artifacts docker images list europe-west1-docker.pkg.dev/data-platform-pr
 
 ### List tags for pipeline image
 
+*Show all tags applied to the pipeline image.*
+
 ```bash
 gcloud artifacts docker tags list europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/pipeline
 ```
 
 ### List tags for dashboard image
+
+*Show all tags applied to the dashboard image.*
 
 ```bash
 gcloud artifacts docker tags list europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/dashboard
@@ -251,11 +268,11 @@ gcloud artifacts docker tags list europe-west1-docker.pkg.dev/data-platform-prod
 
 ### Verify CI service account roles
 
+*Show IAM roles bound to the CI service account at the project level.*
+
 ```bash
 gcloud projects get-iam-policy data-platform-prod --flatten="bindings[].members" --filter="bindings.members:data-pipeline-ci@" --format="table(bindings.role)"
 ```
-
----
 
 ## GitHub Actions Workflow Integration
 
@@ -265,6 +282,8 @@ The CI service account authenticates GitHub Actions workflows with GCP. There ar
 
 The CI service account's JSON key is stored as a GitHub Actions secret and passed to the `google-github-actions/auth` action. This method works but carries security risks — the key is a long-lived credential that must be manually rotated and can be exfiltrated if the repository is compromised.
 
+*Authenticate GitHub Actions with a JSON service account key (legacy).*
+
 ```yaml
 steps:
   - uses: google-github-actions/auth@v2
@@ -272,7 +291,7 @@ steps:
       credentials_json: ${{ secrets.GCP_SA_KEY }}
 ```
 
-> [!warning] Long-Lived Credentials
+> [!warning] Long-lived credentials
 >
 > JSON service account keys do not expire automatically. If the key leaks (e.g., through a compromised CI log, a forked repository, or a misconfigured workflow), an attacker gains persistent access until the key is manually revoked. Key rotation is a manual process with no built-in enforcement.
 
@@ -293,6 +312,8 @@ These secrets are configured in the GitHub repository settings and injected into
 ### Workload Identity Federation (Recommended)
 
 Workload Identity Federation (WIF) allows GitHub Actions to authenticate with GCP without storing any long-lived credentials. GitHub's OIDC provider issues a short-lived token, which GCP exchanges for temporary service account credentials scoped to a single workflow run.
+
+*Create a Workload Identity pool and OIDC provider for GitHub Actions.*
 
 ```hcl
 resource "google_iam_workload_identity_pool" "github" {
@@ -318,6 +339,8 @@ resource "google_iam_workload_identity_pool_provider" "github" {
 }
 ```
 
+*Allow the CI SA to be impersonated via Workload Identity Federation.*
+
 ```hcl
 resource "google_service_account_iam_member" "ci_wif" {
   service_account_id = google_service_account.ci.name
@@ -328,6 +351,8 @@ resource "google_service_account_iam_member" "ci_wif" {
 
 The GitHub Actions workflow then authenticates without any JSON key:
 
+*Authenticate GitHub Actions via Workload Identity Federation (keyless).*
+
 ```yaml
 steps:
   - uses: google-github-actions/auth@v2
@@ -336,7 +361,7 @@ steps:
       service_account: data-pipeline-ci@data-platform-prod.iam.gserviceaccount.com
 ```
 
-> [!tip] WIF Benefits
+> [!tip] WIF benefits
 >
 > - **No secrets to rotate** — tokens are issued per workflow run and expire automatically
 > - **Repository-scoped** — the `attribute_condition` restricts authentication to a specific GitHub repository
@@ -376,8 +401,8 @@ flowchart LR
 ## Related
 
 **Terraform chapter:**
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — full IAM design and the workload service accounts this CI account acts as
-- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — Cloud Run services and jobs that pull images from this registry
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — full IAM design and the workload service accounts this CI account acts as
+- [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run services and jobs that pull images from this registry
 
 **GCP services (Folder 06):**
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — GCP IAM fundamentals, role hierarchy, and service account best practices

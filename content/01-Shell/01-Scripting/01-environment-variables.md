@@ -548,7 +548,7 @@ Remove-Item Env:SA_PASSWORD
 > Remove-Item Env:SA_PASSWORD
 > ```
 
-For a declarative approach to managing variables and configuration across environments, see [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) which covers Terraform input variables, locals, and output values.
+For a declarative approach to managing variables and configuration across environments, see [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) which covers Terraform input variables, locals, and output values.
 
 ## When to use environment variables
 
@@ -620,7 +620,7 @@ For a declarative approach to managing variables and configuration across enviro
 - [command-history](https://alp78.github.io/elysium/01-Shell/01-Scripting/02-command-history) — Preventing secrets from being saved to history
 - [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) — Operators that control execution flow
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager patterns for credential resolution
-- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — Declarative variable management with Terraform
+- [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — Declarative variable management with Terraform
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Docker environment variables and secrets injection
 
 ## References

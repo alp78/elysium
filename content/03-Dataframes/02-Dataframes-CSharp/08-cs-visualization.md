@@ -1,6 +1,6 @@
 ---
 title: "08 - Visualization - C#"
-tags: [csharp, polars, dataframes, plotly, scottplot]
+tags: [csharp, polars, dataframes, visualization]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."

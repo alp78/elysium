@@ -4,7 +4,7 @@ description: "Comprehensive glossary of climate metrics, Net Zero concepts, tran
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - sustainability
 aliases:

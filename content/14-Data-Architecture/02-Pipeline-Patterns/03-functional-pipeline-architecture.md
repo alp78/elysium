@@ -8,8 +8,6 @@ tags:
   - lineage
   - data-quality
   - functional-programming
-  - pydantic
-  - fluentvalidation
   - python
   - csharp
 aliases:

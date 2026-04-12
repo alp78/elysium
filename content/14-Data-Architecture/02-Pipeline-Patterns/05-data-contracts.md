@@ -11,8 +11,6 @@ tags:
   - sla
   - data-quality
   - ci-cd
-  - protobuf
-  - avro
   - dbt
 aliases:
   - "Schema Contracts"

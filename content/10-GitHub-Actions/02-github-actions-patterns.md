@@ -521,7 +521,7 @@ jobs:
 
 ## Terraform CI/CD
 
-These workflows implement the plan-on-PR, apply-on-merge pattern for Terraform infrastructure changes. For Terraform fundamentals, see [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
+These workflows implement the plan-on-PR, apply-on-merge pattern for Terraform infrastructure changes. For Terraform fundamentals, see [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy).
 
 ### Plan on PR with Comment
 
@@ -1339,7 +1339,7 @@ jobs:
 ## Related
 
 **Terraform (Chapter 07):**
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform workflow details
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — Terraform workflow details
 
 **Docker (Chapter 09):**
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker build/push commands

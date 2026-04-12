@@ -31,7 +31,7 @@ status: complete
 >
 > — **Solomon Hykes**, DockerCon talk (paraphrased)
 
-Docker images are the immutable, layered artifacts that run as [containers](https://alp78.github.io/elysium/09-Docker/container-lifecycle). For data engineering pipelines, you build images locally or in [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd), push them to [Artifact Registry](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci), and deploy to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) or the Airflow DAGs. Understanding how images are built, layered, and sized is essential for fast deploys and low costs.
+Docker images are the immutable, layered artifacts that run as [containers](https://alp78.github.io/elysium/09-Docker/container-lifecycle). For data engineering pipelines, you build images locally or in [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd), push them to [Artifact Registry](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci), and deploy to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) or the Airflow DAGs. Understanding how images are built, layered, and sized is essential for fast deploys and low costs.
 
 ---
 
@@ -314,7 +314,7 @@ docker run --rm data-pipeline-pipeline:debug pip list
 
 > [!tip] Image Size Matters
 >
-> Smaller images mean faster pulls, faster cold starts on [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services), and lower storage costs in [Artifact Registry](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci). A 200MB image pulls in ~3 seconds on Cloud Run; a 1.5GB image takes 30+ seconds on cold start.
+> Smaller images mean faster pulls, faster cold starts on [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services), and lower storage costs in [Artifact Registry](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci). A 200MB image pulls in ~3 seconds on Cloud Run; a 1.5GB image takes 30+ seconds on cold start.
 
 ---
 
@@ -397,7 +397,7 @@ docker pull python:3.12-slim
 
 > [!tip] Artifact Registry vs Container Registry
 >
-> GCP deprecated Container Registry (`gcr.io`) in favor of Artifact Registry (`pkg.dev`). All new projects should use Artifact Registry. See [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) for Terraform configuration.
+> GCP deprecated Container Registry (`gcr.io`) in favor of Artifact Registry (`pkg.dev`). All new projects should use Artifact Registry. See [registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci) for Terraform configuration.
 
 ---
 
@@ -635,7 +635,7 @@ docker push europe-west1-docker.pkg.dev/data-platform-prod/pipeline/data-pipelin
 docker image inspect europe-west1-docker.pkg.dev/data-platform-prod/pipeline/data-pipeline-pipeline:latest
 ```
 
-In CI/CD, steps 2-5 are handled by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd), which authenticate to GCP via Workload Identity Federation and push to Artifact Registry in a single workflow. The git SHA tag is the canonical production reference used in [Terraform Cloud Run job definitions](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci). Once pushed, [Cloud Run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) pulls the image directly from Artifact Registry at deploy time.
+In CI/CD, steps 2-5 are handled by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd), which authenticate to GCP via Workload Identity Federation and push to Artifact Registry in a single workflow. The git SHA tag is the canonical production reference used in [Terraform Cloud Run job definitions](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci). Once pushed, [Cloud Run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) pulls the image directly from Artifact Registry at deploy time.
 
 ---
 
@@ -644,6 +644,6 @@ In CI/CD, steps 2-5 are handled by [GitHub Actions](https://alp78.github.io/elys
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Running containers from images (create, start, exec, logs, stop)
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — Multi-container orchestration with docker-compose.yml
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines that build and push images automatically
-- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry Terraform configuration and Cloud Run job definitions
+- [registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci) — Artifact Registry Terraform configuration and Cloud Run job definitions
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Where images are deployed and how cold start time relates to image size
 - the Airflow DAGs — Airflow deployment that pulls pipeline images from Artifact Registry

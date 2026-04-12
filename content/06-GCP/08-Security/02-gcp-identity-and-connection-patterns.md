@@ -46,7 +46,7 @@ Every GCP API call is authenticated by an identity — either a human user or a 
 - **Service accounts** are for machines. They authenticate via key files, metadata server tokens, or Workload Identity Federation
 - **Rule:** production workloads always use service accounts, never user accounts. One SA per workload, not one SA for everything
 
-For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Service Accounts — Machine Identities](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#gcp-service-accounts--machine-identities). For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets#design-principle-one-service-account-per-workload).
+For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Service Accounts — Machine Identities](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#gcp-service-accounts--machine-identities). For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets#design-principle-one-service-account-per-workload).
 
 ### Credential Types — Short-Lived vs Long-Lived
 

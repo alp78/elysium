@@ -1,6 +1,6 @@
 ---
 title: "01 - Cloud Logging"
-tags: [gcp, logging, cloud-logging, observability]
+tags: [gcp, logging, observability]
 aliases: [Cloud Logging, gcloud logging read, GCP logs, log filter, log severity, gcloud logging tail, structured logging, audit logs]
 description: "How to query, filter, and tail GCP Cloud Logging using the gcloud CLI — filtering by severity, time range, resource type, and full-text content to diagnose pipeline failures and infrastructure issues in real-time."
 created: 2026-03-22

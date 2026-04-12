@@ -1,5 +1,5 @@
 ---
-title: "01 - Terraform Resource Dependencies"
+title: "01 - Resource Dependencies"
 tags: [terraform, iac]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
@@ -10,12 +10,13 @@ status: complete
 
 # Terraform Resource Dependencies
 
-> [!quote]
+> [!quote] Mitchell Hashimoto on the dependency graph
+>
 > "Terraform allows you to reference the attribute of any resource within any other resource. That's how the dependency graph gets built."
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
-Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [terraform-problems](https://alp78.github.io/elysium/07-Terraform/terraform-problems).
+Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [problems](https://alp78.github.io/elysium/07-Terraform/problems).
 
 ## How the Dependency Graph Works
 
@@ -28,7 +29,7 @@ When you reference one resource inside another (e.g., `network = google_compute_
 
 This is fundamentally different from scripts where you control order with `&&`. Terraform computes the optimal creation and destruction order automatically.
 
-> [!info] Parallelism Control
+> [!info] Parallelism control
 >
 > By default, Terraform processes up to **10 resource operations concurrently** (`-parallelism=10`). For large configurations with many independent resources, increasing this value (e.g., `-parallelism=30`) can speed up applies. For rate-limited APIs, decrease it to avoid `429 Too Many Requests` errors. Set it on any walk command: `terraform apply -parallelism=20` or `terraform destroy -parallelism=5`.
 
@@ -93,6 +94,8 @@ The most common way to create a dependency is by referencing a resource attribut
 
 ### Attribute References
 
+*Create a subnet that implicitly depends on the VPC via the `network` attribute reference.*
+
 ```hcl
 resource "google_compute_subnetwork" "main" {
   name          = "data-pipeline-subnet"
@@ -118,6 +121,8 @@ The three most common attribute reference patterns in the GCP provider:
 ### Traversing Nested Attributes
 
 Resource attributes can be nested several levels deep. Use bracket notation to traverse lists:
+
+*Extract the SQL VM's private IP and the Airflow VM's public IP from nested resource attributes.*
 
 ```hcl
 locals {
@@ -147,6 +152,8 @@ Sometimes a dependency exists that Terraform cannot see from resource attribute 
 
 ### depends_on
 
+*Declare an explicit ordering dependency on the pipeline service account.*
+
 ```hcl
 resource "google_project_iam_member" "pipeline_bq_access" {
   project = var.project_id
@@ -163,17 +170,19 @@ In this example, the `member` interpolation already creates an implicit dependen
 - When ordering is required but no attribute reference expresses it (e.g., an IAM binding must propagate before a Cloud Run service can start)
 - When a `data` source reads from a resource indirectly — the data source does not reference the resource, but the resource must exist first for the data source query to return results
 
-> [!warning] depends_on Is a Last Resort
+> [!warning] `depends_on` is a last resort
 >
 > Overusing `depends_on` creates unnecessary serialization, slowing down your apply. Every `depends_on` edge forces Terraform to wait even when it could otherwise parallelize. Use resource references wherever possible — they both express the dependency AND give you the attribute value.
 
-> [!success] Safe Pattern — Prefer Implicit Dependencies via References
+> [!success] Safe pattern — prefer implicit dependencies via references
 >
 > Let resource attribute references drive the dependency graph. Instead of `depends_on = [google_service_account.pipeline]`, use `member = "serviceAccount:${google_service_account.pipeline.email}"` — this both expresses the dependency and provides the value. Reserve `depends_on` for cases where a dependency exists through external state or data sources that Terraform cannot track.
 
 ### Data Source Dependencies
 
 `data` blocks participate in the dependency graph the same way as `resource` blocks — if a data source references a resource attribute, Terraform creates an implicit dependency. However, data sources are **read during planning**, which means `depends_on` on a data source forces Terraform to defer the read until the apply phase:
+
+*Defer reading the VM data source until after the VM is created during apply.*
 
 ```hcl
 data "google_compute_instance" "sql" {
@@ -186,7 +195,7 @@ data "google_compute_instance" "sql" {
 
 Without `depends_on`, Terraform would attempt to read this data source during `plan` — before the VM exists. The explicit dependency tells Terraform: "wait until the VM is created during apply, then read its attributes."
 
-> [!tip] When Data Sources Need depends_on
+> [!tip] When data sources need `depends_on`
 >
 > If a data source queries a resource that Terraform itself creates in the same configuration, you almost certainly need `depends_on`. If the data source queries a resource that already exists outside your Terraform configuration, `depends_on` is unnecessary.
 
@@ -196,11 +205,15 @@ Terraform can export the dependency graph in DOT format for visualization with G
 
 ### terraform graph Command
 
+*Export the dependency graph as SVG using Graphviz.*
+
 ```bash
 terraform graph | dot -Tsvg > graph.svg
 ```
 
 This generates an SVG image of the full resource dependency graph. To view the raw text DAG without Graphviz:
+
+*Print the raw DAG text to stdout.*
 
 ```bash
 terraform graph
@@ -208,7 +221,7 @@ terraform graph
 
 The `-type` flag controls which graph to display: `terraform graph -type=plan` (default — shows the plan graph), `terraform graph -type=apply` (the apply-time graph), or `terraform graph -type=destroy` (the reverse-order destruction graph). Add `-draw-cycles` to highlight cyclic edges when diagnosing circular dependency errors. The output shows every resource as a node and every dependency as a directed edge.
 
-> [!tip] Debugging Dependency Issues
+> [!tip] Debugging dependency issues
 >
 > When a resource is being created or destroyed in an unexpected order, generate the graph and look for missing or extra edges. A missing edge means Terraform does not know about a dependency you expect. An extra edge (often from `depends_on`) means unnecessary serialization.
 
@@ -216,7 +229,7 @@ The `-type` flag controls which graph to display: `terraform graph -type=plan` (
 
 Terraform will fail with a clear error if it detects a circular dependency — resource A depends on B, and B depends on A, forming a cycle in the DAG.
 
-> [!danger] Circular Dependency Error
+> [!danger] Circular dependency error
 >
 > ```text
 > Error: Cycle: google_compute_instance.a, google_compute_instance.b
@@ -224,7 +237,7 @@ Terraform will fail with a clear error if it detects a circular dependency — r
 >
 > Terraform cannot resolve a cycle and will refuse to plan or apply. This error always indicates a design problem in your configuration, not a Terraform bug.
 
-> [!success] Breaking Dependency Cycles
+> [!success] Breaking dependency cycles
 >
 > Common causes and fixes:
 > - **Two resources referencing each other's IDs** — restructure so only one holds the reference, or introduce an intermediate resource (e.g., a `locals` block or a third resource that both depend on).
@@ -243,17 +256,19 @@ Some changes can be applied in-place (updating an attribute without recreating t
 | Add a new `env` variable to Cloud Run | New revision (zero-downtime) | `~` |
 | Change `location` on a BigQuery dataset | Destroy + recreate (data loss) | `-/+` |
 
-> [!warning] Forced Recreation Propagates Through the Graph
+> [!warning] Forced recreation propagates through the graph
 >
 > If resource A is destroyed and recreated, it gets a new `id`. Any resource B that references `A.id` will also be updated or recreated to use the new value. This cascade can be surprising — force-replacing a VPC triggers recreation of all subnets, firewalls, VMs, and Cloud Run services that reference it.
 
-> [!success] Safe Pattern — Lifecycle Meta-Arguments
+> [!success] Safe pattern — lifecycle meta-arguments
 >
 > For stable foundational resources (VPCs, subnets, service accounts), add `lifecycle { prevent_destroy = true }` to block accidental Terraform-driven destruction. For mutable attributes managed outside Terraform (e.g., `labels` set by other tools), use `lifecycle { ignore_changes = [labels] }`. Always run `terraform plan` and inspect `-/+` lines before every apply to detect unexpected recreation cascades.
 
 ### replace_triggered_by
 
 Introduced in **Terraform 1.2**, `replace_triggered_by` is a lifecycle meta-argument that forces a resource to be replaced when a referenced resource or attribute changes, even if the resource's own arguments have not changed:
+
+*Force a new Cloud Run deployment whenever the database password secret version changes.*
 
 ```hcl
 resource "google_cloud_run_v2_service" "dashboard" {
@@ -274,6 +289,8 @@ When the secret version changes (a new version is created), Cloud Run gets a new
 
 Introduced in **Terraform 1.1**, `moved` blocks let you rename or reorganize resources in your configuration without destroying and recreating them. When you refactor resource names, module paths, or move resources between modules, Terraform normally sees the old name as "deleted" and the new name as "created." A `moved` block tells Terraform that these are the same resource:
 
+*Tell Terraform the resource was renamed, not deleted and recreated.*
+
 ```hcl
 moved {
   from = google_compute_instance.main
@@ -283,11 +300,11 @@ moved {
 
 Terraform updates the state to reflect the new address without any infrastructure changes. The dependency graph is recalculated using the new names. Remove the `moved` block after everyone on the team has applied it — removing it before that point is a breaking change (anyone who hasn't applied will see a destroy + create instead of a rename).
 
-> [!warning] moved Blocks Do Not Handle Cross-State Moves
+> [!warning] `moved` blocks do not handle cross-state moves
 >
 > `moved` blocks only work within a single Terraform state file. To move a resource between separate state files (e.g., splitting a monolith into modules with their own state), use `terraform state mv` with the `-state` and `-state-out` flags.
 
-> [!success] Safe Refactoring Pattern
+> [!success] Safe refactoring pattern
 >
 > 1. Add the `moved` block with `from` and `to` addresses.
 > 2. Rename the resource in the configuration to match the `to` address.
@@ -297,13 +314,13 @@ Terraform updates the state to reflect the new address without any infrastructur
 ## Related
 
 **Terraform Patterns:**
-- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — how `count` and `for_each` interact with the dependency graph
-- [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) — module boundaries and inter-module dependency passing
+- [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — how `count` and `for_each` interact with the dependency graph
+- [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — module boundaries and inter-module dependency passing
 
 **Terraform Fundamentals:**
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — reading the plan to understand what will be created, updated, or destroyed
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — reading the plan to understand what will be created, updated, or destroyed
 - [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL syntax for resource references and attribute access
-- [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) — how state tracks the real resource IDs that references resolve to
+- [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — how state tracks the real resource IDs that references resolve to
 
 **GCP Services:**
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM bindings and service accounts referenced in the dependency graph

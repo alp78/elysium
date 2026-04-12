@@ -586,7 +586,7 @@ The most effective firewall strategy for production databases is layered: no sin
 
 > [!success] Apply all five layers simultaneously
 >
-> 1. **GCP VPC firewall** — block port 1433 from external IPs at the network level (manage declaratively with [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking))
+> 1. **GCP VPC firewall** — block port 1433 from external IPs at the network level (manage declaratively with [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking))
 > 2. **OS firewall (ufw / Windows Firewall)** — block port 1433 from unauthorized internal IPs at the OS level
 > 3. **SQL Server login** — require strong passwords and specific login names (see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for IAM-based access)
 > 4. **No public IP** — remove the VM's external IP entirely; use IAP tunneling for SSH (see [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling))

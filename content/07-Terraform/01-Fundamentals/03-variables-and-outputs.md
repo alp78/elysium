@@ -1,5 +1,5 @@
 ---
-title: "03 - Terraform Variables and Outputs"
+title: "03 - Variables and Outputs"
 tags: [terraform, iac]
 aliases: [terraform variables, tfvars, terraform outputs, HCL variables, input variables]
 description: "How to define and use Terraform input variables (variables.tf) and output values (outputs.tf), including sensitive variables, defaults, and the locals vs variables distinction."
@@ -10,7 +10,8 @@ status: complete
 
 # Terraform Variables and Outputs
 
-> [!quote]
+> [!quote] Thomas & Hunt on naming
+>
 > "A good name is the best documentation."
 >
 > — **Dave Thomas & Andy Hunt**, *The Pragmatic Programmer* (1999)
@@ -60,6 +61,8 @@ Every input variable is declared in a `variable` block with a name, a type const
 
 The simplest declaration specifies only the type. Without a default, callers must provide a value.
 
+*Declare a required string variable with no default.*
+
 ```hcl
 variable "project_id" {
   description = "GCP project ID"
@@ -71,6 +74,8 @@ variable "project_id" {
 
 Variables with a `default` are optional. The `sensitive` flag redacts the value from all CLI output (plan, apply, state show) but the value still exists in the state file.
 
+*Declare a sensitive variable — Terraform redacts its value from all CLI output.*
+
 ```hcl
 variable "db_password" {
   description = "SQL Server SA password"
@@ -78,6 +83,8 @@ variable "db_password" {
   sensitive   = true
 }
 ```
+
+*Declare an optional variable with a default value.*
 
 ```hcl
 variable "region" {
@@ -90,6 +97,8 @@ variable "region" {
 #### Variable with a complex type
 
 Map and object types allow structured input. The `default` provides fallback values when the caller doesn't override.
+
+*Declare a map variable with default key-value labels for cost tracking.*
 
 ```hcl
 variable "labels" {
@@ -137,11 +146,13 @@ Terraform enforces type constraints at plan time — passing a number where a st
 
 When `sensitive = true`, Terraform redacts the value from all CLI output — plan diffs, apply logs, and `terraform output`. The value still exists **unencrypted** in the state file, which is why the state backend itself must be secured with access controls.
 
-> [!danger] Sensitive Values in State File
+> [!danger] Sensitive values still appear in the state file
+>
 > Marking a variable as `sensitive` only redacts it from CLI output. The plaintext value is still written to the `.tfstate` file. If the state file is stored locally or in an unencrypted GCS bucket without access controls, credentials are exposed.
 
-> [!success] Secure the State Backend
-> Always use a remote backend with encryption and restricted access. For GCS: enable default encryption, restrict bucket IAM to the Terraform service account, and enable object versioning for recovery. See [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) for backend security configuration.
+> [!success] Secure the state backend
+>
+> Always use a remote backend with encryption and restricted access. For GCS: enable default encryption, restrict bucket IAM to the Terraform service account, and enable object versioning for recovery. See [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) for backend security configuration.
 
 #### default
 
@@ -150,6 +161,8 @@ If a variable has no `default`, Terraform prompts for it interactively or fails 
 #### nullable
 
 By default, Terraform allows `null` to be passed to any variable, even if it has a default — the `null` overrides the default. Setting `nullable = false` (Terraform 1.1+) rejects `null` values, ensuring the default is always used when the caller doesn't provide a value.
+
+*Reject `null` values — the default is always used when no value is supplied.*
 
 ```hcl
 variable "region" {
@@ -160,7 +173,8 @@ variable "region" {
 }
 ```
 
-> [!info] Terraform 1.1+ Required
+> [!info] Terraform 1.1+ required
+>
 > The `nullable` argument was introduced in Terraform 1.1. Earlier versions always allow `null` to override defaults.
 
 ### Validation Rules
@@ -168,6 +182,8 @@ variable "region" {
 Validation blocks define custom constraints that Terraform checks at plan time before any resources are created. Each `validation` block contains a `condition` expression (must evaluate to `true`) and an `error_message` shown when the condition fails.
 
 #### Validate a region format
+
+*Reject values that do not match the GCP region naming pattern.*
 
 ```hcl
 variable "region" {
@@ -184,6 +200,8 @@ variable "region" {
 
 #### Validate a string is not empty
 
+*Reject an empty string for `project_id` at plan time.*
+
 ```hcl
 variable "project_id" {
   description = "GCP project ID"
@@ -196,8 +214,26 @@ variable "project_id" {
 }
 ```
 
-> [!tip] Use Validation for Guardrails
+> [!tip] Use validation for guardrails
+>
 > Validation blocks catch misconfigurations before Terraform makes any API calls. Use them for variables that must match specific patterns (region format, CIDR notation), stay within numeric bounds (instance count limits), or satisfy naming conventions. Use `can()` with `regex()` for pattern matching.
+
+> [!info]- Cross-variable validation (Terraform 1.9+)
+>
+> Before Terraform 1.9, `validation` blocks could only reference the variable being validated — `var.self`. From 1.9 onward, conditions can reference other input variables, data sources, and local values. This eliminates the need to use `lifecycle { precondition }` blocks as a workaround for cross-variable constraints.
+>
+> ```hcl
+> variable "ip_address_type" {
+>   type    = string
+>   default = "dualstack"
+>   validation {
+>     condition     = var.type == "application" ? true : var.ip_address_type != "dualstack-without-public-ipv4"
+>     error_message = "dualstack-without-public-ipv4 is only valid for application load balancers."
+>   }
+> }
+> ```
+>
+> Source: *Terraform in Depth* (Ch. 10 — Checks and conditions)
 
 ### Setting Variable Values
 
@@ -206,6 +242,8 @@ Terraform accepts variable values from multiple sources. Each method suits a dif
 #### terraform.tfvars — recommended for local development
 
 The default variable values file. Terraform automatically loads any file named `terraform.tfvars` or `*.auto.tfvars` in the working directory.
+
+*Example `terraform.tfvars` file with project-specific values.*
 
 ```hcl
 project_id  = "data-platform-prod"
@@ -218,9 +256,13 @@ dd_api_key  = "your-datadog-key"
 
 Use `-var` for individual overrides and `-var-file` to load a specific file. Both override values from `terraform.tfvars`.
 
+*Override two variables inline via `-var` flags.*
+
 ```bash
 terraform apply -var="project_id=data-platform-prod" -var="db_password=secret"
 ```
+
+*Load all variable values from a named file.*
 
 ```bash
 terraform apply -var-file="prod.tfvars"
@@ -230,16 +272,20 @@ terraform apply -var-file="prod.tfvars"
 
 Prefix any variable name with `TF_VAR_` to set it via the shell environment. This is the primary method for CI/CD pipelines where `terraform.tfvars` should not exist.
 
+*Set variables via environment variables for headless CI/CD execution.*
+
 ```bash
 export TF_VAR_project_id="data-platform-prod"
 export TF_VAR_db_password="secret"
 terraform apply
 ```
 
-> [!warning] Gitignore terraform.tfvars
+> [!warning] Gitignore `terraform.tfvars`
+>
 > Always add `terraform.tfvars` to `.gitignore`. It contains passwords and API keys. If it is ever committed, rotate all credentials immediately.
 
-> [!success] Use Environment Variables or Secret Manager for CI/CD
+> [!success] Use environment variables or Secret Manager for CI/CD
+>
 > In CI/CD pipelines, pass sensitive variable values via environment variables (`TF_VAR_db_password`, `TF_VAR_dd_api_key`) or retrieve them from [Secret Manager](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) at pipeline start. Never store `terraform.tfvars` in the repository or in CI/CD artifact storage.
 
 ### Variable Precedence Order
@@ -254,7 +300,8 @@ When the same variable is set via multiple sources, Terraform resolves the value
 | 4 | `-var-file` flag | `terraform apply -var-file="prod.tfvars"` |
 | 5 (highest) | `-var` flag | `terraform apply -var="region=asia-east1"` |
 
-> [!info] Precedence Applies Per-Variable
+> [!info] Precedence applies per-variable
+>
 > Each variable is resolved independently. You can set `project_id` in `terraform.tfvars` while overriding `region` with `-var` — only the overridden variable is affected.
 
 ### Locals — Computed Values
@@ -262,6 +309,8 @@ When the same variable is set via multiple sources, Terraform resolves the value
 `locals` are derived values that cannot be overridden from outside the configuration. They are evaluated once after dependencies are resolved and are ideal for transforming resource attributes into reusable expressions, computing derived strings, and reducing repetition across resource blocks.
 
 #### Derive values from resource attributes
+
+*Compute the full Artifact Registry path and extract the SQL VM's private IP from resource attributes.*
 
 ```hcl
 locals {
@@ -275,6 +324,8 @@ locals {
 
 Locals can use conditional expressions to compute values based on variable state — useful for feature-flagging resources or selecting environment-specific configurations.
 
+*Use ternary expressions to select environment-specific values.*
+
 ```hcl
 locals {
   is_prod     = var.env == "prod"
@@ -283,7 +334,8 @@ locals {
 }
 ```
 
-> [!tip] Test Expressions with terraform console
+> [!tip] Test expressions with `terraform console`
+>
 > Run `terraform console` to interactively evaluate variable expressions, locals, and function calls against the current state. This is invaluable for debugging complex interpolations before committing them to configuration files.
 
 ### locals vs variables Comparison
@@ -295,7 +347,29 @@ locals {
 | **Use case** | Derived values like `sql_ip = google_compute_instance.sql.network_interface[0].network_ip` | Configuration inputs like `project_id`, `db_password` |
 | **When evaluated** | During `apply`, after dependencies are resolved | Before `apply`, as input parameters |
 
----
+### Ephemeral Variables (Terraform 1.10+)
+
+Terraform 1.10 introduced ephemeral values — variables, outputs, and resources that exist only during a single plan or apply phase and are never written to state. This addresses the long-standing concern that `sensitive = true` only redacts CLI output while the plaintext value still persists in the state file.
+
+*Declare an ephemeral variable for a short-lived token that must not persist in state.*
+
+```hcl
+variable "session_token" {
+  description = "Short-lived session token for API authentication"
+  type        = string
+  ephemeral   = true
+}
+```
+
+Ephemeral variables can only be used in contexts that accept ephemeral values — other ephemeral variables, ephemeral outputs, provisioner arguments, and connection blocks. Passing an ephemeral value to a resource argument that would be written to state produces a plan-time error.
+
+> [!info]- Ephemeral resources and outputs
+>
+> Beyond variables, Terraform 1.10 also supports:
+>
+> - **Ephemeral resources** — `ephemeral` blocks that are read anew during each plan/apply phase and never stored in state. Providers like AWS (`aws_secretsmanager_secret_version`), Azure (`azurerm_key_vault_secret`), and Kubernetes (`kubernetes_token_request`) offer ephemeral resource types.
+> - **Ephemeral outputs** — outputs marked `ephemeral = true` are excluded from state and only available during the current operation. Useful for passing short-lived tokens between root and child modules.
+> - **`ephemeralasnull` function** — replaces ephemeral values with `null` in contexts that require non-ephemeral values, allowing graceful fallback.
 
 ## Output Values — outputs.tf
 
@@ -316,6 +390,8 @@ Every output block requires a `value` expression. The optional `description` arg
 
 #### Standard output
 
+*Expose the Cloud Run dashboard URL for use in CI/CD scripts and `terraform output`.*
+
 ```hcl
 output "dashboard_url" {
   description = "Public URL of the Cloud Run dashboard service"
@@ -326,6 +402,8 @@ output "dashboard_url" {
 #### Sensitive output
 
 Outputs that expose credentials, connection strings, or keys should be marked `sensitive = true`. Terraform redacts the value from `terraform output` but it remains accessible via `terraform output -json` and in the state file.
+
+*Expose a connection string as a sensitive output — redacted from CLI, visible in JSON.*
 
 ```hcl
 output "db_connection_string" {
@@ -354,11 +432,15 @@ Outputs can be retrieved at any time without re-running `terraform apply`. This 
 
 #### View all outputs
 
+*Print all output values defined in the configuration.*
+
 ```bash
 terraform -chdir=infra output
 ```
 
 #### View a specific output value
+
+*Print only the `dashboard_url` output value.*
 
 ```bash
 terraform -chdir=infra output dashboard_url
@@ -368,27 +450,30 @@ terraform -chdir=infra output dashboard_url
 
 The `-json` flag returns outputs as a JSON object — useful for piping into `jq` or consuming in CI scripts.
 
+*Export all outputs as a JSON object for programmatic consumption.*
+
 ```bash
 terraform -chdir=infra output -json
 ```
 
-> [!tip] Chain Outputs into Shell Commands
+> [!tip] Chain outputs into shell commands
+>
 > Use `terraform output -raw` to get an unquoted value suitable for direct use in shell commands: `gcloud run jobs execute $(terraform -chdir=infra output -raw pipeline_job)`
 
 ## Related
 
 **Terraform Fundamentals:**
 - [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL type system, expressions, and syntax
-- [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) — backend and provider configuration that consumes these variables
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — the workflow that resolves and applies variable values
-- [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) — state backend security for sensitive variable values
+- [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — backend and provider configuration that consumes these variables
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — the workflow that resolves and applies variable values
+- [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — state backend security for sensitive variable values
 
 **Patterns:**
-- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — using variables with `count` and `for_each` to conditionally create resources
-- [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) — how variables and outputs form the module interface
+- [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — using variables with `count` and `for_each` to conditionally create resources
+- [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — how variables and outputs form the module interface
 
 **GCP:**
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — how `db_password` flows into Secret Manager via Terraform
+- [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — how `db_password` flows into Secret Manager via Terraform
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager for managing sensitive values outside of Terraform state
 
 ## References
@@ -397,3 +482,6 @@ terraform -chdir=infra output -json
 - [Terraform Output Values](https://developer.hashicorp.com/terraform/language/values/outputs)
 - [Terraform Local Values](https://developer.hashicorp.com/terraform/language/values/locals)
 - [Terraform Variable Validation](https://developer.hashicorp.com/terraform/language/values/variables#custom-validation-rules)
+- [Terraform 1.9 — Expanded Input Validation](https://www.infoq.com/news/2024/08/terraform-19/) — cross-variable references
+- [Terraform 1.10 — Ephemeral Values](https://www.hashicorp.com/en/blog/terraform-1-10-improves-handling-secrets-in-state-with-ephemeral-values) — ephemeral variables, outputs, and resources
+- ChromaDB: *Terraform in Depth* (Ch. 10 — preconditions, postconditions, cross-variable validation)

@@ -251,7 +251,7 @@ apache-airflow-providers-postgres==5.10.0
 
 ## Option 2: Self-Hosted on Google Compute Engine (GCE)
 
-For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute).
+For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute).
 
 ### Architecture
 

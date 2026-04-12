@@ -4,7 +4,7 @@ description: "Comprehensive glossary of ESG reporting frameworks, standards, and
 tags:
   - stoxx
   - iss
-  - financial-domain
+  - financial
   - glossary
   - esg
 aliases:

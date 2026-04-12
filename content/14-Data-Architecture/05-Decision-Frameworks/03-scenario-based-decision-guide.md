@@ -119,7 +119,7 @@ graph LR
 - [ ] Set up Airflow DAG with task dependencies — [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns)
 - [ ] Configure BigQuery export (scheduled query or `bq load`) — [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export)
 - [ ] Add freshness monitoring and alerting — [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
-- [ ] Terraform all infrastructure — [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
+- [ ] Terraform all infrastructure — [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy)
 
 ### Related Notes
 
@@ -595,7 +595,7 @@ graph TB
 > Data mesh assigns ownership: Team A owns ingestion, Team B owns core models, Team C owns domain analytics. Each team publishes "data products" with defined contracts (schema, SLA, freshness). Consumers depend on contracts, not implementation details. See [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture).
 
 > [!question] Why Terraform modules per team?
-> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition).
+> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition).
 
 > [!question] Why gRPC for inter-service communication?
 > gRPC provides strongly-typed contracts (Protobuf), bi-directional streaming, and 2-10x better performance than REST for internal service-to-service calls. Use REST only for external-facing APIs where browser compatibility matters. See [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) and [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
@@ -631,7 +631,7 @@ contract:
 
 ### Related Notes
 
-[data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) | [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) | [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) | [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) | [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)
+[data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) | [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) | [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) | [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) | [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)
 
 ---
 
@@ -985,7 +985,7 @@ VALIDATION_QUERIES = {
 
 ### Related Notes
 
-[migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | database connections | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
+[migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | database connections | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy)
 
 ---
 
@@ -1142,11 +1142,11 @@ graph LR
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
 | Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) |
-| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) |
-| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
+| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) |
+| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) |
 | Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
-| Manage Terraform state | GCS backend with locking | Remote state for teams | [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) |
-| Create reusable infra modules | Terraform modules | Composition over inheritance | [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) |
+| Manage Terraform state | GCS backend with locking | Remote state for teams | [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) |
+| Create reusable infra modules | Terraform modules | Composition over inheritance | [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) |
 
 ### Monitoring and Governance
 

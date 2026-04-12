@@ -10,7 +10,8 @@ status: complete
 
 # HCL Syntax Basics
 
-> [!quote]
+> [!quote] Alan Perlis on language design
+>
 > "A language that doesn't affect the way you think about programming is not worth knowing."
 >
 > — **Alan Perlis**, *Epigrams on Programming* (1982)
@@ -79,6 +80,8 @@ Every resource has two names. The first label after the resource type (`"allow_s
 
 ### Naming Example
 
+*Declare a firewall resource with Terraform-internal name `allow_sql` and GCP name `allow-sql-from-airflow`.*
+
 ```hcl
 resource "google_compute_firewall" "allow_sql" {
   name = "allow-sql-from-airflow"
@@ -92,7 +95,7 @@ resource "google_compute_firewall" "allow_sql" {
 
 ## Block Types
 
-The `variable` and `output` blocks below are covered in depth in [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs), which extends HCL syntax with parameterization, type constraints, and validation rules.
+The `variable` and `output` blocks below are covered in depth in [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs), which extends HCL syntax with parameterization, type constraints, and validation rules.
 
 The most common block types in Terraform:
 
@@ -113,11 +116,11 @@ Terraform is declarative: you describe the desired end state, and Terraform comp
 **Declarative (Terraform):** "There should be a VM named data-pipeline-sql with these properties."
 **Imperative (bash):** "Run `gcloud compute instances create data-pipeline-sql ...` with these flags."
 
-The declarative approach means Terraform can determine whether a resource already exists, needs updating, or needs to be recreated — and it can handle all three cases automatically. See [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) for the workflow that turns declarative config into real infrastructure.
+The declarative approach means Terraform can determine whether a resource already exists, needs updating, or needs to be recreated — and it can handle all three cases automatically. See [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) for the workflow that turns declarative config into real infrastructure.
 
 ## HCL Type System
 
-Every value in HCL has a type. Terraform uses types to validate variable inputs, enforce constraints, and determine how values can be combined in expressions. Understanding the type system is essential for writing correct `variable` blocks and `for` expressions. See [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) for type constraints in practice.
+Every value in HCL has a type. Terraform uses types to validate variable inputs, enforce constraints, and determine how values can be combined in expressions. Understanding the type system is essential for writing correct `variable` blocks and `for` expressions. See [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) for type constraints in practice.
 
 ### Primitive Types
 
@@ -140,6 +143,7 @@ Terraform automatically converts between primitives when unambiguous: `"42"` bec
 Lists are indexed by position (`element(list, 0)`). Maps are indexed by key (`map["dev"]`). Sets have no index — iterate with `for_each`.
 
 > [!warning] Duplicate map keys silently discard earlier values
+>
 > `{ a = 1, a = 2 }` evaluates to `{ a = 2 }` with no error. This can cause hard-to-debug issues when merging maps with `merge()`.
 
 > [!success] Use `keys()` and `length()` to verify map integrity after merges in `terraform console`.
@@ -170,11 +174,15 @@ HCL expressions go anywhere a value is expected — argument values, `locals` de
 
 Embed expressions inside strings with `${}`:
 
+*Concatenate variable values into a resource name using `${}` interpolation.*
+
 ```hcl
 name = "${var.project_id}-${var.environment}-vpc"
 ```
 
 For directive-based templates (loops and conditionals inside strings), use `%{}`:
+
+*Use `%{if}` directives to conditionally insert text within a string template.*
 
 ```hcl
 description = "%{if var.environment == "prod"}Production%{else}Non-production%{endif} VPC"
@@ -184,11 +192,15 @@ description = "%{if var.environment == "prod"}Production%{else}Non-production%{e
 
 The ternary operator selects between two values based on a boolean condition:
 
+*Select machine type based on the environment variable.*
+
 ```hcl
 machine_type = var.environment == "prod" ? "n2-standard-4" : "e2-medium"
 ```
 
 Combine with `null` to conditionally omit an argument entirely — Terraform treats `null` as "use the provider default":
+
+*Return `null` to let the provider use its default value when the toggle is off.*
 
 ```hcl
 min_tls_version = var.enforce_tls ? "TLS_1_2" : null
@@ -198,17 +210,23 @@ min_tls_version = var.enforce_tls ? "TLS_1_2" : null
 
 Transform collections by iterating over their elements. Produces a new list or map.
 
+*Transform every bucket name to uppercase using a `for` expression.*
+
 ```hcl
 upper_names = [for name in var.bucket_names : upper(name)]
 ```
 
 Filter with an `if` clause:
 
+*Filter the instances list to include only production environment entries.*
+
 ```hcl
 prod_instances = [for inst in var.instances : inst if inst.environment == "prod"]
 ```
 
 Produce a map by separating key and value with `=>`:
+
+*Build a name-to-zone lookup map from a list of instance objects.*
 
 ```hcl
 instance_map = { for inst in var.instances : inst.name => inst.zone }
@@ -217,6 +235,8 @@ instance_map = { for inst in var.instances : inst.name => inst.zone }
 ### Splat Expressions
 
 Shorthand for extracting a single attribute from every element in a list:
+
+*Extract the `instance_id` attribute from every element of the `workers` resource list.*
 
 ```hcl
 instance_ids = google_compute_instance.workers[*].instance_id
@@ -229,6 +249,7 @@ Equivalent to `[for inst in google_compute_instance.workers : inst.instance_id]`
 All functions are available in any HCL expression context — inside `resource`, `variable`, `locals`, `output`, and `data` blocks.
 
 > [!tip] Interactive testing with `terraform console`
+>
 > Run `terraform console` in any initialized Terraform directory to test expressions against live state and variables. Useful for debugging interpolation, type conversions, and complex `for` expressions before committing them to config files.
 
 ### String Functions
@@ -373,6 +394,7 @@ Generate hashes, UUIDs, and checksums. `filesha256` is commonly used to trigger 
 | `filemd5` | `filemd5(path)` | `filemd5("object.bin")` | MD5 of file |
 
 > [!warning] `bcrypt` produces a different hash on every `terraform plan`
+>
 > Because `bcrypt` includes a random salt, Terraform sees the output as changed on every run, causing perpetual diffs. The hash also ends up stored in plaintext in the state file.
 
 > [!success] Use a `random_password` resource with the `bcrypt` function only in a `local-exec` provisioner, or hash outside Terraform and pass the value as a variable.
@@ -391,6 +413,247 @@ Convert between HCL types and handle nullable or error-prone expressions safely.
 | `tonumber` | `tonumber(value)` | `tonumber("3.14")` | `3.14` |
 | `tobool` | `tobool(value)` | `tobool("true")` | `true` |
 | `type` | `type(value)` | (console only) | prints type of value |
+
+## Meta-Arguments
+
+Meta-arguments are built into the HCL language itself and available on every `resource` and `data` block regardless of provider. They instruct Terraform how to process a block — how many instances to create, what order to follow, or how to handle lifecycle events. Because meta-arguments affect plan computation, many of their values must be known at plan time and cannot depend on attributes that are computed during apply.
+
+### count
+
+The `count` meta-argument creates multiple instances of a resource from a single block. Each instance is identified by its numeric index (`count.index`), starting at `0`.
+
+*Create four identical compute instances, each tagged with its index number.*
+
+```hcl
+resource "google_compute_instance" "worker" {
+  count        = 4
+  name         = "worker-${count.index}"
+  machine_type = "e2-medium"
+  zone         = var.zone
+}
+```
+
+Use `count` with a conditional to toggle a resource on or off:
+
+*Create the firewall rule only when `admin_ip` is provided.*
+
+```hcl
+resource "google_compute_firewall" "allow_admin" {
+  count   = var.admin_ip != "" ? 1 : 0
+  name    = "allow-admin-access"
+  network = google_compute_network.main.id
+  # ...
+}
+```
+
+> [!warning] Index shifting destroys and recreates resources
+>
+> Resources created with `count` are keyed by numeric index. If you remove an item from the middle of a list that drives `count`, all subsequent indexes shift — Terraform sees them as different resources and will destroy and recreate them. For stable identity, use `for_each` with a map or set instead.
+
+> [!success] Use `count` only for conditional creation or identical copies
+>
+> Reserve `count` for two patterns: toggling a resource on/off (`count = var.enabled ? 1 : 0`) and creating N identical copies. For resources that differ by key (environments, regions, team names), `for_each` is safer because keys are stable regardless of ordering.
+
+### for_each
+
+The `for_each` meta-argument creates one instance per element of a map or set. Each instance is keyed by the map key (or set element), not by a numeric index — keys remain stable when elements are added or removed.
+
+*Create one subnet per entry in the `subnets` map, keyed by subnet name.*
+
+```hcl
+resource "google_compute_subnetwork" "regional" {
+  for_each      = var.subnets
+  name          = each.key
+  ip_cidr_range = each.value.cidr
+  region        = each.value.region
+  network       = google_compute_network.main.id
+}
+```
+
+Inside the block, `each.key` is the current map key and `each.value` is the corresponding value. For sets, both `each.key` and `each.value` are the element itself.
+
+> [!tip] Convert a list to a set for `for_each`
+>
+> `for_each` requires a map or set, not a list. Convert with `toset()`: `for_each = toset(var.zone_list)`. If you need both index and value, build a map first using a `for` expression: `{ for idx, z in var.zone_list : z => idx }`.
+
+### depends_on
+
+The `depends_on` meta-argument declares an explicit ordering dependency between resources when Terraform cannot infer one from attribute references. Terraform completes all actions on the dependency (including any read actions) before processing the dependent resource.
+
+*Ensure the IAM binding is fully applied before creating the Cloud Run service.*
+
+```hcl
+resource "google_cloud_run_v2_service" "dashboard" {
+  depends_on = [google_project_iam_member.run_invoker]
+  name       = "dashboard"
+  location   = var.region
+  # ...
+}
+```
+
+> [!warning] Prefer implicit dependencies over `depends_on`
+>
+> Whenever possible, express dependencies through attribute references (e.g., `network = google_compute_network.main.id`). Terraform automatically infers the ordering. Reserve `depends_on` for cases where a dependency exists due to side effects not captured in attributes — for example, an IAM binding that must propagate before a service can start.
+
+### lifecycle
+
+The `lifecycle` block is a nested meta-argument that controls how Terraform manages resource changes. It accepts several arguments that override default plan behavior.
+
+| Argument | Purpose | Example |
+|---|---|---|
+| `create_before_destroy` | Create the replacement before destroying the original — reduces downtime for stateless resources | `create_before_destroy = true` |
+| `prevent_destroy` | Reject any plan that would destroy the resource — safety net for stateful resources like databases | `prevent_destroy = true` |
+| `ignore_changes` | Exclude specific attributes from drift detection — useful when an external process manages those attributes | `ignore_changes = [labels, metadata]` |
+| `replace_triggered_by` | Force replacement when a referenced resource changes — signals implicit dependencies that Terraform cannot detect | `replace_triggered_by = [google_compute_disk.boot.id]` |
+| `precondition` | Validate inputs before creating or updating the resource (Terraform 1.2+) | See example below |
+| `postcondition` | Validate resource attributes after creation (Terraform 1.2+) | See example below |
+
+*Prevent accidental destruction of the SQL Server VM and ignore externally managed labels.*
+
+```hcl
+resource "google_compute_instance" "sql" {
+  name         = "data-pipeline-sql"
+  machine_type = "n2-standard-4"
+  zone         = var.zone
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels, metadata["startup-script"]]
+  }
+}
+```
+
+> [!warning] `prevent_destroy` does not protect against block removal
+>
+> If you remove the entire `resource` block from the configuration, Terraform no longer sees the `prevent_destroy` argument and will plan a destroy. The protection only works while the resource block exists in the configuration.
+
+> [!success] Combine `prevent_destroy` with `deletion_protection`
+>
+> For GCP resources that support it (Cloud SQL, BigQuery, Compute Engine), set both `prevent_destroy = true` in the lifecycle block and `deletion_protection = true` in the resource arguments. The lifecycle argument catches Terraform-initiated destroys; the GCP argument catches API-level deletes from any source.
+
+#### Preconditions and postconditions (Terraform 1.2+)
+
+Preconditions validate assumptions before Terraform creates or updates a resource. Postconditions validate the result after the resource is created. Both use the `condition` + `error_message` pattern and live inside the `lifecycle` block.
+
+*Validate that the selected region is in Europe before creating the resource.*
+
+```hcl
+resource "google_compute_network" "main" {
+  name = "data-pipeline-vpc"
+
+  lifecycle {
+    precondition {
+      condition     = startswith(var.region, "europe-")
+      error_message = "This project must deploy to a European region for data residency compliance."
+    }
+  }
+}
+```
+
+> [!info]- Cross-variable validation (Terraform 1.9+)
+>
+> Before Terraform 1.9, `validation` blocks in `variable` declarations could only reference the variable being validated. From Terraform 1.9+, validation conditions can reference other variables, data sources, and local values — reducing the need to use `precondition` blocks as a workaround for cross-variable constraints.
+
+### replace_triggered_by (Terraform 1.2+)
+
+The `replace_triggered_by` lifecycle argument forces Terraform to replace a resource whenever one or more referenced managed resources change. This is useful when a resource depends on another resource's identity in a way that requires full replacement rather than in-place update.
+
+*Replace the Cloud Run service whenever the Docker image digest changes.*
+
+```hcl
+resource "terraform_data" "image_tag" {
+  input = var.image_digest
+}
+
+resource "google_cloud_run_v2_service" "dashboard" {
+  name     = "dashboard"
+  location = var.region
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.image_tag]
+  }
+  # ...
+}
+```
+
+> [!tip] Use `terraform_data` as a change signal
+>
+> The `terraform_data` resource (replacement for the deprecated `null_resource`) stores an arbitrary value in state. When that value changes, any resource with `replace_triggered_by` pointing to it will be replaced. This pattern decouples the trigger from the resource's own arguments.
+
+## Dynamic Blocks
+
+Dynamic blocks generate repeated nested blocks programmatically, acting like a `for` expression that produces block structures instead of values. They are supported inside `resource`, `data`, `provider`, and `provisioner` blocks.
+
+A dynamic block has four components:
+
+| Component | Required | Purpose |
+|---|---|---|
+| **label** | Yes | The type of nested block to generate (e.g., `ingress`, `env`, `setting`) |
+| **`for_each`** | Yes | The collection to iterate over — must be a map or set |
+| **`content`** | Yes | The body of each generated block — references the iterator to access current element values |
+| **`iterator`** | No | Custom name for the iteration variable. Defaults to the block label if omitted |
+
+*Dynamically generate one `env` block per entry in the `env_vars` map.*
+
+```hcl
+resource "google_cloud_run_v2_service" "dashboard" {
+  name     = "dashboard"
+  location = var.region
+
+  template {
+    containers {
+      image = "${local.registry}/dashboard:latest"
+
+      dynamic "env" {
+        for_each = var.env_vars
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+    }
+  }
+}
+```
+
+Inside the `content` block, `env.key` and `env.value` refer to the current map entry (where `env` is the default iterator name matching the block label). To use a custom iterator name, set `iterator = custom_name` and reference `custom_name.key` / `custom_name.value`.
+
+### Nested Dynamic Blocks
+
+Some resource types require multiple levels of nested blocks. You can nest `dynamic` blocks inside the `content` of other `dynamic` blocks to generate these structures.
+
+*Generate `origin_group` blocks, each containing a dynamic set of `origin` entries.*
+
+```hcl
+dynamic "origin_group" {
+  for_each = var.origin_groups
+  content {
+    name = origin_group.value.name
+
+    dynamic "origin" {
+      for_each = origin_group.value.origins
+      content {
+        hostname = origin.value.hostname
+        weight   = origin.value.weight
+      }
+    }
+  }
+}
+```
+
+> [!warning] Deep nesting reduces readability
+>
+> Dynamic blocks beyond two levels of nesting become difficult to read and maintain. If you find yourself nesting three or more levels, consider restructuring the data or extracting the inner logic into a local variable.
+
+> [!success] Flatten complex structures into locals first
+>
+> Use `flatten()` and `for` expressions in a `locals` block to pre-compute the nested structure as a flat map, then iterate over it with a single `dynamic` block. This moves complexity out of the resource block and into a testable expression.
+
+> [!info]- Dynamic block limitations
+>
+> - Dynamic blocks can only generate arguments that belong to the enclosing resource type — they cannot generate meta-arguments like `lifecycle` or `depends_on`.
+> - The `for_each` value must be known at plan time. If it depends on a computed attribute (e.g., an IP address assigned during apply), Terraform will error with "value depends on resource attributes that cannot be determined until apply."
+> - Overusing dynamic blocks where a static block would suffice adds unnecessary indirection. Use them only when the number of nested blocks genuinely varies.
 
 ## File Organization Reference
 
@@ -417,24 +680,36 @@ Standard file layout for a Terraform project targeting GCP. File names are a con
 | `.terraform/` | Local cache — add to `.gitignore` |
 
 > [!danger] Never commit `*.tfvars` files containing secrets (database passwords, API keys, service account keys)
+>
 > These files are often the source of credential leaks in version control. Even private repos are not safe — credentials in git history persist after deletion.
 
-> [!success] Store secrets in environment variables (`TF_VAR_*`), a secrets manager (GCP Secret Manager, HashiCorp Vault), or encrypted backend. Add `*.tfvars` to `.gitignore` and use `*.tfvars.example` files with placeholder values.
+> [!success] Store secrets outside version control
+>
+> Use environment variables (`TF_VAR_*`), a secrets manager (GCP Secret Manager, HashiCorp Vault), or an encrypted backend. Add `*.tfvars` to `.gitignore` and use `*.tfvars.example` files with placeholder values.
 
 > [!info] Always commit `.terraform.lock.hcl`
+>
 > This file pins the exact provider versions and hashes used by your project. Without it, `terraform init` may download a different provider version on another machine, causing inconsistent behavior. Treat it like a `package-lock.json`.
 
 > [!tip] Run `terraform fmt` before every commit
+>
 > `terraform fmt` rewrites `.tf` files to the canonical HCL style (2-space indent, aligned `=` signs, sorted arguments). Enforcing it in CI prevents style drift across team members.
 
 ## Related
 
-- [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) — Configuring where Terraform connects and stores state
-- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — Parameterizing HCL with variables, locals, and outputs
-- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — The workflow that turns HCL into real infrastructure
-- [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) — How Terraform tracks what it has created
+- [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — Configuring where Terraform connects and stores state
+- [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — Parameterizing HCL with variables, locals, and outputs
+- [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — The workflow that turns HCL into real infrastructure
+- [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — How Terraform tracks what it has created
 
 ## References
 
 - [HCL Native Syntax Specification](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md)
 - [Terraform Configuration Language](https://developer.hashicorp.com/terraform/language)
+- [Meta-Arguments](https://developer.hashicorp.com/terraform/language/meta-arguments) — count, for_each, depends_on, provider, lifecycle
+- [lifecycle Meta-Argument Reference](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) — create_before_destroy, prevent_destroy, ignore_changes, replace_triggered_by, precondition, postcondition
+- [Dynamic Blocks](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) — for_each, content, iterator, nested dynamic blocks
+- [Terraform 1.9 — Expanded Input Validation](https://www.infoq.com/news/2024/08/terraform-19/) — cross-variable references in validation blocks
+- [Terraform 1.10 — Ephemeral Values](https://www.hashicorp.com/en/blog/terraform-1-10-improves-handling-secrets-in-state-with-ephemeral-values) — ephemeral resources, variables, and outputs
+- ChromaDB: *Terraform in Depth* (meta-arguments, lifecycle, preconditions/postconditions)
+- ChromaDB: *Terraform Up & Running* (inline blocks vs separate resources)

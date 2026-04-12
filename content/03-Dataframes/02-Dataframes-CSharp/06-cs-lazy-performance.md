@@ -1,6 +1,6 @@
 ---
 title: "06 - Lazy API and Performance - C#"
-tags: [csharp, deedle, polars, dataframes]
+tags: [csharp, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks
 description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [06_py_lazy_performance](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/06_py_lazy_performance) for the Python equivalent."
