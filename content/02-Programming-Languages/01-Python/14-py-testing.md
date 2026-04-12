@@ -815,7 +815,7 @@ def test_ohlcv_bar_validation(bar, should_pass):
 >
 > fee tier mapping — volume in USD maps to fee in basis points
 
-> [!warning] < $100K → 30 bps, $100K–$1M → 20 bps, > $1M → 10 bps. Each row tests one volume tier. Wrong fee = overcharging or undercharging clients.
+> [!warning] < $100K → 30 bps, $100K–\$1M → 20 bps, > $1M → 10 bps. Each row tests one volume tier. Wrong fee = overcharging or undercharging clients.
 
 ```python
 @pytest.mark.parametrize("volume_usd, expected_bps", [

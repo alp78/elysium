@@ -1376,14 +1376,14 @@ Reference infrastructure for this comparison: 2 GCE VMs, BigQuery active usage, 
 | Component | Monthly Cost | Notes |
 |-----------|-------------|-------|
 | Cloud Monitoring (metrics) | $0 | Built-in and Ops Agent metrics are free |
-| Custom metrics | ~$2–5 | $0.18/metric/month after 150 free metrics; 10–20 custom metrics |
-| Log ingestion | ~$0–15 | 50 GiB/month free; typical pipelines stay under unless verbose logging |
-| Log storage | ~$0–5 | 50 GiB/month free in `_Default` bucket |
+| Custom metrics | ~\$2–5 | \$0.18/metric/month after 150 free metrics; 10–20 custom metrics |
+| Log ingestion | ~\$0–15 | 50 GiB/month free; typical pipelines stay under unless verbose logging |
+| Log storage | ~\$0–5 | 50 GiB/month free in `_Default` bucket |
 | Log Analytics | $0 | Querying log buckets with SQL is free |
-| BigQuery log sink storage | ~$0–3 | Standard BQ storage rates on exported logs |
+| BigQuery log sink storage | ~\$0–3 | Standard BQ storage rates on exported logs |
 | Cloud Trace | $0 | Batch pipelines easily stay under 2.5M spans/month free tier |
-| Cloud Storage log archive | ~$1–3 | At $0.02/GiB for Standard storage |
-| **Total** | **~$3–31/month** | |
+| Cloud Storage log archive | ~\$1–3 | At \$0.02/GiB for Standard storage |
+| **Total** | **~\$3–31/month** | |
 
 #### Datadog Stack
 
@@ -1394,7 +1394,7 @@ Reference infrastructure for this comparison: 2 GCE VMs, BigQuery active usage, 
 | Log Management | ~$0.10/GiB × 20 GiB = $100+ | Ingestion + 15-day retention |
 | Log rehydration | Additional | If you need logs older than 15 days |
 | Dashboards, alerts | Included | |
-| **Total** | **~$230–400/month** | Scales with host count and log volume |
+| **Total** | **~\$230–400/month** | Scales with host count and log volume |
 
 > [!info] The Real GCP-Native Cost
 > The dominant cost driver for GCP-native logging is log ingestion volume. If your pipelines write verbose DEBUG-level logs, you can easily exceed the 50 GiB free tier. The fix: use exclusion filters to drop DEBUG logs from `_Default`, route them to a cheap Cloud Storage sink only if needed, and ensure your pipeline code only logs at DEBUG during development.

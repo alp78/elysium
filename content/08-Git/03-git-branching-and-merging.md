@@ -38,7 +38,7 @@ A branch is an independent line of development. Creating a branch adds a new poi
 > Git 2.23 (August 2019) split the overloaded `git checkout` into two focused commands: `git switch` for changing branches and `git restore` for discarding file changes. The old `git checkout` still works but `switch` is safer — it refuses to switch if uncommitted changes conflict, whereas `checkout` can silently discard work when used with file paths.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -116,7 +116,7 @@ git branch
 A stash is a temporary storage area for uncommitted changes. When you stash, Git saves your modified tracked files and staged changes onto a stack, then reverts your working directory to a clean state matching the last commit. You can re-apply stashed changes later on the same branch or a different one. Stashing is essential when you need to switch branches mid-work without committing half-finished code.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -273,7 +273,7 @@ See [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-
 A fast-forward merge occurs when the target branch (e.g., `main`) has not received any new commits since the feature branch was created. Git simply moves the `main` pointer forward to the feature branch's tip — no merge commit is created. The result is a perfectly linear history with no branching visible in `git log --graph`.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -307,7 +307,7 @@ Fast-forward
 A three-way merge occurs when both branches have new commits since they diverged. Git finds the common ancestor (merge base), compares both branch tips against it, and creates a **merge commit** with two parents. This preserves the complete history of both branches, showing exactly when they diverged and when they were joined.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -376,7 +376,7 @@ Rebasing takes every commit on your branch and replays them one by one on top of
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -392,7 +392,7 @@ gitGraph TB:
 **After rebase:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -465,7 +465,7 @@ git rebase --abort
 Cherry-picking copies a single commit from one branch to another. Git applies the diff introduced by the chosen commit as a new commit on the current branch. The new commit has a different SHA but identical changes. This is useful for applying a specific fix from a development branch to a release branch without merging everything.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -520,7 +520,7 @@ Undoing the last commit is one of the most common recovery operations. The three
 **Before reset:**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B"
@@ -532,7 +532,7 @@ gitGraph TB:
 **After `git reset --soft HEAD~1`** — HEAD moves back to B, commit C's changes remain staged:
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "A"
   commit id: "B" type: HIGHLIGHT

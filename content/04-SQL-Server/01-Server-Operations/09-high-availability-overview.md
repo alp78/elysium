@@ -1599,13 +1599,13 @@ ORDER BY expiry_date;
 
 | name | subject | expiry_date | days_remaining |
 |------|---------|-------------|----------------|
-| ##MS_SQLResourceSigningCertificate## | MS_SQLResourceSigningCertificate | 2027-01-23 04:20:25.000 | 287 |
-| ##MS_PolicySigningCertificate## | MS_PolicySigningCertificate | 2027-01-23 04:20:26.000 | 287 |
-| ##MS_SmoExtendedSigningCertificate## | MS_SmoExtendedSigningCertificate | 2027-01-23 04:20:26.000 | 287 |
-| ##MS_SQLAuthenticatorCertificate## | MS_SQLAuthenticatorCertificate | 2027-01-23 04:20:26.000 | 287 |
-| ##MS_SQLReplicationSigningCertificate## | MS_SQLResourceSigningCertificate | 2027-01-23 04:20:26.000 | 287 |
-| ##MS_AgentSigningCertificate## | MS_AgentSigningCertificate | 2027-01-23 04:22:32.000 | 287 |
-| ##MS_SchemaSigningCertificate5B98FF7255B8CD1E604F708454F3171D1273F48C## | MS_SchemaSigningCertificate5B98FF7255B8CD1E604F708454F3171D1273F48C | 2027-01-23 04:23:20.000 | 287 |
+| `##MS_SQLResourceSigningCertificate##` | MS_SQLResourceSigningCertificate | 2027-01-23 04:20:25.000 | 287 |
+| `##MS_PolicySigningCertificate##` | MS_PolicySigningCertificate | 2027-01-23 04:20:26.000 | 287 |
+| `##MS_SmoExtendedSigningCertificate##` | MS_SmoExtendedSigningCertificate | 2027-01-23 04:20:26.000 | 287 |
+| `##MS_SQLAuthenticatorCertificate##` | MS_SQLAuthenticatorCertificate | 2027-01-23 04:20:26.000 | 287 |
+| `##MS_SQLReplicationSigningCertificate##` | MS_SQLResourceSigningCertificate | 2027-01-23 04:20:26.000 | 287 |
+| `##MS_AgentSigningCertificate##` | MS_AgentSigningCertificate | 2027-01-23 04:22:32.000 | 287 |
+| `##MS_SchemaSigningCertificate5B98FF7255B8CD1E604F708454F3171D1273F48C##` | MS_SchemaSigningCertificate5B98FF7255B8CD1E604F708454F3171D1273F48C | 2027-01-23 04:23:20.000 | 287 |
 | dbm_cert | AG endpoint cert for project_ag | 2036-04-11 00:00:00.000 | 3653 |
 
 *Live capture: the user `dbm_cert` was created with an explicit 10-year expiry and shows 3653 days remaining. The built-in `##MS_*##` internal signing certificates all show 287 days — these are SQL Server internal certificates, not AG endpoint certificates, and should not be rotated manually. Filter the operational alert to `WHERE name NOT LIKE '##MS_%##'` when wiring this into monitoring.*

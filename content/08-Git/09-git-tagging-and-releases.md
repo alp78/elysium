@@ -36,7 +36,7 @@ A lightweight tag is simply a named pointer to a commit SHA with no additional m
 | **Annotated** | A full Git object with tagger name, email, date, and a message | Production releases — preferred |
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "feat: source"
   commit id: "fix: nulls"
@@ -216,7 +216,7 @@ Pre-release versions use a hyphen suffix: `v1.0.0-beta.1`, `v1.0.0-rc.2`.
 A complete release cycle: confirm `main` is up to date and all PRs are merged, create an annotated tag on `HEAD`, then push the tag to GitHub. After pushing, GitHub automatically creates a Release entry in the Releases tab, which you can enrich with release notes and attached binaries.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#000000', 'gitBranchLabel1': '#000000', 'gitBranchLabel2': '#000000', 'gitBranchLabel3': '#000000', 'commitLabelColor': '#ffffff', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#000000', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+
 gitGraph TB:
   commit id: "feat: OHLCV"
   branch feat/asia

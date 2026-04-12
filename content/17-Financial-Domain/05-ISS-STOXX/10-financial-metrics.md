@@ -2797,7 +2797,7 @@ $$
 
 
 
-The maximum expected loss of a portfolio over a specified time horizon at a given confidence level. For example, a one-day 95% VaR of $1 million means there is a 5% probability of losing more than $1 million in a single day.
+The maximum expected loss of a portfolio over a specified time horizon at a given confidence level. For example, a one-day 95% VaR of \$1 million means there is a 5% probability of losing more than \$1 million in a single day.
 
 > [!note]
 > VaR puts a dollar figure on potential losses. It answers: "On 95 out of 100 days, I expect to lose no more than this amount." It does not, however, tell you how bad things could get in the remaining 5 days.

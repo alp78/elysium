@@ -474,7 +474,7 @@ On-demand and Editions (slot-based) are the two BigQuery compute pricing models.
 | Dimension | On-Demand | Editions (Standard/Enterprise/Enterprise Plus) |
 |---|---|---|
 | **Billing unit** | Bytes scanned per query | Slot-hours consumed |
-| **Rate** | $6.25/TiB scanned | $0.04–$0.06/slot-hour (varies by edition and commitment) |
+| **Rate** | $6.25/TiB scanned | \$0.04–\$0.06/slot-hour (varies by edition and commitment) |
 | **Free tier** | 1 TiB/month | None |
 | **Optimize for** | `total_bytes_processed` | `total_slot_ms` |
 | **Cost predictability** | Variable — depends on query patterns | Fixed — based on reserved slots |

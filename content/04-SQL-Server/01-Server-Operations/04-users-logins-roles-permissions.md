@@ -628,7 +628,7 @@ SQL Server 2019 and earlier shipped nine fixed server roles. Their permissions c
 >
 > `securityadmin`, `dbcreator`, and `bulkadmin` are commonly over-granted because they sound narrower than they really are. `securityadmin` in particular should be treated as equivalent to `sysadmin` — a member can grant any server permission to any principal, including to itself.
 
-> [!success] Prefer ##MS_LoginManager## and ##MS_DatabaseManager##
+> [!success] Prefer `##MS_LoginManager##` and `##MS_DatabaseManager##`
 >
 > Use the SQL Server 2022 `##MS_LoginManager##` and `##MS_DatabaseManager##` roles instead. They provide the common use cases without the broad escalation surface of legacy roles, and they are portable to Azure SQL Database which does not expose the legacy fixed roles.
 
@@ -649,7 +649,7 @@ SQL Server 2022 added 10 new fixed server roles prefixed with `##MS_` and suffix
 | `##MS_PerformanceDefinitionReader##` | `VIEW ANY PERFORMANCE DEFINITION` | `VIEW PERFORMANCE DEFINITION` | Performance tuning tools that inspect execution plans and stats but nothing else |
 | `##MS_SecurityDefinitionReader##` | `VIEW ANY SECURITY DEFINITION` | `VIEW SECURITY DEFINITION` | Security auditors reading role memberships and permissions metadata |
 
-> [!success] Prefer SQL Server 2022 ##MS_*## roles over legacy fixed roles
+> [!success] Prefer SQL Server 2022 `##MS_*##` roles over legacy fixed roles
 >
 > Prefer the new `##MS_*##` SQL Server 2022 roles over broader legacy roles when they satisfy the use case. They cover the same use cases with a tighter permission surface and are portable across SQL Server and Azure SQL Database.
 

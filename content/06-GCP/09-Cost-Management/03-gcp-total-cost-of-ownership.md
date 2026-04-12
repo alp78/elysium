@@ -47,7 +47,7 @@ A GCP data pipeline TCO spans six cost categories. Use the formula and reference
 4. **Data Processing** — BigQuery query costs (on-demand), Pub/Sub message throughput, Dataflow shuffle, Datastream replication
 5. **Operations** — Cloud Logging ingestion beyond free tier, Cloud Monitoring, Secret Manager, Cloud Scheduler
 6. **Licensing** — SQL Server Windows license (if not using BYOL or Linux), third-party tools (Datadog, dbt Cloud, Monte Carlo)
-7. **Human Cost** — Engineering hours for maintenance, incident response, and on-call. Not calculated here, but typically $5,000–$25,000/month equivalent for a 1–3 engineer team. Always factor into total platform cost.
+7. **Human Cost** — Engineering hours for maintenance, incident response, and on-call. Not calculated here, but typically \$5,000–\$25,000/month equivalent for a 1–3 engineer team. Always factor into total platform cost.
 
 ### The TCO Formula
 
@@ -90,7 +90,7 @@ For budgeting purposes, add a **15–20% buffer** for unexpected egress, log spi
 | Cloud Scheduler | per job/month (after 3 free) | $0.10 |
 | Pub/Sub | per GB | $0.040 |
 | Cloud Composer small | per environment/month | ~$300 |
-| Network egress (internet) | per GB (varies by destination) | $0.08–$0.12 |
+| Network egress (internet) | per GB (varies by destination) | \$0.08–\$0.12 |
 
 > [!tip] Set Cloud Billing Budget Alerts Before You Build
 >
@@ -102,7 +102,7 @@ For budgeting purposes, add a **15–20% buffer** for unexpected egress, log spi
 
 ---
 
-## Reference Architecture 1: Small Batch Pipeline (~$100–150/month)
+## Reference Architecture 1: Small Batch Pipeline (~\$100–150/month)
 
 Fully serverless — no fixed VM costs. All services are pay-per-use, making this the lowest-risk starting point for a new GCP data project.
 
@@ -188,7 +188,7 @@ Total Cloud Run: **$0.783/month** → round to **~$0.80/month**
 | **Total** | | **~$7.23/month** |
 
 > [!success] Real-World Cost
-> With free tiers applied (Cloud Run, BigQuery 1 TB free, Logging 50 GB free), the actual monthly cost for a new GCP billing account is often **$2–$5/month** — essentially just BigQuery storage and Secret Manager. The $7.23 is the steady-state cost once all free tiers are fully consumed.
+> With free tiers applied (Cloud Run, BigQuery 1 TB free, Logging 50 GB free), the actual monthly cost for a new GCP billing account is often **\$2–\$5/month** — essentially just BigQuery storage and Secret Manager. The \$7.23 is the steady-state cost once all free tiers are fully consumed.
 
 ### Architecture Diagram
 
@@ -226,7 +226,7 @@ flowchart LR
 
 ---
 
-## Reference Architecture 2: Medium Pipeline with SQL Server (~$200–400/month)
+## Reference Architecture 2: Medium Pipeline with SQL Server (~\$200–400/month)
 
 Introduces fixed VM costs for full SQL Server control alongside self-hosted Airflow orchestration. The most common architecture for mid-size data engineering teams. See [Terraform provisioning](https://alp78.github.io/elysium/07-Terraform) for IaC of these resources.
 
@@ -327,12 +327,12 @@ A mid-size pipeline for a team of 2–4 engineers:
 | Cloud NAT data processing | ~10 GB/month | $0.045/GB | 10 GB | $0.45 |
 | Disk snapshots | 200 GB total | $0.026/GB | 200 GB | $5.20 |
 | Cloud Logging | 30 GB (free tier covers all) | $0.50/GB | 0 GB | $0.00 |
-| Static IPs | 2 (attached, in use) | $0/hr attached | — | $0.00 |
+| Static IPs | 2 (attached, in use) | \$0/hr attached | — | \$0.00 |
 | Secret Manager | 10 secrets | $0.06/secret | 10 | $0.60 |
 | Cloud Scheduler | 5 jobs (3 free + 2 paid) | $0.10/job | 2 | $0.20 |
 | **Total** | | | | **$222.01/month** |
 
-**Practical range: $200–$250/month** depending on BigQuery query patterns and NAT data volume.
+**Practical range: \$200–\$250/month** depending on BigQuery query patterns and NAT data volume.
 
 ### Architecture Diagram
 
@@ -399,14 +399,14 @@ This is the "dev environment off" state — keep the data, destroy the compute.
 1. **Schedule VM start/stop with Cloud Scheduler + Cloud Functions.** If your pipeline only needs to run during business hours, stopping VMs from 7 PM to 7 AM saves ~58% on compute. The disk still costs money, but compute is the larger line item here.
 2. **Evaluate self-hosted Airflow sizing.** An e2-standard-2 is generous for Airflow with <10 active DAGs. An e2-small (2 vCPU, 2 GB) at $0.0168/hr ($12.26/month) may suffice for simple orchestration.
 3. **Audit Cloud NAT necessity.** If you move ingestion to Cloud Run Jobs, those jobs have native internet egress without NAT. Eliminating NAT saves $32/month.
-4. **BigQuery table partitioning and clustering.** Partition gold-layer export tables by date. Dashboards querying recent data scan a fraction of total storage. At 2 TB scanned/month × $6.25, reducing scans by 50% saves $6.25/month.
+4. **BigQuery table partitioning and clustering.** Partition gold-layer export tables by date. Dashboards querying recent data scan a fraction of total storage. At 2 TB scanned/month × \$6.25, reducing scans by 50% saves \$6.25/month.
 5. **Convert active BigQuery storage to long-term.** Tables not modified for 90+ consecutive days automatically drop from $0.020/GB to $0.010/GB. Archiving old silver/gold data doubles your storage efficiency.
-6. **Use HDD persistent disks for Airflow.** Airflow logs and metadata don't benefit from SSD IOPS. Switch the Airflow VM to a 50 GB HDD disk ($0.040/GB = $2.00/month vs $8.50 SSD) — save $6.50/month.
+6. **Use HDD persistent disks for Airflow.** Airflow logs and metadata don't benefit from SSD IOPS. Switch the Airflow VM to a 50 GB HDD disk (\$0.040/GB = \$2.00/month vs \$8.50 SSD) — save \$6.50/month.
 7. **Set snapshot retention policies.** Without a retention policy, snapshots accumulate indefinitely. Use `gcloud compute resource-policies create snapshot-schedule` with `--max-retention-days=7` to automatically prune old snapshots.
 
 ---
 
-## Reference Architecture 3: Production Platform (~$800–1,500/month)
+## Reference Architecture 3: Production Platform (~\$800–1,500/month)
 
 Production-grade platform with managed orchestration, full-stack observability, and multi-source ingestion. Fixed costs dominate (~75%) — primarily Cloud Composer and Datadog. See [Cloud Scheduler and orchestration patterns](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) for Cloud Composer DAG scheduling.
 
@@ -458,7 +458,7 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 
 > [!warning] Cloud Composer Minimum Cost
 >
-> Cloud Composer 2's smallest configuration (1 scheduler, 1 web server, 1 worker, shared database) runs approximately $300–$350/month with no DAGs running. This is the floor. Every additional worker node adds ~$25–$50/month. If you have fewer than ~15 DAGs and a small team, self-hosted Airflow on an e2-standard-2 saves $250+/month.
+> Cloud Composer 2's smallest configuration (1 scheduler, 1 web server, 1 worker, shared database) runs approximately \$300–\$350/month with no DAGs running. This is the floor. Every additional worker node adds ~\$25–\$50/month. If you have fewer than ~15 DAGs and a small team, self-hosted Airflow on an e2-standard-2 saves \$250+/month.
 
 > [!success] Use self-hosted Airflow on e2-standard-2 for small teams
 > Deploy Airflow on an e2-standard-2 with Docker Compose. At ~$39/month (with SUD), this saves $260+/month vs Cloud Composer. Only move to Cloud Composer when operational overhead of Airflow upgrades, HA, and scaling becomes a real cost to the team.
@@ -551,7 +551,7 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 | Cloud Scheduler | 15 jobs (3 free + 12 paid) | $1.20 |
 | **Total** | | **~$898/month** |
 
-**Practical range: $850–$1,100/month** depending on Cloud Run min-instances, Datadog log volume, and BigQuery query patterns.
+**Practical range: \$850–\$1,100/month** depending on Cloud Run min-instances, Datadog log volume, and BigQuery query patterns.
 
 ### Architecture Diagram
 
@@ -632,13 +632,13 @@ Priority-ordered list (highest impact first):
 3. **n2-standard-8 → 1-year CUD** — saves 37% ($226.59 → ~$143). If SQL Server VM will run 24/7 for 12+ months, commit. Saves ~$83/month.
 4. **Datadog → GCP-native monitoring** — Cloud Monitoring + Cloud Logging covers most needs. Eliminating Datadog saves $86/month. Only keep Datadog if APM, synthetic monitoring, or multi-cloud visibility is required.
 5. **Cloud NAT removal** — if ingestion moves fully to Cloud Run Jobs and the SQL Server VM only receives connections (not initiates them), NAT may be eliminable. Saves $33/month.
-6. **Cloud Run min-instances audit** — if min-instances > 0 on either service, evaluate whether cold start latency matters. Removing min-instances can save $60–$130/month.
+6. **Cloud Run min-instances audit** — if min-instances > 0 on either service, evaluate whether cold start latency matters. Removing min-instances can save \$60–\$130/month.
 7. **BigQuery long-term storage conversion** — ensure historical tables (>90 days unmodified) have been moved to long-term pricing ($0.010 vs $0.020/GB). At 2 TB with 50% being historical, saves ~$10/month.
-8. **Snapshot retention policy** — set 7-day retention on daily snapshots. Without this, snapshot storage grows indefinitely. At $0.026/GB, uncontrolled snapshots can silently add $50–$200/month over a year.
+8. **Snapshot retention policy** — set 7-day retention on daily snapshots. Without this, snapshot storage grows indefinitely. At $0.026/GB, uncontrolled snapshots can silently add \$50–\$200/month over a year.
 
 ---
 
-## Reference Architecture 4: Enterprise Scale (~$3,000–10,000/month)
+## Reference Architecture 4: Enterprise Scale (~\$3,000–10,000/month)
 
 Multi-environment, multi-team platform with BigQuery reserved slots and Always On SQL Server. Cost is dominated by BigQuery slot commitments and multi-environment duplication. See [Datadog monitoring integration](https://alp78.github.io/elysium/13-Observability) for full-stack cost alerting.
 
@@ -696,7 +696,7 @@ Total Composer: **$1,062/month**
 > [!warning] Cloud Composer Cost
 >
 > Cloud Composer Large Environment.
-> A large Cloud Composer 2 environment with 3+ workers easily reaches $700–$1,000/month. At this scale, evaluate whether GCP Workflows + Cloud Run is a viable DAG-light alternative for simple dependency chains.
+> A large Cloud Composer 2 environment with 3+ workers easily reaches \$700–\$1,000/month. At this scale, evaluate whether GCP Workflows + Cloud Run is a viable DAG-light alternative for simple dependency chains.
 
 > [!success] Evaluate GCP Workflows + Cloud Run for DAG-light orchestration
 > For pipelines with simple linear or fan-out dependencies, replace Cloud Composer with **GCP Workflows** calling Cloud Run Jobs. Workflows costs ~$0.01/1,000 steps and eliminates the $700+/month Composer environment entirely for those pipelines.
@@ -798,12 +798,12 @@ Total Dataflow: **$391.95/month**
 | Miscellaneous | $50.00 |
 | **Total** | **~$7,183/month** |
 
-**Practical range: $5,000–$10,000/month** depending on BigQuery slot commitment level, Dataflow worker count, and Datadog feature usage.
+**Practical range: \$5,000–\$10,000/month** depending on BigQuery slot commitment level, Dataflow worker count, and Datadog feature usage.
 
 ### Cost Optimization: Enterprise Scale
 
 1. **BigQuery slot rightsizing.** Run 90 days of on-demand cost tracking before committing to slots. Use INFORMATION_SCHEMA.JOBS to measure actual TB scanned per team. Commit only to slots that are utilized >70% of the time.
-2. **Dev environment auto-shutdown.** Implement a scheduled shutdown of all dev VMs outside business hours. At $78–$156/month, this saves $40–$100/month on dev alone. Use org policy to enforce this.
+2. **Dev environment auto-shutdown.** Implement a scheduled shutdown of all dev VMs outside business hours. At \$78–\$156/month, this saves \$40–\$100/month on dev alone. Use org policy to enforce this.
 3. **Dataflow autoscaling.** Set `--maxNumWorkers` conservatively. Dataflow's autoscaler can over-provision. Monitor actual worker utilization and tune `--workerMachineType` down if CPU utilization is low.
 4. **Dataplex data quality scan frequency.** Reduce scan frequency from daily to weekly for stable, slow-changing tables. Each scan has a per-execution cost.
 5. **Cloud Logging sink to GCS.** Export verbose debug logs to GCS (at $0.020/GB storage) instead of keeping them in Cloud Logging ($0.50/GB ingestion). Keep only ERROR and CRITICAL in Cloud Logging for alerting.
@@ -853,9 +853,9 @@ AWS Athena and Azure Synapse have a lower per-TB price. BigQuery's advantage is 
 |---|---|---|
 | GCP | Cloud Composer (small) | ~$316 |
 | AWS | MWAA (small) | ~$275 |
-| Azure | Managed Airflow (via ADF) | ~$250–$350 |
+| Azure | Managed Airflow (via ADF) | ~\$250–\$350 |
 
-All managed Airflow services carry a ~$250–$350/month minimum. Self-hosting on a VM ($39–$78/month) is the only way to break below this floor on any cloud.
+All managed Airflow services carry a ~\$250–\$350/month minimum. Self-hosting on a VM (\$39–\$78/month) is the only way to break below this floor on any cloud.
 
 ### Full Medium Pipeline Comparison
 
@@ -936,7 +936,7 @@ Before signing off on a budget, audit each item. These are the most common sourc
 
 - [ ] **Cloud NAT gateway (~$32/month each)** — Do your VMs actually need outbound internet access? If only Cloud Run Jobs need to hit external APIs, NAT is unnecessary. Cloud Run has built-in internet egress. Evaluate replacing VM-based ingestion with Cloud Run.
 
-- [ ] **Unused static IPs ($7.20/month each)** — A reserved static IP that is not attached to a running resource costs $0.010/hr = $7.20/month. List all reserved IPs and release any not in use:
+- [ ] **Unused static IPs (\$7.20/month each)** — A reserved static IP that is not attached to a running resource costs \$0.010/hr = \$7.20/month. List all reserved IPs and release any not in use:
 
 ```bash
 gcloud compute addresses list --filter="status=RESERVED"
@@ -952,19 +952,19 @@ gcloud compute disks list --filter="users:( )"
 
 - [ ] **BigQuery long-term storage accumulation** — Every table or partition not modified for 90 consecutive days automatically drops to $0.010/GB. But tables that ARE touched (even minor schema changes or insertions) reset the 90-day clock to $0.020/GB. Monitor your active-vs-long-term split with `INFORMATION_SCHEMA.TABLE_STORAGE`.
 
-- [ ] **Egress charges (GCS to internet)** — Data transfer from GCS to the internet costs $0.08–$0.12/GB depending on destination. Transferring 100 GB of processed data to an external partner each month adds $8–$12/month. This is easy to miss. Use `gcloud logging read` or Billing export to find egress charges.
+- [ ] **Egress charges (GCS to internet)** — Data transfer from GCS to the internet costs \$0.08–\$0.12/GB depending on destination. Transferring 100 GB of processed data to an external partner each month adds \$8–\$12/month. This is easy to miss. Use `gcloud logging read` or Billing export to find egress charges.
 
 - [ ] **SQL Server Windows licensing vs Linux** — SQL Server on Windows on GCP carries a per-core Windows Server license in addition to the SQL Server license. SQL Server on Linux eliminates the Windows Server license. At e2-standard-4 (4 vCPU), Windows Server adds ~$0.064/hr = ~$46.72/month. Over a year: $560. Switch to Linux unless Windows-specific features are required.
 
 - [ ] **Datadog per-host pricing growth** — Datadog counts every host that reports a metric in a given hour as a billable host. When autoscaling kicks in (e.g., Dataflow workers), those ephemeral instances are billed as Datadog hosts for the hours they run. At $23/host/month, a 10-worker Dataflow job running 4 hours/day adds ~10 × (4×30/730) × $23 ≈ $37.80/month of unexpected Datadog charges.
 
-- [ ] **Cloud Composer minimum environment cost (~$300–$350/month)** — Composer 2's smallest configuration runs ~$300/month with no workloads. Budget this from day one. If you're running fewer than 10 DAGs, a self-hosted Airflow on an e2-standard-2 ($39/month with SUD) is a $260/month saving with the tradeoff of operational ownership.
+- [ ] **Cloud Composer minimum environment cost (~\$300–\$350/month)** — Composer 2's smallest configuration runs ~\$300/month with no workloads. Budget this from day one. If you're running fewer than 10 DAGs, a self-hosted Airflow on an e2-standard-2 (\$39/month with SUD) is a \$260/month saving with the tradeoff of operational ownership.
 
 - [ ] **Snapshot accumulation (set retention policies)** — Without explicit lifecycle rules, snapshots accumulate indefinitely. A daily snapshot of a 500 GB disk generates 500 GB per day × $0.026/GB. After 30 days with no retention policy: 15 TB of snapshots = $390/month. GCP uses incremental snapshots (deduplication helps), but growth is real. Always set `--max-retention-days` on snapshot schedules.
 
 - [ ] **BigQuery slot over-commitment** — If you purchase reserved BigQuery slots and then reduce query workloads, you continue paying for the committed slots. 100 flat-rate slots = $4,400/month at list price regardless of utilization. Monitor slot utilization with `INFORMATION_SCHEMA.JOBS_BY_PROJECT` before committing.
 
-- [ ] **Cross-region egress** — Transferring data between GCP regions (e.g., `us-central1` to `us-east1`) costs $0.01/GB. Transferring data between continents costs $0.04–$0.12/GB. Architectures that span multiple regions incur hidden egress costs on every data movement.
+- [ ] **Cross-region egress** — Transferring data between GCP regions (e.g., `us-central1` to `us-east1`) costs $0.01/GB. Transferring data between continents costs \$0.04–\$0.12/GB. Architectures that span multiple regions incur hidden egress costs on every data movement.
 
 - [ ] **Cloud Armor (DDoS protection)** — If you attach Cloud Armor to a load balancer, it adds a policy charge ($5/policy/month) plus $0.75/million requests evaluated. For high-traffic APIs, this adds up.
 
@@ -1027,10 +1027,10 @@ Summary of all four reference architectures by monthly cost, cost structure, and
 
 | Scenario | Monthly Cost | Fixed Cost % | Variable Cost % | Best For |
 |---|---|---|---|---|
-| Arch 1: Small Batch (serverless) | $7–$50 | ~10% | ~90% | PoC, small teams, low frequency |
-| Arch 2: Medium + SQL Server + self-hosted Airflow | $200–$250 | ~70% | ~30% | Mid-size teams, full SQL Server control |
-| Arch 3: Production + Composer + Datadog | $850–$1,100 | ~75% | ~25% | Production with SLAs, managed ops |
-| Arch 4: Enterprise multi-env + slots | $5,000–$10,000 | ~65% | ~35% | Multi-team platforms, compliance workloads |
+| Arch 1: Small Batch (serverless) | \$7–\$50 | ~10% | ~90% | PoC, small teams, low frequency |
+| Arch 2: Medium + SQL Server + self-hosted Airflow | \$200–\$250 | ~70% | ~30% | Mid-size teams, full SQL Server control |
+| Arch 3: Production + Composer + Datadog | \$850–\$1,100 | ~75% | ~25% | Production with SLAs, managed ops |
+| Arch 4: Enterprise multi-env + slots | \$5,000–\$10,000 | ~65% | ~35% | Multi-team platforms, compliance workloads |
 
 **The jump from Arch 2 to Arch 3 (~$650/month)** is almost entirely Cloud Composer ($316/month) and Datadog ($86/month) plus a larger SQL Server VM. The technical capability difference is managed Airflow reliability and full-stack observability — worth it when downtime has real business impact, not worth it for experimental or internal pipelines.
 

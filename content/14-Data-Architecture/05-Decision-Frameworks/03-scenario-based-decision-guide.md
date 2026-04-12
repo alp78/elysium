@@ -1059,7 +1059,7 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] What is the single highest-impact optimization?
-> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — $0.05. This is a 1000x cost reduction for time-range queries. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
+> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~\$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — \$0.05. This is a 1000x cost reduction for time-range queries. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!question] When is Datadog worth the cost?
 > Datadog becomes worth it when: (1) you have 5+ services that need distributed tracing, (2) you need custom APM dashboards that Cloud Monitoring cannot provide, or (3) you need log analytics beyond simple search. For pipelines with <5 components, Cloud Monitoring's free tier is sufficient. See [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) and [datadog-cost-optimization](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-cost-optimization).

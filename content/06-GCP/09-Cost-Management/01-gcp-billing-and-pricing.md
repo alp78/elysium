@@ -344,7 +344,7 @@ gcloud compute instances create INSTANCE_NAME \
 
 #### Special Licensing Costs
 
-SQL Server on Windows: adds $0.40–$2.00/hour on top of VM price depending on edition. Use SQL Server on Linux (Developer/Express edition = free) or bring-your-own license (BYOL) to avoid this.
+SQL Server on Windows: adds \$0.40–\$2.00/hour on top of VM price depending on edition. Use SQL Server on Linux (Developer/Express edition = free) or bring-your-own license (BYOL) to avoid this.
 
 GPU VMs: GPUs are billed per-hour on top of the base VM cost. Example: NVIDIA A100 ~$3.67/hour additional.
 
@@ -703,7 +703,7 @@ Daily cost = 1 × 300 × (2 × 0.0000240 + 4 × 0.0000025)
 > [!tip] Cloud Run vs VM
 >
 > Cloud Run vs VM for Batch Jobs.
-> A Cloud Run Job running 1 hour/day costs roughly $0.04–0.08/day. An e2-standard-2 VM running 24/7 costs ~$49/month. If a job runs less than ~8 hours/day, Cloud Run is cheaper even before accounting for provisioning overhead.
+> A Cloud Run Job running 1 hour/day costs roughly \$0.04–0.08/day. An e2-standard-2 VM running 24/7 costs ~\$49/month. If a job runs less than ~8 hours/day, Cloud Run is cheaper even before accounting for provisioning overhead.
 
 > [!warning] Min Instances Cost Trap
 >
@@ -870,7 +870,7 @@ Egress charges apply when data leaves a region. Co-locating compute and storage 
 | Different region (within GCP) | $0.01/GB |
 | Internet (first 1 GB/month) | Free |
 | Internet (thereafter) | $0.12/GB |
-| Dedicated Interconnect | $0.02–0.04/GB |
+| Dedicated Interconnect | \$0.02–0.04/GB |
 
 > [!danger] Data Egress Costs
 >
@@ -1408,10 +1408,10 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 |-------------|------|
 | Within same zone | Free |
 | Same region, different zone | $0.01/GB |
-| Different GCP regions | $0.01–$0.08/GB |
+| Different GCP regions | \$0.01–\$0.08/GB |
 | Internet (first 1 GB free) | $0.12/GB |
-| Cloud CDN cache fill | $0.02–$0.08/GB |
-| Dedicated Interconnect | $0.02–$0.04/GB |
+| Cloud CDN cache fill | \$0.02–\$0.08/GB |
+| Dedicated Interconnect | \$0.02–\$0.04/GB |
 
 > [!tip] Co-Locate Data and Compute
 >
@@ -1426,9 +1426,9 @@ Single-view reference of billing units, approximate rates, free tiers, and the m
 
 | Service | Billing unit | Price | Free tier | Biggest cost trap |
 |---------|-------------|-------|-----------|------------------|
-| Compute Engine | vCPU-hour + GB-hour | $0.031–0.047/vCPU | 1 e2-micro/month | Idle VMs running 24/7 with attached disks |
+| Compute Engine | vCPU-hour + GB-hour | \$0.031–0.047/vCPU | 1 e2-micro/month | Idle VMs running 24/7 with attached disks |
 | BigQuery (on-demand) | TB scanned | $6.25/TB | 1 TB queries, 10 GB storage | Full-table scans on unpartitioned tables |
-| BigQuery (editions) | Slot-hour | $0.04–0.10 | None | Buying more slots than peak demand requires |
+| BigQuery (editions) | Slot-hour | \$0.04–0.10 | None | Buying more slots than peak demand requires |
 | Cloud Run | vCPU-second | $0.000024 | 2M req, 360K GB-s, 180K vCPU-s | min-instances > 0 when not needed |
 | Pub/Sub | GB ingested | $0.04/GB | 10 GB/month | Large message payloads + message retention |
 | GCS Standard | GB/month | $0.020 | 5 GB | Egress to internet at $0.12/GB |

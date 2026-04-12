@@ -1142,11 +1142,11 @@ ORDER BY name;
 
 | certificate_name | thumbprint | start_date | expiry_date | pvt_key_encryption_type_desc | issuer_name |
 |---|---|---|---|---|---|
-| ##MS_SQLResourceSigningCertificate## | 4130f1510e90d8531259ea316af1c72aec0f9f88 | 2026-01-23 04:20:25 | 2027-01-23 04:20:25 | NO_PRIVATE_KEY | MS_SQLResourceSigningCertificate |
-| ##MS_SQLReplicationSigningCertificate## | 73e8eaa529d46beacd3798fad563a3e5c073e0d9 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_SQLResourceSigningCertificate |
-| ##MS_SQLAuthenticatorCertificate## | fb352a9f00a184bb298335da791977222f703b73 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_SQLAuthenticatorCertificate |
-| ##MS_AgentSigningCertificate## | e9e7ce50e40d926d4c26ad1f67b9794a1121a180 | 2026-01-23 04:22:32 | 2027-01-23 04:22:32 | NO_PRIVATE_KEY | MS_AgentSigningCertificate |
-| ##MS_PolicySigningCertificate## | 21d265e78ac1a4aa51fcd4be101653ab3512d281 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_PolicySigningCertificate |
+| `##MS_SQLResourceSigningCertificate##` | 4130f1510e90d8531259ea316af1c72aec0f9f88 | 2026-01-23 04:20:25 | 2027-01-23 04:20:25 | NO_PRIVATE_KEY | MS_SQLResourceSigningCertificate |
+| `##MS_SQLReplicationSigningCertificate##` | 73e8eaa529d46beacd3798fad563a3e5c073e0d9 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_SQLResourceSigningCertificate |
+| `##MS_SQLAuthenticatorCertificate##` | fb352a9f00a184bb298335da791977222f703b73 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_SQLAuthenticatorCertificate |
+| `##MS_AgentSigningCertificate##` | e9e7ce50e40d926d4c26ad1f67b9794a1121a180 | 2026-01-23 04:22:32 | 2027-01-23 04:22:32 | NO_PRIVATE_KEY | MS_AgentSigningCertificate |
+| `##MS_PolicySigningCertificate##` | 21d265e78ac1a4aa51fcd4be101653ab3512d281 | 2026-01-23 04:20:26 | 2027-01-23 04:20:26 | NO_PRIVATE_KEY | MS_PolicySigningCertificate |
 
 Every row has `pvt_key_encryption_type_desc = NO_PRIVATE_KEY` and every `issuer_name` is `MS_*`, which means these are the built-in signing certificates SQL Server installs automatically for internal operations (resource signing, replication, agent jobs, policy-based management). None of them protect a user database's DEK, and none of them can be backed up with `BACKUP CERTIFICATE ... WITH PRIVATE KEY` because they have no private key to back up. A production instance with user TDE would show at least one additional row with a user-chosen `certificate_name`, `pvt_key_encryption_type_desc = ENCRYPTED_BY_MASTER_KEY`, and a matching thumbprint in `sys.dm_database_encryption_keys`.
 

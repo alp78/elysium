@@ -1663,7 +1663,7 @@ Cloud Monitoring can alert when the error budget burn rate is too high — the s
 | **SLO Management** | Native SLO + error budget | SLO Widgets (requires setup) | Both support burn-rate alerting; Cloud Monitoring is more native |
 | **Uptime Checks** | Built-in (global probing) | Datadog Synthetics | Datadog Synthetics is more capable (browser tests, scripted checks); Cloud Monitoring covers basic HTTP/TCP |
 | **Anomaly Detection** | Not native (manual thresholds only) | Built-in (ML-based) | Significant Datadog advantage for dynamic baselines |
-| **Cost** | Free (included in GCP) + custom metric costs | $15–$23/host/month + per-metric fees | Cloud Monitoring is dramatically cheaper for pure GCP workloads |
+| **Cost** | Free (included in GCP) + custom metric costs | \$15–\$23/host/month + per-metric fees | Cloud Monitoring is dramatically cheaper for pure GCP workloads |
 | **Multi-cloud** | GCP only | Cloud-agnostic | Datadog monitors AWS, Azure, GCP, on-prem in one pane |
 | **Cross-project views** | Metric scopes (workspace) | Single global view | Datadog is simpler for multi-project/multi-account |
 | **Correlation (metrics + logs + traces)** | Requires navigation across products | Unified in one UI | Datadog has better correlation UX |
@@ -1674,7 +1674,7 @@ Cloud Monitoring can alert when the error budget burn rate is too high — the s
 
 > [!success] Use Cloud Monitoring When...
 > - Your infrastructure is **100% on GCP** — Cloud Monitoring has native integrations for every GCP service that Datadog cannot match
-> - **Cost is a primary concern** — Datadog is $15–$23/host/month; Cloud Monitoring is free for standard GCP metrics
+> - **Cost is a primary concern** — Datadog is \$15–\$23/host/month; Cloud Monitoring is free for standard GCP metrics
 > - You need **BigQuery, Pub/Sub, Cloud Run, or Firestore** metrics — Cloud Monitoring is first-class; Datadog requires workarounds
 > - Your team is comfortable with MQL or is willing to learn it
 > - You need **SLO management** natively tied to GCP services

@@ -264,7 +264,7 @@ The first execution after a period of inactivity takes longer because Cloud Run 
 
 > [!warning] Cost impact of always-on settings
 >
-> Setting `--min-instances=1` and `--cpu-throttling=false` (CPU always allocated) on a Cloud Run Service means you pay for idle vCPU-seconds and memory even when no requests are being served. For a service with 1 vCPU and 512 MiB running 24/7 idle, this costs approximately $50–70/month — comparable to a small GCE VM.
+> Setting `--min-instances=1` and `--cpu-throttling=false` (CPU always allocated) on a Cloud Run Service means you pay for idle vCPU-seconds and memory even when no requests are being served. For a service with 1 vCPU and 512 MiB running 24/7 idle, this costs approximately \$50–70/month — comparable to a small GCE VM.
 
 > [!success] Right-size always-on settings
 >

@@ -460,7 +460,7 @@ A data analyst runs an ad-hoc query joining three large tables: `analytics.daily
 BigQuery executes queries in a distributed shuffle-based execution engine. Large JOINs require materializing intermediate results across worker nodes (shuffle). When the shuffle data exceeds available memory across all assigned slots, the query fails. On-demand pricing assigns slots dynamically, but memory per slot is bounded. Wide Cartesian-like JOINs (e.g., joining on a non-unique key), queries with many GROUP BY dimensions, and ARRAY_AGG on large groups are common triggers. The failure is an execution error, not a quota error — the job will not automatically retry.
 
 #### Consequences
-- Analyst paid $10–50 in scan costs and received no result
+- Analyst paid \$10–50 in scan costs and received no result
 - Long-running queries (10+ minutes) block slot allocation for other users
 - Complex analytical queries for index methodology validation may be impossible without query restructuring
 - Pressure on engineers to "just make it work" leads to premature slot reservation purchases
@@ -2120,7 +2120,7 @@ gcloud projects add-iam-policy-binding bq-wh-nb \
 ### BigQuery | Cross-Region | query result egress costs
 
 #### What happens
-The BigQuery dataset `analytics` is located in `EU` (multi-region). A Cloud Run job deployed in `us-central1` submits query jobs to this dataset. BigQuery processes the query in the EU region, but the job submission originates from the US. Although BigQuery query costs are region-agnostic for data-at-rest, the query results (potentially several GB) are transferred back to the US Cloud Run instance, incurring network egress charges of $0.08–$0.12/GB. A job that transfers 50GB of results per day costs $4/day ($1,460/year) just in egress.
+The BigQuery dataset `analytics` is located in `EU` (multi-region). A Cloud Run job deployed in `us-central1` submits query jobs to this dataset. BigQuery processes the query in the EU region, but the job submission originates from the US. Although BigQuery query costs are region-agnostic for data-at-rest, the query results (potentially several GB) are transferred back to the US Cloud Run instance, incurring network egress charges of \$0.08–\$0.12/GB. A job that transfers 50GB of results per day costs \$4/day (\$1,460/year) just in egress.
 
 #### Root cause
 
@@ -2474,7 +2474,7 @@ bq show --schema --format=prettyjson bq-wh-nb:stoxx_gold.index_performance | \
 ### BigQuery | INFORMATION_SCHEMA | metadata query cost overhead
 
 #### What happens
-An engineer writes a cost monitoring query: `SELECT * FROM INFORMATION_SCHEMA.JOBS`. On a busy project with hundreds of jobs per day, this query scans days of job history metadata. The query processes several GB and costs $0.02–$0.10 per run. Scheduled to run every hour for cost monitoring, it costs $50/month in monitoring overhead — spending money to find where money is being spent.
+An engineer writes a cost monitoring query: `SELECT * FROM INFORMATION_SCHEMA.JOBS`. On a busy project with hundreds of jobs per day, this query scans days of job history metadata. The query processes several GB and costs \$0.02–\$0.10 per run. Scheduled to run every hour for cost monitoring, it costs \$50/month in monitoring overhead — spending money to find where money is being spent.
 
 #### Root cause
 

@@ -198,7 +198,10 @@ document.addEventListener("nav", async () => {
 
   const textMapping: WeakMap<HTMLElement, string> = new WeakMap()
   for (const node of nodes) {
-    textMapping.set(node, node.innerText)
+    // Strip %%{init: ...}%% directives so mermaid.initialize() config takes precedence
+    const cleaned = node.innerText.replace(/%%\{init:[\s\S]*?\}%%/g, "").trimStart()
+    node.innerHTML = cleaned
+    textMapping.set(node, cleaned)
   }
 
   async function renderMermaid() {
@@ -298,14 +301,14 @@ document.addEventListener("nav", async () => {
           tagLabelBackground: "#c0caf5",
         }
       : {
-          git0: "#3d59a1",
-          git1: "#8c4351",
-          git2: "#485e30",
-          git3: "#8f5e15",
-          git4: "#5a4fcf",
-          git5: "#166775",
-          git6: "#965027",
-          git7: "#33635c",
+          git0: "#1a3a8a",
+          git1: "#8b1a1a",
+          git2: "#1a6b2a",
+          git3: "#7a4a00",
+          git4: "#3a2a9e",
+          git5: "#0a4a5a",
+          git6: "#7a3010",
+          git7: "#1a4a3a",
           gitBranchLabel0: "#f0f0f2",
           gitBranchLabel1: "#f0f0f2",
           gitBranchLabel2: "#f0f0f2",
@@ -314,7 +317,7 @@ document.addEventListener("nav", async () => {
           gitBranchLabel5: "#f0f0f2",
           gitBranchLabel6: "#f0f0f2",
           gitBranchLabel7: "#f0f0f2",
-          commitLabelColor: "#3b3950",
+          commitLabelColor: "#f0f0f2",
           commitLabelBackground: "transparent",
           commitLabelFontSize: "14px",
           tagLabelColor: "#f0f0f2",

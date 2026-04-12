@@ -77,7 +77,7 @@ GCS offers four storage classes with an inverse cost relationship: lower storage
 
 > [!info] Pricing Beyond Storage
 >
-> Storage class cost is only part of the total bill. GCS also charges for **operations** (Class A: create/list at ~$0.05/10K ops for Standard; Class B: read/get at ~$0.004/10K ops) and **network egress** ($0.12/GB for internet egress, free within the same region). For pipelines that write many small files, operation costs can exceed storage costs. Dual-region and multi-region pricing is higher — for example, Standard dual-region (NAM4/EUR4) is $0.044/GB/mo vs $0.020 for single-region.
+> Storage class cost is only part of the total bill. GCS also charges for **operations** (Class A: create/list at ~\$0.05/10K ops for Standard; Class B: read/get at ~\$0.004/10K ops) and **network egress** (\$0.12/GB for internet egress, free within the same region). For pipelines that write many small files, operation costs can exceed storage costs. Dual-region and multi-region pricing is higher — for example, Standard dual-region (NAM4/EUR4) is \$0.044/GB/mo vs \$0.020 for single-region.
 
 > [!warning] Minimum Duration Charges
 >
@@ -354,7 +354,7 @@ For data residency compliance (GDPR, financial regulations), use a specific sing
 
 > [!tip] Co-Locate with Compute
 >
-> Place buckets in the same region as the services that read from them — Cloud Run Jobs, BigQuery datasets, and Dataflow pipelines. Cross-region reads incur egress charges ($0.01–$0.08/GB depending on source and destination) and add latency. For BigQuery, the dataset region and bucket region must match for `LOAD DATA` operations.
+> Place buckets in the same region as the services that read from them — Cloud Run Jobs, BigQuery datasets, and Dataflow pipelines. Cross-region reads incur egress charges (\$0.01–\$0.08/GB depending on source and destination) and add latency. For BigQuery, the dataset region and bucket region must match for `LOAD DATA` operations.
 
 ## Quotas and Limits
 

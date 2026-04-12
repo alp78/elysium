@@ -261,7 +261,7 @@ Cloud Scheduler pricing (as of 2025):
 - **Paid:** ~$0.10 per job per month for each job beyond the free tier
 - No charge per execution — only per job existence
 
-For a typical data engineering setup with 10–20 scheduler jobs, the cost is $1–2/month. This is negligible compared to the cost of running the scheduled workloads themselves.
+For a typical data engineering setup with 10–20 scheduler jobs, the cost is \$1–2/month. This is negligible compared to the cost of running the scheduled workloads themselves.
 
 ---
 
@@ -419,7 +419,7 @@ Cloud Workflows is a fully managed, serverless workflow engine. You define multi
 
 **The key differentiator from Cloud Scheduler:** Cloud Workflows executes a sequence of steps and tracks state between them. Cloud Scheduler fires a single HTTP request and moves on. If your "job" is really three sequential API calls with a branch based on the result of step 2, that is a workflow, not a cron job.
 
-**The key differentiator from Cloud Composer (Airflow):** Cloud Workflows is lightweight and has no infrastructure to manage. Cloud Composer provisions a managed Airflow environment (GKE cluster + database) with significant overhead ($200–500/month minimum). For workflows with fewer than 20 steps and no complex dependency graphs, Cloud Workflows is dramatically cheaper and simpler.
+**The key differentiator from Cloud Composer (Airflow):** Cloud Workflows is lightweight and has no infrastructure to manage. Cloud Composer provisions a managed Airflow environment (GKE cluster + database) with significant overhead (\$200–500/month minimum). For workflows with fewer than 20 steps and no complex dependency graphs, Cloud Workflows is dramatically cheaper and simpler.
 
 > [!tip] Required API
 > `gcloud services enable workflows.googleapis.com`
@@ -745,7 +745,7 @@ gcloud scheduler jobs create http trigger-my-pipeline \
 
 | Dimension | Cloud Workflows | Cloud Composer (Airflow) |
 |---|---|---|
-| Infrastructure | Fully serverless | Managed GKE + Postgres (~$200–500/month) |
+| Infrastructure | Fully serverless | Managed GKE + Postgres (~\$200–500/month) |
 | Setup time | Minutes | 20–40 minutes for environment creation |
 | DAG complexity | Simple to moderate (YAML steps) | Complex (Python DAGs, sensors, XComs) |
 | Cross-system integration | GCP APIs + HTTP endpoints | Any system via operators/hooks |
@@ -1055,7 +1055,7 @@ gcloud eventarc triggers create bq-job-complete-trigger \
 | Cloud Scheduler | Managed cron | Yes | ~$0.10/job/month | Single HTTP/Pub/Sub call | Triggering Cloud Run jobs, periodic API calls |
 | Cloud Tasks | Durable task queue | Yes | $0.40/million tasks | Fan-out, rate limiting | Processing large item sets, third-party API rate limits |
 | Cloud Workflows | Serverless orchestration | Yes | $0.01/1000 steps | Multi-step with branches | GCP-internal pipelines, < 20 steps, no backfill |
-| Cloud Composer (Airflow) | Managed Airflow | Yes | $200–500+/month base | Arbitrary complexity | Complex multi-system pipelines, backfill, sensors |
+| Cloud Composer (Airflow) | Managed Airflow | Yes | \$200–500+/month base | Arbitrary complexity | Complex multi-system pipelines, backfill, sensors |
 | Cloud Run Jobs (direct) | Container execution | Yes | Pay per use | One container's logic | Batch processing stages, ETL steps |
 
 ### Decision Matrix: Which Scheduling Primitive to Use

@@ -119,7 +119,7 @@ After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform 
 For context, Datadog is optional add-on monitoring. The base the data pipeline project GCP infrastructure costs ~$83/month (see cost reference). Datadog adds:
 
 - Trial: $0
-- After trial (if subscribed): ~$100–160/month (2 hosts × $50–80)
+- After trial (if subscribed): ~\$100–160/month (2 hosts × \$50–80)
 
 The Datadog subscription would roughly double the total infrastructure cost. Evaluate whether the observability value justifies the cost relative to using GCP Cloud Monitoring (free) and Cloud Logging (free tier).
 
