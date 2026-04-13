@@ -188,26 +188,6 @@ status: complete
 > - In production (GCP), read secrets at runtime via `google-cloud-secret-manager` — never bake them into images or config files
 > - Rotate keys in the secret manager without touching code; inject via `os.environ` or a dedicated secrets-loader function
 
-This note covers advanced parallel pipeline patterns — async generators for paginated APIs, rate-limited parallel ingestion, async batching, cross-process execution with `subprocess`, and distributed task queue architecture.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **async generator** | `async def` with `yield` — produces values lazily and asynchronously, one at a time. | Stream paginated API responses without loading all pages into memory. | Must use `async for` to consume, not regular `for`. |
-| **asyncio.Semaphore** | Limits concurrent async operations. `Semaphore(5)` allows 5 concurrent tasks. | Rate-limit API calls to avoid 429 (Too Many Requests) errors. | Not thread-safe — use only within a single event loop. |
-| **asyncio.gather** | Runs multiple coroutines concurrently, returns all results when complete. | Fan-out: fetch N API pages or symbols in parallel. | One failure cancels all by default — use `return_exceptions=True` for resilience. |
-| **aiohttp** | Async HTTP client library for Python. Uses connection pooling and keep-alive. | High-throughput API ingestion without blocking. | Must manage `ClientSession` lifecycle — create once, reuse, close at end. |
-| **subprocess** | Module for launching external processes. `subprocess.run()` for sync, `asyncio.create_subprocess_exec()` for async. | Call CLI tools, shell scripts, or other language runtimes from Python. | Shell injection risk with `shell=True` — use argument lists instead. |
-| **Celery** | Distributed task queue using a message broker (Redis, RabbitMQ). | Scale beyond a single machine — dispatch tasks to a pool of workers. | Requires a running broker and worker process — not an in-process library. |
-
-### What this note covers
-
-- **Async Generators** — paginated API streaming with `async for`
-- **Parallel API Ingestion** — rate-limited concurrent fetches with `asyncio.Semaphore`
-- **Async Batching** — accumulate results into batches for bulk writes
-- **Cross-Process Execution** — `subprocess.run()` and async subprocess for external tools
-- **Distributed Task Queues** — Celery/RQ architecture overview, scaling ladder
 
 ```python
 import asyncio

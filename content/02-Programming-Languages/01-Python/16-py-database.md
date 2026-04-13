@@ -229,8 +229,6 @@ status: complete
 > >
 > > If queries queue or time out under load, check `engine.pool.status()`. A `checked out` count equal to `pool_size + max_overflow` means the pool is exhausted — increase `pool_size` or reduce connection hold time.
 
-This note covers Python database access from raw SQL to full ORM, including embedded and analytical databases and pandas integration.
-
 ```python
 import sqlite3
 import pyodbc

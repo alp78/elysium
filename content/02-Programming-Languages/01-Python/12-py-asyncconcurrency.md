@@ -277,29 +277,6 @@ status: complete
 > >
 > > C# achieves structured concurrency via `Task.WhenAll` with `CancellationTokenSource` linkage. `TaskGroup` is more ergonomic: cancellation and exception aggregation happen automatically without manual `CancellationToken` plumbing.
 
-Python provides async/await for I/O-bound concurrency, `concurrent.futures` for thread/process pooling, and `threading`/`multiprocessing` for low-level control. The GIL limits CPU parallelism to multi-processing. This note covers asyncio fundamentals, task parallelism, threading, and synchronization primitives.
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **asyncio** | Standard library for single-threaded asynchronous I/O using an event loop. | Concurrent HTTP requests, database queries, and file I/O without threads. | `asyncio` is single-threaded — it doesn't bypass the GIL. Use `multiprocessing` for CPU-bound work. |
-| **async / await** | `async def` declares a coroutine; `await` pauses it until the awaited task completes, yielding control to the event loop. | Write concurrent I/O code that reads sequentially but executes concurrently. | Calling an `async def` without `await` returns a coroutine object, not the result. |
-| **coroutine** | A function declared with `async def`. Returns a coroutine object that must be `await`ed or scheduled. | The building block of asyncio programs. | Coroutines don't run when called — they run when awaited or gathered. |
-| **asyncio.gather** | Runs multiple coroutines concurrently and returns all results when all complete. | Fan-out pattern — launch N concurrent requests and collect all responses. | `gather` cancels all tasks if one raises (by default). Use `return_exceptions=True` to collect errors. |
-| **TaskGroup** | Python 3.11+ structured concurrency — tasks are scoped to a block; all must complete before the block exits. | Safer than `gather` — automatic cancellation and error propagation. | Only available in Python 3.11+. |
-| **GIL (Global Interpreter Lock)** | CPython lock allowing only one thread to execute Python bytecode at a time. | Threads don't provide CPU parallelism — use `multiprocessing` for CPU-bound work. | The GIL doesn't prevent I/O concurrency — threads can overlap during I/O waits. |
-| **ThreadPoolExecutor** | Thread pool from `concurrent.futures`. Runs callables in worker threads. | I/O-bound parallelism — concurrent HTTP calls, file reads, database queries. | Threads share memory — mutable shared state needs locking. |
-| **ProcessPoolExecutor** | Process pool from `concurrent.futures`. Runs callables in separate processes, bypassing the GIL. | CPU-bound parallelism — parsing, hashing, compression, data transformation. | Inter-process communication is expensive — don't use for small tasks. |
-| **asyncio.Semaphore** | Limits concurrent access to a resource. `Semaphore(10)` allows 10 concurrent operations. | Rate-limit API calls, cap database connections. | Semaphore is not thread-safe — use `threading.Semaphore` for threads. |
-| **asyncio.Queue** | Async-safe FIFO queue for producer-consumer patterns. | Pipeline stages: extract → transform → load with backpressure. | `queue.Queue` (threading) and `asyncio.Queue` (async) are different — don't mix them. |
-
-### What this note covers
-
-- **Async and Await** — `async def`, `await`, event loop, `asyncio.gather`, `TaskGroup`, error handling, semaphores, timeouts
-- **Tasks and Parallelism** — `concurrent.futures`, `ThreadPoolExecutor`, `ProcessPoolExecutor`, `asyncio.to_thread`
-- **Threading and Concurrency** — `threading.Thread`, `threading.Lock`, GIL, producer-consumer with `queue.Queue`
-- **Advanced Synchronization** — `asyncio.Queue`, `Barrier`, parity notes for C# primitives
-
 ```python
 import asyncio
 import time

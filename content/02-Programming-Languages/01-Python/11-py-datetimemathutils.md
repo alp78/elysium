@@ -212,30 +212,6 @@ status: complete
 > >
 > > Once a secret is committed, it may remain recoverable from history, forks, or mirrors even after deletion. Treat committed secrets as exposed and rotate them immediately.
 
-
-Python's `datetime` module provides date/time types, `timedelta` intervals, and timezone-aware operations. This note also covers math, random number generation, logging, and configuration/environment variable management — common utility patterns for data engineering.
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **datetime** | Object combining date and time. Can be "naive" (no timezone) or "aware" (has `tzinfo`). | The primary type for timestamps in Python. | Naive datetimes have no timezone — comparing naive and aware raises `TypeError`. |
-| **timedelta** | Represents a duration: days, seconds, microseconds. Supports arithmetic with `datetime`. | Date math — add 30 days, compute age, calculate intervals between events. | `timedelta` has no months/years — months vary in length. Use `dateutil.relativedelta`. |
-| **timezone.utc** | The UTC timezone constant from `datetime`. | Always store and transmit timestamps in UTC. | `datetime.now()` returns naive local time. Use `datetime.now(timezone.utc)` for UTC. |
-| **zoneinfo.ZoneInfo** | IANA timezone database access (Python 3.9+). E.g., `ZoneInfo("Europe/Amsterdam")`. | Convert UTC to local time for display. | Timezone names are case-sensitive — `"europe/amsterdam"` fails silently or raises. |
-| **strftime / strptime** | `strftime` formats datetime → string. `strptime` parses string → datetime. | Convert between human-readable text and datetime objects. | `strptime` returns naive datetime — attach timezone manually if needed. |
-| **ISO 8601** | Standard format: `2024-01-15T10:30:00+00:00`. Used by APIs, databases, and logs. | Universal interoperable timestamp format. | Forgetting the timezone offset in ISO format — naive ISO strings lose timezone info. |
-| **math module** | Standard library for mathematical functions: `ceil`, `floor`, `sqrt`, `log`, `pi`. | Rounding, statistics, scientific computation. | `math.floor(-2.5)` returns `-3`, not `-2` — floor always rounds toward negative infinity. |
-| **random module** | Pseudorandom number generation. NOT cryptographically secure. | Sampling, shuffling, generating test data. | Using `random` for security tokens — use `secrets` module instead. |
-| **logging module** | Standard library for structured log output with levels (DEBUG, INFO, WARNING, ERROR, CRITICAL). | Production observability — structured, leveled, configurable output. | Using `print()` instead of `logging` — no levels, no routing, no structured output. |
-| **os.environ** | Dictionary-like access to environment variables. | Configuration, secrets, deployment-specific settings. | `os.environ['MISSING']` raises `KeyError` — use `os.environ.get('KEY', 'default')`. |
-
-### What this note covers
-
-- **Date and Time** — `datetime`, `date`, `time`, `timedelta`, timezones, `strftime`/`strptime`, ISO 8601, business day calculations
-- **Math and Random** — `math` module, rounding, `Decimal`, `random`, `secrets`, `statistics`
-- **Logging** — `logging` module, levels, formatters, handlers, structured logging
-- **Configuration** — `os.environ`, `configparser`, `.env` files, `dataclass`-based config
-
 ## Date and Time
 
 Python's `datetime` module provides `datetime` (date + time), `date` (date only), `time` (time only), and `timedelta` (intervals). Naive datetimes have no timezone; always use `datetime.now(timezone.utc)` for storage and `zoneinfo.ZoneInfo` (Python 3.9+) for timezone-aware local times.

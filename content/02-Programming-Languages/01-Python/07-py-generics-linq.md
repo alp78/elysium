@@ -181,17 +181,8 @@ status: complete
 > > [!info] Arrow is a format, not a user-facing API
 > >
 > > Polars uses Arrow internally; users interact with Polars DataFrames and Series, not Arrow arrays directly. Arrow becomes relevant when exchanging data with other libraries (PyArrow, DuckDB, Hugging Face Datasets) via zero-copy interop.
->
->  ---
 
-Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
-
-### What this note covers
-
-- **Generics** — duck typing, `TypeVar`, `Generic[T]`, bounded type variables, `Protocol` for structural typing
-- **Functional Data Processing** — comprehensions, `map`/`filter`/`reduce`, `itertools.groupby`, `zip`, chaining patterns
-- **Pandas vs Polars Analytics** — live SQL Server queries, side-by-side DataFrame operations (filter, group, aggregate, join, window)
-- **Pandas vs Polars Comparison Matrix** — performance, API style, memory, ecosystem, decision guide
+Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. 
 
 ```python
 from typing import TypeVar, Generic, Optional

@@ -189,7 +189,6 @@ status: complete
 > >
 > > When exporting tables larger than 1 GB, use a wildcard URI (`gs://bucket/export/data-*.csv`) so BigQuery can shard the output across multiple files in parallel.
 
-This note covers Python bulk-load patterns for SQL Server, BigQuery, and Firestore, including performance benchmarking across file formats and source tiers.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

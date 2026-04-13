@@ -191,7 +191,6 @@ status: complete
 > >
 > > In FastAPI, automatic request validation errors typically produce 422 responses. A 400 response is usually reserved for other bad-request conditions that you raise or handle explicitly.
 
-This note covers Python web and API patterns using `requests`, `httpx`, FastAPI, and Pydantic.
 
 ## HTTP Clients & REST API Calls
 

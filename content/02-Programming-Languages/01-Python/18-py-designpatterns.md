@@ -159,8 +159,6 @@ status: complete
 > >
 > > A module-level shared object avoids `__new__` tricks, repeated initialization guards, and extra boilerplate. Prefer it unless you specifically need lazy creation, explicit reset hooks, or more elaborate lifecycle control.
 
-This note documents Python design patterns and architectural idioms used in data engineering and backend development.
-
 ## Dependency Injection
 
 > [!tip] Related pattern

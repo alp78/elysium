@@ -339,8 +339,6 @@ status: complete
 > >
 > > `threading.Thread` with CPU-bound work will not use multiple cores — the GIL serializes bytecode execution. The GIL is released during I/O and C extension calls, so threading is effective for network and file operations.
 
-This note covers the absolute foundations of Python as a programming language: how to set up and verify a runtime environment, read and write console output, declare variables, work with every built-in data type, use all operator families, implement custom operator behavior via dunder methods, and understand the mutable-vs-immutable distinction that governs safe data handling.
-
 ## Environment Setup
 
 Covers Python interpreter configuration, virtual environment inspection, and package verification. These cells confirm the runtime environment before executing language examples.

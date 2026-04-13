@@ -235,8 +235,6 @@ status: complete
 > >
 > > Writing tests after the implementation and calling it TDD. The sequence is the point — writing the test first forces the developer to define the expected behavior before writing code that could bias the test.
 
-This note covers Python testing patterns.
-
 ## Testing Philosophy
 
 Testing is not about proving code works — it's about **catching bugs before they reach production**.

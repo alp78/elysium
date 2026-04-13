@@ -274,46 +274,7 @@ status: complete
 > > [!info] `__post_init__` for computed fields
 > >
 > > Fields excluded from `__init__` with `field(init=False)` are set in `__post_init__`, which runs automatically after the auto-generated `__init__` completes — the equivalent of a secondary initialization phase.
->
->  ---
 
-Python OOP organises code into classes, inheritance hierarchies, abstract base classes, and dataclasses. This page covers all core constructs with executable examples — from basic class definition through to dataclasses and records.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **class** | A blueprint that bundles state (attributes) and behavior (methods) into a reusable type. | The primary unit of OOP — defines what objects look like and what they can do. | Confusing the class (the blueprint) with an instance (a concrete object created from it). |
-| **`__init__`** | The constructor method called automatically when you create an instance. Initializes attributes on `self`. | Ensures every instance starts with valid state. | Forgetting `self` as the first parameter — causes `TypeError` at instantiation. |
-| **`self`** | Explicit reference to the current instance, required as the first parameter of every instance method. | Accesses and modifies the instance's own attributes and methods. | Omitting `self` from a method signature — Python passes the instance automatically, so a missing `self` shifts all arguments. |
-| **class attribute** | A variable defined on the class body, shared by all instances. | Constants, counters, default config shared across all objects. | Mutable class attributes (lists/dicts) are shared — mutating one instance's copy mutates all. Define mutable defaults in `__init__`. |
-| **instance attribute** | A variable set on `self` inside `__init__` or a method, unique to each instance. | Per-object state (name, balance, status). | Assigning `self.x` with the same name as a class attribute creates a shadow — the class attribute remains unchanged. |
-| **`@property`** | Decorator that turns a method into an attribute-style accessor with optional getter/setter/deleter. | Validated access to private backing fields without changing the caller's syntax. | Defining the setter without matching the property name — must use `@name.setter`. |
-| **inheritance** | A child class acquires all attributes and methods of a parent class and can extend or override them. | Code reuse and specialization — `Dog(Animal)` inherits `speak()` and adds `fetch()`. | Deep hierarchies (>3 levels) become brittle. Prefer composition (HAS-A) over inheritance (IS-A) when the relationship isn't genuinely hierarchical. |
-| **`super()`** | Built-in function that delegates to the next class in the MRO. | Call the parent constructor or method from a child class. | Forgetting `super().__init__()` — parent attributes never get initialized. |
-| **MRO (Method Resolution Order)** | The order Python searches classes when resolving a method call, computed via C3 linearization. | Determines which version of a method runs in a multiple-inheritance hierarchy. | Assuming left-to-right search — MRO follows C3 linearization, which can differ from declaration order. Check with `ClassName.__mro__`. |
-| **duck typing** | "If it quacks like a duck" — any object with the right methods works, regardless of its class hierarchy. | Python's default polymorphism mechanism — no base class or interface required. | Assuming `isinstance()` is needed before calling a method — duck typing means you usually just call it. |
-| **ABC (Abstract Base Class)** | A class from the `abc` module that cannot be instantiated; forces subclasses to implement `@abstractmethod` stubs. | Define contracts with shared implementation. | Using ABC when there's no shared code — use `Protocol` instead for pure structural contracts. |
-| **`@abstractmethod`** | Decorator that marks a method as required — subclasses must override it or instantiation raises `TypeError`. | Enforce that all shapes implement `area()` and `perimeter()`. | Forgetting the decorator — the method becomes optional, not enforced. |
-| **Protocol** | A class from `typing` that defines a structural interface — classes satisfy it by having the right methods, no inheritance needed. | Python's answer to Go interfaces — static duck typing. | Not adding `@runtime_checkable` — without it, `isinstance()` checks against the Protocol fail. |
-| **mixin** | A class designed to be combined via multiple inheritance, adding a specific capability (logging, serialization) without being a standalone base. | Compose capabilities without deep hierarchies. | Mixins with `__init__` — they should assume the host class handles initialization. |
-| **encapsulation** | Hiding internal data, exposing only what's necessary through a controlled interface. | Prevents outside code from corrupting internal state. | Python has conventions, not enforcement — `_name` is protected by convention, `__name` uses name mangling but is still accessible. |
-| **name mangling** | Python renames `__attr` to `_ClassName__attr` to prevent accidental override in subclasses. | Avoid accidental name collisions in inheritance hierarchies. | Using `__` for privacy alone — it makes testing and inheritance harder. Use `_` for internal state. |
-| **`__slots__`** | Restricts a class to a fixed set of attributes, preventing dynamic attribute creation via `__dict__`. | Reduces memory ~40% for classes with millions of instances. | Subclasses without their own `__slots__` reintroduce `__dict__`, negating savings. Use `@dataclass(slots=True)` in Python 3.10+. |
-| **`@classmethod`** | Method that receives `cls` (the class itself) as the first argument. | Factory methods and inheritance-aware construction. | Not using `cls` in the body — should be `@staticmethod` instead. |
-| **`@staticmethod`** | Method with no implicit argument — just a function namespaced to the class. | Pure utility functions that belong conceptually to the class. | Using `@staticmethod` when a module-level function would be clearer. |
-| **`@dataclass`** | Decorator that auto-generates `__init__`, `__repr__`, `__eq__` from field annotations. | Eliminates boilerplate for data-holding classes. | Mutable default fields — `tags: list = []` is an error; use `field(default_factory=list)`. |
-| **`frozen=True`** | Dataclass option making instances immutable and hashable — assignment raises `FrozenInstanceError`. | Dict keys, set members, immutable config. | Trying to mutate a frozen instance — use `dataclasses.replace(obj, field=new_val)` for non-destructive updates. |
-| **`field()`** | Function for customizing individual dataclass fields — `default_factory`, `init`, `repr`, `compare`. | Mutable defaults, computed fields, hidden fields. | Using `default` with a mutable value — must use `default_factory` for lists/dicts. |
-
-### What this note covers
-
-- **Classes & Objects** — class definition, `__init__`, class vs instance attributes, `@property` with validation
-- **Inheritance & Polymorphism** — base/child classes, `super()`, method override, duck typing, `isinstance`, mixins, MRO
-- **Abstract Classes & Interfaces** — `ABC` with `@abstractmethod`, `Protocol` for structural typing
-- **Encapsulation & Access Control** — `_protected`, `__private` (name mangling), `__slots__`
-- **Static & Class Methods** — `@staticmethod`, `@classmethod`, factory patterns, inheritance-aware construction
-- **Dataclasses & Records** — `@dataclass`, `field()`, `frozen=True`, `order=True`, dataclass vs dict vs Pydantic
 
 ```python
 import math

@@ -186,7 +186,6 @@ status: complete
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
-This note provisions the full GCP security infrastructure — service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and demo data. Run every section once in order before executing any operations notebook.
 
 ```python
 import itertools

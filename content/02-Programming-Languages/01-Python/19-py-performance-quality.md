@@ -282,8 +282,6 @@ status: complete
 > >
 > > A view is fast precisely because it shares memory. Call `.copy()` when you need an independent array that can be changed safely without affecting the original.
 
-This note is the Python reference for performance measurement and code quality tooling.
-
 ## Timing & Benchmarking
 
 Accurate measurement is the foundation of every performance improvement. Python provides two tiers of tooling: `time.perf_counter()` for quick ad-hoc profiling during development, and `timeit` for reliable micro-benchmarks that disable garbage collection and run the code multiple times to average out OS scheduling noise. The C# equivalents are `Stopwatch` and `BenchmarkDotNet`.

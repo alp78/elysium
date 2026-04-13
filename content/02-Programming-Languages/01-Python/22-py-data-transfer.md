@@ -174,20 +174,6 @@ status: complete
 > >
 > > If the SQL Server instance is remote, the data file must be copied to the server (or a UNC share accessible from the server) before `BULK INSERT` can read it.
 
-This note is the Python reference for moving data between local storage, GCS, Compute Engine VMs, SQL Server, and BigQuery.
-
-### What this note covers
-
-- **Setup** — imports, environment variables, GCS/BigQuery/KMS client initialisation, shared helpers
-- **Upload files from Local to GCS** — single-file, directory, and parallel Transfer Manager uploads with throughput benchmarks
-- **Copy files from Local to VM** — `rsync` and `gcloud compute scp` benchmarks for moving data to a Compute Engine instance
-- **Transfer files from VM to GCS** — `gcloud storage cp` and direct API uploads from a running VM
-- **Parallel Transfer** — multi-threaded chunked upload benchmarks isolating concurrency vs chunk-size effects
-- **Download Files** — GCS to local download patterns including Transfer Manager parallel download
-- **Download files from VM** — pulling files from a Compute Engine instance back to local storage
-- **File Compression Benchmarks** — gzip, bz2, lzma, zstd throughput and ratio comparisons
-- **Production Pipeline** — end-to-end compress → split → parallel upload → download → verify → merge → decompress pipeline with cleanup
-
 ## Setup
 
 Imports all standard-library and third-party dependencies, loads environment variables from `.env`, initialises GCS/BigQuery/KMS clients, and defines shared formatting helpers and benchmark file sets used throughout this notebook.

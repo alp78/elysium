@@ -206,37 +206,6 @@ status: complete
 > > [!info] Key benchmarks
 > > `list` index access and `dict`/`set` lookup are O(1). `list.index()`, `list.remove()`, and `list.pop(0)` are O(n). `heappush`/`heappop` are O(log n).
 
-Python's built-in collections span the full spectrum from mutable sequences to immutable records, ordered mappings to hash sets, and specialized structures for queues, stacks, and priority scheduling. This page covers the core types and the `collections` module extensions.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **list** | Ordered, mutable, dynamic-array-backed sequence. Elements accessed by integer index starting at 0. | Default general-purpose container for ordered data. | Using `list` for membership tests — O(n); use `set` for O(1). |
-| **dict** | Hash-based key-value mapping with O(1) average lookup. Insertion-ordered since Python 3.7. | The standard way to associate names (keys) with values — config, lookup tables, grouped records. | Bracket access `d[key]` raises `KeyError` if key is missing; use `.get()` for safe access. |
-| **set** | Unordered collection of unique hashable elements with O(1) membership testing. | Deduplication and fast `in` checks. | `{}` creates an empty dict, not an empty set — use `set()` for an empty set. |
-| **frozenset** | Immutable variant of `set`. Because it is hashable, it can serve as a dict key or element of another set. | Cache keys, compound lookup keys, immutable set algebra. | Trying to `add()` to a frozenset — it has no mutating methods. |
-| **tuple** | Ordered, immutable sequence. Hashable if all elements are hashable. | Dict keys, function return values, fixed records. | `(42)` is just grouping parentheses — single-element tuple requires a trailing comma: `(42,)`. |
-| **namedtuple** | Tuple subclass with named fields, created via `collections.namedtuple` or `typing.NamedTuple`. | Lightweight immutable record type with dot-access and unpacking. | Mutating namedtuples — they are immutable. Use `_replace()` for non-destructive updates. |
-| **defaultdict** | `dict` subclass that auto-creates missing keys using a factory function (e.g., `list`, `int`). | Eliminates the `if key not in d` boilerplate for grouping and counting. | Passing the factory result `defaultdict(list())` instead of the factory itself `defaultdict(list)`. |
-| **Counter** | `dict` subclass purpose-built for counting hashable objects. | Frequency tables, top-N queries, histogram data. | `Counter` counts are regular ints — negative counts are allowed and can cause surprises. |
-| **deque** | Double-ended queue from `collections`. O(1) append/pop on both ends. | FIFO queues, LIFO stacks, sliding windows, bounded buffers. | Using `list.pop(0)` for queues — O(n) because it shifts every element. Use `deque.popleft()`. |
-| **heapq** | Module providing min-heap operations on a regular list. | Priority queues, top-N problems, merge-sorting sorted streams. | `heapq` is a min-heap — for max-heap, negate values. There is no built-in max-heap. |
-| **Enum** | Class from the `enum` module defining a closed set of named constants. | Replace magic numbers/strings with type-safe symbolic names. | `Color.RED == 1` is `False` for standard `Enum` — use `IntEnum` when numeric comparison is needed. |
-| **IntEnum** | `Enum` subclass whose members are true integers — supports comparison and arithmetic with `int`. | Status codes, priorities, severity levels. | `IntEnum` breaks enum isolation — members compare equal to plain ints, which can mask bugs. |
-| **shallow copy** | Copies the outer container but shares references to inner objects. | Fast duplication of flat collections. | Mutating a nested object in the copy also mutates the original — use `copy.deepcopy()` for nested structures. |
-| **deep copy** | Recursively copies every nested object, producing a fully independent clone. | Safe duplication of nested or mutable data structures. | Deep copy is slow for large graphs and fails on non-picklable objects (open files, sockets). |
-| **O(1) / O(n) / O(log n)** | Big-O notation describing how an operation's cost scales with collection size. O(1) = constant, O(n) = linear, O(log n) = logarithmic. | Choosing the right collection type for the access pattern. | Assuming all collections have the same performance — `list.index()` is O(n), `dict[key]` is O(1). |
-
-### What this note covers
-
-- **Lists** — creation, mutation, search, sort, shallow vs deep copy, stack usage
-- **Dictionaries** — creation, safe access, modification, iteration, merging, `defaultdict`, `Counter`
-- **Sets** — creation, set algebra (union, intersection, difference), `frozenset`, data comparison patterns
-- **Tuples & Enums** — tuple basics, unpacking, `namedtuple`/`NamedTuple`, `Enum`, `IntEnum`, pipeline status
-- **Stacks, Queues & Deques** — LIFO/FIFO with `deque`, bounded buffers, priority queue with `heapq`, ETL patterns
-- **Collection Comparison** — cheat sheet, decision guide, common data engineering patterns
-
 ## Lists (Dynamic Arrays)
 
 Lists are Python's most versatile sequential collection — ordered, mutable, and heterogeneous. Internally backed by a dynamic array that grows by ~12.5% when full, giving amortized O(1) `append` and O(1) indexed access. For O(1) prepend/dequeue, use `collections.deque` instead. This section covers creation, mutation, searching, sorting, copying, and using lists as stacks.

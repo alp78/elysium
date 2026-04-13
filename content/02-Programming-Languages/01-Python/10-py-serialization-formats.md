@@ -248,16 +248,7 @@ status: complete
 > > [!tip] Dynamic Protobuf vs. generated code
 > >
 > > The descriptor-pool approach is useful for notebooks and exploratory work where compiling `.proto` files is impractical. In production services, always use `protoc`-generated `_pb2.py` modules — they are faster, type-checked, and easier to maintain.
->
->  ---
 
-This note compares the major binary and columnar serialization formats used in data engineering — Parquet, Avro, Protocol Buffers, and MessagePack — with executable read/write examples and a side-by-side performance benchmark.
-
-### What this note covers
-
-- **Parquet Files** — pyarrow read/write, column selection, predicate pushdown, compression, metadata, pandas/Polars integration
-- **Enterprise Message Serialization** — Protocol Buffers (dynamic), Avro (fastavro), MessagePack
-- **Format Performance Benchmark** — side-by-side size and speed comparison across JSON, CSV, Parquet, Avro, Protobuf
 
 ```python
 import os

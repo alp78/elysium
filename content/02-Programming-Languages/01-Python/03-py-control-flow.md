@@ -285,39 +285,6 @@ status: complete
 > >
 > > `list(cycle([1,2,3]))` hangs indefinitely. Always bound infinite iterators with `islice` or a `break` condition.
 
-This note covers every mechanism Python provides for directing program execution: conditional branching (`if`/`elif`/`else`, ternary, `match`/`case`), loops (`for`, `while`), loop control (`break`, `continue`, `pass`, `for...else`), iterators and generators (`yield`, `yield from`, generator expressions), and comprehensions as functional alternatives to imperative loops.
-
-### Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **if / elif / else** | Conditional branching. Python uses indentation (not braces) to delimit blocks. `elif` replaces C#'s `else if`. | Direct program flow based on conditions. | Forgetting the colon after `if condition:` — a syntax error unique to Python. |
-| **Ternary expression** | `value_if_true if condition else value_if_false`. Reversed order vs C#'s `condition ? true : false`. | Inline conditional assignment. | Chaining beyond 2 levels — becomes unreadable. Use `if/elif/else` for complex logic. |
-| **match / case** | Structural pattern matching (Python 3.10+). Matches value, type, sequence, mapping, and nested patterns. | Multi-branch dispatch, type narrowing, destructuring. | Thinking `match` is just `switch` — it supports deep structural patterns, guard clauses, and binding. |
-| **for loop** | Iterates over any iterable (list, range, dict, file, generator). No index-based C-style `for(;;)`. | Process every item in a collection. | Modifying a collection while iterating — iterate over a copy or use comprehension. |
-| **while loop** | Repeats while a condition is truthy. Combine with `:=` (walrus) for read-and-test patterns. | Loop when the number of iterations is unknown. | Forgetting to update the loop condition — creates infinite loops. |
-| **range()** | Lazy integer sequence generator: `range(start, stop, step)`. `stop` is exclusive. | Generate index sequences for `for` loops. | Off-by-one: `range(5)` gives 0–4, not 0–5. |
-| **enumerate()** | Wraps an iterable to yield `(index, value)` tuples. Replaces manual counter variables. | Get both index and value during iteration. | Forgetting it returns tuples — unpack with `for i, val in enumerate(items):`. |
-| **zip()** | Iterates over multiple iterables in parallel, stopping at the shortest. | Pair corresponding elements from two lists. | Unequal-length iterables silently truncate — use `itertools.zip_longest()` to pad. |
-| **break** | Exits the innermost loop immediately. | Stop early when a condition is met. | Expecting `break` to exit nested loops — it only exits one level. |
-| **continue** | Skips to the next iteration of the innermost loop. | Skip specific items without restructuring the loop. | Using `continue` excessively — consider filtering the iterable instead. |
-| **pass** | No-op placeholder. Required where Python syntax expects a block but no action is needed. | Stub functions, empty exception handlers, placeholder classes. | Using `pass` in production code — it should be temporary scaffolding, not permanent. |
-| **for...else** | The `else` block runs only if the loop completed without `break`. | Detect "not found" conditions cleanly. | Thinking `else` runs when the loop body is `False` — it runs on normal completion. |
-| **Iterator** | Object implementing `__iter__()` and `__next__()`. Called by `for` loops and `next()`. | Lazy, memory-efficient sequential access to data. | Consuming an iterator twice — iterators are single-pass. Convert to `list` to reuse. |
-| **Generator** | Function using `yield` to produce values lazily. Returns a generator iterator. | Memory-efficient pipelines for large datasets. | Calling a generator function returns the generator object, not the first value. |
-| **yield from** | Delegates to a sub-generator, flattening its output into the parent generator's stream. | Compose generators, recursive iteration over nested structures. | Confusing with `yield` — `yield from iterable` yields each item; `yield iterable` yields the iterable itself. |
-| **Generator expression** | `(expr for x in iterable if condition)` — lazy comprehension that produces values on demand. | Memory-efficient alternative to list comprehension when the full list isn't needed. | Using `[...]` (list) when `(...)` (generator) would suffice — wastes memory for large datasets. |
-| **List comprehension** | `[expr for x in iterable if condition]` — creates a new list by transforming and filtering. | Concise, readable collection creation replacing `for` + `append`. | Nesting beyond 2 levels — becomes unreadable. Extract inner logic into functions. |
-| **Dict / Set comprehension** | `{k: v for ...}` creates a dict; `{x for ...}` creates a set. Same filter/transform pattern as list comprehension. | Build dicts and sets declaratively. | Confusing `{x for ...}` (set) with `{x: y for ...}` (dict) — the colon distinguishes them. |
-
-### What this note covers
-
-- **Conditional Statements** — `if`/`elif`/`else`, ternary expressions, chained comparisons, truthy/falsy coercion, `match`/`case` structural pattern matching
-- **Loops** — `for` with `range`, `enumerate`, `zip`, nested loops; `while` loops; `for...else`
-- **Loop Control** — `break`, `continue`, `pass`, labeled loop workarounds, `for...else` pattern
-- **Iterators & Generators** — iterator protocol, `yield`, `yield from`, generator expressions, `itertools` patterns, coroutine basics
-- **Comprehensions & Functional Tools** — list/dict/set/nested comprehensions, `map`/`filter`/`reduce`, choosing the right construct
-
 ## Conditional Statements
 
 Python provides two families of conditional constructs: `if`/`elif`/`else` chains with full truthy/falsy support and chained comparisons, and `match`/`case` (3.10+) for structural pattern matching with destructuring, type checking, and guards.

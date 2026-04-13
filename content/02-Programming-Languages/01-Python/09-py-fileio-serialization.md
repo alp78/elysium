@@ -161,7 +161,6 @@ status: complete
 > >
 > > Pass storage paths as URIs (`gs://bucket/path`, `s3://bucket/path`) rather than local paths. `fsspec.open(uri)` resolves the correct filesystem implementation at runtime, making the same code runnable in unit tests (local) and production (cloud) without modification.
 
-Python provides multiple layers for file I/O and serialization — from built-in `open()` for text/binary files through `csv`, `json`, `yaml`, and `pickle` modules, to high-performance libraries like `orjson`, `pyarrow`, and `fastavro`. This note covers reading/writing files, structured data formats, encoding, async I/O, schema validation with Pydantic, and cloud-native storage patterns.
 
 ```python
 import os

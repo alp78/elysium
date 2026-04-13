@@ -172,8 +172,6 @@ status: complete
 > >
 > > Transfer Acceleration routes through CDN PoPs (2–5× speedup for cross-continent uploads) but still traverses the public internet. Dedicated Interconnect bypasses the internet entirely and provides predictable latency under congestion.
 
-This note covers Python implementations of five streaming and transfer patterns — WebSocket, SSE, Pub/Sub, Firestore, and enterprise file transfer.
-
 ## Technologies Overview
 
 Comparison of the five streaming and transfer protocols used in this notebook — from lowest-latency local TCP to managed cloud services and batch file transfer.

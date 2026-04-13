@@ -182,45 +182,6 @@ status: complete
 > >
 > > The deployment build installs from `requirements.txt`, not from your local `.venv/` or `venv/` folder. Excluding those directories keeps the source archive smaller and avoids needless upload bloat.
 
-This note covers Python environment and dependency management — from `venv` isolation and `pip` workflows to `pyenv`, `uv`, Docker, CI/CD, and GCP deployment patterns.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **`venv`** | A lightweight, stdlib-only tool that creates an isolated Python environment with its own `site-packages` directory | The standard mechanism for preventing package version conflicts between projects on the same machine | Activating the venv in one terminal and installing packages in another terminal where the venv is not active |
-| **`pip`** | The Python package installer that fetches packages from PyPI and installs them into the active environment | The primary tool for installing, upgrading, and removing third-party dependencies | Running `pip install` without an active venv, which installs into the system Python and may require root or break OS tools |
-| **`requirements.txt`** | A plain-text file listing package names and pinned version constraints used to reproduce an environment | The contract between the developer's machine, CI, and production — all three must install from the same file | Generating it with `pip list > requirements.txt` instead of `pip freeze > requirements.txt`, which produces unpinned names without version constraints |
-| **`pip freeze`** | Outputs all installed packages with their exact versions in `name==version` format | Captures the full resolved dependency tree including transitive dependencies for deterministic reproduction | Checking in a `requirements.txt` generated on a different OS — compiled packages like `psycopg2` have platform-specific wheels |
-| **`pyenv`** | A tool that compiles and installs multiple Python interpreter versions side by side and switches between them per-project | Lets each project pin a specific Python version (e.g., 3.12.3) independent of the system Python | Confusing `pyenv` (interpreter version management) with `venv` (package isolation) — they solve different but complementary problems |
-| **`uv`** | A fast Rust-based Python package manager that replaces `pip`, `pip-tools`, and `virtualenv` with a unified interface | 10–100× faster than pip for large dependency trees; useful for CI and Docker where install time matters | Using `uv pip install` without knowing it writes to a `uv`-managed cache rather than the active `venv` — confirm with `uv pip list` |
-| **`pipx`** | A tool that installs Python CLI applications into isolated venvs so they are available globally without polluting the project environment | Used for tools like `black`, `ruff`, `httpie`, and `poetry` that should be available system-wide but not as project dependencies | Installing CLI tools with `pip install --user` instead — `--user` does not isolate tools from each other and can cause version conflicts |
-| **`pip.conf` / `--extra-index-url`** | Configuration mechanism that tells `pip` to look at a private PyPI feed (e.g., Artifactory, GCP Artifact Registry) in addition to or instead of pypi.org | Required for installing internal packages not published to the public index | Passing `--extra-index-url` on the command line in CI where it may appear in logs — use environment variables or a `.netrc` file for credentials |
-| **`VIRTUAL_ENV` environment variable** | Set automatically when a venv is activated; tells `pip`, `python`, and other tools to use the venv's interpreter | Checking this variable programmatically confirms whether a venv is active before running install commands | Hardcoding the path to the venv's `python` binary — the variable is more portable and works across different project root directories |
-| **Docker multi-stage build** | A Dockerfile pattern with multiple `FROM` stages where only selected artifacts are copied to the final image | Separates the build environment (with compilers, test tools) from the runtime image (minimal, small, no dev deps) | Using a single `FROM python:3.12` stage and copying the entire working directory — the image includes test fixtures, `.git`, and dev tools |
-| **`pip install --no-cache-dir`** | Skips pip's local package cache during installation | Required in Docker to prevent the cache layer from inflating image size; cache is useless in a one-time build context | Omitting this flag in Docker — pip caches wheels in `/root/.cache/pip`, which adds tens to hundreds of MB to the image unnecessarily |
-| **Cloud Functions `requirements.txt`** | GCP Cloud Functions reads `requirements.txt` from the function's root directory and installs packages automatically before deployment | Functions have no persistent filesystem — all dependencies must be declared in `requirements.txt` | Including `venv/` in the deployment source — the runtime ignores it and installs from `requirements.txt`, wasting transfer time and triggering a warning |
-
-### What this note covers
-
-- **venv — why virtual environments exist** — the isolation problem and why system Python is shared
-- **venv — create and activate** — `python -m venv`, activation scripts, deactivation
-- **pip — install packages** — basic install, version pinning, extras
-- **pip freeze — pin and freeze** — capturing the full dependency tree for reproducibility
-- **pip — upgrade and manage** — upgrading, listing, showing, uninstalling packages
-- **pip — inspect the environment** — verifying what is installed and where
-- **requirements.txt lifecycle** — file types (`requirements.txt`, `-dev`, `.in`, `constraints.txt`), environment-specific patterns
-- **pyenv — version management** — installing interpreter versions, `.python-version` file
-- **uv — modern package management** — fast installs, virtual env management, pip compatibility
-- **pipx — isolated global tools** — installing CLI tools without polluting project environments
-- **Private PyPI feeds** — `pip.conf`, `--extra-index-url`, Artifact Registry
-- **Docker** — multi-stage builds, `--no-cache-dir`, `.dockerignore`
-- **GitHub Actions** — `setup-python`, caching, environment matrix
-- **GCP** — Cloud Run, Cloud Functions, Cloud Composer, deployment patterns
-- **Terraform** — deploying Python environments as infrastructure
-- **Anti-patterns** — common environment mistakes and their fixes
-- **Cheat sheet** — quick reference table
-
 ## venv — why virtual environments exist
 
 Two projects. Same machine. Project A needs `pandas==1.5.3` for a legacy ETL pipeline. Project B needs `pandas==2.1.4` for a new data lakehouse. Without isolation, `pip install pandas==2.1.4` overwrites 1.5.3 globally — and Project A silently breaks at 2 AM when the nightly batch job runs.

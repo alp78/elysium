@@ -179,31 +179,6 @@ status: complete
 
 ![Pipeline Architecture](/static/index_lab.jpg)
 
-This note covers the Google Cloud Platform Python SDK — authentication, Cloud Storage, BigQuery, Pub/Sub, Firestore, Secret Manager, and Cloud Monitoring — with executable examples from a real index ETL pipeline.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **ADC (Application Default Credentials)** | Google's automatic credential discovery — checks env vars, gcloud CLI, metadata server in order. | Zero-config auth in GCP environments; local dev uses service account key or `gcloud auth`. | Setting `GOOGLE_APPLICATION_CREDENTIALS` to a non-existent path — silent auth failures. |
-| **Service account** | A non-human identity (email + key pair) used by applications to authenticate with GCP. | Pipelines, Cloud Functions, and GKE workloads authenticate as service accounts. | Granting `Owner` role — use least-privilege IAM roles specific to the services needed. |
-| **GCS (Cloud Storage)** | Object storage for blobs (files) organized in buckets. | Raw data landing zone (Bronze layer), archive, and intermediate file storage. | Buckets are globally unique — naming collisions across all GCP users. |
-| **BigQuery** | Serverless columnar data warehouse with SQL interface. | Analytics, aggregation, and Gold-layer queries on TB-scale data. | Querying `SELECT *` on large tables — BigQuery charges by bytes scanned, not time. |
-| **Pub/Sub** | Managed message queue — publishers push messages, subscribers pull or receive them. | Decouples pipeline stages; triggers Cloud Functions and Dataflow jobs. | Messages are at-least-once delivery — design consumers to be idempotent. |
-| **Firestore** | Serverless NoSQL document database with real-time sync. | Pipeline metadata, config state, small-document operational data. | Firestore has a 1MB document size limit and 500 writes/sec per document. |
-| **Secret Manager** | Managed secret storage with versioning, rotation, and IAM-based access control. | API keys, database passwords, service account keys — never hardcode or commit. | Accessing secrets at import time (module level) — access at runtime to support rotation. |
-| **Cloud Monitoring** | Structured logging and custom metrics via the Cloud Logging / Monitoring APIs. | Pipeline observability — structured logs, latency metrics, alert policies. | Using `print()` instead of structured logging — loses queryability and alerting. |
-
-### What this note covers
-
-- **Pipeline Architecture** — Bronze/Silver/Gold layers, GCP service mapping
-- **Authentication & Setup** — ADC, service accounts, `GOOGLE_APPLICATION_CREDENTIALS`
-- **Cloud Storage** — upload, download, list, lifecycle management
-- **BigQuery** — query, load, streaming insert, partitioned tables
-- **Pub/Sub** — publish, subscribe, pull, dead-letter topics
-- **Firestore** — documents, collections, batch writes, queries
-- **Secret Manager** — read secrets, versioning, rotation
-- **Cloud Monitoring** — structured logging, custom metrics
 
 ## How the Pipeline Works
 

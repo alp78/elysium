@@ -233,17 +233,6 @@ status: complete
 > >
 > > Locale names differ by OS (`en_US.UTF-8` on Linux, `English_United States.1252` on Windows). Use the `babel` library for portable currency and number formatting in production.
 
-This note covers Python's string type in full: creation and immutability, indexing and slicing, the complete set of built-in string methods, all three formatting mechanisms (f-strings, `.format()`, `%`), efficient string building patterns, and regular expressions with the `re` module.
-
-### What this note covers
-
-- **String Creation & Basics** — literals, type conversion, repetition, emptiness checks, immutability and memory model
-- **Indexing & Slicing** — 0-based and negative indexing, slice syntax with step, out-of-range behavior, iteration
-- **String Methods** — case conversion, whitespace/padding, content checks, search/find, comparison, replace/split/join, encoding
-- **String Formatting** — f-strings, `.format()`, `%`-formatting, numeric specifiers, alignment, locale currency
-- **Efficient String Building** — `join()` vs `+=` performance, `io.StringIO`, decision flowchart
-- **Regular Expressions** — matching, capture groups, named groups, substitution, splitting, compilation, flags, common patterns
-
 ## String Creation & Basics
 
 This section covers the fundamental building blocks of string handling in Python: literal syntax, type conversions, construction patterns, and the immutability guarantee that shapes how strings behave at runtime.

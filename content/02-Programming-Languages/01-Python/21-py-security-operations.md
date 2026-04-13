@@ -199,42 +199,6 @@ status: complete
 > > [!warning] Never log the full signed URL
 > >
 > > The URL itself is the credential. Log only the GCS object path and the expiry timestamp. Set the shortest practical expiration — minutes for one-time downloads, not hours.
->
->  ---
-
-This note demonstrates Python-based security operations across GCP services — encryption, certificate handling, identity, and secure access patterns.
-
-### Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| ADC | Application Default Credentials — Google's credential resolution chain checked by all client libraries | All cells use ADC unless a key file path is set explicitly in `GOOGLE_APPLICATION_CREDENTIALS` | Not setting `GOOGLE_APPLICATION_CREDENTIALS` when running outside a GCP VM; ADC then falls back to the wrong account |
-| Service Account Impersonation | Requesting short-lived credentials for a target SA without downloading its key | Demonstrated as an alternative to key-file authentication; credentials expire automatically | Confusing impersonation with key-based auth; impersonation requires `iam.serviceAccounts.getAccessToken` on the target |
-| Cloud KMS — symmetric encryption | Encrypt/decrypt data directly using a KMS key via the Cloud KMS API | Used for small payloads (up to 64 KiB) where the data itself is sent to the KMS API | Sending large blobs directly to KMS; use envelope encryption for anything larger |
-| Envelope Encryption | Generate a local Data Encryption Key (DEK), encrypt data with it, then encrypt the DEK with a KMS key | Used for large payloads: only the DEK is sent to KMS, not the data | Storing the plaintext DEK alongside the ciphertext — only the encrypted DEK should be persisted |
-| Secret Version | An immutable snapshot of a secret's value stored in Secret Manager | Each rotation creates a new version; consumers reference `latest` or a specific version number | Accessing `latest` in production without a pinned version; a rotation can silently change the resolved value |
-| SSL/TLS Mutual Auth | Both client and server present certificates to verify each other's identity | Cloud SQL connections use the server CA cert plus a client cert/key pair issued during setup | Disabling certificate validation (`sslmode=require` without `verify-ca`) — use `verify-full` in production |
-| Access Token | A short-lived OAuth2 bearer token (default 1-hour TTL) that authorizes API calls | Obtained via `google.auth.default()` and refreshed automatically by client libraries | Caching tokens past their expiry; let the client library handle refresh |
-| CMEK Verification | Confirming that a GCP resource is actually encrypted with the expected customer-managed key | Checked after uploads and table creation to confirm the KMS key is applied | Assuming CMEK is active because it was specified at resource creation; always verify with a describe/get call |
-| `pg8000` / `psycopg2` | Pure-Python PostgreSQL drivers; `pg8000` requires no native libraries | Used for Cloud SQL PostgreSQL connections with SSL; `pg8000` is preferred in constrained environments | Forgetting to pass the SSL root cert, client cert, and client key — all three are required for mutual TLS |
-| `pyOpenSSL` / `cryptography` | Python libraries for X.509 certificate parsing and low-level crypto operations | Used to inspect certificate fields (issuer, subject, expiry) returned by Cloud SQL | Mixing `pyOpenSSL` and `cryptography` calls; the `cryptography` library is the modern replacement |
-| BigQuery Column-Level Encryption | Storing KMS-encrypted ciphertext in a BigQuery column; decryption happens at query time or in the client | Demonstrates field-level security where only callers with KMS access can read plaintext values | Relying on BigQuery column ACLs alone for sensitive fields — encrypt the value itself for defence in depth |
-| Firestore Field-Level Encryption | Encrypting individual document field values before writing to Firestore | Prevents even Firestore admin-level access from exposing sensitive field values in plaintext | Encrypting only some fields inconsistently; establish a clear policy for which fields require encryption |
-| Signed URL | A time-limited, capability URL that grants access to a GCS object without requiring GCP credentials | Used to share objects with external systems or unauthenticated clients temporarily | Setting an excessively long expiry (hours/days) on signed URLs; prefer minutes for sensitive objects |
-
-### What this note covers
-
-- **Environment Setup** — imports, environment variables, and project constants loaded once for all cells
-- **Identity and Authentication** — service account key auth, ADC, service account impersonation, access token inspection
-- **Secret Manager** — read, create, rotate, and disable secret versions
-- **Cloud KMS** — symmetric encrypt/decrypt, envelope encryption for large payloads
-- **Compute Engine** — SSH key auth, certificate inspection, VM metadata retrieval
-- **Cloud SQL** — SQL Server TLS connections, parameterized CRUD, SSL cert verification
-- **BigQuery** — authenticated queries, column-level KMS encryption and decryption
-- **Firestore** — SA-authenticated CRUD, field-level KMS encryption
-- **Cloud Storage** — CMEK upload and verification, client-side AES-GCM encryption, signed URLs
-- **Cross-Service Security Patterns** — token scopes, SA impersonation chain, secret-backed connection strings
-- **Cleanup and Cost Control** — teardown commands for all provisioned resources
 
 ## Environment Setup
 

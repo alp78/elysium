@@ -229,8 +229,6 @@ status: complete
 > >
 > > `sorted(data, key=len)` passes the function reference. `sorted(data, key=len())` calls `len()` with no arguments immediately, raising `TypeError`. No parentheses when passing a function as a `key` argument.
 
-This note covers Python's function system in full: definition and first-class usage, flexible parameter modes (`*args`, `**kwargs`, defaults, keyword-only), lambda expressions, closures and scope rules (LEGB), the decorator pattern for cross-cutting concerns, and type hints for static analysis.
-
 ## Function Basics
 
 Python functions are first-class objects — assign them to variables, pass them as arguments, return them from other functions, and store them in data structures. Functions are defined with `def`, support flexible parameter modes (`*args`, `**kwargs`, defaults), and use closures to capture enclosing scope. This section covers definitions, first-class usage, and common function-passing patterns.
