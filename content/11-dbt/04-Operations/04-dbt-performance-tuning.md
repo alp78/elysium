@@ -153,17 +153,6 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 > >
 > > Slow models become operational problems when they push delivery past consumer expectations. Performance tuning is often really SLA protection in disguise.
 
-> [!example] Performance Intervention Scope
->
-> > [!success] Measured Tuning
-> >
-> > - Use this guidance when dbt runs are already working but are too slow, too expensive, or too close to freshness SLAs, and you need to locate whether the pressure comes from model SQL, warehouse layout, or execution settings.
-> > - Apply the adapter-specific sections after measuring the bottleneck, so thread changes, partition design, indexing, and incremental strategy adjustments target the real constraint instead of random symptoms.
->
-> > [!failure] Architectural Mismatch
-> >
-> > - Do not treat tuning as the first fix when the model layer, materialization choice, or warehouse fundamentals are still wrong, because faster execution of a bad design is still a bad design.
-> > - Avoid performance shortcuts that hide correctness issues, such as overly approximate logic or aggressive pruning rules, unless the model's consumers and accuracy requirements explicitly allow that tradeoff.
 
 ## Identifying Slow Models from `run_results.json`
 

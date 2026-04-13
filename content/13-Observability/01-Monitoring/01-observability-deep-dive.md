@@ -196,19 +196,6 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 ---
 
-> [!example] Platform Observability Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the team needs an end-to-end observability model for correctness-critical data pipelines rather than a narrow metrics or dashboard tutorial.
-> > - Use it when metrics, traces, freshness, lineage, cataloging, quality checks, and drift detection all need to work together as one diagnostic surface.
-> > - Use it to design a pipeline that can explain bad data, stale data, and hidden drift before those conditions reach publication or consumers.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note if the immediate goal is only to install one agent or configure one monitoring integration already covered elsewhere.
-> > - Do not call a platform observable if it only reports infrastructure health while freshness, lineage, and data-quality signals remain blind.
-> > - Do not build drift dashboards that never feed alerts or gates; passive visibility alone is not the operating model this note assumes.
 
 ## DataDog for Data Pipeline Observability
 

@@ -159,19 +159,6 @@ status: complete
 > >
 > > Stakeholders usually need the effect on time, money, accuracy, or customer commitments before they need the implementation detail.
 
-> [!example] Leadership Leverage Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for senior and staff engineer development, review standards, design-review practice, project leadership, debt prioritization, and production-incident response design.
-> > - Use it when the leverage point is better decisions, clearer ownership, stronger review discipline, and better incident learning rather than more individual coding throughput.
-> > - Use it to formalize where written artifacts, mentoring, escalation paths, and postmortems actually improve engineering quality and team behavior.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a substitute for technical depth; leadership artifacts do not compensate for weak engineering judgment.
-> > - Do not add ceremony where the work is still small, reversible, and low risk.
-> > - Do not turn design docs, ADRs, or postmortems into paperwork detached from real operational decisions and follow-through.
 
 ## The Code Review as a Teaching Tool
 

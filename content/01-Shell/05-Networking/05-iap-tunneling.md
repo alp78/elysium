@@ -495,20 +495,6 @@ Three patterns exist for reaching private VMs in GCP. The right choice depends o
 > For a small team accessing a few VMs, IAP is always the right choice. Zero infrastructure to maintain, zero cost, and per-user audit logging via Cloud Audit Logs.
 
 
-> [!example] Private Access Fit
->
-> > [!success] Appropriate
-> >
-> > - **Accessing VMs without public IPs** -- IAP tunnels provide secure access to VMs in private subnets without assigning public IPs or configuring VPNs.
-> > - **Database access from local machines** -- tunnel SQL Server (1433), PostgreSQL (5432), or MySQL (3306) to localhost for SSMS, pgAdmin, or DBeaver connections.
-> > - **Secure file transfers** -- `gcloud compute scp --tunnel-through-iap` transfers files to private VMs without a VPN.
-> > - **Emergency access** -- when VPN is down or unavailable, IAP tunnels provide an alternative path to critical infrastructure.
->
-> > [!failure] Inappropriate
-> >
-> > - **High-throughput data transfers** -- IAP tunnels add latency. For bulk data movement, use GCS as an intermediary or set up a proper VPN/Interconnect.
-> > - **Persistent service-to-service connectivity** -- IAP is designed for interactive/administrative access, not for production data pipelines that need continuous connections.
-> > - **Environments without GCP** -- IAP is a GCP-only service. For AWS/Azure, use SSM Session Manager or Azure Bastion.
 
 ## Warnings
 

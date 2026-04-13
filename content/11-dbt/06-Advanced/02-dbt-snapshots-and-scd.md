@@ -184,17 +184,6 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 > >
 > > If snapshots run too late or inconsistently, downstream models consume the wrong history state. Placement in the DAG is an operational requirement, not a stylistic preference.
 
-> [!example] Historical State Fit
->
-> > [!success] Auditable Change History
-> >
-> > - Use snapshots when the same business entity changes over time and you must reconstruct what was true on earlier dates for audit, regulation, portfolio analysis, or historically correct downstream models.
-> > - Run snapshots as their own pipeline step when later models depend on a stable point-in-time history rather than only the latest version of each row.
->
-> > [!failure] Overwrite-Friendly Data
-> >
-> > - Avoid snapshots for append-only feeds or transient staging data where nobody needs restated history and ordinary models or incrementals are simpler to operate.
-> > - Do not snapshot casually if the entity grain, hard-delete behavior, or business-effective date logic is still unclear, because those mistakes become expensive once history starts accumulating.
 
 ## Snapshot Mechanics
 

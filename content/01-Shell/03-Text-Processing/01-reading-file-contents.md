@@ -471,21 +471,6 @@ flowchart TD
 ```
 
 
-> [!example] File Reading Fit
->
-> > [!success] Appropriate
-> >
-> > - **Quick config verification** -- `cat .env` or `head -5 config.yaml` to confirm a setting before running a pipeline.
-> > - **Real-time log monitoring** -- `tail -F /var/log/pipeline.log` during a deployment or pipeline run to watch for errors as they occur.
-> > - **Incident investigation** -- `tail -1000 app.log | grep ERROR` to quickly surface recent errors without reading the entire file.
-> > - **Row count validation** -- `wc -l output.csv` to verify a pipeline produced the expected number of rows.
-> > - **Large file inspection** -- `less /var/log/syslog` to navigate a multi-GB log file interactively without loading it into memory.
->
-> > [!failure] Inappropriate
-> >
-> > - **Structured data processing** -- if you need to filter columns, aggregate, or transform CSV data, use `awk`, `cut`, or a dataframe library instead of `cat | grep`.
-> > - **Binary files** -- `cat` on a binary file dumps garbage to the terminal and can corrupt the terminal state. Use `xxd`, `hexdump`, or `file` for binary inspection.
-> > - **Parsing structured output in scripts** -- do not pipe `cat` into `grep` into `awk` for JSON or XML. Use `jq` (JSON) or `xmlstarlet` (XML).
 
 ## Warnings
 

@@ -208,19 +208,6 @@ Task Scheduler (the Windows service `Schedule`) stores tasks as XML files under 
 
 ---
 
-> [!example] Windows Task Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when work must run on Windows hosts and depends on native Windows services, credentials, SSIS, PowerShell, or Task Scheduler integration.
-> > - Use it when the decision is between `schtasks.exe`, the ScheduledTasks PowerShell module, and PSScheduledJob rather than between unrelated orchestration platforms.
-> > - Use it for Windows-native automation where trigger type, execution identity, working directory, and event-driven behavior define whether the task will actually run correctly.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use Task Scheduler patterns when the workload really needs multi-step orchestration, centralized pipeline state, or cross-system retry semantics better handled by Airflow or a managed orchestrator.
-> > - Do not assume an interactively successful script will run the same way when scheduled under a different principal and working directory.
-> > - Do not choose event-based triggers casually; noisy event sources can create accidental automation storms if the filter and action design are weak.
 
 ## schtasks.exe — Full Reference
 

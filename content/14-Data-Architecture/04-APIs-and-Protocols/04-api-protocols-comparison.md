@@ -173,15 +173,6 @@ status: complete
 > > Pub-sub is valuable because producers and consumers no longer need to know about each other directly, only about the contract of the topic they share.
 >
 
-> [!example] Protocol Selection Fit
->
-> > [!success] Boundary-by-Boundary Choice
-> >
-> > - Use this comparison to evaluate or explain protocol choices across external ingestion, internal services, and downstream product delivery where one protocol cannot satisfy every boundary equally well.
->
-> > [!failure] Favorite-Protocol Bias
-> >
-> > - Do not default to the team's favorite protocol without checking browser support, backpressure, schema guarantees, latency, operational tooling, and consumer control.
 
 ## Protocol Landscape Overview
 

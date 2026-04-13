@@ -757,21 +757,6 @@ Thread pool: 16
 
 ---
 
-> [!example] Lazy Execution Fit
->
-> > [!success] Optimal
-> >
-> > - **Large file reads** — `pl.scan_parquet()` with filters pushes predicates to the storage layer, reading only matching row groups. This can reduce I/O by 10–100x on partitioned or large Parquet files.
-> > - **Multi-step pipelines** — when a query involves filter → join → group_by → sort, lazy execution lets the optimizer fuse and reorder steps for best performance.
-> > - **Memory-constrained environments** — streaming mode processes data in chunks, enabling analysis of datasets larger than RAM.
-> > - **Production pipelines** — lazy execution produces deterministic, optimizable query plans that can be inspected and tested before running.
->
-> > [!failure] Suboptimal
-> >
-> > - **Interactive exploration (EDA)** — Why lazy fails or doesn't help: You need to see data immediately — lazy adds a `.collect()` step at every inspection point. Better approach: Use eager DataFrames for exploration, convert to lazy for production
-> > - **Small datasets (< 100K rows)** — Why lazy fails or doesn't help: Optimizer overhead exceeds the time saved on small data. Better approach: Eager execution is fine — optimization matters at scale
-> > - **Operations unsupported in streaming mode** — Why lazy fails or doesn't help: Full sorts, some join types, and complex UDFs require full materialization. Better approach: Check `.explain(streaming=True)` to verify; fall back to eager if needed
-> > - **Debugging** — Why lazy fails or doesn't help: LazyFrame errors surface only at `.collect()` time — no line-level error attribution. Better approach: Build and test with eager first, then convert to lazy
 
 ## Warnings
 

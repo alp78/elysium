@@ -170,19 +170,6 @@ status: complete
 > >
 > > Too many low-value alerts, duplicated dashboards, or ownerless metrics do not just clutter the platform. They actively make real incidents harder to detect and respond to.
 
-> [!example] Monitoring Scope Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the team needs a reference for what to monitor before choosing or configuring a specific observability tool.
-> > - Use it when metrics, logs, alerts, dashboards, and ownership need to be defined consistently across platform components before implementation begins.
-> > - Use it to decide signal priority, investigation order, severity mapping, and tool placement at the strategy level rather than inside one product’s UI.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note when the real question is how to configure one specific collector, dashboard, or alert implementation already linked from the matrix.
-> > - Do not start monitor construction from tooling features alone if the component-level operating questions are still undefined.
-> > - Do not duplicate the same alert logic across systems just because multiple tools can express it.
 
 ## The Three Pillars Applied to Data Pipelines
 

@@ -454,22 +454,6 @@ Get-Process | Where-Object { $_.CommandLine -like "*run_pipeline*" } |
 | `WorkingSet` | `$_.WorkingSet` | Physical memory in bytes |
 
 
-> [!example] Process Termination Fit
->
-> > [!success] Appropriate
-> >
-> > - **Runaway processes consuming all CPU or memory** -- a stuck Python script or a query gone rogue needs to be terminated before it destabilizes the VM.
-> > - **Stuck pipeline workers** -- an Airflow task or Cloud Run job that hangs past its timeout must be killed and retried.
-> > - **Port conflicts** -- a process holding a port you need (e.g., port 8080 for a new deployment) must be stopped before the new service can bind.
-> > - **Configuration reload** -- `kill -HUP <pid>` reloads nginx, sshd, and other daemons without downtime.
-> > - **Batch cleanup** -- `pkill -f "python.*old_pipeline"` terminates all instances of a deprecated pipeline script.
->
-> > [!failure] Inappropriate
-> >
-> > - **Database processes** -- never `kill -9` a SQL Server, PostgreSQL, or MySQL process. Use the database shutdown command (`SHUTDOWN` in T-SQL, `pg_ctl stop`, `mysqladmin shutdown`) for clean termination with transaction recovery.
-> > - **Processes you do not own** -- killing another user process requires `sudo`. Verify ownership and purpose before killing anything you did not start.
-> > - **D-state processes** -- processes in uninterruptible sleep (D state) cannot be killed even with SIGKILL. Investigate the I/O subsystem instead.
-> > - **Automated kill loops** -- scripts that repeatedly `kill -9` a process without understanding why it keeps restarting mask the root cause. Fix the underlying issue.
 
 ## Warnings
 

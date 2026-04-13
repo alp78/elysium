@@ -214,17 +214,6 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 > >
 > > This setting intentionally breaks expensive queries instead of letting them complete. That is desirable in production because a hard failure is usually cheaper than an unnoticed full-table scan.
 
-> [!example] Warehouse Suitability
->
-> > [!success] BigQuery-Native Workload
-> >
-> > - Use `dbt-bigquery` when BigQuery is the real target warehouse and the project benefits from partition-aware incrementals, serverless elasticity, GCP-native identity patterns, and billing-aware execution controls.
-> > - Lean into BigQuery-specific settings such as partitioning, clustering, job labels, and `maximum_bytes_billed` when scan volume and spend must be governed as part of the model design.
->
-> > [!failure] Cross-Adapter Constraint
-> >
-> > - Avoid treating this note as portable warehouse guidance if the project must remain adapter-neutral while relying on BigQuery-specific features such as `STRUCT`, `ARRAY`, or partition-swap semantics.
-> > - Do not choose BigQuery-first patterns when the workload depends on SQL Server-style indexing, row-store behavior, or adapter parity that BigQuery does not share.
 
 ### BigQuery Adapter Installation
 

@@ -166,19 +166,6 @@ status: complete
 > >
 > > If a workflow implies approval without a visible checkpoint, operators cannot reliably tell when the system has crossed into action-taking behavior.
 
-> [!example] Pipeline Control Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when AI output has to move through explicit request, retrieval, validation, and approval stages instead of a single opaque model call.
-> > - Use it when retries, idempotency, evidence retention, safe degradation, and execution boundaries need to be engineered around the model as part of the application.
-> > - Use it to decide whether the pipeline should be interactive, batch, or hybrid and where deterministic control belongs at each stage.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use an LLM pipeline when the workflow is simple enough for deterministic code alone.
-> > - Do not route work through a model if the team has no way to validate, replay, or govern the AI path around it.
-> > - Do not blur request interpretation, retrieval, and execution into one opaque step if different trust boundaries apply.
 
 ## Why this topic matters
 

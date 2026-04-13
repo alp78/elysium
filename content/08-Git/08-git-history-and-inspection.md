@@ -263,19 +263,6 @@ tags:
 > >
 > > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-> [!example] Investigation Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for regression debugging, integration-history review, ownership audits, and reconstruction of what happened after resets, rebases, or force-pushes.
-> > - Use it when the goal is to inspect commits, ranges, blame, reflog, or bisect state without mutating the repository further.
-> > - Use it to turn vague questions like "what changed?" or "where did this break?" into a repeatable evidence-gathering workflow.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat inspection tooling as a substitute for branch protection, code review, or repository governance.
-> > - Do not rewrite broad history just to make inspection easier; use ranges, reflog, and bisect to investigate first.
-> > - Do not rely on blame or stale local refs without checking context, fetch state, and history-rewrite boundaries.
 
 ## Conceptual Model
 

@@ -213,19 +213,6 @@ tags:
 > >
 > > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
 
-> [!example] Remote Topology Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when inspecting or changing remote configuration, onboarding to fork workflows, repairing tracking relationships, or cleaning stale server references.
-> > - Use it when local branch state, remote-tracking refs, authentication, and push targets need to be untangled before someone updates the wrong server.
-> > - Use it to reason about multi-remote layouts, pruning, default-branch drift, and safe post-rebase push behavior.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not force-push shared branches without lease protection and explicit ownership of the rewrite.
-> > - Do not delete remote branches until merged state, active PRs, and deployment impact have been confirmed.
-> > - Do not treat `origin` as automatically correct; verify the actual remote role and URL before pushing.
 
 ## Conceptual Model
 

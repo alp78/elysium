@@ -3170,22 +3170,6 @@ display(final)
 
 ---
 
-> [!example] Expression Pipeline Fit
->
-> > [!success] Applicability
-> >
-> > - **Deriving new columns from existing data** — return percentages, Z-scores, percentile ranks, binned categories, normalized values, or any computed metric.
-> > - **Conditional logic** — applying different formulas to different subsets of rows (e.g., fee tiers by asset class, cap size classification by market cap).
-> > - **Data cleaning** — recoding values, standardizing string formats, filling defaults, and correcting known data errors.
-> > - **Feature engineering for ML or index construction** — creating model inputs, lag features, ratio columns, or composite scores from raw data.
-> > - **Pipeline readability** — method chaining and expression composition produce clear, auditable transformation logic.
->
-> > [!failure] Limitations
-> >
-> > - **Transformations that depend on external API calls per row** — Why transforms are wrong: `.map_elements()` calls Python row by row — extremely slow and blocks the GIL. Better approach: Batch the API calls outside the DataFrame, then join results back
-> > - **Complex stateful logic across rows** — Why transforms are wrong: Expressions are stateless — they cannot carry state from one row to the next. Better approach: Use `.shift()`, `.cum_sum()`, or write an explicit loop with `.iter_rows()`
-> > - **Transforms on data that exceeds memory** — Why transforms are wrong: In-memory transforms fail or thrash swap on datasets larger than RAM. Better approach: Use Polars lazy + streaming, DuckDB, or push the transform to the database
-> > - **Multi-table transformations with referential integrity** — Why transforms are wrong: Column-level transforms cannot enforce cross-table constraints. Better approach: Use SQL with foreign keys, or apply joins + assertions before transforming
 
 ## Warnings
 

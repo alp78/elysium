@@ -154,19 +154,6 @@ status: complete
 > >
 > > Restricting tools to read-only access usually preserves most of the utility while sharply reducing operational risk.
 
-> [!example] Grounding Strategy Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the workflow needs grounded evidence, current records, deterministic lookups, or controlled access to external systems rather than unsupported recall.
-> > - Use it when retrieval design, hybrid search, reranking, and tool boundaries need to be engineered as separate but cooperating subsystems.
-> > - Use it to decide when document retrieval is enough, when deterministic tools are required, and how both should be combined safely.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use vector similarity as a substitute for exact identifiers, dates, or business-rule lookups that require deterministic matching.
-> > - Do not expose write-capable tools to workflows that only need read support and evidence assembly.
-> > - Do not assume RAG fixes low-quality documents, bad chunking, or unsafe tool output by itself.
 
 ## Why this topic matters
 

@@ -792,21 +792,6 @@ LocalPort Protocol
 For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/troubleshooting-flowcharts).
 
 
-> [!example] Network Reachability Fit
->
-> > [!success] Appropriate
-> >
-> > - **First step in any outage investigation** -- `ping <host>` confirms basic network reachability before investigating application-level issues.
-> > - **DNS verification** -- `dig <hostname>` or `nslookup <hostname>` confirms the name resolves to the expected IP address.
-> > - **Port-level connectivity** -- `nc -zv <host> <port>` or `Test-NetConnection -Port <port>` verifies a specific service is reachable.
-> > - **Latency diagnosis** -- `traceroute` identifies which network hop introduces latency or packet loss.
-> > - **Firewall rule verification** -- TCP port tests confirm that firewall rules are correctly configured for the required traffic.
->
-> > [!failure] Inappropriate
-> >
-> > - **Application-layer debugging** -- connectivity tests confirm the network path works but not whether the application is healthy. Use application health checks, logs, and metrics.
-> > - **Sustained monitoring** -- one-shot ping/traceroute does not replace continuous monitoring. Use synthetic monitoring (Datadog Synthetics, Cloud Monitoring uptime checks).
-> > - **Performance benchmarking** -- ping measures ICMP round-trip time, not application throughput. Use `iperf3` for network bandwidth testing.
 
 ## Warnings
 

@@ -153,19 +153,6 @@ description: "Consumption-ready facts and dimensions, gold layer"
 > >
 > > Once a model is directly consumed, latency, documentation, naming, and stability all become external-facing concerns, not just internal engineering preferences.
 
-> [!example] Published Model Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when publishing stable fact and dimension models for BI, APIs, dashboards, and contractual downstream analytics.
-> > - Use it when grain, consumer-facing documentation, exposure registration, and physical performance behavior must be treated as part of the model contract.
-> > - Use it to design marts as the supported gold layer rather than as a casual extension of intermediate logic.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use marts for raw cleanup or reusable internal logic that belongs in staging or intermediate layers.
-> > - Do not publish ad-hoc analyst convenience tables as marts without a defined grain, documentation, and support boundary.
-> > - Do not let marts reach back to raw sources directly; that bypasses the entire layered modeling contract.
 
 ### Mart Model Core Principles
 

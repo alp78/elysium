@@ -376,15 +376,6 @@ jobs:
 | Producer ignores consumer needs | Schema designed for producer convenience | Joint schema design sessions |
 | No deprecation period | Old version removed immediately | Minimum 30-day deprecation window |
 
-> [!example] Contract Enforcement Fit
->
-> > [!success] Shared Interface
-> >
-> > - Use data contracts when multiple teams or pipelines depend on a dataset and upstream schema or SLA changes would otherwise break downstream systems silently.
->
-> > [!failure] Unenforced Paperwork
-> >
-> > - Do not publish contracts as empty documentation without validation, versioning, and ownership enforcement.
 
 ## Related
 

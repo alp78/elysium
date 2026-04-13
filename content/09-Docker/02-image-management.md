@@ -146,7 +146,7 @@ status: complete
 > > [!warning] Project path drift
 > >
 > > Registry hostname and repository path encode the owning project. A stale project ID sends operators to the wrong image catalog even if the image name itself looks familiar.
-
+>
 > ---
 >
 > **Cloud Run job**
@@ -187,19 +187,6 @@ status: complete
 > >
 > > The most recent lines are usually the most relevant project-specific customizations. That makes `docker history` a fast way to see what your team added on top of an upstream base.
 
-> [!example] Image Operations Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note before rebuilds, rollouts, registry audits, cache cleanup, or Airflow image changes when you need to compare Dockerfiles, local images, registry state, and runtime bindings.
-> > - Use it when the question is whether the image currently deployed is really the image you think it is, including tag drift, digest identity, and stale project-path references.
-> > - Use it to reason about layer size, build context, and `.dockerignore` hygiene before making build-performance or rollout changes.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not infer deployment truth from local cached images alone; registry digests and runtime bindings are the authority.
-> > - Do not rebuild or mutate the live Airflow host during passive inspection or documentation work unless an actual rollout is intended.
-> > - Do not assume later-layer cleanup reduces historical image size; layer structure has to be fixed at build design time.
 
 ## Real Dockerfiles
 

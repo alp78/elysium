@@ -163,15 +163,6 @@ status: complete
 > > Federation adds coordination overhead. It pays off only when service and schema boundaries genuinely match organizational ownership.
 >
 
-> [!example] GraphQL Access Fit
->
-> > [!success] Consumer-Shaped Access
-> >
-> > - Use GraphQL when you need to serve multiple consumers with divergent field needs from one schema, especially when the team owns the data layer and wants a self-documenting access surface.
->
-> > [!failure] Resolver Cost Blindness
-> >
-> > - Do not use GraphQL to wrap external REST APIs you do not control, replace simpler interfaces without a clear need for client-shaped queries, or ignore resolver performance costs.
 
 ## What GraphQL Is
 

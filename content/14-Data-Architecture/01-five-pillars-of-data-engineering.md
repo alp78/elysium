@@ -119,15 +119,6 @@ status: complete
 > >
 > > Thinking in failure modes forces architecture decisions to account for what happens when reality departs from the happy path.
 
-> [!example] Architecture Review Fit
->
-> > [!success] Review Lens
-> >
-> > - Use this note to orient a new team member, review an architecture against senior-level system qualities, or explain why tool choices must serve reliability, visibility, cost, security, and operability together.
->
-> > [!failure] Deep-Dive Replacement
-> >
-> > - Do not use this note as the implementation guide for one specific pillar once you need detailed practices for observability, security, orchestration, or cost optimization.
 
 ## Reliability
 

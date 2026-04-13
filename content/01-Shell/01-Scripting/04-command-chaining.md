@@ -511,23 +511,6 @@ PowerShell pipes raw text strings when you run an external executable (e.g., `gi
 | `*>` | `cmd *> file.txt` | Redirects all output streams (stdout + stderr + verbose + warning + debug + information) to a file |
 
 
-> [!example] Shell Chaining Fit
->
-> > [!success] Appropriate
-> >
-> > - **Deployment scripts** — chain `git pull && build && restart` so a build never starts on broken code and a restart never happens with a broken build.
-> > - **Data pipeline steps with causal dependencies** — `truncate_staging && load_data && validate_count` ensures each step only runs if the previous succeeded.
-> > - **Fallback logic** — `rsync ... || scp ...` tries the fast path first and falls back to the universally available alternative.
-> > - **Quick diagnostic sweeps** — `free -h ; df -h ; docker ps ; ss -tlnp` gathers all information regardless of individual command failures during an incident.
-> > - **Streaming data processing** — `zcat | grep | awk | sort | uniq -c | head` processes gigabytes of data in a single pass without intermediate files.
-> > - **Guard clauses** — `[ -f config.yaml ] || { echo "Missing config" >&2; exit 1; }` validates prerequisites before the main script logic runs.
->
-> > [!failure] Inappropriate
-> >
-> > - **Complex conditional logic** — if you need more than one level of `&&` / `||` nesting, write a proper `if/then/else` block or a function. Deeply nested chaining is unreadable and error-prone.
-> > - **Steps requiring cleanup on failure** — `&&` stops execution but does not run cleanup code. Use `trap 'cleanup_function' EXIT` in bash or `try/catch/finally` in PowerShell for guaranteed cleanup.
-> > - **Long-running pipelines that need individual stage monitoring** — a 10-stage streaming pipeline hides which stage is slow or failing. Break it into named steps with intermediate checkpoints when debuggability matters more than streaming efficiency.
-> > - **PowerShell 5.1 environments** — `&&` and `||` are only available in PowerShell 7+. Use `try/catch` or manual `$LASTEXITCODE` checks instead.
 
 ## Warnings
 

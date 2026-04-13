@@ -1615,26 +1615,6 @@ SELECT 'Demo objects cleaned up' AS status
 </tbody>
 </table>
 
-> [!example] Engineering Pattern Fit
->
-> > [!success] Operational Leverage
-> >
-> > - Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, iTVFs over scalar UDFs, and `#temp` tables over table variables.
-> > - **Views** — when multiple consumers (dashboards, stored procedures, ad-hoc analysts) need the same query logic. One view definition, one place to update.
-> > - **Stored procedures** — when pipeline steps need parameterized execution with error handling and transaction control. SPs compile once and reuse cached plans.
-> > - **iTVFs over scalar UDFs** — always prefer iTVFs for any function that returns data. Scalar UDFs disable parallelism and force row-by-row execution.
-> > - **SCD Type 2** — for any dimension attribute that affects historical calculations (sector, index membership, weighting). Type 1 only for non-analytical corrections (typo in display name).
-> > - **`#temp` tables** — when a CTE is referenced multiple times in the same query, or when you need an index on an intermediate result set.
-> > - **Partitioning** — for tables with 100M+ rows where queries consistently filter on a date column. Below that threshold, indexes alone are sufficient.
->
-> > [!failure] Structural Drag
-> >
-> > - The same patterns become liabilities when applied in the wrong context. The scenarios below are the most common misuse cases seen in pipeline code reviews.
-> > - **Indexed views** — avoid on tables with frequent writes (OHLCV with daily loads). Indexed views must be maintained on every INSERT/UPDATE/DELETE, adding write overhead.
-> > - **Stored procedures for simple reads** — if the query has no parameters, no error handling, and no transaction, a view or iTVF is simpler and equally fast.
-> > - **MERGE for high-concurrency pipelines** — due to known SQL Server MERGE bugs, use explicit INSERT/UPDATE in a transaction for tables with concurrent access.
-> > - **Table variables (`@var`) for large sets** — the optimizer assumes 1 row regardless of actual cardinality. Use `#temp` tables for anything above ~100 rows.
-> > - **Partitioning on small tables** — the 65K-row OHLCV tables in this lab gain nothing from partitioning. Partition overhead (metadata, plan complexity) outweighs the benefit below ~10M rows.
 
 ## Warnings
 

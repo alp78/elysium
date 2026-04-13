@@ -716,22 +716,6 @@ C:\pipeline\jobs\transform.py:87:    # TODO: investigate deadlock under high con
 | `-Encoding` | `-Encoding UTF8` | Specify file encoding |
 
 
-> [!example] Metadata Search Fit
->
-> > [!success] Appropriate
-> >
-> > - **Incident investigation** -- find all files modified in the last hour during a pipeline failure: `find /data -mmin -60 -type f`.
-> > - **Disk cleanup** -- find files larger than 1 GB that have not been accessed in 30 days: `find /data -size +1G -atime +30`.
-> > - **Bulk operations on matching files** -- compress all CSV files older than 7 days: `find /data -name "*.csv" -mtime +7 -exec gzip {} +`.
-> > - **Verifying pipeline output** -- confirm that expected output files exist and have non-zero size: `find /output -name "*.parquet" -size +0`.
-> > - **Quick interactive lookups** -- use `fd` or `locate` when you know the filename but not the path.
->
-> > [!failure] Inappropriate
-> >
-> > - **Simple directory listing** -- if you just want to see what files are in a directory, use `ls` or `Get-ChildItem`. `find` is overkill for flat listings.
-> > - **Content search** -- `find` locates files by metadata. To search inside files for patterns, use `grep -r` or `ripgrep`. The two tools complement each other.
-> > - **Real-time file monitoring** -- `find` is a snapshot tool. For real-time file change detection, use `inotifywait` (Linux) or `FileSystemWatcher` (PowerShell/.NET).
-> > - **Indexed search on very large filesystems** -- `find` traverses the entire tree every time. For filesystems with millions of files where you search frequently, maintain a `locate` database.
 
 ## Warnings
 

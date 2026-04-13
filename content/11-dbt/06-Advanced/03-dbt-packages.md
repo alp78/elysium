@@ -184,17 +184,6 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 > >
 > > Macro-signature or behavior changes can break models even when project SQL is untouched. Run the full build and review the lock-file delta before merging.
 
-> [!example] Dependency Reuse Fit
->
-> > [!success] Shared Capability
-> >
-> > - Use packages when multiple dbt projects repeatedly need the same macros, tests, or observability capabilities and a versioned dependency is cheaper than maintaining parallel copies.
-> > - Promote internal logic into a package only when the interface is stable enough to justify versioning, upgrade workflow, and CI compatibility checks.
->
-> > [!failure] Dependency Overhead
-> >
-> > - Avoid adding a package for a one-off need if it introduces more abstraction, credential risk, or upgrade churn than the reused code is actually worth.
-> > - Do not centralize unstable project-specific logic too early, because forcing immature patterns into a shared dependency makes every future change heavier.
 
 ## `packages.yml` and `dbt deps`
 

@@ -165,15 +165,6 @@ status: complete
 > >
 > > In modern data stacks, cost problems often come from workload shape and access patterns more than from the sticker price of the chosen service.
 
-> [!example] Matrix Reference Fit
->
-> > [!success] Constraint-Driven Comparison
-> >
-> > - Use these matrices for architecture reviews, ADRs, platform selection, and migration planning when scale, team skill, latency, budget, or operational maturity are pulling the decision in different directions.
->
-> > [!failure] Benchmark Replacement
-> >
-> > - Do not use the matrices as a substitute for local benchmarks, team constraints, or workload-specific proof when the comparison narrows choices but cannot decide for you.
 
 ## Language Selection: Which Language for Which Task
 

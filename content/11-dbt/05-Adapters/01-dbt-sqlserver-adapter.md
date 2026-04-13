@@ -198,17 +198,6 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 > >
 > > On SQL Server, thread count is not an abstract performance knob. It changes live connection load and spill pressure, so start conservatively and tune from observed behavior.
 
-> [!example] Adapter Suitability
->
-> > [!success] SQL Server Target
-> >
-> > - Use `dbt-sqlserver` when Microsoft SQL Server or Azure SQL is the actual warehouse target and the team needs dbt Core to run from Linux, GCE, Cloud Run, containers, or WSL with ODBC-based connectivity.
-> > - Adopt the adapter with explicit version pinning, conservative thread counts, and SQL Server-native incremental and indexing patterns, because those are part of the operational contract rather than optional refinements.
->
-> > [!failure] Feature Mismatch
-> >
-> > - Avoid this adapter if the project depends on capabilities it does not support well, such as `insert_overwrite`, Python models, `dbt clone`, first-party feature parity, or warehouse-native nested-type workflows.
-> > - Do not port BigQuery or Snowflake assumptions directly into SQL Server dbt projects; T-SQL semantics, connection behavior, and incremental tradeoffs need their own design choices.
 
 ### SQL Server Adapter Installation
 

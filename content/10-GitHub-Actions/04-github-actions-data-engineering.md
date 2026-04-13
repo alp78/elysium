@@ -42,7 +42,7 @@ tags:
 > > [!info] Operational nuance
 > >
 > > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
-
+>
 > ---
 >
 > **PARSEONLY**
@@ -373,19 +373,6 @@ tags:
 > >
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
-> [!example] Data Platform Automation Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when GitHub Actions must validate or operate warehouses, dbt projects, orchestrators, infrastructure, notebooks, or controlled backfills.
-> > - Use it when workflow design has to account for data cost, partition safety, idempotency, read-only CI, and short-lived cloud identity rather than generic app deployment alone.
-> > - Use it to separate harmless PR validation from gated write paths so production data systems are not mutated by low-trust workflows.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not let `pull_request` or other low-trust triggers perform production writes, schema mutations, or backfills.
-> > - Do not copy generic application CI/CD patterns into data-platform automation without adapting them for warehouse spend, replay safety, and environment-scoped credentials.
-> > - Do not use this note as the first stop if the team still needs the GitHub Actions fundamentals or reusable-pattern baseline.
 
 ## Data-Engineering Workflow Taxonomy
 

@@ -214,19 +214,6 @@ status: complete
 > >
 > > Completion scripts live under different directories for apt, standalone, and Windows installs. Sourcing the wrong path produces silent non-working completion even when the SDK itself is installed correctly.
 
-> [!example] Installation Context
->
-> > [!success] Appropriate
-> >
-> > - Use this note before any first `gcloud` workflow on a new workstation, VM, Cloud Shell session, or container image where the SDK installation path still needs to be proven.
-> > - Use it when SDK drift, wrong-binary resolution, missing components, or broken shell completion suggest the local CLI is present but not operationally trustworthy.
-> > - Use it before adding adjacent tooling such as emulators, GKE auth helpers, or `bq` workflows so the underlying install model and component path are understood first.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not run `gcloud init` in CI/CD or other headless automation, because it is interactive and will block unattended execution.
-> > - Do not mix package-manager installs with standalone installs on the same machine, because PATH resolution and component management become ambiguous.
-> > - Do not assume every install model supports `gcloud components`; apt and yum managed environments require package-manager lifecycle operations instead.
 
 ## Installation
 

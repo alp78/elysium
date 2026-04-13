@@ -165,15 +165,6 @@ status: complete
 > >
 > > Pipelines without observability can remain broken for long periods while continuing to appear healthy from the outside.
 
-> [!example] Decision-Test Scope
->
-> > [!success] Trade-Off Check
-> >
-> > - Use these rules in architecture reviews, ADRs, migrations, incident retrospectives, and tool-selection discussions where trade-offs need explicit decision tests instead of vague preference.
->
-> > [!failure] Context-Free Dogma
-> >
-> > - Do not treat the rules as dogma that overrides business context, existing team strengths, or hard constraints that genuinely justify a more specialized choice.
 
 ## Rule 1: Serve the Business, Not the Technology
 

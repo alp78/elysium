@@ -155,15 +155,6 @@ status: complete
 > >
 > > Teams forget deviations quickly; an ADR keeps later reviewers from mistaking a deliberate adaptation for accidental drift.
 
-> [!example] Reference Stack Fit
->
-> > [!success] Adaptable Baseline
-> >
-> > - Use this guide for greenfield architecture design, migration scoping, new product requests, and stakeholder discussions where an example stack is more useful than an abstract principle.
->
-> > [!failure] Template Worship
-> >
-> > - Do not use the scenarios as rigid templates that ignore existing platform investments, contractual constraints, or real team operating strengths.
 
 ## Scenario 1: Daily Batch Pipeline — Ingest, Transform, Serve
 

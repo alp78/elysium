@@ -1305,21 +1305,6 @@ SUCCESS — daily_etl exited with code 0
 ```
 
 
-> [!example] PowerShell Automation Fit
->
-> > [!success] Appropriate
-> >
-> > - **Windows-native operations** -- Task Scheduler, Windows services, registry, AD, NTFS permissions.
-> > - **SQL Server administration** -- Invoke-Sqlcmd, dbatools module, SQL Server Agent job management.
-> > - **Structured data processing** -- Import-Csv, ConvertFrom-Json, and the object pipeline for CSV/JSON transformation.
-> > - **Cross-platform scripts (PS 7+)** -- PowerShell 7 runs on Linux and macOS.
-> > - **API integrations** -- Invoke-RestMethod returns parsed objects directly.
->
-> > [!failure] Inappropriate
-> >
-> > - **Pure Linux environments** -- bash is more natural with better ecosystem support on Linux.
-> > - **Performance-critical text processing** -- PowerShell object pipeline is slower than awk/sed for millions of text lines.
-> > - **Scripts needing pip/conda packages** -- Python has a richer data engineering ecosystem (Polars, pandas, dbt, Airflow).
 
 ## Warnings
 

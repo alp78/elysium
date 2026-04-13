@@ -211,19 +211,6 @@ tags:
 > >
 > > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-> [!example] Incident Response Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for incident review, on-call response, team training, and policy design around repeated Git or GitHub collaboration failures.
-> > - Use it when the real question is severity, blast radius, containment, escalation, and prevention rather than a single low-level command.
-> > - Use it to classify failures before acting so data loss, secret exposure, release breakage, and process drift are handled with the right urgency.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a low-level command tutorial when a narrower note on merge conflicts, recovery, remotes, or daily workflow is the better fit.
-> > - Do not jump into technical fixes before severity and blast radius have been assessed; the wrong early action can worsen the incident.
-> > - Do not treat recurring Git failures as isolated operator mistakes when the pattern actually indicates a policy or culture problem.
 
 ## Severity Matrix
 

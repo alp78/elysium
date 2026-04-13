@@ -143,19 +143,6 @@ status: complete
 > >
 > > Consistent override reasons should feed evaluation and release decisions instead of being treated as isolated operator judgment.
 
-> [!example] Operational Trace Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when an AI workflow needs debugging, cost control, release safety, auditability, or operational learning from production behavior.
-> > - Use it when prompts, retrieval, tools, validation, latency, and reviewer outcomes all need to be traced together so incidents can be explained and replayed.
-> > - Use it to define provenance, rollback criteria, and telemetry that are specific enough to support real operations rather than anecdotal debugging.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not reduce observability to final-response logging that ignores retrieval, routing, tool activity, provenance, and trace access controls.
-> > - Do not collect rich traces without redaction, retention, and access rules.
-> > - Do not expect cost or latency alerts to be useful if they are detached from route and workflow context.
 
 ## Why this topic matters
 

@@ -137,19 +137,6 @@ status: complete
 > >
 > > A release criterion should define which metrics must improve, which may remain flat, and which regressions are unacceptable.
 
-> [!example] Prompt Release Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for prompt release review, incident investigation, eval-suite design, regression triage, safety testing, and any workflow where prompt changes can affect business outcomes.
-> > - Use it when the team needs to isolate which stage failed and decide whether the fix belongs in the prompt, retrieval, tooling, model, validator, or workflow.
-> > - Use it to turn incidents and regressions into permanent tests instead of another round of intuition-driven rewrites.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use prompt debugging as justification for endless prompt rewriting when the real problem is missing context, weak validators, or a mismatched model class.
-> > - Do not release prompt changes without versioning, regression criteria, and rollback rules.
-> > - Do not trust clean-only eval sets; the hard and ambiguous cases are the ones that decide production safety.
 
 ## Why this topic matters
 

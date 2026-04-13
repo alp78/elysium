@@ -298,19 +298,6 @@ status: complete
 > >
 > > In Firestore, configuration drift is not cosmetic. Missing indexes, disabled protection controls, or inconsistent field settings surface later as broken queries or recovery gaps.
 
-> [!example] Firestore Workload Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Firestore when the workload needs low-latency reads and writes for current operational truth such as checkpoints, leases, config documents, idempotency records, or recent run state.
-> > - Use it when Cloud Run, Composer, or other control-plane services need a compact shared state store that operators can inspect and mutate without rebuilding the pipeline.
-> > - Use it when retention can stay bounded through TTL, export, or archive workflows instead of turning the database into a permanent history store.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use Firestore as the primary store for broad analytical scans, trend analysis, or long-horizon reporting; move those patterns to BigQuery.
-> > - Do not use it for queue semantics, replayable event transport, or high-volume fan-out delivery; keep that responsibility in Pub/Sub or another messaging layer.
-> > - Do not pack large blobs, heavily relational data, or ever-growing event logs into documents; those shapes belong in Cloud Storage, Cloud SQL, or AlloyDB.
 
 ## Mental Model / Architecture Model
 

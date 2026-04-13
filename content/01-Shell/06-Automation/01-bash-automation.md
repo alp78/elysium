@@ -1224,22 +1224,6 @@ SUCCESS — daily_etl exited with code 0
 ```
 
 
-> [!example] Bash Automation Fit
->
-> > [!success] Appropriate
-> >
-> > - **File intake and validation** -- checking for expected files, validating row counts, detecting encoding issues before processing.
-> > - **Database operations** -- wrapping sqlcmd/bcp calls with error checking, retry logic, and logging for scheduled ETL.
-> > - **Deployment scripts** -- git pull, build, test, restart sequences that must fail fast on any error.
-> > - **Scheduled data processing** -- cron or Airflow BashOperator tasks that run daily data quality checks or report generation.
-> > - **Glue scripts** -- short scripts coordinating between tools (download from API, transform with awk, upload to GCS).
->
-> > [!failure] Inappropriate
-> >
-> > - **Complex business logic** -- if the script needs data structures, error handling with retries, or API pagination, use Python or C#.
-> > - **Cross-platform scripts** -- bash is Linux-only. For Windows+Linux, use PowerShell 7 or Python.
-> > - **Scripts longer than 200 lines** -- long bash scripts become unmaintainable. Refactor into a proper programming language.
-> > - **Anything handling JSON/XML** -- bash has no native structured data support. Use Python with `json`/`xml` modules or `jq`.
 
 ## Warnings
 

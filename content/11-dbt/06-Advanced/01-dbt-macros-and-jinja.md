@@ -194,17 +194,6 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 > >
 > > If this distinction is blurred, macros, hooks, and dynamic SQL all become difficult to reason about. Treat compile time as code generation and run time as warehouse execution.
 
-> [!example] Macro Design Scope
->
-> > [!success] Controlled Reuse
-> >
-> > - Use macros when the same SQL fragment, audit hook, or adapter abstraction repeats often enough that copy-paste would create maintenance drift across models or projects.
-> > - Keep macro interfaces narrow and explicit when generating finance calculations, hooks, or cross-adapter SQL so reviewers can still understand the compiled behavior.
->
-> > [!failure] Opaque Logic
-> >
-> > - Avoid burying core business transformations inside deep macro stacks that make the real SQL hard to review, test, or debug.
-> > - Do not let macros generate non-idempotent side effects or depend on brittle environment-name branching when straightforward model SQL would be clearer and safer.
 
 ## Jinja2 Fundamentals
 

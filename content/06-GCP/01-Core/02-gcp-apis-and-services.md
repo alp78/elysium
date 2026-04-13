@@ -200,19 +200,6 @@ status: complete
 
 Service enablement is one of the easiest places to misunderstand Google Cloud because it sits between IAM and runtime access. A principal can have the right roles and still fail immediately if the API is disabled in the target project. The reverse is also true: a project can have the API enabled and still fail if the caller lacks IAM or the request exceeds quota.
 
-> [!example] API Activation Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note before product-specific `gcloud`, SDK, Terraform, or client-library work so service enablement is verified before deeper debugging starts.
-> > - Use it during project bootstrap, when auditing the enabled service surface, or when diagnosing `API not enabled` failures that look like IAM problems.
-> > - Use it before cleanup or hardening work when enable and disable operations must be reviewed as explicit control-plane changes.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat the broad `--available` catalog as a curated shortlist of Google services you should automatically enable.
-> > - Do not disable APIs casually in shared or production projects, especially when dependent services or existing resources still rely on them.
-> > - Do not confuse service activation with authorization; enablement and IAM are separate gates.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

@@ -368,19 +368,6 @@ tags:
 > >
 > > This feature improves developer ergonomics or repository scale, but it adds assumptions that automation and teammates also need to understand.
 
-> [!example] Bootstrap Context
->
-> > [!success] Appropriate
-> >
-> > - Use this note for first-time machine setup, repository bootstrap, identity changes, credential rotation, or policy hardening before collaborative Git work starts.
-> > - Use it when installation path, auth method, config scope, line-ending policy, or pre-commit safeguards still need to be made explicit and repeatable.
-> > - Use it to separate personal versus work identity and to prove the machine is ready before any day-to-day branch work begins.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as the main guide for conflict resolution, branch recovery, or routine daily Git flow once the environment is already operating normally.
-> > - Do not stop at local config if the real issue is collaborative policy around merge strategy, PR review, or remote topology.
-> > - Do not treat installation as complete until auth, normalization, and repository bootstrap have all been validated end to end.
 
 ## Mental Model — How Git's Layers Connect
 

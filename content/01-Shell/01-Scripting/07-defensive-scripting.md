@@ -535,20 +535,6 @@ finally {
 ```
 
 
-> [!example] Defensive Script Scope
->
-> > [!success] Appropriate
-> >
-> > - **Every production script** -- `set -euo pipefail` with a `trap EXIT` cleanup should be the first lines of every bash script that runs in CI/CD, cron, Airflow, or any automated context.
-> > - **Any script that modifies data** -- scripts that truncate tables, delete files, move data, or restart services must fail fast. A half-completed destructive operation is worse than a complete failure.
-> > - **Multi-step deployment scripts** -- `git pull && build && restart` patterns rely on exit codes. Without `set -e`, a failed build does not prevent a restart with broken code.
-> > - **Scripts handling credentials** -- combine `set -u` with `${VAR:?ERROR}` to guarantee required environment variables are set before accessing secrets.
->
-> > [!failure] Inappropriate
-> >
-> > - **Interactive one-liners** -- `set -euo pipefail` in an interactive shell causes confusing exits on benign patterns like `grep pattern | head` (SIGPIPE). Use it in scripts only.
-> > - **Scripts that intentionally check for failure** -- if the script logic depends on testing whether commands fail, use `if ! command; then` or `command || true` rather than disabling `set -e` globally.
-> > - **Sourced library files** -- files intended to be sourced (`. library.sh`) should not set `set -euo pipefail` because the flags would affect the caller environment.
 
 ## Warnings
 

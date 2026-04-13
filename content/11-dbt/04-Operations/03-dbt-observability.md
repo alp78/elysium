@@ -143,17 +143,6 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 > >
 > > Poorly tuned monitors create either silence or alert fatigue. Good observability depends on thresholds and routing being calibrated to real operational impact.
 
-> [!example] Monitoring Scope
->
-> > [!success] Production Signal
-> >
-> > - Build dbt observability when production runs need artifact-level metrics, freshness alarms, anomaly detection, and routed incidents instead of a single pass-or-fail scheduler outcome.
-> > - Combine dbt-native signals with Datadog, Elementary, and Airflow routing when failures must be triaged quickly by people outside the core transformation team.
->
-> > [!failure] False Assurance
-> >
-> > - Do not use observability tooling as a substitute for tests, contracts, or basic scheduler hygiene, because it surfaces execution problems but does not define correctness on its own.
-> > - Avoid shipping every possible metric without ownership, thresholds, and routing rules; noisy dashboards and alert fatigue make real failures harder to see.
 
 ## dbt Artifacts Overview
 

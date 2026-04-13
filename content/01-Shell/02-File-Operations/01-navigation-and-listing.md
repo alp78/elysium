@@ -433,21 +433,6 @@ Get-PSDrive -PSProvider FileSystem | Format-Table Name,
 For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [system-resources](https://alp78.github.io/elysium/01-Shell/04-Process-Management/04-system-resources) which covers `vmstat`, `iostat`, and automated alerting patterns.
 
 
-> [!example] Filesystem Survey Fit
->
-> > [!success] Appropriate
-> >
-> > - **Verifying pipeline output** -- after a pipeline run, `ls -lhrt` confirms what files were produced, their sizes, and when they were written.
-> > - **Diagnosing disk pressure** -- `du -h --max-depth=1 | sort -rh` identifies the largest consumers. `df -h` confirms remaining headroom. Run these before any remediation.
-> > - **Investigating inode exhaustion** -- `df -i` reveals whether "no space left on device" is a byte problem or an inode problem.
-> > - **Surveying project structure** -- `tree -L 2 --dirsfirst` gives a quick visual overview of a repo or data directory.
-> > - **Pre-flight checks in scripts** -- verify that target directories exist and have sufficient space before starting large data operations.
->
-> > [!failure] Inappropriate
-> >
-> > - **Parsing `ls` output in scripts** -- `ls` output is for humans. Filenames with spaces, newlines, or glob characters break any script that parses `ls`. Use `find`, `stat`, or shell globs instead.
-> > - **Monitoring disk space in production** -- manual `df` checks do not scale. Use a monitoring agent (Datadog, Cloud Monitoring, Prometheus node_exporter) with threshold-based alerts.
-> > - **Counting files in very large directories** -- `ls` and `Get-ChildItem` load all entries into memory. For directories with millions of files, use `find . -maxdepth 1 | wc -l` which streams results.
 
 ## Warnings
 

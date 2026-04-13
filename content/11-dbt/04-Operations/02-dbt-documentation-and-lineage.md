@@ -153,17 +153,6 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 > >
 > > In high-stakes reporting, consumers do not just need a table name. They need to know how it was built, what it depends on, and where to inspect the logic behind it.
 
-> [!example] Lineage Publication Fit
->
-> > [!success] Shared Discoverability
-> >
-> > - Publish dbt docs and lineage when analysts, engineers, auditors, or downstream owners need to understand model meaning, dependencies, and consumer impact without reading project SQL directly.
-> > - Treat exposures, hosted docs, and versioned publication as part of the production interface when other teams rely on the lineage view for review, onboarding, or change assessment.
->
-> > [!failure] Metadata Theater
-> >
-> > - Do not expect generated docs to rescue poorly described models; empty descriptions and missing exposures still produce a catalog that looks complete while explaining very little.
-> > - Avoid treating the docs site as authoritative if it is not regenerated reliably from CI against the current project and warehouse state, because stale lineage is operationally misleading.
 
 ## Generating and Serving Docs
 

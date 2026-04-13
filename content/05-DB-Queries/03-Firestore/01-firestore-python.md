@@ -2300,25 +2300,6 @@ for k, v in config.items():
   rows_per_page: 25
 ```
 
-> [!example] Document Model Fit
->
-> > [!success] Operational Sweet Spot
-> >
-> > - Firestore is the right tool when the workload needs low-latency single-document lookups, real-time sync to mobile or web clients, schema-flexible data, or operational metadata like pipeline run logs. Its document model and native push listeners excel where a relational database or a columnar warehouse would be overkill.
-> > - **Low-latency document lookups** — Firestore returns single documents in <10ms. For user-facing dashboards that need to render a single stock's data instantly, Firestore outperforms SQL queries.
-> > - **Real-time sync** — `on_snapshot` listeners push changes to clients within seconds. Ideal for live alerting dashboards, watchlist updates, and config propagation.
-> > - **Schema-flexible data** — when document structures vary between records (e.g., some stocks have ESG scores, others don't), Firestore's schema-less nature avoids nullable columns.
-> > - **Mobile / web clients** — Firestore has native SDKs for iOS, Android, and JavaScript with built-in offline persistence and automatic sync.
-> > - **Operational metadata** — pipeline run logs, alert queues, and singleton config documents are a natural fit for Firestore's document model.
->
-> > [!failure] Analytical Mismatch
-> >
-> > - Firestore is the wrong tool when the workload needs analytical aggregation, cross-collection joins, or cost-efficient full scans. These shapes belong on BigQuery or SQL Server, with Firestore restricted to the operational metadata layer.
-> > - **Analytical aggregation** — Firestore has no window functions, no GROUP BY, no JOINs. Server-side aggregation is limited to COUNT, SUM, AVG. Use BigQuery for analytics.
-> > - **Cross-collection queries** — Firestore has no JOINs. If you need to combine data from `stocks` and `sectors`, you must either denormalize the data or perform client-side joins.
-> > - **Large result sets** — Firestore charges per document read. Scanning 65,000 OHLCV rows costs 65,000 reads. BigQuery scans the same data for pennies.
-> > - **Complex filtering** — Firestore requires a composite index for every unique combination of filters and ordering. Queries with 3+ filter fields become index-management overhead.
-> > - **Transactions over 500 documents** — Firestore limits transactions to 500 operations. For batch processing thousands of rows, use BigQuery or SQL Server.
 
 ## Warnings
 

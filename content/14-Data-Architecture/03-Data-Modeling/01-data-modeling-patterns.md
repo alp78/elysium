@@ -154,15 +154,6 @@ erDiagram
     }
 ```
 
-> [!example] Model Selection Scope
->
-> > [!success] Layered Choice
-> >
-> > - Use this note when you need to compare modeling strategies across different platform layers and accept that one physical model will not satisfy every consumer, latency profile, and history requirement equally well.
->
-> > [!failure] Single-Model Dogma
-> >
-> > - Do not use this note to justify forcing one model everywhere, especially when analytical, operational, historical, and event-driven needs clearly diverge.
 
 ## Choosing a Data Model — Decision Framework
 

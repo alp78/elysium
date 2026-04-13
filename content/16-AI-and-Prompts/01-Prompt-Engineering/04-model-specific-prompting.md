@@ -135,19 +135,6 @@ status: complete
 > >
 > > Sending sensitive context to the wrong execution boundary can create a governance failure even if the model output itself is accurate.
 
-> [!example] Model Routing Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for model-routing design, vendor migration planning, latency and cost tuning, data-boundary decisions, and any workflow that mixes several model classes.
-> > - Use it when the system needs controlled portability across hosted, local, reasoning-heavy, long-context, or tool-native models.
-> > - Use it to decide whether the right fix is prompt change, application change, or model change before more prose is added blindly.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use model selection as a justification to paper over weak prompt structure, weak retrieval, or missing validators with a larger or more expensive model.
-> > - Do not assume long context or frontier size eliminates the need for relevance filtering, approvals, or deterministic safeguards.
-> > - Do not treat portability as exact wording portability when provider and model behavior materially differ.
 
 ## Why this topic matters
 

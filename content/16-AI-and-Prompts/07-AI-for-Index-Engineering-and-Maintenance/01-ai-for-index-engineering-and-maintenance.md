@@ -134,19 +134,6 @@ status: complete
 > >
 > > The closer a step is to benchmark publication or constituent change, the stronger the approval and deterministic control should be.
 
-> [!example] Benchmark Review Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when analysts need faster retrieval, explanation, and triage for methodology-heavy or exception-heavy index workflows that still remain inside controlled review paths.
-> > - Use it when AI should help interpret methodology, explain anomalies, and prepare reviewer context while deterministic logic and governed approvals keep ownership of benchmark outcomes.
-> > - Use it to preserve methodology version, date snapshot, and evidence references in every AI-assisted case.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use AI for approving constituent changes, weight updates, publication decisions, or any step that would let it replace governed benchmark logic.
-> > - Do not confuse a helpful summary with authority over methodology or point-in-time benchmark treatment.
-> > - Do not let reviewer packets become silent approval shortcuts for benchmark-affecting decisions.
 
 ## Why this topic matters
 

@@ -157,15 +157,6 @@ The core architectural implication: **OLTP → normalize to reduce write amplifi
 
 ---
 
-> [!example] Warehouse Architecture Fit
->
-> > [!success] Analytical Workloads
-> >
-> > - Use a warehouse architecture when the workload is analytical, read-heavy, and benefits from structured historical data modeled for aggregation, consistent metrics, and business-facing querying.
->
-> > [!failure] Transactional Mismatch
-> >
-> > - Do not force a warehouse into primary high-concurrency transactional writes, point lookups, or application state management.
 
 ## The Kimball Methodology: Dimensional Modeling
 

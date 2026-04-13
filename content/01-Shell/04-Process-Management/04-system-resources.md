@@ -619,21 +619,6 @@ A queue length of 0.82 means the device is handling requests as fast as they arr
 | `\PhysicalDisk(*)\Disk Write Bytes/sec` | Write throughput in bytes per second |
 
 
-> [!example] Resource Diagnostics Fit
->
-> > [!success] Appropriate
-> >
-> > - **Diagnosing slow systems** -- `free -h` (RAM), `vmstat 1` (overall), and `iostat -x 1` (disk) identify which resource is the bottleneck.
-> > - **Capacity planning** -- monitoring RAM, CPU, and disk I/O trends over time reveals when a VM needs more resources.
-> > - **Pre-deployment checks** -- verify sufficient free memory and disk space before deploying new services or running large data loads.
-> > - **Incident response** -- during an outage, `vmstat 1` and `iostat -x 1` provide immediate real-time visibility into system health.
-> > - **Database performance tuning** -- SQL Server and PostgreSQL performance is directly tied to memory availability, disk I/O throughput, and CPU capacity.
->
-> > [!failure] Inappropriate
-> >
-> > - **Long-term trend analysis** -- shell tools show current state only. For historical trends, use monitoring platforms (Datadog, Cloud Monitoring, Prometheus + Grafana).
-> > - **Automated alerting** -- manual monitoring does not scale. Configure threshold-based alerts in your monitoring system for CPU > 80%, memory available < 1 GB, disk utilization > 85%.
-> > - **Application-level bottlenecks** -- system resource tools show OS-level metrics. For query-level analysis, use database DMVs. For code-level profiling, use language-specific profilers.
 
 ## Warnings
 

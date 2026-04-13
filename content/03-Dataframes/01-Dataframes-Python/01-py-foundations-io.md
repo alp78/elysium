@@ -4651,25 +4651,6 @@ guess wrong on dates, nulls, or mixed-type columns.
 
 ---
 
-> [!example] In-Memory DataFrame Fit
->
-> > [!success] Applicability
-> >
-> > - **Data fits in memory** — the dataset is small enough to load entirely into RAM (typically under 1–10 GB depending on machine resources). For a 32 GB machine, plan for datasets no larger than ~5 GB in raw form, since operations like joins and pivots temporarily double or triple memory usage.
-> > - **Analytical workloads** — filtering, grouping, aggregating, joining, and reshaping tabular data where the full result is needed in one pass.
-> > - **Exploratory data analysis (EDA)** — interactive investigation of a dataset's shape, distributions, and quality before building a pipeline.
-> > - **Feature engineering** — deriving new columns, computing rolling windows, or encoding categoricals for machine learning or index construction.
-> > - **Side-by-side comparison** — evaluating Pandas vs Polars behavior before choosing a library for a production pipeline.
->
-> > [!failure] Limitations
-> >
-> > - **Data exceeds available RAM** — Out-of-memory crash or heavy swap thrashing. Better tool: SQL database, DuckDB, Spark, or Polars lazy with streaming (if supported)
-> > - **Real-time streaming data** — DataFrames are batch-oriented — no built-in mechanism for continuous ingestion. Better tool: Kafka, Flink, Spark Structured Streaming
-> > - **Transactional writes (OLTP)** — DataFrames have no row-level locking, indexing, or ACID guarantees. Better tool: PostgreSQL, SQL Server, or any RDBMS
-> > - **Complex multi-table relational logic** — Joins across 5+ normalized tables with referential integrity constraints. Better tool: SQL or an ORM layer
-> > - **Warehouse-scale transformations** — DataFrames run single-node; distributed compute is needed. Better tool: dbt + warehouse engine, Spark, BigQuery
-> > - **Simple key-value lookups** — Full DataFrame overhead is unnecessary for dictionary-style access. Better tool: Python `dict`, Redis, or a key-value store
-> > - **Rule of thumb** — If the data fits in memory, the logic is columnar, and you need the result in a notebook or script — use a DataFrame. If any of those three conditions is false, evaluate SQL, a warehouse engine, or a streaming framework first.
 
 ## Warnings
 

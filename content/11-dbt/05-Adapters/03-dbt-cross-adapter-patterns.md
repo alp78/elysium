@@ -184,17 +184,6 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 > >
 > > This ordering narrows failures to the current layer. It is much easier to debug broken marts when the staging and intermediate contracts are already known-good.
 
-> [!example] Portability Strategy Fit
->
-> > [!success] Shared Codebase
-> >
-> > - Use these patterns when one dbt codebase must compile across multiple warehouses, or when a migration needs a staged boundary between shared business logic and adapter-specific SQL.
-> > - Prefer dispatch macros and adapter-aware CI when portability matters enough that you need to stop `target.type` branches from spreading through core models.
->
-> > [!failure] Single-Target Simplicity
-> >
-> > - Keep the project simpler if it is permanently single-adapter, because dispatch layers and matrix testing add abstraction cost without buying real portability.
-> > - Do not hide fundamentally different model behavior behind cross-adapter abstractions; if the SQL shape diverges materially by platform, isolate that logic in adapter-specific folders instead.
 
 ### The Cross-Adapter Problem
 

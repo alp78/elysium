@@ -220,19 +220,6 @@ status: complete
 
 Cost monitoring fails in two common ways. The first is no control plane at all, where teams only discover spend at invoice time. The second is a fake control plane, where dashboards and notes assume exports, budgets, or anomaly feeds exist even though the project has never enabled them. `bq-wh-nb` is currently in the second category if you rely on the old placeholder chapter, so the safe path is to document exactly which surfaces exist and which do not.
 
-> [!example] Cost Control Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when you need to verify whether budgets, anomaly surfaces, notifications, recommendations, and scheduled responses are actually live in `bq-wh-nb`.
-> > - Use it when billing export is missing and you still need temporary workload proxies, investigation paths, and safe sequencing for building a real cost-control plane.
-> > - Use it to design selective response workflows only after proving the required APIs, Pub/Sub delivery path, and scheduler surfaces exist.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat proxy telemetry such as BigQuery job metadata or logging-ingestion metrics as invoice-grade billing truth.
-> > - Do not claim that budgets, anomaly feeds, or recommendation-driven optimization are operational while the relevant APIs and messaging surfaces are still disabled.
-> > - Do not automate blunt enforcement against critical resources until the project has a real control plane, rollback plan, and a validated list of non-critical targets.
 
 ## Conceptual Model
 

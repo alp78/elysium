@@ -2022,22 +2022,6 @@ display(df.to_dummies())
 
 ---
 
-> [!example] Aggregation and Reshaping Fit
->
-> > [!success] Applicability
-> >
-> > - **Group-by + agg** — when you need per-group summaries: average price by sector, count by status, total volume by month. This is the most common aggregation pattern in analytical pipelines.
-> > - **Window functions** — when you need per-row values that depend on surrounding rows within a group (rank, running total, moving average, lag) without collapsing the DataFrame.
-> > - **Joins** — when data lives in multiple tables and you need to combine them by a shared key (enriching fact data with dimension attributes, filtering by membership).
-> > - **Reshape (pivot/melt)** — when the analysis, visualization, or export target requires a different orientation than the source data.
->
-> > [!failure] Limitations
-> >
-> > - **Aggregation across 100M+ rows in memory** — Group-by materializes all groups in RAM — may OOM. Better approach: Use Polars lazy with streaming, DuckDB, or push aggregation to the database
-> > - **Joins on non-unique keys without cardinality check** — Many-to-many joins silently explode row count. Better approach: Deduplicate or use `validate="one_to_many"` before joining
-> > - **Cross join on large tables** — Cartesian product grows quadratically — 10K x 10K = 100M rows. Better approach: Filter one side first, or compute only the combinations you need
-> > - **Complex multi-hop joins (5+ tables)** — DataFrame join chains become unreadable and hard to debug. Better approach: Use SQL (via DuckDB, SQLAlchemy, or a warehouse) for complex relational logic
-> > - **Reshaping when the schema is unknown at development time** — Pivot column values are dynamic — code breaks when new values appear. Better approach: Validate the set of pivot values before reshaping; or use a long-format design that avoids pivoting
 
 ## Warnings
 

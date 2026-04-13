@@ -212,19 +212,6 @@ tags:
 > >
 > > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-> [!example] Branch Integration Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for feature isolation, controlled integration, backports, hotfixes, and structured branch cleanup before review or merge.
-> > - Use it when the real question is how branches, `HEAD`, merge shape, and recovery tools interact, not just which single Git command to type next.
-> > - Use it to choose an integration path deliberately and to recover dropped or mispointed work without panic resets.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not rebase, force-delete, or otherwise rewrite shared branches without coordination and clear ownership.
-> > - Do not treat stash entries as durable storage for active work that really belongs on a branch or worktree.
-> > - Do not reduce branch strategy to aesthetics; merge shape affects traceability, recovery, and review ergonomics.
 
 ## Conceptual Model
 

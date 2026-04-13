@@ -123,7 +123,7 @@ tags:
 > > [!warning] Operational blast radius
 > >
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
-
+>
 > ---
 >
 > **Artifact attestation**
@@ -334,19 +334,6 @@ tags:
 > >
 > > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
 
-> [!example] Failure Analysis Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for incident review, security auditing, workflow hardening, and postmortems where the question is how GitHub Actions failures propagate across repositories, runners, and environments.
-> > - Use it when a broken run may reflect a trust-boundary mistake, poisoned cache, mutable action, deployment race, or governance gap rather than a simple syntax error.
-> > - Use it to train reviewers and operators on predictable failure classes before those classes become production incidents.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not start here as a beginner tutorial if the team still needs the safe baseline from the fundamentals, patterns, or CI/CD notes.
-> > - Do not use this page as the only design reference for new workflows; it explains how systems fail, not how to build the full happy path from scratch.
-> > - Do not treat every Actions problem as a local YAML bug when the real issue may be trust, identity, or runner persistence described here.
 
 ## Trigger and Event Mistakes
 

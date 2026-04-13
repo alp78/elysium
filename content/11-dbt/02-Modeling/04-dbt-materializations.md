@@ -163,19 +163,6 @@ description: "View table incremental ephemeral snapshot deep dive"
 > >
 > > Insert_overwrite is powerful when the warehouse and table design support it, but it assumes partition boundaries are the right unit of replacement.
 
-> [!example] Persistence Strategy Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when selecting or reviewing how a model should persist, rebuild, or accumulate state in the warehouse based on data volume, query patterns, and change semantics.
-> > - Use it when the same logical SQL could be correct under several materializations, but cost, rebuild behavior, and downstream expectations differ materially.
-> > - Use it to reason about state, history, and performance before choosing `view`, `table`, `incremental`, `ephemeral`, or `snapshot`.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a substitute for layer design when the real issue is whether logic belongs in staging, intermediate, or mart models in the first place.
-> > - Do not choose an optimization-heavy materialization just to make one slow query disappear if the underlying change model is still unclear.
-> > - Do not deploy incrementals or snapshots without a well-defined correctness story for late data, keys, and change capture.
 
 ### The Five Materialisation Types
 

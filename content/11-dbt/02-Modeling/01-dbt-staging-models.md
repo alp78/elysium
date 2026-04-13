@@ -143,19 +143,6 @@ description: "Staging models 1:1 with source, source freshness"
 > >
 > > A little business logic in staging feels harmless until many models depend on it. By then, the layer boundary is gone and refactoring becomes much harder.
 
-> [!example] Staging Boundary Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when creating the first modeled layer on top of raw warehouse tables, onboarding new domains, or reviewing whether source cleanup logic is still staying inside the staging contract.
-> > - Use it when the team needs to enforce 1:1 source alignment, rename-and-cast discipline, freshness declarations, and auditable structural cleanup.
-> > - Use it to keep raw-boundary assumptions explicit before any joins, scoring, or broader business logic enter the graph.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use staging for cross-source joins, business rules, scoring logic, or downstream consumer shaping that belongs in intermediate or mart models.
-> > - Do not hide important raw-source behavior by skipping source declarations or freshness rules.
-> > - Do not let surrogate keys or light derivations redefine grain under the label of “cleanup.”
 
 ### Staging Model Core Principles
 

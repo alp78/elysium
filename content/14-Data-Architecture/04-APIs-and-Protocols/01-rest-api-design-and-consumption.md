@@ -157,15 +157,6 @@ status: complete
 > > mTLS improves trust at the transport layer, but certificate issuance, rotation, and troubleshooting add real operational complexity.
 >
 
-> [!example] REST Interface Fit
->
-> > [!success] Broad HTTP Adoption
-> >
-> > - Use REST when you need to consume vendor or SaaS APIs, or expose processed data and platform state through internal HTTP interfaces that many consumers can adopt quickly.
->
-> > [!failure] Low-Latency or Streaming Mismatch
-> >
-> > - Do not default to REST for ultra-low-latency internal hops, streaming-heavy binary pipelines, or cases where gRPC or eventing protocols fit the workload better.
 
 ## REST Fundamentals for Data Engineers
 

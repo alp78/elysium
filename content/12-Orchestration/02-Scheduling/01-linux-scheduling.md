@@ -186,19 +186,6 @@ status: complete
 > >
 > > A well-scheduled job can still create an outage if its logs grow without bounds. Retention and compression need to be part of the scheduler design.
 
-> [!example] Host-Level Scheduling Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when a single Linux host or VM needs reliable local scheduling without the full complexity of Airflow or a managed cloud orchestrator.
-> > - Use it when the real choice is between cron, systemd timers, `at`, `batch`, and anacron, along with the environment, locking, and logging patterns required to run them safely.
-> > - Use it for host-bound automation such as backups, local pipeline launchers, health checks, and periodic maintenance where the machine itself is the execution boundary.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use host-level scheduling when the workflow needs cross-task dependencies, centralized state, rich retries, or multi-step orchestration better handled by Airflow or managed cloud services.
-> > - Do not assume cron alone is enough for dependency-aware services, missed-run recovery, or richer observability if systemd timers are the better fit.
-> > - Do not treat a scheduled shell command as production-safe until environment, overlap control, timezone, and logging have been designed explicitly.
 
 ## Cron and Crontab
 

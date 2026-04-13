@@ -260,19 +260,6 @@ Bucket design is therefore about four things at once:
 - **Recovery.** How versioning, soft delete, retention, and restore interact.
 - **Governance.** How IAM, default holds, managed folders, and lock semantics constrain mutations.
 
-> [!example] Bucket Design Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when bucket design needs to reflect distinct operational roles such as landing, processing, export, backup, or replay rather than one generic catch-all container.
-> > - Use it when hierarchical namespace, managed folders, lifecycle rules, Autoclass, retention, and soft delete must be chosen intentionally based on real workload behavior.
-> > - Use it when recovery, governance, and cost controls must be part of the bucket design from the start instead of retrofitted later.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not collapse unrelated workloads into one catch-all bucket when access, retention, and lifecycle behavior differ materially.
-> > - Do not combine manual class-transition lifecycle rules with an Autoclass bucket.
-> > - Do not lock retention on disposable or still-unvalidated infrastructure before the recovery and cleanup behavior is fully understood.
 
 ## Conceptual Model
 

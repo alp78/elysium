@@ -4230,21 +4230,6 @@ Test tables and procedures cleaned up
 
 ---
 
-> [!example] Database Interface Fit
->
-> > [!success] Applicability
-> >
-> > - **Polars SQLContext** — when team members are SQL-fluent and the data is already in memory. Avoids learning the full Polars expression API for one-off queries.
-> > - **DuckDB** — when analytical queries require CTEs, window functions, or set operations that are more naturally expressed in SQL than in DataFrame expressions.
-> > - **SQLAlchemy + Pandas** — when reading from or writing to a relational database in a Python pipeline. The standard approach for database-backed ETL.
-> > - **pyodbc** — when you need cursor-level control: stored procedures with output parameters, bulk insert with `fast_executemany`, or non-standard SQL Server features.
->
-> > [!failure] Limitations
-> >
-> > - **Querying data larger than RAM via SQLContext/DuckDB** — Both operate on in-memory DataFrames — no streaming or pagination by default. Better approach: Push the query to the database server; use OFFSET/FETCH for batched reads
-> > - **High-concurrency transactional writes** — DataFrames are batch-oriented — no row-level locking or transaction isolation. Better approach: Use an ORM (SQLAlchemy with sessions) or database-native transactions
-> > - **Real-time CDC or streaming ingestion** — DataFrame reads are snapshots — no change tracking or incremental loading. Better approach: Use database CDC features, Debezium, or Kafka Connect
-> > - **Complex stored procedure orchestration** — DataFrame tools execute stored procedures but don't manage dependencies or error handling across multiple procedures. Better approach: Use a database-native workflow (SQL Agent, dbt, Airflow)
 
 ## Warnings
 

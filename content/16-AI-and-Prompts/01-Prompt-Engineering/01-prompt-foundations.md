@@ -155,19 +155,6 @@ status: complete
 > >
 > > A system that cannot admit uncertainty will often produce polished guesses exactly where the workflow most needs caution.
 
-> [!example] Prompt Contract Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for prompt design in document extraction, analyst assistance, structured summarization, reviewer packets, and any workflow where AI output must be understandable to both humans and systems.
-> > - Use it when the real design question is how to define the task, evidence boundary, output contract, and uncertainty behavior clearly enough for production review and validation.
-> > - Use it as the baseline for teams that need to move from ad hoc prompting to prompt contracts that can be versioned and discussed like application logic.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use prompt wording as a substitute for missing validators, missing data contracts, weak retrieval, or explicit approval boundaries.
-> > - Do not expect a foundational prompt to rescue a workflow whose surrounding system design is still ambiguous or unsafe.
-> > - Do not confuse fluent output with grounded output; this note is about contract clarity, not rhetorical polish.
 
 ## Why this topic matters
 

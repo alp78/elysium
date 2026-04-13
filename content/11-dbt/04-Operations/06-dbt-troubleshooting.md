@@ -153,17 +153,6 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 > >
 > > A narrow reproduction is usually the fastest route to clarity. Broad reruns add latency and noise without necessarily adding understanding.
 
-> [!example] Failure Diagnosis Scope
->
-> > [!success] Narrow Diagnosis
-> >
-> > - Use this workflow when a dbt run has already failed and you need to classify whether the breakage is in compilation, runtime SQL, tests, incremental state, snapshots, or environment setup before choosing a fix.
-> > - Start with the smallest reproducing command and the most specific artifact or failure table available, so the repair can be verified without rerunning the whole project.
->
-> > [!failure] Structural Recurrence
-> >
-> > - Do not use troubleshooting as a substitute for upstream prevention when the same class of failure keeps returning; repeated incidents usually point to missing tests, weak contracts, poor orchestration, or fragile model design.
-> > - Avoid broad reruns as a first reflex, because they consume time and compute while often obscuring the exact layer that actually failed.
 
 ### dbt First Responder Commands
 

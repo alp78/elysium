@@ -190,15 +190,6 @@ erDiagram
     }
 ```
 
-> [!example] Analytical Modeling Fit
->
-> > [!success] Star-Schema Workloads
-> >
-> > - Use dimensional modeling for reporting, BI, and repeated slice-and-dice warehouse workloads where declared grain, human-readable schemas, and predictable joins matter more than write flexibility.
->
-> > [!failure] Operational or Flexible Workloads
-> >
-> > - Avoid treating dimensional modeling as the default for high-write OLTP systems, pure append-event logs, or workloads where schema flexibility matters more than analytical usability.
 
 ## The Kimball Four-Step Dimensional Design Process
 

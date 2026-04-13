@@ -226,19 +226,6 @@ status: complete
 > >
 > > The target VM database is not a byte-for-byte copy of the local source. It is a curated publication that keeps only the medallion-serving layers.
 
-> [!example] Self-Managed SQL Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this pattern for self-managed SQL Server workloads that need full control over edition, file layout, restore workflow, disk placement, startup sequence, and cost profile.
-> > - Use it when dedicated data, log, and TempDB disks, private IAP-only access, and VM-level operating-system control are explicit requirements.
-> > - Use it when the team is prepared to own package management, storage layout, startup safety, backup, firewalling, and teardown discipline.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not choose this route when managed patching, managed HA, and service simplicity matter more than low-level control.
-> > - Do not use Developer Edition assumptions for production licensing decisions.
-> > - Do not allow SQL Server to start when required mount points are missing or storage layout is not yet verified.
 
 ## Conceptual Model
 

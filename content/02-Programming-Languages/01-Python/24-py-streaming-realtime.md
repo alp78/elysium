@@ -1100,17 +1100,6 @@ Architecture reference for large-scale data movement — MFT gateways, GCS Trans
 
 Dedicated gateways that handle large file transfers with multiplexing, packet-level resume, bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.
 
-> [!example] MFT Workload Fit
->
-> > [!success] Governed Transfer
-> >
-> > - Use MFT when the transfer path itself is a governed business process: regulated delivery, partner accountability, audit logs, encryption policy, and resumable large-file exchange all matter.
-> > - Choose it for multi-partner B2B file movement and very large payloads where restartable transfers, delivery receipts, and operational visibility are more important than minimal infrastructure.
->
-> > [!failure] Native Cloud Path
-> >
-> > - Avoid MFT for internal cloud-to-cloud transfers inside one platform; native storage replication, Transfer Service, or direct service integration is usually simpler and cheaper.
-> > - Do not put MFT in a low-latency streaming path; it is built for governed file movement, not event-by-event real-time delivery.
 
 
 #### GCS Transfer Service — scheduled cross-cloud transfers

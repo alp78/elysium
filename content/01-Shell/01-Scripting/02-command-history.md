@@ -701,20 +701,6 @@ sqlcmd -S 10.132.0.2 -U sa -P $env:SA_PASSWORD -d analytics_db -Q "SELECT TOP 10
 After running the first command, press `Ctrl+R` and type `sqlcmd`. PSReadLine brings up the most recent match. Press `→` to move the cursor into the line and edit the `-Q` argument, then press `Enter`.
 
 
-> [!example] Ad-Hoc Recall Fit
->
-> > [!success] Appropriate
-> >
-> > - **Incident response** — reconstructing what happened on a server during a window of time. With `HISTTIMEFORMAT` set, history becomes an audit trail.
-> > - **Iterative command development** — refining a complex `sqlcmd`, `gcloud`, or pipeline command by recalling and modifying the previous version rather than retyping it.
-> > - **Learning and documentation** — reviewing history after a session to extract the exact commands that resolved an issue, for runbooks or postmortems.
-> > - **Productivity** — `Ctrl+R`, `!!`, `sudo !!`, and `$_` are some of the highest-leverage shell shortcuts. Mastering them removes significant friction from daily operations.
->
-> > [!failure] Inappropriate
-> >
-> > - **Sensitive commands with inline credentials** — if `HISTCONTROL` is not set to `ignorespace` and you forget the leading space, credentials are recorded in plain text. Use environment variables or secret managers instead of inline secrets.
-> > - **Complex multi-step automation** — if you find yourself recalling and chaining the same 5 commands repeatedly, write a script instead. History recall is for ad-hoc work, not repeatable workflows.
-> > - **Shared accounts or jump boxes** — on shared-user environments, history is shared. Any user can see commands (and possibly credentials) from other sessions under the same account.
 
 ## Warnings
 

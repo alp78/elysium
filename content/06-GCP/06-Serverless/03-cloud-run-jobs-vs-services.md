@@ -208,19 +208,6 @@ status: complete
 > >
 > > If the workload is small and event-driven, Cloud Functions may remove container-management overhead entirely. Cloud Run is strongest when runtime control is the priority.
 
-> [!example] Execution Model Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Cloud Run Jobs for run-to-completion pipeline stages such as ETL, exports, backfills, scoring runs, or migrations that should start, finish, and leave an execution record.
-> > - Use Cloud Run Services for HTTP-facing workloads such as APIs, webhook receivers, Pub/Sub push endpoints, and dashboards that must stay ready for requests.
-> > - Use Cloud Run when the workload needs custom containers, regional serverless deployment, managed identity, and scale-to-zero economics without VM administration.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not put finite batch work behind a Service just because it uses HTTP somewhere in the surrounding architecture; that usually creates the wrong lifecycle and billing model.
-> > - Do not choose a Job for an always-on request path, because Jobs do not expose a stable serving endpoint and they cold start on every execution.
-> > - Do not pay for `min-instances`, always-allocated CPU, or other latency tuning unless the request SLO or business deadline is strong enough to justify the idle spend.
 
 ## Jobs vs Services Overview
 

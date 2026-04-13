@@ -133,17 +133,6 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 > >
 > > If the orchestration layer cannot isolate reruns, teams often pay for broader reruns and slower recovery than the underlying dbt failure actually required.
 
-> [!example] Orchestration Fit
->
-> > [!success] Central Control
-> >
-> > - Use Airflow to run dbt when schedules, retries, alerts, upstream ingestion, downstream publication, and cross-system dependencies all need to be coordinated in one control plane.
-> > - Choose model-aware or isolated execution patterns only when finer reruns, clearer failure isolation, or runtime encapsulation materially improve recovery.
->
-> > [!failure] Lightweight Execution
-> >
-> > - Avoid this pattern for a small dbt project that only needs a simple CI, cron, or dbt Cloud-style execution path, because Airflow adds operational surface area you may not need.
-> > - Do not explode every dbt node into Airflow tasks unless that granularity changes how you debug or rerun failures; otherwise the DAG becomes noisy without giving real leverage.
 
 ### Airflow BashOperator Wrapping dbt run
 

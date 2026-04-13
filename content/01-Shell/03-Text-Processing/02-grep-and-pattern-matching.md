@@ -2466,22 +2466,6 @@ Get-ChildItem -Recurse -Filter *.sql |
 ---
 
 
-> [!example] Pattern Search Fit
->
-> > [!success] Appropriate
-> >
-> > - **Log analysis during incidents** -- `grep -E "ERROR|FATAL|TIMEOUT" app.log` surfaces critical errors. Add `-C 5` for surrounding context.
-> > - **Config validation** -- `grep -r "DB_HOST" /etc/` finds where a setting is defined across all config files.
-> > - **Pipeline output verification** -- `grep -c "^" output.csv` counts lines. `grep -v "^$" data.csv | wc -l` counts non-empty lines.
-> > - **Code search** -- `rg "TODO|FIXME|HACK" --type py` finds technical debt across a Python codebase.
-> > - **Security auditing** -- `grep -rn "password\|secret\|token" --include="*.py" .` finds potential credential leaks in source code.
->
-> > [!failure] Inappropriate
-> >
-> > - **Structured data extraction** -- if you need specific CSV columns or JSON fields, use `awk`, `cut`, `jq`, or a dataframe library. grep finds lines, not fields.
-> > - **Multi-line pattern matching** -- grep processes one line at a time. For patterns spanning multiple lines, use `awk`, `sed`, or `pcregrep -M`.
-> > - **Complex text transformation** -- grep finds matches but does not modify them. Use `sed` for substitution or `awk` for field-level transformation.
-> > - **Binary file analysis** -- grep on binary files produces garbage output. Use `strings`, `xxd`, or dedicated binary analysis tools.
 
 ## Warnings
 

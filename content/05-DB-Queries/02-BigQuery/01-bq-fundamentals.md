@@ -1905,24 +1905,6 @@ LIMIT 10
 </tr>
 </table>
 
-> [!example] BigQuery Workload Fit
->
-> > [!success] Serverless Advantage
-> >
-> > - BigQuery is the right tool when the workload matches its serverless, scan-based cost model: large-scale scans, flexible schemas, bursty ad-hoc analytics, and multi-layer medallion pipelines where storage and compute scale independently.
-> > - **Large-scale analytics** — BigQuery's distributed architecture handles petabyte-scale tables without index planning. Queries parallelize automatically across slots.
-> > - **Ad-hoc exploration** — serverless, no infrastructure to manage. Run a query immediately without provisioning a server or creating indexes first.
-> > - **Cost-per-query billing** — pay only for bytes scanned. For infrequent queries on large datasets, this is dramatically cheaper than maintaining a dedicated SQL Server VM.
-> > - **Cross-dataset joins** — BigQuery can join tables across datasets and even across projects in a single query, enabling organization-wide analytics.
-> > - **Scheduled queries and materialized views** — built-in scheduling and auto-refreshing materialized views for recurring dashboard queries.
->
-> > [!failure] Latency Mismatch
-> >
-> > - BigQuery is the wrong tool when the workload needs point lookups, low-latency OLTP access, or frequent small writes. The scenarios below usually belong on Cloud SQL, Firestore, or another engine optimized for the workload shape.
-> > - **Sub-second transactional queries** — BigQuery has a minimum query overhead of ~0.5-2 seconds regardless of data size. SQL Server with indexed seeks delivers single-digit millisecond response times.
-> > - **High-frequency DML** — the 1,500 DML statements/day/table quota makes BigQuery unsuitable for high-frequency upsert patterns. Use the Storage Write API for streaming.
-> > - **Complex procedural logic** — BigQuery scripting supports `IF`/`LOOP`/`BEGIN...EXCEPTION`, but there is no plan caching, and variable scoping across cells is limited in notebooks.
-> > - **Small, frequently-updated tables** — for tables under 1GB with frequent writes, SQL Server or PostgreSQL with proper indexes is simpler and cheaper.
 
 ## Warnings
 

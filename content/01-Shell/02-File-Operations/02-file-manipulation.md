@@ -887,22 +887,6 @@ Get-ChildItem -Recurse "C:\data\pipeline" |
 ```
 
 
-> [!example] File Operation Safety Fit
->
-> > [!success] Appropriate
-> >
-> > - **Staging pipeline data** -- copy raw data to a processing directory with `cp -a` (preserving timestamps) before transformation, so the original is untouched.
-> > - **Large or unreliable transfers** -- use `rsync` for any copy over a network or involving files larger than a few GB. Resume support and checksum verification prevent silent corruption.
-> > - **Atomic renames for safe output** -- write pipeline output to a temp file, then `mv` it to the final path. This prevents downstream consumers from reading a partially written file.
-> > - **Safe deletion in scripts** -- always use the trash pattern (move to staging, verify, then delete) instead of direct `rm -rf` in automated scripts.
-> > - **Container permission setup** -- use `chown -R <uid>:0` to fix bind mount permissions for Docker containers running as non-root users.
-> > - **Batch file renames** -- use `rename` (Perl) or a `for` loop with `mv` for bulk extension changes or naming convention updates.
->
-> > [!failure] Inappropriate
-> >
-> > - **Cross-server transfers** -- `cp` and `mv` are local-only. Use `rsync -e ssh`, `scp`, or `gsutil` for remote transfers.
-> > - **Version-controlled files** -- do not `mv` or `rm` files tracked by git directly. Use `git mv` and `git rm` to keep the index consistent.
-> > - **Database files while the database is running** -- never `cp`, `mv`, or `rm` database files (`.mdf`, `.ldf`, `.ndf`) directly. Use database backup/restore tools.
 
 ## Warnings
 

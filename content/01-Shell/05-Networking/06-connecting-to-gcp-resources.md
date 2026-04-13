@@ -669,20 +669,6 @@ The table below summarizes the connectivity model for every GCP resource type co
 > Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that is a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
 
 
-> [!example] GCP CLI Access Fit
->
-> > [!success] Appropriate
-> >
-> > - **SSH access to GCE VMs** -- `gcloud compute ssh` with automatic key management and optional IAP tunneling for private VMs.
-> > - **File transfers to/from VMs** -- `gcloud compute scp` for quick file copies; `rsync` over IAP tunnel for large or incremental transfers.
-> > - **GCS bucket operations** -- `gcloud storage cp` for uploads/downloads; `gsutil rsync` for directory synchronization.
-> > - **Authentication setup** -- `gcloud auth login` for interactive sessions; service account activation for automated pipelines.
->
-> > [!failure] Inappropriate
-> >
-> > - **Production data pipelines** -- use GCP client libraries (Python `google-cloud-storage`, C# `Google.Cloud.Storage.V1`) instead of CLI tools for production code.
-> > - **Cross-cloud operations** -- `gcloud` is GCP-only. For multi-cloud, use Terraform, Pulumi, or cloud-agnostic SDKs.
-> > - **Large-scale data movement** -- for TB-scale transfers, use Storage Transfer Service, Transfer Appliance, or BigQuery Data Transfer Service instead of CLI uploads.
 
 ## Warnings
 

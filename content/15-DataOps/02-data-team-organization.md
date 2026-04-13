@@ -161,19 +161,6 @@ status: complete
 > >
 > > A strong platform engineer increases the productivity of many teams at once by removing repeated infrastructure and workflow friction.
 
-> [!example] Org Topology Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for org design reviews, hiring plans, operating-model changes, role clarification, incident ownership design, and team-scaling decisions.
-> > - Use it when the key decision is where ownership, standards, platform responsibility, and domain autonomy should sit as the organization grows.
-> > - Use it to compare centralized, embedded, hub-and-spoke, and federated models against real staffing, maturity, and support capacity rather than against ideals alone.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a static org-chart prescription that ignores company size, platform maturity, domain boundaries, or the authority actually available to the proposed owners.
-> > - Do not assign multiple teams accountability for the same outcome just to make the diagram look collaborative.
-> > - Do not jump to federated ownership before platform self-service and domain capability are mature enough to carry it.
 
 ## Team Topology Models
 

@@ -146,7 +146,7 @@ status: complete
 > > [!warning] The command defines safety
 > >
 > > `docker exec` is only observational if the command you run is observational. A write-capable command mutates the live container immediately.
-
+>
 > ---
 >
 > **`docker logs`**
@@ -200,19 +200,6 @@ stateDiagram-v2
   Exited --> Removed: docker rm / compose down
 ```
 
-> [!example] Runtime Inspection Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note after `docker compose up`, after a reboot, during outages, or before deeper application debugging when you first need to establish real container state.
-> > - Use it when host reachability, Compose expectations, and actual container health disagree and you need to reconcile status, logs, and in-container evidence.
-> > - Use it as the runtime reference before changing configuration, because many incidents are state or health problems rather than image or YAML problems.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not assume the compose file proves a container exists or matches the live host state; inspect the runtime directly.
-> > - Do not treat `running` as equivalent to ready or healthy; healthchecks and recent logs still decide operational usability.
-> > - Do not use `docker exec` casually on a live service unless the command is truly read-only and the operational impact is understood.
 
 ## Runtime Inventory
 

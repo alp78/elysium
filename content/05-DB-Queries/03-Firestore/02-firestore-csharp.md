@@ -3201,23 +3201,6 @@ if (displayJson.RootElement.TryGetProperty("fields", out var displayFields))
   rows_per_page: 25
 ```
 
-> [!example] C# Firestore Fit
->
-> > [!success] Typed Operational Fit
-> >
-> > - Firestore paired with C# fits workloads that benefit from strong typing, async integration with ASP.NET, and automatic ADC authentication on Cloud Run or GKE. The SDK's `[FirestoreData]` attributes give compile-time safety that Python's dictionary-based API cannot match.
-> > - **ASP.NET / Blazor backends** — Firestore's async C# SDK integrates naturally with ASP.NET dependency injection and async controller patterns for low-latency document reads.
-> > - **Typed document mapping** — `[FirestoreData]` / `[FirestoreProperty]` attributes provide compile-time type safety that Python's dictionary-based API lacks. Ideal for teams with strong C# conventions.
-> > - **Cloud Run / GKE services** — C# microservices on Cloud Run get automatic ADC via the metadata server. No credentials to manage.
-> > - **Real-time sync (on .NET 8/9)** — `on_snapshot` listeners for Blazor Server dashboards that push Firestore changes to the UI in real time.
->
-> > [!failure] Runtime or Workload Mismatch
-> >
-> > - The scenarios below call for a different engine, a different .NET version, or the REST fallback pattern demonstrated throughout this note.
-> > - **.NET 10 production reads** — the SDK fails on document reads due to a missing `AsyncInterfaces` assembly. Stay on .NET 8/9 for Firestore read workloads until the SDK is updated.
-> > - **Analytical queries** — no JOINs, no window functions, no GROUP BY beyond COUNT/SUM/AVG. Export to BigQuery for analytics.
-> > - **Bulk data processing** — Firestore's 500-document transaction limit and per-document pricing make it unsuitable for processing thousands of rows. Use SQL Server or BigQuery.
-> > - **Complex filtering without index planning** — every unique filter/order combination requires a composite index. In C# this means pre-deploying `firestore.indexes.json` or handling `RpcException` for missing indexes.
 
 ## Warnings
 

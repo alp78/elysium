@@ -194,19 +194,6 @@ links:
 > >
 > > The operator does not replace Cloud Run; it automates the job execution request from inside Airflow while still relying on the underlying Google API permissions.
 
-> [!example] Airflow Deployment Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for a private VM-hosted Airflow control plane that orchestrates Cloud Run jobs plus downstream SQL Server, BigQuery, and Firestore steps through one DAG.
-> > - Use it when the orchestration layer must stay self-managed, private, and tightly aligned to the live STOXX demo runtime on `stoxx-airflow`.
-> > - Use it when the team needs the full bring-up path, from VM and bucket provisioning through Docker Compose, Cloud Run integration, and end-to-end DAG validation.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not assume bronze data is staged from local files on the VM; the current flow fetches directly into GCS.
-> > - Do not design around `oil_20` or other data paths that are intentionally excluded from the validated demo scope.
-> > - Do not revert to public-IP access patterns for the Airflow VM when the validated operating model is IAP-only.
 
 ## Conceptual Model
 

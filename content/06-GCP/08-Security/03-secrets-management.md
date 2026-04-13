@@ -194,19 +194,6 @@ It is not the right home for:
 - non-sensitive configuration that belongs in code or environment-specific config files
 - authorization policy itself, which belongs in IAM
 
-> [!example] Secret Storage Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Secret Manager for small sensitive values that workloads must fetch securely at runtime, such as database passwords, vendor tokens, and other operational credentials.
-> > - Use it when aliases, scheduled destruction, CMEK, and secret-scope IAM need to be part of the operating model rather than informal conventions.
-> > - Use it when one workload should read one secret without widening access across the whole project.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use it as a store for large artifacts, general files, or ordinary non-sensitive configuration.
-> > - Do not use project-wide secret access when a container-level grant is sufficient for the workload.
-> > - Do not treat secret storage as a substitute for authorization design; Secret Manager stores credentials, but IAM and workload identity still decide who may use them.
 
 ## Conceptual Model
 

@@ -173,19 +173,6 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 > >
 > > `profiles.yml` often contains credential references and environment-specific endpoints. Treat it as local or managed runtime state, not as repository content.
 
-> [!example] Project Layout Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when defining a new dbt repository, refactoring a growing project, or reviewing whether naming, foldering, and config defaults still match the platform's operating model.
-> > - Use it when structure, inheritance, adapter boundaries, and environment separation are the main design questions rather than model SQL itself.
-> > - Use it to make repository layout, naming, and config defaults communicate ownership, layer purpose, and execution policy clearly.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a replacement for the separate modeling, adapter, or CLI notes once the question is about SQL logic, command behavior, or warehouse-specific runtime tuning.
-> > - Do not let folder structure become arbitrary; in dbt it directly shapes how defaults, ownership, and reviewability work.
-> > - Do not commit environment-specific connection state into the project just because the repository feels like the obvious home for it.
 
 ### dbt Directory Tree
 

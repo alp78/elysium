@@ -471,22 +471,6 @@ Set-Content -Path config.env -Value $content
 ---
 
 
-> [!example] Bash Composition Fit
->
-> > [!success] Appropriate
-> >
-> > - **Comparing command outputs** -- `diff <(sort a) <(sort b)` compares two sorted streams without temp files. Essential for reconciling data between environments.
-> > - **Multi-consumer pipelines** -- `tee >(gzip > data.gz) >(wc -l)` compresses and counts in one pass, saving I/O when the source data is large.
-> > - **Inline SQL and config blocks** -- here documents embed SQL scripts directly in bash, avoiding separate `.sql` files for simple queries.
-> > - **Dynamic config generation** -- expanding here documents (`<<EOF`) with `$VAR` interpolation generate environment-specific config files at deploy time.
-> > - **Feeding values to parsers** -- `jq '.key' <<< '{"key":"value"}'` is cleaner than `echo '...' | jq` for quick JSON extraction.
->
-> > [!failure] Inappropriate
-> >
-> > - **POSIX portability required** -- process substitution (`<()`, `>()`) and here strings (`<<<`) are bash extensions. Scripts targeting `#!/bin/sh` cannot use them.
-> > - **Seekable file required** -- some commands need to seek in their input file. Process substitution provides a pipe, not a seekable file.
-> > - **Very large inline blocks** -- a 500-line here document embedded in a script harms readability. Extract it to a separate file and use `< file.sql` instead.
-> > - **Complex multi-branch output routing** -- if you need to route output to 3+ consumers with different transformations, write a Python or PowerShell script instead of nesting `>()` expressions.
 
 ## Warnings
 

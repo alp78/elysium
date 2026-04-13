@@ -205,19 +205,6 @@ status: complete
 > >
 > > Retained messages do not reappear on their own. Seek is the control that lets operators revisit historical message state when needed.
 
-> [!example] Delivery Model Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Pub/Sub topics and subscriptions when producers and consumers must stay decoupled and each consumer needs its own retry, backlog, and replay behavior.
-> > - Use pull subscriptions when the consumer must control pace and backpressure, push subscriptions when a healthy HTTPS endpoint should react immediately, and BigQuery subscriptions when the destination is managed analytics ingestion.
-> > - Use dead letter topics, retention, and attribute filters when the stream needs operational safety controls rather than one undifferentiated delivery path.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use push delivery for consumers that are intermittently offline, unstable, or unable to validate inbound identity correctly.
-> > - Do not rely on default subscription expiration or minimal retention for low-frequency pipelines that must survive long idle periods or support replay.
-> > - Do not run poison-message-prone pipelines without dead letter design, because one bad payload can otherwise consume retries indefinitely and hide the real failure mode.
 
 ## Topic Management
 

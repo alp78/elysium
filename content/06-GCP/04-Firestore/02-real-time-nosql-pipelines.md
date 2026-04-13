@@ -275,19 +275,6 @@ status: complete
 > >
 > > Capture the operation name in the change record or incident ticket at the moment the command starts. Rediscovery later is often harder than expected.
 
-> [!example] Pipeline Role Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Firestore in a real-time pipeline when it stores current control-plane state such as checkpoints, replay manifests, deduplication records, run status, or lease ownership.
-> > - Use it when document changes should trigger lightweight downstream reactions and the payload of interest is small, current, and operational rather than historical.
-> > - Use it when Pub/Sub, Dataflow, or BigQuery already own transport, throughput, and long-term analysis, and Firestore only needs to expose the latest state.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat Firestore as the main event bus, replay source, or durable queue; those responsibilities belong in Pub/Sub, Cloud Storage, or other transport layers.
-> > - Do not assume the architecture becomes exactly-once because Firestore is involved; retries, duplicate delivery, and idempotency design still have to be handled explicitly.
-> > - Do not keep broad historical collections in Firestore just because they began as operational state; offload aged or analytical data before read cost and index pressure accumulate.
 
 ## Mental Model / Architecture Model
 

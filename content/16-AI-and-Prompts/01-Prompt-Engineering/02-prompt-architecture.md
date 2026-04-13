@@ -145,19 +145,6 @@ status: complete
 > >
 > > A prompt can request structured tool use, but the application still needs to own permission control, retries, and validation around the call.
 
-> [!example] Template Architecture Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for reusable prompt templates, schema-driven extraction, tool-backed workflows, reviewer packets, and any system where prompts are long-lived production assets rather than one-off chat requests.
-> > - Use it when policy, task, evidence, examples, and output schema need to be separated so failures can be debugged by layer instead of by guesswork.
-> > - Use it to make prompts maintainable under model changes, retrieval changes, and evolving workflow requirements.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use prompt architecture as a substitute for application orchestration, validators, or clear task separation when the workflow itself is still monolithic or ambiguous.
-> > - Do not over-engineer layers if the prompt still lacks a clean job definition from the foundations note.
-> > - Do not store templates without version linkage to models, schemas, and traces; that creates text reuse, not architecture.
 
 ## Why this topic matters
 

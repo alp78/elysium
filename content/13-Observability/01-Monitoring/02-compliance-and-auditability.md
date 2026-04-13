@@ -184,19 +184,6 @@ status: complete
 
 ---
 
-> [!example] Compliance Control Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when published financial data must be explainable, reproducible, reviewable, and recoverable under audit or regulatory challenge.
-> > - Use it when lineage, corporate actions, restatement controls, and benchmark-governance obligations all need to be tied into one compliance model.
-> > - Use it to define the evidence chain required to prove not only what was published, but why it was published and how it can be reconstructed later.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note if the need is only low-level database auditing or generic logging without end-to-end business lineage and governance requirements.
-> > - Do not treat reproducibility as optional in a regulated publication flow; missing context makes later defense impossible.
-> > - Do not assume logging alone satisfies compliance if audit evidence, materiality rules, and controlled restatement paths are undefined.
 
 ## End-to-End Data Lineage
 

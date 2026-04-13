@@ -158,15 +158,6 @@ Understanding this distinction is the architectural foundation of the data lake 
 
 ---
 
-> [!example] Data Lake Fit
->
-> > [!success] Flexible Raw Storage
-> >
-> > - Use a data lake to store raw or semi-structured data cheaply, preserve reprocessing history, support exploratory analytics, or stage multi-format inputs before stricter downstream modeling.
->
-> > [!failure] Governance-Free Dumping
-> >
-> > - Do not use a lake for mostly transactional OLTP workloads, ingest-time warehouse guarantees, or any environment that would leave raw files unmanaged without catalog, schema, and retention controls.
 
 ## Zone Architecture
 

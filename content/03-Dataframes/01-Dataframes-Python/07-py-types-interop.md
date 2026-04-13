@@ -2851,22 +2851,6 @@ Temp files cleaned up
 
 ---
 
-> [!example] Type and Interop Fit
->
-> > [!success] Applicability
-> >
-> > - **Categorical/Enum** — use for columns with fewer than ~1000 unique values where memory savings and faster group_by are important (sectors, status codes, country codes, exchange identifiers).
-> > - **List/Struct types** — use when data is naturally nested (tags per document, OHLCV bars per ticker-day) and you want to avoid premature flattening.
-> > - **Arrow-backed Pandas dtypes** — use when you need zero-copy exchange between Pandas and Polars/DuckDB, or when you want native null support in Pandas.
-> > - **Parquet** — use as the default file format for any analytical pipeline. Prefer over CSV and JSON for persistence and data exchange.
-> > - **Encoding handling** — apply whenever data originates from external sources (web scraping, legacy systems, third-party feeds) where UTF-8 is not guaranteed.
->
-> > [!failure] Limitations
-> >
-> > - **High-cardinality Categorical (>10K unique values)** — Dictionary overhead exceeds memory savings; group_by gains disappear. Better approach: Use String dtype and filter/hash instead
-> > - **Nested types in SQL-backed pipelines** — SQL databases cannot natively store List or Struct columns. Better approach: Flatten to relational form before database insertion
-> > - **Arrow-backed dtypes in Pandas with legacy code** — Some Pandas operations fall back to NumPy, silently converting and copying. Better approach: Stay with NumPy-backed dtypes if the pipeline is Pandas-only
-> > - **CSV for production data exchange** — No embedded schema, no compression, slow reads, encoding ambiguity. Better approach: Use Parquet — preserves types, compresses, and reads faster
 
 ## Warnings
 

@@ -146,19 +146,6 @@ status: complete
 > >
 > > Platform sprawl is often less a technology problem than an ownership problem the team accepted too casually.
 
-> [!example] Stack Selection Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the team is choosing or simplifying the stack around LLM applications and needs to understand which layers are essential versus optional.
-> > - Use it when model access, retrieval, evaluation, tracing, parsing, and safety controls need to be mapped to operational responsibilities instead of to vendor hype.
-> > - Use it to keep the stack minimal and to identify where one category of tooling genuinely solves a production problem versus adding ownership burden.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a reason to add overlapping agent platforms, gateways, or guardrails before the workflow has stable tracing, evaluation, and deterministic validation.
-> > - Do not buy a parsing, tracing, or registry layer if the team still cannot explain the failure surface it is meant to fix.
-> > - Do not confuse a richer stack with a safer system when core prompt, retrieval, and governance discipline are still weak.
 
 ## Why this topic matters
 

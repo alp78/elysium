@@ -189,15 +189,6 @@ CREATE SCHEMA gold;
 CREATE SCHEMA ref;   -- reference data (static lookups)
 ```
 
-> [!example] Medallion Pattern Fit
->
-> > [!success] Layered Refinement
-> >
-> > - Use the medallion pattern when batch-oriented pipelines need raw preservation, cleaned durable data, and reproducible consumer-facing outputs with clear stage boundaries.
->
-> > [!failure] Latency Mismatch
-> >
-> > - Do not default to medallion layering for sub-second streaming systems, event-sourced designs, or workloads where stage-by-stage persistence adds more latency and duplication than value.
 
 ## Layer Responsibilities
 

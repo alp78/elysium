@@ -176,15 +176,6 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > The only reason to use gzip in 2026 is backward compatibility with
 > systems that don't support zstd (increasingly rare).
 
-> [!example] Format Selection Scope
->
-> > [!success] Boundary-Aware Choice
-> >
-> > - Use this note when choosing a storage or interchange format for APIs, config, messaging, analytical files, caches, or inter-service data exchange.
->
-> > [!failure] One-Format Everywhere
-> >
-> > - Do not default to one format everywhere without checking schema, latency, compression, interoperability, and trust boundaries.
 
 ## Format Details
 

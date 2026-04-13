@@ -2089,20 +2089,6 @@ display(asml_pl_sorted.with_columns(
 
 ---
 
-> [!example] Cleaning and Time-Series Fit
->
-> > [!success] Applicability
-> >
-> > - **Null handling** — always address nulls before aggregations (which silently skip them), joins (where null keys never match), and exports (where downstream systems may reject or misinterpret nulls).
-> > - **String operations** — use for cleaning raw text data (user input, free-text fields, file names), standardizing formats (case, padding, delimiters), and extracting structured information from unstructured fields.
-> > - **DateTime operations** — use whenever data has a time dimension: time-series analysis, event sequencing, SLA calculations, rolling averages, resampling to regular intervals, and timezone normalization.
->
-> > [!failure] Limitations
-> >
-> > - **Missing data imputation requiring domain logic** — Simple `fill_null()` strategies cannot encode business rules (e.g., "fill with last known price only if gap < 5 days"). Better approach: Write explicit conditional logic with `when/then` or use a domain-specific imputation model
-> > - **Heavy NLP or text parsing** — DataFrame string methods are limited to pattern matching and simple transforms — no tokenization, stemming, or entity extraction. Better approach: Use spaCy, NLTK, or a dedicated NLP library, then join results back
-> > - **Sub-millisecond or nanosecond-precision time math** — Polars `Datetime` defaults to microsecond precision; Pandas `Timestamp` uses nanoseconds but overflows past year 2262. Better approach: For nanosecond work, stay in Pandas or use `pl.Datetime("ns")` explicitly
-> > - **Complex timezone-dependent business logic** — Timezone conversions interact with DST transitions in non-obvious ways. Better approach: Normalize all timestamps to UTC at ingestion, then convert to local time only for display
 
 ## Warnings
 

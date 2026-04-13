@@ -557,22 +557,6 @@ $gz.Write($input, 0, $input.Length); $gz.Close()
 When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports — see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost — see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle policies that transition objects between storage classes.
 
 
-> [!example] Compression Decision Fit
->
-> > [!success] Appropriate
-> >
-> > - **Pipeline intermediate files** -- compress CSV/JSON output between pipeline stages to reduce transfer time and storage cost. Use zstd at default level 3.
-> > - **Long-term archival to cloud storage** -- compress before uploading to GCS cold/archive tiers. Use zstd -19 for maximum space savings.
-> > - **Log shipping and rotation** -- compress rotated logs to reduce disk consumption. gzip -6 is the standard for log compression due to universal tool support.
-> > - **Database backup transfer** -- compress SQL Server backups before transferring between VMs. Use gzip -1 for speed (the backup is already large and structured).
-> > - **Directory archiving** -- bundle a directory tree into a single `.tar.gz` or `.tar.zst` file for transfer or backup.
->
-> > [!failure] Inappropriate
-> >
-> > - **Already-compressed formats** -- Parquet with Snappy, gzipped JSON, JPEG images, and video files gain little from additional compression and waste CPU time.
-> > - **Real-time latency-critical paths** -- if decompression latency matters more than file size (sub-millisecond requirements), skip compression or use lz4.
-> > - **Tiny files** -- compressing files under 1 KB often produces larger output due to header overhead.
-> > - **Files that must be randomly accessible** -- gzip and zstd compress sequentially. You cannot seek to a specific offset without decompressing from the start. For random access, use columnar formats (Parquet) with internal compression.
 
 ## Warnings
 

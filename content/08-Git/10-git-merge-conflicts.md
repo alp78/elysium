@@ -193,19 +193,6 @@ tags:
 > >
 > > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
 
-> [!example] Conflict Resolution Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note whenever Git stops on overlapping history during merge, rebase, cherry-pick, or stash replay and you need a controlled resolution path instead of trial-and-error editing.
-> > - Use it when the critical step is recognizing the conflict type first and then finishing, aborting, or verifying the workflow safely.
-> > - Use it to keep conflict handling grounded in index state, workflow context, and post-resolution validation rather than in rote marker editing alone.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not apply `--ours` or `--theirs` blindly, because those labels change meaning across merge and rebase workflows.
-> > - Do not continue or force-push a rebased branch before verifying that the resolved content is semantically correct, not just syntactically conflict-free.
-> > - Do not treat binary, rename, or delete conflicts like ordinary line edits; those cases need file-level decisions.
 
 ## Conceptual Model
 

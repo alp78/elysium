@@ -1518,21 +1518,6 @@ print(sorted(names, key=lambda n: n[-1]))
 >
 > Keep comprehensions to one or two levels: `[n for row in matrix for n in row]`. For 3+ levels, break out the inner logic: `def process_row(row): return [transform(n) for n in row]`, then `[n for row in matrix for n in process_row(row)]`.
 
-> [!example] Python Control-Flow Fit
->
-> > [!success] Applicability
-> >
-> > - **Data transformation pipelines** — comprehensions and generators provide concise, readable data flow for filter/map/reduce patterns common in ETL scripts.
-> > - **Pattern matching on heterogeneous data** — `match`/`case` (Python 3.10+) excels at dispatching on message types, API responses, and nested data structures.
-> > - **Lazy processing of large datasets** — generators with `yield` process one record at a time, enabling pipelines that handle files larger than memory.
-> > - **Interactive exploration** — Python's truthy/falsy coercion and chained comparisons make conditional logic concise for notebooks and REPL work.
->
-> > [!failure] Limitations
-> >
-> > - **Performance-critical tight loops** — Python loops are 10–100x slower than C# `for` loops. For CPU-bound iteration, use NumPy vectorization, Polars expressions, or move to C#.
-> > - **Complex state machines** — deeply nested `if/elif` chains with many branches become unreadable. Consider a state pattern, dictionary dispatch, or dedicated state machine library.
-> > - **Parallel iteration** — Python's GIL prevents true parallel execution of `for` loops. Use `multiprocessing`, `concurrent.futures`, or `asyncio` for I/O-bound parallelism.
-> > - **Type-safe exhaustive matching** — `match`/`case` does not enforce exhaustiveness at compile time (unlike C# `switch` expressions with enums). Missing cases fail silently.
 
 ## Warnings
 

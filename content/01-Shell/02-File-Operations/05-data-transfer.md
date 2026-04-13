@@ -1234,23 +1234,6 @@ For transfers over 1 GB, the ability to resume after failure is more valuable th
 > Rule: for any transfer over 1 GB, use a tool with resume support (rsync, Robocopy /Z, gcloud storage, or gsutil).
 
 
-> [!example] Transfer Tool Fit
->
-> > [!success] Appropriate
-> >
-> > - **Moving pipeline output to cloud storage** -- `gsutil cp` or `gcloud storage cp` for uploading to GCS. Use `-m` for parallel multi-file uploads.
-> > - **Syncing directories between VMs** -- `rsync -az --delete` for incremental, resumable directory synchronization over SSH.
-> > - **Quick one-off file copies** -- `scp` for single files between machines when rsync is overkill.
-> > - **Bulk data loading into SQL Server** -- `bcp` for large CSV imports that bypass the query engine.
-> > - **Query-based data export** -- `sqlcmd -Q "SELECT ..." -o output.csv -s "," -W` for exporting query results to files.
-> > - **Windows directory replication** -- `Robocopy /MIR /MT:8` for mirroring directories with multi-threaded transfer and automatic retry.
->
-> > [!failure] Inappropriate
-> >
-> > - **Structured API-to-API data movement** -- use pipeline orchestration (Airflow, Cloud Run) and SDKs instead of shell-based file transfers for production data pipelines.
-> > - **Database-to-database replication** -- use database replication features (Always On, Change Data Capture) instead of `bcp` export/import cycles.
-> > - **Real-time streaming data** -- file transfer tools are batch-oriented. Use Pub/Sub, Kafka, or streaming APIs for real-time data movement.
-> > - **Files smaller than 1 MB** -- the overhead of `rsync` connection setup exceeds the benefit for tiny files. Use `scp` or direct copy.
 
 ## Warnings
 

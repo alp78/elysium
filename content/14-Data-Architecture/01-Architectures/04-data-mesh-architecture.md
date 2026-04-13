@@ -136,15 +136,6 @@ status: complete
 > > Spreading responsibility across domains multiplies confusion if shared governance, discovery, and support expectations are missing.
 >
 
-> [!example] Data Mesh Adoption Fit
->
-> > [!success] Organizational Readiness
-> >
-> > - Use data mesh when the organization has multiple capable domains, recurring central-team bottlenecks, and enough platform maturity to support self-serve onboarding and governance at scale.
->
-> > [!failure] Decentralization Theater
-> >
-> > - Do not adopt data mesh when the company is small, domain teams cannot own quality and support, or a centralized platform still provides faster and clearer delivery.
 
 ## The Four Principles
 

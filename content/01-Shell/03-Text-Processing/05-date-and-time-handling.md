@@ -1224,22 +1224,6 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 ---
 
 
-> [!example] Date and Time Handling Fit
->
-> > [!success] Appropriate
-> >
-> > - **Timestamped file naming** -- `output_$(date +%Y%m%d_%H%M%S).csv` creates unique, sortable filenames for pipeline output.
-> > - **Log correlation** -- converting all timestamps to UTC enables correlating events across systems in different timezones.
-> > - **Pipeline scheduling** -- calculating "yesterday" or "last business day" for incremental data loads: `date -d "yesterday" +%Y-%m-%d`.
-> > - **Data validation** -- checking that timestamps in incoming data fall within expected ranges and are not in the future.
-> > - **Audit trails** -- recording when each pipeline step started and finished, in UTC, for compliance and debugging.
-> > - **Financial data processing** -- converting between exchange timezones (NYSE, LSE, TSE) for market data alignment.
->
-> > [!failure] Inappropriate
-> >
-> > - **Rolling your own timezone conversion** -- use established libraries (`pytz`/`zoneinfo` in Python, `TimeZoneInfo` in .NET, `AT TIME ZONE` in SQL Server) instead of manual offset arithmetic.
-> > - **Storing dates as strings in databases** -- use native `DATE`, `DATETIME2`, or `TIMESTAMPTZ` types. String dates break sorting, comparison, and indexing.
-> > - **Assuming 24-hour days in date arithmetic** -- adding 86400 seconds is not the same as adding 1 calendar day when DST transitions are involved. Use calendar-aware functions.
 
 ## Warnings
 

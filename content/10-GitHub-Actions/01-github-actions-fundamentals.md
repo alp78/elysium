@@ -126,7 +126,7 @@ tags:
 > > [!danger] Security boundary
 > >
 > > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
-
+>
 > ---
 >
 > **Expression**
@@ -307,19 +307,6 @@ tags:
 > >
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
-> [!example] Workflow Model Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note before writing or reviewing any GitHub Actions workflow when you still need the core execution model: triggers, jobs, steps, runners, expressions, outputs, and token scope.
-> > - Use it when a workflow bug may come from evaluation timing, data flow between jobs, runner choice, or trust boundaries rather than from one specific delivery pattern.
-> > - Use it as the baseline reference for security-sensitive automation so later CI/CD, pattern, and data-platform designs inherit the correct mental model.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not stop here if the real task is reusable workflow composition, artifact promotion, or warehouse-specific automation; those concerns belong in the specialized follow-on notes.
-> > - Do not use this page as a substitute for environment-specific deployment design once the core runner and trigger model is already understood.
-> > - Do not treat the fundamentals as purely syntactic YAML guidance; if the team needs opinionated production patterns, this note is only the prerequisite layer.
 
 ## Conceptual Model
 

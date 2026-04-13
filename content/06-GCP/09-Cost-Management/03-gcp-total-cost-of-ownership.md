@@ -189,19 +189,6 @@ status: complete
 
 Static architecture estimates age badly because they are built from imaginary volumes and stale rate cards. A project-grounded TCO note should start from what actually exists, then separate what is measured, what is priced, and what is still blocked by missing billing export. In `bq-wh-nb`, that distinction changes the answer completely: the steady monthly floor is driven by VMs and disks, not by BigQuery queries or Cloud Run jobs.
 
-> [!example] TCO Decision Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when you need to refresh the current monthly baseline from verified inventory, current public pricing, and observed workload shape in `bq-wh-nb`.
-> > - Use it when comparing optimization options so you can tell whether a proposal targets the real dominant cost driver, such as always-on VMs and disks, rather than a negligible variable service.
-> > - Use it to separate fixed, variable, and still-unverified drivers before making architecture or rightsizing decisions.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note for invoice reconciliation, effective-rate analysis, or commitment amortization while billing export and paid-cost evidence are still missing.
-> > - Do not make confident claims about NAT, egress, taxes, credits, or negotiated discounts from inventory and public pricing alone.
-> > - Do not generalize this project’s TCO baseline into a generic GCP architecture estimate; the numbers here are tied to the live `bq-wh-nb` footprint.
 
 ## Conceptual Model
 

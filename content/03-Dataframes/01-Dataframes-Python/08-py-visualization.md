@@ -4141,21 +4141,6 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 
 ---
 
-> [!example] Plotting Library Selection
->
-> > [!success] Applicability
-> >
-> > - ****Matplotlib**** — Best for: Full control, publication-quality static plots, custom themes, reproducible figures for reports. Limitations: Verbose API; no interactivity without additional widgets
-> > - ****Seaborn**** — Best for: Quick statistical charts (distributions, correlations, categories), EDA. Limitations: Limited to statistical plot types; customization falls back to Matplotlib
-> > - ****Bokeh**** — Best for: Interactive dashboards, linked brushing, server-side apps, HTML embedding. Limitations: Steeper learning curve; chart code is more verbose than Plotly
-> > - ****Plotly**** — Best for: Interactive financial charts, quick prototyping, notebook-friendly, Polars-native input. Limitations: Large JavaScript payload; server-side rendering requires kaleido
->
-> > [!failure] Limitations
-> >
-> > - **Plotting 1M+ data points in a scatter plot** — Browser-native renderers (Bokeh, Plotly) choke on large point counts. Better approach: Downsample, use `datashader` for rasterized rendering, or use Matplotlib with alpha blending
-> > - **Real-time streaming dashboards** — Notebook-based charts are static snapshots — no live update. Better approach: Use Bokeh Server, Dash (Plotly), or Grafana
-> > - **Automated report generation in CI/CD** — Interactive charts don't render to PDF natively. Better approach: Use Matplotlib for static images; export Plotly with `kaleido` to PNG/SVG
-> > - **Geographic/map visualizations** — None of these libraries specialize in geospatial mapping. Better approach: Use Folium, Kepler.gl, or GeoPandas
 
 ## Warnings
 

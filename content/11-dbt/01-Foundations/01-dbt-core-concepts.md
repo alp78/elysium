@@ -173,19 +173,6 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 > >
 > > Small config choices in `dbt_project.yml` propagate through every model. A careless default for schemas, materializations, or vars turns into chapter-wide operational drift.
 
-> [!example] Transformation Layer Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when onboarding to dbt, explaining its runtime model to a new team member, or grounding later modeling, testing, and orchestration notes in shared vocabulary.
-> > - Use it when the team needs to understand what dbt does and does not own: compilation, DAG resolution, materialization behavior, profiles, adapters, and packages.
-> > - Use it to place dbt correctly inside the platform before making project-structure, modeling, or orchestration decisions.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a command-by-command CLI reference, a project-layout naming guide, or a materialization decision matrix in isolation once those topics need their dedicated notes.
-> > - Do not treat dbt as ingestion, scheduling, or generic warehouse administration software; that creates the wrong operating expectations.
-> > - Do not skip this mental model if later dbt debates are really arguments about compile-time versus run-time behavior.
 
 ### What dbt Is (and Is Not)
 

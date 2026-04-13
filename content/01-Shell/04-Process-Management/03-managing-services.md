@@ -642,21 +642,6 @@ Get-WinEvent -LogName System -MaxEvents 1 -Wait |
 When running multiple services as containers, [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
 
 
-> [!example] Service Lifecycle Fit
->
-> > [!success] Appropriate
-> >
-> > - **Restarting after config changes** -- `systemctl restart nginx` or `Restart-Service SqlServer` applies configuration changes that require a service restart.
-> > - **Diagnosing service failures** -- `systemctl status <service>` shows the current state, PID, and last few log lines. `journalctl -u <service> --since "1 hour ago"` shows recent logs.
-> > - **Enabling services at boot** -- `systemctl enable docker` ensures Docker starts automatically after a reboot.
-> > - **Investigating startup failures** -- `journalctl -u <service> -b` shows logs from the current boot, pinpointing why a service failed to start.
-> > - **Blocking dangerous services** -- `systemctl mask <service>` prevents a service from being started by any mechanism, including dependencies.
->
-> > [!failure] Inappropriate
-> >
-> > - **Application-level restarts** -- if your application has a built-in reload mechanism (e.g., Airflow `airflow dags reserialize`), use that instead of restarting the entire service.
-> > - **Container orchestration** -- Docker containers and Kubernetes pods have their own lifecycle management. Use `docker restart` or `kubectl rollout restart` instead of `systemctl`.
-> > - **One-shot scripts** -- scripts that run once and exit are not services. Use cron, systemd timers, or Task Scheduler for scheduled execution.
 
 ## Warnings
 

@@ -2054,26 +2054,6 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 >
 > Start with a CTE. If the query is slow and the CTE is referenced multiple times, materialize into a temp table. BigQuery charges per bytes scanned, so a CTE referenced three times triples the scan cost — a temp table pays the scan once.
 
-> [!example] Advanced Pattern Justification
->
-> > [!success] BigQuery-Native Leverage
-> >
-> > - Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler constructs from `01-bq-fundamentals` or `02-bq-engineering` when the problem does not actually require advanced syntax.
-> > - **QUALIFY** — for deduplication and top-N-per-group queries in BigQuery-only code. Simpler than the subquery + WHERE pattern.
-> > - **GENERATE_DATE_ARRAY** — always prefer over recursive CTEs for date-series generation in BigQuery. No iteration limit, single-pass.
-> > - **ROW_NUMBER top-N** — BigQuery's replacement for SQL Server's CROSS APPLY. One table scan, distributed across slots.
-> > - **PIVOT** — when downstream consumers need wide-format data with known column names. Use CASE-based aggregation for portability.
-> > - **GROUPING SETS** — when you need multiple aggregation levels from a single scan instead of UNION ALL.
-> > - **NOT EXISTS** — always prefer over NOT IN for anti-joins. NULL-safe and produces efficient plans.
-> > - **Temp tables** — when a CTE is referenced multiple times. Pays scan cost once instead of N times.
->
-> > [!failure] Portability or Quota Trap
-> >
-> > - These patterns are either BigQuery-specific, have quota implications, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
-> > - **QUALIFY in cross-engine code** — it fails on SQL Server. Use the subquery + WHERE pattern for dbt models targeting multiple engines.
-> > - **Recursive CTEs for date series** — use GENERATE_DATE_ARRAY + UNNEST. Recursive CTEs are limited to 500 iterations and are slower.
-> > - **CUBE with many columns** — generates all 2^N grouping combinations. For 4 columns = 16 levels. Use GROUPING SETS to specify only what you need.
-> > - **MERGE more than once per pipeline cycle** — counts against the 1,500 DML/day quota per table.
 
 ## Warnings
 

@@ -148,15 +148,6 @@ status: complete
 > > Streaming insert paths are valuable when freshness is critical, but they are rarely the cheapest or easiest default for the platform as a whole.
 >
 
-> [!example] Flow Topology Fit
->
-> > [!success] Boundary Mapping
-> >
-> > - Use this note to choose movement patterns for a mixed local, VM, warehouse, and cloud-storage platform where data crosses multiple network and system boundaries.
->
-> > [!failure] Tool-Level Shortcut
-> >
-> > - Do not use this note as a per-tool usage guide once the path is already chosen and a tool-specific note gives the exact command syntax.
 
 ## The Complete Data Flow Topology
 

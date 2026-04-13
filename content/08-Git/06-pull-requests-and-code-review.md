@@ -274,19 +274,6 @@ tags:
 > >
 > > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-> [!example] Review Gate Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for any branch integration that needs human review, CI evidence, merge policy, or protected-branch enforcement before landing on a shared target branch.
-> > - Use it when the team needs to connect PR mechanics to the underlying Git branch relationship so approvals and merge decisions remain technically meaningful.
-> > - Use it to structure review-ready changes, preserve reviewer context, and make rollout and rollback impact explicit before merge.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not bypass review with direct pushes when the branch is supposed to be governed through PR policy.
-> > - Do not hide large risky changes behind weak PR descriptions, because that defeats the review gate this note is meant to strengthen.
-> > - Do not rebase or force-push shared review branches without informing reviewers and re-establishing the review context.
 
 ## Conceptual Model
 

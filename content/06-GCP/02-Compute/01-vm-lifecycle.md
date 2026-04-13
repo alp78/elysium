@@ -260,19 +260,6 @@ stateDiagram-v2
     TERMINATED --> [*] : instances delete
 ```
 
-> [!example] VM Runtime Fit
->
-> > [!success] Appropriate
-> >
-> > - Use Compute Engine VMs for persistent self-managed workloads such as SQL Server, agents, schedulers, and batch workers that do not fit serverless runtimes.
-> > - Use them when the workload needs host-level control, custom startup logic, attached disks, long-lived processes, or machine-type tuning beyond what managed runtimes expose.
-> > - Use this lifecycle guidance when the team must provision, inspect, resize, schedule, and eventually retire VMs safely in a production-like environment.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not choose VMs for workloads that fit fully managed serverless services better.
-> > - Do not use Spot VMs for stateful services or jobs that cannot tolerate preemption.
-> > - Do not rely on the default Compute Engine service account as the production identity model.
 
 ## Prerequisites
 

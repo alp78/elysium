@@ -198,19 +198,6 @@ status: complete
 
 Cloud Billing problems are usually not invoice problems first. They start as missing linkage, missing exports, missing attribution, or missing price interpretation. In `bq-wh-nb`, the billing link is healthy, but the export and attribution layers are incomplete. That means operators can estimate cost drivers and inspect public prices, but they cannot yet do invoice-grade reconciliation, amortized commitment analysis, or budget enforcement from BigQuery.
 
-> [!example] Billing Readiness Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the real question is whether `bq-wh-nb` is financially wired correctly: billing account linkage, export readiness, current public rates, and attribution maturity.
-> > - Use it when you need defensible list-price estimates in `CZK` or need to prove which Cloud Billing data surfaces are live versus still missing.
-> > - Use it before building budgets, chargeback logic, or FinOps dashboards so those downstream controls are grounded in real export capability rather than assumptions.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as evidence for invoice reconciliation, effective-price analysis, or amortized commitment modeling while billing export and commitment metadata remain absent.
-> > - Do not describe the project as FinOps-ready just because billing is enabled; export, pricing, and attribution readiness are separate gates.
-> > - Do not build export-backed budgets, chargeback rules, or discount claims from public pricing alone, because that confuses list price with paid cost.
 
 ## Conceptual Model
 

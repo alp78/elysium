@@ -193,19 +193,6 @@ tags:
 > >
 > > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-> [!example] Recovery Path Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for undoing local mistakes, reconstructing lost commits, and selecting the least-destructive recovery path for a specific Git state boundary.
-> > - Use it when you must distinguish working-tree cleanup, index repair, local-history rewrite, and shared-history-safe correction before choosing a command.
-> > - Use it to treat reflog as the first recovery surface and to validate recovered state before pushing it back into collaboration.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not rewrite public history casually when additive recovery such as `revert` is the safer collaborative choice.
-> > - Do not reach for `reset --hard` before checking whether `restore`, `revert`, or reflog can solve the problem with less blast radius.
-> > - Do not recover files or commits without first deciding which branch and ownership boundary should contain the final state.
 
 ## Conceptual Model
 

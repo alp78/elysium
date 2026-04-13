@@ -136,15 +136,6 @@ status: complete
 > > BigLake is less about inventing a new format and more about providing managed cataloging, policy enforcement, and SQL access over open storage.
 >
 
-> [!example] Lakehouse Adoption Fit
->
-> > [!success] Unified Open Storage
-> >
-> > - Use a lakehouse when you want one open storage layer from raw through curated data, need time travel or transactional writes on object storage, or expect multiple engines to read the same analytical tables.
->
-> > [!failure] Maintenance Burden Mismatch
-> >
-> > - Do not choose a lakehouse if a conventional warehouse already satisfies the workload, the team cannot operate catalog and table-maintenance workflows, or simple batch files are enough without mutation or governance pressure.
 
 ## Why the Lakehouse Emerged
 

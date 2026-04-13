@@ -201,19 +201,6 @@ Data platforms almost always combine multiple trust boundaries:
 
 If those layers are not separated clearly, teams end up debugging the wrong thing. A GitHub Actions workflow can authenticate correctly through WIF and still fail because it cannot impersonate the deployment service account. A Cloud Run job can have correct BigQuery IAM and still fail to reach a private SQL Server because the network path is wrong. This note keeps those failure domains separate.
 
-> [!example] Identity Pattern Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this decision model when a human, CI/CD system, Cloud Run job, GCE VM, Airflow worker, or private-service client must choose the correct Google authentication and connectivity pattern.
-> > - Use it when you need to separate CLI auth, ADC, impersonation, Workload Identity Federation, metadata-backed runtime identity, token type, and network path into distinct design decisions.
-> > - Use it when the team is debugging whether a failure comes from identity choice, token choice, or private-network reachability.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use human identities as the long-term runtime identity of production workloads.
-> > - Do not reach first for downloaded JSON keys when WIF, impersonation, or runtime-attached service accounts provide a keyless path.
-> > - Do not treat private SQL, IAP, or VM reachability as purely an IAM problem when the network path is the real blocker.
 
 ## Conceptual Model
 

@@ -439,19 +439,6 @@ tags:
 > >
 > > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-> [!example] Daily Flow Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for the normal inspect-stage-commit-sync loop, PR cleanup before review, and routine recovery from local mistakes.
-> > - Use it when you need to reason about working tree, index, local commits, fetched state, and pushed state without accidentally losing work.
-> > - Use it to keep daily history clean through deliberate staging, small commits, worktrees, and safe remote synchronization habits.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use these habits to justify destructive history rewriting on shared branches or ad-hoc force-pushes without `--force-with-lease`.
-> > - Do not let long-lived work hide in stashes when a branch or worktree is the safer durable mechanism.
-> > - Do not treat this note as the policy source for merge-strategy design or branch-governance rules; those decisions belong in the branching and integration notes.
 
 ## The Git Mental Model
 

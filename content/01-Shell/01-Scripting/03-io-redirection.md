@@ -598,21 +598,6 @@ Invoke-Sqlcmd -Query $sql -ServerInstance "srv01"
 | Literal | `@'...'@` | No | SQL, JSON, regex, raw templates |
 
 
-> [!example] Stream Redirection Fit
->
-> > [!success] Appropriate
-> >
-> > - **Logging pipeline runs** — redirect stdout and stderr to timestamped log files for post-mortem analysis. Use `tee -a` for simultaneous live monitoring and persistent logging.
-> > - **Silencing noisy commands** — discard output with `> /dev/null 2>&1` when you only care about the exit code (e.g., `command -v tool > /dev/null 2>&1` to test if a tool is installed).
-> > - **Separating errors from data** — redirect stderr to a separate file when stdout carries structured data (CSV, JSON) that must not be contaminated with error messages.
-> > - **Non-interactive database operations** — feed SQL scripts to `sqlcmd` or `psql` via `< query.sql` instead of typing queries interactively.
-> > - **Embedding configuration in scripts** — use here-documents to include multi-line SQL, JSON, or YAML directly in a bash script without managing separate template files.
->
-> > [!failure] Inappropriate
-> >
-> > - **Complex output processing** — if you need to transform, filter, or conditionally route output, use a proper scripting language (Python, PowerShell) rather than chaining increasingly complex redirections.
-> > - **Structured logging** — for production services, use a logging framework that writes structured JSON logs. Shell redirection does not add timestamps, log levels, or correlation IDs.
-> > - **Large binary data** — redirecting binary output (images, compressed files) through text-processing pipelines can corrupt data due to locale-dependent encoding conversions. Use direct file operations instead.
 
 ## Warnings
 

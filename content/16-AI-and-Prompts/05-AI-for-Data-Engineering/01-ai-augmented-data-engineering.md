@@ -146,19 +146,6 @@ status: complete
 > >
 > > Generated SQL or code becomes dangerous when the first execution path is a live environment instead of a dry-run or review stage.
 
-> [!example] Assistive Workflow Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the workflow is ambiguous, semantic, or reviewer-heavy and the output can stay inside existing review, lineage, and observability controls.
-> > - Use it when AI is being asked to interpret, summarize, draft, map, or explain rather than to own authoritative state transitions.
-> > - Use it to keep accepted AI suggestions flowing back into deterministic assets such as tests, mappings, contracts, and reviewed documentation.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use AI for core state transitions, authoritative vendor selection, uncontrolled SQL or code execution, or any process that still lacks basic quality gates and traceability.
-> > - Do not let plausible explanations stand in for evidence-backed diagnosis.
-> > - Do not keep AI outputs as floating suggestions if the real system needs deterministic artifacts instead.
 
 ## Why this topic matters
 

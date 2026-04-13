@@ -193,19 +193,6 @@ tags:
 > >
 > > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
 
-> [!example] Ignore Policy Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when setting repository defaults, diagnosing noisy `git status` output, or preventing accidental commits of machine-specific, generated, or sensitive files.
-> > - Use it when ignore precedence, pattern specificity, and tracked-versus-untracked behavior need to be made explicit for the team.
-> > - Use it to pair `.gitignore` with broader repository hygiene decisions such as `.gitattributes`, `.gitkeep`, and Git LFS placement.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use `.gitignore` as a retroactive secret-removal tool; once sensitive data is committed, history cleanup is a separate incident response task.
-> > - Do not use ignore rules as a substitute for storage policy on large datasets and binaries that belong outside ordinary Git history.
-> > - Do not add broad patterns without testing them, because they can silently hide files the repository actually needs.
 
 ## Conceptual Model
 

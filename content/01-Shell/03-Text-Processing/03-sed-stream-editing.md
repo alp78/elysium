@@ -1916,22 +1916,6 @@ Both sed and awk are stream-processing tools from the Unix text-processing tradi
 ---
 
 
-> [!example] Text Substitution Fit
->
-> > [!success] Appropriate
-> >
-> > - **Automated config file edits** -- `sed -i 's/DB_HOST=.*/DB_HOST=10.132.0.2/' config.env` updates a setting in place without opening an editor.
-> > - **CSV header manipulation** -- `sed '1s/old_header/new_header/' data.csv` renames a column header without touching the data rows.
-> > - **Log cleanup** -- `sed '/^$/d' app.log` removes blank lines. `sed 's/\x1b\[[0-9;]*m//g'` strips ANSI color codes.
-> > - **Template processing** -- `sed "s/{{DB_HOST}}/$DB_HOST/g" template.conf > config.conf` generates config files from templates.
-> > - **Quick one-liner transformations** -- sed is the fastest tool for simple find-and-replace operations on the command line.
->
-> > [!failure] Inappropriate
-> >
-> > - **Field-based data processing** -- if you need to work with specific CSV columns (split by delimiter, reorder, aggregate), use `awk` or a dataframe tool. sed works on patterns within lines, not on structured fields.
-> > - **Complex multi-line transformations** -- the hold space enables multi-line operations but makes scripts difficult to read and debug. Use `awk` or Python for complex multi-line logic.
-> > - **JSON, XML, or structured data** -- sed treats everything as text. Use `jq` for JSON, `xmlstarlet` for XML, and language-specific parsers for structured formats.
-> > - **Large-scale data transformation** -- sed is a stream processor designed for text manipulation, not a data processing engine. For transformations on millions of rows, use SQL, Polars, or Spark.
 
 ## Warnings
 

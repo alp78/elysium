@@ -1778,26 +1778,6 @@ flowchart TD
 >
 > If a CTE is referenced more than once in a query, materialize it into a `#temp` table first: `SELECT ... INTO #my_cte FROM ...`, then reference `#my_cte` wherever needed. Add an index on the join or filter key with `CREATE INDEX ix ON #my_cte (key_col)` for queries over ~10,000 rows. Use CTEs only for readability when they are referenced exactly once.
 
-> [!example] Advanced Pattern Justification
->
-> > [!success] High Leverage
-> >
-> > - Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler construct from `01-sql-fundamentals` or `02-sql-engineering` when the problem does not actually require advanced syntax.
-> > - **Recursive CTEs** — when you need a continuous date series, a hierarchical traversal, or any iterative computation that stops on a condition. Preferred over cursors and WHILE loops.
-> > - **CROSS APPLY** — when you need top-N per group or a correlated subquery that returns multiple rows. More readable and often more efficient than self-joins with ROW_NUMBER.
-> > - **PIVOT** — when downstream consumers (dashboards, Excel exports) need data in wide format with fixed, known column names.
-> > - **MERGE** — for idempotent incremental loads where a single statement must handle both new and updated rows atomically.
-> > - **GROUPING SETS / ROLLUP** — when you need multiple aggregation levels (detail + subtotals + grand total) from a single table scan instead of UNION ALL.
-> > - **NOT EXISTS** — always prefer over `NOT IN` for anti-joins when the subquery column is nullable.
->
-> > [!failure] Overengineering Trap
-> >
-> > - These patterns are either SQL Server-specific, have known bugs, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
-> > - **Recursive CTEs for date series in BigQuery** — use `GENERATE_DATE_ARRAY` / `UNNEST` instead; no recursion limit, single-pass, and more idiomatic.
-> > - **CROSS APPLY in BigQuery / PostgreSQL** — use `ROW_NUMBER` + subquery pattern instead; `APPLY` is SQL Server-specific syntax.
-> > - **MERGE for high-concurrency tables** — use explicit INSERT/UPDATE in a transaction due to known SQL Server MERGE concurrency bugs.
-> > - **PIVOT with dynamic columns** — if column values are not known at compile time, the complexity of dynamic SQL often exceeds the benefit. Use CASE-based conditional aggregation or reshape client-side.
-> > - **CUBE** — generates all possible column combinations, which grows exponentially. For 4 columns, CUBE produces 16 grouping levels. Use GROUPING SETS to specify only the combinations you need.
 
 ## Warnings
 

@@ -1175,23 +1175,6 @@ ORDER BY [rank]
 | TTE.PA | 0.3913 | 1.18 | 4 |
 | ABI.BR | 0.3852 | 1.16 | 5 |
 
-> [!example] SQL Server Workload Fit
->
-> > [!success] Strong Match
-> >
-> > - SQL Server is the right tool when the workload matches its strengths: transactional concurrency, low-latency reads on well-indexed tables, and procedural logic that cannot be expressed as a single declarative query.
-> > - **Transactional workloads** — SQL Server excels when queries run alongside concurrent writes that require row-level locking, ACID transactions, and immediate consistency. Pipelines that read-and-write in the same step (e.g., MERGE-based incremental loads) benefit from SQL Server's lock-based concurrency.
-> > - **Sub-second latency** — indexed seeks on clustered and covering indexes deliver single-digit millisecond response times. Dashboard queries hitting the gold layer via a view or stored procedure can serve interactive UIs directly.
-> > - **Complex procedural logic** — T-SQL stored procedures, cursors, and control flow (`IF`, `WHILE`, `TRY/CATCH`) support multi-step business logic that cannot be expressed in a single declarative query.
-> > - **Existing SQL Server infrastructure** — when the organization already runs SQL Server for OLTP or reporting, adding analytical tables avoids introducing a new engine and its operational overhead.
->
-> > [!failure] Wrong Shape
-> >
-> > - SQL Server is the wrong tool when the workload shape does not match its cost model or scaling limits. The scenarios below usually belong on BigQuery, Firestore, or another engine.
-> > - **Petabyte-scale analytics** — SQL Server scales vertically (add CPU/RAM to one server). Once tables exceed hundreds of millions of rows and queries require full-table scans, BigQuery's distributed architecture is more cost-effective.
-> > - **Ad-hoc exploration of unfamiliar data** — BigQuery's serverless model requires no index planning. SQL Server queries on un-indexed columns degrade to full table scans with no automatic parallelism beyond the server's CPU count.
-> > - **Schema-less or hierarchical data** — document structures with nested objects, variable fields, and subcollections are a better fit for Firestore or a document database. Forcing them into relational tables adds complexity.
-> > - **Cost-per-query billing** — SQL Server charges for infrastructure (VM/license), not per query. If you run only a few queries per day on a large dataset, the idle infrastructure cost is wasted; BigQuery's per-bytes-scanned model would be cheaper.
 
 ## Warnings
 

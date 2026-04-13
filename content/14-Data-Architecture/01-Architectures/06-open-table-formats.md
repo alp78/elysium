@@ -182,15 +182,6 @@ Open table formats solve this by adding a metadata layer:
 
 ---
 
-> [!example] Open Table Format Adoption
->
-> > [!success] Transactional Object Storage
-> >
-> > - Use open table formats when data must stay in open object storage but still needs ACID-like writes, time travel, schema evolution, multi-engine access, or auditable deletion workflows.
->
-> > [!failure] Metadata Neglect
-> >
-> > - Do not adopt open table formats if a managed warehouse already fits the workload, open-file interoperability is unnecessary, or table maintenance and catalog ownership would be neglected.
 
 ## Apache Iceberg Deep Dive
 

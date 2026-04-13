@@ -592,21 +592,6 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
 | `-PassThru` | `-PassThru` | Return the response object when using `-OutFile` |
 
 
-> [!example] HTTP Probing Fit
->
-> > [!success] Appropriate
-> >
-> > - **API integration testing** -- verify that an endpoint returns the expected response before wiring it into a pipeline.
-> > - **Health checks** -- `curl -sf https://service/health` in monitoring scripts to verify service availability.
-> > - **Data download** -- `curl -o file.csv https://api.example.com/export` for one-off data fetches.
-> > - **Debugging API issues** -- `curl -v` shows the full request/response including headers, TLS handshake, and timing.
-> > - **Token-based authentication testing** -- verify that OAuth tokens, API keys, and service account credentials work before deploying.
->
-> > [!failure] Inappropriate
-> >
-> > - **Production data pipelines** -- shell `curl` calls are fragile (no retry logic, no connection pooling, limited error handling). Use language SDKs (Python `requests`, C# `HttpClient`) for production API integrations.
-> > - **Large file downloads** -- `curl` has no resume-by-default. Use `wget -c` or `gsutil` for large file downloads that may be interrupted.
-> > - **Complex API workflows** -- multi-step API interactions with pagination, rate limiting, and error handling belong in application code, not shell scripts.
 
 ## Warnings
 

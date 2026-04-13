@@ -203,19 +203,6 @@ status: complete
 > >
 > > Very large messages increase latency, cost, and operational fragility. Publishing a pointer keeps message flow fast while still linking consumers to the underlying data.
 
-> [!example] Consumer Workflow Fit
->
-> > [!success] Appropriate
-> >
-> > - Use these publish and pull workflows to validate topic wiring, inspect payload shape, test attributes and ordering keys, and smoke-test consumer behavior from the CLI.
-> > - Use them when you need to observe backlog growth, acknowledgement behavior, or message visibility directly before handing the workload to application code.
-> > - Use the note as the operational reference for designing idempotent consumers, lightweight message contracts, and alertable backlog patterns.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not copy `--auto-ack` from CLI testing into real consumers, because it acknowledges work before the business side effect is actually durable.
-> > - Do not build consumers that assume single delivery under default Pub/Sub semantics; duplicate delivery, retry, and replay are normal operating conditions.
-> > - Do not let retention and backlog accumulate without limits or alerts, because the failure surface then shifts from message flow to hidden storage and lag cost.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

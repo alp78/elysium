@@ -136,15 +136,6 @@ status: complete
 > > Slim CI keeps analytical projects deployable by cutting warehouse work to the models touched by the change instead of paying for full graph rebuilds on every PR.
 >
 
-> [!example] Transformation Layer Fit
->
-> > [!success] Warehouse-Native SQL Discipline
-> >
-> > - Use dbt when data is already loaded into the warehouse and the team needs modular, tested SQL transformations with documentation and CI/CD discipline.
->
-> > [!failure] Orchestration Stretch
-> >
-> > - Do not stretch dbt into extraction, file movement, or cross-system ingestion; those concerns still belong elsewhere.
 
 ## What dbt Actually Does (and Does Not Do)
 

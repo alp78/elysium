@@ -1612,20 +1612,6 @@ Polars is not a drop-in Pandas replacement. It is a different mental model:
 
 ---
 
-> [!example] Testing and Migration Fit
->
-> > [!success] Applicability
-> >
-> > - **Testing and assertions** — in every production pipeline. Embed assertions at data load, after transforms, before joins, and before export. The cost of assertion checks is negligible; the cost of undetected data quality bugs is high.
-> > - **Quarantine pattern** — when bad data is expected (external feeds, user input, third-party APIs) and the pipeline must continue processing clean records while preserving bad records for review.
-> > - **Migration (Pandas → Polars)** — when a Pandas pipeline has outgrown single-threaded performance, suffers from index-related bugs, or needs lazy execution for large datasets.
->
-> > [!failure] Limitations
-> >
-> > - **Unit-testing with mock DataFrames only** — Mocked data may not reproduce production edge cases (nulls in unexpected columns, schema drift, encoding issues). Better approach: Supplement mocks with integration tests on real or realistic data samples
-> > - **Migrating a Pandas pipeline line-by-line** — Literal translation produces non-idiomatic, slow Polars code that misses expression-based optimization. Better approach: Rewrite the pipeline logic in Polars expression style from scratch
-> > - **Testing only happy-path scenarios** — Missing edge cases (empty DataFrames, all-null columns, duplicate keys) leads to production failures. Better approach: Write explicit test cases for empty, null-heavy, and duplicate-heavy inputs
-> > - **Profiling with toy data** — Performance characteristics at 1K rows don't predict behavior at 1M rows. Better approach: Profile at realistic data volumes
 
 ## Warnings
 

@@ -164,19 +164,6 @@ status: complete
 > >
 > > Recomputing directly into production makes it harder to verify, explain, and if necessary reverse the repair path during a high-pressure event.
 
-> [!example] Benchmark Operations Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for index-engine changes, methodology revisions, release gating, benchmark validation design, regulated publication workflows, and restatement preparedness reviews.
-> > - Use it when numerical equivalence, auditability, and subscriber-facing publication safety matter more than generic pipeline convenience.
-> > - Use it to design parallel backtests, continuous validation, blue-green publication paths, and incident response around regulated benchmark outputs.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not apply this operating model wholesale to lightweight analytical pipelines that do not publish regulated benchmark values or require strict historical equivalence checks.
-> > - Do not collapse material benchmark deviations into ordinary pipeline bugs; the control and escalation requirements are higher here.
-> > - Do not ship methodology or schema changes without the side-by-side evidence and recovery path this note expects.
 
 ## Parallel Backtesting Architecture
 

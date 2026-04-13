@@ -146,15 +146,6 @@ Without idempotency, every pipeline failure becomes a crisis:
 
 With idempotency, you can re-run any step at any time with confidence.
 
-> [!example] Idempotency Requirement
->
-> > [!success] Mandatory for Reruns
-> >
-> > - Use these patterns anywhere a production pipeline may be retried, replayed, backfilled, or partially rerun after failure.
->
-> > [!failure] Optionality Myth
-> >
-> > - Do not treat idempotency as an optional enhancement; the only real alternative is accepting manual repair and data corruption risk.
 
 ## Core Patterns
 

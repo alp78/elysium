@@ -144,19 +144,6 @@ status: complete
 > >
 > > Shadow mode is often the cleanest bridge between offline confidence and full production exposure.
 
-> [!example] Release Evidence Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when an AI workflow needs release decisions, regression control, or ongoing quality monitoring tied to concrete business outcomes.
-> > - Use it when the team must decide whether a model-driven system is accurate, safe, and useful enough to ship based on stage-level evidence instead of intuition.
-> > - Use it to connect datasets, scorecards, human review, thresholds, and rollback rules into one quality-assurance system.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a superficial demo check or a prose-only scorecard for rule-bound tasks.
-> > - Do not rely on judge-model output alone if the task has not been calibrated against human review and business criteria.
-> > - Do not average away critical-case failures that matter more than the mean score.
 
 ## Why this topic matters
 

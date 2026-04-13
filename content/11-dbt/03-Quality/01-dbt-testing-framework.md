@@ -163,19 +163,6 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 > >
 > > Contracts protect shape; tests protect content and behavior. Strong quality programs usually need both layers working together.
 
-> [!example] Assertion Layer Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when defining model-level quality guarantees, guarding business rules in CI, and deciding which layer should own each class of validation.
-> > - Use it when the question is how to express warehouse-side assertions through built-in tests, package tests, singular SQL, or reusable custom generics.
-> > - Use it to place checks where the contract lives: structural checks early, business-rule checks where logic is introduced, and consumer guarantees on published marts.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use dbt tests as a substitute for ingestion validation, warehouse permissions checks, or observability tooling when the problem is freshness, orchestration, or runtime health rather than assertion logic.
-> > - Do not mark critical rules as warnings just because errors are inconvenient in CI.
-> > - Do not add heavyweight test patterns to every layer indiscriminately; coverage should follow risk and ownership.
 
 ### dbt Test Categories
 

@@ -203,19 +203,6 @@ tags:
 > >
 > > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
 
-> [!example] Error Triage Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when triaging a real Git or GitHub error message, training on common failure classes, or verifying the least-destructive fix before running a command.
-> > - Use it when the safe path depends on matching the exact message to the underlying pointer, remote, auth, merge, or CI state that caused it.
-> > - Use it as the fast lookup reference when progress is blocked and the team needs a state-based diagnosis rather than guesswork.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not guess from a vague symptom without matching the actual message or repository state first.
-> > - Do not copy destructive fixes from superficially similar errors; many Git failures look alike but require opposite remediations.
-> > - Do not stop at the quick fix if the same error class is recurring; the prevention guidance matters too.
 
 ## Conceptual Model
 

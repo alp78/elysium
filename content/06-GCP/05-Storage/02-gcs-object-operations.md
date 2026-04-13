@@ -250,19 +250,6 @@ Many operators understand buckets but still get surprised by object behavior. Th
 
 Object operations are therefore about correctness as much as convenience.
 
-> [!example] Object Mutation Fit
->
-> > [!success] Appropriate
-> >
-> > - Use these patterns when object operations need explicit prefixes, generation-aware preconditions, dry-run sync review, temporary or event-based holds, restore drills, or short-lived signed delivery.
-> > - Use them when object-arrival events must feed Pub/Sub automation and the operator needs to understand exactly which mutation creates a new generation versus edits metadata.
-> > - Use them when safe overwrite, safe restore, and auditable object movement matter more than convenience shortcuts.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not overwrite blindly or run recursive sync or delete commands without reviewing the exact prefix scope first.
-> > - Do not use `mv` when the caller requires true atomic rename semantics.
-> > - Do not use signed URLs when the real requirement is durable IAM-governed access rather than time-bound delegated delivery.
 
 ## Conceptual Model
 

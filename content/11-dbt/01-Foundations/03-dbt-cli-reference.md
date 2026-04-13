@@ -183,19 +183,6 @@ description: "CLI commands, node selection, flags, output interpretation"
 > >
 > > Retry saves time only when the previous invocation context is still valid. If the target, code, or upstream state has changed, a fresh scoped command is usually safer.
 
-> [!example] Execution Surface Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for day-to-day dbt development, warehouse preflight checks, targeted model reruns, CI troubleshooting, and state-aware execution in larger projects.
-> > - Use it when selector scope, target choice, state artifacts, and command semantics are the real control surface for safe execution.
-> > - Use it to narrow blast radius before running warehouse-mutating commands and to explain why the same base verb can behave very differently under different selectors and flags.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this note as a replacement for project-structure, modeling, or troubleshooting notes when the real question is about SQL design, architecture, or failure diagnosis rather than command behavior.
-> > - Do not treat CLI verbs as the main decision; selector scope and target selection are often the more important risk controls.
-> > - Do not run broad or deferred state commands unless the artifact context and environment mapping are explicit.
 
 ### Core Commands Overview
 

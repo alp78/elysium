@@ -159,15 +159,6 @@ These three processing models represent fundamentally different trade-offs betwe
 
 ---
 
-> [!example] Streaming Architecture Fit
->
-> > [!success] Latency-Driven Processing
-> >
-> > - Use streaming architecture when business value depends on low-latency updates, replayable event streams, continuous stateful processing, or CDC-driven propagation from operational systems.
->
-> > [!failure] Batch Is Sufficient
-> >
-> > - Do not choose streaming when minute-level freshness is enough, batch reprocessing is simpler, or the team cannot sustain always-on operations, broker retention, and stateful failure recovery.
 
 ## Lambda Architecture
 

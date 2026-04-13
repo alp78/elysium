@@ -157,15 +157,6 @@ status: complete
 > > A missing deadline often means failures surface too late to be useful, after threads, workers, or downstream budgets have already been consumed.
 >
 
-> [!example] gRPC Interface Fit
->
-> > [!success] Typed Internal Throughput
-> >
-> > - Use gRPC for high-throughput internal service communication, strongly typed multi-language interfaces, and streaming-style pipelines where HTTP/2 multiplexing and protobuf efficiency matter.
->
-> > [!failure] Public Simplicity Preference
-> >
-> > - Do not choose gRPC for browser-first public APIs, simple external integrations, or workloads where human-readable HTTP plus JSON is operationally easier and sufficient.
 
 ## Overview
 

@@ -134,19 +134,6 @@ status: complete
 > >
 > > Multilingual quality problems may originate in parsing and translation layers before the model's reasoning step becomes the bottleneck.
 
-> [!example] ESG Review Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when ESG workflows need extraction, triage, multilingual interpretation, or analyst support that can remain evidence-linked and reviewable.
-> > - Use it when document-level evidence, taxonomy mapping, entity resolution, and reviewer routing all need to stay explicit instead of collapsing into one opaque narrative.
-> > - Use it to keep AI on the assistive side of ESG analysis while preserving source linkage and methodology control.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use AI for unsupported issuer judgments, client-facing narratives without source references, or one-step scoring that hides ambiguity and aggregation logic.
-> > - Do not jump from one document to one issuer-wide conclusion without controlled aggregation logic.
-> > - Do not let multilingual or controversy workflows bypass evidence packaging and review just because the model sounds confident.
 
 ## Why this topic matters
 

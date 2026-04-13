@@ -243,19 +243,6 @@ tags:
 > >
 > > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
 
-> [!example] Strategy Selection Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when choosing a default PR merge mode, cleaning private branch history, or teaching why the same diff can produce very different repository history.
-> > - Use it when auditability, revertability, branch traceability, and hosted-platform merge policy matter as much as visual history cleanliness.
-> > - Use it to compare merge, rebase, and squash as governance choices rather than as interchangeable personal preferences.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not rebase commits that teammates have already based work on unless the coordination and force-push path are explicit.
-> > - Do not squash-merge when individual commit history must stay visible and attributable on the target branch.
-> > - Do not treat history cleanup as harmless if the repository depends on merge evidence for compliance, blame, or rollback.
 
 ## Conceptual Model
 

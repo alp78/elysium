@@ -167,15 +167,6 @@ status: complete
 > > Bi-temporal models add complexity, but they are often the only clean way to reason about corrections, late data, and retroactive business changes.
 >
 
-> [!example] Context Preservation Fit
->
-> > [!success] Traceable Platform
-> >
-> > - Use explicit context and metadata architecture when the platform needs reproducible debugging, audit trails, late-data handling, quality transparency, data-product contracts, or cross-system lineage under real operational pressure.
->
-> > [!failure] Decorative Metadata
-> >
-> > - Do not add metadata only decoratively; without ownership, surfaced queries, and downstream decisions tied to it, the architecture adds ceremony without operational value.
 
 ## Why Context Matters — The Cost of Context Loss
 

@@ -139,15 +139,6 @@ status: complete
 > > Environment boundaries matter most when humans are tired or automation is wrong. Blast-radius reduction is the concrete payoff of that separation.
 >
 
-> [!example] Environment Boundary Fit
->
-> > [!success] Safe Promotion Boundaries
-> >
-> > - Use this strategy to define or repair environment boundaries for a multi-tool platform where infrastructure, pipelines, and warehouse assets must promote predictably across stages.
->
-> > [!failure] Convenience Collapse
-> >
-> > - Do not use convenience as a reason to share one project, one credential set, or one default target across all work.
 
 ## Environment Topology — How Many and Why
 

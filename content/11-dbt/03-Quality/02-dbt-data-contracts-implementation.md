@@ -163,17 +163,6 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 > >
 > > Keeping every version forever avoids immediate breakage but creates permanent complexity. Deprecation is how the interface lifecycle stays manageable.
 
-> [!example] Contract Enforcement Scope
->
-> > [!success] Stable Interface
-> >
-> > - Use enforced contracts on marts or shared models whose columns, types, and access surface are consumed by dashboards, APIs, or downstream dbt projects.
-> > - Pair contracts with versioning and CI when breaking schema changes must be staged deliberately rather than leaking into production by accident.
->
-> > [!failure] Internal Churn
-> >
-> > - Avoid enforcing contracts on fast-changing internal models that are still being reshaped frequently, because the friction will be high while the interface is not yet worth stabilizing.
-> > - Do not use contracts as a replacement for data-quality tests: they protect schema shape and interface guarantees, not freshness, business correctness, or value validity.
 
 ### What Is a dbt Data Contract?
 

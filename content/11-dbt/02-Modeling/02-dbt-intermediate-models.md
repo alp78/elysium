@@ -153,19 +153,6 @@ description: "Business logic transforms, silver layer"
 > >
 > > The moment end users rely on an intermediate model directly, it starts inheriting mart-like expectations for stability, documentation, and support.
 
-> [!example] Intermediate Layer Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when implementing shared business transformations, reusable enrichment logic, rolling calculations, or canonical building blocks that multiple marts need.
-> > - Use it when the goal is to encode business logic once, inside the modeled graph, without publishing it directly to consumers.
-> > - Use it to keep reusable calculations narrow, composable, and intentionally materialized only when reuse or performance justifies it.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use this layer for raw cleanup that belongs in staging or for final consumer tables that should be promoted to marts with clearer documentation and contracts.
-> > - Do not let intermediate models become giant multi-purpose SQL files just because they are “internal.”
-> > - Do not let analysts or BI tools depend directly on unstable intermediate relations without recognizing that this changes their support contract.
 
 ### Intermediate Model Core Principles
 

@@ -236,19 +236,6 @@ status: complete
 > >
 > > In organization-backed estates, a domain such as `example.com` often explains who owns the top-level resource and why an organization exists at all.
 
-> [!example] Hierarchy Audit Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note during hierarchy audits, IAM inheritance reviews, project bootstrap, metadata cleanup, billing-boundary checks, and lien or deletion-protection work.
-> > - Use it when you need to interpret `organization`, `folder`, `parent`, labels, liens, or blank ancestry fields without confusing missing context with malformed output.
-> > - Use it when mapping live `gcloud` hierarchy evidence to Terraform resources and administrative boundaries.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not create or delete throwaway projects casually in a shared environment just to test hierarchy commands.
-> > - Do not assume missing ancestors automatically mean a permission error; in this environment, parentless project output can be the real state.
-> > - Do not treat labels or naming conventions as substitutes for hierarchy, billing, or IAM boundaries.
 
 ## Bootstrap Access
 

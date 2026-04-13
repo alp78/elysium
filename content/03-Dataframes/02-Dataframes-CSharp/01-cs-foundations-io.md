@@ -1366,20 +1366,6 @@ The operationally correct choice is usually obvious once the source boundary and
 
 ---
 
-> [!example] C# DataFrame Engine Fit
->
-> > [!success] Applicability
-> >
-> > - **Polars.NET** — when the DataFrame engine is the analytical heart of the workflow: heavy filtering, grouping, joining, and lazy evaluation on columnar data. Best for data engineering pipelines and analytical notebooks.
-> > - **Microsoft.Data.Analysis** — when the DataFrame is a managed structure inside a larger .NET or ML.NET workflow. Best for feature preparation and ML.NET handoff.
-> > - **Neither** — for orchestration, CDC, warehouse publication, or streaming. Use ADO.NET, Entity Framework, or platform-native tools.
->
-> > [!failure] Limitations
-> >
-> > - **ML.NET integration** — Polars.NET does not implement `IDataView`. Better approach: Use MDA for the ML.NET boundary; convert from Polars via arrays
-> > - **Data larger than RAM** — Both libraries are single-node, in-memory. Better approach: Push computation to SQL, Spark, or a warehouse engine
-> > - **Real-time streaming** — DataFrames are batch-oriented. Better approach: Use Kafka, Azure Event Hubs, or Spark Structured Streaming
-> > - **Complex relational logic (5+ joins)** — DataFrame join chains become unreadable. Better approach: Use SQL via DuckDB.NET or push to the database
 
 ## Warnings
 

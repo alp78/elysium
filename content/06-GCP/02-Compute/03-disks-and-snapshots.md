@@ -233,19 +233,6 @@ status: complete
 > >
 > > TempDB is recreated by SQL Server and should not be handled like durable business data. Isolating it improves both performance and backup discipline.
 
-> [!example] Stateful Storage Fit
->
-> > [!success] Appropriate
-> >
-> > - Use these patterns for stateful workloads such as SQL Server that need separate data, log, and TempDB volumes, scheduled protection, and online storage growth.
-> > - Use them when disk layout, attach order, filesystem mounting, snapshots, restore cutover, and resize steps must be documented and repeatable.
-> > - Use them when the team needs durable block storage that survives VM restarts and can be restored or resized deliberately.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat TempDB or other explicitly ephemeral scratch storage as durable backup material.
-> > - Do not persist `/dev/sdX` names in `/etc/fstab` when stable device-name or UUID references are available.
-> > - Do not detach or delete disks while they are still mounted or in active use by the guest.
 
 ## Conceptual Model
 

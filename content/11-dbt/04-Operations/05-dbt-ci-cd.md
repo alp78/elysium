@@ -153,17 +153,6 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 > >
 > > Fast promotion without a clear rollback story is just accelerated risk. Delivery pipelines should make the reverse move understandable as well as the forward one.
 
-> [!example] Delivery Pipeline Readiness
->
-> > [!success] Controlled Promotion
-> >
-> > - Use this pattern when dbt changes must move from pull request to production through repeatable validation, short-lived cloud auth, and an explicit promotion path into Airflow or another execution surface.
-> > - Lean on slim builds, saved manifests, and aligned local hooks when you need fast feedback without losing graph awareness or reproducibility.
->
-> > [!failure] Automated Chaos
-> >
-> > - Avoid formal CI/CD if the project still lacks basic testing, layering, or artifact discipline, because the pipeline will only automate unstable behavior faster.
-> > - Do not treat deployment automation as complete just because code reaches production; rollback, state provenance, and credential scope still need to be visible and controlled.
 
 ### dbt CI Goals
 

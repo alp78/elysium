@@ -145,19 +145,6 @@ status: complete
 > >
 > > If reviewers cannot reconstruct the sources and versions behind an answer, the workflow is not truly governable.
 
-> [!example] Control Boundary Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when AI workflows touch sensitive data, external providers, governed decisions, or tools that could change state or publish consequential output.
-> > - Use it when the system needs explicit trust boundaries between policy, untrusted content, tools, traces, reviewers, and external vendors.
-> > - Use it to turn governance from a policy slogan into concrete controls around least privilege, approval gates, provenance, and retention.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use governance language as a vague policy discussion detached from actual prompt layers, tool scopes, approval checkpoints, and trace design.
-> > - Do not assume internal retrieval or stored telemetry is automatically trusted.
-> > - Do not expand autonomy for convenience if the workflow still lacks enforceable approval and rollback boundaries.
 
 ## Why this topic matters
 

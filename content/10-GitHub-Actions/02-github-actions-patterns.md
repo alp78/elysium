@@ -97,7 +97,7 @@ tags:
 > > [!warning] Evaluation scope matters
 > >
 > > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
-
+>
 > ---
 >
 > **composite action**
@@ -438,19 +438,6 @@ tags:
 > >
 > > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
 
-> [!example] Pattern Selection Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when the problem is workflow architecture: reusable workflows, composite actions, matrices, artifacts, caches, concurrency, or monorepo scaling.
-> > - Use it when repeated YAML, inconsistent control flow, or unclear blast radius means the team needs a durable reuse pattern rather than another one-off workflow file.
-> > - Use it to compare abstraction choices by runner isolation, trust boundary, maintenance cost, and review clarity before standardizing across repositories.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not introduce reuse layers before repeated workflow pain is real; premature abstraction makes review and debugging harder.
-> > - Do not apply a pattern that hides execution boundaries the team still needs to understand explicitly, especially around caches, environments, and workflow chaining.
-> > - Do not use this note as a substitute for the fundamentals if the underlying trigger, runner, and expression model is still unclear.
 
 ## Conceptual Model
 

@@ -166,19 +166,6 @@ status: complete
 > >
 > > Start by deciding whether the workload is a timed trigger, a durable queue, a stateful workflow, or an event reaction. Tool choice becomes much easier after that semantic decision.
 
-> [!example] Managed Trigger Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when a GCP-hosted workload needs managed time-based triggers, durable deferred execution, or multi-step orchestration without running cron daemons or self-hosted Airflow for every case.
-> > - Use it when the architectural question is which primitive matches the execution model: Cloud Scheduler for clocks, Cloud Tasks for queued HTTP work, Cloud Workflows for orchestration, or Eventarc for event-driven fan-out.
-> > - Use it to design IAM, retry, target integration, and runtime boundaries so the configured trigger becomes a working production path rather than only a control-plane object.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not confuse time-based scheduling with queue semantics; Cloud Scheduler and Cloud Tasks solve different problems.
-> > - Do not use Workflows where a single authenticated HTTP-triggered job would be simpler, cheaper, and easier to operate.
-> > - Do not configure the trigger service in isolation from the target runtime; permissions, idempotency, and retry behavior decide whether the design is safe.
 
 ## Cloud Scheduler
 

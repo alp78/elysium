@@ -203,19 +203,6 @@ It does not replace:
 - row- and column-level data security inside BigQuery
 - compute firewalling for your own VMs and private IP services
 
-> [!example] Perimeter Fit
->
-> > [!success] Appropriate
-> >
-> > - Use VPC Service Controls when the real question is where data from supported Google-managed services may move after IAM already allows access.
-> > - Use it when BigQuery, Cloud Storage, Secret Manager, or similar managed data planes must stay inside approved project and context boundaries.
-> > - Use it when cross-project exchange, partner delivery, CI/CD ingress, or export paths need explicit perimeter rules rather than implicit trust.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat VPC-SC as a replacement for IAM, BigQuery row or column security, or VM and VPC firewall controls.
-> > - Do not design around it if the critical requirement is host-level or application-level authorization instead of managed-service data exfiltration control.
-> > - Do not assume project-level credentials are enough to author real perimeters; live rollout requires organization-level Access Context Manager authority.
 
 ## Conceptual Model
 

@@ -147,15 +147,6 @@ updated: 2026-03-29
 > > SLAs are what convert abstract quality expectations into something the platform can monitor, alert on, and escalate when breached.
 >
 
-> [!example] Quality Gate Scope
->
-> > [!success] Controlled Trust
-> >
-> > - Use a full quality framework when production pipelines need visible trust signals, quality enforcement at stage boundaries, and a controlled path for bad rows or suspicious aggregates.
->
-> > [!failure] Metric Without Action
-> >
-> > - Do not reduce quality to a single dashboard metric with no gating behavior, replay path, or owner response.
 
 ## Data Quality Dimensions
 

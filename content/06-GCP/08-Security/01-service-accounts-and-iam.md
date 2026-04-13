@@ -220,19 +220,6 @@ Most platform failures that look like "auth problems" are actually one of four d
 
 Data engineers hit this constantly: Cloud Run jobs that can write BigQuery but not read a bucket, GitHub Actions that can authenticate through WIF but cannot impersonate the deployment service account, or local scripts that work with user ADC but fail under the production service account. IAM is the decision layer that separates those cases.
 
-> [!example] IAM Design Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when designing least-privilege runtime identities for Cloud Run, GCE, Airflow, CI/CD, and secret access in GCP data platforms.
-> > - Use it when debugging which principal actually made a request, why impersonation failed, or why a conditional grant stopped applying.
-> > - Use it when validating safe service-account lifecycle operations such as create, disable, re-enable, impersonate, and retire risky keys.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use user-managed JSON keys as the default runtime pattern when impersonation, metadata-backed identity, or Workload Identity Federation can do the job.
-> > - Do not default to broad project roles when the real permission can be expressed with a narrower resource-scope grant.
-> > - Do not assume project-level CLI access can simulate or author organization-scoped controls such as deny or principal access boundary policy.
 
 ## Conceptual Model
 

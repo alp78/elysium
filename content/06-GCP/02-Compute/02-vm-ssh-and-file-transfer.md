@@ -159,19 +159,6 @@ status: complete
 > >
 > > The client connects to Google's IAP endpoint, not directly to the VM. Google then forwards the traffic internally to the guest network interface.
 
-> [!example] Remote Access Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for SSH sessions, non-interactive remote commands, SCP transfers, and private-service forwarding into VMs that stay private behind IAP.
-> > - Use it when operators need secure access to instances without public IPs and must combine IAM, IAP, firewall rules, and OS Login correctly.
-> > - Use it when file transfer must respect remote ownership boundaries by staging into writable paths first and then elevating deliberately.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not copy directly into root-owned or service-owned paths when a staging path plus explicit `sudo cp` or `sudo chown` is the safe pattern.
-> > - Do not prefer metadata-based SSH keys for normal human access when OS Login is available and auditability matters.
-> > - Do not use `--internal-ip` unless the workstation already has valid same-network, VPN, or other private routing to the VM.
 
 ## SSH Access via IAP
 

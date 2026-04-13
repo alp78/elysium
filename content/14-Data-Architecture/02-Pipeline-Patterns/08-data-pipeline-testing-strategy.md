@@ -150,15 +150,6 @@ status: complete
 > > Production alerts tell you something already went wrong in a live environment. Testing exists to stop many of those failures before deployment.
 >
 
-> [!example] Testing Pyramid Scope
->
-> > [!success] Cheapest-Failure Coverage
-> >
-> > - Use this strategy to design or repair a pipeline test suite so logic, schema, quality, integration, and regression failures are caught at the cheapest stage possible.
->
-> > [!failure] One-Test-Type Illusion
-> >
-> > - Do not use the note as a substitute for runtime monitoring or as justification for only one test type covering every failure mode.
 
 ## The Data Engineering Testing Pyramid
 

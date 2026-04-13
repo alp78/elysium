@@ -1323,21 +1323,6 @@ A, B
 x, x, x
 ```
 
-> [!example] C# Control-Flow Fit
->
-> > [!success] Applicability
-> >
-> > - **Type-safe branching** — C#'s pattern matching in `switch` expressions provides exhaustive, compiler-verified dispatch on types, properties, and values — catching missing cases at compile time.
-> > - **Performance-critical loops** — C# `for`/`foreach` loops are 10–100x faster than Python loops for CPU-bound work, with no GIL limitation for parallel execution.
-> > - **Complex state machines** — `switch` with pattern matching and `when` guards cleanly expresses multi-dimensional branching that would be unwieldy in Python's `if/elif` chains.
-> > - **LINQ pipelines** — declarative, composable, and lazy data transformation with full IDE support and type inference.
->
-> > [!failure] Limitations
-> >
-> > - **Ad-hoc data exploration** — C#'s ceremony makes quick iteration slower than Python's comprehensions and REPL. Prototype logic in Python, then port.
-> > - **Dynamic dispatch on unknown types** — pattern matching requires known types at compile time. For truly dynamic data, consider `dynamic` or dictionary-based dispatch.
-> > - **No `for...else` equivalent** — C# has no equivalent of Python's `for...else` for "not found" detection. Use a flag variable or LINQ `Any()`/`FirstOrDefault()`.
-> > - **LINQ overhead for simple loops** — LINQ adds allocation and virtual dispatch overhead. For tight loops processing millions of items, a plain `for` loop with manual accumulation is faster.
 
 ## Warnings
 

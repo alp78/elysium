@@ -148,15 +148,6 @@ status: complete
 > > If the retried operation inserts duplicates or partially rewrites state, the retry mechanism amplifies the incident instead of recovering from it.
 >
 
-> [!example] Recovery Strategy Fit
->
-> > [!success] Controlled Recovery
-> >
-> > - Use these patterns anywhere pipelines depend on networks, databases, APIs, messaging systems, or other services that will fail intermittently and need controlled recovery behavior.
->
-> > [!failure] Blind Retry Loop
-> >
-> > - Do not wrap failures in generic retries without classification, idempotency, or escalation boundaries.
 
 ## Error Classification — The Most Important Distinction
 

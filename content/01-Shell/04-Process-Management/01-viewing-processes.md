@@ -774,21 +774,6 @@ On Windows there is no direct equivalent to the Linux 1/5/15-minute load average
 A value of 3 means 3 threads are currently queued waiting for a CPU core. On a 4-core machine this is mildly elevated. On a single-core machine this would indicate significant CPU saturation.
 
 
-> [!example] Live Process Inspection Fit
->
-> > [!success] Appropriate
-> >
-> > - **Diagnosing slow systems** -- `htop` or `top` shows which process is consuming CPU or memory in real time.
-> > - **Identifying stuck processes** -- `ps aux | grep D` finds processes in uninterruptible sleep (D state) that indicate I/O problems.
-> > - **Pre-kill verification** -- always `ps aux | grep <pattern>` before killing to confirm you have the right PID and process.
-> > - **Capacity planning** -- monitoring load average over time reveals whether a VM needs more CPU cores or faster storage.
-> > - **Container troubleshooting** -- `docker stats` or `ps aux` inside the container identifies resource consumption per container process.
->
-> > [!failure] Inappropriate
-> >
-> > - **Historical analysis** -- `ps` and `htop` show current state only. For historical CPU/memory trends, use monitoring tools (Datadog, Cloud Monitoring, Prometheus).
-> > - **Automated alerting** -- manual process viewing does not scale. Configure monitoring agents to alert on high CPU, memory, or load average thresholds.
-> > - **Application-level profiling** -- process-level CPU% tells you which process is busy, not which function or query inside it. Use application profilers (Python cProfile, .NET dotTrace, SQL Server DMVs) for deeper analysis.
 
 ## Warnings
 

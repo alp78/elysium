@@ -136,19 +136,6 @@ status: complete
 > >
 > > Schema validity is useful, but applied prompting still needs checks against domain rules, routing rules, and approval rules.
 
-> [!example] Workflow Prompt Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for document extraction, evidence-backed research, coding assistance with guardrails, anomaly triage, reviewer-note generation, and workflow support where AI output is validated before action.
-> > - Use it when the task family itself should shape the prompt contract, autonomy boundary, and validation method.
-> > - Use it to decide when AI should assist, summarize, extract, or prepare evidence instead of taking direct operational action.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use applied prompting as a freeform shortcut for tasks that need deterministic records, explicit approval gates, or direct system actions without strong downstream controls.
-> > - Do not reuse one prompt shape across unrelated task families just because the wording happened to work once.
-> > - Do not let polished language hide weak evidence rules or hidden autonomy in the workflow.
 
 ## Why this topic matters
 

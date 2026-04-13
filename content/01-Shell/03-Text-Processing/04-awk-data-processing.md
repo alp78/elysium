@@ -2201,23 +2201,6 @@ For the sed perspective on this comparison, including in-place editing, hold spa
 The filtering and aggregation patterns here (pattern-action rules, group-by with associative arrays) have direct DataFrame equivalents — see [02_py_explore_select_filter](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/02_py_explore_select_filter) for the Pandas approach to the same column filtering and selection workflows.
 
 
-> [!example] Field Processing Fit
->
-> > [!success] Appropriate
-> >
-> > - **CSV/TSV field extraction** -- `awk -F',' '{print $1, $3}' data.csv` extracts specific columns without loading the entire file into memory.
-> > - **Log analysis with field filtering** -- `awk '$9 >= 500' access.log` filters HTTP log entries by status code (field 9).
-> > - **Data quality checks** -- `awk -F',' 'NF != 10' data.csv` finds rows with the wrong number of fields (malformed records).
-> > - **Quick aggregation** -- `awk '{sum += $1} END {print sum}' numbers.txt` sums a column without a full programming language.
-> > - **Report generation** -- `awk` with `printf` produces aligned, formatted reports from raw data directly on the command line.
-> > - **Pipeline glue** -- awk is faster than Python for simple field extraction and filtering in shell pipelines processing millions of lines.
->
-> > [!failure] Inappropriate
-> >
-> > - **Complex business logic** -- if you need error handling, API calls, database access, or multi-step transformations, use Python or C#.
-> > - **JSON, XML, or nested data** -- awk processes flat, delimited text. Use `jq` for JSON, `xmlstarlet` for XML.
-> > - **Fields containing the delimiter** -- quoted CSV fields like `"Smith, John"` confuse awk field splitting. Use a proper CSV parser (Python `csv` module, `csvkit`, or `miller`).
-> > - **Data larger than memory** -- while awk is memory-efficient for streaming, associative arrays in awk accumulate in memory. For very large aggregations, use SQL or a dataframe library.
 
 ## Warnings
 

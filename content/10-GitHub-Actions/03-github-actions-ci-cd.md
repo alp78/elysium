@@ -52,7 +52,7 @@ tags:
 > > [!warning] Operational blast radius
 > >
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
-
+>
 > ---
 >
 > **Continuous Deployment**
@@ -333,19 +333,6 @@ tags:
 > >
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
-> [!example] Delivery Pipeline Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note when designing or reviewing GitHub Actions pipelines that must build immutable artifacts once, promote them across environments, deploy safely, and verify production health.
-> > - Use it when environment approvals, rollback paths, deployment identity, merge queues, or release concurrency are the real design constraints.
-> > - Use it to check that CI and CD stages preserve artifact immutability and that the tested artifact is the one reaching production.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not start here if the team still lacks the core runner, trigger, and expression model; promotion pipelines depend on those fundamentals.
-> > - Do not use this note for generic workflow reuse questions that are not about artifact promotion and deployment safety.
-> > - Do not treat it as sufficient if the workload is specifically warehouse automation or data backfill control; those patterns need the data-engineering note.
 
 ## CI/CD Lifecycle Model
 

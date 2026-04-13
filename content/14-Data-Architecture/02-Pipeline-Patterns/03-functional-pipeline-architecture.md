@@ -147,15 +147,6 @@ status: complete
 > > Data can satisfy a schema and still be untrustworthy if its provenance, freshness, or semantic caveats are unclear.
 >
 
-> [!example] Functional Pipeline Fit
->
-> > [!success] Testable Batch Core
-> >
-> > - Use this architecture for batch or micro-batch pipelines that need strong testability, typed boundaries, recoverable failure paths, and explicit trust decisions before publication.
->
-> > [!failure] Intentional Procedural Coupling
-> >
-> > - Do not force this pattern onto throwaway scripts, highly coupled procedural jobs, or systems where transformation logic and infrastructure concerns are intentionally inseparable.
 
 ## The Complete Architecture
 

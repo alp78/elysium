@@ -172,19 +172,6 @@ tags:
 > >
 > > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-> [!example] Release Boundary Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for marking deployable versions, publishing releases, tying artifacts to exact commits, and enforcing reproducible rollback points.
-> > - Use it when the release boundary must be explicit in both Git and the hosting platform, including SemVer naming, release notes, automation, and governance.
-> > - Use it to decide when a tag should remain a simple internal marker and when it must become a protected, auditable release object.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use tags as moving bookmarks; once published, they should be treated as stable release references.
-> > - Do not delete or recreate published tags casually, because that breaks reproducibility and downstream automation assumptions.
-> > - Do not treat release notes as a substitute for actual versioning policy, signing, or tag-governance rules.
 
 ## Conceptual Model
 

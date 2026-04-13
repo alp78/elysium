@@ -190,19 +190,6 @@ When these three lenses converge on a data team, the result is a team that ships
 
 ---
 
-> [!example] Operating Discipline Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for team operating-model design, platform improvement planning, CI/CD modernization, observability rollout, and any discussion about why data delivery is slow, brittle, or opaque.
-> > - Use it when the question is not one tool choice but the broader delivery discipline: automation, testing, process control, environment parity, and continuous improvement.
-> > - Use it to turn vague calls for "better process" into explicit DataOps investments tied to value-stream pain and measurable delivery outcomes.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use DataOps as branding without the underlying discipline of automation, testing, environment parity, metrics, and cultural accountability.
-> > - Do not jump to SPC dashboards or maturity labels before the pipeline behavior is stable enough to baseline sensibly.
-> > - Do not treat this note as a substitute for concrete implementation decisions once the team has already identified the specific operational bottleneck.
 
 ## The DataOps Manifesto
 

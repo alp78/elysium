@@ -1566,25 +1566,6 @@ print("Demo objects cleaned up")
 
 Demo objects cleaned up
 
-> [!example] BigQuery Engineering Fit
->
-> > [!success] Cost-Aware Design
-> >
-> > - Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, table functions over procedures for reads, and batch loads over streaming inserts when real-time latency is not required.
-> > - **Views** — when multiple consumers need the same query logic. Regular views for infrequent reads; materialized views for expensive aggregations hit repeatedly.
-> > - **Table functions** — for parameterized reads that need to be reusable across notebooks, scripts, and scheduled queries. Preferred over stored procedures for read-only logic.
-> > - **Stored procedures** — only for multi-statement scripting with control flow (`IF`, `LOOP`, `BEGIN...EXCEPTION`). Not for parameterized reads.
-> > - **Partitioning + clustering** — for any table above ~1GB. Partition by the most common WHERE column (date), cluster by the most common JOIN/filter column (symbol, _index).
-> > - **SCD Type 2** — for dimension attributes that affect historical calculations. Always prefer over Type 1 for sector, index membership, and weighting changes.
-> > - **Batch loading** — for cost-sensitive pipelines. Batch loads via `bq load`, `LOAD DATA`, or Storage Write API (batch mode) are free.
->
-> > [!failure] Quota or Re-Scan Trap
-> >
-> > - The same patterns become liabilities when applied in the wrong context — regular views hit repeatedly, partitioning on small tables, or high-frequency MERGE that exhausts the DML quota. The scenarios below are the most common misuses seen in code reviews.
-> > - **Regular views for dashboards** — if a dashboard query runs repeatedly throughout the day, the view re-scans on every read. Use a materialized view or scheduled query to a gold table.
-> > - **MERGE more than once per pipeline cycle** — each MERGE counts against the 1,500 DML/day quota. For high-frequency upserts, switch to the Storage Write API.
-> > - **Partitioning on small tables** — tables under ~1GB gain negligible benefit from partitioning. The partition metadata overhead can actually increase query latency.
-> > - **Clustering without partitioning** — while BigQuery supports clustering without partitioning, partition pruning provides coarse elimination first, then clustering provides fine-grained filtering within each partition. Use both.
 
 ## Warnings
 

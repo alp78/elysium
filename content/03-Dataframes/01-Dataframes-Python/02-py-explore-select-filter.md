@@ -10153,22 +10153,6 @@ display(Markdown(comparison))
 
 ---
 
-> [!example] Exploration and Filtering Fit
->
-> > [!success] Applicability
-> >
-> > - **Exploration (head, describe, info, glimpse)** — always run these first on any new dataset. They cost almost nothing and reveal schema problems, null patterns, and unexpected distributions before you write any transformation logic.
-> > - **Value counts and unique** — run on every categorical or key column before joins. High cardinality or unexpected categories indicate data quality issues.
-> > - **Null inspection** — run before aggregations (which may silently skip nulls) and before joins (where null keys never match).
-> > - **Column selection** — use early in a pipeline to drop unneeded columns. Fewer columns means less memory, faster operations, and cleaner code.
-> > - **Row filtering** — apply as early as possible (especially in Polars lazy mode) to reduce the dataset before expensive operations like joins and groupbys.
->
-> > [!failure] Limitations
-> >
-> > - **Filtering on columns that don't exist yet** — The column must be present before filtering — chaining a filter before a `with_columns` that creates the column raises `ColumnNotFoundError`. Better approach: Create the column first, then filter
-> > - **Complex multi-table filtering logic** — Chaining many `.isin()` calls across multiple reference tables becomes unreadable and slow. Better approach: Use joins (inner, semi) or SQL/DuckDB for complex relational logic
-> > - **Filtering streaming or unbounded data** — DataFrames are batch-oriented — no incremental filter as new rows arrive. Better approach: Use Kafka Streams, Flink, or Spark Structured Streaming
-> > - **Very large datasets that don't fit in memory** — Eager `read_parquet()` + `filter()` loads everything first. Better approach: Use Polars `scan_parquet().filter()` for predicate pushdown, or push the filter to the database
 
 ## Warnings
 

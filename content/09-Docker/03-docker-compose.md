@@ -168,7 +168,7 @@ status: complete
 > > [!info] Boot behavior lives here
 > >
 > > If the stack comes up unexpectedly, fails on reboot, or runs under the wrong user, inspect the unit first. Compose is only one layer of the control plane on the VM.
-
+>
 > ---
 >
 > **`journalctl`**
@@ -229,19 +229,6 @@ flowchart LR
   K --> O
 ```
 
-> [!example] Compose Operations Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note before `docker compose up`, after reboot, before editing the VM stack, or whenever service names, mounts, startup order, or health state differ from expectation.
-> > - Use it when you need to reconcile the local workstation stack with the live Airflow VM instead of assuming both environments share one compose truth.
-> > - Use it to inspect the full control plane around Compose, including `.env` interpolation, systemd boot behavior, bind mounts, and health-gated startup.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not treat older repo infrastructure notes as authoritative for the live VM if the compose project name, service set, or boot path has changed.
-> > - Do not apply healthcheck remediations blindly without considering restart impact and whether the probe is the problem or only the symptom.
-> > - Do not reason from raw YAML alone when the effective runtime model depends on interpolation, project naming, and systemd orchestration.
 
 ## Local And Remote Topology
 

@@ -173,19 +173,6 @@ status: complete
 > >
 > > Deflecting tickets is only a success if users are also getting correct answers quickly instead of silently working around a broken experience.
 
-> [!example] Governed Access Fit
->
-> > [!success] Appropriate
-> >
-> > - Use this note for platform roadmap work, self-service strategy, catalog and semantic-layer design, access-governance planning, and scaling analyst capability without linear headcount growth.
-> > - Use it when the real problem is how to widen access while preserving trust, discoverability, policy control, and cost discipline.
-> > - Use it to stage self-service by persona and capability instead of pretending every user needs the same tools or the same freedom.
->
-> > [!failure] Inappropriate
-> >
-> > - Do not use self-service language as an excuse to expose raw, undocumented, or poorly governed data before the trust foundation exists.
-> > - Do not widen query freedom without ownership metadata, quality signals, contracts, and cost controls.
-> > - Do not assume one catalog or BI tool alone creates self-service if literacy, support boundaries, and access workflows are still weak.
 
 ## The Self-Service Spectrum
 
