@@ -1285,20 +1285,22 @@ print(process.__annotations__)
 {'name': <class 'str'>, 'age': <class 'int'>, 'score': <class 'float'>, 'active': <class 'bool'>, 'tags': list[str] | None, 'return': dict[str, object]}
 ```
 
-## When to Use
-
-- **Reusable logic** — extract any repeated block into a function. Functions are Python's primary abstraction mechanism.
-- **Decorators for cross-cutting concerns** — logging, timing, retry, caching, authentication. One decorator applied to many functions avoids scattering infrastructure code.
-- **Closures for state encapsulation** — when a class feels like overkill for simple state (counters, accumulators, partial configuration).
-- **Type hints for team codebases** — annotate public APIs and complex functions. `mypy` catches type bugs before runtime.
-- **Lambda + higher-order functions** — short callbacks for `sorted(key=...)`, `map`, `filter`, and LINQ-style Polars/Pandas operations.
-
-## When Not to Use / Limits
-
-- **Lambdas for complex logic** — if a lambda needs `if/else`, multiple statements, or error handling, use a named `def` instead.
-- **Deep decorator stacking** — more than 3 stacked decorators becomes hard to debug. Combine concerns into a single decorator.
-- **Closures over mutable state in loops** — late binding causes all closures to share the final loop value. Use `functools.partial` or default argument binding.
-- **Type hints as runtime enforcement** — annotations are ignored at runtime unless you add a tool like `beartype` or `pydantic`. Don't assume correctness from hints alone.
+> [!example] Python Function Patterns
+>
+> > [!success] Applicability
+> >
+> > - **Reusable logic** — extract any repeated block into a function. Functions are Python's primary abstraction mechanism.
+> > - **Decorators for cross-cutting concerns** — logging, timing, retry, caching, authentication. One decorator applied to many functions avoids scattering infrastructure code.
+> > - **Closures for state encapsulation** — when a class feels like overkill for simple state (counters, accumulators, partial configuration).
+> > - **Type hints for team codebases** — annotate public APIs and complex functions. `mypy` catches type bugs before runtime.
+> > - **Lambda + higher-order functions** — short callbacks for `sorted(key=...)`, `map`, `filter`, and LINQ-style Polars/Pandas operations.
+>
+> > [!failure] Limitations
+> >
+> > - **Lambdas for complex logic** — if a lambda needs `if/else`, multiple statements, or error handling, use a named `def` instead.
+> > - **Deep decorator stacking** — more than 3 stacked decorators becomes hard to debug. Combine concerns into a single decorator.
+> > - **Closures over mutable state in loops** — late binding causes all closures to share the final loop value. Use `functools.partial` or default argument binding.
+> > - **Type hints as runtime enforcement** — annotations are ignored at runtime unless you add a tool like `beartype` or `pydantic`. Don't assume correctness from hints alone.
 
 ## Warnings
 
@@ -1349,4 +1351,3 @@ print(process.__annotations__)
 | `RecursionError: maximum recursion depth exceeded` | Recursive function without base case or too-deep recursion | Add base case; increase `sys.setrecursionlimit()` or use iteration |
 | Type hint doesn't prevent wrong type | Type hints are not enforced at runtime | Run `mypy` for static checking; use `pydantic` for runtime validation |
 | `lru_cache` doesn't work with dict args | Dict arguments aren't hashable | Convert to `frozenset(d.items())` or use a hashable key |
-

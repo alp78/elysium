@@ -10,23 +10,139 @@ status: complete
 
 # Index Types and Strategy
 
-Indexes are a storage design decision, not just a tuning afterthought. Every index changes three things at once:
-
-- how SQL Server can find rows
-- how much data must be read to satisfy a query
-- how much extra work every `INSERT`, `UPDATE`, and `DELETE` must do
-
-The correct production question is not "can this query be faster with an index?" It is "does this index earn its write cost across the workload?"
-
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> - Physical storage shape of B-tree and columnstore indexes and how each answers queries
-> - Decision criteria for heap vs clustered vs nonclustered vs covering vs filtered vs columnstore
-> - Live index telemetry from catalog views and DMVs
-> - Write-maintenance cost vs read benefit budgeting
-> - Missing-index DMV interpretation without blind `CREATE INDEX` execution
+> Indexes are a storage design decision, not just a tuning afterthought. Every index changes how SQL Server can find rows, how much data must be read to satisfy a query, and how much extra work every `INSERT`, `UPDATE`, and `DELETE` must do. The correct production question is not “can this query be faster with an index?” It is “does this index earn its write cost across the workload?”
+>
+> **Physical index families**
+> - covers the storage shape of rowstore B-tree and columnstore indexes and how each answers queries
+>
+> **Design choices**
+> - evaluates heap vs clustered vs nonclustered vs covering vs filtered vs columnstore, including composite-key order, include columns, lookups, and write cost
+>
+> **Live telemetry**
+> - uses catalog views and DMVs to inspect the current index surface and measure whether indexes are earning their maintenance budget
+>
+> **Missing-index interpretation**
+> - explains how to read missing-index DMVs as hints rather than commands and how to avoid blind `CREATE INDEX` execution
+>
+> **Operations and safety**
+> - Warnings: every extra index adds write cost, bad key order breaks seekability, low-value missing-index suggestions create bloat, and columnstore is not a generic rowstore upgrade
+> - Recommendations: treat indexing as workload budgeting, design around real predicates, and verify live usage before adding or keeping an index
 
-## Key Terms Used In This Note
+> [!note]- Glossary
+>
+> **B-tree**
+> - The balanced rowstore structure SQL Server uses for clustered and nonclustered indexes.
+> - It matters because most index decisions in the note are really decisions about how that tree stores keys, pointers, and projected columns.
+>
+> > [!info] Rowstore indexing is tree design
+> >
+> > Seek depth, page density, and pointer width all come back to the B-tree shape. Thinking at that level prevents shallow “add an index” decisions.
+>
+> ---
+>
+> **Heap**
+> - A table with no clustered index, storing rows without clustered-key order.
+> - It matters because heaps have distinct lookup and update behavior and are the first major storage decision for rowstore tables.
+>
+> > [!warning] Heaps degrade differently
+> >
+> > A heap can be fine for narrow staging patterns, but updates and forwarded rows make it a poor accidental default for many permanent tables.
+>
+> ---
+>
+> **Clustered index**
+> - The index whose leaf level is the table’s actual data pages and whose key defines the physical row order.
+> - It matters because clustered design affects every nonclustered pointer, range scan, split pattern, and maintenance cost downstream.
+>
+> > [!warning] This is storage layout, not just a lookup aid
+> >
+> > Treating the clustered index like “just another index” leads to bad key choices. It is the table’s physical shape.
+>
+> ---
+>
+> **Nonclustered index**
+> - A secondary B-tree whose leaf stores key columns and a pointer back to the base row.
+> - It matters because nonclustered indexes are the main way to support alternate predicate paths, but every one adds storage and write overhead.
+>
+> > [!warning] Every read benefit has a write bill
+> >
+> > Inserts, updates, and deletes must maintain every nonclustered index too. An index is only good if the workload earns that cost.
+>
+> ---
+>
+> **Composite key**
+> - An index key made from more than one column in a specific order.
+> - It matters because left-to-right key order determines which predicates can seek efficiently and which fall back to scans or residual filtering.
+>
+> > [!warning] Column order is semantics, not style
+> >
+> > `(symbol, date)` and `(date, symbol)` are physically different access paths. Choosing the wrong order quietly destroys the intended seek pattern.
+>
+> ---
+>
+> **Covering index**
+> - An index whose key plus included columns provide every column a target query needs.
+> - It matters because covering removes key or RID lookups for hot queries, but widens the leaf and raises maintenance cost.
+>
+> > [!warning] Covering is query-specific
+> >
+> > An index that perfectly covers one workload can still miss the next one. Do not confuse a local optimization with a universal answer.
+>
+> ---
+>
+> **Filtered index**
+> - A nonclustered index built only on rows matching a `WHERE` predicate.
+> - It matters because filtered indexes are one of the cleanest ways to index only the hot or currently valid slice of a table.
+>
+> > [!warning] Powerful, but more fragile than full-table indexes
+> >
+> > Filtered indexes depend on specific semantics and can surprise teams that treat them like ordinary generic indexes.
+>
+> ---
+>
+> **Key Lookup / RID Lookup**
+> - The plan operator that fetches missing base-row columns after a nonclustered seek, using either the clustering key or the heap RID.
+> - It matters because excessive lookups are often the visible symptom that a covering design or different base structure is needed.
+>
+> > [!warning] Cheap per row can still be expensive in total
+> >
+> > Lookups often look harmless in tiny tests. At larger row counts they become one of the classic hidden query-cost explosions.
+>
+> ---
+>
+> **Columnstore index**
+> - A column-oriented compressed storage structure optimized for large scans and aggregations rather than point lookups.
+> - It matters because columnstore is a different storage family with different maintenance and workload fit from rowstore B-trees.
+>
+> > [!warning] Not a better B-tree
+> >
+> > Columnstore excels at analytic scan patterns. It is the wrong answer for many lookup-heavy or short OLTP access paths.
+>
+> ---
+>
+> **Fill factor**
+> - The percentage of leaf-page fullness targeted when an index is built or rebuilt.
+> - It matters because fill factor trades space and scan cost against page-split pressure on write-heavy indexes.
+>
+> > [!warning] Lower is not automatically smarter
+> >
+> > A low fill factor on a read-mostly index just wastes space. It should be a response to measured split pain, not a reflex setting.
+>
+> ---
+>
+> **Missing-index DMV**
+> - The optimizer suggestion surface built from `sys.dm_db_missing_index_details`, `_groups`, and `_group_stats`.
+> - It matters because it is useful for ranking review candidates, but it cannot understand overlap, full workload write cost, or existing design intent.
+>
+> > [!warning] Hints, not orders
+> >
+> > Blindly creating every suggested index is one of the fastest ways to bloat an index surface and slow writes without solving the real problem.
+>
+> ---
+
+## Key Concepts
 
 | Term | Plain-English definition | Why it matters here | Common confusion |
 |---|---|---|---|

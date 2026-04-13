@@ -10,14 +10,138 @@ status: complete
 
 # Pipeline Integration and Developer Experience
 
-This page covers the operational seam between SQL Server and the pipeline layer. The hard problems here are not SQL syntax. They are identity, correlation, connection discipline, and safe release flow:
+> [!abstract]- Summary
+>
+> This note covers the operational seam between SQL Server and the pipeline layer. The hard problems here are not SQL syntax; they are identity, correlation, connection discipline, and safe release flow. The live `stoxx` examples show how to make SQL activity attributable to pipeline components without sacrificing plan reuse or turning every DAG execution into a schema-change event.
+>
+> **Query identity and correlation**
+> - covers which metadata belongs in query text, which belongs outside it, and how to correlate SQL activity back to durable pipeline identities
+>
+> **Plan cache versus Query Store behavior**
+> - covers the key distinction that comment headers survive in the plan cache while Query Store normalizes query text more aggressively, making stable labels safer than volatile headers for durable correlation
+>
+> **Connection identity and pooling**
+> - covers connection naming, session monitoring, and the controls that keep session counts predictable and attributable
+>
+> **Schema change workflow**
+> - covers how migrations move through CI/CD separately from runtime pipeline execution so DAGs do not become ad hoc DDL engines
+>
+> **Monitoring integration**
+> - covers the SQL Server observability hooks that make pipeline and database diagnostics meet cleanly
+>
+> **Operations and safety**
+> - Warnings: volatile identifiers in query text destroy plan reuse, Query Store correlation is weaker when labels are unstable, pooled connections can hide ownership if application naming is sloppy, and runtime jobs that perform DDL blur the release boundary dangerously
+> - Recommendations: keep query text stable, use durable labels plus `Application Name`, keep run-specific metadata in orchestration logs or session metadata, bound and monitor connection pools, and separate migration rollout from ordinary pipeline execution
 
-- how to tell which pipeline component sent a query
-- how to correlate slow queries with orchestration metadata
-- how to keep connection counts predictable
-- how to move schema changes through CI/CD without turning every DAG run into a DDL event
-
-The note uses live `stoxx` outputs where SQL Server can demonstrate the behavior directly. The main correction from the earlier draft is important: SQL comment headers survive in the plan cache, but Query Store normalizes query text more aggressively. For durable Query Store correlation, stable labels work better than volatile comment headers.
+> [!note]- Glossary
+>
+> **Pipeline-to-database seam**
+> - The operational boundary where orchestration code, connection management, and SQL Server observability meet.
+> - It matters because most real integration failures happen at this boundary rather than inside a single SQL statement.
+>
+> > [!info] This is where technical ownership overlaps
+> >
+> > Database behavior, pipeline scheduling, and application connection choices all become one system here. Clean interfaces are what keep that system debuggable.
+>
+> ---
+>
+> **Stable query label**
+> - A durable identifier such as DAG name, task name, or service name that can be attached to SQL activity without changing every run.
+> - It matters because stable labels let operators correlate SQL behavior with pipeline components while preserving plan reuse value.
+>
+> > [!warning] Stability is what makes the label useful
+> >
+> > If the label changes every execution, it stops being a correlation aid and starts being plan-cache noise. Durability is part of the design requirement.
+>
+> ---
+>
+> **Volatile identifier**
+> - A run-specific tag such as an Airflow `run_id`, execution timestamp, or task-instance UUID that changes every execution.
+> - It matters because embedding these identifiers directly into SQL text creates a new statement identity each run.
+>
+> > [!warning] High-cardinality tags are bad SQL metadata
+> >
+> > Volatile identifiers belong in orchestration logs or external telemetry, not in the query text the optimizer and Query Store will treat as workload identity.
+>
+> ---
+>
+> **Query text correlation**
+> - The practice of using stable text features such as labels or comments to recognize which pipeline component produced a statement.
+> - It matters because many operators first try to solve observability by annotating SQL text directly.
+>
+> > [!info] Correlation has to respect optimizer surfaces
+> >
+> > Text tagging can be effective, but it has to work with plan reuse and Query Store normalization rather than against them.
+>
+> ---
+>
+> **Plan cache text**
+> - The literal SQL text SQL Server retains in the plan cache alongside compiled plans.
+> - It matters because comment headers can still be useful when the diagnostic target is the live plan cache rather than normalized Query Store history.
+>
+> > [!warning] Plan cache is useful and transient
+> >
+> > The plan cache is excellent for short-horizon live debugging, but it is not a durable audit trail. Correlation strategies should not depend on it alone.
+>
+> ---
+>
+> **Query Store normalization**
+> - The way Query Store groups or normalizes query text more aggressively than the raw plan cache for long-lived workload analysis.
+> - It matters because it changes which tagging strategies remain visible and reliable over time.
+>
+> > [!warning] What survives in the cache may not survive as a durable Query Store key
+> >
+> > A comment that helps in one tool may disappear or matter less in another. Durable pipeline observability needs to be designed for the persistence layer you actually use.
+>
+> ---
+>
+> **`Application Name`**
+> - The client-supplied connection-string field SQL Server surfaces as `program_name` in session metadata.
+> - It matters because it is one of the cleanest ways to tag pooled connections by service or pipeline component without rewriting SQL text.
+>
+> > [!info] Connection identity belongs at connection open
+> >
+> > If the service identity is known before the first query, the connection string is usually the right place to carry it. That keeps SQL text cleaner and session attribution stronger.
+>
+> ---
+>
+> **Connection pool discipline**
+> - The practice of bounding, naming, and monitoring pooled database connections so concurrent session counts stay predictable.
+> - It matters because uncontrolled pooling can create noisy SQL Server session surfaces and make ownership of activity harder to trace.
+>
+> > [!warning] More pooled sessions are not free
+> >
+> > Excess sessions consume resources and complicate troubleshooting. Pool sizing and cleanup are part of application design, not just driver defaults.
+>
+> ---
+>
+> **Migration workflow**
+> - The controlled process for applying schema changes through versioned, reviewable deployment steps instead of ad hoc runtime behavior.
+> - It matters because safe developer experience depends on keeping schema evolution separate from ordinary data movement.
+>
+> > [!warning] Runtime DDL erodes release discipline
+> >
+> > If pipeline jobs create or alter schema opportunistically, every run becomes a release event. That makes failures harder to reason about and rollback harder to control.
+>
+> ---
+>
+> **Session metadata**
+> - The SQL Server-visible identity fields attached to a live connection, such as session id, program name, host name, and related properties.
+> - It matters because database-side troubleshooting often begins by tying a session back to the pipeline component or service that opened it.
+>
+> > [!info] Session metadata is the SQL-side view of the caller
+> >
+> > Good integration design makes that view meaningful. If sessions are unlabeled or ambiguously labeled, every later diagnostic step becomes slower and noisier.
+>
+> ---
+>
+> **Release boundary**
+> - The organizational separation between shipping schema changes and running ordinary pipeline workloads.
+> - It matters because developer experience is better when operators know whether a failure came from new schema rollout or from steady-state runtime execution.
+>
+> > [!warning] Mixed boundaries create mixed incidents
+> >
+> > When migrations and recurring pipeline runs share the same execution path, failures are harder to classify, rollback, and communicate. Clean release boundaries reduce that operational ambiguity.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -80,6 +204,7 @@ Stable identifiers such as DAG name, task name, service name, or query label can
 > [!success]
 > Keep the SQL text stable. Put durable identifiers such as DAG or task labels in `OPTION (LABEL = ...)`, and keep volatile run-specific metadata in the orchestration layer or session-scoped metadata.
 >
+
 ### Comment headers survive in the plan cache
 
 SQL comment headers are still useful when you need the literal submitted text in the live plan cache or in external query-sample tooling.
@@ -95,6 +220,7 @@ SQL comment headers are still useful when you need the literal submitted text in
 >
 > *Run a tagged batch whose SQL comment header identifies the DAG, task, and run.*
 >
+
 ```sql
 /* dag=daily_pipeline task=load_silver run=manual__2026-04-08T16:15:00 */
 SELECT COUNT(*) AS tagged_row_count
@@ -118,6 +244,7 @@ _The query returned `1347` rows. The more important outcome is that the exact ba
 >
 > *Find the exact tagged batch text in the live plan cache.*
 >
+
 ```sql
 SELECT TOP (5)
     text
@@ -150,6 +277,7 @@ The same comment-tagged query above does not survive into Query Store in the sam
 >
 > *Inspect how Query Store stored the earlier comment-tagged query.*
 >
+
 ```sql
 SELECT TOP (5)
     q.query_id,
@@ -192,6 +320,7 @@ If you need a durable, SQL-native identifier that survives into Query Store text
 >
 > *Run a stable labeled query that Query Store can retain verbatim.*
 >
+
 ```sql
 SELECT COUNT(*) AS labeled_row_count
 FROM silver.eurostoxx50_ohlcv
@@ -215,6 +344,7 @@ _The row count is the same `1347`, but the identity mechanism is better suited t
 >
 > *Find the labeled query text exactly as stored by Query Store.*
 >
+
 ```sql
 SELECT TOP (5)
     q.query_id,
@@ -261,6 +391,7 @@ For SQL Server-side observability, `Application Name` is usually more valuable t
 > [!success]
 > Set a stable `Application Name` per service or per worker type, not per individual run. That gives you usable `program_name` grouping without fragmenting the connection identity space.
 >
+
 ### Monitor sessions by application name
 
 #### Group user sessions by `program_name`
@@ -275,6 +406,7 @@ For SQL Server-side observability, `Application Name` is usually more valuable t
 >
 > *Group user sessions by application name and login to measure current connection footprint.*
 >
+
 ```sql
 SELECT
     program_name,
@@ -314,6 +446,7 @@ _This is the exact operational payoff of setting `Application Name`. `pipeline_l
 >
 > *Find user sessions that have been idle for more than one hour.*
 >
+
 ```sql
 SELECT
     session_id,
@@ -364,6 +497,7 @@ Schema changes should be a release concern, not a normal per-run pipeline behavi
 > [!success]
 > Use runtime DAGs to verify schema version, not to own production DDL. Keep actual schema changes in a dedicated deployment workflow.
 >
+
 ### Migration tool choices
 
 #### Compare the main migration styles
@@ -397,6 +531,7 @@ Schema changes should be a release concern, not a normal per-run pipeline behavi
 >
 > *Validate migration syntax in CI before any deployment workflow can apply the scripts.*
 >
+
 ```yaml
 # .github/workflows/validate-migrations.yml
 - name: Validate SQL migrations
@@ -446,6 +581,7 @@ Datadog, OpenTelemetry collectors, or internal database-monitoring agents all be
 >
 > *Create a monitoring login with the minimum read surface needed for SQL Server performance telemetry.*
 >
+
 ```sql
 CREATE LOGIN dd_agent WITH PASSWORD = 'DD_AGENT_PASSWORD';
 CREATE USER dd_agent FOR LOGIN dd_agent;
@@ -462,4 +598,3 @@ EXEC sp_addrolemember 'db_datareader', 'dd_agent';
 - [sys.query_store_query_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-query-text-transact-sql)
 - [sys.dm_exec_sessions](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sessions-transact-sql)
 - [Query hints and `OPTION (LABEL = ...)`](https://learn.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql-query)
-

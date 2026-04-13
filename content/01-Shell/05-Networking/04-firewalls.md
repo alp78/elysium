@@ -660,17 +660,19 @@ The most effective firewall strategy for production databases is layered: no sin
 > 5. **VPC Service Controls** — prevent data exfiltration from the project (see [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls); GCP Enterprise tier required)
 
 
-## When to use firewall tools
-
-- **Securing new VM deployments** -- lock down a fresh VM to allow only SSH (22), HTTP/HTTPS (80/443), and application-specific ports.
-- **Troubleshooting connectivity** -- "connection timeout" after deploying a service usually means a firewall rule is missing or misconfigured.
-- **Restricting access by source IP** -- allow database access only from your application servers, not from the public internet.
-- **Auditing security posture** -- `ufw status verbose` or `Get-NetFirewallRule` lists all active rules for security review.
-
-## When not to use firewall tools
-
-- **Application-level access control** -- firewalls filter by IP/port/protocol. For user-level authentication and authorization, use application-layer security (OAuth, IAM, API keys).
-- **Cloud-native architectures** -- for GKE, Cloud Run, and serverless platforms, use VPC Service Controls and IAM instead of VM-level firewalls.
+> [!example] Firewall Boundary Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Securing new VM deployments** -- lock down a fresh VM to allow only SSH (22), HTTP/HTTPS (80/443), and application-specific ports.
+> > - **Troubleshooting connectivity** -- "connection timeout" after deploying a service usually means a firewall rule is missing or misconfigured.
+> > - **Restricting access by source IP** -- allow database access only from your application servers, not from the public internet.
+> > - **Auditing security posture** -- `ufw status verbose` or `Get-NetFirewallRule` lists all active rules for security review.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Application-level access control** -- firewalls filter by IP/port/protocol. For user-level authentication and authorization, use application-layer security (OAuth, IAM, API keys).
+> > - **Cloud-native architectures** -- for GKE, Cloud Run, and serverless platforms, use VPC Service Controls and IAM instead of VM-level firewalls.
 
 ## Warnings
 

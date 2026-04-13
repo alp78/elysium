@@ -8,7 +8,7 @@ tags:
 
 # MOC: GCP
 
-Google Cloud Platform from authentication to cost optimization — 29 pages
+Google Cloud Platform from authentication to cost optimization — 31 pages
 covering platform setup, compute, data services, security, and operations.
 Expand any section below to browse page contents.
 
@@ -16,7 +16,7 @@ Expand any section below to browse page contents.
 >
 > [[domain-platform-foundations]]
 >
-> GCP platform essentials from gcloud CLI structure and authentication through named configurations, output formatting, and project/API management.
+> GCP platform essentials from gcloud CLI structure and authentication through resource hierarchy, API/service management, named configurations, and output formatting.
 
 > [!guide]+ Compute and Messaging
 >

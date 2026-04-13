@@ -8,14 +8,258 @@ updated: 2026-04-12
 status: complete
 ---
 
-# BigQuery Data Loading and Export
+# Data Loading and Export
 
-> [!quote]
+> [!quote] Mitch Kapor on Information Volume
 > "Getting information off the Internet is like taking a drink from a fire hydrant."
 >
 > — **Mitch Kapor**, founder of Lotus Development
 
-BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). This note covers load and export operations via both `bq` CLI and the `LOAD DATA` SQL statement, hive-partitioned directory structures, table snapshots, and BigQuery's built-in time travel capability for recovering from data corruption.
+> [!abstract]- Summary
+>
+> Covers moving data between Cloud Storage and BigQuery with `bq load`, `LOAD DATA`, and `bq extract`, then extends into built-in recovery with time travel and snapshot tables so you can ingest files, export tables, and restore historical state without leaving the BigQuery ecosystem.
+>
+> **Loading from GCS**
+> - Prerequisites: enable `bigquery.googleapis.com`, grant `bigquery.dataEditor` on target datasets and `storage.objectViewer` on source buckets, and understand that load jobs are asynchronous and free
+> - `bq load` patterns cover CSV with `--skip_leading_rows`, `--autodetect`, and explicit `--schema`; Parquet as the preferred production format; hive-style paths with `--hive_partitioning_mode`; and table-shape options such as `--replace`, `--time_partitioning_field`, `--time_partitioning_type`, `--clustering_fields`, and `--schema_update_option`
+> - `LOAD DATA` provides the same ingestion capability from SQL with `INTO` or `OVERWRITE`, `FROM FILES(...)`, and a form that can live inside scheduled queries, stored procedures, and multi-statement scripts
+> - Operational limits include up to 10,000 source files and 15 TB uncompressed input per load job, a 4 GB compressed-file ceiling for CSV and JSON, a 5 TB limit for individual uncompressed files, and load-job quotas of 1,000 per table per day and 100,000 per project per day
+>
+> **Exporting to GCS**
+> - `bq extract` exports tables or views to `PARQUET`, `CSV`, `NEWLINE_DELIMITED_JSON`, or `AVRO`, requires `bigquery.dataViewer` on the source and `storage.objectCreator` on the destination bucket, and keeps export jobs free while GCS storage remains billable
+> - Export examples cover Parquet sharding with a `*` wildcard, CSV compression with `--compression=GZIP`, and format-specific flags such as `--field_delimiter`, `--print_header`, and `--use_avro_logical_types`
+>
+> **Recovery and retention**
+> - Query historical table state with `FOR SYSTEM_TIME AS OF`, restore prior versions with `bq cp table@-Nms` or `@<unix_millis>`, and set dataset retention with `bq update --max_time_travel_hours=48..168`
+> - Use `CREATE SNAPSHOT TABLE ... CLONE ... OPTIONS(expiration_timestamp=...)` for read-only point-in-time copies that outlive the rolling time-travel window
+>
+> **Format selection**
+> - The note compares `PARQUET`, `AVRO`, `CSV`, `NEWLINE_DELIMITED_JSON`, and `ORC` by schema handling, compression model, compressed-file limits, and operational fit, with Parquet recommended for production loads
+>
+> **Operations and safety**
+> - When to use: batch ingestion from GCS, SQL-native scheduled loads, cross-system exports, corruption investigation, and point-in-time recovery
+> - Warnings: many small loads fragment tables, CSV autodetect can mistype columns from a 500-row sample, large exports require wildcard sharding, and time travel cannot exceed 168 hours
+> - Recommendations: prefer Parquet, batch loads at pipeline boundaries, switch to the BigQuery Storage Write API or streaming for sub-minute ingestion, right-size `max_time_travel_hours` by dataset tier, and schedule snapshots for long-term retention
+>
+> [!note]- Glossary
+>
+> **BigQuery**
+> - Google's serverless analytical database service that stores tables, runs SQL, and manages load, export, and recovery workflows without user-managed database servers.
+> - Every command and retention feature in this note is implemented by BigQuery rather than by the underlying storage bucket.
+>
+> > [!info] Control plane plus storage
+> >
+> > BigQuery is not just a query engine. It also owns the job system, historical row versions, snapshot tables, and table metadata used throughout this note.
+>
+> ---
+>
+> **Cloud Storage / `gs://` URI**
+> - Google Cloud object storage and its URI scheme used as the source or destination path for `bq load`, `LOAD DATA`, and `bq extract`.
+> - The note assumes data moves through buckets, so understanding bucket paths is required before any load or export example makes sense.
+>
+> > [!warning] Region alignment still matters
+> >
+> > Buckets and datasets can exist in different locations, but cross-region movement affects latency, egress cost, and operational design. Do not treat `gs://` as a location-free abstraction.
+>
+> ---
+>
+> **Load job**
+> - An asynchronous BigQuery ingestion operation that reads files from Cloud Storage and writes rows into a destination table.
+> - Load jobs are the unit behind `bq load` and `LOAD DATA`, including quotas, free pricing, and table-fragmentation guidance in the note.
+>
+> > [!warning] Small jobs add overhead
+> >
+> > Frequent tiny loads create metadata churn and fragmented storage layout. BigQuery will optimize in the background, but not always fast enough to hide a poor load cadence.
+>
+> ---
+>
+> **IAM role**
+> - A named Google Cloud permission bundle such as `bigquery.dataEditor`, `bigquery.dataViewer`, `storage.objectViewer`, or `storage.objectCreator`.
+> - This note maps roles to each direction of data movement so you can distinguish authorization failures from syntax or format problems.
+>
+> > [!warning] Source and destination rights differ
+> >
+> > Load workflows need read access on the bucket and write access on the table. Export workflows flip that pattern, so reusing the same principal without checking both sides often fails.
+>
+> ---
+>
+> **`bq load`**
+> - The BigQuery CLI command that starts a load job from one or more Cloud Storage objects into a BigQuery table.
+> - The note uses `bq load` for shell-driven ingestion, flag-based schema control, and file-format-specific behavior.
+>
+> > [!info] Table creation can be implicit
+> >
+> > If the destination table does not exist, `bq load` can create it when you supply an explicit schema or allow schema detection for supported formats.
+>
+> ---
+>
+> **`LOAD DATA`**
+> - A GoogleSQL statement that loads external files into a BigQuery table from within a SQL session instead of from a shell command.
+> - The note positions it as the SQL-native alternative when ingestion belongs inside scheduled queries, procedures, or multi-statement scripts.
+>
+> > [!info] Useful in SQL pipelines
+> >
+> > `LOAD DATA` keeps orchestration close to the rest of your SQL logic, which simplifies versioning and removes the need for separate wrapper scripts in some pipelines.
+>
+> ---
+>
+> **Write disposition / `WRITE_APPEND`, `WRITE_TRUNCATE`, `OVERWRITE`, `--replace`**
+> - The rule that controls whether a load adds rows to an existing table or replaces the table contents before writing new rows.
+> - The note uses these modes to distinguish safe append patterns from full-refresh staging workflows that intentionally rewrite a table.
+>
+> > [!warning] Truncate changes recovery math
+> >
+> > Repeated full-refresh loads create far more time-travel overhead than append-only patterns because BigQuery must retain prior versions of all replaced rows.
+>
+> ---
+>
+> **Source file format / `CSV`, `PARQUET`, `AVRO`, `ORC`, `NEWLINE_DELIMITED_JSON`**
+> - The serialization format of files stored in Cloud Storage before BigQuery loads or after BigQuery exports them.
+> - Format choice determines whether schema is embedded, what compression limits apply, and which flags or failure modes matter during ingestion.
+>
+> > [!info] Format drives operational complexity
+> >
+> > Human-readable formats are easier to inspect manually, but they usually need more schema handling and quoting discipline than self-describing binary formats.
+>
+> ---
+>
+> **Parquet**
+> - A columnar file format that stores schema in the file footer and usually uses efficient built-in compression such as Snappy.
+> - The note recommends Parquet for production loads because it avoids CSV header handling, sampling-based schema mistakes, and many delimiter-related failures.
+>
+> > [!info] Best default for analytics
+> >
+> > Parquet is especially strong for warehouse ingestion because BigQuery can preserve richer type information and read compressed blocks natively.
+>
+> ---
+>
+> **`--autodetect`**
+> - A `bq load` option that infers a schema from sample rows instead of requiring you to declare columns explicitly.
+> - The note treats it as convenient for ad hoc CSV or JSON loads but risky for production because inferred types can be wrong.
+>
+> > [!warning] Sample-based inference is brittle
+> >
+> > If the sampled rows are not representative, later rows can fail the load or land in an unintended type. This is why the note pushes explicit schemas or Parquet for durable pipelines.
+>
+> ---
+>
+> **Hive partitioning**
+> - A directory-layout convention where each path segment encodes a partition key and value as `key=value`, such as `year=2026/month=04`.
+> - The note uses hive partitioning to show how BigQuery can derive partition columns from GCS object paths during load.
+>
+> > [!warning] Path structure becomes schema
+> >
+> > If upstream writers change the directory naming convention, partition detection breaks or silently produces the wrong keys. Treat the path layout as part of the contract.
+>
+> ---
+>
+> **Schema file / `schema.json`**
+> - A JSON document that explicitly declares BigQuery column names, types, modes, and nested fields for a load target.
+> - The note recommends schema files when CSV ingestion must be predictable and sampling ambiguity is unacceptable.
+>
+> > [!info] Better for complex tables
+> >
+> > Inline schemas are fine for short flat examples, but JSON schemas scale better when tables contain many columns, repeated fields, or nested records.
+>
+> ---
+>
+> **`bq extract`**
+> - The BigQuery CLI command that runs an extract job to write a table or view out to one or more Cloud Storage objects.
+> - The note uses it for downstream lake delivery, archival, and cross-system handoff after data is already in BigQuery.
+>
+> > [!info] Export job itself is free
+> >
+> > BigQuery does not bill for reading the source table during export. The follow-on cost is the data you store in Cloud Storage and any transfer that happens afterward.
+>
+> ---
+>
+> **Export sharding wildcard / `*`**
+> - A destination-path wildcard that lets BigQuery split one export into multiple output objects with numeric suffixes.
+> - The note relies on it because large exports cannot be written as a single file and because even small exports benefit from a consistent shard pattern.
+>
+> > [!warning] Required above single-file limits
+> >
+> > If the output exceeds BigQuery's approximate 1 GB single-file ceiling, omitting the wildcard causes the export to fail instead of producing a larger monolithic object.
+>
+> ---
+>
+> **Time travel**
+> - BigQuery's built-in historical row-version retention that lets you query or copy a table as it existed earlier within a bounded recovery window.
+> - The note uses time travel for corruption analysis, table restore workflows, and storage-overhead planning.
+>
+> > [!warning] Recovery window is finite
+> >
+> > Time travel is automatic, but it is not archival backup. Once the configured window passes, the historical version is gone unless you created a separate snapshot or export.
+>
+> ---
+>
+> **`FOR SYSTEM_TIME AS OF`**
+> - A GoogleSQL clause that tells BigQuery to read a table at a past timestamp instead of its current state.
+> - The note uses it as the safest first step when you need to inspect what the table looked like before deciding whether to restore anything.
+>
+> > [!info] Read before restore
+> >
+> > Querying the old state is often better than restoring immediately because it confirms whether the historical version actually contains the rows or values you need.
+>
+> ---
+>
+> **Snapshot decorator / `@-Nms`, `@<unix_millis>`**
+> - A suffix on a table reference that identifies a specific historical version by relative millisecond offset or absolute Unix-millisecond timestamp.
+> - The note uses this syntax with `bq cp` to restore a prior table state into a new table without altering the original object first.
+>
+> > [!warning] Milliseconds are exact
+> >
+> > The decorator is not a fuzzy time expression. If you choose the wrong offset or timestamp, you restore the wrong version even though the command succeeds.
+>
+> ---
+>
+> **`max_time_travel_hours`**
+> - A dataset-level BigQuery setting that controls how long historical table versions are retained for time-travel access.
+> - The note uses it to balance recovery depth against storage overhead, especially between append-only production data and high-churn staging data.
+>
+> > [!warning] Range is bounded
+> >
+> > The valid range is 48 to 168 hours. You can reduce the window to save storage, but you cannot extend it beyond seven days inside BigQuery time travel itself.
+>
+> ---
+>
+> **Snapshot table**
+> - A persistent, read-only BigQuery table created from another table's current state and stored independently of the rolling time-travel mechanism.
+> - The note recommends snapshots when you need recovery points that last longer than the time-travel window or survive destructive migrations.
+>
+> > [!info] Different from time travel
+> >
+> > Time travel is automatic and temporary; snapshots are explicit and durable until their own expiration or manual deletion.
+>
+> ---
+>
+> **`CLONE`**
+> - The BigQuery SQL keyword used in snapshot creation and table restoration statements to derive a new table from an existing table or snapshot state.
+> - The note uses `CLONE` to show that restoring or preserving data does not always require a full export and reload cycle.
+>
+> > [!info] Metadata-first copy primitive
+> >
+> > `CLONE` is designed for fast point-in-time duplication inside BigQuery. It is operationally different from shipping bytes out to GCS and back in again.
+>
+> ---
+>
+> **Scheduled query**
+> - A managed BigQuery job that runs SQL on a schedule without requiring an external cron host or custom orchestrator.
+> - The note uses scheduled queries as the automation surface for SQL-native `LOAD DATA` ingestion and recurring snapshot creation.
+>
+> > [!info] Good fit for repeatable SQL
+> >
+> > When the whole workflow can live in SQL, scheduled queries reduce moving parts and centralize logic inside BigQuery rather than splitting it between shells and SQL.
+>
+> ---
+>
+> **BigQuery Storage Write API**
+> - BigQuery's low-latency ingestion API for near-real-time writes that would be inefficient as frequent batch load jobs.
+> - The note points to it as the correct escalation path when minute-level or sub-minute ingestion would otherwise create excessive small-load fragmentation.
+>
+> > [!warning] Different operating model
+> >
+> > The Storage Write API is not a drop-in replacement for `bq load`. It changes ingestion semantics, tooling, and operational expectations, so use it only when batch loading is no longer the right pattern.
 
 ## Loading Data from GCS
 
@@ -472,4 +716,3 @@ flowchart LR
 - [Table snapshots with scheduled queries](https://cloud.google.com/bigquery/docs/table-snapshots-scheduled) — Automating periodic snapshots via scheduled queries
 - [BigQuery quotas and limits](https://cloud.google.com/bigquery/quotas) — Load job limits (1,000/table/day, 100,000/project/day), file size limits, row limits
 - *Google BigQuery: The Definitive Guide* (Lakshmanan & Tigani) — load job fragmentation warnings, compressed file staging benchmarks
-

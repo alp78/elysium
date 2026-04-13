@@ -8,22 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog Custom SQL Server Metric Queries
+# Datadog Custom Queries
 
 > [!quote]
 > "Not everything that counts can be counted, and not everything that can be counted counts."
 >
 > — **William Bruce Cameron**, *Informal Sociology* (1963)
 
-Custom queries let you track application-specific metrics from SQL Server DMVs. They are defined in `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` under the `custom_queries` key within the instance block.
+> [!abstract]- Summary
+>
+> This note extends the SQL Server integration beyond its built-in counters by teaching Datadog how to run targeted SQL queries and convert the result sets into custom metrics, which is how the platform exposes deadlocks, connection breakdowns, and other project-specific signals that the stock integration does not publish on its own.
+>
+> **Custom metric patterns**
+> - Starts with concrete query patterns for connections by login and deadlock count, showing how SQL rowsets become Datadog metrics.
+> - Uses those examples to demonstrate when custom queries are worth the extra configuration overhead.
+>
+> **Configuration schema**
+> - Documents the full `custom_queries` structure, including metric naming, column handling, and query blocks inside the SQL Server integration file.
+> - Keeps the focus on the translation layer between SQL results and Datadog metric types.
+>
+> **Apply and validate**
+> - Covers the restart-and-verify cycle after configuration edits and calls out YAML formatting mistakes that silently break collection.
+> - Makes the validation path explicit so custom metric failures are debugged from the host outward.
+>
+> **Type system**
+> - Ends with the Datadog column type reference that controls how query outputs are interpreted as gauges, tags, or other metric fields.
+> - When to use: built-in SQL Server metrics are healthy, but an operationally important question still lacks a first-class Datadog metric.
 
-> [!warning] Metric Name Prefix
-> The Datadog SQL Server integration automatically prepends `sqlserver.` to all custom query column names. To avoid a double prefix like `sqlserver.sqlserver.xyz`, name your columns **without** the `sqlserver.` prefix — e.g., `connections.by_login` becomes `sqlserver.connections.by_login` in Datadog.
-
-> [!success] Safe Naming Pattern
-> Name all `columns[].name` values without any prefix: `connections.by_login`, `deadlocks.total`. Datadog adds `sqlserver.` automatically, producing the correct final metric names `sqlserver.connections.by_login` and `sqlserver.deadlocks.total`.
-
----
+> [!note]- Glossary
+>
+> **custom query**
+> - A SQL statement executed by the Datadog integration to emit metrics from the returned data.
+> - It matters here because this is the extension mechanism for database signals that the default check does not expose.
+>
+> > [!info] Gap-filling mechanism
+> >
+> > Custom queries should answer a specific monitoring gap, not duplicate metrics Datadog already collects.
+>
+> ---
+>
+> **`custom_queries` block**
+> - The integration config section that defines one or more SQL queries and how their outputs map into metrics.
+> - It matters here because the entire custom-metric contract lives in this structure.
+>
+> > [!tip] Config is the mapping layer
+> >
+> > The query result alone is not enough; Datadog also needs the schema that explains what each returned column means.
+>
+> ---
+>
+> **metric name**
+> - The Datadog identifier assigned to a numeric output from a custom query.
+> - It matters here because stable metric names make dashboards and monitors durable over time.
+>
+> > [!info] Name for reuse
+> >
+> > A metric name should describe the signal, not the implementation detail of the SQL that produced it.
+>
+> ---
+>
+> **column type**
+> - The Datadog declaration that tells the integration whether a returned column is a gauge, tag, or another supported field type.
+> - It matters here because one bad type mapping can turn a valid result set into unusable telemetry.
+>
+> > [!tip] Schema drives meaning
+> >
+> > Datadog needs both the value and the semantic role of each column before it can index the result correctly.
+>
+> ---
+>
+> **tag column**
+> - A query column whose values become metric tags rather than numeric datapoints.
+> - It matters here because dimensions like login name are useful for breakdowns but are not themselves measures.
+>
+> > [!info] Dimension, not value
+> >
+> > Use tags for slicing and grouping; use metrics for counting or measuring.
+>
+> ---
+>
+> **agent restart**
+> - The required reload step after editing the integration file that contains the custom query definitions.
+> - It matters here because Datadog does not pick up new query blocks from disk automatically.
+>
+> > [!tip] Reload the collector
+> >
+> > If a new custom metric never appears, confirm the agent restarted before questioning the SQL.
+>
+> ---
+>
+> **YAML indentation**
+> - The whitespace structure that determines nesting and validity inside the Datadog config file.
+> - It matters here because malformed indentation or tabs can invalidate the custom query config without obvious SQL errors.
+>
+> > [!info] Formatting can break telemetry
+> >
+> > A syntactically correct SQL query still fails operationally if the YAML wrapper around it is malformed.
+>
+> ---
+>
+> **deadlock metric**
+> - A custom metric that counts SQL Server deadlock events for monitoring and alerting.
+> - It matters here because deadlocks are a concrete example of a high-value signal often implemented through custom query logic.
+>
+> > [!tip] Custom metrics should be actionable
+> >
+> > Choose extensions that feed real dashboards or alerts, not just interesting-but-unused measurements.
 
 ## Query 1: Connections by Login Name
 
@@ -172,4 +262,3 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 - [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets consuming these custom metrics
 - [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) — Deadlock alert monitor using `sqlserver.deadlocks.total`
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — Raw DMV queries for manual investigation
-

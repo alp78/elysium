@@ -11,11 +11,29 @@ tags:
 
 Orchestration determines when pipelines run, in what order, and what happens when they fail. These notes cover Apache Airflow for complex DAG-based workflows and platform-native scheduling tools for simpler recurring jobs.
 
+```mermaid
+mindmap
+  ((Airflow))
+    (core concepts)
+    (DAG patterns)
+    (deployment)
+    (production problems)
+    (troubleshooting)
+```
+
 > [!guide]+ Airflow
 >
 > [[domain-airflow]]
 >
 > Apache Airflow for programmatic workflow orchestration — architecture, DAG authoring, production deployment, common failure modes, and troubleshooting.
+
+```mermaid
+mindmap
+  ((Scheduling))
+    (Linux cron, systemd)
+    (GCP Cloud Scheduler)
+    (Windows Task Scheduler)
+```
 
 > [!guide]+ Scheduling
 >

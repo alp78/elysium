@@ -13,9 +13,169 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 >
 > — **Charity Majors**, charity.wtf (2018)
 
-dbt's testing system is the primary mechanism for asserting data quality, implementing a key layer of the [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework). Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. When paired with [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts), these tests enforce guarantees that downstream consumers can depend on. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
+> [!abstract]- Summary
+>
+> Explains dbt's testing system as the warehouse-side quality layer for a project, covering built-in tests, package-provided generic tests, custom singular and generic tests, failure storage, severity handling, and test-coverage strategy by model layer.
+>
+> **Test categories and warehouse assertions**
+> - Defines the major dbt test categories â€” built-in generic, `dbt_utils`, `dbt-expectations`, singular SQL tests, and custom generic macros â€” and shows where each is declared and what kinds of quality rules each fits best
+> - Connects dbt testing to structural constraints, business-rule enforcement, and statistical or distributional checks that run against materialized relations in the warehouse
+>
+> **Reusable and custom test patterns**
+> - Covers compound uniqueness, accepted ranges, expression-based assertions, table-level expectations, custom SQL assertions, and reusable macro-based test logic so teams can move from basic integrity checks to domain-specific guarantees
+> - Explains when to favor package tests versus writing singular or generic custom logic as the project grows in complexity
+>
+> **Execution behavior and coverage strategy**
+> - Covers `--store-failures`, warn-versus-error severity, and recommended test coverage by staging, intermediate, and mart layers so failures are both actionable and aligned to the right point in the DAG
+> - Positions dbt tests as a key part of broader data-quality enforcement alongside contracts and observability, not as isolated YAML decoration
+>
+> **Operations and safety**
+> - Warnings: weak coverage on critical marts, overusing heavyweight tests in fast feedback paths, storing failures without a cleanup plan, and treating warning severity as harmless on business-critical rules
+> - Recommendations: match test type to failure surface, keep generic checks reusable, store failed rows when debugging, and distribute coverage intentionally across staging, intermediate, and mart layers
 
----
+> [!note]- Glossary
+>
+> **dbt test**
+> - The dbt execution surface that runs schema and singular tests against selected relations in the warehouse.
+> - It matters here because the note is about how dbt turns quality assertions into executable checks rather than passive documentation.
+>
+> > [!info] Warehouse-side validation
+> >
+> > dbt tests execute against actual modeled data, not just YAML metadata. That is what makes them useful as operational guardrails instead of static annotations.
+>
+> ---
+>
+> **Built-in generic test**
+> - A reusable dbt test declared in YAML, such as `not_null`, `unique`, `accepted_values`, or `relationships`.
+> - It matters here because these are the fastest path to enforcing common structural constraints across many models.
+>
+> > [!info] Default integrity layer
+> >
+> > Built-in generic tests should usually be exhausted before writing custom SQL. They cover a surprising amount of core model hygiene with very little code.
+>
+> ---
+>
+> **`dbt_utils`**
+> - A widely used dbt package that adds reusable macros and generic tests beyond the built-in set.
+> - It matters here because many practical quality rules, such as compound uniqueness or value ranges, are easiest to express through `dbt_utils` tests.
+>
+> > [!warning] Package dependency, not native behavior
+> >
+> > A project that relies on `dbt_utils` tests must manage package installation and versioning consistently. Missing or drifting packages surface as confusing test-name failures.
+>
+> ---
+>
+> **`dbt-expectations`**
+> - A dbt package that brings richer expectation-style tests, often inspired by Great Expectations patterns.
+> - It matters here because it expands dbt from simple integrity checks into broader statistical and table-level assertions.
+>
+> > [!info] Higher-level expectation layer
+> >
+> > `dbt-expectations` is most valuable when the project needs richer semantic checks but still wants them to live in the dbt test surface.
+>
+> ---
+>
+> **Singular test**
+> - A custom SQL file in `tests/` that returns failing rows when a business rule is violated.
+> - It matters here because singular tests are the escape hatch for domain-specific assertions that do not fit cleanly into generic YAML syntax.
+>
+> > [!warning] SQL ownership required
+> >
+> > Singular tests are powerful, but they are also custom SQL assets that need review, maintenance, and clear ownership like any other transformation logic.
+>
+> ---
+>
+> **Generic test**
+> - A parameterized reusable test, often backed by a macro, that can be applied to many models or columns through YAML.
+> - It matters here because reusable generic tests are how teams scale repeated data-quality rules without duplicating singular SQL everywhere.
+>
+> > [!info] Reuse for repeated rules
+> >
+> > Once the same assertion appears in multiple singular tests, it is often a sign that the logic should become a generic test macro instead.
+>
+> ---
+>
+> **`relationships` test**
+> - A built-in generic test that validates referential integrity by checking whether values in one field exist in another relation.
+> - It matters here because it is one of the main ways dbt catches broken joins and orphan keys in modeled warehouse data.
+>
+> > [!warning] Dependency timing matters
+> >
+> > Relationship failures do not always mean the data is bad. They can also reveal refresh-order or latency mismatches between related models.
+>
+> ---
+>
+> **`unique_combination_of_columns`**
+> - A `dbt_utils` generic test that verifies compound uniqueness across multiple columns.
+> - It matters here because model grain is often multi-column, and single-column uniqueness tests are not enough for many analytical tables.
+>
+> > [!info] Grain-level uniqueness check
+> >
+> > This test is often the right way to encode true row grain in analytical models where uniqueness comes from keys plus date or other context columns.
+>
+> ---
+>
+> **`accepted_range`**
+> - A generic test that constrains numeric values to an allowed minimum and maximum interval.
+> - It matters here because many financial and analytical quality rules start as simple boundary checks on prices, weights, scores, or returns.
+>
+> > [!warning] Sanity check, not full semantics
+> >
+> > Range tests catch obvious bad values quickly, but they do not prove a metric is semantically correct. They are a floor, not the full quality story.
+>
+> ---
+>
+> **`--store-failures`**
+> - A dbt option that persists failing test rows to warehouse tables for later inspection.
+> - It matters here because debugging is much faster when engineers can inspect the exact bad rows instead of only seeing a failure count.
+>
+> > [!warning] Failure data needs housekeeping
+> >
+> > Stored failures are useful, but they also create extra relations and can accumulate sensitive or noisy records if cleanup is ignored.
+>
+> ---
+>
+> **Severity**
+> - The dbt test outcome policy, typically `warn` or `error`, that controls whether a failing test blocks the run.
+> - It matters here because severity is how teams encode whether a rule is informational, degradational, or pipeline-stopping.
+>
+> > [!warning] Wrong severity changes operational meaning
+> >
+> > A critical business rule marked as warn is effectively optional in CI. Treat severity as a deployment policy choice, not just formatting.
+>
+> ---
+>
+> **Test coverage strategy**
+> - The deliberate distribution of test types across staging, intermediate, and mart layers based on what each layer is responsible for.
+> - It matters here because the note closes by showing that not every layer should own the same kind of test.
+>
+> > [!info] Put the check where the contract lives
+> >
+> > Structural checks belong early, business-rule checks belong where the rule is introduced, and consumer-facing guarantees belong on published marts.
+>
+> ---
+>
+> **Data contract**
+> - A schema-level promise about columns, types, and allowed structure that downstream consumers can rely on.
+> - It matters here because dbt tests often work alongside contracts to enforce both data quality and interface stability.
+>
+> > [!info] Tests and contracts are complementary
+> >
+> > Contracts protect shape; tests protect content and behavior. Strong quality programs usually need both layers working together.
+
+> [!example] Assertion Layer Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when defining model-level quality guarantees, guarding business rules in CI, and deciding which layer should own each class of validation.
+> > - Use it when the question is how to express warehouse-side assertions through built-in tests, package tests, singular SQL, or reusable custom generics.
+> > - Use it to place checks where the contract lives: structural checks early, business-rule checks where logic is introduced, and consumer guarantees on published marts.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use dbt tests as a substitute for ingestion validation, warehouse permissions checks, or observability tooling when the problem is freshness, orchestration, or runtime health rather than assertion logic.
+> > - Do not mark critical rules as warnings just because errors are inconvenient in CI.
+> > - Do not add heavyweight test patterns to every layer indiscriminately; coverage should follow risk and ownership.
 
 ### dbt Test Categories
 
@@ -573,6 +733,7 @@ models:
 ---
 
 ## Related
+
 - [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
 - [dbt-project-structure](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-project-structure)
 - [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)

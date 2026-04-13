@@ -13,16 +13,157 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 >
 > — **Rob Pike**, *Notes on Programming in C* (1989)
 
-Performance problems in dbt manifest as three distinct symptoms: slow model execution time (compute cost), slow incremental runs (data freshness SLA risk), and high slot/credit consumption (cloud cost). This note covers diagnosis, adapter-specific tuning, and model-level refactoring techniques.
-
----
-
-> [!warning] Slowest model sets the SLA
+> [!abstract]- Summary
 >
-> A dbt project with 50 models where 49 run in 10 seconds and 1 runs in 20 minutes has a pipeline SLA of 20+ minutes. Focus optimization on the single slowest model first -- it dominates total runtime because dbt executes models in dependency order and downstream models wait. Use `run_results.json` to identify the critical path, not just the slowest individual model.
+> Explains how to tune dbt performance across warehouse compute, model design, thread settings, and execution artifacts so teams can reduce slow runs, freshness risk, and avoidable cloud or database cost.
+>
+> **Finding and classifying bottlenecks**
+> - Uses `run_results.json`, lightweight Python analysis, and automated alerts to identify slow models and distinguish between compute-heavy SQL, incremental drift, warehouse contention, and platform misconfiguration
+> - Frames performance tuning as diagnosis first, because the right fix depends on whether the bottleneck is in model logic, warehouse layout, or execution parallelism
+>
+> **Adapter-specific tuning**
+> - Covers BigQuery partition pruning, clustering, slot usage, approximate aggregations, plus SQL Server indexing, statistics, and TempDB-related patterns so tuning stays grounded in the active adapter
+> - Connects warehouse-specific primitives to dbt model design rather than pretending performance behavior is portable across adapters
+>
+> **Execution and run-shape controls**
+> - Covers thread counts, incremental rebuild patterns, post-hook indexing, and recommended concurrency choices so dbt runtime settings align with warehouse behavior instead of fighting it
+> - Emphasizes that run shape, table design, and warehouse resources must be tuned together, not in separate silos
+>
+> **Operations and safety**
+> - Warnings: tuning threads blindly, scanning unpartitioned history repeatedly, creating indexes or statistics without measuring impact, and masking correctness issues with aggressive performance shortcuts
+> - Recommendations: measure before changing, use adapter-native performance primitives, keep thread counts workload-aware, and treat performance artifacts as a recurring observability input rather than a one-off firefight
 
-> [!success] Diagnosis-first approach
-> Parse `run_results.json` with the `slow_models.py` script (below) to rank models by `execution_time`. Fix the top-ranked bottleneck — split it into intermediate tables, add partition pruning, or reduce its source scan — before touching anything else. Re-run and compare.
+> [!note]- Glossary
+>
+> **Performance tuning**
+> - The process of reducing dbt runtime, resource consumption, or freshness lag by changing model logic, warehouse design, or execution settings.
+> - It matters here because the note is about distinguishing where the real bottleneck lives before applying an optimization.
+>
+> > [!warning] Optimize the real constraint
+> >
+> > Performance work fails when teams tune the wrong layer. A thread tweak will not fix a partition-pruning problem, and a query rewrite will not fix warehouse starvation.
+>
+> ---
+>
+> **`run_results.json`**
+> - The dbt artifact that records per-node execution times and statuses for a run.
+> - It matters here because it is one of the fastest ways to identify which models are actually slow instead of guessing from overall pipeline duration.
+>
+> > [!info] Evidence before intervention
+> >
+> > Performance tuning starts with measuring which nodes dominate runtime. `run_results.json` is often the first practical source for that evidence.
+>
+> ---
+>
+> **Partition pruning**
+> - A warehouse optimization that limits scanned data to only the partitions required by a query's filters.
+> - It matters here because partition-aware predicates are one of the highest-leverage performance controls on large analytical tables.
+>
+> > [!warning] Filters must match partition design
+> >
+> > A partitioned table only helps if queries filter in a way the warehouse can exploit. Broad or non-sargable predicates can still force expensive scans.
+>
+> ---
+>
+> **Clustering**
+> - A warehouse storage optimization that groups related rows together by selected columns to improve selective query performance.
+> - It matters here because some dbt models benefit materially when common filter or join keys align with the warehouse's clustering behavior.
+>
+> > [!info] Read pattern optimization
+> >
+> > Clustering is most useful when the same keys are filtered or joined repeatedly. It is a workload-shape optimization, not a universal speed boost.
+>
+> ---
+>
+> **Slot usage**
+> - The compute capacity consumed by BigQuery queries during execution.
+> - It matters here because dbt performance on BigQuery is often a question of both SQL shape and available slot resources.
+>
+> > [!warning] Fast SQL can still wait for compute
+> >
+> > If slots are saturated, query runtime reflects resource contention as much as query quality. Measuring warehouse capacity is part of tuning.
+>
+> ---
+>
+> **Post-hook index**
+> - A warehouse index created by dbt after model materialization using a post-hook.
+> - It matters here because SQL Server-backed dbt projects often need physical design help after table builds to keep downstream queries efficient.
+>
+> > [!warning] Physical tuning outside the SQL body
+> >
+> > dbt model SQL does not express every performance optimization. On some adapters, post-hooks are the practical place to add physical design improvements after build.
+>
+> ---
+>
+> **Statistics update**
+> - A database maintenance action that refreshes optimizer statistics so execution plans reflect current data distribution.
+> - It matters here because stale statistics can make well-written dbt SQL run poorly for reasons unrelated to model logic.
+>
+> > [!warning] Optimizer blindness looks like model slowness
+> >
+> > Sometimes a slow dbt run is really a stale-optimizer problem. If statistics are wrong, the warehouse may choose bad plans even for sensible SQL.
+>
+> ---
+>
+> **TempDB pressure**
+> - SQL Server contention or spill pressure in TempDB caused by sorts, hashes, spools, or concurrent workloads.
+> - It matters here because dbt models using heavy intermediate computation can expose TempDB as a system-level bottleneck.
+>
+> > [!warning] Not every slowdown is in the model SQL
+> >
+> > TempDB pressure is a reminder that dbt performance can be constrained by shared database internals, not just by the text of the model query.
+>
+> ---
+>
+> **Thread count**
+> - The number of dbt worker threads used to execute nodes in parallel.
+> - It matters here because too little parallelism wastes capacity while too much can overwhelm adapters, warehouses, or shared database resources.
+>
+> > [!warning] More threads are not always faster
+> >
+> > Thread settings should match warehouse and workload behavior. Past a point, extra parallelism creates queueing, lock contention, or slot starvation instead of speed.
+>
+> ---
+>
+> **Approximate aggregation**
+> - A query pattern such as `APPROX_COUNT_DISTINCT` that trades exactness for faster or cheaper execution on suitable workloads.
+> - It matters here because some analytical models can accept approximation and gain meaningful runtime savings.
+>
+> > [!warning] Accuracy is part of performance policy
+> >
+> > Approximate functions are only good optimizations when the analytical use case tolerates them. Speed is not a free win if the metric contract demands exactness.
+>
+> ---
+>
+> **Incremental drift**
+> - Performance or correctness degradation that accumulates when an incremental model's selective processing logic no longer matches the real data-change pattern.
+> - It matters here because some slow or stale runs are symptoms of incremental strategy drift rather than of raw compute scarcity.
+>
+> > [!warning] Cheap runs can hide bad state
+> >
+> > An incremental model may look fast while still growing less correct over time. Tuning has to protect both runtime and data validity.
+>
+> ---
+>
+> **Freshness SLA**
+> - The operational time target for how quickly transformed data should be updated and available after source changes.
+> - It matters here because dbt performance is not just about cost; it is also about whether the pipeline still meets expected delivery latency.
+>
+> > [!info] Runtime is a service-level issue
+> >
+> > Slow models become operational problems when they push delivery past consumer expectations. Performance tuning is often really SLA protection in disguise.
+
+> [!example] Performance Intervention Scope
+>
+> > [!success] Measured Tuning
+> >
+> > - Use this guidance when dbt runs are already working but are too slow, too expensive, or too close to freshness SLAs, and you need to locate whether the pressure comes from model SQL, warehouse layout, or execution settings.
+> > - Apply the adapter-specific sections after measuring the bottleneck, so thread changes, partition design, indexing, and incremental strategy adjustments target the real constraint instead of random symptoms.
+>
+> > [!failure] Architectural Mismatch
+> >
+> > - Do not treat tuning as the first fix when the model layer, materialization choice, or warehouse fundamentals are still wrong, because faster execution of a bad design is still a bad design.
+> > - Avoid performance shortcuts that hide correctness issues, such as overly approximate logic or aggressive pruning rules, unless the model's consumers and accuracy requirements explicitly allow that tradeoff.
 
 ## Identifying Slow Models from `run_results.json`
 
@@ -132,6 +273,7 @@ In dbt model config, declare the partition column and ensure downstream models f
 ### BigQuery Tuning — Clustering
 
 Clustering physically sorts data within each partition by the specified columns. Effective for:
+
 - High-cardinality filter columns (`issuer_id`, `isin`).
 - Columns used in `GROUP BY` or `JOIN` conditions.
 
@@ -452,4 +594,3 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
 - [dbt-troubleshooting](https://alp78.github.io/elysium/11-dbt/Operations/dbt-troubleshooting)
 - [dbt-observability](https://alp78.github.io/elysium/11-dbt/Operations/dbt-observability)
-

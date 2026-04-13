@@ -18,14 +18,55 @@ status: complete
 
 # Restore and Recovery
 
-Restore is where the backup strategy is either proven or exposed as theory. A restore guide must be operational: which command runs first, when to use `NORECOVERY` versus `RECOVERY`, how to target a new database name safely, how to stop the replay at an exact moment in time, and how to validate that the restored database is actually usable.
+> [!abstract]- Summary
+>
+> Restore is where the backup strategy is either proven or exposed as theory. This note stays operational: which command runs first, when to use `NORECOVERY` versus `RECOVERY`, how to target a new database name safely, how to stop replay at an exact moment in time, and how to validate that the restored database is actually usable.
+>
+> - **Restore fundamentals**
+>   - defines the recovery-state choices, `msdb` restore audit trail, and the sequence rules that keep a restore chain continuable
+> - **Side-by-side restore**
+>   - shows how to restore safely under a new database name with `MOVE`, preserving the source while validating the recovered copy
+> - **Point-in-time recovery**
+>   - explains how `STOPAT` fits into the log chain and how to stop replay at a precise recovery target
+> - **Object-storage restore**
+>   - covers restore-from-URL flows against the Google Cloud Storage target exposed through the S3 connector
+> - **Tail-log and disaster workflows**
+>   - includes the last-chance backup step that protects the final transactions before a damaged database is replaced
+> - **Recovery monitoring**
+>   - closes with the checks that prove crash recovery or restore recovery is still progressing instead of stalled
+> - **Live capture context**
+>   - commands and outputs were captured on April 11, 2026 from the `stoxx` instance on the `stoxx-db` container: SQL Server 2022 CU23 (`16.0.4236.2`, Developer Edition, Linux), restore source under `/var/opt/mssql/backup/` plus `gs://stoxx-sql-bucket`, and disposable restore targets `stoxx_backup` and `stoxx_backup_check`
 
-All commands and live outputs in this note were captured from the current `stoxx` instance on the `stoxx-db` container:
-
-- SQL Server 2022 CU23 (build 16.0.4236.2, Developer Edition, Linux)
-- Restore source: local backup chain under `/var/opt/mssql/backup/` + GCS bucket `gs://stoxx-sql-bucket`
-- Restore target: disposable database `stoxx_backup` created for the drill, plus a throwaway `stoxx_backup_check` for the URL-restore side-by-side demo
-- Capture window: 2026-04-11 16:32–16:34 UTC
+> [!note]- Glossary
+>
+> - **Restore chain**
+>   - ordered set of full, differential, and log restores required to reach the chosen recovery point
+> - **`NORECOVERY`**
+>   - restore option that leaves the database in `RESTORING` so more backup sets can be applied
+> - **`RECOVERY`**
+>   - restore option that rolls back unfinished transactions and brings the database online, ending the chain
+> - **`STANDBY`**
+>   - restore option that brings the database online read-only while preserving undo information for later log restores
+> - **Side-by-side restore**
+>   - restore pattern that recovers a backup into a different database name for validation or comparison
+> - **`MOVE`**
+>   - restore clause used to redirect logical database files to new physical paths during restore
+> - **Point-in-time recovery**
+>   - restore workflow that replays log backups only up to a chosen timestamp or LSN target
+> - **`STOPAT`**
+>   - restore clause that tells SQL Server where to stop replay during a log restore
+> - **Tail-log backup**
+>   - final log backup taken from the damaged source database before restore, preserving the last committed transactions
+> - **`msdb.dbo.restorehistory`**
+>   - system table that records every restore step executed on the instance
+> - **`WITH REPLACE`**
+>   - restore option that permits overwriting an existing database after explicit confirmation
+> - **Crash recovery**
+>   - startup or post-restore process where SQL Server redoes and undoes transactions to bring the database to a consistent state
+> - **Restore from URL**
+>   - restore pattern that reads backup media from object storage instead of local disk
+> - **Disposable restore target**
+>   - temporary database created to prove a restore path without risking the primary workload
 
 > [!info] Restore decision path
 >
@@ -313,7 +354,6 @@ UNION ALL SELECT 'dbo.backup_demo_marker',   COUNT(*) FROM dbo.backup_demo_marke
 | current_db | server_name |
 |---|---|
 | stoxx_backup | 8482aae8ad0a |
-
 | source_table | row_count |
 |---|---:|
 | silver.eurostoxx50_ohlcv | 67155 |
@@ -730,5 +770,3 @@ A documented restore drill runs end-to-end through the full chain and produces a
 > A drill that runs monthly but fails silently is worse than no drill at all. Wire the drill into the same alerting path as production jobs: success emits a green ticket, failure pages the on-call DBA. The drill's value is the evidence it leaves behind, not the execution itself.
 
 ---
-
-

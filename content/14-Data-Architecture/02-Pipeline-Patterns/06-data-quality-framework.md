@@ -16,7 +16,146 @@ updated: 2026-03-29
 >
 > — **W. Edwards Deming**, *The New Economics* (1993)
 
-Every data pipeline needs quality gates. In financial index calculation, a single bad price or weight produces a wrong index level that propagates to ETFs, derivatives, and regulatory filings. This page defines the six quality dimensions, maps them to medallion layers, and links to every concrete implementation in the vault.
+> [!abstract]- Summary
+>
+> This note defines a full data quality framework for pipelines, organizing quality into six dimensions, mapping those checks onto medallion layers, and showing how tooling, quarantine, anomaly detection, orchestration, and SLAs combine to keep bad data from becoming trusted output.
+>
+> **Quality dimensions**
+> - Defines completeness, uniqueness, validity, timeliness, accuracy, and consistency as the six recurring quality dimensions a pipeline must evaluate.
+> - Uses financial-data failure modes to show why each dimension needs its own detection logic rather than one generic quality score.
+>
+> **Medallion quality gates**
+> - Maps bronze, silver, and gold to different gate priorities and failure responses, including halt, quarantine, advisory review, and publication blocking.
+> - Treats layer-specific quality policy as a core architecture choice rather than a later monitoring add-on.
+>
+> **Tooling, quarantine, and anomaly workflows**
+> - Compares dbt tests, Great Expectations, Soda, custom SQL or Python checks, and Dataplex-quality scans, then explains quarantine design, replay, and anomaly detection for time-series data.
+> - Connects those tools to actual operational responses instead of stopping at test declaration syntax.
+>
+> **Operations and safety**
+> - Warnings: silent row loss, duplicate drift, stale data, and cross-system inconsistency can all survive a technically successful pipeline run.
+> - Recommendations: define explicit gates per layer, surface freshness separately from pipeline success, quarantine bad rows with context, and wire quality checks into both orchestration and CI.
+
+> [!note]- Glossary
+>
+> **Data quality dimension**
+> - A specific lens for evaluating whether data is fit for use, such as completeness or timeliness, rather than a vague overall impression of quality.
+> - It matters here because the framework depends on separating different failure modes instead of collapsing them into one generic status.
+>
+> > [!info] Different dimensions fail differently
+> >
+> > A dataset can be complete but inaccurate, or timely but inconsistent. Treating these as separate dimensions makes root-cause analysis much clearer.
+>
+> ---
+>
+> **Completeness**
+> - The extent to which all expected rows and required fields are present in a dataset.
+> - It matters here because missing rows or null-heavy required columns are among the easiest ways for outputs to look plausible while being wrong.
+>
+> > [!warning] Silent loss is dangerous
+> >
+> > Completeness failures are especially costly when the pipeline still succeeds and downstream consumers have no reason to suspect missing records.
+>
+> ---
+>
+> **Uniqueness**
+> - The requirement that each logical entity appears only once at the intended grain.
+> - It matters here because duplicates distort aggregates, joins, and derived metrics across every later stage.
+>
+> > [!warning] Duplication compounds downstream
+> >
+> > One duplicated row can influence multiple aggregates, derived features, and exports before anyone notices the original duplication event.
+>
+> ---
+>
+> **Validity**
+> - The degree to which values conform to allowed domains, structural rules, and business logic constraints.
+> - It matters here because structurally present data is still unusable if it violates the business rules the platform depends on.
+>
+> > [!info] Rules must be executable
+> >
+> > A business rule that lives only in documentation is not protecting anything. Validity improves only when the rule is turned into a real assertion.
+>
+> ---
+>
+> **Timeliness / freshness**
+> - The measure of whether data arrives or is updated within the expected time window for its consumers.
+> - It matters here because pipelines that run on time can still publish stale or missing source data if freshness is not checked explicitly.
+>
+> > [!warning] Success is not freshness
+> >
+> > A green pipeline status can hide the fact that it processed yesterday's file or missed the source's expected update window entirely.
+>
+> ---
+>
+> **Accuracy**
+> - The degree to which values reflect the real-world truth they are supposed to represent.
+> - It matters here because some of the most damaging pipeline failures are not structural at all; they are numerically wrong while still looking well formed.
+>
+> > [!warning] Often needs an external reference
+> >
+> > Accuracy is hard to automate because many checks require a second source, a reconciliation process, or anomaly thresholds rather than simple schema rules.
+>
+> ---
+>
+> **Consistency**
+> - The requirement that the same logical facts agree across systems, tables, and publications.
+> - It matters here because conflicting values across channels destroy user trust faster than many other data defects.
+>
+> > [!warning] Cross-system mismatch erodes confidence
+> >
+> > Users rarely tolerate two authoritative answers to the same question. Consistency checks are what keep replication and publication steps credible.
+>
+> ---
+>
+> **Quality gate**
+> - A decision checkpoint that evaluates quality signals and either allows data to continue, quarantines part of it, or halts the pipeline.
+> - It matters here because the note turns quality from passive monitoring into an active control over data movement.
+>
+> > [!info] Monitoring plus action
+> >
+> > A gate is useful because it has consequences. It does not just record that quality is bad; it changes what the pipeline is allowed to do next.
+>
+> ---
+>
+> **Quarantine**
+> - A controlled holding area for bad or suspicious rows that should not continue downstream but still need to be preserved for investigation and replay.
+> - It matters here because row-level defects should not force teams to choose between dropping evidence and stopping all processing blindly.
+>
+> > [!info] Preserve evidence and recover later
+> >
+> > Quarantine gives teams a reversible response: protect downstream consumers now, then analyze, fix, and replay affected rows later.
+>
+> ---
+>
+> **Anomaly detection**
+> - A set of statistical or heuristic checks that flag unusual values or movements that may be valid but deserve investigation.
+> - It matters here because some important quality failures appear as abnormal patterns rather than explicit rule violations.
+>
+> > [!warning] Suspicious is not always wrong
+> >
+> > Good anomaly detection should trigger review, not necessarily automatic failure. Real market or business events can produce legitimate outliers.
+>
+> ---
+>
+> **SLA**
+> - The documented commitment for freshness, availability, and acceptable quality levels of a dataset or pipeline output.
+> - It matters here because quality priorities become operational only when the platform knows the deadline and thresholds it must enforce.
+>
+> > [!info] Turn quality into obligation
+> >
+> > SLAs are what convert abstract quality expectations into something the platform can monitor, alert on, and escalate when breached.
+>
+
+> [!example] Quality Gate Scope
+>
+> > [!success] Controlled Trust
+> >
+> > - Use a full quality framework when production pipelines need visible trust signals, quality enforcement at stage boundaries, and a controlled path for bad rows or suspicious aggregates.
+>
+> > [!failure] Metric Without Action
+> >
+> > - Do not reduce quality to a single dashboard metric with no gating behavior, replay path, or owner response.
 
 ## Data Quality Dimensions
 
@@ -468,4 +607,3 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 - [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# implementation of the same patterns
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework) — dbt test types, severity levels, and store-failures
 - [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — GCP-native freshness monitoring and alerting
-

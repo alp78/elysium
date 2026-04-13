@@ -12,28 +12,200 @@ tags:
 >
 > — **Antoine de Saint-Exupéry**, *Terre des hommes* (1939)
 
-The `.gitignore` file tells Git which files and directories to exclude from version control. A well-maintained ignore configuration prevents secrets, build artifacts, large data files, and machine-specific noise from entering the repository. Once a file is already tracked by Git, adding it to `.gitignore` has no effect — you must explicitly remove it from the index with `git rm --cached` and commit the change.
+> [!abstract]- Summary
+>
+> Explains how `.gitignore`, ignore precedence, and related repository-hygiene files keep secrets, generated artifacts, local environments, and large binaries out of Git without hiding files that should still be versioned.
+>
+> **Ignore model and pattern syntax**
+> - Defines `.gitignore`, glob matching, negation, anchored paths, directory rules, and precedence across repo, global, and command-line ignore sources
+> - Shows why ignore rules are about untracked files only and why pattern specificity matters when repositories mix source, build output, notebooks, data, and temporary tooling files
+>
+> **Diagnosis and cleanup**
+> - Uses diagnostic commands to explain why a path is ignored or still tracked, then removes already-committed files from the index without deleting local working copies
+> - Covers secret exposure recovery boundaries so readers do not mistake ignore rules for retroactive history cleanup
+>
+> **Templates and repository hygiene**
+> - Builds practical ignore templates for data engineering, connects `.gitignore` to `.gitattributes`, `.gitkeep`, and other hygiene files, and introduces Git LFS for large binary assets
+> - Explains where generated data, local virtual environments, lockfiles, notebooks, and build directories should live so the repository stays reviewable and portable
+>
+> **Operations and safety**
+> - Warnings: ignored files already tracked in history, over-broad patterns that hide real source files, secret commits that require history cleanup, and large binaries that should move to LFS
+> - Recommendations: keep ignore rules explicit, test patterns with diagnostics, separate team-wide from global ignores, and review templates whenever new tooling or artifact types appear
+> - Troubleshooting: pattern precedence, tracked-file cleanup, secret-recovery boundaries, and repository-noise diagnosis
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **`.gitignore`**
+> - A text file containing glob patterns that tell Git which untracked files to exclude from `git add` and `git status`. Can exist at the repository root, in any subdirectory (scoped rules), or as a global file.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Tracked file**
+> - A file that exists in Git's index (staging area). Git monitors it for changes. Adding a tracked file to `.gitignore` does not untrack it — the file remains tracked until explicitly removed from the index.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Untracked file**
+> - A file in the working directory that Git does not know about. Untracked files appear in `git status` unless they match a `.gitignore` pattern.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Index (staging area)**
+> - The intermediate area between the working directory and the next commit. `git add` copies files into the index; `git commit` records the index as a snapshot.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Glob pattern**
+> - A wildcard pattern used for filename matching. `.gitignore` supports `*` (any characters except `/`), `?` (single character), `[...]` (character class), and `**` (any number of directories).
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Negation pattern**
+> - A pattern prefixed with `!` that re-includes a file previously excluded by an earlier pattern. Order matters — the last matching rule wins.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Trailing slash**
+> - A `/` at the end of a pattern restricts the match to directories only. `logs/` matches the directory; `logs` matches both files and directories named `logs`.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Leading slash**
+> - A `/` at the start of a pattern anchors the match to the repository root. `/build` matches only `build` at the root, not `src/build`.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **`**` (double star)**
+> - Matches zero or more directories. `**/logs` matches `logs` at any depth. `src/**/*.py` matches all `.py` files anywhere under `src/`.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **`.git/info/exclude`**
+> - A per-repository ignore file that is not committed and not shared with collaborators. Use for personal ignores that should not appear in `.gitignore`.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Global excludes file**
+> - A user-level ignore file configured via `core.excludesfile`. Applies to every repository on the machine. Ideal for OS artifacts and IDE directories.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **`.gitattributes`**
+> - A committed file that controls per-path settings such as line-ending normalization, diff drivers, merge strategies, and Git LFS tracking. Not an ignore mechanism — it changes how Git handles files, not whether it tracks them.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Git LFS**
+> - Git Large File Storage. Replaces large binary files with lightweight text pointers in the repository, storing the actual content on a separate LFS server. Configured through `.gitattributes`.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **`git rm --cached`**
+> - Removes a file from the index without deleting it from the working directory. The file becomes untracked in the next commit.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **`git check-ignore`**
+> - Diagnostic command that reports which `.gitignore` rule matches a given path, including the source file and line number.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Precedence**
+> - When multiple ignore sources define patterns, Git evaluates them in order of increasing specificity: global excludes → `.git/info/exclude` → root `.gitignore` → subdirectory `.gitignore`. Within a single file, later lines override earlier lines.
+> - It matters in this note because the workflows for ignore rules, repository hygiene, and secret or large-file prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
 
-| Term | Definition |
-|---|---|
-| **`.gitignore`** | A text file containing glob patterns that tell Git which untracked files to exclude from `git add` and `git status`. Can exist at the repository root, in any subdirectory (scoped rules), or as a global file. |
-| **Tracked file** | A file that exists in Git's index (staging area). Git monitors it for changes. Adding a tracked file to `.gitignore` does not untrack it — the file remains tracked until explicitly removed from the index. |
-| **Untracked file** | A file in the working directory that Git does not know about. Untracked files appear in `git status` unless they match a `.gitignore` pattern. |
-| **Index (staging area)** | The intermediate area between the working directory and the next commit. `git add` copies files into the index; `git commit` records the index as a snapshot. |
-| **Glob pattern** | A wildcard pattern used for filename matching. `.gitignore` supports `*` (any characters except `/`), `?` (single character), `[...]` (character class), and `**` (any number of directories). |
-| **Negation pattern** | A pattern prefixed with `!` that re-includes a file previously excluded by an earlier pattern. Order matters — the last matching rule wins. |
-| **Trailing slash** | A `/` at the end of a pattern restricts the match to directories only. `logs/` matches the directory; `logs` matches both files and directories named `logs`. |
-| **Leading slash** | A `/` at the start of a pattern anchors the match to the repository root. `/build` matches only `build` at the root, not `src/build`. |
-| **`**` (double star)** | Matches zero or more directories. `**/logs` matches `logs` at any depth. `src/**/*.py` matches all `.py` files anywhere under `src/`. |
-| **`.git/info/exclude`** | A per-repository ignore file that is not committed and not shared with collaborators. Use for personal ignores that should not appear in `.gitignore`. |
-| **Global excludes file** | A user-level ignore file configured via `core.excludesfile`. Applies to every repository on the machine. Ideal for OS artifacts and IDE directories. |
-| **`.gitattributes`** | A committed file that controls per-path settings such as line-ending normalization, diff drivers, merge strategies, and Git LFS tracking. Not an ignore mechanism — it changes how Git handles files, not whether it tracks them. |
-| **Git LFS** | Git Large File Storage. Replaces large binary files with lightweight text pointers in the repository, storing the actual content on a separate LFS server. Configured through `.gitattributes`. |
-| **`git rm --cached`** | Removes a file from the index without deleting it from the working directory. The file becomes untracked in the next commit. |
-| **`git check-ignore`** | Diagnostic command that reports which `.gitignore` rule matches a given path, including the source file and line number. |
-| **Precedence** | When multiple ignore sources define patterns, Git evaluates them in order of increasing specificity: global excludes → `.git/info/exclude` → root `.gitignore` → subdirectory `.gitignore`. Within a single file, later lines override earlier lines. |
+> [!example] Ignore Policy Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when setting repository defaults, diagnosing noisy `git status` output, or preventing accidental commits of machine-specific, generated, or sensitive files.
+> > - Use it when ignore precedence, pattern specificity, and tracked-versus-untracked behavior need to be made explicit for the team.
+> > - Use it to pair `.gitignore` with broader repository hygiene decisions such as `.gitattributes`, `.gitkeep`, and Git LFS placement.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use `.gitignore` as a retroactive secret-removal tool; once sensitive data is committed, history cleanup is a separate incident response task.
+> > - Do not use ignore rules as a substitute for storage policy on large datasets and binaries that belong outside ordinary Git history.
+> > - Do not add broad patterns without testing them, because they can silently hide files the repository actually needs.
 
 ## Conceptual Model
 
@@ -1098,7 +1270,6 @@ git push --force --all
 | `--lockable` | `git lfs track --lockable "*.psd"` | Mark pattern as lockable (enables LFS file locking) |
 | `--not-lockable` | `git lfs track --not-lockable "*.psd"` | Remove lockable attribute from a tracked pattern |
 | `--filename` | `git lfs track --filename <file>` | Match an exact filename rather than a glob pattern |
-
 | Flag | Syntax | Description |
 |---|---|---|
 | `--include` | `git lfs migrate import --include="*.parquet"` | Specify which file patterns to migrate |

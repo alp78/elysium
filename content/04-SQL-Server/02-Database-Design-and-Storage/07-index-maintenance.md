@@ -11,9 +11,114 @@ status: complete
 
 # Index Maintenance
 
-Index maintenance is a production decision process, not a weekly rebuild ritual. Microsoft now emphasizes **page density** alongside fragmentation: a large scan-heavy rowstore index with low page density can waste memory and I/O even when fragmentation alone does not look extreme, while a tiny index with 40% fragmentation is often operational noise. The correct action depends on index size, access pattern, density, fragmentation, statistics freshness, and whether the operation must remain online.
+> [!abstract]- Summary
+>
+> Index maintenance is a production decision process, not a weekly rebuild ritual. Microsoft now emphasizes **page density** alongside fragmentation: a large scan-heavy rowstore index with low page density can waste memory and I/O even when fragmentation alone does not look extreme, while a tiny index with 40% fragmentation is often operational noise. The correct action depends on index size, access pattern, density, fragmentation, statistics freshness, and whether the operation must remain online.
+>
+> **Baseline and decision logic**
+> - starts from reproducible discovery on the `stoxx` database and a decision flow that filters out indexes too small to matter before any maintenance is considered
+>
+> **Detection and remediation**
+> - covers fragmentation, page density, `REORGANIZE`, `REBUILD`, columnstore maintenance, resumable operations, fill factor, and statistics refresh
+>
+> **Discovery and cadence**
+> - includes index-discovery DMVs, unused-index review, and the production cadence needed to avoid turning maintenance into ritualized churn
+>
+> **Operations and safety**
+> - Warnings: routine rebuilds without evidence, overreacting to tiny indexes, low fill factors without split pain, and maintenance that ignores online or resumable needs all create avoidable cost
+> - Recommendations: start with measured page density and size, choose between `REORGANIZE` and `REBUILD` deliberately, and let cadence follow workload behavior rather than calendar superstition
 
-This page uses the `stoxx` database for read-only discovery queries and disposable `dbo.demo_idxmaint_*` tables for state-changing demonstrations. The production-facing queries are written in a form suitable for real troubleshooting; the demo objects exist so the effects of `REORGANIZE`, `REBUILD`, resumable operations, fill factor, statistics refresh, and index-discovery DMVs can be shown with real output.
+> [!note]- Glossary
+>
+> **Fragmentation**
+> - The out-of-order page pattern in a rowstore index that can increase read cost, especially for large scans.
+> - It matters because fragmentation is one of the classic maintenance signals, but it only matters when paired with sufficient size and workload relevance.
+>
+> > [!warning] Percent alone is a bad trigger
+> >
+> > A tiny index can be “highly fragmented” and still be irrelevant. Size and access pattern matter as much as the percentage.
+>
+> ---
+>
+> **Page density**
+> - The degree to which index pages are actually full rather than carrying internal free space.
+> - It matters because low density can waste memory and I/O even when fragmentation does not look dramatic.
+>
+> > [!info] Density is often the more important metric
+> >
+> > Modern guidance increasingly treats page density as a first-class maintenance signal, not just a side detail behind fragmentation.
+>
+> ---
+>
+> **`ALTER INDEX ... REORGANIZE`**
+> - The online leaf-level compaction operation for rowstore indexes.
+> - It matters because it is the lighter-touch maintenance path when the goal is incremental cleanup without a full rewrite.
+>
+> > [!warning] It is not a mini-rebuild
+> >
+> > `REORGANIZE` does not change fill factor and does not recreate the whole structure. Use it when that narrower behavior is actually what you want.
+>
+> ---
+>
+> **`ALTER INDEX ... REBUILD`**
+> - The full index rewrite operation that recreates the structure from scratch.
+> - It matters because rebuilds reset fragmentation and can apply new options, but they also cost more log, CPU, and operational coordination.
+>
+> > [!warning] Rebuilds are expensive by design
+> >
+> > A rebuild is not the default-safe answer. It is the heavier intervention and should be justified by the measured state of the index.
+>
+> ---
+>
+> **Resumable index operation**
+> - An index rebuild that can be paused and resumed instead of succeeding or failing as one uninterrupted operation.
+> - It matters because large maintenance windows are often easier to manage when rebuild work can yield to business pressure and continue later.
+>
+> > [!info] Useful when time windows are tight
+> >
+> > Resumable operations turn long maintenance from an all-or-nothing event into an operationally manageable process.
+>
+> ---
+>
+> **Fill factor**
+> - The targeted page fullness applied when an index is built or rebuilt.
+> - It matters because fill factor trades leaf free space against future page-split pressure on write-heavy indexes.
+>
+> > [!warning] Low fill factor is not free insurance
+> >
+> > Leaving extra space reduces page splits but permanently increases page count. Use it when there is real evidence that the write pattern needs it.
+>
+> ---
+>
+> **Columnstore maintenance**
+> - The set of operations and checks used to manage rowgroup state, deleted rows, and compression health in columnstore indexes.
+> - It matters because columnstore structures age differently from rowstore B-trees and need different maintenance signals.
+>
+> > [!warning] Rowstore habits do not transfer directly
+> >
+> > Fragmentation logic and rowgroup logic are not the same problem. Treating columnstore like a B-tree leads to the wrong maintenance choices.
+>
+> ---
+>
+> **Statistics refresh**
+> - The update of optimizer statistics so row-count estimates reflect current data distribution.
+> - It matters because an index can be physically healthy while still producing bad plans if the statistics attached to it are stale.
+>
+> > [!info] Physical repair and optimizer truth are different layers
+> >
+> > Rebuilding or reorganizing does not eliminate the need to think about statistics freshness explicitly.
+>
+> ---
+>
+> **Index-discovery DMV**
+> - DMV surfaces used to review missing, unused, or operationally expensive indexes.
+> - It matters because maintenance is not only about cleaning existing indexes; it is also about deciding which ones should exist at all.
+>
+> > [!warning] Maintenance includes subtraction
+> >
+> > Keeping the wrong index is also an index-maintenance decision. Good maintenance removes wasted structures, not just repairs them.
+>
+> ---
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -2171,4 +2276,3 @@ EXECUTE dbo.IndexOptimize
 - Microsoft Learn: [sys.dm_db_missing_index_details (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-missing-index-details-transact-sql?view=sql-server-ver17)
 - Ola Hallengren: [SQL Server Index and Statistics Maintenance](https://ola.hallengren.com/sql-server-index-and-statistics-maintenance.html)
 - Microsoft Tiger Toolbox: [Adaptive Index Defrag](https://github.com/microsoft/tigertoolbox/tree/master/AdaptiveIndexDefrag)
-

@@ -17,7 +17,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Block Library — IAM, Secrets & Serverless (GCP)
+# IAM, Secrets and Serverless Blocks
 
 > [!quote] Dan Kaminsky on defense in depth
 >
@@ -26,6 +26,133 @@ status: complete
 > — **Dan Kaminsky**, security researcher
 
 Atomic, copy-paste Terraform blocks for GCP IAM, Secret Manager, Cloud Run v2, Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Each block is self-contained and ready to adapt to any project. Argument tables document every field; callouts flag risks and best practices.
+
+> [!abstract]- Summary
+>
+> IAM, Secrets and Serverless Blocks is the GCP Terraform snippet library for identity, secret distribution, serverless compute, event delivery, and supporting deployment infrastructure: it groups reusable blocks for IAM, Secret Manager, Cloud Run, Cloud Functions, Cloud Scheduler, Pub/Sub, Artifact Registry, and the common data-source and pattern glue that connects them.
+>
+> **Identity and secret blocks**
+> - covers IAM resource patterns, service-account design, Workload Identity Federation, Secret Manager resources, lifecycle protection, and the trade-offs between broad and resource-scoped permission models
+>
+> **Serverless and event blocks**
+> - covers Cloud Run, Cloud Functions v2, Cloud Scheduler, and Pub/Sub blocks that define HTTP services, event-driven compute, schedules, and messaging flows
+>
+> **Supporting platform blocks**
+> - covers Artifact Registry, variables reference, data sources, and common composition patterns needed to bind identities, images, and secret references into runnable serverless systems
+>
+> **Operations and safety**
+> - Warnings: project-level IAM grants are broad, Terraform stores secret values in state, secrets need lifecycle protection, `allUsers` removes authentication, subscription expiration can surprise event consumers, and several defaults in serverless and messaging blocks become unsafe when copied unchanged into production
+> - Recommendations: keep one service account per workload, prefer resource-level IAM where possible, protect state and secrets together, require deliberate public-service exposure, use UTC for schedules, set Pub/Sub TTL explicitly, start Artifact Registry cleanup in dry-run mode, and prefer WIF over service-account key management
+
+> [!note]- Glossary
+>
+> **`iam_member` / `iam_binding` / `iam_policy`**
+> - Terraform IAM resource patterns that vary in how incrementally or authoritatively they manage access at a given scope.
+> - It matters because IAM snippets are only safe when the chosen resource type matches whether Terraform should own one grant, one role membership set, or the full policy.
+>
+> > [!warning] Authoritativeness is the real difference
+> >
+> > These resources may look similar, but they behave very differently when multiple teams or tools touch the same scope. Choosing the wrong one can remove access you did not intend to manage.
+>
+> ---
+>
+> **Service account**
+> - A workload identity used by GCP services, Terraform-managed resources, or external automation instead of a human user.
+> - It matters because the library's identity model assumes each workload gets its own principal with narrowly scoped permissions.
+>
+> > [!info] Identity boundaries define blast radius
+> >
+> > Reusing one service account across unrelated workloads is operationally convenient and security-expensive. Separate identities keep failures and privilege creep easier to contain.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A GCP trust model that lets external systems obtain short-lived Google credentials without exporting long-lived service-account keys.
+> - It matters because this library treats WIF as the safer authentication path for CI/CD and external automation.
+>
+> > [!warning] Keys should not be the default artifact
+> >
+> > A service-account key file is durable, copyable, and easy to mishandle. WIF reduces the need to store that kind of credential at all.
+>
+> ---
+>
+> **Secret Manager**
+> - GCP's managed service for storing and accessing sensitive values such as passwords, API keys, and tokens.
+> - It matters because serverless and workload snippets in this note often need secrets, and Secret Manager is the intended storage boundary.
+>
+> > [!warning] Terraform can still touch the plaintext
+> >
+> > Sending a secret into Secret Manager is good practice, but Terraform may still persist the value in state on the way there. Backend protection remains part of the secret design.
+>
+> ---
+>
+> **`prevent_destroy`**
+> - A Terraform lifecycle safeguard that blocks resource destruction while the protected block still exists in configuration.
+> - It matters because secrets and other stateful security resources should not be easy to delete accidentally.
+>
+> > [!warning] Security objects deserve stronger defaults
+> >
+> > A missing destroy safeguard on a secret, credential store, or registry is not a minor omission. Those objects often anchor multiple dependent workloads.
+>
+> ---
+>
+> **Cloud Run**
+> - GCP's serverless container platform for HTTP services and jobs.
+> - It matters because several serverless snippets in the library are built around Cloud Run as the primary runtime surface for containerized workloads.
+>
+> > [!warning] Public exposure is one IAM binding away
+> >
+> > A Cloud Run service can become internet-accessible very quickly if authentication is relaxed thoughtlessly. Public reachability should always be an intentional decision, not a convenience default.
+>
+> ---
+>
+> **`allUsers`**
+> - A broad IAM principal that represents unauthenticated public access.
+> - It matters because the note explicitly warns that binding `allUsers` to serverless services removes authentication entirely.
+>
+> > [!danger] Public means truly unauthenticated
+> >
+> > `allUsers` does not mean "all employees" or "all project members." It means anyone on the internet who can reach the endpoint.
+>
+> ---
+>
+> **Cloud Functions v2**
+> - The current generation of Cloud Functions, built on top of Cloud Run infrastructure.
+> - It matters because the library includes both Cloud Run and Cloud Functions patterns, and understanding their relationship reduces confusion about runtime behavior and IAM.
+>
+> > [!info] Function does not mean separate platform anymore
+> >
+> > Cloud Functions v2 inherits important characteristics from Cloud Run. That makes it closer to a specialized serverless packaging model than to a totally separate execution stack.
+>
+> ---
+>
+> **Cloud Scheduler**
+> - GCP's managed cron-style service for invoking HTTP endpoints, Pub/Sub topics, or other scheduled actions.
+> - It matters because several serverless workflows need reliable scheduled triggers rather than only event-driven triggers.
+>
+> > [!warning] Time zones create subtle production errors
+> >
+> > Scheduler jobs should use UTC unless there is a strong reason not to. Local-time assumptions become fragile during daylight-saving changes and multi-region operations.
+>
+> ---
+>
+> **Pub/Sub subscription TTL**
+> - The retention or expiration behavior that determines how long a subscription stays alive without activity.
+> - It matters because messaging blocks copied into production can fail unexpectedly later if expiration settings are left implicit.
+>
+> > [!warning] Default expiry is easy to forget
+> >
+> > A subscription that silently expires is an operational surprise waiting to happen. Explicit TTL settings make the intended lifecycle visible and reviewable.
+>
+> ---
+>
+> **Artifact Registry**
+> - GCP's managed store for container images and related artifacts.
+> - It matters because serverless deployment snippets often depend on a registry boundary that is secure, region-aware, and cleanup-managed.
+>
+> > [!info] Registry hygiene affects deployment safety
+> >
+> > Artifact storage is part of the runtime pipeline, not just a build artifact graveyard. Cleanup and access controls influence rollback and deployment reliability directly.
 
 ## IAM
 

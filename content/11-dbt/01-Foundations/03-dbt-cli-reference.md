@@ -13,9 +13,189 @@ description: "CLI commands, node selection, flags, output interpretation"
 >
 > — **Kent Beck**
 
-Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models.
+> [!abstract]- Summary
+>
+> Explains the dbt command-line interface as an operational reference for running, testing, compiling, selecting, cleaning, and debugging models, with an emphasis on state-aware selection and CI-friendly execution patterns for a production warehouse project.
+>
+> **Core dbt commands**
+> - Covers `dbt run`, `dbt test`, `dbt build`, `dbt compile`, `dbt debug`, `dbt deps`, `dbt seed`, `dbt snapshot`, docs commands, source freshness checks, node listing, cleanup, and retry behavior
+> - Connects each command to what it changes in the warehouse or project state so the CLI can be used intentionally instead of as a memorized list of verbs
+>
+> **Selection and state-aware execution**
+> - Explains selector syntax, graph operators, set operators, and key flags such as `--select`, `--exclude`, `--vars`, `--threads`, `--full-refresh`, `--defer`, and slim-CI state selection
+> - Shows how node selection and deferred state turn the CLI into a precise execution surface for local debugging, targeted reruns, and CI optimization
+>
+> **Output interpretation and operating patterns**
+> - Covers reading CLI output, using debug and compile as preflight tools, and distinguishing build-versus-run/test behavior so failures are localized to the right layer faster
+> - Emphasizes CI/CD-oriented command choices that reduce unnecessary work and prevent downstream models from running after upstream failures
+>
+> **Operations and safety**
+> - Warnings: running broad selectors against the wrong target, misunderstanding `build` versus `run && test`, rebuilding incrementals unintentionally, and using state or defer flags without the correct artifact context
+> - Recommendations: default to the narrowest selector that answers the question, use `dbt debug` and `dbt compile` before expensive runs, prefer `dbt build` in CI, and treat selector syntax as a control surface rather than a convenience shortcut
 
----
+> [!note]- Glossary
+>
+> **`dbt run`**
+> - The CLI command that materializes selected models into the warehouse.
+> - It matters here because it is the direct execution entry point for most model builds and the baseline against which other commands are compared.
+>
+> > [!warning] Writes warehouse state
+> >
+> > `dbt run` changes relations in the active target. A broad selector or wrong target can materialize far more than intended.
+>
+> ---
+>
+> **`dbt test`**
+> - The CLI command that executes schema and singular tests against selected resources.
+> - It matters here because testing is a separate execution surface from model builds, and understanding that separation is essential when debugging failures.
+>
+> > [!info] Assertion layer
+> >
+> > `dbt test` validates data properties after relations exist. It does not replace compile-time validation or warehouse execution checks.
+>
+> ---
+>
+> **`dbt build`**
+> - A composite command that runs seeds, snapshots, models, and tests in DAG order.
+> - It matters here because it is the preferred CI entry point when upstream failure should stop downstream work automatically.
+>
+> > [!warning] More than run plus test
+> >
+> > `dbt build` is not just a convenience wrapper. Its DAG-aware execution semantics make it safer for CI than chaining `run` and `test` manually.
+>
+> ---
+>
+> **`dbt compile`**
+> - The CLI command that renders Jinja into pure SQL without executing anything in the warehouse.
+> - It matters here because compile is the fastest way to isolate Jinja and graph problems before burning warehouse time.
+>
+> > [!info] Cheap preflight check
+> >
+> > Compile failures point to dbt or Jinja layers, not warehouse runtime. Use it early when the question is "will this render" rather than "will this execute."
+>
+> ---
+>
+> **`dbt debug`**
+> - The CLI command that validates project parsing, profile selection, and warehouse connectivity.
+> - It matters here because many runtime failures are really target or credential problems that `dbt debug` can expose before a real run starts.
+>
+> > [!warning] Connection before execution
+> >
+> > If `dbt debug` is red, later model failures are often misleading noise. Fix profile and auth issues before troubleshooting model SQL.
+>
+> ---
+>
+> **`dbt deps`**
+> - The CLI command that installs packages declared in `packages.yml`.
+> - It matters here because package macros and tests change project behavior, and stale dependencies often explain missing macro or test-name errors.
+>
+> > [!warning] Project behavior depends on it
+> >
+> > A project that compiles on one machine can fail on another if package versions differ. Treat `deps` as part of environment setup, not as optional cleanup.
+>
+> ---
+>
+> **`dbt seed`**
+> - The CLI command that loads CSV files from `seeds/` into warehouse tables.
+> - It matters here because seeds are operational warehouse writes, and they often participate in CI, reference data bootstrapping, or environment setup.
+>
+> > [!info] Reference data loader
+> >
+> > Seeds are ideal for small, versioned lookup data. They are not a substitute for real ingestion pipelines or bulk data movement.
+>
+> ---
+>
+> **`dbt snapshot`**
+> - The CLI command that executes snapshot definitions to record historical changes over time.
+> - It matters here because snapshots change persistence and history semantics compared with ordinary model runs.
+>
+> > [!warning] History accumulates
+> >
+> > Snapshot runs add or update historical state rather than rebuilding a simple relation. Run them with the same care you would apply to any temporal data process.
+>
+> ---
+>
+> **Node selection**
+> - The dbt selector system that chooses which resources commands act on, using model names, paths, tags, graph operators, and state expressions.
+> - It matters here because nearly every CLI command becomes safe or dangerous based on selector scope.
+>
+> > [!warning] Scope is the real command
+> >
+> > In practice, `dbt run` without the right selector is a different operation from `dbt run --select ...`. Precision comes from selection more than from the base verb.
+>
+> ---
+>
+> **Graph operator**
+> - A selector modifier such as `+` that expands selection to upstream parents, downstream children, or both.
+> - It matters here because graph operators are what turn a single node into a dependency-aware subgraph execution.
+>
+> > [!warning] Expansion grows fast
+> >
+> > One extra `+` can change a local debug run into a large warehouse operation. Always read graph-expanding selectors as blast-radius multipliers.
+>
+> ---
+>
+> **State selection**
+> - A selector mode that compares the current project to a saved set of artifacts and chooses only changed resources, often with `state:modified+`.
+> - It matters here because state-aware selection is one of the main ways teams keep CI fast in larger dbt projects.
+>
+> > [!warning] Artifacts must match reality
+> >
+> > State selection is only trustworthy when the referenced artifacts really represent the comparison environment you think they do, such as the last production manifest.
+>
+> ---
+>
+> **`--defer`**
+> - A dbt flag that lets unresolved upstream references point at objects from another environment's artifacts instead of rebuilding everything locally.
+> - It matters here because slim CI and environment-aware testing often depend on deferring unchanged parents to production state.
+>
+> > [!warning] Environment substitution is intentional
+> >
+> > `--defer` changes what relation a ref resolves to. That is powerful, but only if the artifact source and target environment are explicit and trustworthy.
+>
+> ---
+>
+> **`--full-refresh`**
+> - A flag that forces dbt to rebuild incremental models from scratch instead of using their incremental logic.
+> - It matters here because it is one of the highest-cost and highest-impact CLI switches in normal dbt operation.
+>
+> > [!warning] Expensive by design
+> >
+> > Full refresh is the right fix for some drift and schema changes, but it can be costly and disruptive on large fact models if used casually.
+>
+> ---
+>
+> **`dbt ls`**
+> - The CLI command that lists resources matching a selector without executing them.
+> - It matters here because it is the safest way to validate selector scope before running a command that mutates warehouse state.
+>
+> > [!info] Dry-run for selection logic
+> >
+> > If you are unsure what a selector will hit, inspect it with `dbt ls` first. It is often the fastest way to prevent an unnecessarily broad run.
+>
+> ---
+>
+> **`dbt retry`**
+> - The CLI command that re-runs the last failed invocation.
+> - It matters here because retry is useful operationally, but only when you understand what previous state and selection it is actually replaying.
+>
+> > [!warning] Context matters
+> >
+> > Retry saves time only when the previous invocation context is still valid. If the target, code, or upstream state has changed, a fresh scoped command is usually safer.
+
+> [!example] Execution Surface Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for day-to-day dbt development, warehouse preflight checks, targeted model reruns, CI troubleshooting, and state-aware execution in larger projects.
+> > - Use it when selector scope, target choice, state artifacts, and command semantics are the real control surface for safe execution.
+> > - Use it to narrow blast radius before running warehouse-mutating commands and to explain why the same base verb can behave very differently under different selectors and flags.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a replacement for project-structure, modeling, or troubleshooting notes when the real question is about SQL design, architecture, or failure diagnosis rather than command behavior.
+> > - Do not treat CLI verbs as the main decision; selector scope and target selection are often the more important risk controls.
+> > - Do not run broad or deferred state commands unless the artifact context and environment mapping are explicit.
 
 ### Core Commands Overview
 
@@ -451,6 +631,7 @@ Done. PASS=42 WARN=0 ERROR=0 SKIP=0 TOTAL=42
 ---
 
 ## Related
+
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-project-structure](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-project-structure)
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)

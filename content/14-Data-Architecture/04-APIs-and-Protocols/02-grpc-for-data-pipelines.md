@@ -36,12 +36,136 @@ status: complete
 >
 > — **Kenton Varda** (original Protobuf author)
 
-gRPC is a high-performance, open-source RPC framework developed by Google that uses HTTP/2 as its transport protocol and Protocol Buffers (protobuf) as its default serialization format. For data engineers, it is the go-to choice for building low-latency, high-throughput internal service communication — from real-time market data feeds to bulk ingestion pipelines between microservices.
+> [!abstract]- Summary
+>
+> This note defines gRPC as the binary RPC framework for low-latency internal data services, covering protobuf contracts, all four RPC styles, Python implementations, error handling, service operations, and cloud deployment choices so teams can decide when gRPC is worth its extra interface discipline over REST.
+>
+> **Core model and protobuf contracts**
+> - Explains how gRPC combines HTTP/2 transport, Protocol Buffers serialization, and `.proto` interface definitions to create compact strongly typed service boundaries.
+> - Covers message schemas, well-known types, enums, `oneof`, maps, code generation, and backward-compatibility rules as the foundation of durable gRPC APIs.
+>
+> **RPC patterns and implementation**
+> - Walks through unary, server-streaming, client-streaming, and bidirectional streaming RPCs, then demonstrates Python server and client implementations for ingestion and real-time data flows.
+> - Treats RPC style as a workload decision tied to latency, throughput, and message-shape behavior rather than as a purely syntactic choice.
+>
+> **Operational behavior and platform integration**
+> - Covers status codes, deadlines, interceptors, load balancing, health checks, reflection, REST comparisons, and GCP deployment patterns through Cloud Run, gateways, and Dataflow integration.
+> - Adds a decision guide and anti-fit guidance so gRPC is chosen for the right kinds of internal systems.
+>
+> **Operations and safety**
+> - Warnings: gRPC introduces schema and codegen discipline, N-to-N service changes must respect protobuf compatibility rules, and binary transport can be harder to inspect without the right tooling.
+> - Recommendations: keep contracts explicit in `.proto`, choose RPC types by flow shape, enforce deadlines and status handling, and use health, reflection, and interceptors to make services observable in production.
 
-> [!abstract] Core Idea
-> gRPC lets you define a service contract in a `.proto` file, generate client and server code in any supported language, and call remote functions as if they were local. The wire format is binary and compact; the transport is HTTP/2 with multiplexing and built-in flow control.
+> [!note]- Glossary
+>
+> **gRPC**
+> - A remote procedure call framework that uses HTTP/2 and usually Protocol Buffers to expose typed service methods across processes.
+> - It matters here because the note positions gRPC as the preferred internal protocol when performance and strong contracts matter more than raw human readability.
+>
+> > [!info] Internal-service specialist
+> >
+> > gRPC is most attractive when both sides of the interface are controlled by engineering teams that can support schema files, code generation, and binary debugging workflows.
+>
+> ---
+>
+> **Protocol Buffers / protobuf**
+> - A binary serialization format and schema language that defines messages with numbered fields for compact transport and controlled evolution.
+> - It matters here because protobuf is the default payload contract that gives gRPC most of its efficiency and compatibility story.
+>
+> > [!warning] Numbers are the wire contract
+> >
+> > Field numbers, not field names, define compatibility on the wire. Reusing or changing them carelessly can break consumers in subtle ways.
+>
+> ---
+>
+> **`.proto` file**
+> - The interface definition file that declares services, RPC methods, message types, enums, and options for code generation.
+> - It matters here because the `.proto` file is the shared source of truth every client and server implementation depends on.
+>
+> > [!info] Contract before code
+> >
+> > In gRPC, teams usually start by changing the interface file and regenerating code, which makes the protocol contract explicit instead of implicit in handlers.
+>
+> ---
+>
+> **Unary RPC**
+> - The simplest RPC style where one request yields one response.
+> - It matters here because many service operations still fit the classic request-response shape even in gRPC systems.
+>
+> > [!info] Closest to REST call shape
+> >
+> > Unary RPC is often the easiest entry point for teams adopting gRPC because the control flow resembles ordinary service method calls.
+>
+> ---
+>
+> **Server streaming**
+> - An RPC style where one client request opens a stream of many responses from the server.
+> - It matters here because it suits real-time feed delivery and other cases where the server needs to push a sequence of updates.
+>
+> > [!info] Good for pushed result series
+> >
+> > Server streaming is valuable when the consumer wants a continuous or chunked feed without polling repeatedly for the next item.
+>
+> ---
+>
+> **Client streaming**
+> - An RPC style where the client sends a stream of many messages before receiving one final response.
+> - It matters here because bulk ingestion and batched upload workflows often need efficient many-to-one request flows.
+>
+> > [!info] Efficient ingest path
+> >
+> > Client streaming can reduce per-message overhead significantly when the client needs to submit a large sequence of related records.
+>
+> ---
+>
+> **Bidirectional streaming**
+> - An RPC style where client and server both send message streams concurrently over the same call.
+> - It matters here because the most interactive or continuously synchronized pipeline services need two-way incremental communication.
+>
+> > [!warning] Most powerful, most complex
+> >
+> > Bidirectional streaming gives maximum flexibility, but it also raises the complexity of backpressure, cancellation, ordering, and state coordination.
+>
+> ---
+>
+> **Channel and stub**
+> - The client-side connection abstraction and generated method wrapper used to invoke remote gRPC services.
+> - It matters here because callers usually interact with a generated stub over a configured channel rather than hand-building HTTP requests.
+>
+> > [!info] RPC feels local on purpose
+> >
+> > Stubs are what make remote calls look like ordinary method invocations, which is convenient but can also hide network costs if teams stop thinking about latency and failure.
+>
+> ---
+>
+> **Interceptor**
+> - Middleware-like logic that wraps gRPC calls to add concerns such as auth, logging, tracing, or retries without changing every handler.
+> - It matters here because production gRPC services need cross-cutting operational behavior attached consistently across methods.
+>
+> > [!info] Cross-cutting behavior hook
+> >
+> > Interceptors are especially useful when every RPC needs the same tracing, auth, or timing logic and duplicating that code in handlers would be error-prone.
+>
+> ---
+>
+> **Deadline**
+> - A time limit attached to an RPC that tells both client and server when the call should be considered expired.
+> - It matters here because long-hanging requests can consume resources and mask degraded dependencies unless services propagate and honor deadlines.
+>
+> > [!warning] Time budget is part of the contract
+> >
+> > A missing deadline often means failures surface too late to be useful, after threads, workers, or downstream budgets have already been consumed.
+>
 
----
+> [!example] gRPC Interface Fit
+>
+> > [!success] Typed Internal Throughput
+> >
+> > - Use gRPC for high-throughput internal service communication, strongly typed multi-language interfaces, and streaming-style pipelines where HTTP/2 multiplexing and protobuf efficiency matter.
+>
+> > [!failure] Public Simplicity Preference
+> >
+> > - Do not choose gRPC for browser-first public APIs, simple external integrations, or workloads where human-readable HTTP plus JSON is operationally easier and sufficient.
 
 ## Overview
 

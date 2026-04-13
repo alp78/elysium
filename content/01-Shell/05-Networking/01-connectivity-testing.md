@@ -183,27 +183,6 @@ flowchart TD
     E1 -- Connected --> F([Connectivity confirmed])
 ```
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `ping` | Sends ICMP echo requests to a host and measures round-trip time. The most basic connectivity test. | Confirms whether a host is reachable at the network layer. The first command in any connectivity investigation. | ping may be blocked by firewalls (ICMP disabled). A host that does not respond to ping may still be reachable on specific TCP ports. |
-| `traceroute` / `tracert` | Maps the network path between your machine and a destination by sending packets with incrementing TTL values. Each hop responds when TTL expires. | Identifies where in the network path a connection fails or slows down. Essential for diagnosing latency and routing issues. | traceroute shows network hops, not application-layer issues. A successful traceroute does not mean the application port is open. |
-| `nslookup` / `dig` | DNS lookup tools. `nslookup` is simple and cross-platform. `dig` (Linux) provides detailed query/response information including TTL, authority, and additional records. | DNS resolution failures are a common cause of "connection refused" errors. Always verify DNS before blaming the application. | Using `nslookup` in scripts -- its output format varies between implementations. Use `dig +short` for scriptable DNS lookups. |
-| `curl` | A command-line tool for transferring data using URLs. Supports HTTP, HTTPS, FTP, and many other protocols. | Tests HTTP connectivity, API endpoints, and TLS certificate validity. Combines connectivity test with application-layer verification. | `curl` exits 0 even on HTTP 4xx/5xx errors. Use `curl -f` (fail) to return non-zero on HTTP errors, or check `-w '%{http_code}'`. |
-| `Test-NetConnection` (PS) | The PowerShell cmdlet for connectivity testing. Combines ping, TCP port test, and traceroute in one command. | The PowerShell equivalent of `ping` + `nc` (netcat). `-Port` tests TCP connectivity to a specific service port. | Only tests TCP, not UDP. Does not support custom timeouts below 1 second. |
-| ICMP | Internet Control Message Protocol. Used by `ping` and `traceroute`. Operates at the network layer (Layer 3). | ICMP packets verify basic network reachability. Many firewalls block ICMP, which does not mean the host is unreachable. | Assuming ICMP block = host down. A host can block ICMP and still serve HTTP, SSH, and database traffic on TCP ports. |
-| TTL (Time To Live) | A counter in each IP packet that decrements at every router hop. When TTL reaches 0, the router drops the packet and sends an ICMP "time exceeded" message. | `traceroute` works by exploiting TTL. Each increment reveals the next router in the path. Also used in DNS records to control cache duration. | DNS TTL and IP packet TTL are unrelated concepts that share the same abbreviation. |
-
-## What this note covers
-
-- Basic connectivity testing with `ping` (Linux and PowerShell)
-- Network path tracing with `traceroute` / `tracert`
-- DNS resolution with `nslookup` and `dig`
-- TCP port testing with `nc` (netcat), `curl`, and `Test-NetConnection`
-- Interpreting results: what "host unreachable," "connection refused," and "timeout" mean
-
 ## Linux connectivity testing tools
 
 This section covers the core Linux tools for diagnosing network connectivity at each layer: `nc` and `/dev/tcp` for TCP port reachability, `dig` for DNS resolution, `traceroute` and `mtr` for path tracing, and `ss` for inspecting local listening ports.
@@ -813,19 +792,21 @@ LocalPort Protocol
 For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/troubleshooting-flowcharts).
 
 
-## When to use connectivity testing tools
-
-- **First step in any outage investigation** -- `ping <host>` confirms basic network reachability before investigating application-level issues.
-- **DNS verification** -- `dig <hostname>` or `nslookup <hostname>` confirms the name resolves to the expected IP address.
-- **Port-level connectivity** -- `nc -zv <host> <port>` or `Test-NetConnection -Port <port>` verifies a specific service is reachable.
-- **Latency diagnosis** -- `traceroute` identifies which network hop introduces latency or packet loss.
-- **Firewall rule verification** -- TCP port tests confirm that firewall rules are correctly configured for the required traffic.
-
-## When not to use connectivity testing tools
-
-- **Application-layer debugging** -- connectivity tests confirm the network path works but not whether the application is healthy. Use application health checks, logs, and metrics.
-- **Sustained monitoring** -- one-shot ping/traceroute does not replace continuous monitoring. Use synthetic monitoring (Datadog Synthetics, Cloud Monitoring uptime checks).
-- **Performance benchmarking** -- ping measures ICMP round-trip time, not application throughput. Use `iperf3` for network bandwidth testing.
+> [!example] Network Reachability Fit
+>
+> > [!success] Appropriate
+> >
+> > - **First step in any outage investigation** -- `ping <host>` confirms basic network reachability before investigating application-level issues.
+> > - **DNS verification** -- `dig <hostname>` or `nslookup <hostname>` confirms the name resolves to the expected IP address.
+> > - **Port-level connectivity** -- `nc -zv <host> <port>` or `Test-NetConnection -Port <port>` verifies a specific service is reachable.
+> > - **Latency diagnosis** -- `traceroute` identifies which network hop introduces latency or packet loss.
+> > - **Firewall rule verification** -- TCP port tests confirm that firewall rules are correctly configured for the required traffic.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Application-layer debugging** -- connectivity tests confirm the network path works but not whether the application is healthy. Use application health checks, logs, and metrics.
+> > - **Sustained monitoring** -- one-shot ping/traceroute does not replace continuous monitoring. Use synthetic monitoring (Datadog Synthetics, Cloud Monitoring uptime checks).
+> > - **Performance benchmarking** -- ping measures ICMP round-trip time, not application throughput. Use `iperf3` for network bandwidth testing.
 
 ## Warnings
 
@@ -867,4 +848,3 @@ For a broader systematic diagnosis approach that goes beyond network connectivit
 - [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) — deeper analysis of connection states
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — connecting to VMs with no public IP
 - [http-requests-and-apis](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) — testing REST API connectivity with curl
-

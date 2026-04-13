@@ -15,9 +15,148 @@ status: complete
 >
 > — **Michael Stonebraker**, ACM interview
 
-SQL Server execution plans are the primary diagnostic tool for query performance. They show exactly how SQL Server chose to execute a query — which indexes it used, how it joined tables, how many rows it expected vs. actually processed, and what it waited on. Reading plans correctly is the skill that turns a 60-second query into a 200ms query.
+> [!abstract]- Summary
+>
+> Execution plans are SQL Server’s ground-truth performance narrative: they show which physical operators the optimizer chose, how many rows it expected versus actually processed, what waits or spills occurred, and which plan-shaping features were active. This note teaches how to capture those plans reproducibly in the `stoxx` lab, read them in SSMS or from XML, and turn the findings into safe tuning actions.
+>
+> **Plan capture and lab setup**
+> - covers reproducible setup in `stoxx`, Query Store and last-plan capture settings, and the baseline configuration needed before plan analysis examples make sense
+>
+> **Plan reading surfaces**
+> - covers estimated versus actual plans, SSMS visual tree reading, and non-SSMS programmatic capture through XML and DMVs
+>
+> **Core diagnostics**
+> - covers cost hotspots, cardinality-estimation errors, per-query wait stats inside plans, and the operator-level clues behind slow batch workloads
+>
+> **Plan hazards and regressions**
+> - covers implicit conversions, parameter sniffing, missing-index interpretation, and the plan patterns that hide I/O, memory-grant, or lookup problems
+>
+> **Modern optimizer features**
+> - covers batch mode, Intelligent Query Processing, and related SQL Server 2022 behaviors that alter plan shape or runtime adaptation
+>
+> **Operations and safety**
+> - Warnings: estimated plan cost percentages are comparative rather than absolute, plan cache contents are transient, stale statistics distort row estimates, missing-index suggestions are hints rather than commands, and some setup steps change database-scoped behavior
+> - Recommendations: capture actual plans when possible, compare estimated and actual rows first, pair plan reading with wait evidence, treat Showplan XML as the source of truth behind the SSMS graph, and change lab or database-scoped options deliberately rather than casually
 
-Internally, every execution plan is a tree of physical operators serialized as XML (ShowplanXML format). SSMS renders this XML as a visual graph, but the underlying representation is always XML — which is why programmatic plan analysis queries parse XML nodes. Plans are stored in the **plan cache**, an in-memory store divided into two pools: **OBJCP** (Object Plans) for stored procedures, functions, and triggers, and **SQLCP** (SQL Plans) for ad-hoc, dynamic, and prepared queries. The optimizer compiles a plan once, then reuses it for subsequent executions with the same plan handle — avoiding the cost of re-optimization on every call.
+> [!note]- Glossary
+>
+> **Execution plan**
+> - The optimizer-generated description of how SQL Server will execute or did execute a query, represented as a tree of physical operators.
+> - It matters because the note’s entire workflow depends on reading this tree accurately before making any tuning decision.
+>
+> > [!info] The plan is the optimizer’s explanation
+> >
+> > A slow query can have many symptoms, but the execution plan is where SQL Server shows the chosen access paths, join strategy, and operator pipeline that produced those symptoms.
+>
+> ---
+>
+> **ShowplanXML**
+> - The XML serialization format SQL Server uses for execution plans underneath graphical tools such as SSMS.
+> - It matters because programmatic plan analysis and many advanced properties are easiest to access from the XML source, not from the rendered diagram.
+>
+> > [!warning] The diagram is a rendering, not the primary artifact
+> >
+> > SSMS is convenient, but it hides some details and can encourage shallow reading. When precision matters, inspect the XML-backed properties or the XML itself.
+>
+> ---
+>
+> **Physical operator**
+> - A concrete execution step in a plan, such as an index seek, hash match, sort, or nested loops join.
+> - It matters because performance diagnostics happen at the operator level, where row counts, spills, and access paths become visible.
+>
+> > [!info] The operator is where cost becomes behavior
+> >
+> > Tuning is rarely about the whole plan in the abstract. It is about understanding which specific operators are doing too much work and why.
+>
+> ---
+>
+> **Plan cache**
+> - SQL Server’s in-memory store of compiled query plans that can be reused across executions.
+> - It matters because plan reuse, plan eviction, and plan inspection workflows all depend on understanding that cached plans are transient shared state.
+>
+> > [!warning] Cached does not mean permanent
+> >
+> > Memory pressure, recompilation, statistics change, or configuration changes can evict or replace a cached plan. A missing cached plan is not evidence that the query never ran.
+>
+> ---
+>
+> **OBJCP / SQLCP**
+> - The two main plan-cache pools where SQL Server stores object plans (`OBJCP`) and ad hoc or prepared SQL plans (`SQLCP`).
+> - It matters because the note’s cache discussion distinguishes stored-procedure workloads from ad hoc query text and dynamic SQL.
+>
+> > [!info] Cache pool hints at workload shape
+> >
+> > Seeing where a plan lives helps explain whether it came from a module, a prepared statement, or ad hoc text. That context affects tuning and parameterization decisions.
+>
+> ---
+>
+> **Estimated plan**
+> - A plan produced without running the query, based on optimizer assumptions and estimated row counts only.
+> - It matters because it is easy to capture and useful for shape inspection, but it lacks runtime truth about actual rows, waits, and spills.
+>
+> > [!warning] Estimates are predictions, not observations
+> >
+> > An estimated plan can be logically correct and still miss the real runtime problem. It should be treated as a hypothesis until actual execution evidence confirms it.
+>
+> ---
+>
+> **Actual plan**
+> - A plan captured during query execution that includes runtime metrics such as actual row counts and sometimes per-operator waits.
+> - It matters because comparing actual versus estimated rows is one of the fastest ways to find the root cause of a bad plan.
+>
+> > [!info] Runtime truth starts here
+> >
+> > If a query is slow, the actual plan is usually the first meaningful artifact to inspect. It shows what the optimizer predicted and what the engine really encountered.
+>
+> ---
+>
+> **Cardinality estimate**
+> - The optimizer’s prediction of how many rows a plan operator will produce or consume.
+> - It matters because bad cardinality estimates are one of the main reasons SQL Server chooses the wrong join type, memory grant, or access path.
+>
+> > [!warning] Row-count error cascades
+> >
+> > A large estimate error near the top of the plan can poison many downstream choices. That is why estimate-versus-actual row comparison is such a high-value diagnostic step.
+>
+> ---
+>
+> **Memory grant and spill**
+> - The memory reserved for plan operators such as sorts or hash joins, and the condition where that memory proves insufficient so data spills to tempdb.
+> - It matters because spills often explain sudden slowdowns, tempdb pressure, and wait patterns that are not obvious from operator names alone.
+>
+> > [!warning] Sort or hash operators can become tempdb problems
+> >
+> > A spill is not just a slower operator. It changes the resource profile of the query by pulling tempdb and extra I/O into the runtime path.
+>
+> ---
+>
+> **Parameter sniffing**
+> - The behavior where SQL Server compiles a reusable plan using the parameter values seen on the compilation execution.
+> - It matters because one cached plan can be excellent for one parameter set and terrible for another.
+>
+> > [!warning] Reuse can be the source of variance
+> >
+> > A plan that works well for a selective parameter may catastrophically misfit a broad parameter, or the reverse. The issue is not the parameter itself, but the reuse of one plan shape for many distributions.
+>
+> ---
+>
+> **Batch mode**
+> - A vectorized execution mode where operators process many rows at a time instead of row by row.
+> - It matters because batch mode can radically change operator efficiency and plan behavior for analytical workloads.
+>
+> > [!info] Same logic, different execution engine feel
+> >
+> > Batch mode often makes large scans, aggregates, and joins far cheaper. Understanding whether a plan is in row mode or batch mode changes how you interpret its runtime profile.
+>
+> ---
+>
+> **Intelligent Query Processing**
+> - The SQL Server feature family that adapts or improves runtime and compilation behavior through capabilities such as memory grant feedback, PSP, and CE-related refinements.
+> - It matters because some plan issues are now partially mitigated by engine features, but those mitigations still need to be verified rather than assumed.
+>
+> > [!info] The engine can adapt, but not magically
+> >
+> > IQP features help many workloads, but they do not replace plan reading. A bad query shape or a poor data model can still defeat every adaptive feature in the stack.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -2192,4 +2331,3 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN, PERSIST_SAMPLE_PERCENT =
 - [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) — index types, missing index DMVs, and covering index strategy
 - [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/storage-internals) — buffer pool, B-tree mechanics that explain what plans show
 - [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/performance-audit-playbook) — structured audit using execution plans as the primary tool
-

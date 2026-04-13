@@ -13,9 +13,218 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 >
 > — **Jordan Tigani** (founding engineer of BigQuery)
 
-`dbt-bigquery` is a first-party adapter maintained by dbt Labs. It maps dbt materializations to BigQuery DDL/DML and exposes BigQuery-specific config options — partitioning, clustering, slot labels, and cost controls — directly in model config blocks. For broader BigQuery cost and query optimization patterns, see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
+> [!abstract]- Summary
+>
+> `dbt-bigquery` is the first-party dbt adapter for BigQuery, and this note defines the BigQuery-specific profile, partitioning, clustering, incremental, SQL, materialization, and cost-control patterns required to run analytical models efficiently and predictably on a serverless warehouse.
+>
+> **Adapter setup and authentication**
+> - Installs pinned `dbt-core` and `dbt-bigquery` versions, confirms adapter registration, and notes that BigQuery relies on API credentials rather than host-level database drivers.
+> - Configures `profiles.yml` for service-account JSON keys, local ADC with `oauth`, and service-account impersonation for production-safe access patterns.
+>
+> **Storage layout and incremental design**
+> - Uses `partition_by` and `cluster_by` deliberately, including date and integer-range partitioning, partition granularity choices, and `require_partition_filter` on marts.
+> - Compares `merge` and `insert_overwrite`, with guidance on when partition replacement is more efficient than row-level upserts.
+>
+> **Warehouse tuning and SQL patterns**
+> - Covers thread count versus slot consumption, `priority`, and job labels for cost attribution, then maps key BigQuery SQL features such as `SAFE_DIVIDE`, `DATE_TRUNC`, `DATE_ADD`, `STRUCT`, `ARRAY`, and manual `MERGE` DML.
+> - Extends the adapter discussion to materialized views, BI Engine behavior, and external tables staged through `dbt_external_tables`.
+>
+> **Operations and safety**
+> - Warnings: enforce partition filters on marts, tune `threads` against slot availability, avoid raw keyfile sprawl when Workload Identity or impersonation is available, and do not deploy large tables without partitioning and clustering.
+> - Recommendations table: the partition granularity guide and cost-visibility label patterns define the safe default operating posture.
+> - Cost controls: `maximum_bytes_billed`, dry runs, and billing labels are the note's explicit spend-governance mechanisms.
 
----
+> [!note]- Glossary
+>
+> **`dbt-bigquery`**
+> - The first-party dbt adapter that maps dbt models and materializations to BigQuery DDL, DML, and job configuration.
+> - It matters here because all partitioning, clustering, incremental, and cost controls in the note are adapter features exposed through dbt config.
+>
+> > [!info] First-party coverage
+> >
+> > This adapter tracks dbt Core more closely than community adapters. Even so, BigQuery-specific runtime behavior still needs deliberate validation in the warehouse, not just in compiled SQL.
+>
+> ---
+>
+> **`profiles.yml`**
+> - The dbt profile file that stores target definitions and adapter-specific connection parameters.
+> - It matters here because project, dataset, auth method, location, threads, timeout, and query priority are all controlled there.
+>
+> > [!info] Runtime control plane
+> >
+> > In BigQuery, profile choices shape both identity and spend. Treat the file as an execution policy surface, not as a narrow credential wrapper.
+>
+> ---
+>
+> **Service account JSON key**
+> - A downloaded private key file that allows a dbt process to authenticate as a Google Cloud service account.
+> - It matters here because it is the simplest non-interactive auth method for CI, but also the least desirable long-term credential pattern.
+>
+> > [!danger] Long-lived secret material
+> >
+> > JSON keys are easy to copy, hard to rotate everywhere, and frequently over-scoped. Prefer attached identities or impersonation when the platform supports them.
+>
+> ---
+>
+> **Application Default Credentials**
+> - Google's standard mechanism for discovering local or attached credentials automatically in client libraries and CLI tools.
+> - It matters here because local dbt development on BigQuery often uses `method: oauth` backed by ADC rather than embedded key paths.
+>
+> > [!warning] Developer context leaks
+> >
+> > ADC follows the active local identity state. If developers switch accounts or projects casually, dbt runs can silently target the wrong BigQuery environment.
+>
+> ---
+>
+> **Service account impersonation**
+> - A Google Cloud access pattern where one principal temporarily mints short-lived credentials for a target service account.
+> - It matters here because it enables production access without distributing the production account's private key.
+>
+> > [!danger] IAM boundary enforcement
+> >
+> > The safety of impersonation depends on tightly scoped `roles/iam.serviceAccountTokenCreator` grants. Broad token-creator permissions collapse the security boundary.
+>
+> ---
+>
+> **Partitioning**
+> - BigQuery's table layout feature that divides data into partitions so queries can prune storage before scanning bytes.
+> - It matters here because partitioning is the primary performance and cost control for date-driven analytical marts.
+>
+> > [!warning] Foundational, not optional
+> >
+> > Large analytical tables without partitioning become full-scan targets very quickly. Add it during model design instead of treating it as a later tuning step.
+>
+> ---
+>
+> **`partition_by`**
+> - The dbt model config that declares the partition column, data type, and granularity for a BigQuery table.
+> - It matters here because the adapter converts this config directly into the table layout that governs pruning, incremental strategy, and scan cost.
+>
+> > [!info] Physical design knob
+> >
+> > This is not just metadata. It changes how the table is stored and which incremental patterns remain economical as data volume grows.
+>
+> ---
+>
+> **`require_partition_filter`**
+> - A BigQuery table setting that rejects queries which do not filter on the partition column.
+> - It matters here because it protects mart tables from accidental full scans by analysts, dashboards, or ad hoc queries.
+>
+> > [!warning] Apply selectively
+> >
+> > This safety net is appropriate for marts but can break internal or exploratory queries on staging models. Use it where query discipline matters, not everywhere indiscriminately.
+>
+> ---
+>
+> **Clustering**
+> - BigQuery's within-partition sort organization on one or more columns.
+> - It matters here because it complements partition pruning by making repeated filter and join predicates cheaper inside each partition.
+>
+> > [!info] Secondary optimization layer
+> >
+> > Clustering helps only after partitioning is reasonable. It refines scan efficiency within partitions; it does not replace partition design.
+>
+> ---
+>
+> **`merge`**
+> - The default BigQuery incremental strategy that uses BigQuery `MERGE` DML for row-level upserts.
+> - It matters here because it is the general-purpose choice when the model must reconcile changed rows by `unique_key`.
+>
+> > [!warning] Still compute-heavy
+> >
+> > `MERGE` is correct for many models, but large targets can still consume substantial slots and bytes. Do not confuse logical convenience with low-cost execution.
+>
+> ---
+>
+> **`insert_overwrite`**
+> - A partition-replacement incremental strategy that rewrites entire affected partitions instead of performing row-by-row matching.
+> - It matters here because it is often more efficient than `merge` when source corrections arrive as complete partition-aligned batches.
+>
+> > [!warning] Partition semantics required
+> >
+> > This strategy is safe only when the data naturally replaces whole partitions. If corrections happen at row granularity inside a partition, use `merge` instead.
+>
+> ---
+>
+> **Slots**
+> - BigQuery compute capacity units consumed by queries while they execute.
+> - It matters here because dbt thread count multiplies concurrent query demand, and slot pressure determines whether runs start promptly or queue.
+>
+> > [!warning] Threads amplify spend
+> >
+> > A high `threads` setting does not mean lightweight parallelism. Each concurrent query can consume substantial slots, so overshooting thread count creates contention and cost spikes.
+>
+> ---
+>
+> **`priority`**
+> - The BigQuery job execution mode that chooses between immediate interactive execution and queued batch execution.
+> - It matters here because production dbt runs often need to trade latency for reduced contention with analyst workloads.
+>
+> > [!info] Scheduling policy choice
+> >
+> > `batch` is not slower SQL; it is a queueing policy. Use it when predictable shared-capacity behavior matters more than immediate start time.
+>
+> ---
+>
+> **Labels**
+> - Key-value metadata attached to BigQuery jobs and objects for cost attribution and administrative tracking.
+> - It matters here because dbt model and layer labels let billing exports and `INFORMATION_SCHEMA` queries trace warehouse spend back to specific workloads.
+>
+> > [!info] FinOps hook point
+> >
+> > Without consistent labels, cost analysis collapses into project-level averages. Labels make dbt activity observable at the model and team level.
+>
+> ---
+>
+> **`SAFE_DIVIDE`**
+> - A BigQuery SQL function that returns `NULL` instead of raising an error when division would fail, such as division by zero.
+> - It matters here because it is one of the key BigQuery-native expressions the note uses to contrast adapter-specific SQL idioms.
+>
+> > [!info] Portable intent, different syntax
+> >
+> > The analytical intent matches SQL Server's `NULLIF`-based safe division pattern, but the implementation is BigQuery-specific and belongs behind adapter-aware abstractions in shared projects.
+>
+> ---
+>
+> **`STRUCT` and `ARRAY`**
+> - BigQuery nested data types for representing grouped fields and repeated values inside a single row.
+> - It matters here because they enable BigQuery-native analytical models but break portability to adapters such as SQL Server.
+>
+> > [!warning] Adapter boundary marker
+> >
+> > Once nested types enter a model, that model is effectively BigQuery-only unless you isolate it in adapter-specific folders or conditional logic.
+>
+> ---
+>
+> **Materialized view**
+> - A persisted BigQuery query result that refreshes automatically and can accelerate repeated analytical reads.
+> - It matters here because the note treats materialized views as an operational extension that dbt manages indirectly rather than as a native dbt materialization.
+>
+> > [!warning] Not a normal dbt model
+> >
+> > BigQuery materialized views behave like warehouse objects with their own refresh constraints. Manage them deliberately through operations or hooks rather than assuming full parity with table models.
+>
+> ---
+>
+> **`maximum_bytes_billed`**
+> - A BigQuery job setting that caps how many bytes a query is allowed to process before it fails.
+> - It matters here because it is the note's explicit fail-fast control against accidental runaway scan costs.
+>
+> > [!danger] Protective failure mode
+> >
+> > This setting intentionally breaks expensive queries instead of letting them complete. That is desirable in production because a hard failure is usually cheaper than an unnoticed full-table scan.
+
+> [!example] Warehouse Suitability
+>
+> > [!success] BigQuery-Native Workload
+> >
+> > - Use `dbt-bigquery` when BigQuery is the real target warehouse and the project benefits from partition-aware incrementals, serverless elasticity, GCP-native identity patterns, and billing-aware execution controls.
+> > - Lean into BigQuery-specific settings such as partitioning, clustering, job labels, and `maximum_bytes_billed` when scan volume and spend must be governed as part of the model design.
+>
+> > [!failure] Cross-Adapter Constraint
+> >
+> > - Avoid treating this note as portable warehouse guidance if the project must remain adapter-neutral while relying on BigQuery-specific features such as `STRUCT`, `ARRAY`, or partition-swap semantics.
+> > - Do not choose BigQuery-first patterns when the workload depends on SQL Server-style indexing, row-store behavior, or adapter parity that BigQuery does not share.
 
 ### BigQuery Adapter Installation
 

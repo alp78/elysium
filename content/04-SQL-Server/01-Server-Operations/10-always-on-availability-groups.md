@@ -15,22 +15,57 @@ status: complete
 >
 > — **Adrian Cockcroft**, Netflix tech blog
 
-Always On Availability Groups (AGs) are the primary high-availability mechanism for SQL Server on Linux. An AG replicates a group of databases across 2–9 replicas (1 primary + up to 8 secondaries), with the primary accepting reads and writes while secondaries receive and replay transaction log records automatically.
-
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note covers the full operational surface of Always On Availability Groups for SQL Server 2022 on Linux under GCP:
+> Always On Availability Groups (AGs) are the primary high-availability mechanism for SQL Server on Linux. They replicate a group of databases across 2 to 9 replicas, with the primary accepting writes while secondaries harden and replay the log stream. This note covers the full operational surface of AGs for SQL Server 2022 on Linux under GCP.
 >
-> - **HA option selection** — AG sync, AG async, FCI, log shipping, Basic AG, Distributed AG, Contained AG, and when to pick each
-> - **End-to-end setup** — HADR feature enablement, database mirroring endpoint with certificate auth, `CREATE AVAILABILITY GROUP` with full `WITH` options, Pacemaker resource configuration
-> - **Monitoring** — `sys.dm_hadr_*` family field-by-field reference, log send queue and redo queue thresholds, `HADR_SYNC_COMMIT` wait-type diagnostics
-> - **Failover operations** — planned failover gating on `SYNCHRONIZED` state, forced failover with possible data loss, post-failover recovery
-> - **Read-only routing** — routing list vs routing URL configuration, load-balancing with nested parentheses, diagnostic queries
-> - **Tuning knobs** — `FAILURE_CONDITION_LEVEL`, `HEALTH_CHECK_TIMEOUT`, `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`, `AUTOMATED_BACKUP_PREFERENCE`, `BACKUP_PRIORITY`
-> - **GCP integration** — Internal Load Balancer as listener, VPC firewall rules, fencing with `fence_gce`
-> - **Troubleshooting** — 5 concrete failure patterns with diagnostic queries, cause/fix tables, and paired danger/success callouts
+> - **HA option selection**
+>   - compares synchronous and asynchronous AGs with FCI, log shipping, Basic AG, Distributed AG, and Contained AG so the topology matches the workload and platform constraints
+> - **End-to-end setup**
+>   - covers HADR feature enablement, certificate-authenticated database mirroring endpoints, `CREATE AVAILABILITY GROUP` options, and Pacemaker resource configuration
+> - **Monitoring**
+>   - explains the `sys.dm_hadr_*` surface, queue metrics, synchronization health, and `HADR_SYNC_COMMIT` diagnostics
+> - **Failover and read scale**
+>   - walks through planned failover gates, forced failover risk, post-failover validation, and read-only routing configuration plus diagnostics
+> - **Operational tuning**
+>   - covers `FAILURE_CONDITION_LEVEL`, `HEALTH_CHECK_TIMEOUT`, `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`, `AUTOMATED_BACKUP_PREFERENCE`, and `BACKUP_PRIORITY`
+> - **GCP integration and safety**
+>   - maps AG listener replacement through an Internal Load Balancer, required firewall and fencing design, TDE prerequisites across replicas, and concrete troubleshooting patterns
+>
+> All code cells in this note were either live-captured against the local `stoxx` SQL Server 2022 Developer Edition Linux container (`16.0.4236.2`, HADR disabled as a fresh pre-AG baseline), or flagged explicitly where live capture is not possible on a single-container lab instance.
 
-All code cells in this note were either live-captured against the local `stoxx` SQL Server 2022 Developer Edition Linux container (`16.0.4236.2`, HADR disabled — representative of a fresh pre-AG instance), or flagged explicitly where live capture is not possible on a single-container lab instance.
+> [!note]- Glossary
+>
+> - **Availability Group (AG)**
+>   - database-level replication feature that groups one or more user databases into a single failover unit
+> - **Primary replica**
+>   - AG node currently accepting writes and sending log records to secondaries
+> - **Secondary replica**
+>   - AG node receiving log records, optionally serving read-only traffic, and waiting to assume primary if needed
+> - **Synchronous commit**
+>   - replica mode where commit acknowledgment waits for a synchronous secondary to harden the log
+> - **Asynchronous commit**
+>   - replica mode where commit acknowledgment does not wait for the secondary to harden the log
+> - **HADR**
+>   - SQL Server high-availability and disaster-recovery feature surface that powers AGs
+> - **Database mirroring endpoint**
+>   - TCP endpoint used to transport AG log traffic between replicas
+> - **Pacemaker**
+>   - Linux cluster manager that handles quorum, health, and failover coordination for AGs
+> - **Basic AG**
+>   - SQL Server Standard Edition AG variant limited to one database and two replicas
+> - **Contained AG**
+>   - SQL Server 2022 AG variant that replicates AG-scoped system metadata alongside user databases
+> - **Distributed AG**
+>   - topology that links separate availability groups for cross-region or cross-environment replication
+> - **Read-only routing**
+>   - feature that directs read-intent connections to eligible secondary replicas
+> - **`REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`**
+>   - setting that controls how many synchronous secondaries must harden a transaction before commit succeeds
+> - **Listener replacement**
+>   - GCP pattern that uses an Internal Load Balancer instead of a traditional AG listener VIP
+> - **Fencing**
+>   - cluster safeguard that isolates a failed or partitioned node so split-brain cannot occur
 
 ---
 
@@ -590,7 +625,6 @@ FOR REPLICA ON
 | `BASIC` | — | — | Creates a Basic AG (Standard Edition, 2 replicas, 1 DB). |
 | `DISTRIBUTED` | — | — | Creates a distributed AG (AG-of-AGs). |
 | `CONTAINED [REUSE_SYSTEM_DATABASES \| AUTOSEEDING_SYSTEM_DATABASES]` | — | — | Creates a contained AG (SQL 2022 Enterprise). |
-
 | Replica-level `WITH` option | Values | Default | Meaning |
 |---|---|---|---|
 | `ENDPOINT_URL` | `tcp://<host>:<port>` | — | TCP URL of this replica's mirroring endpoint. Must match the port in `CREATE ENDPOINT`. |
@@ -849,7 +883,6 @@ sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 | `op monitor interval=10s on-fail=demote` | Monitor every 10 seconds; on failure, demote the replica. |
 | `op monitor interval=11s role=Promoted on-fail=restart` | Second monitor operation specifically for the promoted role. Different interval (11s) so Pacemaker can distinguish the two monitors. |
 | `promotable notify=true` | Declares this resource as promotable (master/slave semantics). `notify=true` lets the agent receive pre-promotion notifications. Older Pacemaker used `master notify=true` — `promotable` is the RHEL 8+ / Ubuntu 20.04+ syntax. |
-
 | `IPaddr2` parameter | Meaning |
 |---|---|
 | `ip=10.132.0.100` | The floating IP that applications connect to as the AG listener. On GCP, see the ILB replacement section — floating VIPs do not work reliably because GCP filters gratuitous ARP. |
@@ -2052,4 +2085,3 @@ With the DEK created and encryption enabled on the primary, the database can now
 - [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/blocking-and-locking) — RCSI on secondary replicas to prevent redo thread blocking
 - [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/storage-internals) — WAL and log record flow that underlies AG replication
 - [users-logins-roles-permissions](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/users-logins-roles-permissions) — Pacemaker login permission model, TDE permissions
-

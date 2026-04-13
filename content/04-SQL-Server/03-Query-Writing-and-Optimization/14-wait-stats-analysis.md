@@ -10,9 +10,155 @@ status: complete
 
 # Wait Stats Analysis
 
-Wait statistics answer the most important production triage question in SQL Server: what is the engine spending time waiting on right now, and which resource family should you investigate first?
+> [!abstract]- Summary
+>
+> Wait statistics are the fastest production triage surface for SQL Server because they answer one question directly: which resource family is delaying work right now. This note uses live `stoxx` outputs to show how to establish the uptime and health context first, then interpret waits, file latency, TempDB contention, and Query Store evidence without confusing cumulative history for real-time truth.
+>
+> **Health baseline**
+> - covers the first-check dashboard for uptime, memory state, page life expectancy, cache health, and current activity so later cumulative waits have the right confidence boundary
+>
+> **Primary wait analysis**
+> - covers `sys.dm_os_wait_stats`, benign-wait exclusions, and the separation of actionable waits into resource families
+>
+> **Correlated diagnostics**
+> - covers top resource-consuming queries, file I/O latency, TempDB contention, and Query Store regression signals that help explain why a wait family is elevated
+>
+> **Operational reference**
+> - includes a quick-reference mapping for common wait types such as lock waits, latch waits, log flush waits, parallelism waits, and memory-grant waits
+>
+> **Operations and safety**
+> - Warnings: wait stats are cumulative since startup, low uptime weakens trend confidence, benign waits must be excluded before ranking, one high wait family does not prove root cause by itself, and Query Store regression candidates are hints rather than verdicts
+> - Recommendations: capture uptime first, group waits by resource family, correlate waits with live requests and Query Store, inspect file and TempDB signals before changing configuration, and treat waits as a triage surface that points to deeper investigation rather than as a standalone answer
 
-The queries below are production-facing, and the outputs are real results from the current `stoxx` instance. That matters because cumulative waits, file stalls, and Query Store evidence are only as trustworthy as the uptime window that produced them.
+> [!note]- Glossary
+>
+> **Wait statistic**
+> - A cumulative measurement of time SQL Server worker threads spent waiting for a resource, scheduler turn, or synchronization event.
+> - It matters because the note uses waits as the first evidence surface for deciding where to investigate next.
+>
+> > [!info] Waits describe symptoms by resource family
+> >
+> > A wait type does not always reveal the root cause directly, but it does reveal which class of bottleneck the engine encountered while trying to make progress.
+>
+> ---
+>
+> **Uptime window**
+> - The elapsed time since the SQL Server instance last started, which defines the accumulation period for many DMVs.
+> - It matters because cumulative waits, file stats, and Query Store aggregates are only as meaningful as the time window that produced them.
+>
+> > [!warning] Young uptime means weak baseline
+> >
+> > A few hours of uptime can still help with current-incident triage, but it is not enough to support confident long-horizon claims about the workload’s normal behavior.
+>
+> ---
+>
+> **Resource wait**
+> - The portion of a wait where the worker is blocked on an external or internal resource, such as I/O, locks, or memory.
+> - It matters because most operational bottlenecks are first understood by identifying which resource family dominates wait time.
+>
+> > [!info] This is the “what was unavailable” part
+> >
+> > Resource wait time answers what the session was waiting for before it could resume. That makes it the main bottleneck signal in most wait analysis.
+>
+> ---
+>
+> **Signal wait**
+> - The portion of a wait that occurs after the resource became available but before the worker was scheduled onto a CPU.
+> - It matters because it helps distinguish pure resource contention from scheduler pressure.
+>
+> > [!warning] High signal waits point toward CPU scheduling pressure
+> >
+> > A wait with a large signal component suggests the engine was ready to run but could not get CPU time quickly. That is a different problem from slow storage or blocking.
+>
+> ---
+>
+> **Benign wait**
+> - A background, housekeeping, or idle wait type that appears in DMVs but usually does not explain user-facing slowness.
+> - It matters because meaningful wait analysis starts by removing these from top-wait rankings.
+>
+> > [!warning] Ranking without exclusions is misleading
+> >
+> > Many “top wait” lists are noise because they include engine background activity. The exclusion list is part of the method, not an optional cosmetic step.
+>
+> ---
+>
+> **`PAGEIOLATCH_*`**
+> - A wait family indicating a task is waiting for a data page to be read from storage into memory.
+> - It matters because it often points toward disk latency, low cache residency, or an access pattern that reads more data than necessary.
+>
+> > [!warning] This is not automatically a storage-only problem
+> >
+> > Slow I/O can cause `PAGEIOLATCH`, but so can poor query shape that forces excessive reads. The file system and the query plan both need to be checked.
+>
+> ---
+>
+> **`WRITELOG`**
+> - The wait family for log-buffer flushes to the transaction log.
+> - It matters because commit-heavy workloads, slow log storage, and oversized transactions often surface here first.
+>
+> > [!warning] Frequent commits and slow log disks reinforce each other
+> >
+> > `WRITELOG` can come from the storage layer, the transaction design, or both. Fixing only one side may not remove the bottleneck.
+>
+> ---
+>
+> **`LCK_M_*`**
+> - The family of lock waits showing that a session is blocked waiting for a lock held by another transaction.
+> - It matters because blocking chains are one of the most common production incidents and are directly visible through these waits.
+>
+> > [!warning] The blocker matters more than the victim
+> >
+> > The waiting session is usually not the real problem. The root cause is the transaction holding the lock too long or taking too broad a lock in the first place.
+>
+> ---
+>
+> **`PAGELATCH_*`**
+> - An in-memory latch wait family usually associated with contention on hot memory structures such as TempDB allocation pages.
+> - It matters because it looks similar to disk-related waits but points to memory-resident synchronization instead.
+>
+> > [!warning] Latch is not latch I/O
+> >
+> > `PAGELATCH` means contention on pages already in memory. It is a concurrency and allocation problem, not a signal to start with the storage subsystem.
+>
+> ---
+>
+> **`RESOURCE_SEMAPHORE`**
+> - The wait family for queries blocked while trying to obtain a required memory grant.
+> - It matters because it signals that one or more queries need more execution memory than the engine can currently provide safely.
+>
+> > [!warning] This is a memory-grant bottleneck, not generic “low RAM”
+> >
+> > The underlying cause might be underestimated or overestimated grants, concurrent large sorts or hashes, or overall memory pressure. The plan shapes matter as much as instance size.
+>
+> ---
+>
+> **File I/O latency**
+> - The storage delay measured per database file, usually through DMVs such as `sys.dm_io_virtual_file_stats`.
+> - It matters because it helps confirm whether wait families such as `PAGEIOLATCH` or `WRITELOG` map to an actual storage problem.
+>
+> > [!info] This is the cross-check for wait-based storage suspicion
+> >
+> > If storage-related waits are high but file latency is normal, the problem may be query shape or cache churn rather than the disk subsystem itself.
+>
+> ---
+>
+> **TempDB contention**
+> - Resource pressure on TempDB allocation or metadata paths, often surfacing as latch waits and session slowdowns under concurrent workload.
+> - It matters because many query patterns spill, sort, hash, or stage work in TempDB, making it a frequent bottleneck surface.
+>
+> > [!warning] TempDB problems are often concurrency problems
+> >
+> > The issue is rarely just “TempDB exists.” It is usually that too many sessions are contending for the same allocation paths or spilling there at once.
+>
+> ---
+>
+> **Query Store regression candidate**
+> - A query whose persisted plan history shows materially worse average runtime under one plan than another.
+> - It matters because wait analysis often needs a bridge from instance-level symptoms to specific queries, and Query Store provides that bridge.
+>
+> > [!info] Candidate, not conviction
+> >
+> > A regression factor flags a query worth inspecting. It does not prove that the worst historical plan is the cause of the current incident without time-window correlation.
 
 ## System Health Dashboard — First Check
 
@@ -31,6 +177,7 @@ Before diving into wait families, start with one health row that establishes the
 >
 > *Capture the current health baseline before interpreting cumulative waits.*
 >
+
 ```sql
 WITH bchr AS (
     SELECT
@@ -90,6 +237,7 @@ _The instance is not showing broad memory distress right now. `PLE = 22165` and 
 >
 > *Return the top actionable waits on the current instance.*
 >
+
 ```sql
 WITH waits AS (
     SELECT
@@ -173,6 +321,7 @@ _The current wait picture is not storage-led. The strongest actionable families 
 >
 > *Quantify how much of the current actionable wait profile is CPU scheduling pressure versus resource blocking.*
 >
+
 ```sql
 WITH waits AS (
     SELECT
@@ -257,6 +406,7 @@ On a short-uptime or admin-heavy instance, plan-cache top-N lists are often nois
 >
 > *Find persisted business-query patterns that consume meaningful time or logical reads.*
 >
+
 ```sql
 SELECT TOP (10)
     LEFT(REPLACE(REPLACE(qt.query_sql_text, CHAR(13), ' '), CHAR(10), ' '), 160) AS query_text,
@@ -322,6 +472,7 @@ If waits suggest storage pressure, the next step is to verify file-level latency
 >
 > *Check which files are seeing the highest cumulative I/O stall and what their average latencies look like.*
 >
+
 ```sql
 SELECT TOP (10)
     DB_NAME(fs.database_id) AS database_name,
@@ -377,6 +528,7 @@ TempDB waits are not only about raw disk speed. They are also about whether conc
 >
 > *Check whether TempDB I/O is balanced across the current data files.*
 >
+
 ```sql
 SELECT
     f.name AS file_name,
@@ -429,6 +581,7 @@ Wait families tell you what hurts. Query Store helps answer whether a changed pl
 >
 > *Find persisted Query Store statements whose alternative plans differ materially in average duration.*
 >
+
 ```sql
 WITH recent_plans AS (
     SELECT
@@ -512,4 +665,3 @@ _There are real multi-plan candidates in the live Query Store history. The stron
 - [sys.dm_io_virtual_file_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-io-virtual-file-stats-transact-sql?view=sql-server-ver17)
 - [sys.dm_os_volume_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-volume-stats-transact-sql?view=sql-server-ver17)
 - [Query Store runtime statistics](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-runtime-stats-transact-sql?view=sql-server-ver17)
-

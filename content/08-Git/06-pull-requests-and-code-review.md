@@ -13,38 +13,280 @@ tags:
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
-A **pull request** (PR) is GitHub's mechanism for proposing, discussing, and merging changes from one branch into another. It wraps a Git branch diff in a collaboration layer: reviewers inspect the code, automated checks run, and the merge is gated until all configured requirements pass. This page covers the complete PR lifecycle — from creation through review rounds to merge — plus branch protection, merge policies, recovery from diverged branches, and review checklists for data-engineering artifacts.
+> [!abstract]- Summary
+>
+> Explains the pull-request layer on top of Git: how branch diffs become reviewable change proposals, how merge policies and branch protection gate integration, and how teams keep review quality, auditability, and large-change delivery under control.
+>
+> **PR lifecycle and merge outcomes**
+> - Covers PR creation, required metadata, review states, status checks, merge completion, branch cleanup, and the difference between merge, rebase, and squash from the hosting-platform side
+> - Connects the PR object to the underlying Git branch relationship so reviewers can reason about what will actually land on the target branch
+>
+> **Policies, terminology, and accountability**
+> - Defines review terminology across platforms, explains protected branches, merge queues, required approvals, CODEOWNERS, and compliance rules, and separates reviewer feedback from merge authorization
+> - Maps those controls to governance expectations such as traceability, approval evidence, and rules for who may override failed checks or policy exceptions
+>
+> **Review workflow and large changes**
+> - Shows how to structure review-ready branches, split large work into digestible PRs, handle review rounds, and recover a diverged PR after rebase without confusing reviewers or losing comments
+> - Adds data-engineering-specific checklists for schema changes, DAG safety, infrastructure drift, and production-impact review concerns
+>
+> **Operations and safety**
+> - Warnings: stale approvals after rebases, accidental merge-mode changes, weak PR descriptions, policy bypasses, and force-pushes that invalidate reviewer context
+> - Recommendations: keep PRs scoped, declare rollout and rollback impact explicitly, respect branch protection, and use the review workflow as an operational gate rather than a paperwork step
+> - Troubleshooting: recovery paths for diverged PRs, failed checks, blocked merges, stale review state, and collaboration breakdown on large review sets
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Pull request (PR)**
+> - A GitHub object that proposes merging one branch (the *head*) into another (the *base*). It records the diff, hosts review discussion, triggers CI checks, and gates the merge button.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Base branch**
+> - The target branch the PR merges into — usually `main` or `develop`.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Head branch**
+> - The source branch containing the proposed changes.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Draft PR**
+> - A PR explicitly marked as work-in-progress. The merge button is disabled until the author marks it "Ready for review." CI checks still run.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Review**
+> - A structured evaluation of the PR's changes by a teammate. GitHub supports three review actions: *approve*, *request changes*, and *comment*.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Approval**
+> - A review verdict that signals the changes are acceptable. Branch protection rules can require a minimum number of approvals before merge.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Requested changes**
+> - A review verdict that blocks the merge button until the author addresses the feedback and the reviewer dismisses or updates their review.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Dismiss stale reviews**
+> - A branch protection option that automatically invalidates existing approvals when new commits are pushed to the PR, forcing a fresh review.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Required checks**
+> - CI status checks that must pass before the merge button is enabled. Configured in branch protection rules.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Branch protection rule**
+> - A GitHub setting on a branch (typically `main`) that enforces policies: required reviews, required checks, up-to-date branch, no force-push, no deletion.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **CODEOWNERS**
+> - A file (`.github/CODEOWNERS`) that automatically assigns reviewers based on which files a PR modifies.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Merge queue**
+> - A GitHub feature that serializes PR merges, rebasing each PR onto the latest base before merging. Prevents broken builds from concurrent merges.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Mergeability**
+> - Whether GitHub can create a clean merge commit. A PR is "not mergeable" when its head branch has diverged from the base and Git cannot automatically reconcile the histories.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Squash merge**
+> - A merge strategy that collapses all PR commits into a single new commit on the base branch. Individual commit history is discarded.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Merge commit**
+> - A merge strategy that creates a two-parent commit joining the head and base histories. All original commits are preserved.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Rebase merge**
+> - A merge strategy that replays each head-branch commit on top of the base, one by one, producing new SHAs. No merge commit is created.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Force-push with lease**
+> - `git push --force-with-lease` — overwrites the remote branch only if no one else has pushed since your last fetch. The safe way to push rewritten history (e.g., after rebase).
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Merge request (MR)**
+> - GitLab's equivalent of a pull request. Same concept — different name. Azure DevOps and Bitbucket use "pull request."
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Merge train**
+> - GitLab's merge queue implementation. MRs queue up and each is tested against the accumulated state of all MRs ahead in the queue.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Semi-linear merge**
+> - A merge strategy (GitLab, Azure DevOps) that rebases the branch first, then creates a merge commit — combining rebase benefits with merge traceability.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Review suggestion**
+> - A GitHub feature that lets a reviewer propose exact code changes inline. The author can accept with one click, creating a commit.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **RFC (Request for Comments)**
+> - A design document proposing a significant change, reviewed and approved before implementation begins. Used for changes that affect multiple systems or require cross-team coordination.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Feature flag**
+> - A runtime toggle that enables or disables a feature without deploying new code. Used to merge large changes behind a flag, then enable them after verification.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Break-glass**
+> - An emergency procedure that bypasses normal review requirements (e.g., merging without approvals during a production outage). Must be followed by retroactive review.
+> - It matters in this note because the workflows for PR creation, review, merge policy, and protected-branch workflow read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-Every term used throughout this page is defined here. The table is the single source of truth for PR and review vocabulary.
-
-| Term | Definition |
-|------|-----------|
-| **Pull request (PR)** | A GitHub object that proposes merging one branch (the *head*) into another (the *base*). It records the diff, hosts review discussion, triggers CI checks, and gates the merge button. |
-| **Base branch** | The target branch the PR merges into — usually `main` or `develop`. |
-| **Head branch** | The source branch containing the proposed changes. |
-| **Draft PR** | A PR explicitly marked as work-in-progress. The merge button is disabled until the author marks it "Ready for review." CI checks still run. |
-| **Review** | A structured evaluation of the PR's changes by a teammate. GitHub supports three review actions: *approve*, *request changes*, and *comment*. |
-| **Approval** | A review verdict that signals the changes are acceptable. Branch protection rules can require a minimum number of approvals before merge. |
-| **Requested changes** | A review verdict that blocks the merge button until the author addresses the feedback and the reviewer dismisses or updates their review. |
-| **Dismiss stale reviews** | A branch protection option that automatically invalidates existing approvals when new commits are pushed to the PR, forcing a fresh review. |
-| **Required checks** | CI status checks that must pass before the merge button is enabled. Configured in branch protection rules. |
-| **Branch protection rule** | A GitHub setting on a branch (typically `main`) that enforces policies: required reviews, required checks, up-to-date branch, no force-push, no deletion. |
-| **CODEOWNERS** | A file (`.github/CODEOWNERS`) that automatically assigns reviewers based on which files a PR modifies. |
-| **Merge queue** | A GitHub feature that serializes PR merges, rebasing each PR onto the latest base before merging. Prevents broken builds from concurrent merges. |
-| **Mergeability** | Whether GitHub can create a clean merge commit. A PR is "not mergeable" when its head branch has diverged from the base and Git cannot automatically reconcile the histories. |
-| **Squash merge** | A merge strategy that collapses all PR commits into a single new commit on the base branch. Individual commit history is discarded. |
-| **Merge commit** | A merge strategy that creates a two-parent commit joining the head and base histories. All original commits are preserved. |
-| **Rebase merge** | A merge strategy that replays each head-branch commit on top of the base, one by one, producing new SHAs. No merge commit is created. |
-| **Force-push with lease** | `git push --force-with-lease` — overwrites the remote branch only if no one else has pushed since your last fetch. The safe way to push rewritten history (e.g., after rebase). |
-| **Merge request (MR)** | GitLab's equivalent of a pull request. Same concept — different name. Azure DevOps and Bitbucket use "pull request." |
-| **Merge train** | GitLab's merge queue implementation. MRs queue up and each is tested against the accumulated state of all MRs ahead in the queue. |
-| **Semi-linear merge** | A merge strategy (GitLab, Azure DevOps) that rebases the branch first, then creates a merge commit — combining rebase benefits with merge traceability. |
-| **Review suggestion** | A GitHub feature that lets a reviewer propose exact code changes inline. The author can accept with one click, creating a commit. |
-| **RFC (Request for Comments)** | A design document proposing a significant change, reviewed and approved before implementation begins. Used for changes that affect multiple systems or require cross-team coordination. |
-| **Feature flag** | A runtime toggle that enables or disables a feature without deploying new code. Used to merge large changes behind a flag, then enable them after verification. |
-| **Break-glass** | An emergency procedure that bypasses normal review requirements (e.g., merging without approvals during a production outage). Must be followed by retroactive review. |
+> [!example] Review Gate Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for any branch integration that needs human review, CI evidence, merge policy, or protected-branch enforcement before landing on a shared target branch.
+> > - Use it when the team needs to connect PR mechanics to the underlying Git branch relationship so approvals and merge decisions remain technically meaningful.
+> > - Use it to structure review-ready changes, preserve reviewer context, and make rollout and rollback impact explicit before merge.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not bypass review with direct pushes when the branch is supposed to be governed through PR policy.
+> > - Do not hide large risky changes behind weak PR descriptions, because that defeats the review gate this note is meant to strengthen.
+> > - Do not rebase or force-push shared review branches without informing reviewers and re-establishing the review context.
 
 ## Conceptual Model
 
@@ -980,7 +1222,9 @@ In the review comment box, use the suggestion syntax:
 
 ````text
 ```suggestion
+
 CACHE_TTL = 120  # reduced for production
+
 ```
 ````
 

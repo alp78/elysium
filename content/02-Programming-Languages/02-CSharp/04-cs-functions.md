@@ -1330,20 +1330,22 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 30, 40, 50
 ```
 
-## When to Use
-
-- **Typed callbacks and strategy pattern** — `Func<T>` and `Action<T>` provide compile-time-safe function passing without the boilerplate of custom delegate types.
-- **Extension methods for fluent APIs** — add domain-specific methods to existing types (e.g., `.ToBusinessDay()` on `DateTime`) without modifying source code.
-- **Events for observer pattern** — loosely coupled notification in UI, messaging, and pipeline architectures.
-- **Method overloading for API ergonomics** — provide multiple entry points with different parameter sets while keeping a single implementation.
-- **Local functions for scoped helpers** — keep helper logic close to its only caller; use `static` to prevent accidental capture.
-
-## When Not to Use / Limits
-
-- **Lambda for complex logic** — statement lambdas with braces lose readability. Extract to a named method or local function.
-- **Deep delegate chains** — multicast delegates with many subscribers become hard to debug. Consider a mediator pattern for complex event flows.
-- **Extension methods on `object`** — pollutes IntelliSense for every type. Extend the most specific type possible.
-- **`ref`/`out` in public APIs** — complicates the calling convention and breaks async compatibility. Prefer return tuples or result objects.
+> [!example] C# Function Patterns
+>
+> > [!success] Applicability
+> >
+> > - **Typed callbacks and strategy pattern** — `Func<T>` and `Action<T>` provide compile-time-safe function passing without the boilerplate of custom delegate types.
+> > - **Extension methods for fluent APIs** — add domain-specific methods to existing types (e.g., `.ToBusinessDay()` on `DateTime`) without modifying source code.
+> > - **Events for observer pattern** — loosely coupled notification in UI, messaging, and pipeline architectures.
+> > - **Method overloading for API ergonomics** — provide multiple entry points with different parameter sets while keeping a single implementation.
+> > - **Local functions for scoped helpers** — keep helper logic close to its only caller; use `static` to prevent accidental capture.
+>
+> > [!failure] Limitations
+> >
+> > - **Lambda for complex logic** — statement lambdas with braces lose readability. Extract to a named method or local function.
+> > - **Deep delegate chains** — multicast delegates with many subscribers become hard to debug. Consider a mediator pattern for complex event flows.
+> > - **Extension methods on `object`** — pollutes IntelliSense for every type. Extend the most specific type possible.
+> > - **`ref`/`out` in public APIs** — complicates the calling convention and breaks async compatibility. Prefer return tuples or result objects.
 
 ## Warnings
 
@@ -1395,4 +1397,3 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 | `CS0123: method has wrong return type for delegate` | Method signature doesn't match `Func<T>` type parameters | Verify parameter and return types match the delegate signature |
 | Closure causes heap allocation | Non-static local function captures enclosing variables | Add `static` modifier to prevent capture |
 | `out` parameter not assigned error | Method exits without assigning all `out` parameters | Assign all `out` parameters before any `return` or exception |
-

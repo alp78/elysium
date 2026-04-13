@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Plan, Apply, and Destroy
+# Plan, Apply and Destroy
 
 > [!quote] Eisenhower on planning
 >
@@ -16,7 +16,156 @@ status: complete
 >
 > — **Dwight D. Eisenhower**
 
-The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management.
+> [!abstract]- Summary
+>
+> Terraform Plan, Apply, and Destroy is the operational workflow note for the chapter: it explains how Terraform turns configuration into a dependency graph, plans and applies changes against state, tears infrastructure down intentionally, imports pre-existing resources, and exposes the CLI signals that CI/CD pipelines need to automate that flow safely.
+>
+> **Execution model**
+> - covers the internal apply sequence, dependency-graph evaluation, parallelism, partial-failure behavior, and why Terraform does not offer rollback semantics after a broken apply
+>
+> **Core workflow commands**
+> - covers `terraform init`, `plan`, `apply`, `destroy`, key flags, targeted actions, and how state-aware command usage fits a normal day-to-day workflow
+>
+> **Inspection and validation**
+> - covers state inspection commands, validation, formatting, output queries, state summaries, exit codes, and Terraform environment variables for script and CI integration
+>
+> **Import and environment strategy**
+> - covers CLI import, declarative `import` blocks, common issue diagnosis, multi-environment module patterns, and automation-oriented branching on plan results
+>
+> **Operations and safety**
+> - Warnings: partial apply has no rollback, plans must be reviewed before execution, targeted apply creates drift risk, destroy is permanent, import does not generate full configuration, and headless automation needs explicit flags and environment controls
+> - Troubleshooting: 13 common failure modes covering existing resources, deletion protection, Cloud Run provenance, permission issues, state locks, provider inconsistencies, CLI version mismatches, backend changes, wrong working directory, dependency cycles, and `count` / `for_each` values that are unknown at plan time
+> - Recommendations: re-plan after any failed apply, follow targeted changes with a full plan, use import blocks for reproducibility when available, branch on detailed exit codes in CI, and prefer module-based environment separation over ad-hoc directory duplication
+
+> [!note]- Glossary
+>
+> **Plan**
+> - Terraform's preview of the changes needed to move real infrastructure from current state toward the desired configuration.
+> - It matters because planning is the main safety checkpoint before any destructive or expensive infrastructure action is executed.
+>
+> > [!warning] A plan is not optional ceremony
+> >
+> > Skipping plan review removes the clearest opportunity to spot unintended replacements, deletes, or drift before they happen. In shared environments, that is an avoidable risk.
+>
+> ---
+>
+> **Apply**
+> - The Terraform command that executes the planned create, update, replace, or destroy operations and then records the new result in state.
+> - It matters because apply is the point where declarative intent becomes real infrastructure change.
+>
+> > [!warning] Apply is not transactional
+> >
+> > Terraform updates state as work succeeds, but it does not roll infrastructure back automatically if a later step fails. A broken apply usually means "fix the issue, then re-plan."
+>
+> ---
+>
+> **Destroy**
+> - The Terraform operation that plans and removes managed infrastructure instead of creating or updating it.
+> - It matters because teardown is part of the same workflow surface and needs deliberate safeguards in environments with costly or critical resources.
+>
+> > [!danger] Destruction is real, not symbolic
+> >
+> > `terraform destroy` is not a cleanup suggestion. If protections are not in place, it can permanently remove live resources and data-bearing services.
+>
+> ---
+>
+> **Dependency graph / DAG**
+> - The directed acyclic graph Terraform builds from resource references and explicit dependencies to determine evaluation and apply order.
+> - It matters because graph construction explains why some resources run in parallel and others must wait for upstream dependencies.
+>
+> > [!info] Order comes from relationships
+> >
+> > Terraform does not execute files line by line. The graph is what determines ordering, which is why correct references are more important than file naming or block placement.
+>
+> ---
+>
+> **Parallelism**
+> - Terraform's ability to apply independent graph nodes concurrently, usually with a configurable upper limit.
+> - It matters because apply speed, API pressure, and the blast radius of failures are all affected by how many operations Terraform runs simultaneously.
+>
+> > [!warning] Faster can mean noisier
+> >
+> > Higher parallelism can reduce runtime, but it can also amplify quota pressure or produce more simultaneous failures. It is an operational tuning knob, not a pure speed upgrade.
+>
+> ---
+>
+> **Targeted apply**
+> - A Terraform run scoped to one address or a narrow set of addresses rather than to the full configuration.
+> - It matters because targeted actions can be useful in emergencies or focused repairs, but they intentionally bypass the full-system planning perspective.
+>
+> > [!warning] Targeting increases drift risk
+> >
+> > A targeted run can leave the rest of the configuration out of sync with actual infrastructure. That is why it should usually be followed by a full plan to surface any remaining mismatches.
+>
+> ---
+>
+> **Import**
+> - The process of telling Terraform to start managing an already existing resource by binding it to a Terraform address in state.
+> - It matters because many real environments adopt Terraform after infrastructure already exists or after state must be reconstructed.
+>
+> > [!warning] Import does not author the module for you
+> >
+> > Terraform can associate an existing object with state, but the configuration still needs to describe that object accurately. Adoption is half state work and half config work.
+>
+> ---
+>
+> **Import block**
+> - A declarative Terraform language construct that records import intent in configuration instead of relying on a one-off CLI command.
+> - It matters because import blocks make state adoption reproducible, reviewable, and easier to rerun in automation.
+>
+> > [!info] Better fit for team workflows
+> >
+> > A CLI import can succeed and then disappear into shell history. An import block leaves an auditable record of why and how Terraform took ownership of an existing resource.
+>
+> ---
+>
+> **Exit code**
+> - The numeric status a Terraform CLI command returns to the shell or a CI runner.
+> - It matters because automation often needs a machine-readable signal to distinguish "no changes," "changes pending," and outright failure.
+>
+> > [!info] `plan -detailed-exitcode` is CI-friendly
+> >
+> > Detailed exit codes let pipelines branch on change detection without parsing human-readable plan text. That is simpler and more reliable than scraping console output.
+>
+> ---
+>
+> **`-chdir`**
+> - A Terraform CLI flag that tells Terraform to run as though it were invoked from a different working directory.
+> - It matters because repositories often keep Terraform under a subdirectory such as `infra`, and wrapper scripts or CI jobs need a stable way to target that directory.
+>
+> > [!info] Useful for automation wrappers
+> >
+> > `-chdir` makes scripts less dependent on the caller's current shell location. That keeps CI and local commands aligned without extra `cd` gymnastics.
+>
+> ---
+>
+> **State inspection**
+> - The family of Terraform commands used to list, show, or summarize what Terraform currently believes it manages.
+> - It matters because debugging plan output or import state often starts by checking Terraform's current view before changing anything.
+>
+> > [!warning] Inspect before repairing
+> >
+> > Many Terraform mistakes get worse when operators skip straight to mutation. Listing resources and showing state first often clarifies whether the issue is address drift, config drift, or a missing import.
+>
+> ---
+>
+> **`TF_IN_AUTOMATION`**
+> - An environment variable that tells Terraform it is running in an automated context and should adjust prompts and output accordingly.
+> - It matters because CI/CD workflows need deterministic, non-interactive command behavior instead of human-oriented prompts.
+>
+> > [!info] Works best with `TF_INPUT=0`
+> >
+> > Automation mode and disabled input solve different parts of the same problem. Together they make Terraform behave much more predictably in headless runners.
+>
+> ---
+>
+> **`TF_VAR_*`**
+> - Environment variables that map directly to Terraform input variables by name.
+> - It matters because they are one of the standard ways to inject runtime-specific values into headless workflows.
+>
+> > [!warning] Environment injection still needs discipline
+> >
+> > `TF_VAR_*` avoids checked-in secrets, but it can still create confusing precedence behavior or accidental value leakage if CI jobs are not carefully scoped and documented.
 
 ## How terraform apply Works
 
@@ -85,6 +234,7 @@ terraform init
 ```
 
 Run `init` once after:
+
 - Cloning a repository for the first time
 - Adding a new provider to `required_providers`
 - Changing the backend configuration
@@ -509,20 +659,24 @@ TF_IN_AUTOMATION=1 TF_INPUT=0 terraform apply -auto-approve
 ## Related
 
 **Terraform Fundamentals:**
+
 - [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL block types, expressions, and type system
 - [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — provider configuration and GCS backend setup
 - [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — remote state, locking, and state manipulation commands
 - [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — how variables are defined and consumed
 
 **Patterns:**
+
 - [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — multi-environment module patterns
 - [resource-dependencies](https://alp78.github.io/elysium/07-Terraform/Patterns/resource-dependencies) — dependency graph and lifecycle meta-arguments
 
 **GCP:**
+
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket management (used as Terraform state backend)
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles required by the Terraform service account
 
 **CI/CD:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines for `terraform plan` and `apply` automation
 
 ## References

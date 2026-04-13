@@ -13,9 +13,149 @@ description: "Staging models 1:1 with source, source freshness"
 >
 > — **Maxime Beauchemin**, "Functional Data Engineering" (2018)
 
-Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.
+> [!abstract]- Summary
+>
+> Explains how dbt staging models form the first modeling layer above raw sources by keeping transformations structural, source-aligned, and easy to audit before any business logic enters the DAG.
+>
+> **Staging role and operating rules**
+> - Defines the core staging principles: one model per source table, rename-and-cast only, view materialization by default, explicit `stg_<source>__<entity>` naming, and no cross-source joins or embedded business rules
+> - Ties staging behavior to deterministic, idempotent modeling so source changes remain visible immediately instead of being hidden inside downstream enrichment logic
+>
+> **Source declarations and freshness**
+> - Covers `_sources.yml`, source-level tests, table-level metadata, and freshness thresholds so raw ingestion contracts are explicit before modeled relations are built
+> - Explains how source declarations document the handoff from ingestion into dbt and provide early warning when upstream feeds drift or stall
+>
+> **Model implementation patterns**
+> - Walks through concrete staging model SQL, including renaming, casting, lightweight derived fields, accepted-range tests, and surrogate-key decisions that simplify downstream joins without changing business meaning
+> - Reinforces the boundary between structural cleanup in staging and analytical logic in intermediate or mart layers
+>
+> **Operations and safety**
+> - Warnings: hiding business logic in staging, breaking the 1:1 source mapping, skipping source freshness definitions, and using heavyweight materializations where source-aligned views are the safer default
+> - Recommendations: keep staging models narrow, declare sources and freshness centrally, enforce consistent naming, and make every transformation auditable back to a single upstream table
 
----
+> [!note]- Glossary
+>
+> **Staging model**
+> - The first dbt model layer above raw sources, usually limited to renaming, casting, and lightweight structural cleanup.
+> - It matters here because the note defines staging as a strict contract boundary, not as a place for business logic or cross-source analysis.
+>
+> > [!warning] Structural layer only
+> >
+> > Once staging starts carrying domain rules or joins, source changes become harder to audit and downstream model responsibilities blur quickly.
+>
+> ---
+>
+> **Source table**
+> - A raw ingested relation declared to dbt through `source()` metadata rather than produced by another dbt model.
+> - It matters here because staging models are intended to stay 1:1 with source tables so lineage remains obvious.
+>
+> > [!info] Raw-system boundary
+> >
+> > Source tables represent the handoff from ingestion into transformation. Keeping that boundary explicit is what makes freshness and raw-data troubleshooting workable.
+>
+> ---
+>
+> **`_sources.yml`**
+> - A YAML declaration file that defines source names, tables, tests, freshness rules, and documentation metadata.
+> - It matters here because source correctness and freshness should be declared once at the raw boundary rather than scattered across model SQL.
+>
+> > [!warning] Metadata is operational control
+> >
+> > Missing or weak source declarations do not just reduce documentation quality. They remove the main early-warning mechanism for stale or malformed upstream data.
+>
+> ---
+>
+> **Source freshness**
+> - A dbt check that measures how old the latest loaded source data is relative to configured warning and error thresholds.
+> - It matters here because staging models are only trustworthy when the upstream raw feed is current enough for downstream SLAs.
+>
+> > [!warning] Freshness is not optional monitoring
+> >
+> > If freshness thresholds are missing, teams often discover upstream ingestion failures only after transformed marts or dashboards are already wrong.
+>
+> ---
+>
+> **`source()`**
+> - A dbt function that references a declared external source table inside model SQL.
+> - It matters here because staging is the main place where `source()` should appear; downstream layers should usually depend on staged refs instead.
+>
+> > [!info] Entry point into the DAG
+> >
+> > `source()` marks where dbt modeling starts. If later layers keep reaching back to raw tables directly, the graph stops encoding clean layer boundaries.
+>
+> ---
+>
+> **Rename-and-cast pattern**
+> - The staging practice of normalizing column names, types, and light formatting while preserving the original business meaning of the raw data.
+> - It matters here because most staging value comes from standardizing raw inputs without inventing new logic.
+>
+> > [!warning] Do not over-transform
+> >
+> > Renaming and casting improve usability; derived business semantics belong elsewhere. Over-transforming in staging hides where meaning changed.
+>
+> ---
+>
+> **`stg_<source>__<entity>`**
+> - The conventional naming pattern for staging models, using a double underscore to separate source system from entity.
+> - It matters here because naming is one of the fastest ways to communicate origin and keep selection patterns consistent across the project.
+>
+> > [!info] Machine-readable origin marker
+> >
+> > Good staging names help both humans and selectors. The source prefix makes lineage visible before you open the SQL file.
+>
+> ---
+>
+> **View materialization**
+> - A dbt materialization that creates a view instead of storing a physical copy of the staging result.
+> - It matters here because views are usually the safest default for source-aligned structural cleanup with minimal storage cost.
+>
+> > [!warning] Cheap does not mean free everywhere
+> >
+> > Views preserve freshness and avoid storage, but they can still become expensive if downstream queries repeatedly stack complex logic on top of them.
+>
+> ---
+>
+> **Surrogate key**
+> - A simplified identifier added when the natural key is too wide or awkward for reliable downstream joins.
+> - It matters here because staging is often the right place to standardize key shape before enrichment layers start depending on it.
+>
+> > [!warning] Standardize, do not redefine grain
+> >
+> > A surrogate key should simplify joins, not change what one row represents. If the surrogate key hides a grain change, the model is doing more than staging work.
+>
+> ---
+>
+> **Accepted-range test**
+> - A validation rule, often from `dbt_utils`, that constrains numeric values to an allowed interval.
+> - It matters here because staging models are the first practical place to reject obviously invalid source values such as negative prices or out-of-range weights.
+>
+> > [!info] Structural sanity check
+> >
+> > Range tests are not full business-rule coverage. They are fast boundary checks that keep corrupt raw values from flowing deeper into the DAG.
+>
+> ---
+>
+> **Business logic boundary**
+> - The modeling rule that staging should stop at structural transformation and leave joins, scoring, and domain rules to later layers.
+> - It matters here because the whole note is really about enforcing that boundary consistently across a dbt project.
+>
+> > [!warning] Layer drift is cumulative
+> >
+> > A little business logic in staging feels harmless until many models depend on it. By then, the layer boundary is gone and refactoring becomes much harder.
+
+> [!example] Staging Boundary Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when creating the first modeled layer on top of raw warehouse tables, onboarding new domains, or reviewing whether source cleanup logic is still staying inside the staging contract.
+> > - Use it when the team needs to enforce 1:1 source alignment, rename-and-cast discipline, freshness declarations, and auditable structural cleanup.
+> > - Use it to keep raw-boundary assumptions explicit before any joins, scoring, or broader business logic enter the graph.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use staging for cross-source joins, business rules, scoring logic, or downstream consumer shaping that belongs in intermediate or mart models.
+> > - Do not hide important raw-source behavior by skipping source declarations or freshness rules.
+> > - Do not let surrogate keys or light derivations redefine grain under the label of “cleanup.”
 
 ### Staging Model Core Principles
 
@@ -461,8 +601,8 @@ where close_price > 0 and volume > 1000  -- this is analytical logic
 ---
 
 ## Related
+
 - [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models)
 - [dbt-project-structure](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-project-structure)
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)
-

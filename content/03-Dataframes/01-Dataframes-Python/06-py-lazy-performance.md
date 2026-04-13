@@ -9,7 +9,7 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 06 — Lazy API & Performance
+# Lazy API and Performance - Python
 
 > [!quote]
 > "Premature optimization is the root of all evil."
@@ -20,32 +20,188 @@ status: complete
 >
 > — **Michael A. Jackson**, *Principles of Program Design* (1975)
 
-This note explains the difference between eager and lazy execution in DataFrame libraries, demonstrates the Polars LazyFrame API (collect, query plan, predicate pushdown, projection pushdown, streaming, profiling), and benchmarks Pandas vs Polars across common operations. It covers when lazy evaluation helps, when it doesn't, and how to measure real-world performance without overgeneralizing from toy examples.
+> [!abstract]- Summary
+>
+> Contrasts immediate Pandas-style execution with Polars' deferred LazyFrame model, showing how query planning, pushdown, streaming, and profiling change the cost of disk reads and multi-step pipelines, and how to benchmark those differences without drawing false conclusions from toy workloads.
+>
+> **Eager: Immediate / Lazy: Deferred**
+> - Compare eager materialization (`pd.read_parquet()`, `pl.read_parquet()`) with lazy scanning (`pl.scan_parquet()`, `pl.scan_csv()`) and explain when each execution model is appropriate
+> - Show how `LazyFrame` records work first and only produces data after `.collect()`
+>
+> **Collect / Query Plan / Pushdown**
+> - Use `.collect()` as the execution boundary and inspect plans with `.explain()` to verify what Polars will actually run
+> - Demonstrate predicate pushdown and projection pushdown so filters and column pruning move into the scan instead of happening after a full read
+>
+> **Eager to Lazy Conversion / Streaming Mode / Profile**
+> - Convert eager DataFrames to lazy pipelines with `.lazy()`, then materialize once at the edge
+> - Use streaming mode for memory-constrained execution when the plan supports it, and `lf.profile()` to time the actual bottlenecking nodes
+>
+> **Pandas vs Polars Lazy Benchmark / Performance & Optimization**
+> - Benchmark filter, group-by, join, and sort operations across Pandas and Polars at representative scales instead of relying on tiny toy examples
+> - Contrast vectorized column operations with Python loops and `.apply()` / `.map_elements()` to show where DataFrame performance actually comes from
+>
+> **Memory Usage / Polars Architecture**
+> - Measure memory honestly with `df.memory_usage(deep=True)` or `df.estimated_size()` so string/object columns do not get undercounted
+> - Connect performance outcomes back to Polars' Arrow memory model, Rust engine, multithreading, and optimizer rather than treating speedups as magic
+>
+> **Operations and safety**
+> - When to use lazy execution: large file reads, multi-step production pipelines, memory-constrained workloads, and queries where pushdown or streaming can remove large amounts of wasted work
+> - When not to use: interactive EDA that needs immediate inspection, small datasets where optimizer overhead dominates, unsupported streaming operations, or debugging scenarios where deferred errors slow iteration
+> - Warnings: `.collect()` inside loops reruns full plans, toy benchmarks do not generalize, shallow Pandas memory reporting undercounts strings, `.apply()` destroys vectorized speed, and streaming can fall back silently when unsupported nodes appear
+> - Recommendations: 7 practices covering lazy scans for disk-backed data, mandatory plan inspection, realistic-scale benchmarks, profiling before tuning, replacing `.apply()` with native expressions, accurate memory measurement, and the "build eager, ship lazy" workflow
+> - Troubleshooting: 7 failure modes covering missing pushdown, out-of-memory collects, Python UDFs blocking scan optimizations, misleading benchmarks, disabled streaming, I/O-bound plans, and unexpectedly slow `.apply()`
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Eager execution** | Every operation runs immediately and returns a materialized result. Pandas is always eager; Polars DataFrames are eager. | Simple to debug — every line produces an inspectable result. | Eager execution reads the entire dataset into memory before any filter, wasting RAM and time on large datasets. |
-| **Lazy execution** | Operations are recorded as a query plan and executed only when `.collect()` is called. Polars `LazyFrame` uses this. | Enables the query optimizer to reorder, fuse, and push down operations for dramatically better performance. | Calling `.collect()` too early defeats the optimizer. Build the full plan first, collect once. |
-| **LazyFrame** | A Polars object that represents a deferred computation. Created by `pl.scan_*()` or `df.lazy()`. | The entry point for lazy execution — all operations on a LazyFrame are accumulated, not executed. | A LazyFrame is not a DataFrame — you cannot inspect its data until `.collect()` materializes it. |
-| **collect** | The method that triggers execution of a LazyFrame's query plan, returning a materialized DataFrame. | The boundary between plan-building and execution. | Collecting in a loop (e.g., inside a `for`) re-executes the entire plan each iteration. Build the plan once, collect once. |
-| **query plan** | The internal representation of all operations recorded on a LazyFrame. Can be inspected with `.explain()` or `.show_graph()`. | Reveals what the optimizer will actually execute — useful for diagnosing slow queries. | The optimized plan may differ significantly from the code you wrote (operations reordered, fused, or eliminated). |
-| **predicate pushdown** | The optimizer moves filter conditions closer to the data source, reducing the number of rows read from disk or memory. | Avoids loading millions of irrelevant rows. On Parquet files, can skip entire row groups. | Only works with `scan_*()` functions and certain filter expressions. Complex Python UDFs block pushdown. |
-| **projection pushdown** | The optimizer reduces the number of columns read from disk by only loading columns that the query actually uses. | Reduces I/O and memory usage proportionally to unused columns. | Only effective with columnar formats (Parquet). CSV must be fully scanned regardless of column selection. |
-| **streaming mode** | A Polars execution mode that processes data in batches instead of loading everything into memory at once. | Handles datasets larger than available RAM by processing chunks sequentially. | Not all operations support streaming (e.g., full sorts, some joins). Check `.explain(streaming=True)` to verify. |
-| **profile** | Polars method `lf.profile()` that returns the result plus a DataFrame of timing information per operation. | Identifies the slowest step in a query plan — essential for targeted optimization. | Profiling measures wall-clock time including I/O. Run multiple times to get stable measurements. |
-| **vectorization** | Applying operations to entire columns using optimized low-level routines instead of Python loops. | The fundamental reason DataFrames outperform plain Python — 10–1000x speedup. | Using `.apply()` with a Python lambda is not vectorized and negates all performance benefits. |
-| **memory footprint** | The total RAM consumed by a DataFrame, including overhead. Measured with `df.memory_usage(deep=True)` (Pandas) or `df.estimated_size()` (Polars). | Determines whether a dataset fits in memory and how much headroom remains for operations. | `memory_usage()` without `deep=True` underreports string columns by 10–100x because it counts pointer sizes, not string contents. |
-
-## What this note covers
-
-- **Eager vs Lazy** — execution model comparison, when each applies
-- **LazyFrame API** — collect, query plan inspection, predicate/projection pushdown, streaming, profiling
-- **Eager-to-lazy conversion** — `df.lazy()` and `lf.collect()`
-- **Benchmarks** — Pandas vs Polars timing on filter, group_by, join, and sort
-- **Performance optimization** — vectorized vs loop, why `apply()` is slow, memory measurement
-- **Polars architecture** — Rust engine, Arrow memory, multi-threaded execution
+> [!note]- Glossary
+>
+> **Eager execution**
+> - An execution model where every DataFrame operation runs immediately and returns a materialized result right away.
+> - It matters because Pandas and eager Polars DataFrames behave this way, making them easy to inspect but potentially wasteful on large disk-backed workloads.
+>
+> > [!warning] Immediate work can be wasteful
+> >
+> > Eager execution loads and processes data before the full intent of the pipeline is known. On large files, that can mean reading rows and columns you were about to discard.
+>
+> ---
+>
+> **Lazy execution**
+> - An execution model where operations are recorded first and only run when a terminal materialization step is requested.
+> - It matters because the note centers on how Polars can optimize multi-step pipelines before touching most of the data.
+>
+> > [!warning] Collect too early, lose the benefit
+> >
+> > If you materialize after every step, you reduce a lazy pipeline back to eager behavior. Build the full plan first, then execute once.
+>
+> ---
+>
+> **LazyFrame**
+> - A Polars object representing a deferred query plan instead of an already materialized in-memory table.
+> - It matters because all lazy scans, optimized filters, and execution-plan introspection in the note are built on `LazyFrame`.
+>
+> > [!info] Plan object, not data container
+> >
+> > You cannot inspect row values from a LazyFrame directly the way you do with a DataFrame. First you inspect the plan or schema, then you collect.
+>
+> ---
+>
+> **`.collect()`**
+> - The LazyFrame method that triggers execution and returns a concrete Polars DataFrame.
+> - It matters because it is the explicit boundary between planning and materialization throughout the note.
+>
+> > [!warning] Avoid repeated collection
+> >
+> > Collecting inside loops or helper functions can rerun the same expensive scan repeatedly. Keep collection at the outer edge of the workflow when possible.
+>
+> ---
+>
+> **Query plan**
+> - The internal representation of all operations recorded on a lazy pipeline before execution.
+> - It matters because understanding performance in Polars requires reading what the optimizer will actually run, not just what the source code appears to say.
+>
+> > [!info] Optimized plans can differ from written order
+> >
+> > Filters, projections, and other operations may be fused or moved. That is a feature, not a discrepancy, but you need to inspect the plan to verify it helped.
+>
+> ---
+>
+> **Predicate pushdown**
+> - An optimization that moves filters as close as possible to the data source so fewer rows are read and processed.
+> - It matters because large lazy scans become practical only when irrelevant rows are skipped before full materialization.
+>
+> > [!warning] Python UDFs block pushdown
+> >
+> > If your filter logic depends on Python callbacks instead of native expressions, the optimizer often cannot push it down into the scan layer.
+>
+> ---
+>
+> **Projection pushdown**
+> - An optimization that reads only the columns actually needed by the query instead of loading the full schema eagerly.
+> - It matters because wide analytical tables often contain many unused columns, and skipping them reduces I/O and memory pressure immediately.
+>
+> > [!warning] Format matters
+> >
+> > Projection pushdown is strongest on columnar formats such as Parquet. Text formats like CSV still impose much more scanning work even when you keep few columns.
+>
+> ---
+>
+> **Streaming mode**
+> - A Polars execution mode that processes supported plans in chunks instead of materializing the entire dataset at once.
+> - It matters because it can make otherwise too-large lazy pipelines runnable on limited RAM.
+>
+> > [!warning] Support is plan-dependent
+> >
+> > Not every lazy query can stream. Sorts, certain joins, and other nodes may force a full materialization fallback.
+>
+> ---
+>
+> **`profile()`**
+> - A Polars method that executes a lazy plan and returns both the result and timing data for the underlying operations.
+> - It matters because performance work should start with measured bottlenecks, not assumptions about which step must be slow.
+>
+> > [!warning] Single-run timings can mislead
+> >
+> > Profiling includes I/O, cache state, and system noise. Repeat important measurements before concluding that one operator is the true bottleneck.
+>
+> ---
+>
+> **Vectorization**
+> - Column-oriented execution using optimized native loops instead of per-row Python interpretation.
+> - It matters because the note's performance comparisons depend on keeping work inside vectorized DataFrame kernels whenever possible.
+>
+> > [!warning] Compact Python is still Python
+> >
+> > A short lambda can look elegant while destroying performance. Vectorization is about execution model, not code length.
+>
+> ---
+>
+> **Memory footprint**
+> - The total RAM consumed by a DataFrame, including both raw values and object overhead.
+> - It matters because performance planning is impossible without knowing whether the data and intermediate results fit in available memory.
+>
+> > [!warning] Shallow counts underreport object columns
+> >
+> > Pandas string and object columns can consume far more memory than shallow pointer-based estimates imply. Use `deep=True` when measuring.
+>
+> ---
+>
+> **`scan_parquet()` / `scan_csv()`**
+> - Lazy Polars readers that create a `LazyFrame` instead of immediately loading file contents into a materialized DataFrame.
+> - They matter because pushdown and streaming start at the scan stage; eager readers cannot retroactively gain those benefits.
+>
+> > [!info] Lazy begins at the reader
+> >
+> > If you read eagerly and then call `.lazy()`, the data is already in memory. That can still help with later optimization, but it cannot undo the eager file read cost.
+>
+> ---
+>
+> **`.explain()`**
+> - A plan-inspection method that prints the optimized lazy query plan without executing it.
+> - It matters because it is the fastest way to verify whether pushdown, projection pruning, and other optimizations actually activated.
+>
+> > [!info] Read the scan node carefully
+> >
+> > The most revealing part of the plan is often the scan section: how many columns are projected, whether filters moved down, and whether the plan still looks broader than expected.
+>
+> ---
+>
+> **`.apply()` / `.map_elements()`**
+> - Python callback escape hatches that execute custom code row by row or element by element instead of staying inside the native expression engine.
+> - They matter because they are the most common reason a DataFrame workflow performs far worse than expected.
+>
+> > [!warning] Treat as temporary escape hatches
+> >
+> > If a pipeline depends heavily on Python UDFs, optimization options collapse quickly. Replace them with native expressions whenever possible.
+>
+> ---
+>
+> **`deep=True`**
+> - A Pandas memory-reporting option that traverses Python object contents instead of counting only shallow array or pointer storage.
+> - It matters because string-heavy DataFrames can otherwise look deceptively small during performance planning.
+>
+> > [!info] Use for honest measurement
+> >
+> > Performance tuning without accurate memory numbers is guesswork. `deep=True` is the difference between a rough pointer count and a realistic RAM estimate for object-heavy tables.
+>
+> ---
 
 ---
 
@@ -78,7 +234,7 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 import time
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Eager: Immediate
 
@@ -107,7 +263,7 @@ df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
 print(f"Type: {type(df)}, Shape: {df.shape}")
 ```
 
-    Type: <class 'polars.dataframe.frame.DataFrame'>, Shape: (66355, 12)
+Type: <class 'polars.dataframe.frame.DataFrame'>, Shape: (66355, 12)
 
 ## Lazy: Deferred
 
@@ -149,7 +305,7 @@ print(f"Type: {type(lf)}")
 print(f"Schema: {lf.collect_schema()}")
 ```
 
-    Type: <class 'polars.lazyframe.frame.LazyFrame'>
+Type: <class 'polars.lazyframe.frame.LazyFrame'>
     Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
 
 ## Collect
@@ -217,7 +373,7 @@ lf = (
 print(lf.explain())
 ```
 
-    Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
+Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
     PROJECT 3/12 COLUMNS
     SELECTION: [([(col("symbol")) == ("ASML.AS")]) & ([(col("close")) > (900.0)])]
     ESTIMATED ROWS: 66355
@@ -246,7 +402,7 @@ print("Filter pushed to scan:")
 print(lf.explain())
 ```
 
-    Filter pushed to scan:
+Filter pushed to scan:
     Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
     PROJECT 3/12 COLUMNS
     SELECTION: [(col("symbol")) == ("ASML.AS")]
@@ -269,7 +425,7 @@ print(lf.explain())
 print(f"Result: {lf.collect().shape}")
 ```
 
-    Only 2 columns read:
+Only 2 columns read:
     Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
     PROJECT 2/12 COLUMNS
     ESTIMATED ROWS: 66355
@@ -291,7 +447,7 @@ result = df.lazy().filter(pl.col("symbol") == "ASML.AS").select("date", "close")
 print(f"Result: {result.shape}")
 ```
 
-    Result: (1331, 2)
+Result: (1331, 2)
 
 ## Streaming Mode
 
@@ -343,7 +499,6 @@ display(timing_df)
 ```
 
 <div><!-- shape: (2, 2) --><table><thead><tr><th>symbol</th><th>avg_ret</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>-0.0162</td></tr><tr><td>MC.PA</td><td>-0.0045</td></tr></tbody></table></div>
-
 <div><!-- shape: (3, 3) --><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>optimization</td><td>0</td><td>2054</td></tr><tr><td>with_column(ret)</td><td>2054</td><td>2222</td></tr><tr><td>group_by(symbol)</td><td>2227</td><td>2566</td></tr></tbody></table></div>
 
 The `start` and `end` columns are in microseconds. Here, `optimization` took 2054 µs (plan rewriting), `with_column(ret)` took 168 µs, and `group_by` took 339 µs. Subtract `end - start` per row to find the slowest node — that is where to focus optimization effort.
@@ -372,8 +527,8 @@ pl_t = time.perf_counter() - start
 print(f"Pandas: {pd_t:.4f}s \nPolars lazy: {pl_t:.4f}s \nSpeedup: {pd_t/pl_t:.1f}x")
 ```
 
-    Pandas: 0.0114s 
-    Polars lazy: 0.0023s 
+Pandas: 0.0114s
+    Polars lazy: 0.0023s
     Speedup: 5.1x
 
 ## Summary
@@ -400,7 +555,7 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 print(f"Rows: {len(ohlcv_pd):,}")
 ```
 
-    Rows: 66,355
+Rows: 66,355
 
 ## Vectorized vs Loop
 
@@ -431,7 +586,7 @@ print(f"iterrows (1K): {bad:.4f}s")
 print(f"vectorized (66K): {good:.4f}s")
 ```
 
-    iterrows (1K): 0.0116s
+iterrows (1K): 0.0116s
     vectorized (66K): 0.0003s
 
 ## Why apply() Is Slow
@@ -470,7 +625,7 @@ vec_t=time.perf_counter()-start
 print(f"apply: {apply_t:.4f}s\nvectorized: {vec_t:.4f}s\nSpeedup: {apply_t/vec_t:.0f}x")
 ```
 
-    apply: 0.2317s
+apply: 0.2317s
     vectorized: 0.0003s
     Speedup: 743x
 
@@ -496,7 +651,7 @@ print(f"Polars: {mem_pl:.2f} MB")
 print(f"Ratio: {mem_pd/mem_pl:.1f}x")
 ```
 
-    Pandas: 11.65 MB
+Pandas: 11.65 MB
     Polars: 5.20 MB
     Ratio: 2.2x
 
@@ -526,7 +681,7 @@ print(f"  pl_filter : {ops['pl_filter']:.4f}s")
 print(f"  Filter speedup: {ops['pd_filter'] / ops['pl_filter']:.1f}x")
 ```
 
-      pd_filter : 0.0019s
+pd_filter : 0.0019s
       pl_filter : 0.0006s
       Filter speedup: 3.4x
 
@@ -544,7 +699,7 @@ print(f"  pl_groupby : {ops['pl_groupby']:.4f}s")
 print(f"  GroupBy speedup: {ops['pd_groupby'] / ops['pl_groupby']:.1f}x")
 ```
 
-      pd_groupby : 0.0025s
+pd_groupby : 0.0025s
       pl_groupby : 0.0013s
       GroupBy speedup: 1.9x
 
@@ -562,7 +717,7 @@ print(f"  pl_sort : {ops['pl_sort']:.4f}s")
 print(f"  Sort speedup: {ops['pd_sort'] / ops['pl_sort']:.1f}x")
 ```
 
-      pd_sort : 0.0064s
+pd_sort : 0.0064s
       pl_sort : 0.0014s
       Sort speedup: 4.6x
 
@@ -588,7 +743,7 @@ print(f"Thread pool: {pl.thread_pool_size()}")
 print(f"Polars version: {pl.__version__}")
 ```
 
-    Thread pool: 16
+Thread pool: 16
     Polars version: 1.39.3
 
 ## Summary
@@ -602,21 +757,21 @@ print(f"Polars version: {pl.__version__}")
 
 ---
 
-## When to use lazy execution
-
-- **Large file reads** — `pl.scan_parquet()` with filters pushes predicates to the storage layer, reading only matching row groups. This can reduce I/O by 10–100x on partitioned or large Parquet files.
-- **Multi-step pipelines** — when a query involves filter → join → group_by → sort, lazy execution lets the optimizer fuse and reorder steps for best performance.
-- **Memory-constrained environments** — streaming mode processes data in chunks, enabling analysis of datasets larger than RAM.
-- **Production pipelines** — lazy execution produces deterministic, optimizable query plans that can be inspected and tested before running.
-
-## When not to use (Limits)
-
-| Scenario | Why lazy fails or doesn't help | Better approach |
-|---|---|---|
-| Interactive exploration (EDA) | You need to see data immediately — lazy adds a `.collect()` step at every inspection point | Use eager DataFrames for exploration, convert to lazy for production |
-| Small datasets (< 100K rows) | Optimizer overhead exceeds the time saved on small data | Eager execution is fine — optimization matters at scale |
-| Operations unsupported in streaming mode | Full sorts, some join types, and complex UDFs require full materialization | Check `.explain(streaming=True)` to verify; fall back to eager if needed |
-| Debugging | LazyFrame errors surface only at `.collect()` time — no line-level error attribution | Build and test with eager first, then convert to lazy |
+> [!example] Lazy Execution Fit
+>
+> > [!success] Optimal
+> >
+> > - **Large file reads** — `pl.scan_parquet()` with filters pushes predicates to the storage layer, reading only matching row groups. This can reduce I/O by 10–100x on partitioned or large Parquet files.
+> > - **Multi-step pipelines** — when a query involves filter → join → group_by → sort, lazy execution lets the optimizer fuse and reorder steps for best performance.
+> > - **Memory-constrained environments** — streaming mode processes data in chunks, enabling analysis of datasets larger than RAM.
+> > - **Production pipelines** — lazy execution produces deterministic, optimizable query plans that can be inspected and tested before running.
+>
+> > [!failure] Suboptimal
+> >
+> > - **Interactive exploration (EDA)** — Why lazy fails or doesn't help: You need to see data immediately — lazy adds a `.collect()` step at every inspection point. Better approach: Use eager DataFrames for exploration, convert to lazy for production
+> > - **Small datasets (< 100K rows)** — Why lazy fails or doesn't help: Optimizer overhead exceeds the time saved on small data. Better approach: Eager execution is fine — optimization matters at scale
+> > - **Operations unsupported in streaming mode** — Why lazy fails or doesn't help: Full sorts, some join types, and complex UDFs require full materialization. Better approach: Check `.explain(streaming=True)` to verify; fall back to eager if needed
+> > - **Debugging** — Why lazy fails or doesn't help: LazyFrame errors surface only at `.collect()` time — no line-level error attribution. Better approach: Build and test with eager first, then convert to lazy
 
 ## Warnings
 
@@ -656,4 +811,3 @@ print(f"Polars version: {pl.__version__}")
 | Streaming silently disabled | Unsupported operation in the plan | Check `.explain(streaming=True)` output for non-streaming nodes |
 | `.profile()` shows I/O as the bottleneck | Disk read dominates computation time | Switch to Parquet (columnar, compressed); use SSD storage |
 | `.apply()` runs slower than expected | Python GIL prevents parallelism; row-by-row execution | Replace with vectorized expression or `map_batches()` for batch UDFs |
-

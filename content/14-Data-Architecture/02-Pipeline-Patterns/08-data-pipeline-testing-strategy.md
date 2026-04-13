@@ -29,9 +29,136 @@ status: complete
 >
 > — **Kent Beck**, *Test-Driven Development* (2002)
 
-Every page in this vault covers *how* to use a testing tool — pytest fixtures, dbt generic tests, GitHub Actions workflows. This page answers the strategy question: **what should I test, at which layer, with which tool, and when does each test run?**
+> [!abstract]- Summary
+>
+> This note defines the testing strategy for data pipelines as a layered pyramid of fast logic tests, runtime quality checks, contract validation, real-infrastructure integration tests, and slower end-to-end comparisons, then maps each test type to the pipeline layers, CI cadence, and failure class it is meant to catch.
+>
+> **Testing pyramid and coverage model**
+> - Explains why unit, quality, contract, integration, and end-to-end tests belong at different cost and frequency layers instead of being treated as interchangeable checks.
+> - Uses the pyramid to decide what should run on every PR, on merge, on every load, or on a slower nightly cadence.
+>
+> **Test types and pipeline-layer mapping**
+> - Breaks down each test category, then maps those checks onto bronze, silver, and gold responsibilities so teams know what to verify at each stage boundary.
+> - Connects strategy guidance to concrete tools such as pytest, dbt tests, GitHub Actions, and golden-file comparisons.
+>
+> **Data management and automation**
+> - Covers test data management, CI orchestration, and execution timing so tests remain repeatable and meaningful rather than brittle or too slow to keep running.
+> - Distinguishes production monitoring from testing to keep pre-deploy assurance separate from runtime observability.
+>
+> **Operations and safety**
+> - Warnings: skipping lower-cost tests pushes cheap failures into expensive environments, and relying on monitoring alone does not verify future changes safely.
+> - Recommendations: start with unit plus key quality and contract tests, add real-infrastructure integration checks, and reserve golden-file E2E validation for slower but high-signal regression coverage.
 
----
+> [!note]- Glossary
+>
+> **Testing pyramid**
+> - A layered test strategy that concentrates many fast cheap tests at the base and fewer expensive system-wide tests at the top.
+> - It matters here because the note uses the pyramid to organize both execution cadence and expected failure coverage.
+>
+> > [!info] Cost shapes frequency
+> >
+> > The pyramid is useful because it prevents teams from over-investing in slow end-to-end tests while neglecting fast checks that catch most defects earlier.
+>
+> ---
+>
+> **Unit test**
+> - A focused test of one transform or logical unit in isolation from external systems.
+> - It matters here because transform correctness is cheapest to verify before databases, networks, and orchestration enter the picture.
+>
+> > [!warning] Pure logic should stay cheap to test
+> >
+> > If unit tests need a live database or network connection, the code boundaries are probably wrong and the pipeline will be harder to maintain.
+>
+> ---
+>
+> **Data quality assertion**
+> - A runtime or CI check that verifies important properties of produced data such as counts, null rates, ranges, uniqueness, and freshness.
+> - It matters here because pipeline code can be correct while the produced data is still unusable or suspicious.
+>
+> > [!info] Runs where the data exists
+> >
+> > Quality assertions are most effective when they run at stage boundaries and after writes, not only in local development.
+>
+> ---
+>
+> **Contract test**
+> - A test that checks whether produced or incoming data conforms to the declared schema and interface guarantees.
+> - It matters here because contract tests are the defense against upstream or downstream interface drift.
+>
+> > [!warning] Schema drift can stay silent
+> >
+> > Without contract tests, producers can change shape or meaning while pipelines continue to run and quietly feed consumers incorrect data.
+>
+> ---
+>
+> **Integration test**
+> - A test that exercises multiple real components together, usually including actual databases, files, or services with controlled fixture data.
+> - It matters here because integration tests catch environment and system-behavior problems that isolated logic tests cannot reveal.
+>
+> > [!info] Real boundaries, smaller scope
+> >
+> > Integration testing is valuable precisely because mocks cannot reproduce collation issues, permissions, indexing behavior, or real SQL execution plans.
+>
+> ---
+>
+> **End-to-end validation**
+> - A broad test that runs a representative pipeline flow from source through final output and compares the end result with a known-correct expectation.
+> - It matters here because some regressions only appear when many individually correct steps compose into a wrong final answer.
+>
+> > [!warning] High signal, high cost
+> >
+> > E2E checks are powerful but slower and more brittle, so they should be used selectively for regression confidence rather than as the only safety net.
+>
+> ---
+>
+> **Golden file**
+> - A stored reference output used to compare current pipeline results against a previously verified correct result.
+> - It matters here because golden files give end-to-end and regression tests a stable answer key for high-value representative datasets.
+>
+> > [!warning] Keep the reference honest
+> >
+> > A stale or unreviewed golden file can normalize wrong behavior. Reference outputs need explicit ownership and update discipline.
+>
+> ---
+>
+> **Regression test**
+> - A test that checks whether previously correct behavior has changed unexpectedly after code or configuration changes.
+> - It matters here because data pipelines often fail through subtle output drift rather than obvious crashes.
+>
+> > [!info] Change detection, not just correctness
+> >
+> > Regression tests are valuable because they tell you a result changed, even when every lower-level component still appears individually valid.
+>
+> ---
+>
+> **Test fixture**
+> - A curated input dataset or environment setup used to make tests deterministic and repeatable.
+> - It matters here because pipeline tests only stay trustworthy if the same inputs produce comparable outputs across runs and environments.
+>
+> > [!info] Small but representative
+> >
+> > Good fixtures capture edge cases and realistic shapes without becoming so large or random that the test suite becomes slow or flaky.
+>
+> ---
+>
+> **Production monitoring**
+> - The runtime observation of live pipeline health, freshness, failures, and data quality after deployment.
+> - It matters here because the note explicitly separates monitoring from testing so teams do not confuse detection of live problems with pre-release prevention.
+>
+> > [!warning] Monitoring is not pre-merge safety
+> >
+> > Production alerts tell you something already went wrong in a live environment. Testing exists to stop many of those failures before deployment.
+>
+
+> [!example] Testing Pyramid Scope
+>
+> > [!success] Cheapest-Failure Coverage
+> >
+> > - Use this strategy to design or repair a pipeline test suite so logic, schema, quality, integration, and regression failures are caught at the cheapest stage possible.
+>
+> > [!failure] One-Test-Type Illusion
+> >
+> > - Do not use the note as a substitute for runtime monitoring or as justification for only one test type covering every failure mode.
 
 ## The Data Engineering Testing Pyramid
 

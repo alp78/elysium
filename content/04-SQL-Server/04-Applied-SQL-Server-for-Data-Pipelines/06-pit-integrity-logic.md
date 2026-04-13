@@ -10,13 +10,155 @@ status: complete
 
 # Point-in-Time Data Integrity
 
-Point-in-time work is not one problem. In `stoxx`, it appears in three distinct forms:
+> [!abstract]- Summary
+>
+> Point-in-time logic is not one problem in `stoxx`. It appears as dated snapshot facts, effective-dated reference data, and correction-aware history where the question is not only “what was true on that business date?” but also “what did the system know when it published that answer?” This note separates those time models, then shows how to join, validate, and tune them without breaking auditability.
+>
+> **Time-surface decision model**
+> - distinguishes snapshot facts, effective-dated rows, and bi-temporal history so PIT logic starts from the correct time model instead of a vague “as-of” idea
+>
+> **Effective-dated constituent logic**
+> - covers constituent lists, valid-time joins, and the rules for keeping one active row per business key over time
+>
+> **Bi-temporal correction handling**
+> - covers transaction-time history and the patterns needed when later corrections must not erase what the system previously knew
+>
+> **Integrity and weighting**
+> - covers weight normalization, performance tuning for large temporal joins, and the reconciliation checks that gate trustworthy publication
+>
+> **Operations and safety**
+> - Warnings: mixing snapshot and effective-dated models produces irreproducible backfills, valid-time logic alone cannot reproduce pre-correction state, and temporal joins are expensive enough that correctness and tuning must be considered together
+> - Recommendations: choose the time surface explicitly, use half-open intervals for valid-time logic, add transaction-time history when correction audit matters, normalize weights before publication, and keep reconciliation queries as first-class pipeline gates rather than optional diagnostics
 
-- published daily snapshots such as `gold.scores_daily`, where the business answer is keyed directly by the snapshot date
-- effective-dated reference data such as `silver.index_dim`, where rows carry `valid_from` and `valid_to`
-- post-publication corrections, where you must know not only what was true for the business date, but what the system knew at the time the result was published
-
-Confusing those models is how teams produce irreproducible backfills, incorrect constituent histories, or audit trails that cannot explain a corrected publication.
+> [!note]- Glossary
+>
+> **Point-in-time answer**
+> - A result that claims to describe what was true for a specific business moment or publication moment.
+> - It matters because the note is about making those answers reproducible instead of merely plausible.
+>
+> > [!warning] “As of” is ambiguous until the time model is named
+> >
+> > An as-of question can mean “what was published then,” “what was valid then,” or “what we knew then.” Treating those as the same problem is what breaks auditability.
+>
+> ---
+>
+> **Snapshot fact**
+> - A published dataset keyed directly by a snapshot date, where the row itself represents the answer for that publication moment.
+> - It matters because some PIT questions are easiest to answer by filtering the snapshot table directly rather than reconstructing history from valid-time rows.
+>
+> > [!info] Snapshot tables answer publication questions directly
+> >
+> > When a fact table already stores dated published outputs, the cleanest PIT query is often just the exact snapshot-date filter rather than a temporal reconstruction.
+>
+> ---
+>
+> **Effective-dated row**
+> - A row that carries business-validity boundaries such as `valid_from` and `valid_to` to describe when it should be considered true.
+> - It matters because valid-time reference data is one of the main PIT surfaces in this pipeline.
+>
+> > [!warning] Open-ended rows need strict current-row discipline
+> >
+> > Effective-dated design only works if each business key has at most one open row at a time. Violating that rule makes every later as-of join ambiguous.
+>
+> ---
+>
+> **Valid time**
+> - The business period during which a fact or attribute is considered true in the modeled domain.
+> - It matters because many PIT joins are really questions about business validity, not about when the database received or corrected a row.
+>
+> > [!info] Business truth and system knowledge are different clocks
+> >
+> > Valid time answers when the data was true in the world. It does not answer when the database learned about it or when a correction was published.
+>
+> ---
+>
+> **Transaction time**
+> - The period during which a version of a row existed inside the database system as recorded knowledge.
+> - It matters because post-publication correction workflows need to preserve what the system knew before later updates arrived.
+>
+> > [!warning] Auditability requires this second timeline
+> >
+> > If later corrections overwrite the only stored version, the system can no longer explain what it previously published. Transaction-time history prevents that loss.
+>
+> ---
+>
+> **Bi-temporal model**
+> - A design that tracks both valid time and transaction time for the same business facts.
+> - It matters because it is the only clean way to answer “what was true then?” and “what did we know then?” simultaneously.
+>
+> > [!warning] One timeline cannot answer both questions
+> >
+> > Valid-time history alone cannot reconstruct pre-correction publication state. Bi-temporal logic exists specifically to keep those two meanings separate.
+>
+> ---
+>
+> **Half-open interval**
+> - A date or timestamp range written as `>= start AND < end` so adjacent periods do not overlap.
+> - It matters because effective-dated joins rely on this pattern to keep temporal boundaries deterministic and gap-safe.
+>
+> > [!info] This is the safest temporal join shape
+> >
+> > Inclusive end points make adjacent versions harder to reason about. Half-open intervals avoid overlap ambiguity and precision traps.
+>
+> ---
+>
+> **Constituent history**
+> - The record of which members belonged to an index or portfolio across changing effective periods.
+> - It matters because PIT scoring and performance logic often depends on knowing the correct constituent list for the exact date in question.
+>
+> > [!warning] Present constituents are not historical constituents
+> >
+> > Reusing today’s membership for old dates is one of the easiest ways to produce quietly wrong backtests and attribution logic.
+>
+> ---
+>
+> **Weight normalization**
+> - The step that adjusts or validates constituent weights so the published total meets the expected sum constraint.
+> - It matters because PIT outputs are not trustworthy if the constituent set is correct but the weights no longer reconcile.
+>
+> > [!warning] Correct members can still produce wrong totals
+> >
+> > A constituent list and a weight vector must agree numerically. Integrity logic needs to check both membership and sum behavior before publication.
+>
+> ---
+>
+> **Temporal join**
+> - A join that matches rows by both business key and time condition, usually using validity intervals or snapshot dates.
+> - It matters because PIT correctness often fails at the join boundary where keys match but time semantics do not.
+>
+> > [!warning] Ordinary key joins are not time-safe
+> >
+> > A business key alone is rarely enough in historical logic. Without the time predicate, the query can attach the wrong version while still looking syntactically correct.
+>
+> ---
+>
+> **Reconciliation gate**
+> - A validation query or rule that checks whether PIT outputs satisfy expected totals, counts, or consistency constraints before they are trusted downstream.
+> - It matters because temporal correctness is hard enough that publication should not rely on visual spot checks or hope.
+>
+> > [!info] Reconciliation is part of the model, not just QA
+> >
+> > In PIT systems, reconciliation queries are what keep time logic from silently drifting into “looks plausible” results that nobody can reproduce later.
+>
+> ---
+>
+> **Publication correction**
+> - A later update that changes what the system would now say about a previously published business date.
+> - It matters because these corrections are the reason valid-time logic alone is often insufficient for serious audit and replay requirements.
+>
+> > [!warning] Corrections rewrite history unless history is modeled explicitly
+> >
+> > If the system stores only the newest corrected version, it loses the ability to explain what users saw before the correction landed.
+>
+> ---
+>
+> **PIT integrity**
+> - The property that historical answers remain reproducible, internally consistent, and explainable even after corrections or later reloads.
+> - It matters because the note’s ultimate goal is not just temporal modeling elegance but trustworthy historical answers under operational pressure.
+>
+> > [!info] Integrity is reproducibility plus explanation
+> >
+> > A historical answer is only really safe if the system can reproduce it again later and explain why it was the correct answer under the chosen time model.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -79,6 +221,7 @@ The first PIT question is always: what kind of time surface are you querying? In
 >
 > *Check whether the live index dimension already contains historical versions or only current rows.*
 >
+
 ```sql
 SELECT
     COUNT(*) AS total_rows,
@@ -112,6 +255,7 @@ _`silver.index_dim` is structurally ready for valid-time modeling, but the live 
 >
 > *Inspect current rows from the effective-dated reference table.*
 >
+
 ```sql
 SELECT TOP (15)
     _index,
@@ -161,6 +305,7 @@ _The live rows confirm the aggregate picture: `valid_from` is present, but the t
 >
 > *Retrieve the latest published daily constituent snapshot for `euro_stoxx_50`.*
 >
+
 ```sql
 SELECT TOP (10)
     score_date,
@@ -206,6 +351,7 @@ _This is a clean PIT query because the date grain is explicit in the fact table 
 >
 > *Track one constituent across all published snapshot dates currently loaded into the gold layer.*
 >
+
 ```sql
 SELECT
     score_date,
@@ -238,6 +384,7 @@ Snapshot facts answer "what was published on date X?" Valid-time rows answer "wh
 > [!success]
 > Store transaction-time history separately from business-validity dates. In SQL Server, system-versioned temporal tables are the cleanest built-in way to retain the earlier row version automatically.
 >
+
 ### Disposable system-versioned demo
 
 > [!example]
@@ -258,6 +405,7 @@ Snapshot facts answer "what was published on date X?" Valid-time rows answer "wh
 >
 > *Remove any previous copy of the disposable temporal demo.*
 >
+
 ```sql
 IF OBJECT_ID('dbo.demo_pit_temporal', 'U') IS NOT NULL
 BEGIN
@@ -276,6 +424,7 @@ END;
 >
 > *Create a disposable system-versioned temporal table for the bi-temporal demonstration.*
 >
+
 ```sql
 CREATE TABLE dbo.demo_pit_temporal
 (
@@ -302,6 +451,7 @@ WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.demo_pit_temporal_history));
 >
 > *Insert the original row version, then simulate a later correction.*
 >
+
 ```sql
 INSERT INTO dbo.demo_pit_temporal (_index, symbol, weight_pct, valid_from, valid_to)
 VALUES ('euro_stoxx_50', 'ASML.AS', 0.0911568723, '2026-03-04', '9999-12-31');
@@ -324,6 +474,7 @@ WHERE _index = 'euro_stoxx_50'
 >
 > *Confirm that the demo table is system-versioned and linked to its history table.*
 >
+
 ```sql
 SELECT
     t.name AS table_name,
@@ -358,6 +509,7 @@ _SQL Server registered the current table and its history table correctly. At thi
 >
 > *Read the full transaction-time history for the corrected demo row.*
 >
+
 ```sql
 SELECT
     _index,
@@ -396,6 +548,7 @@ _The valid-time meaning of the row did not change: it still applies from `2026-0
 >
 > *Reconstruct the row as it existed immediately before the later correction.*
 >
+
 ```sql
 DECLARE @as_of_before_update datetime2(7);
 
@@ -433,6 +586,7 @@ The live `gold.scores_daily` table stores `index_weight` as `FLOAT`, which is co
 > [!success]
 > Cast to `DECIMAL`, compute the deviation from `1.000000000000`, and make the pass or fail decision explicit in the output that the pipeline reviews.
 >
+
 ### Validate weight closure across every loaded snapshot
 
 > [!info]-
@@ -445,6 +599,7 @@ The live `gold.scores_daily` table stores `index_weight` as `FLOAT`, which is co
 >
 > *Validate weight closure for every currently loaded daily snapshot.*
 >
+
 ```sql
 SELECT
     score_date,
@@ -515,6 +670,7 @@ PIT joins are expensive when the query shape does not respect the data grain. In
 >
 > *Join each daily score row to the latest quarterly row known on or before the same daily date.*
 >
+
 ```sql
 SELECT TOP (10)
     d.symbol,
@@ -569,6 +725,7 @@ _This is the correct temporal join shape for a daily-to-quarterly PIT alignment.
 >
 > *Verify that every loaded daily row can find a quarterly row without look-ahead.*
 >
+
 ```sql
 WITH aligned AS (
     SELECT
@@ -624,6 +781,7 @@ _All currently loaded `euro_stoxx_50` daily rows have a valid quarterly predeces
 >
 > *Inspect the live access paths on the PIT-relevant tables.*
 >
+
 ```sql
 SET QUOTED_IDENTIFIER ON;
 
@@ -704,6 +862,7 @@ Reconciliation queries are not optional reporting extras. They are the checks th
 >
 > *Cross-check shared dates between the constituent snapshot table and the aggregated index-performance table.*
 >
+
 ```sql
 WITH snapshot_counts AS (
     SELECT
@@ -755,4 +914,3 @@ _On the dates shared by both gold-layer surfaces, constituent counts reconcile e
 - [Query data in a system-versioned temporal table](https://learn.microsoft.com/en-us/sql/relational-databases/tables/querying-data-in-a-system-versioned-temporal-table?view=sql-server-ver17)
 - [decimal and numeric (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/data-types/decimal-and-numeric-transact-sql?view=sql-server-ver17)
 - [FROM clause plus JOIN, APPLY, PIVOT (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/queries/from-transact-sql?view=sql-server-ver17)
-

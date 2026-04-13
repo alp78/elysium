@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog Agent Setup — Airflow VM (Docker on COS)
+# Datadog Agent: Airflow VM
 
 > [!quote]
 > "Monitoring is a verb, not a noun. It is the action of observing and checking the behavior of a system over time."
 >
 > — **Greg Poirier**, Monitorama 2016
 
-The Airflow VM runs Container-Optimized OS (COS), so the Datadog Agent runs as a Docker container on the same Docker network as the Airflow containers. COS is an immutable OS optimized for containers — it has a read-only root filesystem, which affects where the agent can write state.
+> [!abstract]- Summary
+>
+> This note covers the Airflow VM as the opposite operating model from the SQL host: the VM runs Container-Optimized OS, so Datadog is deployed as a Docker container with host mounts, autodiscovery labels, and DogStatsD enabled to collect both container signals and Airflow's own orchestration metrics.
+>
+> **Agent architecture on COS**
+> - Explains how the Airflow VM hosts the Datadog container, what host paths and sockets must be mounted, and why this differs from the package-based SQL VM installation.
+> - Treats the agent as part of the VM bootstrap so container, host, and Docker-engine telemetry start flowing immediately.
+>
+> **Autodiscovery and StatsD**
+> - Shows how Docker labels configure service checks automatically and how Airflow emits StatsD metrics that the local agent receives and forwards.
+> - Connects platform mechanics to the later Airflow observability note so infrastructure setup and metric meaning stay separate.
+>
+> **Verification and cleanup**
+> - Covers metric-flow validation, the Datadog Airflow integration toggle, and stale-container cleanup when an old agent instance keeps conflicting with the intended setup.
+> - Keeps verification focused on what the VM is actually forwarding rather than on dashboard assumptions.
+>
+> **Sizing and operations**
+> - Ends with the agent memory budget, the Terraform startup-script shape, and the management commands used on the Airflow VM.
+> - When to use: the goal is to understand the containerized agent deployment model for COS-hosted Airflow.
 
----
+> [!note]- Glossary
+>
+> **Container-Optimized OS**
+> - Google's minimal host OS for container workloads, designed around Docker rather than general package management.
+> - It matters here because the Airflow VM cannot use the same agent installation pattern as the Ubuntu SQL VM.
+>
+> > [!info] Host model drives install model
+> >
+> > On COS, the agent needs to run as a container because the host is intentionally not a general-purpose package environment.
+>
+> ---
+>
+> **Docker autodiscovery**
+> - The Datadog mechanism that reads container labels to discover and configure integrations automatically.
+> - It matters here because PostgreSQL and Airflow-related checks are attached through labels instead of manual host-side config files.
+>
+> > [!tip] Config rides with containers
+> >
+> > Autodiscovery keeps service monitoring aligned with the container definition instead of a separate static host inventory.
+>
+> ---
+>
+> **DogStatsD**
+> - Datadog's StatsD-compatible UDP listener that accepts application-emitted metrics.
+> - It matters here because Airflow publishes scheduler and task metrics through this path.
+>
+> > [!info] Application metrics ingress
+> >
+> > Host metrics explain resource usage; DogStatsD is how the application tells Datadog what the scheduler is doing.
+>
+> ---
+>
+> **Docker socket mount**
+> - A bind mount of the Docker engine socket into the Datadog container.
+> - It matters here because the agent uses it to discover containers and collect container logs and metadata.
+>
+> > [!info] Container visibility hinge
+> >
+> > Without the socket, the agent can still exist but loses most of the orchestration context that makes the Airflow VM useful to monitor.
+>
+> ---
+>
+> **Host mounts**
+> - The `/proc`, `/sys`, and related host paths made visible inside the Datadog container.
+> - It matters here because system metrics on COS come from mounted host state rather than from a native package install.
+>
+> > [!tip] Container agent, host data
+> >
+> > Those mounts are what let a containerized agent describe the VM it sits on.
+>
+> ---
+>
+> **StatsD verification**
+> - The set of checks used to prove Airflow metrics are reaching DogStatsD and then Datadog.
+> - It matters here because a working agent does not automatically prove the application metric pipeline is healthy.
+>
+> > [!info] Two-step proof
+> >
+> > First prove emission into DogStatsD, then prove indexed arrival in Datadog.
+>
+> ---
+>
+> **stale `dd-agent` container**
+> - An older or duplicate Datadog container that keeps running after the intended bootstrap changes have been applied.
+> - It matters here because duplicate agents can confuse collection results and waste scarce VM memory.
+>
+> > [!tip] Clean old runtime state
+> >
+> > On small hosts, leaving dead configurations running is both a debugging problem and a capacity problem.
+>
+> ---
+>
+> **memory budget**
+> - The portion of VM memory intentionally reserved for the Datadog agent container and its checks.
+> - It matters here because the Airflow VM is resource-constrained and observability overhead competes with the scheduler and webserver.
+>
+> > [!info] Monitoring has a footprint
+> >
+> > Instrumentation that starves the orchestrator defeats the purpose of observing it.
 
 ## How It Works
 

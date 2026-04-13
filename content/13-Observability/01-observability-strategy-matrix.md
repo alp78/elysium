@@ -19,7 +19,170 @@ status: complete
 >
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
-This page answers **what to monitor** for every component in the Elysium data platform. It does not cover how to configure any tool — every cell in the matrix links to the implementation page that does.
+> [!abstract]- Summary
+>
+> This note is the monitoring decision layer for the Elysium platform: it defines what each major component should emit as metrics, logs, alerts, and dashboards, and gives the investigation order, severity model, and tool-selection rules needed to turn raw observability data into consistent triage across SQL Server, Airflow, BigQuery, Cloud Run, Pub/Sub, storage, VMs, and the pipeline as a whole.
+>
+> **Pillars and triage model**
+> - Maps metrics, logs, and traces to the actual data-pipeline investigation flow, with metrics as the first signal, logs as the failure explanation, and traces as the cross-service path reconstruction.
+> - Treats observability as a layered diagnostic system rather than a collection of unrelated dashboards.
+>
+> **Per-component monitoring matrix**
+> - Defines the key metrics, logs, alert conditions, and first response patterns for SQL Server, Airflow, BigQuery, Cloud Run, Pub/Sub, GCS, Firestore, GCE VMs, and the end-to-end pipeline.
+> - Uses each component section to answer what to watch, why it matters, and which implementation pages hold the concrete tool configuration.
+>
+> **Alerting and dashboard strategy**
+> - Establishes a severity framework, dashboard segmentation strategy, and the practical split between Datadog and GCP-native monitoring surfaces.
+> - Connects dashboards and alerts back to the matrix so the same components are visible, actionable, and consistently prioritized.
+>
+> **Operations and safety**
+> - Covers anti-patterns such as alert noise, metrics without owners, and dashboards without response playbooks.
+> - Warnings: start investigations in the right order, avoid duplicating the same alert in multiple systems, and keep component ownership, thresholds, and response paths explicit.
+> - Strategy surfaces: the severity framework, dashboard strategy, and Datadog-vs-GCP-native section are the note's main governance guides.
+
+> [!note]- Glossary
+>
+> **Observability strategy matrix**
+> - A cross-component reference that maps each platform surface to the metrics, logs, alerts, and dashboards required to operate it safely.
+> - It matters here because the note is intended to answer what should be observed before any implementation detail is chosen.
+>
+> > [!info] Strategy before tooling
+> >
+> > This matrix is a design surface, not a configuration surface. It tells you which signals matter so later dashboards and monitors can be built deliberately instead of reactively.
+>
+> ---
+>
+> **Metric**
+> - A numeric time-series signal that captures system behavior such as latency, utilization, backlog, or freshness.
+> - It matters here because the matrix uses metrics as the cheapest, fastest first indication that something has drifted or failed.
+>
+> > [!warning] Detection not diagnosis
+> >
+> > Metrics tell you that a boundary was crossed, not why. Treat them as triage entry points, then drill into logs and traces for explanation.
+>
+> ---
+>
+> **Log**
+> - A record of discrete events, errors, state changes, or contextual messages emitted by an application or infrastructure service.
+> - It matters here because the matrix uses logs to explain failures after a metric or alert indicates a problem.
+>
+> > [!info] Highest-detail evidence
+> >
+> > Logs are usually where the real failure message lives, but they are too verbose to be the first thing operators stare at for every component all the time.
+>
+> ---
+>
+> **Trace**
+> - A distributed execution record that shows how one request, run, or workflow moved across multiple services and spans.
+> - It matters here because pipeline incidents often cross service boundaries where a single log stream or dashboard is not enough.
+>
+> > [!warning] Use when the path matters
+> >
+> > Traces are most valuable when latency or failure is distributed. They add cost and complexity, so use them where multi-hop causality actually needs reconstruction.
+>
+> ---
+>
+> **Investigation order**
+> - The recommended sequence for triage: start with metrics, then drill into logs, then use traces if the failure crosses services.
+> - It matters here because consistent operator behavior reduces mean time to identify the right layer of failure.
+>
+> > [!info] Cheap to expensive workflow
+> >
+> > This order is not arbitrary. It moves from cheap aggregated signals to verbose evidence to cross-system path analysis, which keeps diagnosis fast and disciplined.
+>
+> ---
+>
+> **Alert condition**
+> - A threshold, absence rule, or state change that should trigger human or automated response.
+> - It matters here because each component section in the matrix turns raw signals into concrete action boundaries.
+>
+> > [!warning] Thresholds need ownership
+> >
+> > An alert without an owner or an agreed response is just noise. The matrix only becomes useful when each condition has a real response path attached.
+>
+> ---
+>
+> **Severity framework**
+> - The classification scheme that ranks incidents and alerts by business impact and urgency.
+> - It matters here because the note uses severity to keep SQL outages, stale pipelines, and lower-grade monitoring drift from being treated the same way.
+>
+> > [!warning] Prioritization protects attention
+> >
+> > If every alert is treated as urgent, nothing is. Severity is what preserves on-call focus for the failures that actually threaten data freshness or platform safety.
+>
+> ---
+>
+> **Dashboard**
+> - A curated visual surface that groups the most important signals for one system, service, or operational role.
+> - It matters here because the note translates the matrix into concrete dashboard ownership by component and by operator workflow.
+>
+> > [!info] Visualization with purpose
+> >
+> > Dashboards should compress decision-relevant signals, not mirror every raw metric. If they are not helping an operator decide what to do next, they are decoration.
+>
+> ---
+>
+> **Response pattern**
+> - A standard first action or investigation path tied to a specific alert or degraded signal.
+> - It matters here because the matrix does not stop at detection; it pairs each high-signal alert class with an initial operational move.
+>
+> > [!info] Detection must lead somewhere
+> >
+> > A good monitoring design shortens the path from symptom to action. Response patterns are what keep dashboards and alerts from ending at awareness only.
+>
+> ---
+>
+> **Data freshness**
+> - The measure of how current a dataset or pipeline output is compared with its expected update cadence.
+> - It matters here because freshness is one of the most important business-facing observability signals across the entire Elysium platform.
+>
+> > [!danger] Silent failure signal
+> >
+> > A pipeline can be technically healthy while still delivering stale data. Freshness monitoring closes that gap between infrastructure health and business usefulness.
+>
+> ---
+>
+> **Pipeline SLA**
+> - The committed completion or freshness window a data pipeline must meet to remain operationally acceptable.
+> - It matters here because several matrix sections treat SLA misses as the key severity boundary that converts slow execution into an incident.
+>
+> > [!warning] Business clock not system clock
+> >
+> > SLAs are about externally meaningful timing, not just whether jobs eventually finish. Monitoring needs to encode the deadline that actually matters to consumers.
+>
+> ---
+>
+> **Datadog vs GCP-native split**
+> - The strategic choice of which signals should live in Datadog versus in Cloud Monitoring, Logging, Trace, and related GCP-native services.
+> - It matters here because the note explicitly separates tool choice from signal design and uses both stacks where they are strongest.
+>
+> > [!warning] Avoid duplicate observability sprawl
+> >
+> > If the same alert or dashboard lives in too many systems, operators stop trusting any single source of truth. Pick the primary surface intentionally.
+>
+> ---
+>
+> **Anti-pattern**
+> - A recurring monitoring design mistake that adds noise, hides failures, or slows triage instead of improving it.
+> - It matters here because the note closes with the pitfalls that most often corrupt otherwise good observability programs.
+>
+> > [!warning] Noise is an operational failure
+> >
+> > Too many low-value alerts, duplicated dashboards, or ownerless metrics do not just clutter the platform. They actively make real incidents harder to detect and respond to.
+
+> [!example] Monitoring Scope Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when the team needs a reference for what to monitor before choosing or configuring a specific observability tool.
+> > - Use it when metrics, logs, alerts, dashboards, and ownership need to be defined consistently across platform components before implementation begins.
+> > - Use it to decide signal priority, investigation order, severity mapping, and tool placement at the strategy level rather than inside one product’s UI.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note when the real question is how to configure one specific collector, dashboard, or alert implementation already linked from the matrix.
+> > - Do not start monitor construction from tooling features alone if the component-level operating questions are still undefined.
+> > - Do not duplicate the same alert logic across systems just because multiple tools can express it.
 
 ## The Three Pillars Applied to Data Pipelines
 

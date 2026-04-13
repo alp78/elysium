@@ -21,12 +21,159 @@ status: complete
 >
 > — **Matthew Skelton & Manuel Pais**, *Team Topologies* (2019)
 
-How you organize your data team shapes everything: what gets built, how fast it ships, how reliable it is, and whether engineers stay or leave. There is no universally correct topology — but there are clear trade-offs, and the best teams are intentional about the model they choose.
+> [!abstract]- Summary
+>
+> This note treats data-team design as an operating decision that shapes speed, standards, ownership, hiring, and retention, mapping the trade-offs between centralized and federated structures while showing how roles, collaboration models, and incident responsibilities need to evolve as the organization grows.
+>
+> **Topology and role design**
+> - Compares centralized, embedded, hub-and-spoke, and federated/data-mesh team topologies, including their delivery speed, standardization, autonomy, and organizational-fit trade-offs.
+> - Defines the core roles across a data organization, from data engineer and analytics engineer through data platform engineer, architect, analyst, scientist, and data product manager, then explains the T-shaped engineer model used to balance depth and breadth.
+>
+> **Career growth and collaboration**
+> - Covers IC and management progression, the change in scope and leverage at each level, and the collaboration patterns that connect data teams to business teams and to each other.
+> - Uses shared-OKR thinking and explicit coordination models to move teams away from ticket queues and toward aligned, outcome-based work.
+>
+> **Operational model and scaling**
+> - Includes RACI ownership for common activities, on-call structure, severity levels, blameless postmortems, staged hiring guidance for building a team from scratch, distributed-team practices, and delivery, quality, and team-health metrics.
+> - Treats team topology as a living decision that should be revisited as data maturity, domain ownership, staffing, and platform capability change over time.
+>
+> **Operations and safety**
+> - Warnings: jumping to federated ownership too early, giving multiple parties accountability for the same outcome, treating all data roles as interchangeable, and optimizing velocity while starving quality, documentation, or on-call sustainability.
+> - Recommendations: start with the simplest topology that preserves clarity, name one accountable owner per activity, track quality and health metrics alongside delivery, and revisit the team model at least annually.
 
-> [!info] This Is a Living Decision
-> Team topology is not a one-time architectural decision. It should evolve as the organization grows, as data maturity increases, and as the relationship between data teams and business teams changes. Revisit your model annually.
+> [!note]- Glossary
+>
+> **Team topology**
+> - The structural model that determines how teams are grouped, how they interact, and where responsibilities are concentrated or distributed.
+> - It matters here because the note frames delivery speed, standards, and autonomy as downstream effects of topology rather than purely of individual performance.
+>
+> > [!info] Structure shapes flow
+> >
+> > A team can have strong people and still move slowly if its topology forces work through too many queues or shared dependencies.
+>
+> ---
+>
+> **Centralized data team**
+> - A model where data engineers, analysts, and related specialists sit in one shared team serving the whole organization.
+> - It matters here because centralized structures are often the right starting point for smaller companies that need standards and efficient staffing more than domain autonomy.
+>
+> > [!warning] Queue risk grows fast
+> >
+> > Centralization simplifies governance early, but it can turn into a bottleneck when stakeholder demand grows faster than team capacity.
+>
+> ---
+>
+> **Embedded model**
+> - A team structure where data specialists are placed directly inside business or product teams instead of sitting in one central function.
+> - It matters here because the note uses embedding to show the trade-off between faster domain alignment and weaker cross-team consistency.
+>
+> > [!warning] Local speed can fragment standards
+> >
+> > Embedded teams often move quickly for their domain, but duplicated pipelines, metrics drift, and divergent practices become more likely without a coordinating platform layer.
+>
+> ---
+>
+> **Hub-and-spoke**
+> - A hybrid topology where a central platform or standards team supports semi-autonomous domain teams that own local delivery.
+> - It matters here because the note presents hub-and-spoke as the common evolution path for organizations that need both speed and consistency.
+>
+> > [!info] Balance through interfaces
+> >
+> > The model works best when the hub provides clear platform contracts and the spokes retain enough autonomy to avoid re-creating a central queue.
+>
+> ---
+>
+> **Federated / data mesh**
+> - A highly distributed operating model where domain teams own their data as products and a thin platform team provides enabling infrastructure and policies.
+> - It matters here because the note positions federation as a high-maturity option that only works when domain ownership and platform self-service are both real.
+>
+> > [!warning] Autonomy requires maturity
+> >
+> > Federated ownership without clear contracts, platform support, and governance enforcement usually spreads fragmentation faster than it spreads accountability.
+>
+> ---
+>
+> **T-shaped engineer**
+> - An engineer with broad working knowledge across adjacent domains and deep expertise in one or two areas.
+> - It matters here because hiring and career development in data teams depend on balancing specialization with enough breadth to collaborate effectively across the stack.
+>
+> > [!info] Depth plus curiosity
+> >
+> > The goal is not universal mastery; it is dependable strength in one area combined with enough breadth to avoid siloed thinking.
+>
+> ---
+>
+> **RACI matrix**
+> - A responsibility model that assigns who is Responsible, Accountable, Consulted, and Informed for a given activity or decision.
+> - It matters here because the note uses RACI to eliminate ownership ambiguity in deployments, incidents, schema changes, access control, and prioritization.
+>
+> > [!warning] One accountable owner
+> >
+> > If more than one party is marked accountable, the decision is usually still unresolved even if the matrix looks complete.
+>
+> ---
+>
+> **Shared OKR**
+> - An objective and key results model where the data team and its business partner team are jointly measured on the same outcome.
+> - It matters here because the note treats shared OKRs as a higher-maturity alternative to order-taking relationships and isolated ticket fulfillment.
+>
+> > [!info] Align on outcomes
+> >
+> > Shared OKRs change the conversation from “Did the dashboard ship?” to “Did the business outcome improve?”
+>
+> ---
+>
+> **On-call rotation**
+> - A scheduled support model where designated engineers respond to production incidents within agreed response windows.
+> - It matters here because the note treats data incidents as operational incidents that require the same explicit ownership and escalation paths as application failures.
+>
+> > [!warning] Reliability work needs staffing
+> >
+> > An on-call model without documented runbooks, backup coverage, and sustainable load quickly turns into burnout instead of resilience.
+>
+> ---
+>
+> **Blameless postmortem**
+> - A structured incident review focused on systemic causes, timeline clarity, and concrete prevention actions rather than on individual blame.
+> - It matters here because the note positions postmortems as a core feedback loop for improving the team’s process and platform rather than just closing an incident ticket.
+>
+> > [!info] Learn from the system
+> >
+> > If the final explanation stops at “someone made a mistake,” the real control weakness is still undiscovered.
+>
+> ---
+>
+> **Matrixed organization**
+> - An organizational setup where engineers report through one line of management while collaborating across several product, platform, compliance, or stakeholder groups.
+> - It matters here because many larger data organizations work in matrixed structures where influence and coordination matter as much as line authority.
+>
+> > [!warning] Informal ownership causes drag
+> >
+> > Matrix structures fail when teams assume ownership is obvious but never write down who decides, who approves, and who merely needs visibility.
+>
+> ---
+>
+> **Data platform engineer**
+> - An engineer who builds and operates the shared tooling, infrastructure, CI/CD, and self-service systems used by other data practitioners.
+> - It matters here because the note distinguishes platform engineering from domain pipeline work and uses it as a key capability in hub-and-spoke and federated models.
+>
+> > [!info] Platform is leverage
+> >
+> > A strong platform engineer increases the productivity of many teams at once by removing repeated infrastructure and workflow friction.
 
----
+> [!example] Org Topology Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for org design reviews, hiring plans, operating-model changes, role clarification, incident ownership design, and team-scaling decisions.
+> > - Use it when the key decision is where ownership, standards, platform responsibility, and domain autonomy should sit as the organization grows.
+> > - Use it to compare centralized, embedded, hub-and-spoke, and federated models against real staffing, maturity, and support capacity rather than against ideals alone.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a static org-chart prescription that ignores company size, platform maturity, domain boundaries, or the authority actually available to the proposed owners.
+> > - Do not assign multiple teams accountability for the same outcome just to make the diagram look collaborative.
+> > - Do not jump to federated ownership before platform self-service and domain capability are mature enough to carry it.
 
 ## Team Topology Models
 
@@ -211,6 +358,7 @@ Owns the roadmap and strategy for data products and the data platform. Prioritiz
 ### The T-Shaped Engineer
 
 The T-shaped model describes an engineer with:
+
 - **Broad knowledge** across the data engineering landscape (the horizontal bar of the T)
 - **Deep expertise** in one or two specific areas (the vertical bar of the T)
 
@@ -223,6 +371,7 @@ Broad: SQL  Python  Cloud  Orchestration  BI  ML  Governance  Streaming
 ```
 
 For data engineers, common "vertical bars" (deep specializations):
+
 - Streaming and real-time pipelines (Kafka, Flink)
 - Data modeling and dimensional design
 - Data platform and infrastructure
@@ -281,12 +430,15 @@ Data engineering careers follow a progression from individual contributor execut
 The relationship between data teams and their stakeholders defines delivery speed and alignment. Three models exist:
 
 #### Order-taking model (anti-pattern)
+
 Business teams file tickets. Data team processes them in order received. No prioritization, no context, no partnership. Result: slow delivery, wrong priorities, frustrated stakeholders.
 
 #### Embedded partnership model
+
 Data engineers and analysts attend business team standups, participate in business planning, and have direct relationships with decision-makers. Work is pulled from a shared prioritized backlog.
 
 #### Shared OKR model
+
 Data team and business team share outcome-based OKRs. Both teams are accountable for business results, not just data delivery. This is the highest-maturity collaboration model.
 
 > [!tip] Move Toward Shared OKRs
@@ -313,6 +465,7 @@ RACI defines **Responsible** (does the work), **Accountable** (owns the outcome,
 ### RACI for Common Data Engineering Activities
 
 #### Legend
+
 - R = Responsible (does the work)
 - A = Accountable (owns outcome)
 - C = Consulted
@@ -353,6 +506,7 @@ Data teams need an on-call rotation, just like software engineering teams. Data 
 **Secondary on-call:** Backup if primary is unreachable. Often the previous primary.
 
 #### Escalation path
+
 ```
 Alert fires → Primary on-call → (if no response in 15 min) Secondary → (if no response) Engineering Manager → Director
 ```

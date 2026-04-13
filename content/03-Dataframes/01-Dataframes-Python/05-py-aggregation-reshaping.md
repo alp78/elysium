@@ -9,42 +9,239 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 05 — Aggregation & Reshaping
+# Aggregation and Reshaping - Python
 
 > [!quote]
 > "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
 >
 > — **Aaron Levenstein**
 
-This note covers the four pillars of DataFrame data manipulation: grouping and aggregation (group_by, named agg, transform), window functions (rolling, cumulative, rank, lag), combining DataFrames (inner, left, anti, semi, cross joins plus concat), and reshaping (pivot, melt/unpivot, explode, implode, transpose, one-hot encoding). All examples use real EuroStoxx 50 OHLCV and dimension data with Pandas and Polars side by side.
+> [!abstract]- Summary
+>
+> Covers the four structural pillars of DataFrame manipulation — grouping, windowing, table combination, and reshape — using EuroStoxx price, dimension, and score data to show how Pandas and Polars summarize, enrich, and reorient tables without losing track of row counts, join cardinality, or output shape.
+>
+> **Part 1: Group By**
+> - Aggregate by one or more keys with `groupby()` / `group_by()`, named aggregation, multi-function aggregation, and same-length group statistics via `transform()` or Polars `.over(...)`
+> - Apply group-by-plus-sort patterns and sector-level analysis to turn raw OHLCV and scores tables into grouped summaries
+>
+> **Part 2: Window Functions**
+> - Build rolling windows, cumulative metrics, rank-within-group logic, and lead/lag features without collapsing the original row set
+> - Emphasize ordering requirements so rolling and window calculations operate on meaningful sequences rather than shuffled rows
+>
+> **Part 3: Combining DataFrames**
+> - Compare `inner`, `left`, `anti`, `semi`, and `cross` joins plus vertical, horizontal, and diagonal concat patterns
+> - Show how dimension enrichment, membership filtering, and schema-aware table stacking behave differently depending on key uniqueness and shape
+>
+> **Part 4: Reshaping**
+> - Convert between long and wide layouts with `melt()` / `unpivot()`, `pivot()`, explode, implode, transpose, and one-hot encoding
+> - Highlight where duplicates, list cardinality, or dynamic category sets make reshape operations fail or explode in width/row count
+>
+> **Operations and safety**
+> - Warnings: many-to-many joins silently multiply rows, cross joins scale quadratically, Polars `group_by()` is unordered until sorted, `as_index=False` is version-sensitive in Pandas, rolling windows need sorted data, and `pivot()` fails on duplicate key pairs
+> - Recommendations: 7 practices covering join-cardinality validation, explicit post-group sorting in Polars, named aggregation, `.over()` for Polars transforms, limiting cross joins, `unpivot()` preference, and post-join/post-reshape shape assertions
+> - Troubleshooting: 8 failure modes covering join row explosions, missing groups from null keys, duplicate-entry pivot errors, null-producing concat schema mismatches, anti-join empties, explode dtype issues, and one-hot width explosions
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **group_by / groupby** | Splits a DataFrame into groups based on one or more columns, then applies an aggregate function to each group. | Computes per-group statistics: mean price per sector, count per ticker, max volume per month. | Pandas `groupby()` returns a `GroupBy` object (not a DataFrame) — you must chain `.agg()`, `.mean()`, etc. Polars `group_by()` requires `.agg()` immediately. |
-| **aggregation (agg)** | A function that reduces multiple rows to a single value: `sum`, `mean`, `count`, `min`, `max`, `std`, `first`, `last`. | Summarizes grouped data into a single row per group. | `count` counts non-null rows; `len` (Polars) or `size` (Pandas) counts all rows including nulls. |
-| **named aggregation** | Pandas: `.agg(new_name=("col", "func"))`. Polars: `pl.col("col").mean().alias("new_name")`. | Names the output column explicitly — avoids ambiguous MultiIndex column headers in Pandas. | Pandas named agg requires tuples inside `.agg()`. Positional arguments and dicts are deprecated or produce different column naming. |
-| **transform** | An aggregation-like operation that returns a result with the same length as the input — the group value is broadcast back to each row. | Adds group-level statistics (e.g., sector mean) as a new column without reducing the DataFrame. | Pandas `.transform("mean")` silently aligns on index — mismatched indexes produce NaN. Polars uses `.over("group")` instead. |
-| **window function** | A function that computes a value for each row based on a window of surrounding rows — defined by group, order, or a rolling range. | Rank, rolling mean, lag/lead, cumulative sum — all within a group without collapsing it. | Window functions require sorted data. Applying a rolling mean on unsorted rows produces meaningless results. |
-| **rolling window** | A fixed-size sliding window that moves row by row, computing an aggregate at each position. | Moving averages, rolling volatility, rolling correlation. | The first `n-1` rows return NaN/null because the window is incomplete. Use `min_periods=` to control this. |
-| **join** | Combines two DataFrames by matching rows on one or more key columns. | Enriches a fact table with dimension attributes (e.g., adding sector name to OHLCV data by ticker). | Many-to-many joins silently multiply rows — a 1000-row left table joined to a 5-row-per-key right table produces 5000 rows. Use `validate=` to catch this. |
-| **inner join** | Returns only rows where the key exists in both DataFrames. | Keeps only matched records — useful when unmatched rows are irrelevant. | Silently drops rows with no match. If the left table had 1000 rows and the result has 900, 100 rows had no match — verify this is intentional. |
-| **left join** | Returns all rows from the left DataFrame plus matched columns from the right. Unmatched right-side values become null. | Preserves the left table's row count while enriching with optional lookup data. | Duplicate keys in the right table multiply left rows. A "safe" left join can still explode row count. |
-| **anti join** | Returns rows from the left DataFrame whose key does NOT exist in the right DataFrame. | Finds orphan records, missing references, or rows excluded by a filter table. | Pandas has no native anti-join. Use `df.merge(right, how="left", indicator=True).query('_merge == "left_only"')` — verbose but correct. |
-| **semi join** | Returns rows from the left DataFrame whose key exists in the right DataFrame, without adding any right-side columns. | Filters by membership in another table — cleaner than `isin()` for multi-column keys. | Pandas has no native semi-join. Use `df[df["key"].isin(right["key"])]` for single-column keys. |
-| **cross join** | Returns the Cartesian product of two DataFrames — every row paired with every other row. | Generates all combinations for grid searches, scenario matrices, or distance calculations. | Row count = left rows x right rows. A 1000-row x 1000-row cross join produces 1M rows — easy to exhaust memory. |
-| **concat** | Stacks DataFrames vertically (rows) or horizontally (columns). | Combines results from multiple sources, partitions, or processing steps. | Vertical concat requires matching column names. Mismatched schemas produce nulls or errors depending on the library. |
-| **pivot** | Reshapes from long to wide format — unique values in one column become new column headers. | Creates summary tables (e.g., ticker x month with mean price as values). | Duplicate index/column combinations cause errors (Polars) or silent aggregation (Pandas `pivot_table`). Deduplicate first. |
-| **melt / unpivot** | Reshapes from wide to long format — column headers become values in a new row. | Normalizes wide datasets for analysis, visualization, or database insertion. | Pandas: `melt()`. Polars: `unpivot()`. The function name differs but the operation is identical. |
-| **explode** | Converts a list-valued column into multiple rows — one row per list element. | Flattens nested data (e.g., a column of tag lists) into a relational structure. | Row count increases by the sum of list lengths. A column with 1000 rows where each list has 10 items produces 10K rows. |
-
-## What this note covers
-
-- **Part 1: Group By** — basic and multi-column grouping, named aggregation, transform, sector analysis
-- **Part 2: Window Functions** — rolling, cumulative, rank within groups, lead/lag
-- **Part 3: Combining DataFrames** — inner, left, anti, semi, cross joins, vertical/horizontal/diagonal concat
-- **Part 4: Reshaping** — melt/unpivot, pivot, explode, implode, transpose, one-hot encoding
+> [!note]- Glossary
+>
+> **`groupby()` / `group_by()`**
+> - Grouping operations that partition a DataFrame by one or more key columns before applying aggregations or grouped transforms.
+> - They matter because the note's aggregation patterns all start by defining which rows belong together logically.
+>
+> > [!warning] Group object is not the result
+> >
+> > In Pandas, `groupby()` returns a `GroupBy` object rather than a summary table. You still need `.agg()`, `.transform()`, or another grouped operation to materialize results.
+>
+> ---
+>
+> **Aggregation / `agg()`**
+> - A reduction step that turns many rows per group into one or a few summary values such as mean, sum, count, min, max, first, or last.
+> - It matters because grouping only becomes analytically useful once those groups are reduced into interpretable statistics.
+>
+> > [!warning] Count semantics differ
+> >
+> > Counting non-null values is not always the same as counting all rows. Verify whether you need `count`, `size`, or a length-style aggregate.
+>
+> ---
+>
+> **Named aggregation**
+> - An aggregation style that assigns explicit output names while computing grouped metrics, instead of accepting auto-generated or MultiIndex column labels.
+> - It matters because clear output schemas make grouped results easier to chain into joins, sorts, and downstream analysis.
+>
+> > [!info] Prefer explicit output names
+> >
+> > Auto-generated aggregate names often become ambiguous once multiple source columns and functions are involved. Naming the outputs up front avoids cleanup later.
+>
+> ---
+>
+> **Transform**
+> - A grouped computation that returns the same number of rows as the input by broadcasting the group-level result back onto each original row.
+> - It matters because the note uses it to enrich rows with group statistics without collapsing the table.
+>
+> > [!warning] Same length is the key difference
+> >
+> > If the result has fewer rows than the input, you aggregated; if it has the same length, you transformed. Mixing those expectations causes alignment bugs.
+>
+> ---
+>
+> **Window function**
+> - A per-row computation that depends on neighboring rows, group membership, or ordered context while preserving one output value per input row.
+> - It matters because ranking, rolling metrics, lag features, and cumulative statistics all rely on window semantics.
+>
+> > [!warning] Order defines meaning
+> >
+> > A window over unsorted data still computes something, but not necessarily something meaningful. Always verify the sort order before interpreting the result.
+>
+> ---
+>
+> **Rolling window**
+> - A fixed-size moving frame that slides across ordered rows and recomputes an aggregate at each position.
+> - It matters because moving averages and related smoothing metrics are a core part of the note's time-series examples.
+>
+> > [!warning] Early rows are incomplete
+> >
+> > The first rows of a rolling calculation usually lack a full window and therefore produce null or NaN outputs unless a minimum-period rule says otherwise.
+>
+> ---
+>
+> **Join**
+> - A table-combination operation that matches rows across DataFrames by one or more shared keys.
+> - It matters because the note uses joins to enrich fact-like market data with dimension attributes and to filter by membership.
+>
+> > [!danger] Cardinality mistakes multiply data
+> >
+> > A join can silently create more rows than either input if keys are duplicated on both sides. Validate uniqueness assumptions before trusting row counts.
+>
+> ---
+>
+> **Inner join**
+> - A join that keeps only rows whose key exists in both input tables.
+> - It matters when unmatched records are intentionally excluded and only confirmed matches should survive.
+>
+> > [!warning] Dropped rows are easy to miss
+> >
+> > An inner join removes non-matching rows silently. Compare input and output row counts if record loss matters.
+>
+> ---
+>
+> **Left join**
+> - A join that preserves every row from the left table and attaches matching columns from the right table where available.
+> - It matters because it is the default enrichment pattern for fact-plus-dimension pipelines in this note.
+>
+> > [!warning] Left join can still expand rows
+> >
+> > Preserving all left rows does not guarantee preserving left row count. Duplicate keys on the right side still fan out the result.
+>
+> ---
+>
+> **Anti join**
+> - A join-style filter that returns only rows from the left table whose keys do not appear in the right table.
+> - It matters for finding orphan records, excluded keys, and failed reference matches.
+>
+> > [!info] Useful for diagnostics
+> >
+> > Anti joins are often the fastest way to answer "what did not match?" after a join or membership check.
+>
+> ---
+>
+> **Semi join**
+> - A join-style filter that keeps left-table rows whose keys exist in the right table, without bringing right-side columns into the result.
+> - It matters because it expresses table-driven membership filtering more clearly than ad hoc boolean lists.
+>
+> > [!info] Membership without enrichment
+> >
+> > Use a semi join when the right table is only a key filter and not a source of attributes you need to keep.
+>
+> ---
+>
+> **Cross join**
+> - A Cartesian product that pairs every row from one table with every row from the other.
+> - It matters because it can generate scenario grids and exhaustive combinations, but it is also the easiest reshape/join pattern to blow up in size.
+>
+> > [!danger] Growth is quadratic
+> >
+> > Even medium-size inputs can create unmanageable outputs. Estimate row count before running a cross join, not after.
+>
+> ---
+>
+> **Concat**
+> - An operation that stacks DataFrames vertically or horizontally to combine partitions, results, or aligned column sets.
+> - It matters because the note compares multiple concat modes and how schema mismatches surface in each library.
+>
+> > [!warning] Schema alignment is part of the operation
+> >
+> > Concat is not just appending memory blocks. Column names, column order, and dtypes determine whether the result is clean, sparse, or erroneous.
+>
+> ---
+>
+> **Pivot**
+> - A reshape that turns unique values from one column into new output columns, converting long-form data into wide-form layout.
+> - It matters because pivoting is a common reporting pattern for ticker-by-period summary tables.
+>
+> > [!warning] Duplicate coordinate pairs break pivots
+> >
+> > If the same row-key and column-key combination appears more than once, you need an aggregation-aware pivot strategy instead of a strict pivot.
+>
+> ---
+>
+> **`melt()` / `unpivot()`**
+> - Long-format reshapes that turn multiple measured columns into key-value rows instead of keeping them as separate wide columns.
+> - They matter because many analytics and visualization tools prefer long-form data over wide spreadsheets.
+>
+> > [!info] Same idea, different API names
+> >
+> > Pandas and Polars expose the same conceptual reshape under different names. The operation is equivalent even though the function labels differ.
+>
+> ---
+>
+> **Explode**
+> - A reshape that turns each element of a list-like cell into its own row while duplicating the other row values as needed.
+> - It matters because nested list columns must often be flattened before relational analysis or export.
+>
+> > [!warning] Row count can surge
+> >
+> > Exploding a list column multiplies rows by list length. On heavily nested data, that expansion can be large enough to affect memory planning.
+>
+> ---
+>
+> **Implode**
+> - The inverse-style operation of explode in Polars, collecting multiple row values into a single list-valued column per group.
+> - It matters because the note uses it to package grouped records into compact list outputs before further processing.
+>
+> > [!info] Useful for grouped collection
+> >
+> > Implode is a natural fit when you need "all values per key" as a list instead of one row per value.
+>
+> ---
+>
+> **Transpose**
+> - A reshape that swaps rows and columns so that previous row labels or identifiers become column headings in the output.
+> - It matters for compact display-oriented summaries where metrics should appear as rows and entities as columns.
+>
+> > [!warning] Best on small, regular tables
+> >
+> > Transpose is most useful when the data is small and homogeneous. Large mixed-type tables usually become harder to interpret after transposition.
+>
+> ---
+>
+> **One-hot encoding**
+> - A categorical expansion that turns one category column into many binary indicator columns, one per distinct category.
+> - It matters because machine-learning and numeric-only modeling pipelines often require categorical variables in this expanded form.
+>
+> > [!warning] High-cardinality categories create width explosion
+> >
+> > A category column with thousands of unique values becomes thousands of output columns. Bucket or reduce rare categories before encoding.
+>
+> ---
+>
+> **`.over()`**
+> - A Polars windowing construct that applies a calculation within groups while preserving one result per original row.
+> - It matters because it is the expression-native Polars alternative to many Pandas `transform()` patterns in the note.
+>
+> > [!info] Windowing without collapse
+> >
+> > `.over()` attaches group-aware results back to each row, which makes it ideal for ranks, grouped means, and other same-length enrichments.
+>
+> ---
 
 ---
 
@@ -76,7 +273,7 @@ scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}")
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Basic Group By
 
@@ -118,87 +315,87 @@ display(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>avg_close</th>
-      <th>total_volume</th>
-      <th>trading_days</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>38</th>
-      <td>RMS.PA</td>
-      <td>1761.555748</td>
-      <td>81633862</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ADYEN.AS</td>
-      <td>1545.976409</td>
-      <td>110400463</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ASML.AS</td>
-      <td>671.348911</td>
-      <td>945070720</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>MC.PA</td>
-      <td>662.404508</td>
-      <td>557855567</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>RHM.DE</td>
-      <td>544.661533</td>
-      <td>308359744</td>
-      <td>1324</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>ARGX.BR</td>
-      <td>413.691961</td>
-      <td>94592244</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>OR.PA</td>
-      <td>377.544365</td>
-      <td>484115375</td>
-      <td>1331</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>MUV2.DE</td>
-      <td>374.659932</td>
-      <td>398802950</td>
-      <td>1324</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>RACE.MI</td>
-      <td>289.753823</td>
-      <td>476686026</td>
-      <td>1321</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ALV.DE</td>
-      <td>252.193731</td>
-      <td>1101960308</td>
-      <td>1324</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>avg_close</th>
+<th>total_volume</th>
+<th>trading_days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>38</th>
+<td>RMS.PA</td>
+<td>1761.555748</td>
+<td>81633862</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ADYEN.AS</td>
+<td>1545.976409</td>
+<td>110400463</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ASML.AS</td>
+<td>671.348911</td>
+<td>945070720</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>31</th>
+<td>MC.PA</td>
+<td>662.404508</td>
+<td>557855567</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>37</th>
+<td>RHM.DE</td>
+<td>544.661533</td>
+<td>308359744</td>
+<td>1324</td>
+</tr>
+<tr>
+<th>7</th>
+<td>ARGX.BR</td>
+<td>413.691961</td>
+<td>94592244</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>34</th>
+<td>OR.PA</td>
+<td>377.544365</td>
+<td>484115375</td>
+<td>1331</td>
+</tr>
+<tr>
+<th>32</th>
+<td>MUV2.DE</td>
+<td>374.659932</td>
+<td>398802950</td>
+<td>1324</td>
+</tr>
+<tr>
+<th>36</th>
+<td>RACE.MI</td>
+<td>289.753823</td>
+<td>476686026</td>
+<td>1321</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ALV.DE</td>
+<td>252.193731</td>
+<td>1101960308</td>
+<td>1324</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Group by symbol to compute mean close, total volume, and trading days
@@ -243,52 +440,52 @@ display(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>year</th>
-      <th>avg_close</th>
-      <th>max_close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>49</th>
-      <td>ASML.AS</td>
-      <td>2022</td>
-      <td>531.578794</td>
-      <td>701.7</td>
-    </tr>
-    <tr>
-      <th>50</th>
-      <td>ASML.AS</td>
-      <td>2023</td>
-      <td>611.328627</td>
-      <td>694.7</td>
-    </tr>
-    <tr>
-      <th>51</th>
-      <td>ASML.AS</td>
-      <td>2024</td>
-      <td>799.262109</td>
-      <td>1002.2</td>
-    </tr>
-    <tr>
-      <th>52</th>
-      <td>ASML.AS</td>
-      <td>2025</td>
-      <td>724.614118</td>
-      <td>963.4</td>
-    </tr>
-    <tr>
-      <th>53</th>
-      <td>ASML.AS</td>
-      <td>2026</td>
-      <td>1170.418000</td>
-      <td>1288.4</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>year</th>
+<th>avg_close</th>
+<th>max_close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>49</th>
+<td>ASML.AS</td>
+<td>2022</td>
+<td>531.578794</td>
+<td>701.7</td>
+</tr>
+<tr>
+<th>50</th>
+<td>ASML.AS</td>
+<td>2023</td>
+<td>611.328627</td>
+<td>694.7</td>
+</tr>
+<tr>
+<th>51</th>
+<td>ASML.AS</td>
+<td>2024</td>
+<td>799.262109</td>
+<td>1002.2</td>
+</tr>
+<tr>
+<th>52</th>
+<td>ASML.AS</td>
+<td>2025</td>
+<td>724.614118</td>
+<td>963.4</td>
+</tr>
+<tr>
+<th>53</th>
+<td>ASML.AS</td>
+<td>2026</td>
+<td>1170.418000</td>
+<td>1288.4</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Group by symbol and year to compute annual average and maximum close, extracting year inline
@@ -337,120 +534,120 @@ display(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>mean_close</th>
-      <th>std_close</th>
-      <th>min_close</th>
-      <th>max_close</th>
-      <th>first_date</th>
-      <th>last_date</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>38</th>
-      <td>RMS.PA</td>
-      <td>1761.555748</td>
-      <td>481.321257</td>
-      <td>842.60</td>
-      <td>2839.0</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ADYEN.AS</td>
-      <td>1545.976409</td>
-      <td>417.812759</td>
-      <td>630.80</td>
-      <td>2766.0</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ASML.AS</td>
-      <td>671.348911</td>
-      <td>162.745793</td>
-      <td>397.45</td>
-      <td>1288.4</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>MC.PA</td>
-      <td>662.404508</td>
-      <td>103.503255</td>
-      <td>437.55</td>
-      <td>902.0</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>RHM.DE</td>
-      <td>544.661533</td>
-      <td>586.081819</td>
-      <td>77.00</td>
-      <td>1988.5</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>ARGX.BR</td>
-      <td>413.691961</td>
-      <td>142.729547</td>
-      <td>208.80</td>
-      <td>803.0</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>OR.PA</td>
-      <td>377.544365</td>
-      <td>37.184584</td>
-      <td>290.10</td>
-      <td>456.9</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>MUV2.DE</td>
-      <td>374.659932</td>
-      <td>123.048080</td>
-      <td>209.15</td>
-      <td>610.6</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>RACE.MI</td>
-      <td>289.753823</td>
-      <td>94.845151</td>
-      <td>154.70</td>
-      <td>487.9</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ALV.DE</td>
-      <td>252.193731</td>
-      <td>62.466824</td>
-      <td>159.62</td>
-      <td>392.7</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>mean_close</th>
+<th>std_close</th>
+<th>min_close</th>
+<th>max_close</th>
+<th>first_date</th>
+<th>last_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>38</th>
+<td>RMS.PA</td>
+<td>1761.555748</td>
+<td>481.321257</td>
+<td>842.60</td>
+<td>2839.0</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ADYEN.AS</td>
+<td>1545.976409</td>
+<td>417.812759</td>
+<td>630.80</td>
+<td>2766.0</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ASML.AS</td>
+<td>671.348911</td>
+<td>162.745793</td>
+<td>397.45</td>
+<td>1288.4</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>31</th>
+<td>MC.PA</td>
+<td>662.404508</td>
+<td>103.503255</td>
+<td>437.55</td>
+<td>902.0</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>37</th>
+<td>RHM.DE</td>
+<td>544.661533</td>
+<td>586.081819</td>
+<td>77.00</td>
+<td>1988.5</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>7</th>
+<td>ARGX.BR</td>
+<td>413.691961</td>
+<td>142.729547</td>
+<td>208.80</td>
+<td>803.0</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>34</th>
+<td>OR.PA</td>
+<td>377.544365</td>
+<td>37.184584</td>
+<td>290.10</td>
+<td>456.9</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>32</th>
+<td>MUV2.DE</td>
+<td>374.659932</td>
+<td>123.048080</td>
+<td>209.15</td>
+<td>610.6</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>36</th>
+<td>RACE.MI</td>
+<td>289.753823</td>
+<td>94.845151</td>
+<td>154.70</td>
+<td>487.9</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ALV.DE</td>
+<td>252.193731</td>
+<td>62.466824</td>
+<td>159.62</td>
+<td>392.7</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Compute mean, std, min, max close and date range per symbol using expression list
@@ -492,98 +689,98 @@ display(asml_pd[["symbol", "date", "close", "group_avg", "vs_avg"]].tail(10))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>group_avg</th>
-      <th>vs_avg</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>ASML.AS</td>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>671.348911</td>
-      <td>83.72</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>ASML.AS</td>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>671.348911</td>
-      <td>80.29</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>ASML.AS</td>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>671.348911</td>
-      <td>73.05</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>ASML.AS</td>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>671.348911</td>
-      <td>78.71</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>ASML.AS</td>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>671.348911</td>
-      <td>76.66</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>671.348911</td>
-      <td>70.85</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>671.348911</td>
-      <td>70.94</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>671.348911</td>
-      <td>78.74</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>671.348911</td>
-      <td>78.57</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>671.348911</td>
-      <td>77.37</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>group_avg</th>
+<th>vs_avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>671.348911</td>
+<td>83.72</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>671.348911</td>
+<td>80.29</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>671.348911</td>
+<td>73.05</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>671.348911</td>
+<td>78.71</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>671.348911</td>
+<td>76.66</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>671.348911</td>
+<td>70.85</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>671.348911</td>
+<td>70.94</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>671.348911</td>
+<td>78.74</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>671.348911</td>
+<td>78.57</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>671.348911</td>
+<td>77.37</td>
+</tr>
+</tbody>
 </table>
 
 > [!info] Polars equivalent: `.over()` window expression
@@ -616,98 +813,98 @@ display(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>sector</th>
-      <th>stocks</th>
-      <th>avg_composite</th>
-      <th>avg_momentum</th>
-      <th>total_weight</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>8</th>
-      <td>Technology</td>
-      <td>75</td>
-      <td>0.154008</td>
-      <td>-0.197089</td>
-      <td>2.147753</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Energy</td>
-      <td>34</td>
-      <td>0.105659</td>
-      <td>0.502755</td>
-      <td>1.199656</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>Industrials</td>
-      <td>66</td>
-      <td>0.087422</td>
-      <td>0.303463</td>
-      <td>1.315854</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Communication Services</td>
-      <td>36</td>
-      <td>0.049356</td>
-      <td>-0.182466</td>
-      <td>1.021353</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>Basic Materials</td>
-      <td>18</td>
-      <td>0.043009</td>
-      <td>0.447455</td>
-      <td>0.185352</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>Healthcare</td>
-      <td>45</td>
-      <td>0.019073</td>
-      <td>-0.209665</td>
-      <td>0.543554</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Consumer Defensive</td>
-      <td>36</td>
-      <td>-0.075310</td>
-      <td>0.247709</td>
-      <td>0.473144</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>Financial Services</td>
-      <td>96</td>
-      <td>-0.089991</td>
-      <td>-0.056456</td>
-      <td>1.468250</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>Utilities</td>
-      <td>6</td>
-      <td>-0.099377</td>
-      <td>0.725350</td>
-      <td>0.133743</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Consumer Cyclical</td>
-      <td>54</td>
-      <td>-0.137446</td>
-      <td>-0.413220</td>
-      <td>1.423495</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>sector</th>
+<th>stocks</th>
+<th>avg_composite</th>
+<th>avg_momentum</th>
+<th>total_weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>8</th>
+<td>Technology</td>
+<td>75</td>
+<td>0.154008</td>
+<td>-0.197089</td>
+<td>2.147753</td>
+</tr>
+<tr>
+<th>4</th>
+<td>Energy</td>
+<td>34</td>
+<td>0.105659</td>
+<td>0.502755</td>
+<td>1.199656</td>
+</tr>
+<tr>
+<th>7</th>
+<td>Industrials</td>
+<td>66</td>
+<td>0.087422</td>
+<td>0.303463</td>
+<td>1.315854</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Communication Services</td>
+<td>36</td>
+<td>0.049356</td>
+<td>-0.182466</td>
+<td>1.021353</td>
+</tr>
+<tr>
+<th>0</th>
+<td>Basic Materials</td>
+<td>18</td>
+<td>0.043009</td>
+<td>0.447455</td>
+<td>0.185352</td>
+</tr>
+<tr>
+<th>6</th>
+<td>Healthcare</td>
+<td>45</td>
+<td>0.019073</td>
+<td>-0.209665</td>
+<td>0.543554</td>
+</tr>
+<tr>
+<th>3</th>
+<td>Consumer Defensive</td>
+<td>36</td>
+<td>-0.075310</td>
+<td>0.247709</td>
+<td>0.473144</td>
+</tr>
+<tr>
+<th>5</th>
+<td>Financial Services</td>
+<td>96</td>
+<td>-0.089991</td>
+<td>-0.056456</td>
+<td>1.468250</td>
+</tr>
+<tr>
+<th>9</th>
+<td>Utilities</td>
+<td>6</td>
+<td>-0.099377</td>
+<td>0.725350</td>
+<td>0.133743</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Consumer Cyclical</td>
+<td>54</td>
+<td>-0.137446</td>
+<td>-0.413220</td>
+<td>1.423495</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Aggregate scores by sector to compute constituent count, average scores, and total weight
@@ -773,6 +970,7 @@ display(
 | Filter groups | .filter(func) | .filter() after group_by |
 
 ---
+
 ## Part 2: Window Functions
 
 ## Window Transform
@@ -797,87 +995,87 @@ display(asml[["date","close","avg_close","rank"]].tail(10))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>avg_close</th>
-      <th>rank</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>671.348911</td>
-      <td>7.0</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>671.348911</td>
-      <td>12.0</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>671.348911</td>
-      <td>33.0</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>671.348911</td>
-      <td>16.0</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>671.348911</td>
-      <td>27.0</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>671.348911</td>
-      <td>38.0</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>671.348911</td>
-      <td>37.0</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>671.348911</td>
-      <td>15.0</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>671.348911</td>
-      <td>18.0</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>671.348911</td>
-      <td>24.0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>avg_close</th>
+<th>rank</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>671.348911</td>
+<td>7.0</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>671.348911</td>
+<td>12.0</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>671.348911</td>
+<td>33.0</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>671.348911</td>
+<td>16.0</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>671.348911</td>
+<td>27.0</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>671.348911</td>
+<td>38.0</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>671.348911</td>
+<td>37.0</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>671.348911</td>
+<td>15.0</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>671.348911</td>
+<td>18.0</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>671.348911</td>
+<td>24.0</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Window transform (.over())
@@ -924,87 +1122,87 @@ display(asml_s.assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>sma_7</th>
-      <th>rolling_max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1251.514286</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1247.542857</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1234.142857</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1227.085714</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1216.028571</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1195.828571</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1183.714286</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1178.942857</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1177.285714</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1181.428571</td>
-      <td>1288.4</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>sma_7</th>
+<th>rolling_max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1251.514286</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1247.542857</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1234.142857</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1227.085714</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1216.028571</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1195.828571</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1183.714286</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1178.942857</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1177.285714</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1181.428571</td>
+<td>1288.4</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Compute 7-day SMA and 30-day rolling max for ASML.AS using rolling_mean() and rolling_max()
@@ -1147,6 +1345,7 @@ display(
 | Shift | .shift(n) | .shift(n) |
 
 ---
+
 ## Part 3: Combining DataFrames
 
 Combining DataFrames covers joins (key-based row matching), concatenation (stacking frames), and set-based filters (anti/semi). Both Pandas and Polars use SQL-style join semantics: inner, left, right, full outer, anti, semi, cross. The key API difference is that Pandas uses `.merge()` / `pd.merge()` while Polars uses `.join()`.
@@ -1214,61 +1413,61 @@ print(f"Pandas inner: {len(result_pd)}")
 display(result_pd[["symbol", "short_name", "date", "close", "sector"]].head(5))
 ```
 
-    Pandas inner: 66355
+Pandas inner: 66355
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>short_name</th>
-      <th>date</th>
-      <th>close</th>
-      <th>sector</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>AB INBEV</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>Consumer Defensive</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>AB INBEV</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-      <td>Consumer Defensive</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>AB INBEV</td>
-      <td>2021-01-06</td>
-      <td>58.77</td>
-      <td>Consumer Defensive</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>AB INBEV</td>
-      <td>2021-01-07</td>
-      <td>58.40</td>
-      <td>Consumer Defensive</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>AB INBEV</td>
-      <td>2021-01-08</td>
-      <td>57.86</td>
-      <td>Consumer Defensive</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>short_name</th>
+<th>date</th>
+<th>close</th>
+<th>sector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2021-01-06</td>
+<td>58.77</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2021-01-07</td>
+<td>58.40</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2021-01-08</td>
+<td>57.86</td>
+<td>Consumer Defensive</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Inner join OHLCV to dimension table on symbol, adding short_name and sector columns
@@ -1282,7 +1481,7 @@ print(f"Polars inner: {result_pl.height}")
 display(result_pl.select("symbol", "short_name", "date", "close", "sector").head(5))
 ```
 
-    Polars inner: 66355
+Polars inner: 66355
 
 <div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-04</td><td>57.21</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-05</td><td>57.18</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-06</td><td>58.77</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-07</td><td>58.4</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-08</td><td>57.86</td><td>Consumer Defensive</td></tr></tbody></table></div>
 
@@ -1315,52 +1514,52 @@ display(result_pd[["symbol", "date", "close", "composite_score"]].head(5))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>composite_score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>0.406873</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>0.420940</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>0.385210</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-      <td>0.406873</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-      <td>0.420940</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>composite_score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>0.406873</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>0.420940</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>0.385210</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+<td>0.406873</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+<td>0.420940</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Left join OHLCV to scores on symbol, attaching composite score to each price row
@@ -1402,7 +1601,7 @@ print(f"Symbols without scores: {result.height}")
 display(result)
 ```
 
-    Symbols without scores: 0
+Symbols without scores: 0
 
 <div><!-- shape: (0, 1) --><table><thead><tr><th>symbol</th></tr><tr><td>str</td></tr></thead><tbody></tbody></table></div>
 
@@ -1429,7 +1628,7 @@ result = ohlcv_pl.join(scores_pl.select("symbol").unique(), on="symbol", how="se
 print(f"OHLCV rows with scores: {result.height} (of {ohlcv_pl.height})")
 ```
 
-    OHLCV rows with scores: 66355 (of 66355)
+OHLCV rows with scores: 66355 (of 66355)
 
 ## Cross Join
 
@@ -1472,52 +1671,52 @@ display(combined_pd[["symbol", "date", "close"]])
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>58.77</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>AAPL</td>
-      <td>2021-01-04</td>
-      <td>129.41</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>AAPL</td>
-      <td>2021-01-05</td>
-      <td>131.01</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>AAPL</td>
-      <td>2021-01-06</td>
-      <td>126.60</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>58.77</td>
+</tr>
+<tr>
+<th>3</th>
+<td>AAPL</td>
+<td>2021-01-04</td>
+<td>129.41</td>
+</tr>
+<tr>
+<th>4</th>
+<td>AAPL</td>
+<td>2021-01-05</td>
+<td>131.01</td>
+</tr>
+<tr>
+<th>5</th>
+<td>AAPL</td>
+<td>2021-01-06</td>
+<td>126.60</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Stack Euro Stoxx 50 and US 50 OHLCV head rows vertically using pl.concat()
@@ -1593,6 +1792,7 @@ display(pl.concat([a, b], how="diagonal"))
 | Diagonal | N/A | pl.concat(how='diagonal') |
 
 ---
+
 ## Part 4: Reshaping
 
 Reshaping transforms the structure of a DataFrame without changing the underlying data. The two fundamental operations are **wide to long** (melt/unpivot — spread column names into rows) and **long to wide** (pivot — collapse row values into columns). Additional operations include explode (list column to rows), implode (rows to list), transpose, and one-hot encoding.
@@ -1614,88 +1814,88 @@ display(asml_pd.melt(id_vars="date", var_name="price_type", value_name="price"))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>price_type</th>
-      <th>price</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2026-03-10</td>
-      <td>open</td>
-      <td>1188.4</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2026-03-11</td>
-      <td>open</td>
-      <td>1188.4</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2026-03-12</td>
-      <td>open</td>
-      <td>1194.8</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2026-03-10</td>
-      <td>high</td>
-      <td>1208.4</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2026-03-11</td>
-      <td>high</td>
-      <td>1210.8</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2026-03-12</td>
-      <td>high</td>
-      <td>1202.2</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2026-03-10</td>
-      <td>low</td>
-      <td>1172.2</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2026-03-11</td>
-      <td>low</td>
-      <td>1174.0</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2026-03-12</td>
-      <td>low</td>
-      <td>1187.8</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2026-03-10</td>
-      <td>close</td>
-      <td>1200.0</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>2026-03-11</td>
-      <td>close</td>
-      <td>1198.8</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>2026-03-12</td>
-      <td>close</td>
-      <td>1190.8</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>price_type</th>
+<th>price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2026-03-10</td>
+<td>open</td>
+<td>1188.4</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2026-03-11</td>
+<td>open</td>
+<td>1188.4</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2026-03-12</td>
+<td>open</td>
+<td>1194.8</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2026-03-10</td>
+<td>high</td>
+<td>1208.4</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2026-03-11</td>
+<td>high</td>
+<td>1210.8</td>
+</tr>
+<tr>
+<th>5</th>
+<td>2026-03-12</td>
+<td>high</td>
+<td>1202.2</td>
+</tr>
+<tr>
+<th>6</th>
+<td>2026-03-10</td>
+<td>low</td>
+<td>1172.2</td>
+</tr>
+<tr>
+<th>7</th>
+<td>2026-03-11</td>
+<td>low</td>
+<td>1174.0</td>
+</tr>
+<tr>
+<th>8</th>
+<td>2026-03-12</td>
+<td>low</td>
+<td>1187.8</td>
+</tr>
+<tr>
+<th>9</th>
+<td>2026-03-10</td>
+<td>close</td>
+<td>1200.0</td>
+</tr>
+<tr>
+<th>10</th>
+<td>2026-03-11</td>
+<td>close</td>
+<td>1198.8</td>
+</tr>
+<tr>
+<th>11</th>
+<td>2026-03-12</td>
+<td>close</td>
+<td>1190.8</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Unpivot ASML.AS OHLC columns into long format with price_type and price columns
@@ -1790,7 +1990,6 @@ display(small.transpose(include_header=True, column_names="symbol"))
 ```
 
 <div><!-- shape: (2, 3) --><table><thead><tr><th>symbol</th><th>composite_score</th><th>momentum_score</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>0.176104</td><td>1.470134</td></tr><tr><td>MC.PA</td><td>-0.203769</td><td>-0.70792</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 3) --><table><thead><tr><th>column</th><th>ASML.AS</th><th>MC.PA</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>composite_score</td><td>0.176104</td><td>-0.203769</td></tr><tr><td>momentum_score</td><td>1.470134</td><td>-0.70792</td></tr></tbody></table></div>
 
 ## One-Hot Encoding
@@ -1821,25 +2020,24 @@ display(df.to_dummies())
 | Transpose | .T | .transpose() |
 | One-hot | get_dummies() | to_dummies() |
 
-
 ---
 
-## When to use these operations
-
-- **Group-by + agg** — when you need per-group summaries: average price by sector, count by status, total volume by month. This is the most common aggregation pattern in analytical pipelines.
-- **Window functions** — when you need per-row values that depend on surrounding rows within a group (rank, running total, moving average, lag) without collapsing the DataFrame.
-- **Joins** — when data lives in multiple tables and you need to combine them by a shared key (enriching fact data with dimension attributes, filtering by membership).
-- **Reshape (pivot/melt)** — when the analysis, visualization, or export target requires a different orientation than the source data.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| Aggregation across 100M+ rows in memory | Group-by materializes all groups in RAM — may OOM | Use Polars lazy with streaming, DuckDB, or push aggregation to the database |
-| Joins on non-unique keys without cardinality check | Many-to-many joins silently explode row count | Deduplicate or use `validate="one_to_many"` before joining |
-| Cross join on large tables | Cartesian product grows quadratically — 10K x 10K = 100M rows | Filter one side first, or compute only the combinations you need |
-| Complex multi-hop joins (5+ tables) | DataFrame join chains become unreadable and hard to debug | Use SQL (via DuckDB, SQLAlchemy, or a warehouse) for complex relational logic |
-| Reshaping when the schema is unknown at development time | Pivot column values are dynamic — code breaks when new values appear | Validate the set of pivot values before reshaping; or use a long-format design that avoids pivoting |
+> [!example] Aggregation and Reshaping Fit
+>
+> > [!success] Applicability
+> >
+> > - **Group-by + agg** — when you need per-group summaries: average price by sector, count by status, total volume by month. This is the most common aggregation pattern in analytical pipelines.
+> > - **Window functions** — when you need per-row values that depend on surrounding rows within a group (rank, running total, moving average, lag) without collapsing the DataFrame.
+> > - **Joins** — when data lives in multiple tables and you need to combine them by a shared key (enriching fact data with dimension attributes, filtering by membership).
+> > - **Reshape (pivot/melt)** — when the analysis, visualization, or export target requires a different orientation than the source data.
+>
+> > [!failure] Limitations
+> >
+> > - **Aggregation across 100M+ rows in memory** — Group-by materializes all groups in RAM — may OOM. Better approach: Use Polars lazy with streaming, DuckDB, or push aggregation to the database
+> > - **Joins on non-unique keys without cardinality check** — Many-to-many joins silently explode row count. Better approach: Deduplicate or use `validate="one_to_many"` before joining
+> > - **Cross join on large tables** — Cartesian product grows quadratically — 10K x 10K = 100M rows. Better approach: Filter one side first, or compute only the combinations you need
+> > - **Complex multi-hop joins (5+ tables)** — DataFrame join chains become unreadable and hard to debug. Better approach: Use SQL (via DuckDB, SQLAlchemy, or a warehouse) for complex relational logic
+> > - **Reshaping when the schema is unknown at development time** — Pivot column values are dynamic — code breaks when new values appear. Better approach: Validate the set of pivot values before reshaping; or use a long-format design that avoids pivoting
 
 ## Warnings
 
@@ -1883,4 +2081,3 @@ display(df.to_dummies())
 | Anti-join returns empty DataFrame | All left keys exist in the right table | Verify key columns match in dtype and values; check for whitespace in string keys |
 | `explode()` raises error | Column is not list-typed | Cast to list first, or check with `df.schema` |
 | One-hot encoding produces too many columns | High-cardinality column (e.g., 10K unique values) | Bucket rare values into "other" before encoding |
-

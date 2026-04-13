@@ -127,31 +127,6 @@ status: complete
 > > [!info] Installation required
 > > 7-Zip is not installed by default on Windows or Linux. It must be explicitly installed before use in pipelines or automation scripts.
 
-When you move data between systems (GCE VM to GCS, pipeline output to archive), compression is not optional — it directly affects transfer time, storage cost, and bandwidth consumption. Choosing the right compression algorithm is an engineering decision, not an aesthetic one.
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Compression algorithm | A method for reducing file size by encoding data more efficiently. Lossless algorithms (gzip, zstd, lz4) can reconstruct the original data exactly. | Choosing the right algorithm directly affects transfer time, storage cost, and decompression speed in data pipelines. | Assuming all compression is equal. gzip is universal but slow; zstd is better in both ratio and speed; lz4 prioritizes decompression speed over ratio. |
-| `gzip` | The most widely supported compression tool on Linux. Uses the DEFLATE algorithm (RFC 1952). Single-threaded by default. Produces `.gz` files. | The safe default when every downstream system must support the format. Installed on every Linux distribution and CI runner. | gzip removes the original file after compression. Use `-k` to keep it. For multi-core machines, use `pigz` (parallel gzip) for 3-4x speed improvement. |
-| `zstd` (Zstandard) | A modern compression algorithm by Facebook that compresses better than gzip and decompresses faster. Supports levels 1-19 (standard) and 20-22 (ultra). Default level is 3. | The recommended default for all modern data pipelines. Better ratio than gzip at every speed tier. | Assuming all tools support zstd. Some legacy systems and older cloud services only accept gzip. Check downstream compatibility first. |
-| `tar` | A tool that bundles a directory tree into a single file (tarball). Does not compress by itself -- combines with gzip (`-z`), zstd (`--zstd`), bzip2 (`-j`), or xz (`-J`) for compressed archives. | The standard method for archiving directory structures. `tar czf` creates `.tar.gz` files; `tar --zstd -cf` creates `.tar.zst` files. | Tar bombs: archives created without a top-level directory extract files directly into the current directory. Always inspect with `tar tf` before extracting unknown archives. |
-| `lz4` | An extremely fast compression algorithm optimized for decompression speed (~4 GB/s). Trades compression ratio for speed. | Ideal for real-time streaming, message queues, and latency-sensitive pipelines where decompression speed is critical. | Not suitable for long-term archival -- the compression ratio is significantly worse than zstd or gzip. |
-| Compression level | A numeric parameter (typically 1-9 or 1-19) controlling the trade-off between compression speed and output size. Higher levels produce smaller files but take longer. | For pipeline intermediate files, use fast levels (gzip -1, zstd -3). For long-term archives, use high levels (zstd -19). | Over-compressing intermediate files. The difference between gzip -1 and gzip -9 is only 5-15% in size but 5-8x in time. |
-| `pigz` | Parallel gzip -- a drop-in replacement for gzip that uses multiple CPU cores. Produces identical `.gz` files. | gzip is single-threaded. On a 4-core VM, pigz is 3-4x faster while producing the same output format. | Not installed by default. Requires `apt install pigz`. |
-| `Compress-Archive` (PS) | The built-in PowerShell cmdlet for creating zip files. Uses .NET `System.IO.Compression`. | Quick zip operations without external tools. | Has a 2 GB per-file limit in all current stable versions. Use 7-Zip for larger files. |
-| 7-Zip (`7z`) | A multi-format compression tool supporting gzip, zstd, bzip2, xz, tar, zip, and 7z formats. No file size limits. Multi-threaded. | The Swiss Army knife for compression on Windows. Covers every format that `Compress-Archive` cannot handle. | Not installed by default. Requires `scoop install 7zip` or `winget install 7zip`. |
-
-## What this note covers
-
-- gzip for universal compatibility (compress, decompress, integrity check, compression levels, `pigz` parallelization)
-- zstd for superior compression ratio and speed (levels 1-22, `--adapt`, multi-threaded)
-- tar for archiving directory trees (combined with gzip or zstd, tar bomb prevention)
-- Compression strategy matrix: which algorithm for which pipeline scenario
-- PowerShell equivalents: `Compress-Archive`, 7-Zip, `GZipStream`
-
 ## Linux file compression tools
 
 Linux provides three core compression tools for data engineering workflows: **gzip** for universal compatibility (every system, every CI runner), **zstd** for superior compression ratio and speed (the modern default), and **tar** for bundling directory trees into single compressed archives. Each tool serves a distinct role — understanding when to use which prevents wasted time and storage cost.
@@ -582,20 +557,22 @@ $gz.Write($input, 0, $input.Length); $gz.Close()
 When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports — see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost — see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle policies that transition objects between storage classes.
 
 
-## When to use compression
-
-- **Pipeline intermediate files** -- compress CSV/JSON output between pipeline stages to reduce transfer time and storage cost. Use zstd at default level 3.
-- **Long-term archival to cloud storage** -- compress before uploading to GCS cold/archive tiers. Use zstd -19 for maximum space savings.
-- **Log shipping and rotation** -- compress rotated logs to reduce disk consumption. gzip -6 is the standard for log compression due to universal tool support.
-- **Database backup transfer** -- compress SQL Server backups before transferring between VMs. Use gzip -1 for speed (the backup is already large and structured).
-- **Directory archiving** -- bundle a directory tree into a single `.tar.gz` or `.tar.zst` file for transfer or backup.
-
-## When not to use compression
-
-- **Already-compressed formats** -- Parquet with Snappy, gzipped JSON, JPEG images, and video files gain little from additional compression and waste CPU time.
-- **Real-time latency-critical paths** -- if decompression latency matters more than file size (sub-millisecond requirements), skip compression or use lz4.
-- **Tiny files** -- compressing files under 1 KB often produces larger output due to header overhead.
-- **Files that must be randomly accessible** -- gzip and zstd compress sequentially. You cannot seek to a specific offset without decompressing from the start. For random access, use columnar formats (Parquet) with internal compression.
+> [!example] Compression Decision Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Pipeline intermediate files** -- compress CSV/JSON output between pipeline stages to reduce transfer time and storage cost. Use zstd at default level 3.
+> > - **Long-term archival to cloud storage** -- compress before uploading to GCS cold/archive tiers. Use zstd -19 for maximum space savings.
+> > - **Log shipping and rotation** -- compress rotated logs to reduce disk consumption. gzip -6 is the standard for log compression due to universal tool support.
+> > - **Database backup transfer** -- compress SQL Server backups before transferring between VMs. Use gzip -1 for speed (the backup is already large and structured).
+> > - **Directory archiving** -- bundle a directory tree into a single `.tar.gz` or `.tar.zst` file for transfer or backup.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Already-compressed formats** -- Parquet with Snappy, gzipped JSON, JPEG images, and video files gain little from additional compression and waste CPU time.
+> > - **Real-time latency-critical paths** -- if decompression latency matters more than file size (sub-millisecond requirements), skip compression or use lz4.
+> > - **Tiny files** -- compressing files under 1 KB often produces larger output due to header overhead.
+> > - **Files that must be randomly accessible** -- gzip and zstd compress sequentially. You cannot seek to a specific offset without decompressing from the start. For random access, use columnar formats (Parquet) with internal compression.
 
 ## Warnings
 

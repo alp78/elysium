@@ -23,16 +23,145 @@ status: complete
 
 # Race Conditions
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note covers the race-condition class of concurrency bugs in SQL Server: two or more sessions touching the same business state at the same time, each completing successfully, and the final data ending up wrong. It catalogues the five standard anomalies (lost update, dirty read, non-repeatable read, phantom read, write skew), demonstrates each one live against the `stoxx` database using a concurrent two-session runner, and shows the canonical fixes — atomic DML, `WITH (UPDLOCK, HOLDLOCK)`, `rowversion`-based optimistic concurrency, and `sp_getapplock`. Adjacent topics live in other notes:
+> Race conditions are the concurrency bugs that usually hurt most because nothing fails fast: two or more sessions touch the same business state, both complete successfully, and the final data is wrong because correctness depended on timing that the design never made explicit. This note demonstrates those anomalies live against `stoxx` with a concurrent two-session runner and maps the database-level fixes that turn silent corruption into either safe serialization or controlled, retryable errors.
 >
-> - **Lock modes, granularity, escalation, and blocking-chain DMVs** → [[16-blocking-and-locking]]
-> - **Deadlock detection, system_health, and retry policy** → [[17-deadlock-detection-and-prevention]]
-> - **MERGE semantics and UPSERT patterns** → [[11-merge-and-upsert]]
-> - **TRY/CATCH and stored procedure error handling** → [[19-stored-procedures-dynamic-sql-and-error-handling]]
+> **Concurrency model and setup**
+> - covers why race conditions matter, the isolation levels that do and do not prevent them, and the runner used to reproduce each anomaly deterministically
+>
+> **Standard anomaly patterns**
+> - covers lost update, check-then-insert duplicates, dirty read, non-repeatable read, phantom read, and write skew
+>
+> **Conflict and serialization fixes**
+> - covers `SNAPSHOT` update conflict error 3960, `rowversion`-based optimistic concurrency, and serialization hints such as `UPDLOCK` and `HOLDLOCK`
+>
+> **Application and orchestration controls**
+> - covers `sp_getapplock`, retryable versus non-retryable errors, and bounded retry logic for controlled-failure paths
+>
+> **Operations and safety**
+> - Warnings: race conditions often return apparent success, `NOLOCK` allows impossible reads, application-side existence checks are raceable, row versioning removes some conflicts but not every anomaly, and retries are only safe for replayable units of work
+> - Recommendations: enable RCSI for OLTP read/write separation, use atomic DML for counters and state transitions, back business keys with unique constraints, use `UPDLOCK` plus `HOLDLOCK` for upserts, use `rowversion` when a write cannot be expressed atomically, and serialize coarse critical sections with `sp_getapplock`
 
-Race conditions do not usually raise an error. Both sessions complete, both return "success", and the final database state is wrong because correctness depended on timing that nobody wrote down. Deadlocks are noisy — SQL Server throws error `1205` and one session rolls back. Race conditions are usually **worse** operationally because nothing fails fast. The job log says "success", but the data is silently incorrect, and the bug is only discovered downstream when a reconciliation job, a customer complaint, or a regulatory audit surfaces the mismatch.
+> [!note]- Glossary
+>
+> **Race condition**
+> - A correctness bug where the final database state depends on the order or overlap of concurrent sessions rather than on explicit transactional rules.
+> - It matters because this note is about making those timing assumptions explicit through isolation, locking, constraints, or retryable failure paths.
+>
+> > [!warning] Success status can be misleading
+> >
+> > Many race conditions do not raise an error at all. That is what makes them operationally dangerous: the workload appears healthy while the data quietly drifts wrong.
+>
+> ---
+>
+> **Lost update**
+> - An anomaly where one session overwrites another session’s change because both read the same starting value and write back independently.
+> - It matters because it is one of the most common race patterns in counters, balances, and state transitions.
+>
+> > [!warning] Read-then-write logic is fragile under concurrency
+> >
+> > If the database sees two separate reads and writes instead of one atomic transition, whichever writer commits last can erase the other session’s work.
+>
+> ---
+>
+> **Dirty read**
+> - A read that observes data written by a transaction that has not yet committed and may later roll back.
+> - It matters because it is the anomaly tolerated by `READ UNCOMMITTED` and `NOLOCK`.
+>
+> > [!danger] Dirty data may never have been real
+> >
+> > A dirty read does not just risk staleness. It can return a value that is rolled back later and therefore never becomes part of committed history.
+>
+> ---
+>
+> **Non-repeatable read**
+> - An anomaly where the same query inside one transaction returns different values for the same row because another transaction committed a change in between.
+> - It matters because it breaks assumptions that a transaction can re-check a row and see the same facts it saw earlier.
+>
+> > [!warning] Stable transaction does not imply stable row view
+> >
+> > Under weaker isolation, a transaction can observe a row twice and get two different answers without either read being “wrong” according to the isolation contract.
+>
+> ---
+>
+> **Phantom read**
+> - An anomaly where re-running a predicate inside one transaction returns a different set of rows because another transaction inserted or deleted qualifying rows.
+> - It matters because set-based invariants often depend on the rowset shape staying stable, not just on single-row values staying stable.
+>
+> > [!warning] Set stability is stronger than row stability
+> >
+> > Preventing phantoms usually requires range protection, not just row-level locking. That is why this anomaly tends to push designs toward stronger isolation or explicit serialization.
+>
+> ---
+>
+> **Write skew**
+> - An anomaly where two concurrent transactions each read a shared condition, update disjoint rows, and together violate an invariant neither transaction violated alone.
+> - It matters because it shows that row-level conflicts are not the only concurrency risk; set-level business rules can also race.
+>
+> > [!warning] Disjoint writes can still corrupt a shared rule
+> >
+> > If correctness depends on a multi-row invariant, avoiding direct row conflicts is not enough. The rule must be serialized or checked under stronger isolation.
+>
+> ---
+>
+> **Atomic DML**
+> - A single SQL statement that expresses the whole state transition directly in the database instead of as separate read and write steps.
+> - It matters because many race conditions disappear when the database performs the change as one atomic operation.
+>
+> > [!info] One statement is often the simplest race fix
+> >
+> > `SET col = col + 1` is safer than “read value, add in application, write result back.” The engine can serialize the atomic form correctly under normal write rules.
+>
+> ---
+>
+> **`UPDLOCK` / `HOLDLOCK`**
+> - Lock hints that force a read-for-write path to hold update-compatible range protection until the transaction ends.
+> - It matters because classic check-then-insert and upsert races often need these hints to serialize the existence test against concurrent writers.
+>
+> > [!warning] Hints are part of correctness here
+> >
+> > In concurrency-sensitive code, these hints are not cosmetic tuning. They are often the mechanism that closes the race between checking and writing.
+>
+> ---
+>
+> **Snapshot isolation**
+> - A concurrency model where transactions read a versioned snapshot rather than blocking on currently locked rows.
+> - It matters because it eliminates some reader/writer conflicts and changes which anomalies are possible.
+>
+> > [!warning] Snapshot changes conflict shape, not all correctness rules
+> >
+> > Snapshot-style isolation removes many blocking problems, but write skew and update conflicts still need to be understood and handled deliberately.
+>
+> ---
+>
+> **`rowversion` optimistic concurrency**
+> - A pattern where a row’s version token is checked in the `WHERE` clause of an update so the statement succeeds only if no other session changed the row first.
+> - It matters because it is the standard SQL Server optimistic-concurrency mechanism when the write cannot be collapsed into one purely atomic expression.
+>
+> > [!info] This turns a silent race into a visible miss
+> >
+> > The update simply affects zero rows when the version changed. That lets the application treat the event as a controlled conflict rather than as silent corruption.
+>
+> ---
+>
+> **Controlled error**
+> - A database-enforced failure mode such as deadlock victim, snapshot update conflict, lock timeout, or unique-key violation that prevents silent bad data from being committed.
+> - It matters because production-safe race handling often means preferring a retryable or visible failure over a silent wrong result.
+>
+> > [!warning] Failing safely is often better than “succeeding” wrongly
+> >
+> > A visible conflict can be retried or surfaced. Silent corruption often survives until reconciliation or audit, when the repair cost is much higher.
+>
+> ---
+>
+> **`sp_getapplock`**
+> - A procedure that acquires an application-defined logical lock independent of row, page, or key locks.
+> - It matters because some critical sections span more than one table or statement and are easier to serialize at a logical business-resource level.
+>
+> > [!info] Logical serialization is sometimes the cleanest tool
+> >
+> > When the protected resource is “one business date” or “one tenant reload,” application locks can express the true contention boundary more clearly than row locks alone.
 
 ## Why Race Conditions Matter
 

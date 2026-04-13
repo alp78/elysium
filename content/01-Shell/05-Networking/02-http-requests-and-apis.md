@@ -145,27 +145,6 @@ sequenceDiagram
     Note over C,S: time_total = end-to-end wall clock
 ```
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `curl` | A command-line tool for making HTTP requests. Supports GET, POST, PUT, DELETE, headers, authentication, TLS, and file upload/download. | The universal tool for testing APIs, downloading files, and verifying HTTP endpoints from the command line. | `curl` exits 0 even on HTTP 4xx/5xx responses. Use `-f` (fail on error) or check `-w '%{http_code}'` for proper error detection in scripts. |
-| HTTP method | The verb in an HTTP request: GET (read), POST (create), PUT (update/replace), PATCH (partial update), DELETE (remove). | Every API interaction requires the correct method. Using GET when POST is expected (or vice versa) produces 405 Method Not Allowed errors. | Confusing PUT and PATCH. PUT replaces the entire resource; PATCH modifies specific fields. Most REST APIs use PATCH for updates. |
-| HTTP status code | A 3-digit number in the response indicating the result: 2xx (success), 3xx (redirect), 4xx (client error), 5xx (server error). | Status codes determine whether a pipeline API call succeeded, needs retry (5xx, 429), or has a permanent error (4xx). | Treating all non-200 responses as failures. 201 (Created), 204 (No Content), and 3xx (Redirect) are all valid success responses depending on context. |
-| `Invoke-RestMethod` (PS) | The PowerShell cmdlet for making HTTP requests and automatically parsing JSON/XML responses into objects. | The PowerShell equivalent of `curl` for API interactions. Returns structured objects, not raw text. | `Invoke-RestMethod` throws a terminating error on HTTP 4xx/5xx. Wrap in `try/catch` with `$ErrorActionPreference = 'Stop'` for proper error handling. |
-| Bearer token | An authentication credential sent in the `Authorization: Bearer <token>` HTTP header. Common in OAuth 2.0 and API key authentication. | Most cloud APIs (GCP, Azure, GitHub) use bearer tokens for authentication. | Hardcoding tokens in scripts. Tokens expire and should be resolved at runtime from a secret manager or `gcloud auth print-access-token`. |
-| JSON (JavaScript Object Notation) | A lightweight text format for structured data: `{"key": "value", "array": [1, 2, 3]}`. The standard format for REST API request and response bodies. | Nearly all modern APIs accept and return JSON. `curl` sends JSON with `-H 'Content-Type: application/json' -d '{"key":"value"}'`. | Forgetting the `Content-Type: application/json` header when POSTing JSON. Without it, the server may reject the request or misinterpret the body. |
-| `jq` | A command-line JSON processor. Filters, transforms, and extracts data from JSON using a concise query language. | Essential for parsing API responses in shell scripts. `curl ... \| jq '.data[].name'` extracts specific fields from JSON output. | `jq` is not installed by default. Requires `apt install jq`. Without `jq`, parsing JSON in bash requires fragile `grep`/`sed` hacks. |
-
-## What this note covers
-
-- Making HTTP requests with `curl`: GET, POST, PUT, DELETE, headers, authentication
-- Parsing JSON responses with `jq`
-- Testing API endpoints and health checks
-- Authentication patterns: bearer tokens, API keys, OAuth
-- PowerShell equivalents: `Invoke-RestMethod`, `Invoke-WebRequest`, `ConvertFrom-Json`
-
 ## Linux curl tools
 
 `curl` transfers data over many protocols (HTTP, HTTPS, FTP, SFTP) from the command line. It is the standard tool for REST API calls, health checks, file downloads, and latency diagnostics in bash scripts and pipelines.
@@ -613,19 +592,21 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
 | `-PassThru` | `-PassThru` | Return the response object when using `-OutFile` |
 
 
-## When to use HTTP request tools
-
-- **API integration testing** -- verify that an endpoint returns the expected response before wiring it into a pipeline.
-- **Health checks** -- `curl -sf https://service/health` in monitoring scripts to verify service availability.
-- **Data download** -- `curl -o file.csv https://api.example.com/export` for one-off data fetches.
-- **Debugging API issues** -- `curl -v` shows the full request/response including headers, TLS handshake, and timing.
-- **Token-based authentication testing** -- verify that OAuth tokens, API keys, and service account credentials work before deploying.
-
-## When not to use HTTP request tools
-
-- **Production data pipelines** -- shell `curl` calls are fragile (no retry logic, no connection pooling, limited error handling). Use language SDKs (Python `requests`, C# `HttpClient`) for production API integrations.
-- **Large file downloads** -- `curl` has no resume-by-default. Use `wget -c` or `gsutil` for large file downloads that may be interrupted.
-- **Complex API workflows** -- multi-step API interactions with pagination, rate limiting, and error handling belong in application code, not shell scripts.
+> [!example] HTTP Probing Fit
+>
+> > [!success] Appropriate
+> >
+> > - **API integration testing** -- verify that an endpoint returns the expected response before wiring it into a pipeline.
+> > - **Health checks** -- `curl -sf https://service/health` in monitoring scripts to verify service availability.
+> > - **Data download** -- `curl -o file.csv https://api.example.com/export` for one-off data fetches.
+> > - **Debugging API issues** -- `curl -v` shows the full request/response including headers, TLS handshake, and timing.
+> > - **Token-based authentication testing** -- verify that OAuth tokens, API keys, and service account credentials work before deploying.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Production data pipelines** -- shell `curl` calls are fragile (no retry logic, no connection pooling, limited error handling). Use language SDKs (Python `requests`, C# `HttpClient`) for production API integrations.
+> > - **Large file downloads** -- `curl` has no resume-by-default. Use `wget -c` or `gsutil` for large file downloads that may be interrupted.
+> > - **Complex API workflows** -- multi-step API interactions with pagination, rate limiting, and error handling belong in application code, not shell scripts.
 
 ## Warnings
 

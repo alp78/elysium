@@ -186,25 +186,6 @@ flowchart LR
     Dev -->|"gsutil / Python client<br>(IAM only)"| GCS
 ```
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `gcloud compute ssh` | A GCP CLI command that manages SSH keys automatically and connects to a GCE VM. Supports IAP tunneling with `--tunnel-through-iap`. | The standard way to SSH into GCE VMs without manually managing SSH keys. | Forgetting `--zone` when the VM is not in the default zone. The command fails or connects to the wrong VM. |
-| `gcloud compute scp` | A GCP CLI command for secure file copy to/from GCE VMs. Wraps `scp` with automatic key management and IAP support. | Transfers files to/from GCE VMs without manual SSH key configuration. | Same trailing-slash behavior as `scp`: source path determines whether contents or directory itself is copied. |
-| `gsutil` / `gcloud storage` | CLI tools for interacting with Google Cloud Storage (GCS). `gsutil` is legacy; `gcloud storage` is the modern replacement with better performance. | The primary interface for uploading, downloading, and syncing data to GCS buckets. | `gsutil rsync --delete` permanently removes destination-only objects. Always dry-run first. |
-| Service account | A GCP identity used by applications and VMs (not humans) to authenticate to GCP APIs. Has IAM roles like a user account. | VMs authenticate to GCS, BigQuery, and other services using their attached service account. | The VM default service account often has overly broad permissions (Editor role). Follow least-privilege by attaching a custom service account with only required roles. |
-| `gcloud auth` | GCP CLI commands for managing authentication: `gcloud auth login` (user), `gcloud auth activate-service-account` (service account), `gcloud auth print-access-token` (get bearer token). | Required for authenticating CLI tools and scripts to GCP APIs. | User auth (`gcloud auth login`) is for interactive use. Automated scripts should use service account keys or workload identity. |
-
-## What this note covers
-
-- SSH access to GCE VMs with `gcloud compute ssh` and IAP tunneling
-- File transfers with `gcloud compute scp` (local-to-VM and VM-to-VM)
-- GCS operations with `gsutil` and `gcloud storage`: upload, download, sync, lifecycle
-- Authentication patterns: user login, service accounts, access tokens
-- Connecting to SQL Server, BigQuery, and other GCP services from the command line
-
 ## PowerShell / Linux | Compute Engine | SSH access
 
 `gcloud compute ssh` wraps standard SSH with automatic IAP tunneling and OS Login key management. It connects you to a Compute Engine VM over port 22 through Google's Identity-Aware Proxy, meaning the VM itself does not need a public IP address. The first connection may take 10–30 seconds while gcloud propagates your SSH public key to VM metadata.
@@ -688,18 +669,20 @@ The table below summarizes the connectivity model for every GCP resource type co
 > Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that is a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
 
 
-## When to use GCP connection tools
-
-- **SSH access to GCE VMs** -- `gcloud compute ssh` with automatic key management and optional IAP tunneling for private VMs.
-- **File transfers to/from VMs** -- `gcloud compute scp` for quick file copies; `rsync` over IAP tunnel for large or incremental transfers.
-- **GCS bucket operations** -- `gcloud storage cp` for uploads/downloads; `gsutil rsync` for directory synchronization.
-- **Authentication setup** -- `gcloud auth login` for interactive sessions; service account activation for automated pipelines.
-
-## When not to use GCP connection tools
-
-- **Production data pipelines** -- use GCP client libraries (Python `google-cloud-storage`, C# `Google.Cloud.Storage.V1`) instead of CLI tools for production code.
-- **Cross-cloud operations** -- `gcloud` is GCP-only. For multi-cloud, use Terraform, Pulumi, or cloud-agnostic SDKs.
-- **Large-scale data movement** -- for TB-scale transfers, use Storage Transfer Service, Transfer Appliance, or BigQuery Data Transfer Service instead of CLI uploads.
+> [!example] GCP CLI Access Fit
+>
+> > [!success] Appropriate
+> >
+> > - **SSH access to GCE VMs** -- `gcloud compute ssh` with automatic key management and optional IAP tunneling for private VMs.
+> > - **File transfers to/from VMs** -- `gcloud compute scp` for quick file copies; `rsync` over IAP tunnel for large or incremental transfers.
+> > - **GCS bucket operations** -- `gcloud storage cp` for uploads/downloads; `gsutil rsync` for directory synchronization.
+> > - **Authentication setup** -- `gcloud auth login` for interactive sessions; service account activation for automated pipelines.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Production data pipelines** -- use GCP client libraries (Python `google-cloud-storage`, C# `Google.Cloud.Storage.V1`) instead of CLI tools for production code.
+> > - **Cross-cloud operations** -- `gcloud` is GCP-only. For multi-cloud, use Terraform, Pulumi, or cloud-agnostic SDKs.
+> > - **Large-scale data movement** -- for TB-scale transfers, use Storage Transfer Service, Transfer Appliance, or BigQuery Data Transfer Service instead of CLI uploads.
 
 ## Warnings
 

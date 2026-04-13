@@ -26,6 +26,12 @@ mindmap
 
 > [!abstract]- [[03-disks-and-snapshots]]
 
+> [!abstract]- [[04-sql-server-on-compute-engine]]
+
+> [!abstract]- [[05-airflow-on-compute-engine]]
+
+> [!abstract]- [[01-stoxx-index-pipeline]]
+
 > [!abstract]- [[03-cloud-run-jobs-vs-services]]
 
 > [!abstract]- [[02-pubsub-messaging]]

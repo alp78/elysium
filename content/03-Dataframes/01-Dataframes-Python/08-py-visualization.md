@@ -9,33 +9,168 @@ updated: 2026-04-08
 status: complete
 ---
 
-# 08 — Visualization
+# Visualization - Python
 
 > [!quote]
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
 >
 > — **John Tukey**, *Exploratory Data Analysis* (1977)
 
-This note covers DataFrame visualization end-to-end: static charts with Matplotlib and Seaborn (line, bar, scatter, heatmap, distribution), interactive browser-native charts with Bokeh (candlesticks, linked brushing, server apps) and Plotly (financial charts, dashboards, dropdowns), and practical guidance on when to use each library. All examples use real EuroStoxx 50 financial data.
+> [!abstract]- Summary
+>
+> Covers DataFrame visualization end to end on real EuroStoxx data, moving from static explanatory charts in Matplotlib and Seaborn to browser-native interactive views in Bokeh and Plotly, with emphasis on choosing the right library, exporting the result correctly, and avoiding performance or publishing traps.
+>
+> **Data Preparation / Matplotlib / Seaborn**
+> - Prepare reusable plotting subsets, apply the Tokyo Night Matplotlib theme, and build static line, bar, scatter, area, pie, donut, and dual-axis charts for explanation-focused reporting
+> - Use Seaborn for fast statistical views such as distributions, heatmaps, and categorical comparisons, while retaining Matplotlib-level control for styling and layout
+>
+> **Bokeh — Interactive Charts**
+> - Build browser-native interactive charts including candlesticks, line and bar charts, scatter plots, distributions, heatmaps, linked brushing layouts, dashboards, and exportable HTML widgets
+> - Use hover tools, selections, layouts, and server-style patterns where notebook interactivity is more important than static publication
+>
+> **Plotly — Interactive Charts**
+> - Build interactive line, bar, scatter, histogram, area, pie, sunburst, treemap, heatmap, candlestick, OHLC, geographic, animated, and dashboard-style charts
+> - Contrast Plotly Express for fast high-level plotting with Graph Objects for lower-level control, dropdowns, subplots, templates, and custom hover behavior
+> - Show Polars integration and explicit list conversion for cases where Graph Objects do not accept DataFrame-native inputs directly
+>
+> **Operations and safety**
+> - When to use each library: Matplotlib for reproducible static publication, Seaborn for quick statistical EDA, Bokeh for linked interactive exploration and dashboards, Plotly for rich interactive financial and notebook-friendly charts
+> - When not to use: million-point browser scatterplots, notebook charts for real-time streaming dashboards, interactive-only visuals in CI/PDF workflows, or these libraries as substitutes for dedicated geospatial tooling
+> - Warnings: Plotly HTML output can embed multi-megabyte JavaScript payloads, Bokeh/Plotly widgets do not render everywhere in Quartz/Obsidian contexts, and color-scale choice can invert or hide analytical meaning
+> - Recommendations: 5 practices covering Tokyo Night for vault publication, Plotly Express for fast EDA, Bokeh for linked exploration, dual HTML/PNG export, and aggressive downsampling before plotting large data
+> - Troubleshooting: 6 failure modes covering blank Matplotlib notebooks, mismatched Bokeh source fields, Plotly renderer issues, unreadable heatmap labels, oversized HTML exports, and dark-theme-invisible default colors
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Matplotlib** | The foundational Python plotting library. Provides a low-level, highly customizable API for static charts. | Full control over every visual element — the base layer that Seaborn and Pandas plotting build on. | Verbose API — simple charts require 10+ lines. Use Seaborn or Pandas `.plot()` for quick EDA. |
-| **Seaborn** | A statistical visualization library built on Matplotlib. Provides high-level functions for common chart types with sensible defaults. | Quick statistical plots (distributions, correlations, categorical comparisons) with minimal code. | Seaborn returns Matplotlib axes — customization still requires Matplotlib API knowledge. |
-| **Bokeh** | A Python library for interactive, browser-native visualizations. Renders charts as HTML/JavaScript. | Interactive exploration: hover tooltips, zoom, pan, linked brushing across multiple plots. | Bokeh charts are not images — they are HTML widgets. Export with `.save()` or serve with `bokeh serve`. |
-| **Plotly** | A Python library for interactive charts rendered via Plotly.js. Supports financial charts, 3D plots, and dashboard components. | Publication-quality interactive charts with built-in financial chart types (candlestick, OHLC). | Plotly Express (high-level) vs `go.Figure` (low-level) — use Express for quick plots, `go` for customization. |
-| **candlestick chart** | A financial chart showing open, high, low, close prices as a body (open-close) and wicks (high-low) per time period. | The standard visualization for price action in financial analysis. | Requires OHLC columns in a specific order. Missing or misnamed columns produce empty or misleading charts. |
-| **heatmap** | A color-coded matrix where cell color represents a numerical value. | Visualizes correlation matrices, pivot tables, and any 2D numeric grid. | Color scale must be chosen carefully — sequential for magnitude, diverging for positive/negative. |
-| **facet / subplot** | Multiple small charts arranged in a grid, each showing a subset of the data (e.g., one chart per sector). | Compares distributions or trends across categories without overplotting. | Too many facets (>12) become unreadable. Aggregate or filter before faceting. |
-
-## What this note covers
-
-- **Matplotlib** — Tokyo Night theme setup, line charts, bar charts, scatter plots, subplots, dual axes
-- **Seaborn** — distribution plots, heatmaps, pair plots, categorical comparisons
-- **Bokeh** — interactive candlestick charts, linked brushing, hover tools, HTML export
-- **Plotly** — financial charts, range selectors, dropdowns, templates, Polars integration
+> [!note]- Glossary
+>
+> **Matplotlib**
+> - The foundational Python plotting library used for low-level, highly controllable static visualizations.
+> - It matters because the note uses it as the base layer for publication-style charts, custom theming, and the styling model underneath Seaborn.
+>
+> > [!info] Static-first strength
+> >
+> > Matplotlib is often the best choice when the output must survive notebooks, CI exports, PDFs, and static publishing without JavaScript dependencies.
+>
+> ---
+>
+> **Seaborn**
+> - A high-level statistical visualization layer built on top of Matplotlib with strong defaults for common analytical chart types.
+> - It matters because the note uses it for fast distribution, correlation, and category comparisons without hand-building every axis from scratch.
+>
+> > [!warning] Still a Matplotlib ecosystem tool
+> >
+> > Seaborn simplifies chart creation, but non-trivial customization still often falls back to Matplotlib axes and figure APIs.
+>
+> ---
+>
+> **Bokeh**
+> - A Python visualization library that renders interactive charts as HTML and JavaScript rather than static image objects.
+> - It matters because the note uses Bokeh where linked brushing, hover interactions, and dashboard-style layouts provide analytical value beyond static figures.
+>
+> > [!warning] HTML widget, not image
+> >
+> > Bokeh output is interactive web content. If the target environment cannot render embedded HTML/JS widgets reliably, you need a static fallback.
+>
+> ---
+>
+> **Plotly**
+> - An interactive charting library backed by Plotly.js, spanning quick notebook charts through highly customized dashboard-style figures.
+> - It matters because the note uses Plotly for financial visuals, templates, interactivity, and exportable HTML artifacts.
+>
+> > [!warning] Interactivity has payload cost
+> >
+> > Plotly charts are easy to share, but the JavaScript bundle and figure JSON can make output files much larger than static chart images.
+>
+> ---
+>
+> **Candlestick chart**
+> - A financial chart type that encodes open, high, low, and close values for each time interval using bodies and wicks.
+> - It matters because the note uses candlesticks as the standard interactive price-action view for OHLCV market data.
+>
+> > [!warning] Column mapping must be exact
+> >
+> > Candlestick charts depend on correctly identified OHLC columns. Misordered or mislabeled inputs can render misleading price action or fail silently.
+>
+> ---
+>
+> **Heatmap**
+> - A grid visualization where color intensity encodes numeric magnitude across a matrix of values.
+> - It matters because the note uses heatmaps for correlations and other dense two-dimensional numeric summaries.
+>
+> > [!warning] Color semantics are analytical semantics
+> >
+> > Sequential and diverging palettes communicate different meanings. Pick the scale to match whether magnitude-only or signed deviation is the real story.
+>
+> ---
+>
+> **Facet / subplot**
+> - A layout pattern that splits one comparison across multiple smaller axes, one panel per category or view.
+> - It matters because many comparisons in the note become readable only when overplotting is replaced by small multiples.
+>
+> > [!warning] Too many panels destroy legibility
+> >
+> > Faceting solves overlap only up to a point. Once the grid becomes too dense, aggregation or filtering is usually a better design choice.
+>
+> ---
+>
+> **Linked brushing**
+> - An interaction pattern where selections in one chart automatically highlight the corresponding records in another chart.
+> - It matters because Bokeh examples in the note rely on linked interaction to connect overview and detail views.
+>
+> > [!info] Powerful for exploratory dashboards
+> >
+> > Linked brushing is most useful when multiple coordinated views show different projections of the same underlying records.
+>
+> ---
+>
+> **`ColumnDataSource`**
+> - Bokeh's tabular data container that maps named fields to sequences used by glyphs, tools, and linked selections.
+> - It matters because most non-trivial Bokeh charts in the note depend on consistent field naming between the source and the plotted glyph properties.
+>
+> > [!warning] Field names must match exactly
+> >
+> > A glyph referencing a missing field will render incorrectly or not at all. Data source schema and glyph configuration must stay aligned.
+>
+> ---
+>
+> **Plotly Express**
+> - Plotly's high-level API for constructing common interactive charts quickly from DataFrames with minimal code.
+> - It matters because the note treats it as the fastest route to exploratory visualizations and Polars-friendly plotting.
+>
+> > [!info] Best default for quick interactive EDA
+> >
+> > When the chart type is standard and the interaction needs are modest, Plotly Express usually gets you there faster than building a figure manually.
+>
+> ---
+>
+> **Graph Objects / `go.Figure`**
+> - Plotly's lower-level API for assembling figures explicitly from trace objects, layouts, and interactive controls.
+> - It matters because the note uses Graph Objects when Express is too limited for candlesticks, custom subplots, or advanced interactivity.
+>
+> > [!warning] More control means more boilerplate
+> >
+> > Graph Objects are powerful precisely because they are explicit. Expect more code and more manual wiring than in Plotly Express.
+>
+> ---
+>
+> **Static export**
+> - Saving a chart as a non-interactive asset such as PNG, SVG, or PDF.
+> - It matters because vault publishing, reports, CI artifacts, and long-term documentation often need renderer-independent output.
+>
+> > [!warning] Interactive tools still need static fallbacks
+> >
+> > A chart that works in a notebook may fail in a static site or PDF pipeline. Exporting a static image protects the content from environment-specific widget failures.
+>
+> ---
+>
+> **HTML export**
+> - Saving an interactive chart as a standalone HTML document or embeddable widget for browser-based viewing.
+> - It matters because both Bokeh and Plotly examples in the note are designed to be shared or embedded outside the notebook runtime.
+>
+> > [!warning] Size and compatibility vary
+> >
+> > HTML export preserves interactivity, but file size, CSP rules, CDN availability, and static-site rendering support all affect whether the result is practical to publish.
+>
+> ---
 
 ---
 
@@ -4006,23 +4141,21 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 
 ---
 
-## When to use each visualization library
-
-| Library | Best for | Limitations |
-|---|---|---|
-| **Matplotlib** | Full control, publication-quality static plots, custom themes, reproducible figures for reports | Verbose API; no interactivity without additional widgets |
-| **Seaborn** | Quick statistical charts (distributions, correlations, categories), EDA | Limited to statistical plot types; customization falls back to Matplotlib |
-| **Bokeh** | Interactive dashboards, linked brushing, server-side apps, HTML embedding | Steeper learning curve; chart code is more verbose than Plotly |
-| **Plotly** | Interactive financial charts, quick prototyping, notebook-friendly, Polars-native input | Large JavaScript payload; server-side rendering requires kaleido |
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| Plotting 1M+ data points in a scatter plot | Browser-native renderers (Bokeh, Plotly) choke on large point counts | Downsample, use `datashader` for rasterized rendering, or use Matplotlib with alpha blending |
-| Real-time streaming dashboards | Notebook-based charts are static snapshots — no live update | Use Bokeh Server, Dash (Plotly), or Grafana |
-| Automated report generation in CI/CD | Interactive charts don't render to PDF natively | Use Matplotlib for static images; export Plotly with `kaleido` to PNG/SVG |
-| Geographic/map visualizations | None of these libraries specialize in geospatial mapping | Use Folium, Kepler.gl, or GeoPandas |
+> [!example] Plotting Library Selection
+>
+> > [!success] Applicability
+> >
+> > - ****Matplotlib**** — Best for: Full control, publication-quality static plots, custom themes, reproducible figures for reports. Limitations: Verbose API; no interactivity without additional widgets
+> > - ****Seaborn**** — Best for: Quick statistical charts (distributions, correlations, categories), EDA. Limitations: Limited to statistical plot types; customization falls back to Matplotlib
+> > - ****Bokeh**** — Best for: Interactive dashboards, linked brushing, server-side apps, HTML embedding. Limitations: Steeper learning curve; chart code is more verbose than Plotly
+> > - ****Plotly**** — Best for: Interactive financial charts, quick prototyping, notebook-friendly, Polars-native input. Limitations: Large JavaScript payload; server-side rendering requires kaleido
+>
+> > [!failure] Limitations
+> >
+> > - **Plotting 1M+ data points in a scatter plot** — Browser-native renderers (Bokeh, Plotly) choke on large point counts. Better approach: Downsample, use `datashader` for rasterized rendering, or use Matplotlib with alpha blending
+> > - **Real-time streaming dashboards** — Notebook-based charts are static snapshots — no live update. Better approach: Use Bokeh Server, Dash (Plotly), or Grafana
+> > - **Automated report generation in CI/CD** — Interactive charts don't render to PDF natively. Better approach: Use Matplotlib for static images; export Plotly with `kaleido` to PNG/SVG
+> > - **Geographic/map visualizations** — None of these libraries specialize in geospatial mapping. Better approach: Use Folium, Kepler.gl, or GeoPandas
 
 ## Warnings
 
@@ -4053,4 +4186,3 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 | Seaborn heatmap has overlapping labels | Too many categories on the axis | Rotate labels: `plt.xticks(rotation=45)`; or aggregate categories |
 | Exported HTML file is too large | Plotly JavaScript bundle embedded per chart | Use `include_plotlyjs="cdn"` or export as static image |
 | Chart colors are invisible on dark background | Default color palette designed for light backgrounds | Apply dark theme: Tokyo Night for Matplotlib, `plotly_dark` for Plotly |
-

@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Block Library — GCP Foundation and Networking
+# Foundation and Networking Blocks
 
 > [!quote] Kelsey Hightower on minimizing code
 >
@@ -16,7 +16,135 @@ status: complete
 >
 > — **Kelsey Hightower**, Twitter
 
-This is an atomic block library. Every section below is an independently copy-pasteable Terraform block. Each block is preceded by a plain-text explanation of what it provisions, when to use it, and how its arguments behave. Argument tables follow each code cell for quick reference. No block depends on another block in this file — treat each one as a standalone snippet.
+> [!abstract]- Summary
+>
+> Foundation and Networking Blocks is the GCP Terraform snippet library for the platform substrate: it collects independently copy-pasteable provider, backend, VPC, subnet, NAT, firewall, addressing, DNS, peering, Shared VPC, and PSC blocks, each meant to be lifted into real configurations with full awareness of the argument and lifecycle trade-offs.
+>
+> **Foundation blocks**
+> - covers provider and backend setup, version pinning, variables, outputs, locals, and the baseline Terraform scaffolding needed before any GCP network resources can be managed
+>
+> **Core networking blocks**
+> - covers VPCs, subnets, Cloud Router, Cloud NAT, firewall rules, and static IP patterns that define the private network shape and traffic posture for later workloads
+>
+> **Extended connectivity blocks**
+> - covers DNS, VPC peering, Shared VPC, and Private Service Connect for multi-network, enterprise, and private-service connectivity use cases
+>
+> **Library usage and composition**
+> - covers the complete stitched example, quick-reference index, and the rule that each block is standalone even when multiple blocks naturally compose into a fuller architecture
+>
+> **Operations and safety**
+> - Warnings: backend state must still be shared safely, auto-mode VPCs create subnets in every region, firewall rules without narrow targeting affect more than intended, unattached static IPs still bill, VPC peering is non-transitive, Shared VPC needs separate IAM after attachment, and PSC requires its API before apply
+> - Recommendations: use custom-mode VPCs in production, pin provider versions, validate NAT IP mode decisions, scope allow rules with target tags or identities, reclaim unused static IPs, create explicit peering paths for every required network edge, and enable supporting APIs before using advanced connectivity resources
+
+> [!note]- Glossary
+>
+> **Atomic block library**
+> - A collection of self-contained Terraform snippets designed to be copied into larger configurations without assuming the whole file is applied as one unit.
+> - It matters because this note is organized as reusable building blocks, not as one canonical root module to apply unchanged.
+>
+> > [!info] Standalone does not mean context-free
+> >
+> > Each snippet is intentionally self-contained, but the surrounding architecture still decides whether the block is safe, sufficient, or compatible with the rest of the environment.
+>
+> ---
+>
+> **Provider pinning**
+> - The practice of constraining the Terraform provider version so upgrades do not happen silently.
+> - It matters because a snippet library is only reliable if the provider schema it assumes stays within a controlled version range.
+>
+> > [!warning] Libraries need stable provider contracts
+> >
+> > Copy-pasteable blocks age badly if the provider is allowed to float freely. Version pinning is part of making snippet behavior predictable across teams and time.
+>
+> ---
+>
+> **Backend**
+> - The Terraform state storage configuration that determines where the source of truth lives and how collaborative runs are coordinated.
+> - It matters because foundation snippets are incomplete unless they also establish durable, shared state handling.
+>
+> > [!warning] Network code without remote state is weak foundation
+> >
+> > You can provision a VPC with local state, but that is not a strong operational pattern for real teams. The backend is part of the infrastructure baseline, not just Terraform plumbing.
+>
+> ---
+>
+> **Custom-mode VPC**
+> - A GCP network created without automatic subnet creation in every region.
+> - It matters because production network design usually needs explicit control over which regions get address ranges and routing boundaries.
+>
+> > [!warning] Auto mode spends your address space for you
+> >
+> > Auto-mode VPCs are convenient for experiments, but they pre-create regional subnets you may not want. That reduces intentionality in network planning.
+>
+> ---
+>
+> **Cloud NAT**
+> - GCP's managed outbound translation service for private workloads that still need internet or Google API access.
+> - It matters because many Terraform-managed workloads should stay off the public internet while still reaching package repositories or managed services.
+>
+> > [!warning] NAT configuration affects runtime resilience
+> >
+> > NAT is not just a checkbox for outbound access. IP allocation mode and port behavior influence whether high-concurrency traffic patterns remain healthy under load.
+>
+> ---
+>
+> **Firewall rule**
+> - A GCP traffic-control object that allows or denies traffic based on direction, protocol, ports, source ranges, and target scope.
+> - It matters because the networking library expresses network security posture primarily through firewall blocks.
+>
+> > [!danger] Broad firewall rules age badly
+> >
+> > A permissive rule that feels convenient during setup often becomes an invisible liability later. Tight targets and source ranges are the difference between intent and accidental exposure.
+>
+> ---
+>
+> **Target tag**
+> - A VM-attached label used by firewall rules to decide which instances a rule should affect.
+> - It matters because tag targeting is one of the main ways this block library keeps allow rules from applying to every VM in the network.
+>
+> > [!info] Tags define reachability scope
+> >
+> > A firewall rule without deliberate targeting can have a far larger blast radius than intended. Tags are a simple but effective way to narrow that scope.
+>
+> ---
+>
+> **Static IP**
+> - A reserved address that persists independently of any one attached workload.
+> - It matters because some integrations, DNS patterns, and allowlists need a stable address rather than an ephemeral assignment.
+>
+> > [!warning] Stability has a carrying cost
+> >
+> > Static IPs are useful only when the environment truly needs address stability. Unattached reservations become a cost and inventory-management problem if left behind.
+>
+> ---
+>
+> **VPC peering**
+> - A private network connection between two VPCs that allows traffic to flow directly between them.
+> - It matters because multi-VPC topologies often rely on peering for internal connectivity without exposing resources publicly.
+>
+> > [!warning] Peering does not transitively chain
+> >
+> > Peering is pairwise. If three networks all need to communicate, each required edge has to be designed explicitly instead of assumed through an intermediate VPC.
+>
+> ---
+>
+> **Shared VPC**
+> - A GCP model where one host project owns the network and service projects attach their workloads to that shared network.
+> - It matters because enterprise networking often centralizes network control while distributing application ownership across projects.
+>
+> > [!warning] Attachment still needs IAM completion
+> >
+> > Putting a project onto a Shared VPC is only part of the design. Subnet and network usage still depend on explicit IAM grants after attachment.
+>
+> ---
+>
+> **Private Service Connect**
+> - A GCP pattern for reaching supported services privately through internal endpoints instead of public service addresses.
+> - It matters because PSC is one of the higher-order private-connectivity blocks in the library and often appears only after simpler VPC patterns are already in place.
+>
+> > [!warning] Advanced connectivity starts with prerequisites
+> >
+> > PSC resources fail predictably when the required APIs are not enabled. The block itself can be correct while the platform is still unprepared to host it.
 
 ## Foundation Blocks
 

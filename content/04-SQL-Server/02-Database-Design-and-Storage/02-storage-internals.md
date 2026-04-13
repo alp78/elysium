@@ -14,14 +14,131 @@ status: complete
 
 # Storage Internals
 
-Storage internals explain why the same SQL text can behave very differently depending on table structure, page density, log pressure, and allocation patterns. The production questions are concrete:
+> [!abstract]- Summary
+>
+> Storage internals explain why the same SQL text can behave very differently depending on table structure, page density, log pressure, and allocation patterns. This note connects SQL Server’s physical storage model to the production symptoms that show up later in growth, logging, fragmentation, and `tempdb` behavior.
+>
+> **Core model**
+> - defines the physical units every later section depends on: pages, extents, data files, log files, and virtual log files
+> - uses the current file layout as the live anchor so storage concepts stay tied to real database state rather than abstract diagrams
+>
+> **Pages and files**
+> - inspects the current file layout and a real data page so page structure, allocation, and on-disk storage are grounded in live output
+>
+> **Write-ahead logging and log health**
+> - explains WAL, log reuse, and VLF behavior so transaction-log growth and recovery semantics can be interpreted correctly
+>
+> **Mutation costs**
+> - covers heap forwarding records and page splits, the two storage-engine effects that make the same workload behave differently as row shape and update patterns change
+>
+> **`tempdb`**
+> - breaks down `tempdb` space by category so versioning, spills, and other temporary workloads can be read against the correct storage bucket
+>
+> **Operations and safety**
+> - Recommendations: start storage diagnostics from physical layout, log state, and `tempdb` category pressure before jumping to query-level blame
+> - Warnings: forwarded rows, page splits, and unhealthy VLF patterns are side effects of design and write behavior, not random engine noise
 
-- where the database is growing
-- how pages are laid out
-- whether the log is healthy
-- whether heaps are generating forwarded rows
-- whether updates are forcing page splits
-- whether `tempdb` is absorbing versioning or spill pressure
+> [!note]- Glossary
+>
+> **Page**
+> - The 8 KB unit SQL Server uses for rowstore I/O, buffering, and most on-disk data organization.
+> - It matters because every scan, lookup, split, and density decision in this note is ultimately expressed in pages.
+>
+> > [!info] The page is the real storage grain
+> >
+> > Row counts can mislead. Page counts are often the more useful unit when the question is I/O cost, cache footprint, or fragmentation.
+>
+> ---
+>
+> **Extent**
+> - A 64 KB allocation unit made up of eight contiguous pages.
+> - It matters because SQL Server allocates rowstore space in extents, so growth and fragmentation behavior are tied to extent allocation patterns.
+>
+> > [!info] Allocation and I/O are not identical
+> >
+> > SQL Server allocates in extents, but many access patterns still read and write one page at a time. The two concepts overlap without being the same.
+>
+> ---
+>
+> **Write-ahead logging (WAL)**
+> - The durability rule that log records must be written to the transaction log before the corresponding dirty data pages are written to disk.
+> - It matters because the transaction log is the first persistence surface for every change, which is why log health is central to both performance and recovery.
+>
+> > [!danger] The log is the durability path
+> >
+> > When the log is unhealthy, write performance and recoverability fail together. Treating log issues as “just storage” misses the real blast radius.
+>
+> ---
+>
+> **Virtual log file (VLF)**
+> - An internal segment of the SQL Server transaction log used to track reuse and truncation boundaries.
+> - It matters because too many tiny VLFs or badly grown log files make log reuse and recovery operations slower and harder to manage.
+>
+> > [!warning] Bad growth settings create VLF debt
+> >
+> > VLF problems are usually created gradually by repeated poor autogrowth decisions. They are an operational history problem, not a one-time incident.
+>
+> ---
+>
+> **Heap**
+> - A table with no clustered index, where rows are stored without clustered key order.
+> - It matters because heaps can generate forwarded records under updates and behave very differently from clustered tables under real workloads.
+>
+> > [!warning] Heaps are not “free tables”
+> >
+> > A heap can be the right design for some patterns, but it changes update and scan behavior enough that it should always be a deliberate choice.
+>
+> ---
+>
+> **Forwarded record**
+> - A heap row that has been moved to another page after an update, leaving a forwarding pointer behind.
+> - It matters because forwarded rows turn simple scans and lookups into extra page hops, increasing I/O and making heap-heavy workloads age badly.
+>
+> > [!warning] Updates can make heaps decay over time
+> >
+> > A heap that looks fine on day one can become much more expensive later if variable-length updates keep creating forwarded rows.
+>
+> ---
+>
+> **Page split**
+> - The operation where SQL Server divides a full page into two pages to make room for an insert or update in the middle of an ordered structure.
+> - It matters because page splits increase write cost, cause extra logging, and reduce page density in clustered and nonclustered B-trees.
+>
+> > [!warning] Not every split is a bug, but many are a design smell
+> >
+> > Random-key inserts and poorly chosen fill factors often surface as persistent page-split pressure. The symptom points back to physical design.
+>
+> ---
+>
+> **Page density**
+> - The degree to which page space is actually filled with useful rows rather than left as internal free space.
+> - It matters because low density increases page counts, buffer-pool footprint, and scan cost even when fragmentation is not dramatic.
+>
+> > [!info] More pages means more work
+> >
+> > Density is easy to ignore because it is less visible than fragmentation. But for many workloads, wasted pages are the more important cost.
+>
+> ---
+>
+> **`tempdb`**
+> - The system database used for temporary objects, spills, version store, and many engine-internal work tables.
+> - It matters because storage pressure in `tempdb` often reflects workload side effects such as sorts, hashes, snapshot isolation, or row versioning rather than user-table growth.
+>
+> > [!warning] `tempdb` pressure is often a downstream symptom
+> >
+> > Fixing `tempdb` usually requires understanding the workload creating the pressure, not just adding more disk and hoping the symptom disappears.
+>
+> ---
+>
+> **Version store**
+> - The `tempdb` storage area that holds row versions for snapshot-based isolation and related features.
+> - It matters because version-store growth can make `tempdb` look like a storage problem when the real driver is concurrency or long-running readers.
+>
+> > [!warning] Long readers can pin old versions
+> >
+> > A version store that keeps growing is often being held open by sessions that have not finished reading, not by write volume alone.
+>
+> ---
 
 ## Core Model
 
@@ -674,5 +791,3 @@ The following recommendations translate the storage internals covered in the pre
 - Avoid mutable heaps for long-lived OLTP or frequently updated tables. Forwarding records are a structural tax, not a cosmetic issue.
 - Treat page splits as a design signal first. Sequential clustering, narrower rows, and lower churn usually matter more than blind rebuilds. When `leaf_allocation_count` in `sys.dm_db_index_operational_stats` shows a specific index splitting frequently, lower that index's `fill_factor` (e.g., from the default 100% to 90% or 80%) with `ALTER INDEX [ix] ON [table] REBUILD WITH (FILLFACTOR = 90)`, then re-check `leaf_allocation_count` over the next workload cycle to confirm splits decreased — if they did not, the root cause is key choice, not fill factor.
 - Watch `tempdb` version store and internal object space when troubleshooting snapshot workloads, spills, or online maintenance.
-
-

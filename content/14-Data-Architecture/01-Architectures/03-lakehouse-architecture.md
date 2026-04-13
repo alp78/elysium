@@ -15,9 +15,136 @@ status: complete
 >
 > — **Michael Armbrust** (co-creator of Delta Lake)
 
-The lakehouse is a data platform architecture that collapses the traditional two-tier stack — a cheap data lake for raw storage and an expensive data warehouse for governed analytics — into a single, unified storage layer. It achieves this by adding a metadata layer (an [open table format](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats)) on top of object-storage files (Parquet on GCS, S3, or ADLS) that provides ACID transactions, schema enforcement, time travel, and fine-grained governance. The result is one copy of data, one compute model, and one governance layer that serves everything from raw ingestion to BI dashboards to ML training sets.
+> [!abstract]- Summary
+>
+> This note defines the lakehouse as the architecture that keeps data on open object storage while adding transactional metadata, schema control, and governance so one storage layer can serve ingestion, analytics, and machine-learning workloads without the traditional lake-versus-warehouse split.
+>
+> **Why the lakehouse emerged**
+> - Explains how unmanaged lakes failed through missing ACID guarantees and governance while classic warehouses imposed proprietary storage and cost constraints on raw-scale analytics.
+> - Positions the lakehouse as the synthesis that separates cheap storage from query engines while keeping a shared metadata contract over the files.
+>
+> **Core table-format capabilities**
+> - Covers ACID transactions, schema enforcement and evolution, time travel, and row-level mutations, treating the open table format as the mechanism that makes object storage behave like a managed analytical system.
+> - Compares copy-on-write and merge-on-read to show how write frequency, read latency, and maintenance trade against each other.
+>
+> **Formats, engines, and platform choices**
+> - Compares Delta Lake, Apache Iceberg, and Apache Hudi, then maps the architecture onto medallion layering, multi-engine query access, and GCP governance through BigLake and related catalogs.
+> - Connects implementation choices to ecosystem fit, interoperability, and operational ownership rather than treating the format decision as branding.
+>
+> **Operations and safety**
+> - Warnings: an open table format is mandatory, compaction and snapshot cleanup are operational tasks not optional hygiene, and weak catalog discipline recreates the old data swamp under a new name.
+> - Recommendations: choose the format that matches the platform ecosystem, treat maintenance as part of the design, and keep medallion layers and governance policies explicit from the first write.
 
----
+> [!note]- Glossary
+>
+> **Lakehouse**
+> - An analytical architecture that stores data in open file formats on object storage while adding database-like management through a metadata and transaction layer.
+> - It matters here because the note explains why this architecture exists and how it replaces the traditional split between raw lake and governed warehouse.
+>
+> > [!info] One storage layer
+> >
+> > The lakehouse promise is not just lower cost. It is the ability to keep one authoritative physical copy of data while serving multiple compute engines.
+>
+> ---
+>
+> **Open table format**
+> - A specification and metadata model that tracks table snapshots, files, schemas, and transactional state on top of object storage data files.
+> - It matters here because the format layer is what gives the lakehouse ACID behavior, schema control, and interoperability.
+>
+> > [!warning] Files alone are not enough
+> >
+> > Parquet in a bucket is not a lakehouse. Without the table-format metadata, readers have no consistent table state to agree on.
+>
+> ---
+>
+> **ACID transaction**
+> - A write or sequence of writes that obeys atomicity, consistency, isolation, and durability so readers never observe partial state.
+> - It matters here because raw object storage does not provide these guarantees natively, yet the lakehouse depends on them.
+>
+> > [!info] Snapshot visibility
+> >
+> > Readers consult metadata first, so a failed write simply never becomes part of the visible table snapshot.
+>
+> ---
+>
+> **Schema evolution**
+> - The controlled process of changing a table schema over time while preserving compatibility rules for existing readers and writers.
+> - It matters here because the lakehouse promises flexibility without returning to the uncontrolled schema drift of old data lakes.
+>
+> > [!warning] Evolution is constrained
+> >
+> > Safe schema evolution still needs compatibility rules. Adding nullable columns is easy; narrowing types or reusing semantics is where tables break.
+>
+> ---
+>
+> **Time travel**
+> - The ability to query a table as it existed at an earlier timestamp or snapshot version.
+> - It matters here because auditing, debugging, and reproducible model training all rely on historical table states being queryable.
+>
+> > [!info] Operational replay tool
+> >
+> > Time travel is not just a convenience feature. It is a concrete recovery and investigation mechanism after bad writes or disputed outputs.
+>
+> ---
+>
+> **Snapshot**
+> - A consistent recorded table state that points to the exact files and metadata valid at a specific version or time.
+> - It matters here because every lakehouse read depends on snapshots rather than scanning whatever files happen to exist in storage.
+>
+> > [!warning] Retention has cost
+> >
+> > Keeping more snapshots improves auditability and rollback options, but it also increases metadata volume and cleanup work.
+>
+> ---
+>
+> **Copy-on-Write**
+> - A mutation strategy that rewrites affected data files when rows change so readers always see compact, directly readable files.
+> - It matters here because it favors read performance and simplicity at the cost of heavier writes.
+>
+> > [!info] Good for read-heavy tables
+> >
+> > Copy-on-write is usually easier to operate on dimensions and curated datasets where reads dominate and mutations are relatively sparse.
+>
+> ---
+>
+> **Merge-on-Read**
+> - A mutation strategy that records changes in auxiliary delta or delete files and merges them with base files during reads.
+> - It matters here because it reduces write cost for high-ingest tables while shifting more work to readers and maintenance jobs.
+>
+> > [!warning] Read path is more complex
+> >
+> > Merge-on-read can degrade query performance if compaction lags and too many delta files accumulate behind the scenes.
+>
+> ---
+>
+> **Catalog**
+> - The metadata service that stores table definitions, namespaces, schemas, and access points for lakehouse engines.
+> - It matters here because multiple engines can only share the same tables safely when they agree on a common catalog contract.
+>
+> > [!warning] Governance lives here
+> >
+> > If teams bypass the catalog and write directly to storage paths, they recreate the coordination failures the lakehouse was meant to solve.
+>
+> ---
+>
+> **BigLake**
+> - Google Cloud's governance and external-table layer for analytical data stored in GCS and exposed through BigQuery-compatible controls.
+> - It matters here because the note uses BigLake as the GCP-native path for cataloging and querying lakehouse-style storage.
+>
+> > [!info] GCP control plane
+> >
+> > BigLake is less about inventing a new format and more about providing managed cataloging, policy enforcement, and SQL access over open storage.
+>
+
+> [!example] Lakehouse Adoption Fit
+>
+> > [!success] Unified Open Storage
+> >
+> > - Use a lakehouse when you want one open storage layer from raw through curated data, need time travel or transactional writes on object storage, or expect multiple engines to read the same analytical tables.
+>
+> > [!failure] Maintenance Burden Mismatch
+> >
+> > - Do not choose a lakehouse if a conventional warehouse already satisfies the workload, the team cannot operate catalog and table-maintenance workflows, or simple batch files are enough without mutation or governance pressure.
 
 ## Why the Lakehouse Emerged
 

@@ -12,20 +12,256 @@ updated: 2026-04-12
 status: complete
 ---
 
-# BigQuery Querying and Cost Optimization
+# Querying and Cost Optimization
 
-> [!quote]
+> [!quote] Werner Vogels on Cost Awareness
 > "Cost awareness is a lost art. We need to regain that art."
 >
 > — **Werner Vogels**, AWS re:Invent keynote (2019)
 
-BigQuery offers two compute pricing models: **on-demand** ($6.25 per TiB scanned, first 1 TiB/month free) and **Editions** (reserved compute slots billed per slot-hour regardless of bytes scanned). This note focuses on on-demand, which is the default for most teams. A single `SELECT *` on a 10 TiB table costs $62.50 — and runs every time someone executes it. Senior data engineers always dry-run queries before executing them, always use partitioned tables, and never select columns they don't need.
+> [!abstract]- Summary
+>
+> Covers BigQuery query execution and scan-cost control with `bq query`, dry runs, destination tables, parameterized caching, query guardrails, and pricing telemetry so you can run GoogleSQL from the CLI without accidentally turning broad scans into recurring spend.
+>
+> **Running queries**
+> - Prerequisites: enable `bigquery.googleapis.com`, grant `roles/bigquery.jobUser` plus `roles/bigquery.dataViewer`, and authenticate with `gcloud auth application-default login` or `GOOGLE_APPLICATION_CREDENTIALS`
+> - Use `bq query --use_legacy_sql=false` for interactive GoogleSQL, stdin-fed `.sql` files, and output formats such as `table`, `prettyjson`, and `csv`
+> - Materialize results with `--destination_table`, `--replace`, `--append_table`, `--allow_large_results`, and optional destination partitioning, clustering, schema-update, and CMEK flags
+> - Use named `--parameter='name:TYPE:value'` bindings for reusable, injection-safe queries, with cache reuse subject to table freshness, deterministic SQL, result size, and `--nouse_cache`
+>
+> **Guardrails and cost controls**
+> - `--dry_run` validates SQL and estimates bytes scanned before execution using `bytes / 1,099,511,627,776 * $6.25` on on-demand pricing
+> - `--maximum_bytes_billed` blocks oversized queries at plan time, `.bigqueryrc` or `constraints/bigquery.maximumBytesBilled` can enforce defaults, and `--batch` trades lower priority for longer timeout without changing on-demand scan pricing
+>
+> **Optimization patterns**
+> - The 80/20 rules are: partition tables, filter directly on partition columns, never rely on `SELECT *`, cluster on common in-partition filters, dry-run first, and use materialized views for repeated aggregations that tolerate refresh lag
+> - The note distinguishes on-demand optimization (`total_bytes_processed`) from Editions optimization (`total_slot_ms`)
+>
+> **Cost tracking and pricing**
+> - Audit spend through `region-<region>.INFORMATION_SCHEMA.JOBS_BY_PROJECT`, excluding parent `SCRIPT` jobs and converting bytes to TiB or slot milliseconds to slot-hours as appropriate
+> - Quick-reference sections cover on-demand scan cost, on-demand vs Editions break-even logic, storage pricing, and Storage Read / Write API charges
+>
+> **Operations and safety**
+> - When to use: ad hoc CLI querying, exploratory analysis, automated query guardrails, cost review, and user-level spend attribution
+> - Warnings: legacy SQL remains available unless you disable it, `SELECT *` scales cost with every scanned column, wrapping partition columns in functions disables pruning, cached results are bypassed by common conditions, and unbounded queries need byte caps
+> - Recommendations: dry-run first, keep byte caps on exploratory workloads, enumerate columns explicitly, combine partitioning with clustering, and use materialized views only when a few minutes of staleness fits the SLA
+>
+> [!note]- Glossary
+>
+> **BigQuery job**
+> - A managed unit of work BigQuery creates for a query, load, extract, or copy operation, with its own metadata, billing signals, and lifecycle.
+> - This note focuses on query jobs because every CLI example eventually becomes a job recorded in `INFORMATION_SCHEMA.JOBS`.
+>
+> > [!info] Jobs are auditable
+> >
+> > Query cost analysis in BigQuery starts from job metadata rather than from shell history. If you want to know who spent money, inspect the jobs they submitted.
+>
+> ---
+>
+> **GoogleSQL / `--use_legacy_sql=false`**
+> - BigQuery's modern SQL dialect and the CLI flag that forces queries to use it instead of the older legacy SQL parser.
+> - The note assumes GoogleSQL syntax everywhere, so using the wrong dialect breaks examples and removes newer query features.
+>
+> > [!warning] Legacy mode still exists
+> >
+> > BigQuery keeps legacy SQL for backward compatibility. If you omit the flag in mixed environments, a query can fail or behave differently for reasons that look unrelated to cost.
+>
+> ---
+>
+> **Application Default Credentials / `gcloud auth application-default login`, `GOOGLE_APPLICATION_CREDENTIALS`**
+> - Google client-library and CLI authentication context established either interactively with ADC login or by pointing to a service-account key file.
+> - The note includes CLI query workflows, so successful authentication is a prerequisite before IAM and SQL even matter.
+>
+> > [!warning] CLI auth has layers
+> >
+> > Being logged into `gcloud` for interactive commands does not always mean ADC is set for libraries or all local tools. Verify which credential path the workflow actually uses.
+>
+> ---
+>
+> **On-demand pricing**
+> - BigQuery's pay-per-scan model where query cost is driven by bytes processed, with the first 1 TiB per month free and the rest billed per TiB scanned.
+> - The note centers its guardrails and examples on this pricing model because scan volume directly determines cost.
+>
+> > [!info] Scan size becomes spend
+> >
+> > On-demand pricing rewards pruning columns and partitions aggressively. A cheaper query is usually just a query that reads less data.
+>
+> ---
+>
+> **Editions / slots**
+> - BigQuery's reserved-compute pricing model where you pay for slot-hours instead of bytes scanned, with Standard, Enterprise, and Enterprise Plus capacity tiers.
+> - The note contrasts Editions with on-demand so you know when the right optimization metric changes from bytes to slot time.
+>
+> > [!warning] Different metric, same query
+> >
+> > A query that is cheap on on-demand because it scans few bytes can still be operationally expensive on Editions if it burns many slot-milliseconds. Always optimize against the billing model you actually bought.
+>
+> ---
+>
+> **Columnar storage**
+> - A storage layout where data is grouped by column rather than by full row, letting BigQuery read only referenced columns for many analytical queries.
+> - The note's anti-`SELECT *` guidance depends on this behavior: unused columns are avoidable scan cost.
+>
+> > [!info] Projection saves money
+> >
+> > Columnar systems make narrow `SELECT` lists operationally meaningful. Choosing only the needed columns is a pricing decision, not just a style preference.
+>
+> ---
+>
+> **`bq query`**
+> - The BigQuery CLI command that submits GoogleSQL for execution and prints results or writes them to a destination table.
+> - Nearly every workflow in this note starts with `bq query`, then layers cost, caching, output, or destination controls on top.
+>
+> > [!info] One command, many modes
+> >
+> > The same command supports interactive reads, dry runs, saved-result writes, parameter binding, JSON or CSV output, and batch execution. Most operational variation lives in flags rather than in different tools.
+>
+> ---
+>
+> **Dry run / `--dry_run`**
+> - A planning-only query mode that validates SQL and reports estimated bytes processed without executing the query or billing for it.
+> - The note treats dry runs as the first line of defense against accidental large scans on on-demand pricing.
+>
+> > [!warning] Estimate before execution
+> >
+> > A dry run prevents cost surprises only if you do it before the real query. Running it afterward is just a postmortem on spend you already incurred.
+>
+> ---
+>
+> **Cost metric / `total_bytes_processed`, `total_slot_ms`**
+> - The primary BigQuery job metrics used to reason about pricing: bytes scanned for on-demand, slot milliseconds consumed for Editions.
+> - The note uses this distinction to show why the same `INFORMATION_SCHEMA` view supports two different cost-accounting models.
+>
+> > [!info] Match metric to billing
+> >
+> > Tracking `total_bytes_processed` in a slot-based environment or `total_slot_ms` in an on-demand environment gives you the wrong optimization target even when the query text is identical.
+>
+> ---
+>
+> **`--maximum_bytes_billed`**
+> - A per-query byte ceiling that causes BigQuery to fail the query during planning if the scan estimate exceeds the configured budget.
+> - The note uses it as the hard-stop companion to dry runs in exploratory workflows and automated pipelines.
+>
+> > [!warning] Fail closed on purpose
+> >
+> > A blocked query is the intended outcome when the estimate is too high. Do not treat the error as noise; it is the guardrail doing exactly what it was configured to do.
+>
+> ---
+>
+> **Destination table / `--destination_table`**
+> - A BigQuery table that receives query results instead of printing them to stdout.
+> - The note uses destination tables when repeated downstream reads would cost more than materializing the result once.
+>
+> > [!info] Materialize to avoid rescans
+> >
+> > If a query result will be reused by dashboards, exports, or later SQL, writing it once can be cheaper and more stable than recomputing it repeatedly.
+>
+> ---
+>
+> **Write disposition / `WRITE_TRUNCATE`, `WRITE_APPEND`, `WRITE_EMPTY`**
+> - The rule that determines whether query results overwrite an existing table, append to it, or fail when the target already exists.
+> - The note uses these modes to make destination-table writes explicit instead of leaving persistence behavior ambiguous.
+>
+> > [!warning] Persistence can be destructive
+> >
+> > `WRITE_TRUNCATE` or `--replace` is convenient for refresh tables, but it can also wipe the previous result set instantly. Be clear about whether the target is disposable or authoritative.
+>
+> ---
+>
+> **Named parameter / `--parameter`, `@name`**
+> - A typed value bound to a query at runtime and referenced inside GoogleSQL with `@parameter_name` syntax.
+> - The note uses parameters to keep query structure stable for cache reuse and to prevent user input from being treated as SQL text.
+>
+> > [!info] Parameters are typed
+> >
+> > BigQuery validates parameter types at compile time. That catches many mistakes before any bytes are scanned and avoids manual string quoting in shell commands.
+>
+> ---
+>
+> **Query results cache / `--nouse_cache`**
+> - BigQuery's 24-hour reuse of prior query results when the query text and referenced data are still cache-eligible.
+> - The note frames caching as both a cost lever and a source of confusion when results are unexpectedly fresh or unexpectedly recomputed.
+>
+> > [!warning] Cache eligibility is fragile
+> >
+> > Non-deterministic functions, table modifications, large result sets, scripting, or an explicit cache bypass all force fresh execution even if the SQL text looks the same.
+>
+> ---
+>
+> **`SELECT *`**
+> - A SQL projection that asks BigQuery to read every column in the result set instead of only the columns you actually need.
+> - The note treats `SELECT *` as a cost anti-pattern because columnar storage makes unused columns directly translatable into wasted scan bytes.
+>
+> > [!warning] Convenience scales badly
+> >
+> > `SELECT *` feels harmless on tiny tables and becomes expensive only when the table grows. That delayed pain is why teams often normalize a habit that later blows up cost.
+>
+> ---
+>
+> **Partition pruning**
+> - BigQuery's ability to skip entire table partitions when a query filter can be resolved against the partition boundary at planning time.
+> - The note's first cost rule depends on pruning because it is often the largest single reduction in bytes scanned.
+>
+> > [!warning] Functions can defeat pruning
+> >
+> > Wrapping the partition column in per-row expressions such as `DATE(created_at)` can prevent BigQuery from proving which partitions are needed. Filter on the raw partition column whenever possible.
+>
+> ---
+>
+> **`require_partition_filter`**
+> - A table setting that forces queries to include a partition filter before BigQuery will run them against a partitioned table.
+> - The note recommends it as a production guardrail to prevent accidental full-table scans by analysts, views, or dashboards.
+>
+> > [!warning] Downstream consumers must comply
+> >
+> > Enabling the setting protects cost, but it also breaks existing queries and views that do not supply the required filter. Audit dependencies before turning it on broadly.
+>
+> ---
+>
+> **Clustering**
+> - A BigQuery storage optimization that orders data within a table or partition by selected columns so irrelevant blocks can be skipped during scans.
+> - The note pairs clustering with partitioning because clustering is the next major scan-reduction lever once partition pruning is already in place.
+>
+> > [!info] Best inside partitions
+> >
+> > Clustering is especially effective when many queries already narrow the time range and then filter within that slice by symbols, IDs, or other selective dimensions.
+>
+> ---
+>
+> **Materialized view**
+> - A BigQuery-managed stored query result that is refreshed automatically so repeated queries can read precomputed data instead of recomputing the full aggregation.
+> - The note recommends materialized views for hot repeated workloads where query reuse matters more than perfectly current base-table state.
+>
+> > [!warning] Freshness is not instantaneous
+> >
+> > Materialized views reduce repeated work, but refresh is not guaranteed to be instantaneous. Do not promise near-real-time SLAs unless you have verified refresh lag under production load.
+>
+> ---
+>
+> **`INFORMATION_SCHEMA.JOBS_BY_PROJECT`**
+> - A regional metadata view that exposes query-job history, including submitter identity, bytes scanned, slot time, and statement type.
+> - The note uses it to attribute BigQuery cost by user or service account instead of guessing from billing totals alone.
+>
+> > [!warning] Region qualifier is required
+> >
+> > The view is regional, so the prefix must match where the jobs ran, such as `region-US` or `region-EU`. Querying the wrong region yields misleadingly empty or incomplete results.
+>
+> ---
+>
+> **Storage APIs / Storage Read API, Storage Write API**
+> - BigQuery's non-SQL data-plane APIs for large reads and low-latency writes, priced separately from ordinary query scans.
+> - The note includes them in the pricing reference so engineers do not assume every BigQuery cost shows up as SQL bytes scanned.
+>
+> > [!info] Separate billing surfaces
+> >
+> > Query pricing, storage pricing, and API pricing are related but distinct. A low SQL bill does not mean the project is cheap if read or write APIs are carrying significant volume.
 
 ## Running Queries with bq
 
 The `bq` command-line tool is the primary interface for running BigQuery queries from the terminal. All operations create BigQuery jobs tracked in `INFORMATION_SCHEMA.JOBS`.
 
 **Prerequisites:**
+
 - API: `bigquery.googleapis.com` enabled on the project
 - IAM: `roles/bigquery.jobUser` to create query jobs; `roles/bigquery.dataViewer` on the target dataset
 - Authentication: `gcloud auth application-default login` or `GOOGLE_APPLICATION_CREDENTIALS` pointing to a service account key
@@ -193,6 +429,7 @@ bq query --use_legacy_sql=false \
 Parameterized queries substitute typed values into the query at runtime using `@parameter_name` syntax. They serve two purposes: **caching** — queries with identical structure share cached results regardless of parameter values, reducing repeat-scan costs; and **injection prevention** — user-supplied values are never interpreted as SQL syntax.
 
 Query results are cached for 24 hours. The cache is **bypassed** when:
+
 - The query calls non-deterministic functions (`CURRENT_TIMESTAMP()`, `RAND()`, `SESSION_USER()`)
 - Any table referenced in the query was modified since the last cached result
 - The result set exceeds 10 GB compressed
@@ -502,7 +739,7 @@ Long-term storage discount is automatic — tables unmodified for 90 consecutive
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/03-BigQuery/01-dataset-and-table-management) — Partitioning and clustering are configured at table creation
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/03-BigQuery/02-data-loading-and-export) — How data gets into BigQuery for querying
 - [job-management](https://alp78.github.io/elysium/06-GCP/03-BigQuery/04-job-management) — Monitoring query jobs, canceling runaway scans
-- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled
+- [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) — `bigquery.googleapis.com` must be enabled
 - [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — SQL query patterns against BigQuery
 - [BigQuery Terraform blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — IaC for partitioned and clustered table definitions
 
@@ -520,5 +757,6 @@ Long-term storage discount is automatic — tables unmodified for 90 consecutive
 - [Storage Read API](https://cloud.google.com/bigquery/docs/reference/storage) — bulk read pricing, free tier
 
 **ChromaDB sources:**
+
 - *Google BigQuery: The Definitive Guide* (Lakshmanan & Tigani) — partition metadata in Spanner, clustering file headers, reclustering behavior
 - *Data Engineering Design Patterns* — slot-based optimization, materialized view refresh latency

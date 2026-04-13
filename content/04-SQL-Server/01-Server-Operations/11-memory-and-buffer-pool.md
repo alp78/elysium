@@ -10,38 +10,55 @@ status: complete
 
 # Memory and the Buffer Pool
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> SQL Server is designed to use memory aggressively. That is healthy when the instance has a sane memory cap, the operating system is not under external pressure, the buffer pool is holding the right data, and memory grants are not queueing. It becomes a production problem when SQL Server is allowed to grow without bounds, when plan cache bloat wastes memory, or when large scans and oversized grants keep evicting useful pages from RAM.
+> SQL Server is designed to use memory aggressively. That is healthy when the instance has a sane cap, the operating system is not under external pressure, the buffer pool is holding the right data, and memory grants are not queueing. It becomes a production problem when SQL Server grows without bounds, when plan cache bloat wastes RAM, or when large scans and oversized grants keep evicting useful pages.
 >
-> This page covers eight diagnostic layers against the live `stoxx` instance running on a Linux Docker host:
->
-> - **Reproducible baseline** — `sys.configurations`, `sys.dm_os_sys_memory`, `sys.dm_os_process_memory`, `sys.dm_os_sys_info`.
-> - **Linux host memory boundaries** — cgroup v2 limits, `/proc/meminfo`, `mssql-conf memory.memorylimitmb`, the SQL-Server-specific 80% default, and how `max server memory (MB)` interacts with `memory.memorylimitmb`.
-> - **Buffer pool health** — Page Life Expectancy per buffer node, correctly computed buffer cache hit ratio, and buffer pool occupancy by database.
-> - **Memory consumers** — top memory clerks, plan cache composition, single-use ad hoc plans, cache-store-level breakdown, `DBCC MEMORYSTATUS`.
-> - **Memory grants** — granted and waiting queries from `sys.dm_exec_query_memory_grants`, resource semaphores from `sys.dm_exec_query_resource_semaphores`, plus the triage decision flow.
-> - **Configuration and intervention commands** — `sp_configure` primary and secondary memory settings, `DBCC FREEPROCCACHE`, `DBCC FLUSHPROCINDB`, scoped procedure cache clearing, and cold-cache buffer flush.
-> - **Memory grant feedback** — the SQL 2022 adaptive memory grant feature, database-scoped configuration, and per-query disable hints.
-> - **Windows-only LPIM** — `sql_memory_model` verification and the operational boundary between the Linux and Windows memory models.
->
-> Every SQL output is captured live from `stoxx` after the 2026-04-11 15:55 restart, via the `stoxx-queries` skill. High-impact cache-flush commands are kept in the note but are isolated, titled, and explicitly marked as operationally dangerous.
+> - **Reproducible baseline**
+>   - establishes the four-view baseline through `sys.configurations`, `sys.dm_os_sys_memory`, `sys.dm_os_process_memory`, and `sys.dm_os_sys_info`
+> - **Linux host memory boundaries**
+>   - covers cgroup v2 limits, `/proc/meminfo`, `mssql-conf memory.memorylimitmb`, the SQL Server 80% default, and how that boundary interacts with `max server memory (MB)`
+> - **Buffer pool health**
+>   - inspects page life expectancy, correctly computed buffer cache hit ratio, and buffer pool occupancy by database
+> - **Memory consumers and grants**
+>   - analyzes top memory clerks, plan cache composition, single-use ad hoc plans, grant wait queues, resource semaphores, and SQL Server 2022 memory grant feedback
+> - **Configuration and intervention**
+>   - reviews `sp_configure` memory settings, `DBCC MEMORYSTATUS`, cache-clearing commands, and the operational boundary around high-impact interventions
+> - **Platform boundary and guidance**
+>   - closes with the Windows-only LPIM model and the final recommendations for safe production tuning
+> - **Live capture context**
+>   - every SQL output was captured live from `stoxx` after the April 11, 2026 15:55 restart via the `stoxx-queries` skill, and high-impact cache-flush commands are explicitly marked as dangerous
 
-## Key Terms
-
-The rest of the note uses seven terms as if they are already familiar. The table below defines each one precisely enough that every later query and interpretation can be read without cross-reference. After the terms, a top-level decision tree shows how the diagnostic layers below fit together: configuration check → OS and process pressure → PLE and buffer pool churn → memory grant queueing → plan cache waste. Every downstream section corresponds to exactly one branch of that tree.
-
-| Term | Meaning |
-|---|---|
-| `buffer pool` | Main SQL Server memory region for cached data and index pages. |
-| `clean page` | Cached page whose in-memory copy matches disk and can be evicted without being written first. |
-| `dirty page` | Cached page modified in memory and not yet written to disk. |
-| `PLE` | Page Life Expectancy, measured in seconds. Higher means cached pages stay resident longer. |
-| `memory clerk` | Internal SQL Server memory-accounting category such as buffer pool, plan cache, lock manager, or CLR. |
-| `memory grant` | Workspace memory pre-allocated to a query for sorts, hashes, and similar operators. |
-| `max server memory` | Upper bound for most SQL Server memory consumption for the buffer pool and most clerks. On Linux it must sit below `memory.memorylimitmb`; on Windows it should sit 1–2 GB below host RAM. |
-| `memory.memorylimitmb` | SQL-Server-specific Linux cap on **total** process memory, not just the buffer pool. Defaults to 80% of the lesser of host RAM and cgroup limit. |
-| `resource semaphore` | Pool of workspace memory from which memory grants are issued. Two per Resource Governor pool: regular and small-query. |
+> [!note]- Glossary
+>
+> - **Buffer pool**
+>   - main SQL Server memory region for cached data and index pages
+> - **Clean page**
+>   - cached page whose in-memory contents already match disk and can be evicted without a write
+> - **Dirty page**
+>   - cached page modified in memory but not yet written back to disk
+> - **PLE**
+>   - page life expectancy, measuring how long cached pages stay resident before eviction
+> - **Buffer cache hit ratio**
+>   - ratio comparing logical page reads satisfied from cache against total page-read demand
+> - **Memory clerk**
+>   - internal SQL Server memory-accounting category for a subsystem such as buffer pool, plan cache, or lock manager
+> - **Plan cache**
+>   - memory area holding compiled plans, where ad hoc plan bloat can crowd out useful cache
+> - **Memory grant**
+>   - workspace memory pre-allocated to a query for sorts, hashes, and similar operators
+> - **Resource semaphore**
+>   - memory-grant gatekeeper from which queries obtain workspace memory
+> - **`max server memory (MB)`**
+>   - SQL Server configuration cap for the buffer pool and most internal consumers
+> - **`memory.memorylimitmb`**
+>   - Linux `mssql-conf` cap on total SQL Server process memory, not just the buffer pool
+> - **Memory grant feedback**
+>   - adaptive feature that adjusts future grant sizes based on prior execution behavior
+> - **LPIM**
+>   - Lock Pages in Memory, a Windows-only operating-system privilege that changes SQL Server memory behavior
+> - **cgroup limit**
+>   - Linux container or host memory boundary visible to SQL Server and relevant to its effective ceiling
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1637,4 +1654,3 @@ Twenty-four concrete actions grouped by category. Every recommendation below is 
 - Microsoft Learn: [Memory grant feedback (intelligent query processing)](https://learn.microsoft.com/sql/relational-databases/performance/intelligent-query-processing-memory-grant-feedback?view=sql-server-ver17)
 - Microsoft Learn: [Intelligent query processing in SQL databases](https://learn.microsoft.com/sql/relational-databases/performance/intelligent-query-processing?view=sql-server-ver17)
 - Microsoft Learn: [Enable the Lock Pages in Memory option](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/enable-the-lock-pages-in-memory-option-windows?view=sql-server-ver17)
-

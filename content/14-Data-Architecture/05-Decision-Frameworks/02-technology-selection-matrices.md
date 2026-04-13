@@ -15,14 +15,165 @@ status: complete
 >
 > — **Dan McKinley**, "Choose Boring Technology" (2015)
 
-Every technology decision in data engineering is a trade-off. There is no universally "best" language, database, or architecture — only the best fit for a given context of scale, team skill, budget, latency requirements, and operational complexity. This note is the lookup table. When you face a technology decision, find the relevant matrix, check the constraints, and follow the decision rule.
+> [!abstract]- Summary
+>
+> This note is the lookup-table companion to the architecture chapter, translating the broader first-principles guidance into decision matrices for languages, databases, GCP services, orchestration, infrastructure tooling, data models, API protocols, and build-vs-buy trade-offs so teams can choose proportionate technology from actual constraints instead of preference.
+>
+> **Languages, databases, and core platform choices**
+> - Compares Python, Bash, PowerShell, C#, and SQL by task boundary, then maps database choices such as SQL Server, BigQuery, and other workload-specific stores to transactional, analytical, and operational requirements.
+> - Includes detailed comparisons and decision flowcharts for language fit, database fit, and the GCP component choices that shape compute, messaging, storage, networking, and security boundaries.
+>
+> **Orchestration, infrastructure, and architecture patterns**
+> - Covers orchestration selection, Terraform versus CLI versus console workflows, and the data-model, protocol, and architecture patterns that drive how systems are deployed, integrated, and evolved.
+> - Extends the comparison into build-vs-buy reasoning so team skill, lock-in, maintenance load, and time-to-value stay visible during stack selection.
+>
+> **Reference usage and quick lookup**
+> - Organizes each domain around a primary decision matrix, then layers in thresholds, detailed comparisons, flowcharts, and quick-reference lookups for teams that need to move from ambiguity to a defensible choice quickly.
+> - Pairs the matrices with anti-pattern warnings and cost-optimization guidance so the note remains a working design aid rather than a static comparison chart.
+>
+> **Operations and safety**
+> - Warnings: one-size-fits-all stacks, premature platform complexity, forcing every workload into one database or protocol, and ignoring the operational cost of a technically elegant choice.
+> - Recommendations: start with the relevant matrix, apply the decision rule, read the detailed comparison if the trade-off is still ambiguous, and cross-check the final choice against the chapter's five-pillar and golden-rule guidance.
 
-> [!tip] How to Use This Reference
-> Each section contains a **decision matrix** (comparison table), **decision rules** (concrete thresholds and if-then logic), and **callouts** for the non-obvious gotchas. Start with the matrix, apply the decision rule, then read the detailed comparison if the choice is ambiguous.
+> [!note]- Glossary
+>
+> **Decision matrix**
+> - A structured comparison table that evaluates options against a consistent set of requirements, constraints, or workload characteristics.
+> - It matters here because the whole note is built as a reference library of matrices that turn vague technology debates into explicit trade-off decisions.
+>
+> > [!info] Compare like with like
+> >
+> > A useful matrix does not prove one tool is universally best. It narrows the choice by making the decision criteria visible.
+>
+> ---
+>
+> **Innovation token**
+> - A mental budget for how much unfamiliar technology a team can afford to introduce and support at once.
+> - It matters here because many matrices in the note assume novelty has an operating cost even when a tool looks technically superior on paper.
+>
+> > [!warning] Hidden adoption cost
+> >
+> > Training, debugging, on-call support, and hiring friction all rise when several new tools land in the same architecture simultaneously.
+>
+> ---
+>
+> **Transactional workload**
+> - A workload dominated by frequent reads and writes on current records, correctness guarantees, and often row-level updates.
+> - It matters here because database and platform choices change when the system must optimize for transactions rather than long analytical scans.
+>
+> > [!warning] Analytics tools are not OLTP tools
+> >
+> > Warehouses handle large scans well, but they are often the wrong place for high-churn row updates and operational serving paths.
+>
+> ---
+>
+> **Analytical workload**
+> - A workload focused on large scans, aggregations, joins, and historical analysis across substantial volumes of data.
+> - It matters here because several matrices in the note favor warehouses or columnar engines when the dominant need is analysis rather than transaction processing.
+>
+> > [!info] Optimize for scan patterns
+> >
+> > The right analytical platform is usually chosen by data shape and query behavior, not by familiarity alone.
+>
+> ---
+>
+> **Serverless compute**
+> - A managed execution model where the platform provisions runtime capacity on demand and bills primarily for actual usage.
+> - It matters here because the GCP selection sections repeatedly weigh Cloud Run, Functions, and other managed runtimes against VMs and always-on services.
+>
+> > [!warning] Cheap when the shape fits
+> >
+> > Serverless is attractive for bursty or scheduled work, but long-lived stateful workloads can become harder to reason about or more expensive there.
+>
+> ---
+>
+> **Message broker**
+> - An intermediary system that receives, buffers, routes, or fan-outs messages between producers and consumers.
+> - It matters here because messaging choices such as Pub/Sub, direct calls, or brokered patterns create very different latency, retry, and decoupling properties.
+>
+> > [!info] Decoupling has a price
+> >
+> > A broker can simplify producer-consumer independence while adding delivery semantics, backlog handling, and new operational surfaces.
+>
+> ---
+>
+> **Orchestration**
+> - The coordination of multi-step jobs, dependencies, retries, schedules, and state across pipeline tasks.
+> - It matters here because the note distinguishes simple scheduling from full orchestration and uses that boundary to decide when Airflow-class tooling is justified.
+>
+> > [!warning] Scheduling is not orchestration
+> >
+> > A timer can launch one task, but it does not automatically provide dependency graphs, backfills, SLAs, or task-level recovery behavior.
+>
+> ---
+>
+> **Infrastructure as Code / IaC**
+> - The practice of defining infrastructure in version-controlled declarative or scripted artifacts instead of configuring it manually.
+> - It matters here because the note compares Terraform, CLI workflows, and console actions based on repeatability, reviewability, and environment consistency.
+>
+> > [!warning] Manual fixes drift quickly
+> >
+> > One-off console changes often solve the immediate issue while making later environments and incident recovery harder to trust.
+>
+> ---
+>
+> **Dimensional model**
+> - An analytical data model that organizes facts and dimensions to support intuitive reporting, filtering, and aggregation.
+> - It matters here because the data-model sections use dimensional thinking to decide how warehouse data should be structured for consumers.
+>
+> > [!info] Modeling is part of tool choice
+> >
+> > A warehouse decision is incomplete if the team has not also decided how analysts will navigate the data once it lands there.
+>
+> ---
+>
+> **API protocol**
+> - The communication contract that defines how services exchange requests, responses, events, or streamed data.
+> - It matters here because the note compares protocol options not just by syntax, but by latency, consumer control, schema discipline, and operational overhead.
+>
+> > [!warning] Protocol mismatch multiplies glue code
+> >
+> > Choosing a protocol that does not match the access pattern often forces extra adapters, retries, or consumer workarounds later.
+>
+> ---
+>
+> **Architecture pattern**
+> - A recurring high-level system shape, such as batch, streaming, medallion, or service-oriented processing, used to organize data flow and responsibilities.
+> - It matters here because architecture selection in the note is about fitting the workload to a system shape before choosing individual tools inside it.
+>
+> > [!info] Shape before tools
+> >
+> > Many technology arguments disappear once the team agrees on the operating model the system actually needs.
+>
+> ---
+>
+> **Build vs buy**
+> - The decision between creating a capability internally or adopting an external managed product, platform, or service.
+> - It matters here because several sections weigh the engineering control of custom builds against the speed and support burden of managed offerings.
+>
+> > [!warning] Ownership is the real cost
+> >
+> > Building can remove vendor constraints, but it also turns maintenance, upgrades, and incident response into permanent team obligations.
+>
+> ---
+>
+> **Cost driver**
+> - A workload characteristic that materially affects spend, such as query volume, data movement, storage retention, message throughput, or always-on runtime.
+> - It matters here because the cost-optimization sections ask teams to choose tools with full awareness of what actually makes that architecture expensive.
+>
+> > [!info] Price follows shape
+> >
+> > In modern data stacks, cost problems often come from workload shape and access patterns more than from the sticker price of the chosen service.
 
-For the principles that underpin every decision here, see [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering).
-
----
+> [!example] Matrix Reference Fit
+>
+> > [!success] Constraint-Driven Comparison
+> >
+> > - Use these matrices for architecture reviews, ADRs, platform selection, and migration planning when scale, team skill, latency, budget, or operational maturity are pulling the decision in different directions.
+>
+> > [!failure] Benchmark Replacement
+> >
+> > - Do not use the matrices as a substitute for local benchmarks, team constraints, or workload-specific proof when the comparison narrows choices but cannot decide for you.
 
 ## Language Selection: Which Language for Which Task
 
@@ -546,7 +697,7 @@ When work is triggered by events rather than time:
 | BigQuery query | `bq query` | Data operation, not infra |
 | One-time service enable | `gcloud services enable` | If done once and never changed |
 
-See [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) for gcloud command structure and global flags.
+See [gcloud-cli-setup](https://alp78.github.io/elysium/06-GCP/01-Core/00-gcloud-cli-setup) for SDK command structure and [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) for service enablement commands.
 
 ---
 
@@ -947,7 +1098,7 @@ For rapid lookup when you just need the answer:
 | ...set up CI/CD for a pipeline | GitHub Actions | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
 | ...encrypt data at rest | TDE (SQL Server) or GCS encryption | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/tde-encryption) |
 | ...manage service accounts | Terraform + IAM | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) |
-| ...explore a new GCP service | Console (UI), then translate to Terraform | [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) |
+| ...explore a new GCP service | Console (UI), then translate to Terraform | [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) |
 | ...handle schema migrations | Idempotent SQL scripts | [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
 | ...choose a data format for transfer | Parquet | [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
 | ...set up Airflow on a VM | Docker Compose | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) |
@@ -964,6 +1115,7 @@ For rapid lookup when you just need the answer:
 ## Related Notes
 
 #### Architecture and modeling
+
 - [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — full section index
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — the principles behind every decision
 - [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Terraform and IaC overview
@@ -973,6 +1125,7 @@ For rapid lookup when you just need the answer:
 - [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) — REST vs gRPC vs GraphQL vs WebSocket
 
 #### Implementation details
+
 - [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) / [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) / [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — orchestration
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless compute patterns
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) / [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — IaC
@@ -985,8 +1138,8 @@ For rapid lookup when you just need the answer:
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD patterns
 
 #### Observability and operations
+
 - [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — monitoring platform
 - [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive) — metrics, logs, traces framework
 - [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) — cost management
 - [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — SLA tracking
-

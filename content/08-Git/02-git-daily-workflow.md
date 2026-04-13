@@ -14,54 +14,444 @@ tags:
 >
 > — **Jeff Atwood**, codinghorror.com
 
-Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every Terraform module must be version-controlled. This page is a self-contained operational guide to the commands and workflows a data engineer runs dozens of times per day — from checking status through staging, committing, pushing, pulling, branching, resolving conflicts, undoing mistakes, and collaborating safely with a team.
+> [!abstract]- Summary
+>
+> Explains the day-to-day Git loop for collaborative engineering work: inspect state, stage and commit deliberately, sync with remotes, manage feature branches, resolve conflicts, recover mistakes, and keep history reviewable.
+>
+> **Mental model and inspection**
+> - Maps changes across the working tree, staging area, local history, and remotes, then uses `git status`, `git diff`, and `git log` to decide what is safe to do next
+> - Distinguishes unstaged, staged, committed, fetched, and pushed state so routine actions do not turn into accidental data loss or branch drift
+>
+> **Staging, commits, and synchronization**
+> - Stages whole files or hunks, creates and amends commits, pushes tracked or new branches, and chooses between `git fetch`, `git pull`, merge, and rebase based on branch state
+> - Covers conventional commit hygiene, upstream tracking, remote cleanup, and why local commits stay private until an explicit push
+>
+> **Feature-branch collaboration**
+> - Starts from updated `main`, opens and merges PRs, cleans up history with interactive rebase, `--autosquash`, and fixup commits, and backports changes with `git cherry-pick`
+> - Uses `git worktree` to avoid stash-switch-restore loops when multiple branches need active work at the same time
+>
+> **Conflict handling and recovery**
+> - Resolves merge and rebase conflicts, compares `restore`, `clean`, `reset`, `revert`, `reflog`, and `stash`, and explains which undo tools are safe on shared history
+> - Adds data-engineering guidance for generated artifacts, review boundaries, and collaboration habits that keep pipeline repositories stable
+>
+> **Operations and safety**
+> - Warnings: non-fast-forward pushes, detached HEAD work, accidental commits on `main`, secret commits, and rebases performed after teammates have already pulled the branch
+> - Recommendations: fetch before risky operations, keep commits small, use `--force-with-lease` only on personal branches, and prefer worktrees over repeated stash juggling
+> - Troubleshooting: 9 daily failure modes covering push rejection, accidental `main` commits, wrong or missing files, bad messages, detached HEAD, secret exposure, deleted files, and upstream mismatches
 
-## Terminology
+> [!note]- Glossary
+>
+> **Git**
+> - A distributed version control system that tracks changes to files as a series of snapshots (commits). Every collaborator has a complete copy of the entire history.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Repository (repo)**
+> - A directory tracked by Git. Contains the working tree, the `.git` directory (which holds all history, branches, and metadata), and optionally a remote counterpart on a hosting platform.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Local repository**
+> - The repo on your machine. All commits, branches, and history are stored locally in `.git`. You do not need a network connection to commit, branch, or inspect history.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Remote repository**
+> - A copy of the repo hosted on a platform like GitHub, GitLab, or Bitbucket. Teams push to and pull from remotes to share work.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **origin**
+> - The default name Git gives to the remote you cloned from. `origin/main` means "the `main` branch as it exists on the remote called `origin`."
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **upstream**
+> - In fork-based workflows, the original repository that your fork was created from. In branch tracking, the remote branch that a local branch is linked to (e.g., `origin/feat/my-feature` is the upstream of `feat/my-feature`).
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **clone**
+> - Create a local copy of a remote repository, including all branches and history. `git clone <url>` downloads everything and sets up `origin` automatically.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **commit**
+> - A snapshot of all staged files at a point in time. Each commit has a unique SHA hash, a parent pointer (forming a directed acyclic graph), an author, a timestamp, and a message.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **SHA / commit hash**
+> - A 40-character hexadecimal string (e.g., `f322cce...`) that uniquely identifies a commit. Git commands accept the first 7–12 characters as a short form.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **branch**
+> - A movable pointer to a commit. Creating a branch is instant and cheap — it just creates a new pointer. When you commit on a branch, the pointer advances to the new commit.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **default branch**
+> - The main line of development — typically called `main` (or `master` in older repos). Protected branches often require pull requests and CI checks before merging.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **feature branch**
+> - A branch created from `main` to isolate work on a specific feature, fix, or task. Merged back into `main` via pull request when complete.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **working tree**
+> - The actual files on disk in your project directory. This is where you edit code. Changes here are "unstaged" until you run `git add`.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **staging area (index)**
+> - An intermediate zone between the working tree and the next commit. `git add` moves changes into the staging area. `git commit` captures everything in the staging area as a new commit.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **tracked file**
+> - A file that Git knows about — it exists in the last commit or has been staged with `git add`. Git monitors tracked files for modifications.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **untracked file**
+> - A file in the working tree that Git does not know about. It has never been added or committed. Untracked files appear in `git status` under "Untracked files."
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **modified file**
+> - A tracked file whose content has changed since the last commit. It appears in `git status` under "Changes not staged for commit" until staged.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **HEAD**
+> - A pointer to the current commit — specifically, to the branch you are on. `HEAD -> main` means you are on `main` and HEAD points to the latest commit on that branch.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **checkout / switch**
+> - Move HEAD to a different branch (or commit). `git switch` (Git 2.23+) is the modern command for branch switching. `git checkout` still works but mixes branch-switching with file-restoring, which can be confusing.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **fetch**
+> - Download new commits, branches, and tags from a remote without modifying your working tree or local branches. Updates remote-tracking branches (e.g., `origin/main`). Always safe.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **pull**
+> - Shorthand for `git fetch` + `git merge` (or `git fetch` + `git rebase` if configured). Downloads remote changes and integrates them into your current branch. May cause merge conflicts.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **push**
+> - Upload local commits to the remote. `git push` sends your branch's new commits to the remote counterpart. Fails if the remote has commits you do not have (non-fast-forward).
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **merge**
+> - Combine two branches by creating a merge commit that has two parents. Preserves the full branching history.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **rebase**
+> - Replay commits from one branch on top of another, rewriting their SHAs. Produces a linear history as if the work was done sequentially.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **fast-forward**
+> - A merge where the target branch has no new commits since the source branched off. Git simply moves the pointer forward — no merge commit needed.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **divergence**
+> - When both the local and remote branches have commits the other does not. Requires a merge or rebase to reconcile.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **merge conflict**
+> - Occurs when two branches modify the same lines in the same file. Git cannot auto-merge and marks the file with conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`). The developer must resolve manually.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **stash**
+> - Temporarily shelve uncommitted changes (staged and/or unstaged) so you can switch branches or pull without committing incomplete work. Changes are saved in a stack and can be restored later.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **revert**
+> - Create a new commit that undoes the changes of a previous commit. Safe for shared branches because it does not rewrite history.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **reset**
+> - Move the branch pointer backward to an earlier commit. `--soft` keeps changes staged, `--mixed` (default) unstages them, `--hard` discards them. Rewrites history — dangerous after pushing.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **restore**
+> - Discard or unstage changes to specific files without affecting the branch pointer. `git restore <file>` discards working tree changes. `git restore --staged <file>` unstages. (Git 2.23+)
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **reflog**
+> - A local log of every position HEAD has pointed to — every checkout, commit, reset, rebase, and merge. The safety net for recovering lost commits. Entries expire after ~90 days.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **pull request (PR)**
+> - A request on the hosting platform to merge one branch into another. PRs enable code review, CI checks, and approval workflows before changes reach the default branch.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **branch protection**
+> - Rules enforced on the hosting platform that restrict direct pushes, require reviews, require passing CI, or forbid force-pushes to a branch. Typically applied to `main`.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **force push**
+> - Overwrite the remote branch with your local version, discarding any remote commits that differ. Dangerous on shared branches — can destroy teammates' work.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **`--force-with-lease`**
+> - A safer variant of force push that refuses to overwrite if the remote has commits you have not fetched. Use this instead of `--force` on personal branches after a rebase or amend.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **cherry-pick**
+> - Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **interactive rebase**
+> - A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch before merging. The primary tool for cleaning up branch history before PR review.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **fixup commit**
+> - A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **worktree**
+> - A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share commit history and reflog. Avoids the stash-switch-restore cycle for parallel work.
+> - It matters in this note because the workflows for daily status inspection, staging, commit creation, synchronization, cleanup, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-Every term used on this page is defined here. If a term appears in a command explanation and is unfamiliar, return to this table.
-
-| Term | Definition |
-|---|---|
-| **Git** | A distributed version control system that tracks changes to files as a series of snapshots (commits). Every collaborator has a complete copy of the entire history. |
-| **Repository (repo)** | A directory tracked by Git. Contains the working tree, the `.git` directory (which holds all history, branches, and metadata), and optionally a remote counterpart on a hosting platform. |
-| **Local repository** | The repo on your machine. All commits, branches, and history are stored locally in `.git`. You do not need a network connection to commit, branch, or inspect history. |
-| **Remote repository** | A copy of the repo hosted on a platform like GitHub, GitLab, or Bitbucket. Teams push to and pull from remotes to share work. |
-| **origin** | The default name Git gives to the remote you cloned from. `origin/main` means "the `main` branch as it exists on the remote called `origin`." |
-| **upstream** | In fork-based workflows, the original repository that your fork was created from. In branch tracking, the remote branch that a local branch is linked to (e.g., `origin/feat/my-feature` is the upstream of `feat/my-feature`). |
-| **clone** | Create a local copy of a remote repository, including all branches and history. `git clone <url>` downloads everything and sets up `origin` automatically. |
-| **commit** | A snapshot of all staged files at a point in time. Each commit has a unique SHA hash, a parent pointer (forming a directed acyclic graph), an author, a timestamp, and a message. |
-| **SHA / commit hash** | A 40-character hexadecimal string (e.g., `f322cce...`) that uniquely identifies a commit. Git commands accept the first 7–12 characters as a short form. |
-| **branch** | A movable pointer to a commit. Creating a branch is instant and cheap — it just creates a new pointer. When you commit on a branch, the pointer advances to the new commit. |
-| **default branch** | The main line of development — typically called `main` (or `master` in older repos). Protected branches often require pull requests and CI checks before merging. |
-| **feature branch** | A branch created from `main` to isolate work on a specific feature, fix, or task. Merged back into `main` via pull request when complete. |
-| **working tree** | The actual files on disk in your project directory. This is where you edit code. Changes here are "unstaged" until you run `git add`. |
-| **staging area (index)** | An intermediate zone between the working tree and the next commit. `git add` moves changes into the staging area. `git commit` captures everything in the staging area as a new commit. |
-| **tracked file** | A file that Git knows about — it exists in the last commit or has been staged with `git add`. Git monitors tracked files for modifications. |
-| **untracked file** | A file in the working tree that Git does not know about. It has never been added or committed. Untracked files appear in `git status` under "Untracked files." |
-| **modified file** | A tracked file whose content has changed since the last commit. It appears in `git status` under "Changes not staged for commit" until staged. |
-| **HEAD** | A pointer to the current commit — specifically, to the branch you are on. `HEAD -> main` means you are on `main` and HEAD points to the latest commit on that branch. |
-| **checkout / switch** | Move HEAD to a different branch (or commit). `git switch` (Git 2.23+) is the modern command for branch switching. `git checkout` still works but mixes branch-switching with file-restoring, which can be confusing. |
-| **fetch** | Download new commits, branches, and tags from a remote without modifying your working tree or local branches. Updates remote-tracking branches (e.g., `origin/main`). Always safe. |
-| **pull** | Shorthand for `git fetch` + `git merge` (or `git fetch` + `git rebase` if configured). Downloads remote changes and integrates them into your current branch. May cause merge conflicts. |
-| **push** | Upload local commits to the remote. `git push` sends your branch's new commits to the remote counterpart. Fails if the remote has commits you do not have (non-fast-forward). |
-| **merge** | Combine two branches by creating a merge commit that has two parents. Preserves the full branching history. |
-| **rebase** | Replay commits from one branch on top of another, rewriting their SHAs. Produces a linear history as if the work was done sequentially. |
-| **fast-forward** | A merge where the target branch has no new commits since the source branched off. Git simply moves the pointer forward — no merge commit needed. |
-| **divergence** | When both the local and remote branches have commits the other does not. Requires a merge or rebase to reconcile. |
-| **merge conflict** | Occurs when two branches modify the same lines in the same file. Git cannot auto-merge and marks the file with conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`). The developer must resolve manually. |
-| **stash** | Temporarily shelve uncommitted changes (staged and/or unstaged) so you can switch branches or pull without committing incomplete work. Changes are saved in a stack and can be restored later. |
-| **revert** | Create a new commit that undoes the changes of a previous commit. Safe for shared branches because it does not rewrite history. |
-| **reset** | Move the branch pointer backward to an earlier commit. `--soft` keeps changes staged, `--mixed` (default) unstages them, `--hard` discards them. Rewrites history — dangerous after pushing. |
-| **restore** | Discard or unstage changes to specific files without affecting the branch pointer. `git restore <file>` discards working tree changes. `git restore --staged <file>` unstages. (Git 2.23+) |
-| **reflog** | A local log of every position HEAD has pointed to — every checkout, commit, reset, rebase, and merge. The safety net for recovering lost commits. Entries expire after ~90 days. |
-| **pull request (PR)** | A request on the hosting platform to merge one branch into another. PRs enable code review, CI checks, and approval workflows before changes reach the default branch. |
-| **branch protection** | Rules enforced on the hosting platform that restrict direct pushes, require reviews, require passing CI, or forbid force-pushes to a branch. Typically applied to `main`. |
-| **force push** | Overwrite the remote branch with your local version, discarding any remote commits that differ. Dangerous on shared branches — can destroy teammates' work. |
-| **`--force-with-lease`** | A safer variant of force push that refuses to overwrite if the remote has commits you have not fetched. Use this instead of `--force` on personal branches after a rebase or amend. |
-| **cherry-pick** | Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch. |
-| **interactive rebase** | A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch before merging. The primary tool for cleaning up branch history before PR review. |
-| **fixup commit** | A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically. |
-| **worktree** | A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share commit history and reflog. Avoids the stash-switch-restore cycle for parallel work. |
+> [!example] Daily Flow Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for the normal inspect-stage-commit-sync loop, PR cleanup before review, and routine recovery from local mistakes.
+> > - Use it when you need to reason about working tree, index, local commits, fetched state, and pushed state without accidentally losing work.
+> > - Use it to keep daily history clean through deliberate staging, small commits, worktrees, and safe remote synchronization habits.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use these habits to justify destructive history rewriting on shared branches or ad-hoc force-pushes without `--force-with-lease`.
+> > - Do not let long-lived work hide in stashes when a branch or worktree is the safer durable mechanism.
+> > - Do not treat this note as the policy source for merge-strategy design or branch-governance rules; those decisions belong in the branching and integration notes.
 
 ## The Git Mental Model
 
@@ -1244,6 +1634,7 @@ gitGraph TB:
 #### How conflicts happen
 
 Conflicts arise when:
+
 1. Two branches modify the same line(s) in the same file
 2. One branch deletes a file that the other branch modifies
 3. Both branches add a file with the same name but different content

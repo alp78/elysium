@@ -18,17 +18,149 @@ status: complete
 
 # Keys, Defaults, Identity, and Sequences
 
-This note owns every mechanism SQL Server uses to assign, guarantee, and retrieve row identity: the strategic choice between natural, surrogate, and composite keys; automatic value generation through `IDENTITY`, `SEQUENCE`, `NEWSEQUENTIALID`, and `DEFAULT` constraints; and the operational traps around gap formation, value retrieval, clustered-index fragmentation, and the `rowversion` change token. Every rule in this note is backed by a live demo captured against the local `stoxx` instance so the reader can reproduce the exact behaviour.
-
-> [!abstract] What this note covers
+> [!abstract]- Summary
 >
-> - Picking between natural, surrogate, and composite keys and the trade-offs each makes around width, stability, and clustering locality.
-> - How `IDENTITY` actually behaves under failed inserts, `IDENTITY_INSERT`, `DBCC CHECKIDENT`, `IDENTITY_CACHE`, trace flag 272, and overflow.
-> - How `SCOPE_IDENTITY()`, `@@IDENTITY`, `IDENT_CURRENT`, and the `OUTPUT` clause differ and which to use for correctness.
-> - How `SEQUENCE` objects, `NEXT VALUE FOR`, and `sp_sequence_get_range` replace `IDENTITY` when numbering must survive one table.
-> - How `DEFAULT` constraints bind `SYSUTCDATETIME`, `NEWID`, `NEWSEQUENTIALID`, and `NEXT VALUE FOR` to columns without application knowledge.
-> - Why `NEWSEQUENTIALID` wins on clustered-index fragmentation and the live measurement that proves it.
-> - What `rowversion` actually is, how it powers optimistic concurrency, and why it is never a timestamp.
+> This note owns every mechanism SQL Server uses to assign, guarantee, and retrieve row identity: the strategic choice between natural, surrogate, and composite keys; automatic value generation through `IDENTITY`, `SEQUENCE`, `NEWSEQUENTIALID`, and `DEFAULT` constraints; and the operational traps around gap formation, value retrieval, clustered-index fragmentation, and the `rowversion` change token. Every rule is backed by a live demo captured against the local `stoxx` instance.
+>
+> **Row identity strategy**
+> - compares natural, surrogate, and composite keys with the trade-offs each choice makes around width, stability, clustering locality, and downstream joins
+>
+> **`IDENTITY` behavior**
+> - explains how `IDENTITY` behaves under failed inserts, `IDENTITY_INSERT`, `DBCC CHECKIDENT`, `IDENTITY_CACHE`, trace flag 272, and overflow
+> - covers the safe retrieval surface for generated values: `SCOPE_IDENTITY()`, `@@IDENTITY`, `IDENT_CURRENT`, and the `OUTPUT` clause
+>
+> **`SEQUENCE` and defaults**
+> - shows how `SEQUENCE` objects, `NEXT VALUE FOR`, and `sp_sequence_get_range` extend numbering beyond one table
+> - covers how `DEFAULT` constraints bind `SYSUTCDATETIME`, `NEWID`, `NEWSEQUENTIALID`, and sequence values to columns without application-side logic
+>
+> **GUIDs and change tokens**
+> - explains why `NEWSEQUENTIALID` changes clustered-index fragmentation behavior and what `rowversion` actually does in optimistic concurrency designs
+>
+> **Operations and safety**
+> - Warnings: identity gaps, wrong identity-retrieval functions, random GUID clustering, and misunderstanding `rowversion` all create correctness bugs that surface late
+> - Recommendations: choose keys deliberately, retrieve generated values with scope-safe patterns, and separate join identity from business uniqueness
+
+> [!note]- Glossary
+>
+> **Natural key**
+> - A key whose columns come from the business domain itself, such as `(symbol, date)` or `(customer_id, order_id)`.
+> - It matters because natural keys often capture the real uniqueness rule even when the table also carries a surrogate identifier.
+>
+> > [!warning] Business uniqueness still needs enforcement
+> >
+> > Switching to a surrogate key does not make the domain rule disappear. It only moves the join anchor somewhere else.
+>
+> ---
+>
+> **Surrogate key**
+> - A generated identifier with no business meaning, often implemented as an integer `IDENTITY`.
+> - It matters because surrogate keys simplify joins and foreign-key relationships, but they are not a substitute for business-key integrity.
+>
+> > [!info] Convenience and semantics are different concerns
+> >
+> > Surrogate keys are excellent for joins. They do not prove that a row is unique according to the business.
+>
+> ---
+>
+> **Composite key**
+> - A key made of multiple columns together rather than a single identifier column.
+> - It matters because composite keys can express business uniqueness directly, but they change index width, foreign-key shape, and clustering tradeoffs.
+>
+> > [!warning] Wider keys propagate outward
+> >
+> > A wide clustered composite key increases the size of every nonclustered index that points back to it. That physical cost needs to be deliberate.
+>
+> ---
+>
+> **`IDENTITY`**
+> - A column property that generates incrementing numeric values automatically on insert.
+> - It matters because it is SQL Server’s most common surrogate-key mechanism and comes with operational behavior around gaps, reseeds, and retrieval.
+>
+> > [!warning] Gaps are normal
+> >
+> > Failed inserts, rollbacks, restarts, and caching can all create missing identity values. Sequential does not mean gapless.
+>
+> ---
+>
+> **`IDENTITY_INSERT`**
+> - The session setting that temporarily allows explicit values to be inserted into an identity column.
+> - It matters because repair, migration, and replay workflows sometimes need it, but it changes the normal key-generation contract while active.
+>
+> > [!warning] One table per session
+> >
+> > Only one table can have `IDENTITY_INSERT` enabled in a session at a time. Leaving it on carelessly complicates later writes.
+>
+> ---
+>
+> **`DBCC CHECKIDENT`**
+> - The command used to inspect or reseed an identity value.
+> - It matters because reseeding is one of the few direct ways to alter the next generated identity value after repairs or bulk operations.
+>
+> > [!danger] Reseeding can create collisions
+> >
+> > Setting the seed below existing values can cause duplicate-key failures or broken relationships on the very next insert.
+>
+> ---
+>
+> **`SCOPE_IDENTITY()`**
+> - A function that returns the last identity value generated in the current scope.
+> - It matters because it is the safest common way to retrieve an identity created by the statement you just executed.
+>
+> > [!warning] Scope is the safety boundary
+> >
+> > Functions that ignore scope can return identity values generated by triggers or unrelated activity. That is a correctness bug, not just a style issue.
+>
+> ---
+>
+> **`SEQUENCE`**
+> - A schema-scoped object that generates numeric values independently of any one table.
+> - It matters because sequences are the right abstraction when numbering must be shared, preallocated, or consumed outside one table insert pattern.
+>
+> > [!info] Sequence numbers are table-agnostic
+> >
+> > Unlike `IDENTITY`, a sequence can be used across many tables, defaults, or preallocation workflows without being tied to one rowstore object.
+>
+> ---
+>
+> **`NEXT VALUE FOR`**
+> - The expression that consumes the next value from a sequence object.
+> - It matters because it is the bridge between a sequence and the DML or default expression that needs the generated value.
+>
+> > [!warning] Consumption still advances on failed work
+> >
+> > Like identity values, consumed sequence numbers are not automatically rolled back into existence if later work fails.
+>
+> ---
+>
+> **`DEFAULT` constraint**
+> - A column rule that supplies a value when the insert statement omits that column.
+> - It matters because defaults let the database own generated timestamps, GUIDs, and sequence assignments instead of trusting every caller to do it correctly.
+>
+> > [!warning] Defaults fill values, they do not validate intent
+> >
+> > A default makes omission safe. It does not prove the generated value is the right semantic choice unless the design says so explicitly.
+>
+> ---
+>
+> **`NEWSEQUENTIALID`**
+> - A function that generates GUID values with increasing locality instead of fully random distribution.
+> - It matters because sequential GUIDs reduce page splits and fragmentation compared with `NEWID()` when the GUID is part of the clustered key path.
+>
+> > [!warning] Sequential is local, not globally ordered history
+> >
+> > `NEWSEQUENTIALID` helps storage locality. It is not a business timestamp and should not be treated as one.
+>
+> ---
+>
+> **`rowversion`**
+> - An automatically incremented binary token SQL Server updates whenever a row changes.
+> - It matters because `rowversion` is a change-detection and optimistic-concurrency primitive, not a human time value.
+>
+> > [!warning] It is not a timestamp
+> >
+> > Despite the historical name, `rowversion` contains no wall-clock meaning. It only tells you that a newer change has happened somewhere in the database.
+>
+> ---
 
 ## Row Identity Strategy
 
@@ -1293,5 +1425,3 @@ Apply these in order when designing a table that needs row identity or automatic
 - [NEWSEQUENTIALID](https://learn.microsoft.com/sql/t-sql/functions/newsequentialid-transact-sql?view=sql-server-ver17) · [Index architecture and design guide](https://learn.microsoft.com/sql/relational-databases/sql-server-index-design-guide?view=sql-server-ver17) · [sys.dm_db_index_physical_stats](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql?view=sql-server-ver17)
 - [rowversion](https://learn.microsoft.com/sql/t-sql/data-types/rowversion-transact-sql?view=sql-server-ver17) · [MIN_ACTIVE_ROWVERSION](https://learn.microsoft.com/sql/t-sql/functions/min-active-rowversion-transact-sql?view=sql-server-ver17) · [Transaction locking and row versioning guide](https://learn.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide?view=sql-server-ver17)
 - [sys.identity_columns](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-identity-columns-transact-sql?view=sql-server-ver17) · [sys.sequences](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-sequences-transact-sql?view=sql-server-ver17) · [sys.default_constraints](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-default-constraints-transact-sql?view=sql-server-ver17)
-
-

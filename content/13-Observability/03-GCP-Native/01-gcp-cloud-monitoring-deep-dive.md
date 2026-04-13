@@ -22,39 +22,132 @@ updated: 2026-03-22
 status: complete
 ---
 
-# GCP Cloud Monitoring — Deep Dive
+# GCP Cloud Monitoring Deep Dive
 
 > [!quote]
 > "The future of monitoring is leaning strongly toward complex analytics on epic amounts of telemetry data."
 >
 > — **Theo Schlossnagle**
 
-> [!abstract] Purpose
-> This is the definitive reference for using GCP Cloud Monitoring (formerly Stackdriver) as the single observability platform for data engineering infrastructure. The goal: achieve full operational parity with Datadog using only GCP-native tools, at a fraction of the cost.
+> [!abstract]- Summary
+>
+> This note treats Cloud Monitoring as the GCP-native control plane for metrics, alerts, dashboards, and error budgets: it explains how built-in service telemetry, Ops Agent data, custom metrics, MQL, and runbooks can cover most monitoring needs for a data platform that lives primarily inside Google Cloud.
+>
+> **Metric model and collection**
+> - Explains the ingestion paths, monitored resources, metric descriptors, and metric kinds that define how Cloud Monitoring stores and interprets telemetry.
+> - Builds the conceptual base needed to aggregate, align, and alert on metrics without misreading what each time series actually means.
+>
+> **Coverage and query language**
+> - Maps Cloud Monitoring across Compute Engine, BigQuery, Cloud Run, Pub/Sub, Storage, Firestore, and scheduling services, then uses MQL to query those signals precisely.
+> - Treats MQL as the way to turn raw provider metrics into operational questions about backlog, latency, cold starts, and cost.
+>
+> **Custom metrics and alerting**
+> - Shows how pipeline code can publish custom metrics and how those signals feed dashboards, alerting policies, notification channels, uptime checks, and SLO definitions.
+> - Connects application-level telemetry to the same native monitoring surface as infrastructure metrics.
+>
+> **Platform tradeoffs and runbooks**
+> - Ends with the Cloud Monitoring versus Datadog comparison, feature-gap mitigations, and concrete runbooks for common operational incidents.
+> - When to use: the goal is to run a GCP-heavy platform with one native monitoring stack instead of layering in a separate SaaS by default.
 
----
-
-### Table of Contents
-
-1. [Cloud Monitoring Architecture](#cloud-monitoring-architecture)
-2. [Monitoring Every GCP Component Used in Data Engineering](#monitoring-every-gcp-component-used-in-data-engineering)
-   - [Compute Engine VMs](#compute-engine-vms)
-   - [BigQuery](#bigquery)
-   - [Cloud Run Jobs and Services](#cloud-run-jobs-and-services)
-   - [Pub/Sub](#pubsub)
-   - [Cloud Storage](#cloud-storage)
-   - [Firestore](#firestore)
-   - [Cloud Scheduler and Cloud Functions](#cloud-scheduler-and-cloud-functions)
-3. [Monitoring Query Language (MQL)](#monitoring-query-language-mql)
-4. [Custom Metrics for Data Pipelines](#custom-metrics-for-data-pipelines)
-5. [Dashboards](#dashboards)
-6. [Alerting Policies](#alerting-policies)
-7. [Uptime Checks](#uptime-checks)
-8. [SLIs and SLOs](#slis-and-slos)
-9. [Cloud Monitoring vs Datadog — Feature Parity](#cloud-monitoring-vs-datadog-feature-parity)
-10. [Operational Runbook](#operational-runbook)
-
----
+> [!note]- Glossary
+>
+> **Cloud Monitoring**
+> - Google Cloud's managed metrics, alerting, dashboard, and SLO platform.
+> - It matters here because the note is about using it as the primary observability surface for the platform.
+>
+> > [!info] Native control plane
+> >
+> > A native stack reduces context switching when most workloads already live inside GCP.
+>
+> ---
+>
+> **monitored resource**
+> - The resource type and label set that identify what produced a metric time series.
+> - It matters here because the same metric name means little until it is tied to the correct VM, job, service, or subscription resource.
+>
+> > [!tip] Identity of the signal
+> >
+> > Metrics are only actionable when the emitting resource is modeled correctly.
+>
+> ---
+>
+> **metric descriptor**
+> - The schema definition for a metric type, including kind, value type, unit, and labels.
+> - It matters here because correct queries and alerts depend on knowing what the metric is allowed to represent.
+>
+> > [!info] Schema before math
+> >
+> > You need the descriptor before you can align, rate, or aggregate a metric safely.
+>
+> ---
+>
+> **metric kind**
+> - The semantic class of a metric, such as GAUGE, DELTA, or CUMULATIVE.
+> - It matters here because the wrong aggregation on the wrong kind produces misleading charts and alerts.
+>
+> > [!tip] Aggregation follows semantics
+> >
+> > A metric's kind tells you whether to average, sum, or rate it before comparing resources.
+>
+> ---
+>
+> **Ops Agent**
+> - Google's VM agent for collecting system metrics and logs beyond the built-in platform telemetry.
+> - It matters here because some host-level visibility on Compute Engine exists only when the agent is installed.
+>
+> > [!info] Host extension layer
+> >
+> > Managed metrics are broad, but guest-level diagnostics still need an agent on the VM.
+>
+> ---
+>
+> **MQL**
+> - Monitoring Query Language, Google's query language for Cloud Monitoring time series.
+> - It matters here because it is the main tool for expressing derived conditions such as backlog age, burn rate, or cold-start latency.
+>
+> > [!tip] Metrics become questions
+> >
+> > MQL is how raw provider series turn into operational logic.
+>
+> ---
+>
+> **custom metric**
+> - A metric published by application code into Cloud Monitoring rather than emitted automatically by GCP services.
+> - It matters here because freshness, row counts, and pipeline-specific health signals often do not exist until the pipeline writes them.
+>
+> > [!info] Business telemetry layer
+> >
+> > Custom metrics are how data-product semantics enter the native monitoring system.
+>
+> ---
+>
+> **alerting policy**
+> - A Cloud Monitoring rule that evaluates conditions and sends notifications when they are met.
+> - It matters here because visibility only becomes operationally useful once the right failure conditions escalate to humans or systems.
+>
+> > [!tip] Detection to action
+> >
+> > A monitoring platform is only as good as the alert policy that turns telemetry into response.
+>
+> ---
+>
+> **uptime check**
+> - A managed probe that tests whether an endpoint or port is reachable and healthy over time.
+> - It matters here because reachability is still a distinct signal even in data-platform environments dominated by internal pipelines.
+>
+> > [!info] Synthetic outside-in signal
+> >
+> > Some failures are easiest to catch by probing the service boundary rather than watching internal metrics.
+>
+> ---
+>
+> **SLO**
+> - A formal reliability objective measured against one or more SLIs over a time window.
+> - It matters here because error budgets and service expectations need a durable contract, not just ad hoc dashboard watching.
+>
+> > [!tip] Reliability as policy
+> >
+> > SLOs turn monitoring from reactive inspection into explicit operating targets.
 
 ## Cloud Monitoring Architecture
 
@@ -167,6 +260,7 @@ Create custom metrics when built-in metrics do not expose what you need:
 - **Cross-service health** — a single metric aggregating multiple upstream statuses
 
 Custom metric limits (per project):
+
 - 500 active time series per custom metric descriptor (soft limit, raisable)
 - 200 metric descriptors (soft limit)
 - First 150 descriptors free; $0.10/descriptor/month beyond that

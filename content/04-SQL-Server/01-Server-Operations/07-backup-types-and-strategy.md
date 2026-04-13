@@ -18,15 +18,59 @@ status: complete
 
 # Backup Types and Strategy
 
-This note is the production backup reference for SQL Server 2022 on the `stoxx-db` container. A backup strategy is not a list of commands. It is a restore design expressed as a schedule: which backup types exist, how they depend on each other, where the files live, how long they are retained, and how you prove they can be restored.
+> [!abstract]- Summary
+>
+> This note is the production backup reference for SQL Server 2022 on the `stoxx-db` container. A backup strategy is not a list of commands; it is a restore design expressed as a schedule that defines which backup types exist, how they depend on each other, where the files live, how long they are retained, and how restorability is proven.
+>
+> - **Backup model**
+>   - defines full, differential, log, copy-only, and file-level backup types, the chain semantics between them, and the recovery-model boundaries that decide whether point-in-time recovery exists at all
+> - **Metadata inspection**
+>   - shows how `msdb` catalogs, `sys.databases`, and related metadata reveal the active backup chain, recovery posture, and restore dependencies
+> - **Verification**
+>   - covers `VERIFYONLY`, `HEADERONLY`, `FILELISTONLY`, and the file-level checks that prove a backup is structurally usable before an incident forces a restore
+> - **Production commands**
+>   - provides live `BACKUP DATABASE` and `BACKUP LOG` patterns for local disk and explains the chain implications of each command choice
+> - **Object storage and retention**
+>   - walks through `TO URL` backups to Google Cloud Storage via the S3 connector, then ties scheduling and retention back to RPO, RTO, and restore drills
+> - **Operational safeguards**
+>   - closes with the production controls that keep backup success from becoming false confidence
+> - **Live capture context**
+>   - commands and outputs were captured on April 11, 2026 from the `stoxx` instance: SQL Server 2022 CU23 (`16.0.4236.2`, Developer Edition, Linux), container `stoxx-db`, hostname `8482aae8ad0a`, host port `1434`, local backup root `/var/opt/mssql/backup/`, and object-storage target `gs://stoxx-sql-bucket` in project `bq-wh-nb`, region `EUROPE-WEST1`
 
-All commands and live outputs in this note were captured from the current `stoxx` instance:
-
-- SQL Server 2022 CU23 (build 16.0.4236.2, Developer Edition, Linux)
-- Container `stoxx-db`, hostname `8482aae8ad0a`, host port `1434`
-- Backup root `/var/opt/mssql/backup/` on the container filesystem
-- Object storage backup target: `gs://stoxx-sql-bucket` in project `bq-wh-nb`, region `EUROPE-WEST1`
-- Capture window: 2026-04-11 16:25–16:33 UTC
+> [!note]- Glossary
+>
+> - **Full backup**
+>   - baseline backup of the entire database plus enough log for transactional consistency
+> - **Differential backup**
+>   - backup of extents changed since the most recent conventional full backup
+> - **Transaction log backup**
+>   - backup of log records since the previous log backup, enabling point-in-time recovery in `FULL` or `BULK_LOGGED`
+> - **Copy-only backup**
+>   - ad hoc backup that does not disturb the normal differential base or log-backup chain
+> - **Recovery model**
+>   - database setting that controls log behavior and whether point-in-time recovery is possible
+> - **Restore chain**
+>   - ordered set of backup files required to recover a database to a chosen point
+> - **Differential base**
+>   - most recent conventional full backup that a differential depends on
+> - **DCM page**
+>   - differential changed map page that tracks extents modified since the last full backup
+> - **`msdb` backup catalogs**
+>   - system tables such as `backupset` and `backupmediafamily` that record backup history and media metadata
+> - **`VERIFYONLY`**
+>   - backup validation command that checks structural readability without restoring the database
+> - **`HEADERONLY`**
+>   - inspection command that returns backup-set metadata from the file header
+> - **`FILELISTONLY`**
+>   - inspection command that returns the logical and physical files contained in a backup set
+> - **`TO URL`**
+>   - backup destination syntax used to write backup files to object storage
+> - **S3 connector**
+>   - SQL Server mechanism that lets `TO URL` target S3-compatible storage endpoints, including Google Cloud Storage
+> - **RPO**
+>   - recovery point objective, defining how much data loss is acceptable
+> - **RTO**
+>   - recovery time objective, defining how quickly service must be restored
 
 > [!info] Backup strategy decision path
 >
@@ -1393,6 +1437,3 @@ The failures below are the ones most likely to show up in the backup subsystem. 
 > Always keep at least two generations of conventional full backups on fast-access media. If the most recent full is corrupted or unusable, the previous generation plus its downstream chain is your fallback. Losing both means losing the database.
 
 ---
-
-
-

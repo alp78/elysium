@@ -35,9 +35,147 @@ status: complete
 >
 > — **Jason Scott**, Internet Archive
 
-Data without context is noise. A number in a table means nothing unless you know where it came from, when it was true, how trustworthy it is, which pipeline produced it, and what it represents in business terms. This note is a comprehensive architectural reference for preserving every dimension of context as data flows through extraction, transformation, loading, and consumption.
+> [!abstract]- Summary
+>
+> This note defines context and metadata architecture as the discipline of preserving meaning, provenance, temporal state, and quality signals through every pipeline stage, then shows how to model, propagate, validate, and query that context so data stays explainable under change, audit, and failure.
+>
+> **Why context matters and the five context types**
+> - Uses concrete failure scenarios to show how pipelines can succeed mechanically while still losing meaning, then defines run, provenance, temporal, quality, and business context as the five dimensions needed for trustworthy data.
+> - Treats missing context as an architecture failure because debugging, compliance, restatement analysis, and trust all depend on it.
+>
+> **Implementation and propagation patterns**
+> - Covers context records in SQL Server, BigQuery, Firestore, and Python, then explains propagation patterns such as metadata tables, envelope and sidecar approaches, and row-level context columns.
+> - Connects context capture to day-to-day operations like replay, lineage tracing, auditability, and freshness tracking rather than leaving metadata in a separate governance silo.
+>
+> **Contracts, schema evolution, and design choices**
+> - Explains data contracts, contract validation, schema evolution, schema drift detection, versioned registries, and anti-patterns that cause context to disappear across teams and systems.
+> - Adds a decision framework for selecting the minimum viable context model by pipeline complexity and by the kinds of questions the system must answer later.
+>
+> **Operations and safety**
+> - Warnings: overwritten history, orphaned schemas, missing run identifiers, and undocumented business meaning destroy trust even when the rows themselves are technically present.
+> - Recommendations: start with minimum viable context on every table, propagate identifiers end to end, formalize contracts early, and use the operational recipes to prove the metadata can answer real incident and audit questions.
+> - Troubleshooting: 6 operational recipes cover failed runs, row tracing, failed quality checks, freshness visibility, issue lineage, and stale BigQuery tables.
 
----
+> [!note]- Glossary
+>
+> **Context / metadata architecture**
+> - The design of how a platform captures, stores, propagates, and queries the information that explains what data means and how it came to exist.
+> - It matters here because the note treats context as part of the data system itself rather than as side documentation.
+>
+> > [!warning] Metadata must answer questions
+> >
+> > If the platform cannot use metadata to investigate incidents, enforce contracts, or satisfy audits, the metadata model is ornamental rather than operational.
+>
+> ---
+>
+> **Run context**
+> - The execution metadata that identifies which pipeline run produced a row or dataset, with what parameters, timing, and outcome.
+> - It matters here because debugging and safe reprocessing begin with knowing exactly which run wrote what.
+>
+> > [!info] First investigation pivot
+> >
+> > When numbers look wrong, the fastest path is usually to compare run IDs, parameters, and row counts before inspecting business logic.
+>
+> ---
+>
+> **Provenance context**
+> - The chain of source-system and transformation lineage that shows where a datum originated and how it moved through the platform.
+> - It matters here because errors and ownership questions are only traceable when lineage remains attached to the data.
+>
+> > [!warning] Lineage gaps hide defects
+> >
+> > A row without provenance forces teams into guesswork about whether the bug sits in extraction, transformation, reference data, or publication.
+>
+> ---
+>
+> **Temporal context**
+> - The time semantics that describe when data was observed, processed, valid in the business domain, and potentially corrected later.
+> - It matters here because late arrivals, restatements, and audit comparisons all depend on time being modeled explicitly.
+>
+> > [!warning] One timestamp is not enough
+> >
+> > Event time, processing time, and validity time answer different questions. Collapsing them into a single column makes historical reasoning unreliable.
+>
+> ---
+>
+> **Quality context**
+> - The metrics, assertions, and confidence signals that indicate whether data is complete, fresh, accurate, and fit for use.
+> - It matters here because consumers need visible trust signals instead of blind faith that a green pipeline means good data.
+>
+> > [!info] Trust needs evidence
+> >
+> > Quality context works best when it is surfaced next to the data product, not buried in a separate monitoring tool that consumers never check.
+>
+> ---
+>
+> **Business context**
+> - The semantic meaning of a field or dataset, including business definitions, ownership, classification, and intended use.
+> - It matters here because technically correct rows are still ambiguous if different teams interpret them differently.
+>
+> > [!warning] Semantics drift quietly
+> >
+> > Metric names and field labels often look stable while their business meaning changes underneath. That drift is a context problem, not just a documentation problem.
+>
+> ---
+>
+> **Context propagation**
+> - The mechanism by which context travels with data through pipeline stages rather than being recreated or guessed later.
+> - It matters here because captured metadata has little value if it gets dropped at every transformation boundary.
+>
+> > [!info] Carry the chain forward
+> >
+> > Good propagation design makes context accumulation natural. Each stage adds new facts without severing what upstream already recorded.
+>
+> ---
+>
+> **Data contract**
+> - A formal versioned agreement that defines schema, ownership, quality expectations, and compatibility rules between producers and consumers.
+> - It matters here because contracts turn context from internal convention into an explicit inter-team boundary.
+>
+> > [!warning] Contracts need enforcement
+> >
+> > A YAML file by itself does not protect consumers. Validation, compatibility checks, and deployment gates are what make the contract real.
+>
+> ---
+>
+> **Schema drift**
+> - Unplanned change in source or published schema that can break consumers or silently alter meaning if not detected and managed.
+> - It matters here because schema drift is one of the fastest ways for context and trust to disappear from a pipeline.
+>
+> > [!warning] Silent breakage risk
+> >
+> > Drift is dangerous when systems keep running after the change. The pipeline looks healthy while consumers receive semantically different data.
+>
+> ---
+>
+> **Envelope pattern**
+> - A propagation pattern where payload data is wrapped together with metadata so transport and processing preserve both as one unit.
+> - It matters here because some architectures need context to travel with each record rather than relying only on side tables.
+>
+> > [!info] Useful at boundaries
+> >
+> > Envelope designs are especially helpful when data crosses services or protocols that would otherwise strip away execution and provenance details.
+>
+> ---
+>
+> **Bi-temporal modeling**
+> - A temporal design that records both business-valid time and system-recorded time for the same fact.
+> - It matters here because restatements and audit comparisons often require answering when something was true and when the platform knew it.
+>
+> > [!warning] More columns, clearer truth
+> >
+> > Bi-temporal models add complexity, but they are often the only clean way to reason about corrections, late data, and retroactive business changes.
+>
+
+> [!example] Context Preservation Fit
+>
+> > [!success] Traceable Platform
+> >
+> > - Use explicit context and metadata architecture when the platform needs reproducible debugging, audit trails, late-data handling, quality transparency, data-product contracts, or cross-system lineage under real operational pressure.
+>
+> > [!failure] Decorative Metadata
+> >
+> > - Do not add metadata only decoratively; without ownership, surfaced queries, and downstream decisions tied to it, the architecture adds ceremony without operational value.
 
 ## Why Context Matters — The Cost of Context Loss
 

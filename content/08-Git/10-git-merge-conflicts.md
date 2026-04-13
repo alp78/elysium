@@ -5,35 +5,207 @@ tags:
   - version-control
 ---
 
-# Git Merge Conflict Resolution
+# Git Merge Conflicts
 
 > [!quote]
 > "You can disagree with me as much as you want, but during this talk, by definition, anybody who disagrees is stupid and ugly."
 >
 > — **Linus Torvalds**, Git mailing list
 
-Merge conflicts occur when two branches modify the same lines in the same file and Git cannot automatically decide which version to keep. They arise during `git merge`, `git rebase`, `git cherry-pick`, and `git stash pop`. This page explains what conflicts are, how to read conflict markers, how the Git index tracks conflicted files, and how to resolve conflicts across every operation type — with real outputs captured from live Git operations.
+> [!abstract]- Summary
+>
+> Explains merge conflicts across `git merge`, `git rebase`, `git cherry-pick`, and `git stash pop`, showing how Git records competing versions in the index, how to read conflict markers, and how to resolve or abort safely.
+>
+> **Conflict model and anatomy**
+> - Defines conflicts, common ancestors, three-way merge logic, index stages, unmerged paths, and the meaning of `ours` and `theirs` before any command-level resolution steps
+> - Separates content, binary, rename, mode, and add/add conflicts so the reader can recognize which cases allow line editing and which require file-level decisions
+>
+> **Resolution workflows**
+> - Resolves conflicts during `git merge`, accepts individual sides with `--ours` or `--theirs`, handles rename/delete cases, and completes the merge only after staging the final file state
+> - Covers visual merge tools plus the exact continue, abort, or skip actions needed when the conflict originates from rebase, cherry-pick, or stash replay instead of merge
+>
+> **Verification and prevention**
+> - Verifies the resolved result, then reduces future conflict frequency with branching discipline, smaller diff sets, merge-order habits, notebook strategies, and conflict-reuse features such as `rerere`
+> - Highlights data-engineering edge cases such as SQL migrations, notebook JSON, lockfiles, and other files where naive conflict resolution often damages operational correctness
+>
+> **Operations and safety**
+> - Warnings: `ours` and `theirs` invert meaning during rebase, binary conflicts require whole-file choices, and staged-but-unverified resolutions can silently ship broken logic
+> - Recommendations: inspect conflict type first, resolve in small steps, run verification before continue, and enable tools like `rerere` or `zdiff3` where they reduce repeat conflict cost
+> - Troubleshooting: merge, rebase, cherry-pick, stash, and mergetool failure paths plus recovery hatches for aborting safely
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Conflict**
+> - A state where Git cannot automatically combine two sets of changes because they modify the same region of the same file. Resolution requires human intervention.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **Conflict marker**
+> - Text delimiters (`<<<<<<<`, `=======`, `>>>>>>>`) that Git inserts into a file to show the two competing versions of a conflicted region.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **HEAD**
+> - A pointer to the current commit on the active branch. During a merge, HEAD refers to the branch you are merging *into*. During a rebase, HEAD refers to the *target base* branch.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Ours**
+> - The version of a file on the current branch (HEAD side). In a merge, ours = your branch. In a rebase, ours = the branch you are rebasing *onto* (the base).
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Theirs**
+> - The version of a file from the incoming branch. In a merge, theirs = the branch being merged in. In a rebase, theirs = the commits being replayed (your commits).
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Common ancestor**
+> - The most recent commit shared by both branches before they diverged. Git uses this as the base for three-way merge comparison. Also called the *merge base*.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Three-way merge**
+> - An algorithm that compares three versions of a file — the common ancestor, ours, and theirs — to detect which side changed which lines. Conflicts occur only when both sides changed the same lines differently.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **Index stage**
+> - During a conflict, Git stores three versions of each conflicted file in the index: stage 1 (common ancestor), stage 2 (ours), stage 3 (theirs). Normal files use stage 0.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **Unmerged path**
+> - A file that exists in the index at stages 1–3 instead of stage 0. Git considers the merge incomplete until all unmerged paths are resolved and moved to stage 0 via `git add`.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Merge commit**
+> - A commit with two or more parents that records the result of combining two branches. Created by `git merge` (non-fast-forward) after all conflicts are resolved.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Fast-forward**
+> - A merge where the target branch has no new commits since the source branched off. Git simply moves the pointer forward — no merge commit, no conflict possible.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Rebase**
+> - Replaying a sequence of commits onto a new base. Each commit is applied individually, so conflicts can occur at each step rather than all at once.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Cherry-pick**
+> - Applying a single commit from another branch onto the current branch. Uses three-way merge with the cherry-picked commit's parent as the common ancestor.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Force-push**
+> - Overwriting the remote branch history after a rebase. Required because rebase creates new commit SHAs. Use `--force-with-lease` to prevent overwriting teammates' work.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Merge tool**
+> - A GUI application (VS Code, IntelliJ, vimdiff, kdiff3) that presents the three-way merge visually — common ancestor, ours, theirs — and lets you build the resolution interactively.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **Rerere**
+> - "Reuse recorded resolution" — a Git feature that remembers how you resolved a conflict and automatically applies the same resolution if the identical conflict recurs.
+> - It matters in this note because the workflows for conflict detection, manual resolution, and post-resolution verification read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
 
-| Term | Definition |
-|------|-----------|
-| **Conflict** | A state where Git cannot automatically combine two sets of changes because they modify the same region of the same file. Resolution requires human intervention. |
-| **Conflict marker** | Text delimiters (`<<<<<<<`, `=======`, `>>>>>>>`) that Git inserts into a file to show the two competing versions of a conflicted region. |
-| **HEAD** | A pointer to the current commit on the active branch. During a merge, HEAD refers to the branch you are merging *into*. During a rebase, HEAD refers to the *target base* branch. |
-| **Ours** | The version of a file on the current branch (HEAD side). In a merge, ours = your branch. In a rebase, ours = the branch you are rebasing *onto* (the base). |
-| **Theirs** | The version of a file from the incoming branch. In a merge, theirs = the branch being merged in. In a rebase, theirs = the commits being replayed (your commits). |
-| **Common ancestor** | The most recent commit shared by both branches before they diverged. Git uses this as the base for three-way merge comparison. Also called the *merge base*. |
-| **Three-way merge** | An algorithm that compares three versions of a file — the common ancestor, ours, and theirs — to detect which side changed which lines. Conflicts occur only when both sides changed the same lines differently. |
-| **Index stage** | During a conflict, Git stores three versions of each conflicted file in the index: stage 1 (common ancestor), stage 2 (ours), stage 3 (theirs). Normal files use stage 0. |
-| **Unmerged path** | A file that exists in the index at stages 1–3 instead of stage 0. Git considers the merge incomplete until all unmerged paths are resolved and moved to stage 0 via `git add`. |
-| **Merge commit** | A commit with two or more parents that records the result of combining two branches. Created by `git merge` (non-fast-forward) after all conflicts are resolved. |
-| **Fast-forward** | A merge where the target branch has no new commits since the source branched off. Git simply moves the pointer forward — no merge commit, no conflict possible. |
-| **Rebase** | Replaying a sequence of commits onto a new base. Each commit is applied individually, so conflicts can occur at each step rather than all at once. |
-| **Cherry-pick** | Applying a single commit from another branch onto the current branch. Uses three-way merge with the cherry-picked commit's parent as the common ancestor. |
-| **Force-push** | Overwriting the remote branch history after a rebase. Required because rebase creates new commit SHAs. Use `--force-with-lease` to prevent overwriting teammates' work. |
-| **Merge tool** | A GUI application (VS Code, IntelliJ, vimdiff, kdiff3) that presents the three-way merge visually — common ancestor, ours, theirs — and lets you build the resolution interactively. |
-| **Rerere** | "Reuse recorded resolution" — a Git feature that remembers how you resolved a conflict and automatically applies the same resolution if the identical conflict recurs. |
+> [!example] Conflict Resolution Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note whenever Git stops on overlapping history during merge, rebase, cherry-pick, or stash replay and you need a controlled resolution path instead of trial-and-error editing.
+> > - Use it when the critical step is recognizing the conflict type first and then finishing, aborting, or verifying the workflow safely.
+> > - Use it to keep conflict handling grounded in index state, workflow context, and post-resolution validation rather than in rote marker editing alone.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not apply `--ours` or `--theirs` blindly, because those labels change meaning across merge and rebase workflows.
+> > - Do not continue or force-push a rebased branch before verifying that the resolved content is semantically correct, not just syntactically conflict-free.
+> > - Do not treat binary, rename, or delete conflicts like ordinary line edits; those cases need file-level decisions.
 
 ## Conceptual Model
 
@@ -986,9 +1158,11 @@ Prevention is cheaper than resolution. These practices reduce conflict frequency
 ### Practices | reduce conflict frequency
 
 - **Pull from main before starting any new work:**
-  ```bash
+
+```bash
   git checkout main && git pull && git checkout -b feat/my-feature
-  ```
+```
+
 - **Keep PRs small and focused** — one feature or fix per PR. Large PRs take longer to review, increasing the chance that main moves ahead.
 - **Merge or rebase frequently** — if your branch lives for more than a day or two, periodically rebase onto the latest main to stay current.
 - **Coordinate on shared files** — if two people are editing the same file for unrelated reasons, communicate and consider sequencing the PRs.

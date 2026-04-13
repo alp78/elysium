@@ -17,15 +17,183 @@ status: complete
 
 # Database Creation and File Layout
 
-Creating a database is a design act, not a syntactic one. Every decision encoded in `CREATE DATABASE` — physical layout, collation, recovery model, growth policy, observability — becomes an operational constraint the moment the first byte is written. This note walks through those decisions and demonstrates each one against two live reference databases so every DMV output on this page is captured from real state, not fabricated.
+> [!abstract]- Summary
+>
+> Creating a database is a design act, not a syntactic one. Every decision encoded in `CREATE DATABASE` — physical layout, collation, recovery model, growth policy, and observability defaults — becomes an operational constraint the moment the first byte is written. This note turns database creation into a production baseline exercise rather than a one-line DDL event.
+>
+> **Reference baseline**
+> - anchors every example against two live databases on the same SQL Server 2022 instance so the note can compare a production-shaped baseline (`stoxx_db`) with the current `stoxx` surface
+> - explains what a `CREATE DATABASE` statement implicitly decides when the operator omits options
+>
+> **Storage architecture**
+> - covers storage primitives, files, filegroups, file specification parameters, file and filegroup operations, and the sizing plus autogrowth rules that determine long-term disk behavior
+> - maps those choices onto Google Cloud storage realities so file layout is evaluated against the actual platform rather than generic SQL Server guidance
+>
+> **Database defaults**
+> - evaluates the creation-time defaults that most directly shape workload behavior: collation, recovery model, compatibility level, isolation settings, Query Store, database-scoped configuration, contained databases, and operational database options
+> - separates day-one-safe defaults from product defaults that silently create future operational debt
+>
+> **Feature surface**
+> - includes special storage options such as `FILESTREAM` and `MEMORY_OPTIMIZED_DATA`, plus the security and ownership baseline that should exist before objects and workloads accumulate
+>
+> **Production workflow**
+> - ends with the syntax surface, a baseline production example, a recommended creation workflow, anti-patterns to avoid, post-creation monitoring, and a decision checklist
+>
+> **Operations and safety**
+> - Warnings: file layout, growth settings, recovery model, and default-option omissions become hard-to-reverse production constraints after data lands
+> - Recommendations: start from an explicit baseline template, size deliberately, and validate the created database against live catalog state before handing it to workloads
 
-This note answers the production questions that actually matter on day one:
-
-- what a `CREATE DATABASE` statement *implicitly decides* when the operator omits options
-- how file layout, filegroups, autogrowth, and `MAXSIZE` interact under production load
-- which recovery model, collation, compatibility level, and isolation settings are the right defaults and why
-- how a full production baseline template reproduces against a live SQL Server 2022 instance
-- which anti-patterns silently hurt production years after creation
+> [!note]- Glossary
+>
+> **`CREATE DATABASE`**
+> - The DDL statement that creates a database and optionally defines its files, filegroups, collation, containment, and other creation-time characteristics.
+> - It matters because the note treats database creation as the moment where storage, recovery, and observability decisions become durable defaults.
+>
+> > [!warning] Defaults are still decisions
+> >
+> > Omitting options does not keep the design neutral. It accepts SQL Server product defaults, which often become accidental production policy.
+>
+> ---
+>
+> **Data file**
+> - A SQL Server file that stores data pages, index pages, allocation maps, and metadata, typically with `.mdf` or `.ndf` extensions.
+> - It matters because file count, placement, size, and autogrowth determine how the database consumes disk and how it behaves under sustained growth.
+>
+> > [!warning] Growing later is more expensive than planning now
+> >
+> > Undersized files force repeated autogrowth events. Those events are operational symptoms of a design decision that should have been made up front.
+>
+> ---
+>
+> **Log file**
+> - The sequential transaction-log file, typically `.ldf`, that records every durable change before data pages are written.
+> - It matters because recovery model, backup chain design, and write availability all depend on log behavior from day one.
+>
+> > [!danger] The log is not optional plumbing
+> >
+> > A wrongly sized or badly managed log can stop writes entirely. Recovery-model choices only make sense if the log strategy is viable in production.
+>
+> ---
+>
+> **Filegroup**
+> - A logical container that groups one or more data files for allocation, administration, and in some cases backup or restore strategy.
+> - It matters because filegroups are the layer where physical storage layout becomes manageable for large or tiered databases.
+>
+> > [!info] One filegroup is enough until it is not
+> >
+> > Many databases should stay simple on `PRIMARY`. Extra filegroups are justified by operational boundaries, not by aesthetics.
+>
+> ---
+>
+> **Autogrowth**
+> - The SQL Server behavior that expands a file automatically when its current allocated size is exhausted.
+> - It matters because fixed-size autogrowth increments are part of the operational growth policy and directly affect fragmentation, latency spikes, and capacity predictability.
+>
+> > [!warning] Percentage growth ages badly
+> >
+> > Percentage autogrowth becomes more expensive as files get larger. Fixed increments are usually easier to reason about operationally.
+>
+> ---
+>
+> **`MAXSIZE`**
+> - The optional upper bound on how large a SQL Server file is allowed to grow.
+> - It matters because it turns disk exhaustion from a host-level surprise into an explicit database-level capacity boundary.
+>
+> > [!warning] Unlimited is still a policy
+> >
+> > Leaving `MAXSIZE` unlimited does not avoid capacity planning. It just pushes the failure boundary outward to the disk or volume.
+>
+> ---
+>
+> **Recovery model**
+> - The database setting that controls log reuse rules and the available restore patterns, especially whether point-in-time recovery exists.
+> - It matters because the recovery model chosen at creation time determines the backup discipline the database will require from its first real workload.
+>
+> > [!danger] `FULL` without log backups is an outage path
+> >
+> > Choosing `FULL` recovery is only safe when the operational model includes actual transaction-log backups. Otherwise log growth becomes a production incident.
+>
+> ---
+>
+> **Collation**
+> - The rule set SQL Server uses for string comparison and sorting, including case, accent, and locale behavior.
+> - It matters because collation mismatches leak into joins, uniqueness rules, and application expectations, and are painful to change after objects exist.
+>
+> > [!warning] Changing later is disruptive
+> >
+> > Collation is easy to ignore at creation time and expensive to revisit after tables, indexes, and application code are already built around it.
+>
+> ---
+>
+> **Compatibility level**
+> - The database-level switch that determines which query-processor behaviors and optimizer features SQL Server exposes to that database.
+> - It matters because a database can run on SQL Server 2022 while still behaving like an older optimizer generation if the compatibility level is left behind.
+>
+> > [!info] Engine version and compatibility are separate
+> >
+> > Upgrading the instance does not automatically move every database to the newest optimizer behavior. The compatibility level remains its own operational choice.
+>
+> ---
+>
+> **Query Store**
+> - The database-scoped feature that captures query history, plans, and runtime statistics for performance analysis and regression control.
+> - It matters because enabling it deliberately at creation time improves later troubleshooting and reduces the chance that performance history is missing when it is finally needed.
+>
+> > [!info] Observability is easiest on day one
+> >
+> > Query Store is far easier to treat as a baseline default than to retrofit after the first performance regression has already happened.
+>
+> ---
+>
+> **Contained database**
+> - A database that can own more of its authentication and configuration surface without depending entirely on instance-level objects.
+> - It matters because containment changes the security and deployment boundary of the database and should be an explicit design choice.
+>
+> > [!warning] Containment changes the auth model
+> >
+> > This is not just a portability switch. It affects how identities are created, managed, and audited.
+>
+> ---
+>
+> **`FILESTREAM`**
+> - The SQL Server feature that stores large binary objects in the NTFS filesystem while keeping transactional integration with the database.
+> - It matters because it changes the physical storage model and is only appropriate when the workload genuinely needs database-managed large-object storage outside normal pages.
+>
+> > [!warning] Special storage means special operations
+> >
+> > `FILESTREAM` introduces filesystem dependencies and backup considerations that do not exist for ordinary rowstore pages.
+>
+> ---
+>
+> **`MEMORY_OPTIMIZED_DATA`**
+> - The special filegroup required for In-Memory OLTP durable checkpoint files.
+> - It matters because the feature has its own storage path, recovery behavior, and operational surface, so it should not appear in a design accidentally.
+>
+> > [!warning] Add only for a real In-Memory OLTP use case
+> >
+> > This filegroup is not a generic performance toggle. It belongs only to databases that intentionally use memory-optimized objects.
+>
+> ---
+>
+> **Database-scoped configuration**
+> - A set of optimizer and execution controls applied per database rather than instance-wide.
+> - It matters because some workload behaviors should be tuned at the database boundary established during creation, not by broad server-wide changes.
+>
+> > [!info] Per-database overrides reduce blast radius
+> >
+> > Database-scoped settings are often the safer way to change behavior when only one workload needs the adjustment.
+>
+> ---
+>
+> **Ownership baseline**
+> - The initial decision about which principals own the database and its schemas and how that ownership is kept predictable across deployments.
+> - It matters because security and DDL behavior become messy quickly when ownership is left implicit during creation.
+>
+> > [!warning] Ownership drift compounds over time
+> >
+> > A database created under the wrong principal can work for months before ownership issues surface in migrations, permissions, or restore workflows.
+>
+> ---
 
 ## Reference Databases
 
@@ -791,7 +959,6 @@ SELECT DB_NAME(database_id), COUNT(*) FROM sys.dm_db_log_info(DB_ID('stoxx')) GR
 | file_id | vlf_count | active_vlfs | min_vlf_mb | avg_vlf_mb | max_vlf_mb |
 |---:|---:|---:|---:|---:|---:|
 | 2 | 8 | 1 | 31.93 | 31.99 | 32.42 |
-
 | database_name | vlf_count |
 |---|---:|
 | stoxx_db | 8 |
@@ -879,6 +1046,7 @@ SQL Server supports multiple ways to create a database. These modes are operatio
 This is the standard case: create new files and initialize a new database.
 
 **Use when:**
+
 - creating a new application database
 - creating a new warehouse or mart
 - creating a staging or landing database
@@ -904,11 +1072,13 @@ This minimal form is syntactically valid, but rarely sufficient for production b
 This attaches already existing database files to an instance.
 
 **Use when:**
+
 - reattaching a detached database
 - moving a non-production database between servers
 - recovering a copied database outside normal restore workflow
 
 **Operational implications:**
+
 - file paths must be valid
 - permissions must be correct
 - version compatibility must be acceptable
@@ -922,6 +1092,7 @@ Attach is not a general substitute for backup/restore in mature environments.
 This path is used when data files exist but the log file is missing and SQL Server is able to rebuild it.
 
 **Use when:**
+
 - constrained recovery scenarios
 - emergency salvage of certain non-production databases
 
@@ -933,11 +1104,13 @@ This is not normal operations. If you rely on this routinely, your backup strate
 A **database snapshot** is a read-only static view of a source database at a point in time.
 
 **Use when:**
+
 - you need a stable read-only reference
 - you want protection before a risky change
 - you want to inspect production data without allowing writes
 
 **Key implications:**
+
 - read-only
 - dependent on the source database
 - not a replacement for backups
@@ -1156,6 +1329,7 @@ gcloud sql instances clone SOURCE_INSTANCE TARGET_INSTANCE \
 A **contained database** reduces dependency on instance-level configuration and logins.
 
 **Use when:**
+
 - portability matters
 - database-level user independence matters
 - application isolation requirements justify it
@@ -1194,14 +1368,11 @@ The physical location of files constrains performance and recovery behavior. SQL
   - Lowest latency
   - Highest IOPS
   - Best for intense log, TempDB, and active-data workloads
-
 - **Enterprise SSD**
   - Strong random read/write performance
   - Standard production choice for most active data files
-
 - **Standard SSD**
   - Good for moderate workloads and many archive scenarios
-
 - **HDD**
   - Poor for random I/O
   - Acceptable mainly for backups or colder scan-oriented storage
@@ -1221,6 +1392,7 @@ The physical location of files constrains performance and recovery behavior. SQL
 “Put data and log on separate drives” is a useful rule of thumb, but the real requirement is **separate performance domains**, not just separate letters.
 
 **Correct interpretation:**
+
 - If different drive letters still land on the same shared congested storage, separation may be illusory.
 - On modern SAN, HCI, or virtualized platforms, validate actual latency and contention rather than trusting naming conventions.
 
@@ -1240,11 +1412,13 @@ The physical location of files constrains performance and recovery behavior. SQL
 Without IFI, data file creation and growth can take much longer because the OS must write zeros to the new space before SQL Server can use it.
 
 **What it affects:**
+
 - data file creation
 - data file growth
 - restore operations involving data-file growth
 
 **What it does not affect (prior to SQL Server 2022):**
+
 - log file creation
 - log file growth
 
@@ -2201,6 +2375,7 @@ MAXSIZE = 500GB
 ```
 
 **Use thoughtfully:**
+
 - Too small: you create avoidable outages.
 - Too loose: you risk consuming all shared storage.
 
@@ -2509,6 +2684,7 @@ Autogrowth is not where sizing strategy begins. Good sizing starts with forecast
 ### Initial sizing | forecast-based pre-allocation for data and log files
 
 Initial size should be based on:
+
 - expected data volume
 - retention window
 - compression behavior
@@ -2526,6 +2702,7 @@ If you expect 300 GB of net growth over the next quarter, a 5 GB initial file wi
 ### Tiny defaults | why SQL Server's default file sizes cause operational pain
 
 Tiny defaults cause:
+
 - repeated autogrowth
 - avoidable file fragmentation
 - operational noise
@@ -2574,6 +2751,7 @@ Log growth requires zero-initialization (IFI does not apply to log files) and di
 > Microsoft recommends not setting `FILEGROWTH` above 1,024 MB for transaction logs. Larger growth events take longer to zero-initialize and produce fewer, oversized VLFs. A 1,024 MB growth event creates 8 VLFs of 128 MB each — a well-balanced size for most production workloads. A 2,048 MB event creates 16 VLFs of 128 MB, which is still healthy but doubles the zero-initialization time.
 
 **Factors to model** when sizing the log pre-allocation and growth increment:
+
 - **peak ETL windows** — the largest single-batch write burst between log backups
 - **large index rebuilds** — `ALTER INDEX ... REBUILD` on a 100 GB table can generate 20+ GB of log
 - **long-running transactions** — hold log space pinned for their entire duration
@@ -2648,6 +2826,7 @@ ORDER BY name;
 ### Collation choice | why poor decisions cause joins, ETL, and migration failures
 
 Poor collation choices cause:
+
 - join inconsistencies
 - temp table conflicts
 - incorrect assumptions in ETL logic
@@ -2671,6 +2850,7 @@ The live inventory query in the [Collation inventory](#collation-inventory--insp
 If the database collation differs from `tempdb`, you can encounter string comparison errors in temporary objects.
 
 **Example problem pattern:**
+
 - user table in one collation
 - temp table in server/tempdb collation
 - string join fails unless `COLLATE` is used explicitly
@@ -2791,12 +2971,14 @@ flowchart TD
 All required changes are fully logged such that point-in-time recovery is possible when log backups are taken properly.
 
 **What it implies operationally:**
+
 - you must run log backups
 - the log does not take care of itself
 - backup discipline is part of normal operations
 - HA/DR patterns often depend on this model
 
 **Use when:**
+
 - the database matters
 - data loss must be minimized
 - point-in-time recovery is required
@@ -2814,6 +2996,7 @@ A model that minimizes logging for certain bulk operations while retaining much 
 Some bulk operations produce very large volumes of log. `BULK_LOGGED` can reduce that pressure in carefully controlled windows.
 
 **Use when:**
+
 - large controlled bulk operations justify it
 - backup and restore implications are fully understood
 
@@ -2826,12 +3009,14 @@ This is not a casual performance switch. It changes restore semantics around min
 A model in which reusable log space is reclaimed automatically after checkpoint when possible. Log backups are not part of the design.
 
 **What it implies:**
+
 - no point-in-time recovery
 - simpler operations
 - lower recoverability
 - acceptable only when rebuild or data loss is acceptable
 
 **Use when:**
+
 - staging databases
 - disposable dev/test databases
 - rebuildable transient data stores
@@ -2897,6 +3082,7 @@ ORDER BY database_id;
 ### Compatibility level | separates engine version from database behavior version
 
 It lets you separate:
+
 - engine version
 - database behavior version
 
@@ -2991,6 +3177,7 @@ Changes the default read committed behavior to use row versioning.
 It often reduces reader/writer blocking significantly.
 
 **What it costs:**
+
 - more TempDB pressure
 - more version-store monitoring requirements
 - more need to understand long-running transactions
@@ -3066,19 +3253,18 @@ In SQL Server 2022 it is even more important because several intelligent perform
 - `OPERATION_MODE`
   - `READ_WRITE`
   - `READ_ONLY`
-
 - `QUERY_CAPTURE_MODE`
   - `ALL`
   - `AUTO`
   - `NONE`
   - `CUSTOM`
-
 - `MAX_STORAGE_SIZE_MB`
   - upper storage limit for Query Store data
 
 ### Query Store recommendation | enable with AUTO capture and realistic storage cap
 
 For most production databases:
+
 - enable Query Store
 - use `AUTO` capture initially
 - size it realistically
@@ -3101,6 +3287,7 @@ This allows workload-specific control of selected optimizer and execution behavi
 ### Scoped configuration examples | MAXDOP, parameter sniffing, and AUTOGROW_ALL_FILES
 
 Examples include settings related to:
+
 - `MAXDOP`
 - parameter sniffing behavior
 - cardinality estimation behavior
@@ -3113,6 +3300,7 @@ Examples include settings related to:
 Do not blindly override every knob at creation time.
 
 Instead:
+
 - know the surface area exists
 - document intended defaults
 - apply explicit overrides only where workload evidence supports them
@@ -3133,6 +3321,7 @@ Contained databases reduce reliance on instance-level objects such as traditiona
 ### Containment impact | authentication, migration, and administration differences
 
 Containment affects:
+
 - authentication design
 - migration behavior
 - collation interactions in some scenarios
@@ -3157,6 +3346,7 @@ FILESTREAM is intended for large binary objects that benefit from file-system st
 ### `FILESTREAM` implications | changes to storage layout, backup, and administration
 
 FILESTREAM is not merely a different extension. It changes:
+
 - storage layout
 - backup and restore behavior
 - administrative expectations
@@ -3226,6 +3416,7 @@ TDE encrypts data and log files at rest.
 
 **Why it matters during design:**
 Encryption affects:
+
 - backup/restore dependencies
 - certificate and key management
 - migration procedures
@@ -3327,6 +3518,7 @@ These are not universally “on” or “off.” They depend on the workload and
 When `AUTO_SHRINK` runs, it moves pages from the end of the file toward the beginning to free trailing space, then truncates the file. This page relocation scatters previously contiguous data across the file, causing severe index fragmentation. When new data arrives and the file must grow again, SQL Server extends the file (triggering an autogrowth event), but the data written to the new space does not undo the fragmentation created by the shrink. The result is a repeating cycle: shrink fragments the data, growth extends the file back, and the next shrink fragments it again — each cycle degrading performance further while consuming I/O for no net benefit.
 
 In reality it often causes:
+
 - severe index fragmentation (logical and physical)
 - repeated shrink/grow cycles that consume I/O without net space savings
 - avoidable I/O churn from page relocation during shrink
@@ -3347,6 +3539,7 @@ In reality it often causes:
 A definitive guide must acknowledge that `CREATE DATABASE` is broader than the common “name + files” example.
 
 At a high level, the statement surface includes:
+
 - new database creation
 - file and filegroup definitions
 - log file definitions
@@ -3706,6 +3899,7 @@ ORDER BY database_name;
 ### Accepting all defaults | bad placement, tiny sizes, and no operational baseline
 
 This usually means:
+
 - bad file placement
 - tiny initial size
 - poor growth settings
@@ -3731,6 +3925,7 @@ Misunderstands how the log works.
 ### File-count folklore | arbitrary data file counts with no measured justification
 
 Examples:
+
 - arbitrary numbers of data files
 - ritualistic separation with no actual storage isolation
 - using warehouse patterns for OLTP or vice versa
@@ -3746,6 +3941,7 @@ This leaves the database operationally incomplete for many HA/DR patterns.
 Creation is not the end of the design. The database must be observed.
 
 Monitor at minimum:
+
 - file free space
 - autogrowth events
 - log reuse waits
@@ -3779,4 +3975,3 @@ Before promoting a newly created database to production, confirm:
 - Monitoring and alerting are ready
 
 ---
-

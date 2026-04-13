@@ -1,816 +1,500 @@
 ---
 title: "01 - Airflow Core Concepts"
-tags: [orchestration, python, airflow]
-aliases:
-  - Apache Airflow
-  - Airflow
-  - DAG
-  - Directed Acyclic Graph
-  - Airflow Operator
-  - Airflow Task
-  - Airflow Sensor
-  - Airflow Hook
-  - Airflow Connection
-  - XCom
-  - Cross-task communication
-  - Airflow Executor
-  - Airflow Scheduler
-  - Airflow Worker
-  - Airflow Webserver
-  - Metadata Database
-  - TaskFlow API
-  - Airflow Variables
-  - Airflow Connections
-  - CeleryExecutor
-  - KubernetesExecutor
-  - LocalExecutor
-  - SequentialExecutor
-description: "Comprehensive reference for Apache Airflow core concepts: architecture (Scheduler, Webserver, Worker, Metadata DB, Executor), DAGs, Operators, Sensors, Hooks, XComs, the TaskFlow API, and a comparison of all Executor types."
+tags:
+  - orchestration
+  - airflow
+description: "Airflow fundamentals explained through the live STOXX Airflow 3.2 deployment on stoxx-airflow, including the CeleryExecutor control plane, the stoxx_stage_yfinance DAG, Cloud Run orchestration, and the real state model used in production."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
 status: complete
+parent: "[[domain-airflow]]"
+links:
+  - "[[02-airflow-dag-patterns]]"
+  - "[[03-airflow-deployment]]"
+  - "[[04-airflow-troubleshooting]]"
+  - "[[05-airflow-problems]]"
 ---
 
-# Apache Airflow Core Concepts
+# Airflow Core Concepts
 
-> [!quote]
-> "I believe Airflow is positioned to be the batch process orchestrator that will dominate the next 5 years."
+Airflow is the orchestration layer for the live STOXX index pipeline running on `stoxx-airflow`. It does not fetch market data itself, parse JSON itself, compute silver and gold tables itself, or publish Firestore documents itself. It schedules, coordinates, retries, and records the work performed by Cloud Run jobs and the downstream systems they touch.
+
+## What This Note Covers
+
+This note defines the minimum Airflow vocabulary required to understand the live platform safely, then maps each term to the deployed `stoxx_stage_yfinance` DAG and the Airflow 3.2 runtime that currently orchestrates the STOXX-only pipeline in project `bq-wh-nb`.
+
+- What Airflow is and is not in this platform.
+- Which runtime components exist on `stoxx-airflow`, and what each one does.
+- How DAGs, tasks, task instances, DAG runs, retries, timeouts, connections, and XCom appear in the real STOXX pipeline.
+- Why the current deployment uses `CeleryExecutor`, a local metadata database, Redis, and Cloud Run jobs instead of placing the data-processing logic directly inside Airflow tasks.
+
+## Glossary / Key Terms
+
+> [!info] Key Terms
 >
-> — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
+> | Term | Definition | Why it matters here | Caveat |
+> |---|---|---|---|
+> | Airflow | A workflow orchestrator that stores run state, schedules work, and coordinates task execution. | It is the control plane for the STOXX pipeline. | It is not the compute engine that transforms market data. |
+> | DAG | A Directed Acyclic Graph that defines tasks and dependencies as code. | `stoxx_stage_yfinance` is the pipeline contract Airflow parses and schedules. | A DAG definition is static Python code; runtime data should not shape it at import time. |
+> | DAG run | One execution of a DAG for a specific trigger and time context. | The validated end-to-end serving run is `manual__2026-04-13T17:28:30Z_serving`. | A DAG run can exist even when some tasks fail or are skipped. |
+> | Task | A single node in the DAG graph. | `load_bronze_into_sql` and `build_bigquery_marts` are tasks. | A task definition is not an execution record. |
+> | Task instance | One execution record of one task inside one DAG run. | Airflow stores start time, end time, and state per task instance. | Retries create multiple attempts for the same logical task instance. |
+> | Scheduler | The Airflow component that decides what can run next. | It turns the parsed DAG and task states into queued work. | If it stalls, every DAG appears broken even when workers are healthy. |
+> | Worker | The component that executes queued tasks. | The Celery worker calls the Google provider operator that starts Cloud Run jobs. | The worker is not where the STOXX pipeline data processing actually happens. |
+> | Triggerer | The component that manages deferred asynchronous work. | The live stack runs a triggerer even though the current DAG sets `deferrable=False`. | Having a triggerer does not mean tasks are automatically deferrable. |
+> | Metadata database | Airflow's shared state store. | It holds DAG metadata, task states, connections, and UI state. | If it is wrong or unavailable, the platform cannot be trusted. |
+> | Executor | The strategy Airflow uses to hand queued tasks to execution slots. | The live runtime uses `CeleryExecutor`. | The executor choice changes scaling and failure behavior, not DAG semantics. |
+> | Connection | A named integration object Airflow uses to resolve credentials and defaults for external systems. | `google_cloud_default` is required for `CloudRunExecuteJobOperator`. | VM metadata credentials do not remove the need for the connection record itself. |
+> | XCom | Airflow's cross-communication channel for small metadata payloads between tasks. | The Google operator pushes execution metadata that Airflow can inspect. | XCom is not used for JSON payloads, market data, or table data in this platform. |
+> | Catchup | Airflow behavior that backfills missed schedule intervals automatically. | The live DAG disables it with `catchup=False`. | Enabling it accidentally can create replay storms. |
+> | Data interval | The time window a scheduled DAG run represents. | It matters when DAGs are cron-driven and partitioned by logical time. | The current DAG is `schedule=None`, so manual runs are the operational default. |
 
-Apache Airflow is an open-source **workflow orchestration platform** for programmatically authoring, scheduling, monitoring, and managing data pipelines. Pipelines are defined as Python code, making them version-controllable, testable, and dynamically generated.
+## What Airflow Is In This Platform
 
-> [!warning] What Airflow is NOT
->
-> Airflow is **not a data processing framework**. It does not move or transform data itself — it **orchestrates** tools that do. Think of Airflow as the conductor, not the orchestra. Data processing happens in Spark, dbt, BigQuery, or Python scripts that Airflow triggers. Treating Airflow as a data-processing engine (e.g., loading large DataFrames into XComs) is the single most common architectural mistake.
+Airflow is the system that decides when the STOXX pipeline may advance from one stage to the next. It is the place that knows that bronze loading must finish before silver transforms start, that BigQuery marts must wait for gold tables, and that Firestore publication must not run until marts are built.
 
-> [!success] Correct pattern: delegate processing to external systems
-> Use `BashOperator`, `KubernetesPodOperator`, or `BigQueryInsertJobOperator` to trigger the actual compute — keep Airflow tasks thin. Pass only lightweight metadata (file paths, row counts, run IDs) between tasks via XCom, never raw data.
+### Runtime Architecture
 
----
-
-## Architecture Overview
-
-Airflow has five core components that work together. Understanding each is essential for deployment, debugging, and performance tuning.
+The deployed Airflow runtime is a private Compute Engine VM called `stoxx-airflow`. The VM runs Airflow 3.2.0 in Docker Compose, with Postgres as the metadata database, Redis as the Celery broker, and one Celery worker that launches Google Cloud Run jobs.
 
 ```mermaid
-flowchart TD
-    subgraph ARCH["Airflow Architecture"]
-        SCHED["Scheduler"]
-        EXEC["Executor<br/>Local / Celery / K8s"]
-        WORKERS["Workers<br/>run task instances"]
-        METADB["Metadata DB<br/>PostgreSQL"]
-        WEBUI["Webserver<br/>UI + REST API"]
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    U[Operator]
+    UI[Airflow UI and API<br>airflow-apiserver]
+    S[Scheduler]
+    D[Dag Processor]
+    T[Triggerer]
+    W[Celery Worker]
+    PG[(Postgres<br>metadata DB)]
+    R[(Redis<br>broker)]
+    CR1[Cloud Run Job<br>stoxx-stage-fetch]
+    CR2[Cloud Run Job<br>stoxx-bronze-load]
+    CR3[Cloud Run Job<br>stoxx-transforms]
+    CR4[Cloud Run Job<br>stoxx-serving]
 
-        SCHED -->|"schedules"| EXEC
-        EXEC --> WORKERS
-        SCHED --> METADB
-        WORKERS <--> METADB
-        WEBUI --> METADB
-    end
-
-    style ARCH fill:#1a1a2e,stroke:#7aa2f7,color:#fff
-    style SCHED fill:#1a1a2e,stroke:#bb9af7,color:#fff
-    style EXEC fill:#1a1a2e,stroke:#22d3ee,color:#fff
-    style WORKERS fill:#1a1a2e,stroke:#9ece6a,color:#fff
-    style METADB fill:#1a1a2e,stroke:#e0af68,color:#fff
-    style WEBUI fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    U --> UI
+    UI --> PG
+    S --> PG
+    D --> PG
+    T --> PG
+    S --> R
+    R --> W
+    D --> S
+    W --> CR1
+    W --> CR2
+    W --> CR3
+    W --> CR4
 ```
 
-### Scheduler
+### Airflow Does Not Process Market Data
 
-The Scheduler is the brain of Airflow. It continuously:
+The live DAG deliberately keeps Airflow thin. The scheduler and worker do not fetch yfinance data row by row, do not parse every JSON file, and do not execute the medallion SQL transformations inline. They invoke external jobs that own those responsibilities.
 
-1. Parses DAG files from the DAGs folder on a configurable interval (`min_file_process_interval`, default 30 s)
-2. Determines which DAG Runs to create based on `schedule` and `start_date`
-3. Determines which Tasks are eligible to run (dependencies met, slots available)
-4. Submits eligible Task Instances to the Executor
-
-> [!info] Scheduler HA
-> In Airflow 2.0+, you can run **multiple Scheduler instances** for high availability. Use `scheduler_heartbeat_sec` to configure the heartbeat. Only one scheduler actively creates DAG Runs at a time — the others act as hot standbys.
-
-### Webserver
-
-A Flask/Gunicorn web application that provides:
-- The Airflow UI (DAG grid view, Gantt chart, Graph view, Log viewer)
-- A REST API (Airflow 2.x stable API at `/api/v1/`)
-- Flower UI (if using CeleryExecutor)
-
-The webserver reads from the Metadata DB — it does **not** schedule tasks.
-
-### Workers
-
-Workers are processes (or pods) that **execute Task Instances**. What "worker" means depends on the Executor:
-- **LocalExecutor**: subprocesses on the Scheduler machine
-- **CeleryExecutor**: Celery worker processes on separate machines
-- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle)
-
-### Metadata Database
-
-PostgreSQL (recommended) or MySQL database that stores:
-- DAG definitions (serialized)
-- DAG Run history
-- Task Instance state (queued, running, success, failed, skipped)
-- XComs
-- Variables and Connections
-- User/Role/Permission data
-
-> [!warning] Database is Critical
-> The Metadata DB is a single point of failure. Use a managed database (Cloud SQL, RDS, AlloyDB) in production with automated backups and HA failover.
-
-> [!success] Safe pattern: managed DB with HA and automated backups
-> In GCP, use Cloud SQL for PostgreSQL with a read replica and daily automated backups. Set `sql_alchemy_pool_size` and `sql_alchemy_max_overflow` conservatively to avoid connection exhaustion under load.
-
-### Executor
-
-The Executor determines **how** tasks are run. See the [Executors Comparison Table](#executors-comparison-table) section below.
-
----
-
-## DAGs: Directed Acyclic Graphs
-
-A DAG (Directed Acyclic Graph) is the core abstraction in Airflow. It represents a workflow as a set of tasks with dependencies between them. The graph must be **acyclic** — no circular dependencies.
-
-### DAG File Structure
-
-Airflow discovers DAGs by scanning Python files in the `dags_folder` (default: `$AIRFLOW_HOME/dags`). A file is a valid DAG file if it contains a `DAG` object at the module level.
-
-#### Minimal valid DAG
-
-```python
-# dags/minimal_example.py
-# This is the simplest possible valid Airflow DAG.
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
-from datetime import datetime
-
-with DAG(
-    dag_id="minimal_example",
-    start_date=datetime(2024, 1, 1),
-    schedule="@daily",
-) as dag:
-    EmptyOperator(task_id="start")
-```
-
-### Complete DAG with All Common Parameters
-
-```python
-# dags/comprehensive_example.py
-# Production-quality DAG template demonstrating all common parameters.
-
-from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.dates import days_ago
-from datetime import datetime, timedelta
-
-# default_args apply to every task in the DAG unless overridden at the task level
-default_args = {
-    "owner": "data-engineering",           # Owner shown in the UI
-    "depends_on_past": False,              # Task does not wait for previous run's same task to succeed
-    "email": ["alerts@example.com"],       # Email list for notifications
-    "email_on_failure": True,             # Send email when a task fails
-    "email_on_retry": False,              # Do NOT email on every retry (noisy)
-    "retries": 3,                         # Number of retry attempts on failure
-    "retry_delay": timedelta(minutes=5),  # Wait 5 minutes between retries
-    "retry_exponential_backoff": False,    # Use fixed delay (not exponential)
-    "execution_timeout": timedelta(hours=2),  # Kill task if it runs longer than 2h
-    "sla": timedelta(hours=4),            # Alert if task hasn't finished within 4h of scheduled time
-}
-
-with DAG(
-    dag_id="comprehensive_example",        # Unique identifier — shown in the UI
-    description="Demonstrates all common DAG parameters",
-    schedule="0 6 * * *",                 # Run at 06:00 UTC daily (cron expression)
-    start_date=datetime(2024, 1, 1),      # First logical date to run
-    end_date=None,                         # Run indefinitely (set a date to stop)
-    catchup=False,                         # IMPORTANT: do NOT backfill missed runs automatically
-    max_active_runs=1,                     # Only 1 DAG Run active at a time (prevents overlap)
-    max_active_tasks=16,                   # Max concurrent tasks across all active runs
-    default_args=default_args,
-    tags=["example", "data-engineering"], # Tags for filtering in the UI
-    doc_md="""
-    ## Comprehensive Example DAG
-
-    This DAG demonstrates all common parameters.
-    It runs daily at 06:00 UTC and processes data for the previous day.
-    """,
-    params={                               # User-overridable runtime parameters
-        "environment": "production",
-        "dry_run": False,
-    },
-    render_template_as_native_obj=False,   # Keep Jinja-rendered values as strings (default)
-    is_paused_upon_creation=True,          # DAG starts paused — must be manually unpaused
-) as dag:
-
-    # EmptyOperator: a no-op task used as a start/end marker or join point
-    start = EmptyOperator(task_id="start")
-
-    # BashOperator: runs a shell command
-    extract = BashOperator(
-        task_id="extract_data",
-        bash_command="python /opt/scripts/extract.py --date {{ ds }}",
-        # {{ ds }} is the execution date in YYYY-MM-DD format (Jinja templating)
-        env={"GOOGLE_APPLICATION_CREDENTIALS": "/opt/secrets/sa-key.json"},
-    )
-
-    def transform_data(**context):
-        """Transform function — receives the Airflow context dict."""
-        execution_date = context["ds"]
-        logical_date = context["logical_date"]
-        print(f"Transforming data for {execution_date}")
-        return {"rows_processed": 1000}  # Automatically pushed to XCom
-
-    # PythonOperator: runs a Python callable
-    transform = PythonOperator(
-        task_id="transform_data",
-        python_callable=transform_data,
-        provide_context=True,  # Pass the Airflow context dict as **kwargs
-    )
-
-    load = BashOperator(
-        task_id="load_data",
-        bash_command="bq load --source_format=NEWLINE_DELIMITED_JSON "
-                     "dataset.table gs://bucket/data/{{ ds }}/*.json",
-    )
-
-    end = EmptyOperator(task_id="end")
-
-    # Task dependency chain using >> (bitshift operator)
-    start >> extract >> transform >> load >> end
-```
-
-> [!tip] catchup=False is almost always right
+> [!warning] Airflow Is Not The ETL Engine
 >
-> With `catchup=True` (the default), Airflow creates a DAG Run for every missed interval between `start_date` and now when the DAG is first unpaused. For a DAG with `start_date=2024-01-01` and `schedule="@daily"`, that could be hundreds of runs. Always set `catchup=False` unless you explicitly need historical backfill, and use `airflow dags backfill` for intentional backfills.
+> Putting the market-data parsing, SQL loading, or BigQuery mart logic directly inside long-lived Airflow Python tasks would move heavy compute into the control plane. That makes retries slower, worker saturation more likely, and failure recovery harder.
+>
+> [!success] Airflow Owns Orchestration Only
+>
+> The live design keeps Airflow responsible for dependency control, retries, timeouts, visibility, and manual reruns. Cloud Run jobs own the data movement and transformation logic.
 
-### Schedule Values
+## The Live Control Plane
 
-```python
-# All valid forms of the `schedule` parameter
+This section maps the core runtime components to the actual Airflow VM and shows the command outputs that prove the current topology.
 
-schedule="@daily"          # Alias: run once per day at midnight UTC
-schedule="@hourly"         # Alias: run once per hour
-schedule="@weekly"         # Alias: run once per week (Sunday midnight)
-schedule="@monthly"        # Alias: run once per month (1st day, midnight)
-schedule="@once"           # Run exactly once
-schedule=None              # Never scheduled — trigger manually only
+### Runtime Components On `stoxx-airflow`
 
-# Cron expressions (minute hour day-of-month month day-of-week)
-schedule="0 6 * * *"       # 06:00 UTC every day
-schedule="0 */6 * * *"     # Every 6 hours
-schedule="30 4 1 * *"      # 04:30 UTC on the 1st of every month
-schedule="0 8 * * 1-5"     # 08:00 UTC weekdays only
+This subsection shows which Airflow services are actually running now and how to interpret them.
 
-# Timedelta (Airflow 2.4+)
-from datetime import timedelta
-schedule=timedelta(hours=6)  # Every 6 hours from start_date
+#### Inspect The Running Airflow Services
 
-# Dataset-driven scheduling (Airflow 2.4+) — see airflow-dag-patterns
-from airflow.datasets import Dataset
-schedule=[Dataset("gs://my-bucket/input/")]
+**When to run:** Run this after deployment, after any Compose restart, or whenever the UI suggests a service-level problem.
+**Trigger:** A DAG is missing, tasks are not advancing, or container health is in doubt.
+**Context:** Run from a workstation with `gcloud` access. The command is read-only. It tunnels through IAP because the VM has no public IP.
+**Purpose:** Confirm that the Airflow API server, scheduler, dag processor, triggerer, worker, Postgres, and Redis are all present and healthy.
+
+*This command SSHes through IAP to `stoxx-airflow` and asks Docker Compose for the live container state.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose ps"
 ```
 
----
-
-## Operators
-
-An Operator defines a **single unit of work** in a DAG. Each Operator becomes one Task in the DAG. Operators are templates — instantiating one creates a Task Instance when a DAG Run executes.
-
-### BashOperator
-
-Runs a bash command or script. The most versatile operator for calling external scripts.
-
-```python
-from airflow.operators.bash import BashOperator
-
-# Run an inline bash command with Jinja templating
-run_script = BashOperator(
-    task_id="run_etl_script",
-    bash_command="python /opt/etl/load_bq.py --date {{ ds }} --env {{ params.environment }}",
-    cwd="/opt/etl",                      # Working directory for the command
-    env={"MY_VAR": "value"},             # Additional environment variables
-    append_env=True,                     # Keep existing env vars (don't replace)
-    output_encoding="utf-8",
-    skip_on_exit_code=[99],              # Exit code 99 causes task to SKIP instead of fail
-    do_xcom_push=True,                   # Push stdout to XCom key "return_value"
-)
+```text
+NAME                          IMAGE                 COMMAND                  SERVICE                 CREATED       STATUS                 PORTS
+app-airflow-apiserver-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-apiserver       2 hours ago   Up 2 hours (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+app-airflow-dag-processor-1   stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-dag-processor   2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-scheduler-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-scheduler       2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-triggerer-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-triggerer       2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-worker-1          stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-worker          2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-postgres-1                postgres:16           "docker-entrypoint.s…"   postgres                5 hours ago   Up 5 hours (healthy)   5432/tcp
+app-redis-1                   redis:7.2-bookworm    "docker-entrypoint.s…"   redis                   5 hours ago   Up 5 hours (healthy)   6379/tcp
 ```
 
-### PythonOperator
+The important operational reading is straightforward:
 
-Calls a Python function. Pass arguments via `op_kwargs` or read from XCom via context.
+- `airflow-apiserver` serves the UI and Airflow API.
+- `airflow-scheduler` decides which task instances can queue next.
+- `airflow-dag-processor` parses DAG files into scheduler-consumable metadata.
+- `airflow-worker` executes queued operator code.
+- `airflow-triggerer` is available for deferred tasks.
+- `postgres` and `redis` are not optional sidecars; they are required state dependencies for `CeleryExecutor`.
 
-```python
-from airflow.operators.python import PythonOperator
+#### Read The Scheduler Role From Live Logs
 
-def my_python_function(param1, param2, **context):
-    """
-    context contains: ds, ts, logical_date, dag, task, run_id, etc.
-    Return value is pushed to XCom as "return_value".
-    """
-    from google.cloud import bigquery
-    client = bigquery.Client()
-    # ... do work ...
-    return {"rows_inserted": 500}
+**When to run:** Run this when the scheduler might be unhealthy or after a restart when you need to see whether it actually came back.
+**Trigger:** DAG runs remain queued, task instances do not advance, or the scheduler heartbeat is suspect.
+**Context:** Run from the same VM shell path. The command is read-only and tails scheduler logs.
+**Purpose:** Prove that the scheduler has loaded the executor, started its main loop, and is responding to health probes.
 
-run_python = PythonOperator(
-    task_id="run_python",
-    python_callable=my_python_function,
-    op_kwargs={                          # Keyword arguments passed to the callable
-        "param1": "value1",
-        "param2": "{{ ds }}",           # Jinja templating works in op_kwargs
-    },
-)
+*This tails the scheduler container log so the operator can confirm that scheduling has actually resumed.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose logs --tail=25 airflow-scheduler"
 ```
 
-### DockerOperator
-
-Runs a Docker container. Ideal for isolating dependencies per task.
-
-```python
-from airflow.providers.docker.operators.docker import DockerOperator
-
-run_container = DockerOperator(
-    task_id="run_docker_task",
-    image="my-registry/etl-image:1.2.3",  # Docker image to run
-    command="python /app/process.py --date {{ ds }}",
-    docker_url="unix://var/run/docker.sock",
-    network_mode="bridge",
-    environment={"DATE": "{{ ds }}"},
-    auto_remove=True,                    # Remove container after execution
-    mount_tmp_dir=False,
-)
+```text
+airflow-scheduler-1  | 2026-04-13T17:26:08.689572Z [info     ] Loaded executor: :CeleryExecutor:
+airflow-scheduler-1  | 2026-04-13T17:26:11.000515Z [info     ] Starting the scheduler
+airflow-scheduler-1  | 2026-04-13T17:26:11.016136Z [info     ] Adopting or resetting orphaned tasks for active dag runs
+airflow-scheduler-1  | 127.0.0.1 - - [13/Apr/2026 17:26:37] "GET /health HTTP/1.1" 200 -
+airflow-scheduler-1  | 127.0.0.1 - - [13/Apr/2026 17:27:07] "GET /health HTTP/1.1" 200 -
+airflow-scheduler-1  | 127.0.0.1 - - [13/Apr/2026 17:27:38] "GET /health HTTP/1.1" 200 -
 ```
 
-### KubernetesPodOperator
+The `Loaded executor: :CeleryExecutor:` line matters because it proves the runtime is not using a local single-process executor. The repeated `GET /health ... 200` lines matter because the container health check is succeeding, which means the service is alive rather than merely started.
 
-Runs a Kubernetes Pod. The preferred operator for GCP Cloud Composer and self-managed K8s Airflow.
+| Flag | Syntax | Description |
+|---|---|---|
+| `--project` | `gcloud compute ssh ... --project=bq-wh-nb` | Selects the active GCP project that contains the VM. |
+| `--zone` | `gcloud compute ssh ... --zone=europe-west1-b` | Selects the VM zone. |
+| `--tunnel-through-iap` | `gcloud compute ssh ... --tunnel-through-iap` | Reaches the private VM without requiring a public IP. |
+| `--command` | `gcloud compute ssh ... --command "<linux command>"` | Runs a remote shell command non-interactively. |
 
-> [!warning] KubernetesPodOperator Image Tag :latest Causes Silent Stale Deploys
-> Using `:latest` as the image tag means Kubernetes may use a cached image from the node instead of pulling the newest version. Pin image tags to a specific version or SHA digest (e.g., `etl:1.2.3` or `etl@sha256:abc...`). Set `image_pull_policy="Always"` if you must use `:latest` during development.
+### DAG Discovery, Executor, And Connection Surfaces
 
-> [!success] Fix: pin image tags in CI/CD and set image_pull_policy
-> In your CI/CD pipeline, tag images with the git commit SHA (`gcr.io/my-project/etl:$GIT_SHA`) and reference that exact tag in the operator. In development, set `image_pull_policy="Always"` to force a fresh pull on every run.
+Airflow's state model is only useful if the scheduler can see the DAG, the executor can queue work correctly, and the provider operators can resolve their connections.
 
-```python
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
-from kubernetes.client import models as k8s
+#### Verify That The DAG Is Registered
 
-run_pod = KubernetesPodOperator(
-    task_id="run_k8s_task",
-    name="etl-task-pod",                # Pod name prefix
-    namespace="airflow",                # K8s namespace
-    image="gcr.io/my-project/etl:latest",
-    cmds=["python"],
-    arguments=["/app/process.py", "--date", "{{ ds }}"],
-    env_vars=[
-        k8s.V1EnvVar(name="DATE", value="{{ ds }}"),
-    ],
-    resources=k8s.V1ResourceRequirements(
-        requests={"memory": "512Mi", "cpu": "500m"},
-        limits={"memory": "2Gi", "cpu": "2"},
-    ),
-    in_cluster=True,                    # True when Airflow itself runs in K8s
-    get_logs=True,                      # Stream pod logs to Airflow task logs
-    is_delete_operator_pod=True,        # Clean up pod after completion
-    startup_timeout_seconds=300,
-)
+**When to run:** Run this after copying a new DAG file, after restarting Airflow services, or when the UI does not show the workflow.
+**Trigger:** A newly deployed DAG does not appear, or a known DAG appears paused or missing.
+**Context:** This is a read-only CLI check executed inside the Airflow worker container.
+**Purpose:** Confirm that `stoxx_stage_yfinance` is present in the DagBag and visible to Airflow.
+
+*This command filters the Airflow DAG catalog to the live STOXX DAG.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose exec -T airflow-worker airflow dags list | grep stoxx_stage_yfinance"
 ```
 
-### EmptyOperator
-
-A no-op task. Used for start/end markers, fan-out/fan-in join points, and conditional branching targets.
-
-```python
-from airflow.operators.empty import EmptyOperator
-
-# Use as a join point after parallel branches
-join = EmptyOperator(
-    task_id="join",
-    trigger_rule="none_failed_min_one_success",  # Proceed if at least one branch succeeded
-)
+```text
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | False     | dags-folder | None
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | False     | dags-folder | None
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | False     | dags-folder | None
 ```
 
----
+The important field here is `False` in the paused column. Earlier in the rollout, the DAG was visible but still paused. Airflow can know about a DAG and still refuse to schedule it until that flag is cleared.
 
-### Airflow Sensors — Poke and Reschedule Modes
+#### Verify The Executor And Google Connection
 
-Sensors are a special type of Operator that **poke** an external system until a condition is met, then succeed. They block a task slot while waiting.
+**When to run:** Run this on first bootstrap, after image rebuilds, or when Google operators start failing unexpectedly.
+**Trigger:** Tasks queue but do not launch Cloud Run jobs, or provider operators complain about missing credentials or connection IDs.
+**Context:** These are read-only Airflow CLI calls executed inside the worker container.
+**Purpose:** Prove that the runtime uses `CeleryExecutor` and that `google_cloud_default` exists in the metadata database.
 
-> [!warning] Sensor Mode: Poke vs Reschedule
-> Default sensor mode is `poke` — the sensor holds a worker slot the entire time it waits. For long-running sensors (hours), use `mode="reschedule"` — the sensor releases the slot between checks and reacquires it only to check again. This is critical for preventing slot starvation.
+*The first command prints the configured executor. The second prints the stored Google connection record that the Cloud Run operator relies on.*
 
-> [!success] Fix: always set mode="reschedule" for long-running sensors
-> Set `mode="reschedule"` and `poke_interval` to a sensible interval (e.g., 60–300 seconds) for any sensor that may wait longer than a few minutes. Also set `timeout` to prevent an indefinitely blocked slot if the upstream condition never arrives.
-
-```python
-from airflow.sensors.filesystem import FileSensor
-from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.sensors.http import HttpSensor
-from airflow.providers.common.sql.sensors.sql import SqlSensor
-
-# Wait for a file to exist on the filesystem
-wait_for_file = FileSensor(
-    task_id="wait_for_input_file",
-    filepath="/data/input/{{ ds }}/ready.flag",
-    fs_conn_id="fs_default",
-    mode="reschedule",               # Release slot between checks
-    poke_interval=60,                # Check every 60 seconds
-    timeout=3600,                    # Fail after 1 hour of waiting
-    soft_fail=False,                 # True = SKIP instead of FAIL on timeout
-)
-
-# Wait for another DAG's task to complete
-wait_for_upstream = ExternalTaskSensor(
-    task_id="wait_for_upstream_dag",
-    external_dag_id="upstream_pipeline",
-    external_task_id="load_complete",       # None = wait for whole DAG Run
-    execution_date_fn=None,                 # Use same execution date by default
-    mode="reschedule",
-    poke_interval=120,
-    timeout=7200,
-    check_existence=True,                   # Fail if the external DAG doesn't exist
-)
-
-# Wait for an HTTP endpoint to return 200
-wait_for_api = HttpSensor(
-    task_id="wait_for_api_ready",
-    http_conn_id="my_api",
-    endpoint="/health",
-    request_params={},
-    response_check=lambda response: response.json()["status"] == "ready",
-    mode="reschedule",
-    poke_interval=30,
-)
-
-# Wait for a SQL query to return rows
-wait_for_data = SqlSensor(
-    task_id="wait_for_data_loaded",
-    conn_id="my_postgres",
-    sql="SELECT COUNT(*) FROM staging.events WHERE date = '{{ ds }}'",
-    success=lambda result: result[0][0] > 0,  # Succeed when count > 0
-    mode="reschedule",
-    poke_interval=300,
-)
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose exec -T airflow-worker airflow config get-value core executor"
 ```
 
----
-
-## Hooks and Connections
-
-### Connections
-
-A **Connection** stores credentials for external systems (databases, APIs, cloud services). Stored in the Metadata DB (encrypted) or externally (Secret Manager, env vars).
-
-#### Setting a connection via environment variable (preferred for secrets -- see [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) for general env var patterns)
-
-```bash
-# Format: AIRFLOW_CONN_{CONN_ID} = URI or JSON
-# URI format: conn-type://login:password@host:port/schema?extra=value
-
-export AIRFLOW_CONN_MY_POSTGRES="postgresql://user:pass@localhost:5432/mydb"
-export AIRFLOW_CONN_BIGQUERY_DEFAULT='{"conn_type": "google_cloud_platform", "project": "my-project", "keyfile_path": "/opt/secrets/sa.json"}'
-
-# Or set via CLI
-airflow connections add my_postgres \
-    --conn-type postgres \
-    --conn-host localhost \
-    --conn-login user \
-    --conn-password secret \
-    --conn-port 5432 \
-    --conn-schema mydb
+```text
+CeleryExecutor
 ```
 
-#### Setting a connection via the Airflow UI
-Admin → Connections → + (Add) → Fill in conn_id, conn_type, host, login, password, port, schema, Extra (JSON).
-
-### Hooks
-
-A **Hook** is a Python class that wraps a Connection and provides methods for interacting with an external system. Operators use Hooks internally. You can also use Hooks directly in PythonOperator callables.
-
-```python
-# Using hooks directly inside a PythonOperator callable
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.cloud.hooks.gcs import GCSHook
-
-def load_postgres_to_bq(**context):
-    """Extract from Postgres and load to BigQuery using hooks."""
-
-    # PostgresHook uses the "my_postgres" connection
-    pg_hook = PostgresHook(postgres_conn_id="my_postgres")
-    records = pg_hook.get_records(
-        sql="SELECT id, name, value FROM source.table WHERE date = %(date)s",
-        parameters={"date": context["ds"]},
-    )
-
-    # GCSHook for writing intermediate files
-    gcs_hook = GCSHook(gcp_conn_id="google_cloud_default")
-    gcs_hook.upload(
-        bucket_name="my-bucket",
-        object_name=f"staging/{context['ds']}/data.json",
-        data=str(records).encode(),
-        mime_type="application/json",
-    )
-
-    # BigQueryHook for running queries
-    bq_hook = BigQueryHook(gcp_conn_id="google_cloud_default")
-    bq_hook.run_query(
-        sql=f"CALL my_dataset.load_procedure('{context['ds']}')",
-        use_legacy_sql=False,
-    )
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose exec -T airflow-worker airflow connections get google_cloud_default"
 ```
 
----
-
-### XComs — Cross-Task Communication
-
-XComs (Cross-Communications) allow tasks to exchange small messages via the Metadata DB. A task **pushes** a value; downstream tasks **pull** it.
-
-> [!warning] XCom Size Limit
-> XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for the "XCom too large" error.
-
-> [!success] Fix: pass GCS/S3 paths instead of data in XComs
-> Write large results to an intermediate GCS path, then return that path string as the task's XCom value. Downstream tasks pull the path and read directly from storage — the Metadata DB is never touched by the data itself.
-
-```python
-# --- Pushing XComs ---
-
-def push_xcom(**context):
-    """Multiple ways to push XComs."""
-
-    # Method 1: Return value (automatically pushed as key="return_value")
-    return {"rows_processed": 500, "output_path": "gs://bucket/data/2024-01-01/"}
-
-def push_xcom_explicit(**context):
-    """Method 2: Explicit push with custom key."""
-    context["task_instance"].xcom_push(
-        key="output_path",
-        value="gs://bucket/data/2024-01-01/",
-    )
-    context["task_instance"].xcom_push(
-        key="row_count",
-        value=500,
-    )
-
-# --- Pulling XComs ---
-
-def pull_xcom(**context):
-    """Pull XComs from upstream tasks."""
-    ti = context["task_instance"]
-
-    # Pull the return value (key="return_value") from a specific task
-    result = ti.xcom_pull(task_ids="push_task")
-
-    # Pull a specific key from a specific task
-    output_path = ti.xcom_pull(task_ids="push_task", key="output_path")
-
-    # Pull from multiple tasks
-    all_paths = ti.xcom_pull(task_ids=["task_a", "task_b"], key="output_path")
-
-    print(f"Processing file: {output_path}")
-
-# XComs are also available in Jinja templates:
-load_task = BashOperator(
-    task_id="load",
-    bash_command="gsutil cp {{ ti.xcom_pull(task_ids='extract', key='output_path') }} /tmp/",
-)
+```text
+id | conn_id              | conn_type             | description | host | schema | login | password | port | is_encrypted | is_extra_encrypted | extra_dejson | get_uri
+===+======================+=======================+=============+======+========+=======+==========+======+==============+====================+==============+=========================
+1  | google_cloud_default | google_cloud_platform | None        |      |        | None  | None     | None | False        | False              | {}           | google-cloud-platform://
 ```
 
----
+The connection output is operationally important for one reason: the Google provider resolved its default connection name. The VM service account provides the underlying credentials through Application Default Credentials, but the Airflow connection record is still the object that the operator expects to exist.
 
-### TaskFlow API — Decorator-Based DAG Authoring
+| Flag | Syntax | Description |
+|---|---|---|
+| `exec -T` | `docker compose exec -T airflow-worker ...` | Runs a command inside the worker container without allocating a pseudo-TTY, which keeps non-interactive output clean. |
+| `config get-value` | `airflow config get-value core executor` | Reads the effective Airflow configuration value for a given section and key. |
+| `connections get` | `airflow connections get google_cloud_default` | Prints the stored Airflow connection record. |
+| `dags list` | `airflow dags list` | Prints DAGs visible to the current Airflow runtime. |
 
-Introduced in Airflow 2.0, the TaskFlow API uses Python decorators to define tasks and automatically handle XCom push/pull. It dramatically reduces boilerplate.
+## The Core Airflow Objects In The Live DAG
 
-```python
-# dags/taskflow_example.py
-# TaskFlow API: cleaner syntax for Python-heavy DAGs
+The best way to learn Airflow safely is to map the vocabulary to a real DAG instead of an isolated tutorial script. The current platform uses one manually triggered DAG that fans out into silver transforms, converges into gold and serving tasks, and finishes with Firestore validation.
 
-from airflow.decorators import dag, task
-from datetime import datetime
+### DAG Definition And Scheduling Semantics
 
-@dag(
-    dag_id="taskflow_example",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-    tags=["example", "taskflow"],
-)
-def taskflow_pipeline():
-    """
-    A TaskFlow DAG. Each @task function becomes an Airflow task.
-    Return values are automatically pushed/pulled as XComs.
-    """
+This subsection shows the actual DAG declaration and explains what each top-level option means in the live deployment.
 
-    @task
-    def extract(ds=None):
-        """Extract data — ds is auto-injected from context."""
-        print(f"Extracting data for {ds}")
-        # Return value is automatically pushed as an XCom
-        return {"data_path": f"gs://bucket/raw/{ds}/data.json", "record_count": 1000}
+#### Read The Real DAG Definition
 
-    @task
-    def transform(extract_result: dict) -> dict:
-        """Transform — extract_result is automatically pulled from XCom."""
-        path = extract_result["data_path"]
-        count = extract_result["record_count"]
-        print(f"Transforming {count} records from {path}")
-        return {"output_path": path.replace("/raw/", "/transformed/"), "count": count}
+The following snippet is taken directly from [stoxx_stage_yfinance.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/airflow-vm/dags/stoxx_stage_yfinance.py:1>). It is the real DAG that Airflow currently parses on `stoxx-airflow`.
 
-    @task
-    def load(transform_result: dict) -> None:
-        """Load — no return value needed."""
-        print(f"Loading {transform_result['count']} records from {transform_result['output_path']}")
+> [!example] Real DAG Declaration
+>
+> ```python
+> with DAG(
+>     dag_id="stoxx_stage_yfinance",
+>     description="Fetch STOXX bronze-stage JSON from yfinance into GCS via Cloud Run",
+>     start_date=pendulum.datetime(2026, 4, 13, tz="Europe/Prague"),
+>     schedule=None,
+>     catchup=False,
+>     max_active_runs=1,
+>     default_args={
+>         "retries": 1,
+>         "retry_delay": timedelta(minutes=5),
+>         "execution_timeout": timedelta(minutes=45),
+>     },
+>     tags=["stoxx", "bronze", "gcs", "yfinance", "cloud-run"],
+> ) as dag:
+> ```
 
-    # TaskFlow wires dependencies automatically via XCom
-    raw = extract()
-    transformed = transform(raw)
-    load(transformed)
+Each field has a concrete operational meaning:
 
-# Instantiate the DAG
-taskflow_pipeline()
+- `dag_id="stoxx_stage_yfinance"` is the stable Airflow identifier used everywhere else: logs, task instances, CLI inspection, and the UI.
+- `start_date=... Europe/Prague` anchors the DAG in the business timezone used for the demo environment.
+- `schedule=None` means Airflow will not create recurring runs on its own. Runs are manual or API-triggered.
+- `catchup=False` means Airflow will not backfill historical intervals automatically.
+- `max_active_runs=1` serializes full pipeline runs so the demo environment does not overlap bronze, silver, gold, BigQuery, and Firestore publication windows.
+- `retries=1`, `retry_delay=5 minutes`, and `execution_timeout=45 minutes` apply to all tasks by default unless a task overrides them.
+
+> [!warning] `schedule=None` Is Intentional
+>
+> This DAG is currently designed for controlled demonstration and validation runs. Turning it into a recurring cron schedule without first defining the partitioning, backfill policy, and overlap policy would create avoidable replay risk.
+>
+> [!success] Manual Orchestration Keeps The Blast Radius Small
+>
+> The current choice makes every full run explicit. Operators can reset the recent window, trigger the DAG once, observe the whole chain, and validate the serving state deterministically.
+
+### Tasks, Operators, And Dependencies
+
+The DAG is a graph of `CloudRunExecuteJobOperator` tasks. Each task launches a purpose-built Cloud Run job and then records the execution outcome in Airflow.
+
+#### Read The Real Task Graph
+
+The following dependency block is the real orchestration skeleton from the deployed DAG.
+
+> [!example] Real Dependency Chain
+>
+> ```python
+> fetch_bronze_stage_into_gcs >> load_bronze_into_sql
+> load_bronze_into_sql >> [
+>     transform_ohlcv_to_silver,
+>     transform_signals_daily_to_silver,
+>     transform_signals_quarterly_to_silver,
+> ]
+> [
+>     transform_ohlcv_to_silver,
+>     transform_signals_daily_to_silver,
+>     transform_signals_quarterly_to_silver,
+> ] >> build_gold_scores >> build_gold_index_performance
+> build_gold_index_performance >> sync_gold_to_bigquery >> build_bigquery_marts
+> build_bigquery_marts >> publish_serving_to_firestore >> validate_serving_layer
+> ```
+
+This graph expresses five different Airflow concepts at once:
+
+- `fetch_bronze_stage_into_gcs` is the extract-and-land boundary.
+- `load_bronze_into_sql` is the bronze persistence boundary.
+- The three transform tasks are a controlled fan-out.
+- `build_gold_scores` and `build_gold_index_performance` are a fan-in followed by serial gold construction.
+- `sync_gold_to_bigquery`, `build_bigquery_marts`, `publish_serving_to_firestore`, and `validate_serving_layer` are the publication path.
+
+The current DAG does not use Task Groups, branching, dataset scheduling, or sensors. The graph is intentionally explicit because the pipeline is linear with one parallel silver stage.
+
+#### Read One Real Operator Definition
+
+This operator definition is representative of the live pattern. The worker does not execute transformation code locally; it tells Cloud Run which job to run and what arguments to pass.
+
+> [!example] Real Cloud Run Operator
+>
+> ```python
+> build_bigquery_marts = CloudRunExecuteJobOperator(
+>     task_id="build_bigquery_marts",
+>     project_id=PROJECT_ID,
+>     region=REGION,
+>     job_name=SERVING_JOB_NAME,
+>     deferrable=False,
+>     overrides={
+>         "task_count": 1,
+>         "container_overrides": [{
+>             "clear_args": False,
+>             "args": ["--mode=build-marts"],
+>         }],
+>     },
+> )
+> ```
+
+Important details:
+
+- `task_id` is the Airflow identity of the node.
+- `job_name=SERVING_JOB_NAME` binds the task to the Cloud Run job `stoxx-serving`.
+- `args=["--mode=build-marts"]` tells the serving job to execute only the BigQuery mart step.
+- `deferrable=False` means the worker slot stays occupied while Airflow waits for the Cloud Run execution to finish.
+
+### Connections, Hooks, And XCom In The STOXX DAG
+
+Airflow's integration surfaces are present in the platform, but they are used selectively.
+
+#### How `google_cloud_default` Is Used
+
+The DAG does not set `gcp_conn_id` explicitly on each task. The Google provider falls back to `google_cloud_default`, which must exist in the metadata database. When the operator ran successfully, the task test log showed the provider resolving credentials through `google.auth.default()`.
+
+```text
+2026-04-13T15:27:22.088482Z [info] Getting connection using `google.auth.default()` since no explicit credentials are provided.
 ```
 
-```python
-# TaskFlow: branching with @task.branch
-from airflow.decorators import dag, task
-from airflow.operators.empty import EmptyOperator
+That single line explains the full credential stack:
 
-@dag(schedule="@daily", start_date=datetime(2024, 1, 1), catchup=False)
-def branching_taskflow():
+- Airflow resolves the connection object by name.
+- The connection contains no embedded secret.
+- The provider then uses the VM service account via Application Default Credentials.
 
-    @task.branch
-    def choose_branch(ds=None):
-        """Return the task_id of the branch to follow."""
-        from datetime import datetime
-        day_of_week = datetime.strptime(ds, "%Y-%m-%d").weekday()
-        if day_of_week == 0:  # Monday
-            return "run_weekly_report"
-        return "run_daily_report"
+#### Why XCom Is Present But Not A Data Bus
 
-    @task
-    def run_daily_report():
-        print("Running daily report")
+The Google operator still pushes metadata to XCom, but the pipeline does not move datasets through Airflow. The task test logs show the operator's XCom push point:
 
-    @task
-    def run_weekly_report():
-        print("Running weekly report")
-
-    join = EmptyOperator(task_id="join", trigger_rule="none_failed_min_one_success")
-
-    branch = choose_branch()
-    [run_daily_report(), run_weekly_report()] >> join
-
-branching_taskflow()
+```text
+2026-04-13T15:28:35.619081Z [info] Pushing xcom [task]
+[] []
 ```
 
----
+That is the correct design boundary:
 
-## Variables and Connections
+- bronze JSON lives in `gs://stoxx-stage-bucket`
+- bronze, silver, and gold tables live in SQL Server on `stoxx-vm`
+- replica and marts live in BigQuery datasets such as `stoxx_gold` and `stoxx_marts`
+- serving documents live in Firestore database `main`
 
-> [!warning] Variable.get() at Module Level Runs on Every DAG Parse (Every 30s)
-> Code at module level runs during DAG parsing, not during task execution. A `Variable.get()` at module level hits the Metadata DB every 30 seconds per DAG file. With 50 DAG files, that is 100 DB queries per minute just for variable resolution. Always call `Variable.get()` inside task callables, never at the top of the DAG file.
+Airflow only stores lightweight execution metadata and state transitions.
 
-> [!success] Fix: call Variable.get() inside task callables only
-> Move all `Variable.get()` calls inside the Python callable of a `PythonOperator` or inside a `@task`-decorated function. This limits each fetch to task execution time, not parse time, and eliminates repeated DB hits from the Scheduler loop.
+## DAG Runs And Task Instances In The Live Pipeline
 
-### Variables
+The most important operational Airflow concept is that a DAG definition is static code, while DAG runs and task instances are runtime records. The same DAG can have many runs. Each run contains one task instance per task, with its own state and timestamps.
 
-Key-value pairs stored in the Metadata DB. Used for configuration that needs to change without modifying DAG code.
+### Read A Successful Full DAG Run
 
-```python
-from airflow.models import Variable
+This subsection uses the validated serving run to show exactly what a completed Airflow pipeline looks like in the metadata database.
 
-# In a task callable -- fetches from DB on each call
-def use_variable(**context):
-    # Get a variable (raises KeyError if missing)
-    env = Variable.get("environment")
+#### Inspect The Task States For The Successful Serving Run
 
-    # Get with default (never raises)
-    dry_run = Variable.get("dry_run", default_var="false")
+**When to run:** Run this after a full DAG execution, during incident review, or while proving that a rollout succeeded end to end.
+**Trigger:** You need to know which tasks ran, in what order, and whether the whole graph finished successfully.
+**Context:** This is a read-only Airflow CLI command executed inside the worker container.
+**Purpose:** Print the task-instance state table for a specific DAG run and use it as the authoritative run ledger.
 
-    # Get JSON variable (deserialize automatically)
-    config = Variable.get("pipeline_config", deserialize_json=True)
-    batch_size = config["batch_size"]
+*This command reads task-instance state for the validated end-to-end serving run.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose exec -T airflow-worker airflow tasks states-for-dag-run stoxx_stage_yfinance manual__2026-04-13T17:28:30Z_serving"
 ```
 
-#### Setting variables
-
-```bash
-# CLI
-airflow variables set environment production
-airflow variables set pipeline_config '{"batch_size": 1000, "timeout": 300}'
-
-# Environment variable (overrides DB — preferred for secrets)
-export AIRFLOW_VAR_ENVIRONMENT=production
-export AIRFLOW_VAR_PIPELINE_CONFIG='{"batch_size": 1000}'
+```text
+dag_id               | logical_date | task_id                               | state   | start_date                       | end_date
+=====================+==============+=======================================+=========+==================================+=================================
+stoxx_stage_yfinance |              | build_gold_scores                     | success | 2026-04-13T17:34:07.755655+00:00 | 2026-04-13T17:35:19.502117+00:00
+stoxx_stage_yfinance |              | build_bigquery_marts                  | success | 2026-04-13T17:38:08.176627+00:00 | 2026-04-13T17:39:31.636842+00:00
+stoxx_stage_yfinance |              | transform_ohlcv_to_silver             | success | 2026-04-13T17:32:52.958397+00:00 | 2026-04-13T17:34:07.065424+00:00
+stoxx_stage_yfinance |              | build_gold_index_performance          | success | 2026-04-13T17:35:20.521940+00:00 | 2026-04-13T17:36:29.693701+00:00
+stoxx_stage_yfinance |              | load_bronze_into_sql                  | success | 2026-04-13T17:31:54.675515+00:00 | 2026-04-13T17:32:52.180176+00:00
+stoxx_stage_yfinance |              | sync_gold_to_bigquery                 | success | 2026-04-13T17:36:30.357505+00:00 | 2026-04-13T17:38:07.571071+00:00
+stoxx_stage_yfinance |              | publish_serving_to_firestore          | success | 2026-04-13T17:39:32.834998+00:00 | 2026-04-13T17:40:40.082303+00:00
+stoxx_stage_yfinance |              | fetch_bronze_stage_into_gcs           | success | 2026-04-13T17:30:27.650234+00:00 | 2026-04-13T17:31:54.180281+00:00
+stoxx_stage_yfinance |              | transform_signals_daily_to_silver     | success | 2026-04-13T17:32:53.576918+00:00 | 2026-04-13T17:33:59.913948+00:00
+stoxx_stage_yfinance |              | transform_signals_quarterly_to_silver | success | 2026-04-13T17:32:53.740656+00:00 | 2026-04-13T17:34:04.283928+00:00
+stoxx_stage_yfinance |              | validate_serving_layer                | success | 2026-04-13T17:40:40.571297+00:00 | 2026-04-13T17:41:44.811851+00:00
 ```
 
-> [!tip] Variable Caching
-> Each `Variable.get()` call hits the Metadata DB. In large DAGs with many tasks, this adds up. Use `Variable.get()` once per task, or fetch at module level with caution (DAG-level fetches run during parsing, not execution).
+This single table teaches the live state model better than a generic diagram:
 
----
+- Each row is one task instance inside one DAG run.
+- `state=success` means the task's operator completed successfully from Airflow's point of view.
+- The three silver transform tasks started within the same second, which proves the fan-out happened in parallel.
+- The next downstream task did not start until all three silver tasks succeeded.
+- The final validation task finished last, which makes it the terminal checkpoint for the entire serving chain.
 
-## Executors Comparison Table
+| Flag | Syntax | Description |
+|---|---|---|
+| `states-for-dag-run` | `airflow tasks states-for-dag-run <dag_id> <run_id>` | Prints the task-instance states for one DAG run. |
+| `<dag_id>` | `stoxx_stage_yfinance` | Identifies which workflow to inspect. |
+| `<run_id>` | `manual__2026-04-13T17:28:30Z_serving` | Identifies the exact execution instance. |
 
-The Executor determines how Airflow runs tasks. Choose based on your scale, infrastructure, and operational requirements.
+## Triggerer, Deferrable Operators, And Why They Matter Here
 
-| Executor | Parallelism | Infrastructure | Best For | Limitations |
-|---|---|---|---|---|
-| **SequentialExecutor** | 1 task at a time | None (SQLite default) | Local dev/testing only | Not for production; single-threaded |
-| **LocalExecutor** | Multiple (configurable) | PostgreSQL/MySQL required | Small/medium teams, single machine | Limited by one machine's resources |
-| **CeleryExecutor** | Horizontal scale | Redis/RabbitMQ + worker fleet | Large scale, many concurrent tasks | Complex ops: Celery + message broker |
-| **KubernetesExecutor** | Horizontal scale | Kubernetes cluster | Cloud-native, task isolation, dynamic resources | K8s overhead, cold start latency per task |
-| **CeleryKubernetesExecutor** | Hybrid | Celery + Kubernetes | Mixed workloads | Most complex to operate |
-| **LocalKubernetesExecutor** | Hybrid | Kubernetes | Cloud Composer (managed) | Managed only; not self-hosted |
+The live runtime includes a healthy triggerer container, so the platform is ready for deferred asynchronous patterns. The current DAG does not use them yet because every `CloudRunExecuteJobOperator` is declared with `deferrable=False`.
 
-### LocalExecutor
+This matters for capacity planning:
 
-```ini
-# airflow.cfg
-[core]
-executor = LocalExecutor
+- with `deferrable=False`, the worker holds the task slot while Airflow waits for the Cloud Run execution to complete
+- with a deferrable pattern, the worker could hand off the wait state to the triggerer and free capacity for other work
 
-[database]
-sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@localhost/airflow
+The current choice is acceptable because the DAG is single-run, manual, and demonstration-oriented. If the platform becomes scheduled and runs multiple DAGs or higher parallelism, converting suitable external-wait tasks to deferrable execution is one of the first efficiency upgrades to evaluate.
 
-[core]
-parallelism = 32                    # Max tasks running across all DAGs
-max_active_tasks_per_dag = 16       # Max tasks per DAG Run
-```
+> [!tip] When To Care About The Triggerer
+>
+> Start treating the triggerer as a capacity feature rather than a background service when these conditions are true:
+>
+> - several long-running external jobs are active at the same time
+> - worker slots become the bottleneck rather than Cloud Run quotas
+> - the DAG spends more time waiting on external execution than doing operator work
 
-### CeleryExecutor
+## What To Remember
 
-```ini
-# airflow.cfg
-[core]
-executor = CeleryExecutor
+Airflow in this environment is a stateful orchestration control plane with a simple, explicit contract:
 
-[celery]
-broker_url = redis://redis:6379/0
-result_backend = db+postgresql://airflow:airflow@postgres/airflow
-worker_concurrency = 16             # Tasks per Celery worker process
-```
+- the DAG defines the allowed order of work
+- the scheduler decides when tasks may run
+- the worker launches provider operators
+- the metadata database records what happened
+- the actual data processing happens in Cloud Run, SQL Server, BigQuery, and Firestore
 
-### KubernetesExecutor
-
-```ini
-# airflow.cfg
-[core]
-executor = KubernetesExecutor
-
-[kubernetes]
-namespace = airflow
-in_cluster = True
-worker_container_repository = apache/airflow
-worker_container_tag = 2.9.0
-delete_worker_pods = True
-```
-
-> [!info] Cloud Composer Uses LocalKubernetesExecutor
-> Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) for Cloud Composer specifics.
-
-> [!tip] Related pattern
-> Most local and self-hosted Airflow deployments use [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) note walks through the full `docker-compose.yaml` setup.
-
----
-
-### Jinja Templating in Airflow Operators
-
-Airflow uses Jinja2 templating in `template_fields` of Operators. Common template variables:
-
-```python
-# Common Jinja template variables available in Operators
-"{{ ds }}"                     # Execution date: "2024-01-15"
-"{{ ds_nodash }}"              # Execution date no dashes: "20240115"
-"{{ ts }}"                     # Timestamp: "2024-01-15T06:00:00+00:00"
-"{{ logical_date }}"           # Pendulum datetime object
-"{{ data_interval_start }}"    # Start of the data interval
-"{{ data_interval_end }}"      # End of the data interval
-"{{ run_id }}"                 # Run ID string: "scheduled__2024-01-15T06:00:00+00:00"
-"{{ dag.dag_id }}"             # DAG ID
-"{{ task.task_id }}"           # Task ID
-"{{ params.my_param }}"        # Access DAG/run params
-"{{ var.value.my_var }}"       # Access Airflow Variables
-"{{ conn.my_conn.host }}"      # Access Connection fields
-"{{ ti.xcom_pull('task_id') }}"  # Pull XCom in template
-```
-
----
-
-## Related Notes
-
-- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
-- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Task dependencies, dynamic DAGs, branching, trigger rules
-- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Docker Compose, Cloud Composer, CI/CD for DAGs
-- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Common errors, debugging CLI commands, log locations
-
-## References
-
-- [Apache Airflow Official Documentation](https://airflow.apache.org/docs/)
-- [Airflow REST API Reference](https://airflow.apache.org/docs/apache-airflow/stable/stable-rest-api-ref.html)
-- [TaskFlow API Tutorial](https://airflow.apache.org/docs/apache-airflow/stable/tutorial/taskflow.html)
-- [Airflow Best Practices](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html)
+That separation is the foundation for every other Airflow note in this chapter. The next note builds on it by showing which DAG patterns the live STOXX pipeline actually uses and why those patterns were chosen.

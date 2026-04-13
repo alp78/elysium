@@ -162,34 +162,6 @@ status: complete
 > >
 > > `Remove-Item -Recurse -Force` deletes immediately and permanently. There is no `-WhatIf` safety net once the command runs. Always inspect with `Get-ChildItem` and run with `-WhatIf` first.
 
-Copying, moving, and deleting files seems trivial until you accidentally overwrite a production dataset, delete a directory that was still being written to, or run out of disk space mid-copy because you did not check first. Production file operations require explicit safety habits.
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `cp` | The Linux command for copying files and directories. Without flags, copies a single file. With `-r`, copies directories recursively. With `-a`, preserves all metadata. | The starting point for duplicating data, creating backups, and staging files for processing. | Using `cp -r` instead of `cp -a` for data directories -- `-r` resets modification timestamps, breaking downstream change-detection logic. |
-| `rsync` | A file transfer tool that copies only the differences between source and destination. Supports resumable transfers, checksum verification, and remote copying via SSH. | The standard tool for large or unreliable file transfers. If interrupted, re-run the same command and it picks up where it left off. | Trailing slash behavior: `rsync src/ dst/` copies contents into `dst/`; `rsync src dst/` creates `dst/src/`. Combined with `--delete`, a wrong slash can wipe the destination. |
-| `mv` | The Linux command for moving and renaming files. Same-filesystem moves are instant (a single `rename()` syscall). Cross-filesystem moves are copy + delete. | Used for both renaming files and relocating them. Atomic on the same filesystem, but not across filesystems. | Assuming `mv` is always atomic. Cross-filesystem moves are copy-then-delete -- if the copy fails (disk full), you get a partial file at the destination. |
-| `rm` | The Linux command for permanently deleting files and directories. There is no system trash -- deletion is immediate and unrecoverable without a backup. | The most dangerous standard command. `rm -rf` with a wrong path or unset variable can destroy entire directory trees. | Not using the trash pattern in scripts. Direct `rm -rf` in automated scripts is the leading cause of accidental data deletion in production environments. |
-| `chmod` | The Linux command for setting file permissions using octal (e.g., `755`) or symbolic (e.g., `u+x`) notation. | Controls who can read, write, and execute files. Common values: `755` (scripts), `644` (data files), `600` (secrets). | Octal digit meaning: each digit = read (4) + write (2) + execute (1). `755` = owner rwx, group r-x, others r-x. |
-| `chown` | The Linux command for changing file ownership (user and group). Syntax: `chown user:group file`. | Required when Docker containers run as a specific UID and need write access to host-mounted directories. | Not matching container UIDs when setting ownership on bind mounts -- Airflow default UID is 50000, not root. |
-| Trash pattern | A safe deletion strategy: move the target to a timestamped staging directory instead of deleting immediately. Verify, then delete the staging directory. | Provides a recovery window. The cost of a 30-second verification delay is infinitely less than the cost of accidental deletion. | Skipping verification -- the trash pattern only helps if you check the staging directory before final deletion. |
-| `icacls` | The Windows command-line tool for viewing and modifying NTFS access control lists (ACLs). The functional equivalent of `chmod` on Linux. | Used to grant, deny, or reset file permissions on Windows. Supports inheritance flags (`OI`, `CI`) for recursive application. | ACL inheritance: `(OI)(CI)F` grants Full Control to the directory and all children. Without `(OI)(CI)`, the permission applies only to the directory itself. |
-| `rename` (Perl) | A Debian/Ubuntu utility that applies a Perl regex substitution to filenames for batch renaming. | Used for bulk extension changes, prefix/suffix operations, and pattern-based renames. | Two different `rename` utilities exist: Perl-based (Debian) and util-linux (RHEL). They have completely different syntax. |
-
-## What this note covers
-
-- Copying files and directories with `cp` (including archive mode for metadata preservation)
-- Resumable transfers with `rsync` (trailing slash behavior, dry-run, checksum verification)
-- Moving and renaming files with `mv` (atomic vs. cross-filesystem behavior)
-- Safe deletion patterns: the trash directory approach vs. direct `rm -rf`
-- Directory creation with `mkdir -p` and brace expansion
-- File permissions with `chmod` (octal and symbolic notation)
-- File ownership with `chown` (Docker/Airflow UID patterns)
-- Disk usage checks with `du` and `df`
-- PowerShell equivalents: `Copy-Item`, `Move-Item`, `Rename-Item`, `Remove-Item`, `New-Item`, `icacls`
 ## Linux file manipulation tools
 
 Linux provides dedicated single-purpose tools for each file operation: `cp` for copying, `mv` for moving and renaming, `rm` for deletion, `rsync` for resumable transfers, `rename` for batch renames, `mkdir` for directory creation, `chmod` for permissions, `chown` for ownership, `du` for directory size, and `df` for disk space. Each tool has a narrow contract — composing them correctly is where safe file handling begins.
@@ -915,20 +887,22 @@ Get-ChildItem -Recurse "C:\data\pipeline" |
 ```
 
 
-## When to use file manipulation tools
-
-- **Staging pipeline data** -- copy raw data to a processing directory with `cp -a` (preserving timestamps) before transformation, so the original is untouched.
-- **Large or unreliable transfers** -- use `rsync` for any copy over a network or involving files larger than a few GB. Resume support and checksum verification prevent silent corruption.
-- **Atomic renames for safe output** -- write pipeline output to a temp file, then `mv` it to the final path. This prevents downstream consumers from reading a partially written file.
-- **Safe deletion in scripts** -- always use the trash pattern (move to staging, verify, then delete) instead of direct `rm -rf` in automated scripts.
-- **Container permission setup** -- use `chown -R <uid>:0` to fix bind mount permissions for Docker containers running as non-root users.
-- **Batch file renames** -- use `rename` (Perl) or a `for` loop with `mv` for bulk extension changes or naming convention updates.
-
-## When not to use file manipulation tools
-
-- **Cross-server transfers** -- `cp` and `mv` are local-only. Use `rsync -e ssh`, `scp`, or `gsutil` for remote transfers.
-- **Version-controlled files** -- do not `mv` or `rm` files tracked by git directly. Use `git mv` and `git rm` to keep the index consistent.
-- **Database files while the database is running** -- never `cp`, `mv`, or `rm` database files (`.mdf`, `.ldf`, `.ndf`) directly. Use database backup/restore tools.
+> [!example] File Operation Safety Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Staging pipeline data** -- copy raw data to a processing directory with `cp -a` (preserving timestamps) before transformation, so the original is untouched.
+> > - **Large or unreliable transfers** -- use `rsync` for any copy over a network or involving files larger than a few GB. Resume support and checksum verification prevent silent corruption.
+> > - **Atomic renames for safe output** -- write pipeline output to a temp file, then `mv` it to the final path. This prevents downstream consumers from reading a partially written file.
+> > - **Safe deletion in scripts** -- always use the trash pattern (move to staging, verify, then delete) instead of direct `rm -rf` in automated scripts.
+> > - **Container permission setup** -- use `chown -R <uid>:0` to fix bind mount permissions for Docker containers running as non-root users.
+> > - **Batch file renames** -- use `rename` (Perl) or a `for` loop with `mv` for bulk extension changes or naming convention updates.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Cross-server transfers** -- `cp` and `mv` are local-only. Use `rsync -e ssh`, `scp`, or `gsutil` for remote transfers.
+> > - **Version-controlled files** -- do not `mv` or `rm` files tracked by git directly. Use `git mv` and `git rm` to keep the index consistent.
+> > - **Database files while the database is running** -- never `cp`, `mv`, or `rm` database files (`.mdf`, `.ldf`, `.ndf`) directly. Use database backup/restore tools.
 
 ## Warnings
 

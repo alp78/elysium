@@ -52,8 +52,6 @@ status: complete
 > - Process environment is safer than CLI arguments (`ps aux` exposes args to all users) but not safe at rest; use a secret manager for long-lived secrets
 >
 > **Operations and safety**
-> - When to use: runtime configuration varying by environment, credentials as a transient handoff from a secret manager, 12-factor apps, CI/CD pipelines
-> - When not to use: structured/large config (use config files + file-path pointer), multi-line or binary data, long-lived secrets, cross-process sharing, anything that must survive a reboot without explicit setup
 > - Warnings: secrets in CLI args visible to all users; exported vars inherited by all children; `.env` files must never be committed; cron/systemd/Task Scheduler have minimal environments; common name collisions (`PATH`, `HOME`, `USER`)
 > - Recommendations table: 9 scenarios covering setting, scoping, persisting (user + system), loading `.env`, secret injection, `envsubst` templating, debugging, and naming conventions
 > - Troubleshooting: 7 failure modes covering missing vars in scripts/cron/containers, stale child values, unexpected persistence from startup files, CI environment mismatches, `envsubst` literal placeholders, `ARG_MAX` exhaustion, and PowerShell registry/session mismatch
@@ -754,21 +752,23 @@ Remove-Item Env:SA_PASSWORD
 
 For a declarative approach to managing variables and configuration across environments, see [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) which covers Terraform input variables, locals, and output values.
 
-## When to use environment variables
-
-- **Runtime configuration that varies by environment** — database hosts, API endpoints, feature flags, log levels. The same container image or script should work in dev, staging, and production by changing only the environment.
-- **Credentials and secrets** — as an intermediate handoff from a secret manager to the process. The environment variable holds the credential for the duration of execution, not permanently.
-- **12-factor app patterns** — any application following the [12-factor methodology](https://12factor.net/config) expects configuration from the environment, not from config files baked into the image.
-- **CI/CD pipelines** — GitHub Actions, Cloud Build, Jenkins, and Airflow all inject variables through the environment. This is the standard interface between the orchestrator and the task.
-- **Quick prototyping and ad-hoc scripts** — when a formal config file would be overkill, a few exported variables get the job done.
-
-## When not to use environment variables
-
-- **Structured or large configuration** — if you need arrays, nested objects, or payloads larger than a few hundred bytes, use a config file (YAML, JSON, TOML) and point an environment variable at its path.
-- **Multi-line values or binary data** — environment variables do not handle newlines reliably across all tools. Base64-encoding a certificate into an env var is fragile; mount the file instead.
-- **Long-lived secret storage** — environment variables remain in process memory and are readable via `/proc/<pid>/environ` on Linux. For secrets at rest, use a dedicated secret manager (GCP Secret Manager, Azure Key Vault, HashiCorp Vault) and resolve at runtime.
-- **Configuration shared across unrelated processes** — if two services on the same machine need the same variable, persisting it in `/etc/environment`, the registry, or a config management tool is cleaner than expecting every shell to source the same `.env` file.
-- **Anything that must survive a reboot without explicit setup** — session-scoped environment variables disappear when the terminal closes. If you need persistence, write to `.bashrc`, `$PROFILE`, the registry, or `/etc/environment`.
+> [!example] Configuration Boundary
+>
+> > [!success] Appropriate
+> >
+> > - **Runtime configuration that varies by environment** — database hosts, API endpoints, feature flags, log levels. The same container image or script should work in dev, staging, and production by changing only the environment.
+> > - **Credentials and secrets** — as an intermediate handoff from a secret manager to the process. The environment variable holds the credential for the duration of execution, not permanently.
+> > - **12-factor app patterns** — any application following the [12-factor methodology](https://12factor.net/config) expects configuration from the environment, not from config files baked into the image.
+> > - **CI/CD pipelines** — GitHub Actions, Cloud Build, Jenkins, and Airflow all inject variables through the environment. This is the standard interface between the orchestrator and the task.
+> > - **Quick prototyping and ad-hoc scripts** — when a formal config file would be overkill, a few exported variables get the job done.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Structured or large configuration** — if you need arrays, nested objects, or payloads larger than a few hundred bytes, use a config file (YAML, JSON, TOML) and point an environment variable at its path.
+> > - **Multi-line values or binary data** — environment variables do not handle newlines reliably across all tools. Base64-encoding a certificate into an env var is fragile; mount the file instead.
+> > - **Long-lived secret storage** — environment variables remain in process memory and are readable via `/proc/<pid>/environ` on Linux. For secrets at rest, use a dedicated secret manager (GCP Secret Manager, Azure Key Vault, HashiCorp Vault) and resolve at runtime.
+> > - **Configuration shared across unrelated processes** — if two services on the same machine need the same variable, persisting it in `/etc/environment`, the registry, or a config management tool is cleaner than expecting every shell to source the same `.env` file.
+> > - **Anything that must survive a reboot without explicit setup** — session-scoped environment variables disappear when the terminal closes. If you need persistence, write to `.bashrc`, `$PROFILE`, the registry, or `/etc/environment`.
 
 ## Warnings
 

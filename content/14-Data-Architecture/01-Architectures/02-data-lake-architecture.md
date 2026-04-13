@@ -15,11 +15,126 @@ status: complete
 >
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)
 
-A **data lake** is a centralized repository that stores raw data at any scale — structured, semi-structured, and unstructured — at a fraction of the cost of a traditional data warehouse. Unlike a warehouse which enforces schema on write (data is transformed into a fixed schema before loading), a data lake applies **schema-on-read**: data is stored in its native format and structure is only imposed when it is queried.
+> [!abstract]- Summary
+>
+> This note defines the data lake as the low-cost, schema-on-read storage layer for multi-format data, then shows how zone design, file layout, governance, and platform choices determine whether that flexibility becomes a durable asset or an unusable swamp.
+>
+> **Schema model and zone design**
+> - Contrasts schema-on-write and schema-on-read, then uses landing, cleansed, and curated zones to show where raw ingest ends and enforced structure begins.
+> - Treats zone boundaries as the real quality contract, with immutable raw storage, validated conformance, and analytics-ready publication serving distinct access patterns.
+>
+> **Storage layout and file choices**
+> - Covers Hive-style partitioning, naming conventions, file size targets, and storage-format selection so lake queries stay prunable, compressible, and operationally predictable.
+> - Connects partition strategy, small-file control, and columnar formats directly to both performance and long-term storage cost.
+>
+> **Governance, anti-patterns, and cloud implementations**
+> - Explains cataloging, lineage, access control, and PII handling, then uses the data swamp anti-patterns to show what breaks when a lake is only cheap storage with no discipline.
+> - Compares cloud lake implementations and walks through a GCP pattern built from GCS, BigQuery external tables, and Dataproc for heavier transformation work.
+>
+> **Operations and safety**
+> - Warnings: schema-on-read is deferred enforcement rather than no enforcement, and weak partitioning, uncontrolled small files, or missing ownership quickly turn the lake into a swamp.
+> - Recommendations: enforce schemas at zone transitions, catalog every dataset early, partition mostly by time, and compact incremental files before query cost and latency drift upward.
 
-The term was coined by James Dixon (Pentaho) in 2010 as a contrast to the "data mart" concept — a data mart is like a bottle of water (cleaned, packaged, structured for a specific purpose); a data lake is the lake itself (raw, unfiltered, accessible in its native state).
-
----
+> [!note]- Glossary
+>
+> **Data lake**
+> - A centralized storage layer that keeps structured, semi-structured, and unstructured data in low-cost object storage, usually in its original or lightly standardized formats.
+> - It matters here because the entire note explains how to make that raw flexibility operationally safe instead of letting it decay into unmanaged storage.
+>
+> > [!info] Cheap does not mean simple
+> >
+> > The storage bill may be low, but the engineering discipline needed to keep the lake queryable and trustworthy is high.
+>
+> ---
+>
+> **Schema-on-read**
+> - A data access model where structure is interpreted at query time instead of being fully enforced before data lands in storage.
+> - It matters here because it is the defining flexibility of the lake and the reason zone transitions must carry the real validation burden.
+>
+> > [!warning] Deferred enforcement
+> >
+> > Schema-on-read does not remove schema work. It postpones it, which means errors can accumulate silently until a consumer query fails or returns bad results.
+>
+> ---
+>
+> **Landing / raw zone**
+> - The immutable append-only area that stores exact source-system payloads as they arrived, without correction or normalization.
+> - It matters here because the raw zone is the audit trail and reprocessing source for every later lake transformation.
+>
+> > [!info] Preserve the original record
+> >
+> > If upstream sends malformed data, keep it in landing anyway. The safe pattern is to quarantine or reject later, not to erase the original arrival.
+>
+> ---
+>
+> **Cleansed / conforming zone**
+> - The lake layer where data is validated, deduplicated, standardized, and rewritten into formats with declared schemas.
+> - It matters here because this is where the lake stops being passive storage and starts enforcing reusable contracts.
+>
+> > [!warning] Do not leave JSON here
+> >
+> > A cleansed zone that still holds arbitrary CSV or JSON has not really enforced a contract. It only moved the raw files to a new folder.
+>
+> ---
+>
+> **Curated / analytics zone**
+> - The business-facing layer that publishes optimized, governed datasets for analysts, BI, or downstream serving systems.
+> - It matters here because curated data is the point where lake storage becomes directly useful to non-engineering consumers.
+>
+> > [!info] Fit for access patterns
+> >
+> > Curated data is not only cleaner. It is also shaped for dominant query patterns, discoverability, and governed access.
+>
+> ---
+>
+> **Hive-style partitioning**
+> - A directory layout convention that encodes partition keys in paths such as `year=2026/month=03/day=22/` so engines can discover and prune partitions automatically.
+> - It matters here because partition layout is a primary performance lever for lake reads across Spark, BigQuery, Athena, and similar engines.
+>
+> > [!warning] Cardinality trade-off
+> >
+> > Very high-cardinality partitions create too many directories, while very low-cardinality partitions barely prune anything. Time-based partitioning is the safest default.
+>
+> ---
+>
+> **Small files problem**
+> - The performance and metadata overhead created when incremental writes produce huge numbers of tiny objects instead of fewer well-sized columnar files.
+> - It matters here because lake performance and cost can degrade even when the data volume itself is reasonable.
+>
+> > [!warning] Metadata becomes the bottleneck
+> >
+> > Query engines can spend more time listing and opening files than reading actual data when partitions accumulate thousands of tiny objects.
+>
+> ---
+>
+> **Data swamp**
+> - A failed lake implementation where datasets exist in storage but lack clear schema, ownership, cataloging, retention, or trust.
+> - It matters here because the note treats swamp avoidance as the real architectural challenge of operating a lake.
+>
+> > [!danger] Cheap storage trap
+> >
+> > Teams often mistake successful ingestion for successful architecture. If no one can discover, validate, or safely reuse the data, the lake is already failing.
+>
+> ---
+>
+> **External table**
+> - A query-engine table definition that references files stored outside the engine's native managed storage.
+> - It matters here because the note uses BigQuery external tables as the bridge between lake files in GCS and SQL-based analytical access.
+>
+> > [!info] Compute without copying
+> >
+> > External tables let analysts work through a familiar SQL surface while the physical data remains in object storage.
+>
+> ---
+>
+> **Data catalog**
+> - A metadata system that records datasets, schemas, owners, lineage, and discovery attributes for the lake.
+> - It matters here because governance starts collapsing as soon as files exist without searchable metadata and ownership context.
+>
+> > [!warning] Register early
+> >
+> > Retrofitting a catalog after dozens of producers have already written unmanaged files is much harder than requiring registration at dataset creation time.
+>
 
 ### Schema-on-Write vs Schema-on-Read
 
@@ -42,6 +157,16 @@ Understanding this distinction is the architectural foundation of the data lake 
 > Accept any format in the landing zone (raw, immutable copy) but enforce a declared schema at the landing → cleansed transition. Use Spark's `DROPMALFORMED` mode or a Python Pydantic validator to reject or quarantine records that fail the schema. Any quarantined record lands in a `_rejected/` partition alongside the cleansed data, preserving the audit trail without polluting the cleansed zone.
 
 ---
+
+> [!example] Data Lake Fit
+>
+> > [!success] Flexible Raw Storage
+> >
+> > - Use a data lake to store raw or semi-structured data cheaply, preserve reprocessing history, support exploratory analytics, or stage multi-format inputs before stricter downstream modeling.
+>
+> > [!failure] Governance-Free Dumping
+> >
+> > - Do not use a lake for mostly transactional OLTP workloads, ingest-time warehouse guarantees, or any environment that would leave raw files unmanaged without catalog, schema, and retention controls.
 
 ## Zone Architecture
 

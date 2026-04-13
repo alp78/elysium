@@ -16,15 +16,51 @@ status: complete
 
 # Essential DBA Queries
 
-This note is the production query pack for first-response SQL Server administration. The goal is not to show every DMV in the product. The goal is to give a short set of queries that answer the operational questions a DBA needs first: what server this is, what databases exist, whether files and logs are healthy, what is running now, what has been waiting, whether backups have actually happened, and where capacity is being consumed.
+> [!abstract]- Summary
+>
+> This note is a first-response SQL Server query pack for production administration. The goal is not catalog completeness; it is to keep a short, defensible set of queries that answers the first operational questions a DBA needs during health checks and incident triage: which server this is, what databases and files exist, what is running now, what is waiting, whether backups happened, and where capacity pressure is building.
+>
+> - **Baseline**
+>   - confirms engine identity, edition, host, HA posture, database inventory, file layout, and configuration drift through `SERVERPROPERTY`, `sys.databases`, `sys.master_files`, and related catalog checks
+> - **Workload**
+>   - inspects active requests, waits, blocking chains, tempdb pressure, I/O latency, transactions, and query-level signals through core DMVs
+> - **Backups and capacity**
+>   - verifies backup history, log consumption, space pressure, fragmentation, missing-index signals, and error-log context
+> - **Operational flow**
+>   - follows the same branch order a DBA uses in real incident response so baseline facts lead directly into workload, history, and storage triage
+> - **Live capture context**
+>   - result tables were captured on April 11, 2026 from the local `stoxx` instance: SQL Server 2022 CU23 (`16.0.4236.2`), Developer Edition, Linux container on Ubuntu 22.04.5 LTS, host port `1434`, with SQL Server Agent enabled
 
-All result tables in this note were captured from the current `stoxx` instance:
-
-- SQL Server 2022 CU23 (build 16.0.4236.2)
-- Developer Edition (64-bit)
-- Linux container on Ubuntu 22.04.5 LTS, host port `1434`
-- SQL Server Agent is enabled on this instance (Linux container)
-- Current date: April 11, 2026
+> [!note]- Glossary
+>
+> - **DMV**
+>   - dynamic management view that exposes live engine state for workload, wait, and resource diagnostics
+> - **`SERVERPROPERTY`**
+>   - scalar function used to retrieve structured engine metadata such as build, edition, collation, and HA flags
+> - **`sys.databases`**
+>   - catalog view that inventories databases and their current state
+> - **`sys.master_files`**
+>   - catalog view that inventories database files, sizes, growth settings, and physical locations
+> - **Active request**
+>   - currently executing or waiting session surfaced through `sys.dm_exec_requests`
+> - **Wait statistic**
+>   - record of time SQL Server spent waiting on a resource class, used to identify bottlenecks
+> - **Blocking chain**
+>   - set of sessions waiting behind a blocking head session that holds a conflicting lock
+> - **Head blocker**
+>   - session at the root of a blocking chain that others are waiting on
+> - **TempDB contention**
+>   - allocation or metadata pressure inside `tempdb`, often visible through latch waits
+> - **`msdb.dbo.backupset`**
+>   - backup history catalog used to confirm whether full, differential, and log backups actually ran
+> - **`sys.dm_db_log_space_usage`**
+>   - DMV that shows current transaction-log utilization inside a database
+> - **`sys.dm_io_virtual_file_stats`**
+>   - function that exposes per-file I/O latency and throughput counters
+> - **Capacity pressure**
+>   - storage or log-growth risk that threatens normal operation if left unresolved
+> - **Error log tail**
+>   - recent engine log entries used to add operational context around failures, startup, or backup behavior
 
 > [!info] First-response triage decision path
 >
@@ -302,7 +338,6 @@ This subsection quantifies how much storage each database currently owns on disk
 | `max_size` | `int` | Max size in 8 KB pages; `-1` = unlimited, `0` = no growth |
 | `growth` | `int` | Growth increment; unit depends on `is_percent_growth` |
 | `is_percent_growth` | `bit` | 0 = `growth` is in pages; 1 = `growth` is a percentage |
-
 | `sys.master_files.type` | Meaning |
 |---:|---|
 | `0` | Rows (data file — `.mdf`, `.ndf`) |
@@ -1127,7 +1162,6 @@ This subsection confirms that recent full backups actually exist and shows their
 | `first_lsn` | `numeric(25,0)` | First LSN included in the backup |
 | `last_lsn` | `numeric(25,0)` | Last LSN included |
 | `database_backup_lsn` | `numeric(25,0)` | LSN of the most recent full backup — anchors differentials |
-
 | `backupset.type` | Meaning |
 |---|---|
 | `D` | Full database backup |
@@ -1709,4 +1743,3 @@ ORDER BY LogDate DESC;
 > [!info] Query Store vs wait-stat cumulative reads
 >
 > For wait analysis that survives restarts and correlates to individual plans, prefer Query Store (`sys.query_store_wait_stats`) over the instance-wide `sys.dm_os_wait_stats` used in this note. Query Store preserves wait data per plan per time interval and is not reset by a service restart. See [[13-execution-plans]] for the Query Store setup and query patterns.
-

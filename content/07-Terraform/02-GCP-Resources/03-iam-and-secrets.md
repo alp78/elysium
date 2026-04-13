@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform IAM and Secrets
+# IAM and Secrets
 
 > [!quote] Kelsey Hightower on raw cloud access
 >
@@ -16,7 +16,155 @@ status: complete
 >
 > — **Kelsey Hightower**, Twitter
 
-This note covers Terraform resources for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. The guiding principle is **one service account per workload** with least-privilege access — each workload gets its own service account with the minimum permissions it needs. Service accounts have no permissions by default and only gain access through explicit IAM bindings (covered in the IAM Bindings section). For the underlying GCP IAM concepts — roles, policies, and the principal hierarchy — see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
+> [!abstract]- Summary
+>
+> IAM and Secrets is the identity and secret-boundary note for the Terraform GCP layer: it shows how one-service-account-per-workload, explicit IAM bindings, Secret Manager resources, optional Datadog conditionals, and CI/CD impersonation paths fit together into a least-privilege deployment model.
+>
+> **Identity foundations**
+> - covers required APIs and permissions, workload-specific service accounts, naming conventions, and the principle that service accounts begin with no permissions until Terraform binds roles explicitly
+>
+> **IAM role assignment**
+> - covers resource-level versus project-level IAM, `iam_member` versus `iam_binding` versus `iam_policy`, `for_each` patterns for repeated bindings, and the least-privilege chain used by runtime and CI identities
+>
+> **Secret management and conditional resources**
+> - covers Secret Manager resources, replication syntax, secret versions, lifecycle protection, secret-access bindings, and optional Datadog-related resources controlled by conditional logic
+>
+> **CI/CD identity path**
+> - covers the dedicated deployment service account, why exported keys are risky, and how Workload Identity Federation keeps GitHub Actions from depending on long-lived credentials
+>
+> **Operations and safety**
+> - Warnings: primitive roles are too broad, secret values still land in Terraform state, production secrets need lifecycle protection, exported service-account keys for CI are risky, and verification commands can print plaintext secret values to the terminal
+> - Recommendations: keep one service account per workload, bind only fine-grained predefined roles, encrypt and protect the remote state backend, prefer WIF over key export, use `for_each` for repeated IAM resources, and reference secrets indirectly instead of printing or embedding them
+
+> [!note]- Glossary
+>
+> **Service account**
+> - A Google-managed workload identity used by applications, VMs, jobs, or automation instead of by a human user.
+> - It matters because the note's central access-control pattern is to give each workload its own narrowly scoped service account.
+>
+> > [!info] Identity and permission are separate
+> >
+> > Creating a service account does not grant it any access by itself. Permissions arrive only when IAM bindings attach roles to that identity.
+>
+> ---
+>
+> **Least privilege**
+> - The principle of granting only the minimum permissions required for a workload or automation path to function.
+> - It matters because the note repeatedly narrows role choices, secret access, and CI permissions around that principle.
+>
+> > [!warning] Convenience tends to widen scope
+> >
+> > Broad roles are operationally tempting because they make errors disappear quickly. They also turn identity mistakes into larger blast-radius problems later.
+>
+> ---
+>
+> **Primitive role**
+> - A broad legacy IAM role such as Owner, Editor, or Viewer that spans many unrelated permissions.
+> - It matters because the note explicitly warns against using primitive roles for Terraform-managed workloads.
+>
+> > [!danger] Broad roles undermine control boundaries
+> >
+> > Primitive roles collapse careful separation of duties into one oversized permission grant. Once attached to a workload identity, they are difficult to reason about safely.
+>
+> ---
+>
+> **IAM binding**
+> - The association between a principal and a role at some scope, such as a project, resource, or secret.
+> - It matters because service accounts in this note gain all useful access only through explicit bindings Terraform creates.
+>
+> > [!info] Scope matters as much as role
+> >
+> > The same role at a project level is usually much broader than the same permission pattern targeted at one resource. Least privilege depends on both dimensions, not just the role name.
+>
+> ---
+>
+> **`iam_member` / `iam_binding` / `iam_policy`**
+> - Three Terraform resource patterns for managing IAM, ranging from one-member incremental changes to full-authoritative policy replacement.
+> - It matters because choosing the wrong IAM resource type can create policy fights or unintentionally replace permissions managed elsewhere.
+>
+> > [!warning] Authoritative resources can overwrite peers
+> >
+> > `iam_binding` and especially `iam_policy` can become destructive if multiple Terraform stacks or manual processes manage the same scope. The authoritativeness of the resource is part of its risk profile.
+>
+> ---
+>
+> **Secret Manager**
+> - GCP's managed secret storage service for values such as passwords, API keys, and tokens.
+> - It matters because the note uses Secret Manager to keep sensitive runtime values out of instance metadata and out of application source.
+>
+> > [!info] Secret storage and secret usage are separate
+> >
+> > Creating a secret is only half the design. You still need the right IAM model and runtime references so workloads can consume it without exposing the value broadly.
+>
+> ---
+>
+> **Secret version**
+> - An individual stored value revision under a Secret Manager secret.
+> - It matters because Terraform often provisions both the secret container and one or more versions that hold the actual sensitive material.
+>
+> > [!warning] Versions still affect state exposure
+> >
+> > Even when secrets live in Secret Manager, Terraform can still process the plaintext input used to create the version. That is why state protection remains critical.
+>
+> ---
+>
+> **Terraform state exposure**
+> - The risk that values Terraform handles, especially sensitive inputs and secret versions, are persisted in state and therefore inherit the backend's security posture.
+> - It matters because this note explicitly warns that secret values can still reside in Terraform state even when the destination system is Secret Manager.
+>
+> > [!danger] Secret Manager does not magically sanitize state
+> >
+> > Sending a secret into a managed secret store is good practice, but the value may still pass through Terraform's state lifecycle. Backend encryption and access control are part of the secret design, not an unrelated concern.
+>
+> ---
+>
+> **`prevent_destroy`**
+> - A Terraform lifecycle safeguard that blocks planned destruction while the protected resource block still exists in configuration.
+> - It matters because production secrets are stateful security assets and should not be easy to delete accidentally.
+>
+> > [!warning] Secrets deserve stronger lifecycle defaults
+> >
+> > A missing `prevent_destroy` on a production secret turns routine refactors into potential outage or recovery events. Stateful security objects should be harder to remove than disposable compute.
+>
+> ---
+>
+> **Conditional resource**
+> - A Terraform resource whose creation depends on a condition, commonly implemented with `count` or `for_each`.
+> - It matters because the note uses this pattern to create optional Datadog-related resources only when the corresponding inputs are enabled.
+>
+> > [!info] Optional does not mean ad hoc
+> >
+> > Even conditional resources should keep stable identities and clear rules. Optional infrastructure still needs deterministic Terraform behavior when toggled on or off.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A GCP identity pattern that lets external systems such as GitHub Actions exchange trusted identity assertions for short-lived Google credentials without exporting service-account keys.
+> - It matters because the safest CI/CD path in this note avoids long-lived JSON keys entirely.
+>
+> > [!warning] Key export should be the exception
+> >
+> > A service-account key file is a durable credential artifact that can leak, be copied, or remain valid longer than intended. WIF reduces that persistence risk substantially.
+>
+> ---
+>
+> **Impersonation / `actAs`**
+> - The permission model where one principal is allowed to attach or act as another service account to run workloads under that identity.
+> - It matters because CI/CD identities in this note need narrow deployment powers without inheriting every runtime permission directly.
+>
+> > [!info] Separation of build and runtime identity
+> >
+> > Letting CI impersonate a runtime identity can be safer than giving CI all of that runtime identity's underlying permissions permanently. The chain should still stay as narrow as possible.
+>
+> ---
+>
+> **`for_each` for IAM**
+> - A Terraform pattern for generating repeated IAM resources from a collection of roles, members, or bindings.
+> - It matters because IAM configurations often contain several similar bindings, and `for_each` keeps them consistent and reviewable.
+>
+> > [!info] Good fit for repeated policy fragments
+> >
+> > IAM tends to be repetitive. `for_each` reduces copy-paste while keeping each binding addressable and easier to evolve than a monolithic handwritten block set.
 
 > [!info] Assumed variables
 >
@@ -600,12 +748,14 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 ## Related
 
 **GCP service references:**
+
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — underlying IAM concepts, roles, policies, WIF
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — secret rotation, access auditing, application integration
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — the workloads these service accounts run
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS backend for Terraform state encryption
 
 **Terraform references:**
+
 - [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute) — the VMs assigned service accounts
 - [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — how secrets are injected into Cloud Run containers
 - [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — the `count` pattern for optional Datadog resources
@@ -613,6 +763,7 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 - [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — remote backend configuration for state encryption
 
 **CI/CD integration:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflow using the CI service account
 
 ## References

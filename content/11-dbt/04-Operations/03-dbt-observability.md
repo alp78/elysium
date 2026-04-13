@@ -13,9 +13,147 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 >
 > — **Charity Majors**, charity.wtf (2018)
 
-dbt produces rich execution artifacts after every run. A complete observability stack parses those artifacts, ships metrics to a monitoring platform, detects anomalies in data quality, and alerts the on-call engineer before downstream consumers notice a problem.
+> [!abstract]- Summary
+>
+> Explains how to observe dbt operationally by turning execution artifacts into metrics, anomaly signals, schema-change alerts, and routed incidents across tools such as Elementary, Datadog, and Airflow callbacks.
+>
+> **Artifact-driven observability**
+> - Covers the main dbt execution artifacts, especially `run_results.json`, and the key fields that reveal model status, runtime, row-level outcomes, and build metadata after every run
+> - Shows how artifact parsing becomes the raw telemetry layer for run monitoring instead of relying only on whether the scheduler marked a task green or red
+>
+> **Package and platform integrations**
+> - Covers Elementary installation, anomaly detection tests, schema-change tracking, CLI reporting, custom Python-to-DogStatsD metric shipping, and Datadog naming conventions so dbt results become searchable and alertable in the monitoring stack
+> - Connects warehouse quality signals to generic infrastructure monitoring rather than isolating dbt health inside the transformation team
+>
+> **Alerting and incident routing**
+> - Covers source freshness metrics, Airflow failure callbacks, Datadog monitors, and Slack-style escalation paths so dbt failures are routed before downstream consumers discover them manually
+> - Frames observability as both metric collection and response design: the useful signal is the one that leads quickly to the right on-call action
+>
+> **Operations and safety**
+> - Warnings: treating dbt success as binary without artifact detail, shipping noisy metrics without naming discipline, missing freshness alerts, and alerting paths that page too late or without enough execution context
+> - Recommendations: parse artifacts systematically, make metric names stable, combine package-level and custom monitoring, and wire freshness, failures, and schema drift into the same incident response surface
 
----
+> [!note]- Glossary
+>
+> **dbt artifact**
+> - A structured file emitted by dbt after compilation or execution, containing metadata about the project, graph, and run results.
+> - It matters here because observability starts from artifact parsing rather than from guessing what happened inside a black-box run.
+>
+> > [!info] Structured telemetry source
+> >
+> > Artifacts are valuable because they provide machine-readable run details. They let teams build monitoring on top of dbt's actual execution state, not just scheduler success flags.
+>
+> ---
+>
+> **`run_results.json`**
+> - The dbt artifact that records per-node execution outcomes such as status, timing, and adapter responses for a run.
+> - It matters here because most operational metrics and failure triage signals start from this file.
+>
+> > [!warning] Green run is not enough detail
+> >
+> > A run can succeed while still hiding slow models or warnings. `run_results.json` is what exposes the per-model story behind the top-level status.
+>
+> ---
+>
+> **Manifest**
+> - The dbt artifact that describes project nodes, metadata, dependencies, and configuration state.
+> - It matters here because observability and reporting often need both execution results and static graph context to explain what failed and why it matters.
+>
+> > [!info] Execution plus context
+> >
+> > Results without manifest context show what happened, but not always what the node represents or who depends on it. The manifest completes that picture.
+>
+> ---
+>
+> **Elementary**
+> - A dbt-focused observability package and reporting tool that layers tests, anomaly detection, and reporting over dbt projects.
+> - It matters here because it provides a ready-made observability surface instead of requiring every team to build all dbt monitoring primitives from scratch.
+>
+> > [!info] dbt-native observability layer
+> >
+> > Elementary is useful because it speaks dbt concepts directly. That can accelerate alerting and reporting compared with building every signal in a generic monitoring tool alone.
+>
+> ---
+>
+> **Anomaly detection**
+> - The detection of unusual behavior in metrics such as row counts, freshness, or value distributions relative to historical baselines.
+> - It matters here because many real data failures are not hard test failures; they are unusual shifts that need monitoring rather than strict assertions.
+>
+> > [!warning] Best when paired with context
+> >
+> > Anomaly alerts are useful only when someone can tell whether the shift is expected, benign, or production-impacting. Noise without context degrades trust quickly.
+>
+> ---
+>
+> **Schema change tracking**
+> - The detection and reporting of changes in model or source column structure over time.
+> - It matters here because schema drift is a major source of broken downstream jobs and often needs visibility even before it becomes a contract violation.
+>
+> > [!warning] Drift often starts quietly
+> >
+> > By the time a downstream consumer breaks, the schema change may already have propagated. Early visibility gives teams time to decide whether the change is intended or dangerous.
+>
+> ---
+>
+> **DogStatsD**
+> - The metrics ingestion protocol commonly used to push custom metrics into Datadog.
+> - It matters here because custom dbt runtime metrics often travel through DogStatsD before they appear in dashboards or monitors.
+>
+> > [!info] Metric transport layer
+> >
+> > DogStatsD is not the observability strategy by itself; it is the delivery mechanism that turns parsed dbt signals into monitorable platform metrics.
+>
+> ---
+>
+> **Datadog**
+> - A monitoring platform used to collect metrics, create dashboards, and trigger alerts for dbt-related operational signals.
+> - It matters here because the note shows how dbt observability becomes actionable only after metrics land in a shared monitoring surface.
+>
+> > [!warning] Naming discipline matters
+> >
+> > If metric names and tags are inconsistent, dashboards and alerts become hard to trust or reuse. Monitoring structure is part of observability quality.
+>
+> ---
+>
+> **Source freshness metric**
+> - A monitoring signal derived from how old the latest loaded source data is relative to expected arrival thresholds.
+> - It matters here because freshness is often the first signal that an upstream feed or ingestion job has failed before transformation logic even starts.
+>
+> > [!warning] Upstream failure arrives downstream fast
+> >
+> > Freshness alerts are some of the highest-value data alerts because they detect missing upstream inputs before marts and dashboards quietly age out.
+>
+> ---
+>
+> **Failure callback**
+> - Scheduler-side logic, often in Airflow, that executes when a dbt-related task fails and can forward the event into alerting systems.
+> - It matters here because observability is incomplete if execution failures are logged but never routed to the people responsible for recovery.
+>
+> > [!info] Signal routing layer
+> >
+> > A callback is what turns a failed task into an incident signal with context. Without it, failures remain visible only to whoever happens to inspect the scheduler UI.
+>
+> ---
+>
+> **Monitor**
+> - A rules-based alert in a monitoring platform that evaluates metrics or events and decides when to notify responders.
+> - It matters here because dbt observability only becomes operationally useful when the right thresholds and routing logic are defined on top of the collected signals.
+>
+> > [!warning] Thresholds shape pager quality
+> >
+> > Poorly tuned monitors create either silence or alert fatigue. Good observability depends on thresholds and routing being calibrated to real operational impact.
+
+> [!example] Monitoring Scope
+>
+> > [!success] Production Signal
+> >
+> > - Build dbt observability when production runs need artifact-level metrics, freshness alarms, anomaly detection, and routed incidents instead of a single pass-or-fail scheduler outcome.
+> > - Combine dbt-native signals with Datadog, Elementary, and Airflow routing when failures must be triaged quickly by people outside the core transformation team.
+>
+> > [!failure] False Assurance
+> >
+> > - Do not use observability tooling as a substitute for tests, contracts, or basic scheduler hygiene, because it surfaces execution problems but does not define correctness on its own.
+> > - Avoid shipping every possible metric without ownership, thresholds, and routing rules; noisy dashboards and alert fatigue make real failures harder to see.
 
 ## dbt Artifacts Overview
 
@@ -142,6 +280,7 @@ emit_metrics = BashOperator(
 ## elementary Package
 
 [elementary-data](https://docs.elementary-data.com/) is an open-source dbt package that adds:
+
 - Anomaly detection on metric values, row counts, null rates, and schema.
 - A metadata schema inside your warehouse for storing test results.
 - A CLI report (`edr`) for browsing historical test results.

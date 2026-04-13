@@ -9,35 +9,154 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 10 — Real-World Project, Testing & Migration
+# Testing and Migration - Python
 
 > [!quote]
 > "Program testing can be used to show the presence of bugs, but never to show their absence."
 >
 > — **Edsger Dijkstra**, *Notes on Structured Programming*, EWD 249 (1970)
 
-This note brings everything together: an end-to-end analytical pipeline on real financial data, a comprehensive testing and validation framework (schema assertions, null audits, duplicate detection, referential integrity, statistical sanity checks), debugging and profiling techniques, and a structured Pandas-to-Polars migration guide covering concepts to unlearn, API translation, and common anti-patterns.
+> [!abstract]- Summary
+>
+> Brings the dataframe chapter into one production-shaped workflow: build an end-to-end analytical pipeline on EuroStoxx data, validate it with explicit quality guards, inspect failures and performance, then translate the same habits into a practical Pandas-to-Polars migration strategy. The emphasis is not just on getting the right output once, but on making the pipeline testable, explainable, and safe to evolve.
+>
+> **Setup and end-to-end pipeline**
+> - Load the core datasets, configure plotting, enrich OHLCV with company metadata, compute returns with window expressions, aggregate sector performance, rank top names, and hand off to Pandas/Matplotlib only where plotting requires it
+> - Use the full pipeline section as the concrete reference implementation that later testing and migration patterns are meant to protect
+>
+> **Testing, validation, and debugging**
+> - Assert frame equality, validate schema, audit nulls, detect duplicates, enforce referential integrity, run statistical sanity checks, and embed pipeline assertions that fail at the point where data quality actually breaks
+> - Use quarantine tables, DataFrame diffs, safe type-coercion checks, chain-debugging patterns, and profiling tools to isolate whether a defect is logical, structural, or performance-related
+>
+> **Pandas to Polars migration**
+> - Reframe Pandas habits around indexes, in-place mutation, and generic `.apply()` use into Polars' index-free, immutable, expression-first model
+> - Use the concept-to-concept translation table and anti-pattern section to decide what should be rewritten, what can stay in Pandas, and where a literal API port would make the code slower or less clear
+>
+> **Operations and safety**
+> - When to use these patterns: assertions at every pipeline boundary, quarantine for dirty external sources, and migration when Pandas performance or index semantics have become operational constraints
+> - Limits: mocks-only tests, line-by-line migration, happy-path-only coverage, and profiling on toy data all produce false confidence
+> - Warnings: floating-point equality traps, schema-only checks, Pandas habits that do not exist in Polars, and quarantine tables that grow indefinitely when nobody reviews them
+> - Recommendations and troubleshooting: test with realistic data, use tolerance-aware comparisons, profile memory as well as time, maintain a migration map, and diagnose common assertion, schema, quarantine, and slow-port failure modes explicitly
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **assert_frame_equal** | A test function that compares two DataFrames element-by-element. Pandas: `pd.testing.assert_frame_equal()`. Polars: `pl.testing.assert_frame_equal()`. | Validates that a transform produces the expected output — the core assertion for DataFrame unit tests. | Fails on floating-point differences even when values are effectively equal. Use `atol=` or `rtol=` for approximate comparison. |
-| **schema validation** | Checking that a DataFrame's column names and dtypes match an expected specification. | Catches upstream schema drift (renamed columns, changed types) before it corrupts downstream logic. | Schema validation checks structure, not content. A DataFrame can pass schema validation and still contain wrong values. |
-| **null audit** | Counting and locating null/NaN values across all columns. | Detects missing data before aggregations (which silently skip nulls) and joins (where null keys never match). | A null audit shows where nulls are, not why they exist. Investigate the data source to determine if nulls are expected or indicate a pipeline failure. |
-| **duplicate detection** | Identifying rows where key columns have repeated values. | Prevents double-counting in aggregations and row multiplication in joins. | "Duplicate" depends on context — full-row duplicates vs duplicate keys vs duplicate (date, ticker) pairs are different conditions. |
-| **referential integrity** | Verifying that every foreign key value in one table exists as a primary key in another table. | Catches orphan records (e.g., a ticker in the OHLCV table that doesn't exist in the dimension table). | Null keys never match in joins — exclude nulls before checking referential integrity. |
-| **quarantine pattern** | A data quality strategy where rows failing validation are separated into a "quarantine" table instead of being dropped or rejected. | Preserves failing data for investigation while allowing the pipeline to continue with clean data. | Quarantined data must be reviewed and either fixed or permanently excluded. Ignoring the quarantine table defeats its purpose. |
-| **pipeline assertion** | A validation check embedded inside a data pipeline that halts execution if a condition is violated. | Fail-fast behavior — catches data quality issues at the point of failure, not at the end of the pipeline. | Assertions should be meaningful — `assert len(df) > 0` is too weak. Assert specific conditions: expected row count ranges, null thresholds, value domains. |
-| **migration (Pandas → Polars)** | The process of converting a Pandas-based codebase to Polars, including API translation, mental model changes, and anti-pattern removal. | Polars offers 5–50x performance improvements, stricter type safety, and no index-related bugs — but it is not a drop-in replacement. | Translating Pandas code line-by-line to Polars produces slow, non-idiomatic code. Rewrite in expression-first style instead. |
-
-## What this note covers
-
-- **End-to-end analytical pipeline** — loading, cleaning, enriching, aggregating, and analyzing EuroStoxx 50 data
-- **Testing and assertions** — `assert_frame_equal`, schema validation, null audits, duplicate detection, referential integrity, statistical sanity checks
-- **Data quality pipeline** — chainable assertion guards, quarantine pattern, date gap detection
-- **Debugging and profiling** — `.pipe(print)`, intermediate variables, `%%timeit`, memory profiling, Polars query plan inspection
-- **Pandas-to-Polars migration** — concepts to unlearn, API translation table, common anti-patterns
+> [!note]- Glossary
+>
+> **`assert_frame_equal`**
+> - A testing helper that compares two DataFrames for structural and value-level equality.
+> - It matters because the note uses it as the primary correctness check for transforms, migrations, and regression tests.
+>
+> > [!warning] Exact equality is often too strict for floats
+> >
+> > Small rounding differences can fail an otherwise correct test. Use tolerances such as `atol` or `rtol` when numeric drift is expected.
+>
+> ---
+>
+> **Schema validation**
+> - Checking that column names, ordering expectations, and data types match an expected contract.
+> - It matters because schema drift is one of the fastest ways for a pipeline to become subtly wrong while still "running."
+>
+> > [!warning] Structure is not content
+> >
+> > A frame can satisfy schema checks and still contain swapped, truncated, stale, or logically invalid values.
+>
+> ---
+>
+> **Null audit**
+> - A systematic count and location check for missing values across the DataFrame.
+> - It matters because nulls change join behavior, aggregation outcomes, and downstream assumptions long before a hard exception appears.
+>
+> > [!info] Nulls require interpretation, not just counting
+> >
+> > A null audit tells you where the gaps are. It does not explain whether those gaps are expected business logic or a broken upstream load.
+>
+> ---
+>
+> **Duplicate detection**
+> - Identifying repeated rows or repeated key combinations that violate the expected grain of the data.
+> - It matters because duplicates silently inflate counts, sums, joins, and ranking logic.
+>
+> > [!warning] "Duplicate" depends on the business key
+> >
+> > Full-row duplication and duplicate `(date, symbol)` pairs are different problems and should be tested separately.
+>
+> ---
+>
+> **Referential integrity**
+> - Verifying that key values in one table always resolve to valid keys in a related table.
+> - It matters because the pipeline joins fact and dimension data, so orphan keys indicate broken source coordination or stale reference data.
+>
+> > [!warning] Null keys are not successful matches
+> >
+> > Integrity checks must treat null foreign keys explicitly instead of letting them disappear inside join semantics.
+>
+> ---
+>
+> **Quarantine pattern**
+> - A design where records that fail validation are separated for review instead of being silently dropped or allowed through.
+> - It matters because the note promotes keeping pipelines operational without hiding bad data.
+>
+> > [!warning] Quarantine without review becomes a sinkhole
+> >
+> > If nobody empties, inspects, or alerts on quarantine volume, the pattern preserves bad data but does not improve data quality.
+>
+> ---
+>
+> **Pipeline assertion**
+> - A validation rule embedded directly in the transformation flow that stops execution when a required condition is violated.
+> - It matters because fail-fast guards localize defects to the step that introduced them instead of letting them surface much later.
+>
+> > [!info] Strong assertions are specific
+> >
+> > Row-count ranges, uniqueness guarantees, null thresholds, and domain checks are far more useful than generic non-empty assertions.
+>
+> ---
+>
+> **Statistical sanity check**
+> - A range or distribution-oriented validation that asks whether the data looks numerically plausible, not merely well-typed.
+> - It matters because many financial or analytical failures show up first as impossible ratios, extreme outliers, or broken distributions.
+>
+> > [!info] Semantics catch what schemas miss
+> >
+> > A price column with the right dtype can still be wrong if values jump by impossible magnitudes or signs.
+>
+> ---
+>
+> **DataFrame diff**
+> - A comparison pattern that surfaces where two DataFrames diverge rather than only declaring that they are unequal.
+> - It matters because migration and regression debugging often depend on locating the exact columns, rows, or values that changed.
+>
+> > [!info] Diffs accelerate root-cause analysis
+> >
+> > Once a test fails, the next useful question is not "did it fail?" but "which records changed, and in what way?"
+>
+> ---
+>
+> **Method-chain debugging**
+> - Techniques for inspecting intermediate state inside chained DataFrame transformations without throwing away the chain-based style.
+> - It matters because concise pipelines are readable only if there is a disciplined way to peek at shape, schema, and sample values midstream.
+>
+> > [!warning] Debugging must not become permanent noise
+> >
+> > Temporary `.pipe(print)` or inspection steps are useful during diagnosis, but they should not remain as accidental production behavior.
+>
+> ---
+>
+> **Migration (Pandas → Polars)**
+> - The process of moving a Pandas workflow into Polars while changing both API usage and underlying mental model.
+> - It matters because the note frames migration as a redesign exercise, not a mechanical rename pass.
+>
+> > [!warning] Literal translation is the common failure mode
+> >
+> > Code that imitates Pandas patterns inside Polars usually loses the performance and clarity benefits that motivated the migration.
+>
+> ---
+>
+> **Expression-first style**
+> - A Polars programming approach where transformations are built from column expressions, not row loops, mutable state, or ad hoc Python callbacks.
+> - It matters because most migration guidance in the note depends on learning this style rather than clinging to `.apply()`-shaped thinking.
+>
+> > [!info] Expression-first code is optimizer-friendly
+> >
+> > When the logic stays inside DataFrame expressions, Polars can plan, parallelize, and simplify work that opaque Python functions would block.
 
 ## Setup
 
@@ -86,7 +205,7 @@ from polars.testing import assert_frame_equal, assert_series_equal
 import time
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Enrich with Company Info
 
@@ -186,9 +305,10 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+<Figure size 1000x500 with 1 Axes>
 
 ---
+
 ## Part 2: Testing & Debugging
 
 Comprehensive testing, validation, debugging, and profiling strategies for Pandas and Polars.
@@ -248,7 +368,7 @@ pd_ase(df1["a"], df2["a"])
 print("Series match: OK")
 ```
 
-    Exact match: OK
+Exact match: OK
     Float tolerance (atol=1e-5): OK
     Strict dtype check: OK
     Ignore column order (check_like): OK
@@ -268,10 +388,10 @@ except AssertionError as e:
     print(f"Expected failure:\n{e}")
 ```
 
-    Expected failure:
+Expected failure:
     DataFrame.iloc[:, 0] (column name="a") are different
-    
-    DataFrame.iloc[:, 0] (column name="a") values are different (33.33333 %)
+
+DataFrame.iloc[:, 0] (column name="a") values are different (33.33333 %)
     [index]: [0, 1, 2]
     [left]:  [1, 2, 3]
     [right]: [1, 2, 99]
@@ -312,7 +432,7 @@ assert_series_equal(df1["a"], df2["a"])
 print("Series match: OK")
 ```
 
-    Exact match: OK
+Exact match: OK
     Float tolerance (abs_tol=1e-5): OK
     Strict dtype check: OK
     Ignore column order: OK
@@ -332,7 +452,7 @@ except AssertionError as e:
     print(f"Expected failure:\n{e}")
 ```
 
-    Expected failure:
+Expected failure:
     DataFrames are different (value mismatch for column "a")
     [left]: shape: (3,)
     Series: 'a' [i64]
@@ -391,7 +511,7 @@ assert_schema_pd(
 )
 ```
 
-      Warning: extra columns: {'id', 'adj_close', 'dividends', 'stock_splits', 'is_filled'}
+Warning: extra columns: {'id', 'adj_close', 'dividends', 'stock_splits', 'is_filled'}
       Schema OK: (66355, 12), 12 cols
 
 #### Polars | Schema validation function
@@ -423,7 +543,7 @@ assert_schema_pl(
 )
 ```
 
-      Schema OK: (66355, 12), schema matches
+Schema OK: (66355, 12), schema matches
 
 ## Data Validation Rules
 
@@ -481,7 +601,7 @@ else:
     print("  All validation rules passed")
 ```
 
-      All validation rules passed
+All validation rules passed
 
 #### Pandas | OHLCV validation rules
 
@@ -524,7 +644,7 @@ else:
     print("  All validation rules passed")
 ```
 
-      All validation rules passed
+All validation rules passed
 
 ## Referential Integrity
 
@@ -555,7 +675,7 @@ orphans_pd = set(ohlcv_pd["symbol"].unique()) - set(ohlcv_pd["symbol"].unique())
 print(f"Pandas orphans: {orphans_pd}")
 ```
 
-    Orphan symbols (in ohlcv but not in dim): []
+Orphan symbols (in ohlcv but not in dim): []
     Referential integrity: OK
     Pandas orphans: set()
 
@@ -589,7 +709,7 @@ print(f"After select+tail: {step4.shape}")
 display(step4)
 ```
 
-    After filter: (1331, 12)
+After filter: (1331, 12)
     After sort: (1331, 12)
     After with_columns: (1331, 13), new cols: ['daily_return']
     After select+tail: (10, 3)
@@ -627,7 +747,7 @@ result = (
 )
 ```
 
-      [start] shape=(66355, 12), cols=['id', 'symbol', 'date', 'open', 'high']...
+[start] shape=(66355, 12), cols=['id', 'symbol', 'date', 'open', 'high']...
       [after filter] shape=(1331, 12), cols=['id', 'symbol', 'date', 'open', 'high']...
       [after assign] shape=(1331, 13), cols=['id', 'symbol', 'date', 'open', 'high']...
       [final] shape=(5, 3), cols=['date', 'close', 'daily_return']...
@@ -661,7 +781,7 @@ result = (
 )
 ```
 
-      [start] shape=(66355, 12)
+[start] shape=(66355, 12)
       [after filter] shape=(1331, 12)
       [after with_columns] shape=(1331, 13)
       [final] shape=(5, 3)
@@ -694,7 +814,7 @@ elapsed = time.perf_counter() - t0
 print(f"Pandas groupby: {elapsed*1000:.1f}ms")
 ```
 
-    Polars group_by: 1.7ms
+Polars group_by: 1.7ms
     Pandas groupby: 2.2ms
 
 ### Memory Usage
@@ -722,7 +842,7 @@ est = ohlcv_pl.estimated_size("mb")
 print(f"\nPolars estimated size: {est:.2f} MB")
 ```
 
-    Pandas memory per column:
+Pandas memory per column:
       Index               : 0.00 MB
       id                  : 0.51 MB
       symbol              : 3.49 MB
@@ -737,8 +857,8 @@ print(f"\nPolars estimated size: {est:.2f} MB")
       stock_splits        : 0.51 MB
       is_filled           : 0.06 MB
       TOTAL               : 10.64 MB
-    
-    Polars estimated size: 5.20 MB
+
+Polars estimated size: 5.20 MB
 
 ### Query Plan Inspection
 
@@ -763,7 +883,7 @@ print("Optimized plan:")
 print(plan.explain())
 ```
 
-    Optimized plan:
+Optimized plan:
     AGGREGATE[maintain_order: false]
       [col("close").mean().alias("avg_close")] BY [col("symbol")]
       FROM
@@ -797,7 +917,7 @@ print(f"Result: {result.shape}")
 display(timings)
 ```
 
-    Result: (1331, 13)
+Result: (1331, 13)
 
 <div><!-- shape: (4, 3) --><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>optimization</td><td>0</td><td>118</td></tr><tr><td>.filter([(col(symbol)) == (…</td><td>118</td><td>288</td></tr><tr><td>sort(date)</td><td>295</td><td>487</td></tr><tr><td>with_column(sma_7)</td><td>489</td><td>520</td></tr></tbody></table></div>
 
@@ -835,28 +955,28 @@ if len(result) > 0:
     display(result)
 ```
 
-    No nulls found in ohlcv_pd
+No nulls found in ohlcv_pd
 
 #### index_dim nulls
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>nulls</th>
-      <th>pct</th>
-      <th>dtype</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>valid_to</th>
-      <td>169</td>
-      <td>100.0</td>
-      <td>object</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>nulls</th>
+<th>pct</th>
+<th>dtype</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>valid_to</th>
+<td>169</td>
+<td>100.0</td>
+<td>object</td>
+</tr>
+</tbody>
 </table>
 </div>
 
@@ -890,7 +1010,7 @@ if result.height > 0:
     display(result)
 ```
 
-    No nulls found in ohlcv_pl
+No nulls found in ohlcv_pl
 
 #### index_dim nulls
 
@@ -921,7 +1041,7 @@ if key_dupes > 0:
     display(dupes.sort_values(["symbol", "date"]).head(10))
 ```
 
-    Exact duplicate rows: 0
+Exact duplicate rows: 0
     Duplicate (symbol, date) pairs: 0
 
 #### Polars | Duplicate detection
@@ -951,7 +1071,7 @@ if key_dupes > 0:
     )
 ```
 
-    Exact duplicate rows: 0
+Exact duplicate rows: 0
     Duplicate (symbol, date) pairs: 0
 
 ## Statistical Sanity Checks
@@ -1009,8 +1129,7 @@ if symbol_gaps.height > 0:
 
 <div><!-- shape: (1, 8) --><table><thead><tr><th>mean</th><th>std</th><th>min</th><th>max</th><th>p1</th><th>p99</th><th>median</th><th>skew</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>197.0349</td><td>363.052047</td><td>1.6066</td><td>2839.0</td><td>2.477</td><td>2017.0</td><td>70.68</td><td>3.759992</td></tr></tbody></table></div>
 
-    
-    Rows beyond 3 std: 2320 (3.50%)
+Rows beyond 3 std: 2320 (3.50%)
     Date gaps > 5 days: 22
 
 <div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>gap_days</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>ADS.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>ALV.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>BAS.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>BAYN.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>BMW.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>DB1.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>DHL.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>DTE.DE</td><td>2025-12-29</td><td>6</td></tr><tr><td>ENEL.MI</td><td>2025-12-29</td><td>6</td></tr><tr><td>ENI.MI</td><td>2025-12-29</td><td>6</td></tr></tbody></table></div>
@@ -1084,7 +1203,7 @@ result = (
 print(f"Pipeline passed all assertions. Result: {result.shape}")
 ```
 
-    Pipeline passed all assertions. Result: (1331, 12)
+Pipeline passed all assertions. Result: (1331, 12)
 
 ## DataFrame Diff
 
@@ -1121,49 +1240,49 @@ print(f"Added: {len(added)}, Removed: {len(removed)}, Changed: {len(changed)}, U
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>val_old</th>
-      <th>val_new</th>
-      <th>_merge</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>10.0</td>
-      <td>10.0</td>
-      <td>both</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>20.0</td>
-      <td>25.0</td>
-      <td>both</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3</td>
-      <td>30.0</td>
-      <td>NaN</td>
-      <td>left_only</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>4</td>
-      <td>NaN</td>
-      <td>40.0</td>
-      <td>right_only</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>val_old</th>
+<th>val_new</th>
+<th>_merge</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>10.0</td>
+<td>10.0</td>
+<td>both</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>20.0</td>
+<td>25.0</td>
+<td>both</td>
+</tr>
+<tr>
+<th>2</th>
+<td>3</td>
+<td>30.0</td>
+<td>NaN</td>
+<td>left_only</td>
+</tr>
+<tr>
+<th>3</th>
+<td>4</td>
+<td>NaN</td>
+<td>40.0</td>
+<td>right_only</td>
+</tr>
+</tbody>
 </table>
 </div>
 
-    Added: 1, Removed: 1, Changed: 1, Unchanged: 1
+Added: 1, Removed: 1, Changed: 1, Unchanged: 1
 
 #### Polars | DataFrame diff via anti-join
 
@@ -1192,7 +1311,7 @@ if changed.height > 0:
     display(changed)
 ```
 
-    Added: 1, Removed: 1, Changed: 1
+Added: 1, Removed: 1, Changed: 1
 
 #### Changed rows
 
@@ -1241,7 +1360,7 @@ if bad.height > 0:
     display(bad.head(5))
 ```
 
-    Good rows: 66,355, Bad rows: 0
+Good rows: 66,355, Bad rows: 0
 
 ## Type Coercion & Cast Safety
 
@@ -1279,18 +1398,16 @@ print(f"\nDowncast data loss: {lost.height} rows affected")
 display(small)
 ```
 
-    Non-strict cast (bad -> null):
+Non-strict cast (bad -> null):
 
 <div><!-- shape: (4, 2) --><table><thead><tr><th>x</th><th>x_int</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>bad</td><td>null</td></tr><tr><td>4</td><td>4</td></tr></tbody></table></div>
 
-    
-    Strict cast error: conversion from `str` to `i64` failed in column 'x' for 1 out of 4 values: ["bad"]
-    
-    This error occurred in the following expression:
+Strict cast error: conversion from `str` to `i64` failed in column 'x' for 1 out of 4 values: ["bad"]
+
+This error occurred in the following expression:
     	col("x").strict_cast(Int64)
-    
-    
-    Downcast data loss: 0 rows affected
+
+Downcast data loss: 0 rows affected
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>val</th><th>val_i8</th></tr><tr><td>i64</td><td>i8</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>300</td><td>null</td></tr></tbody></table></div>
 
@@ -1314,6 +1431,7 @@ display(small)
 | Error quarantine | Filter + transform | Filter + transform |
 
 ---
+
 ## Part 3: Pandas to Polars Migration Guide
 
 ### Dataset Reload
@@ -1352,7 +1470,7 @@ df_pl=ohlcv_pl.sort("date")
 print("Polars: just use sort/filter")
 ```
 
-    Pandas index: date
+Pandas index: date
     Polars: just use sort/filter
 
 ### Inplace Mutation
@@ -1369,7 +1487,7 @@ df2=ohlcv_pl.sort("date")
 print(f"Polars: original {ohlcv_pl.shape}, new {df2.shape}")
 ```
 
-    Pandas: mutated
+Pandas: mutated
     Polars: original (66355, 12), new (66355, 12)
 
 ### Row Access
@@ -1387,37 +1505,36 @@ display(ohlcv_pl.select(ohlcv_pl.columns[1:4]).head(3))
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+</tr>
+</tbody>
 </table>
 </div>
-
 <div><!-- shape: (3, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td></tr></tbody></table></div>
 
 ## Translation Table
@@ -1482,32 +1599,33 @@ print("GOOD Pandas: df[col1] - df[col2]")
 print("GOOD Polars: df.with_columns(pl.col(a) - pl.col(b))")
 ```
 
-    BAD: for _, row in df.iterrows() -- always vectorize!
+BAD: for _, row in df.iterrows() -- always vectorize!
     GOOD Pandas: df[col1] - df[col2]
     GOOD Polars: df.with_columns(pl.col(a) - pl.col(b))
 
 ## Summary
 
 Polars is not a drop-in Pandas replacement. It is a different mental model:
+
 - Pandas = rows and indexes (spreadsheet)
 - Polars = expressions and transforms (SQL/functional)
 
 ---
 
-## When to use these patterns
-
-- **Testing and assertions** — in every production pipeline. Embed assertions at data load, after transforms, before joins, and before export. The cost of assertion checks is negligible; the cost of undetected data quality bugs is high.
-- **Quarantine pattern** — when bad data is expected (external feeds, user input, third-party APIs) and the pipeline must continue processing clean records while preserving bad records for review.
-- **Migration (Pandas → Polars)** — when a Pandas pipeline has outgrown single-threaded performance, suffers from index-related bugs, or needs lazy execution for large datasets.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| Unit-testing with mock DataFrames only | Mocked data may not reproduce production edge cases (nulls in unexpected columns, schema drift, encoding issues) | Supplement mocks with integration tests on real or realistic data samples |
-| Migrating a Pandas pipeline line-by-line | Literal translation produces non-idiomatic, slow Polars code that misses expression-based optimization | Rewrite the pipeline logic in Polars expression style from scratch |
-| Testing only happy-path scenarios | Missing edge cases (empty DataFrames, all-null columns, duplicate keys) leads to production failures | Write explicit test cases for empty, null-heavy, and duplicate-heavy inputs |
-| Profiling with toy data | Performance characteristics at 1K rows don't predict behavior at 1M rows | Profile at realistic data volumes |
+> [!example] Testing and Migration Fit
+>
+> > [!success] Applicability
+> >
+> > - **Testing and assertions** — in every production pipeline. Embed assertions at data load, after transforms, before joins, and before export. The cost of assertion checks is negligible; the cost of undetected data quality bugs is high.
+> > - **Quarantine pattern** — when bad data is expected (external feeds, user input, third-party APIs) and the pipeline must continue processing clean records while preserving bad records for review.
+> > - **Migration (Pandas → Polars)** — when a Pandas pipeline has outgrown single-threaded performance, suffers from index-related bugs, or needs lazy execution for large datasets.
+>
+> > [!failure] Limitations
+> >
+> > - **Unit-testing with mock DataFrames only** — Mocked data may not reproduce production edge cases (nulls in unexpected columns, schema drift, encoding issues). Better approach: Supplement mocks with integration tests on real or realistic data samples
+> > - **Migrating a Pandas pipeline line-by-line** — Literal translation produces non-idiomatic, slow Polars code that misses expression-based optimization. Better approach: Rewrite the pipeline logic in Polars expression style from scratch
+> > - **Testing only happy-path scenarios** — Missing edge cases (empty DataFrames, all-null columns, duplicate keys) leads to production failures. Better approach: Write explicit test cases for empty, null-heavy, and duplicate-heavy inputs
+> > - **Profiling with toy data** — Performance characteristics at 1K rows don't predict behavior at 1M rows. Better approach: Profile at realistic data volumes
 
 ## Warnings
 
@@ -1545,4 +1663,3 @@ Polars is not a drop-in Pandas replacement. It is a different mental model:
 | Migrated Polars code is slower than Pandas | Line-by-line translation used `.map_elements()` instead of expressions | Rewrite using `with_columns`, `filter`, and `when/then` expressions |
 | `SettingWithCopyWarning` during migration testing | Pandas code still uses in-place mutation patterns | Convert to `.assign()` / `.copy()` in Pandas, or migrate to Polars |
 | Memory profiling shows unexpected spike | Intermediate DataFrames not garbage-collected | Delete intermediate variables with `del df_temp` or restructure as a chain |
-

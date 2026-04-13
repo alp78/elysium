@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Module Composition
+# Module Composition
 
 > [!quote] Mitchell Hashimoto on module design
 >
@@ -16,7 +16,157 @@ status: complete
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
-Terraform modules are the primary mechanism for creating reusable, composable infrastructure. When you manage multiple environments (dev, staging, prod), modules prevent copy-paste between configurations and enable environment promotion.
+> [!abstract]- Summary
+>
+> Module Composition is the Terraform note for building reusable infrastructure from stable interfaces instead of copy-pasted directories: it explains root and child modules, environment promotion, module sources, module iteration, remote-state coupling, testing, and the refactor traps that can destroy infrastructure when module addresses change carelessly.
+>
+> **Module foundations**
+> - covers root versus child modules, module call syntax, directory structure, and why modules are the main Terraform mechanism for reuse and composable design
+>
+> **Multi-environment design**
+> - covers dev / staging / prod patterns, environment promotion, module inputs and outputs, source selection, and using module blocks to keep environments structurally aligned
+>
+> **Advanced composition patterns**
+> - covers `for_each` on modules, remote-state data sources, when to extract a module at all, and the trade-offs between one root, multiple roots, and separate environment directories
+>
+> **Testing and refactoring**
+> - covers native Terraform tests with `.tftest.hcl`, mock providers, module test strategy, `moved` blocks, source-change reinitialization, and the failure modes that show up during module refactors or circular module references
+>
+> **Operations and safety**
+> - When to extract: when a pattern appears in multiple configurations, when a group of resources forms a coherent unit, and when a stable interface is valuable
+> - When not to extract: when the code is single-use, when the module adds more indirection than reuse value, or when the interface would simply mirror the underlying resource arguments
+> - Warnings: community modules carry trust risk, module `for_each` keys must be known at plan time, remote state can expose sensitive data, moving resources into modules without `moved` blocks causes destructive recreations, module source changes require re-init, and circular module references are invalid
+> - Recommendations: avoid copy-paste environment trees, pin module sources or versions, prefer declarative `moved` blocks for refactors, use dedicated least-privilege access for remote state, and add fast plan-based module tests before relying on modules across environments
+
+> [!note]- Glossary
+>
+> **Module**
+> - A directory of Terraform configuration that exposes a reusable interface through variables and outputs.
+> - It matters because module composition is Terraform's main abstraction mechanism for sharing infrastructure patterns without copy-pasting full configurations.
+>
+> > [!info] Modules are Terraform's reuse primitive
+> >
+> > Terraform does not have classes or inheritance in the usual programming-language sense. Modules are the idiomatic way to package and reuse infrastructure logic.
+>
+> ---
+>
+> **Root module**
+> - The Terraform module in the directory where you run Terraform commands directly.
+> - It matters because the root module orchestrates child modules, owns the state boundary, and usually defines the environment-specific entrypoint.
+>
+> > [!info] Every Terraform configuration has one
+> >
+> > Even a flat directory with no `module` blocks is still a module: the root module. Composition starts from understanding that Terraform always evaluates from one root context.
+>
+> ---
+>
+> **Child module**
+> - A module called from another module through a `module` block.
+> - It matters because child modules are how shared infrastructure patterns are encapsulated and reused across environments or stacks.
+>
+> > [!warning] Child modules still live in the same graph
+> >
+> > Calling a child module does not create an independent Terraform universe. The child's resources become part of the overall graph evaluated from the root.
+>
+> ---
+>
+> **Module interface**
+> - The set of input variables and output values that define how callers interact with a module.
+> - It matters because the value of a module depends on having a stable, understandable contract rather than just hiding code in another directory.
+>
+> > [!warning] Poor interfaces turn reuse into friction
+> >
+> > If a module leaks too many low-level knobs or returns unclear outputs, callers get the indirection cost without much abstraction benefit. Good module design is mostly interface design.
+>
+> ---
+>
+> **Module source**
+> - The location Terraform uses to load a module, such as a relative path, Git URL, object-store path, or Terraform Registry address.
+> - It matters because source choice affects trust, versioning, and how reproducibly a module can be initialized across machines and CI.
+>
+> > [!warning] Source changes are operational changes
+> >
+> > Modifying a module `source` is not a harmless string edit. Terraform needs to reinitialize the module installation, and the new source may bring materially different code into the graph.
+>
+> ---
+>
+> **Environment promotion**
+> - The practice of moving the same module pattern through dev, staging, and prod by changing input values instead of rewriting infrastructure per environment.
+> - It matters because modules are meant to keep environments structurally aligned while still allowing controlled value differences.
+>
+> > [!info] Promotion works only when parity is real
+> >
+> > If each environment drifts into its own bespoke directory, promotion becomes mostly aspirational. Reusing the same module is what gives promotion its discipline.
+>
+> ---
+>
+> **`for_each` on module blocks**
+> - A Terraform pattern for instantiating a child module multiple times from a keyed collection.
+> - It matters because multi-environment or multi-tenant infrastructure often needs repeated module instances without copy-pasted module blocks.
+>
+> > [!warning] Keys must be known before apply
+> >
+> > Just like resource `for_each`, module-instance keys must be available at plan time. Unknown keys block Terraform from determining how many module instances exist.
+>
+> ---
+>
+> **Remote state data source**
+> - A Terraform data source pattern for reading outputs from another Terraform state file.
+> - It matters because modules and stacks sometimes need to consume infrastructure facts produced in a different state boundary.
+>
+> > [!warning] Remote state is also a data-exposure path
+> >
+> > State files can contain sensitive values, so reading remote state should be treated as privileged access. The convenience of output sharing does not remove the need for least-privilege controls.
+>
+> ---
+>
+> **`.tftest.hcl`**
+> - Terraform's native test-file format for module tests executed with `terraform test`.
+> - It matters because module composition scales better when modules have fast automated checks for naming, logic, and conditional behavior.
+>
+> > [!info] Tests are part of module quality
+> >
+> > Reusable modules become shared infrastructure dependencies. That makes even lightweight plan-based tests valuable before a module is trusted across multiple environments.
+>
+> ---
+>
+> **Mock provider**
+> - A Terraform testing feature that substitutes provider responses during tests so real cloud APIs are not always required.
+> - It matters because module tests become faster and safer when they do not need full cloud credentials for every assertion.
+>
+> > [!info] Good for unit-style Terraform tests
+> >
+> > Mock providers make it possible to test interface and logic behavior without treating every module test as a live integration test against GCP.
+>
+> ---
+>
+> **`moved` block**
+> - A Terraform language feature that preserves resource identity across address changes during refactors.
+> - It matters because moving resources into or out of modules changes addresses, and Terraform otherwise interprets that as destroy-and-recreate.
+>
+> > [!danger] Refactors can destroy stateful infrastructure
+> >
+> > Module extraction feels like a structural cleanup, but Terraform sees addresses, not intentions. Without `moved` blocks, a refactor can become a destructive infrastructure event.
+>
+> ---
+>
+> **Circular module reference**
+> - A dependency loop where two modules depend on each other directly or indirectly, making Terraform's graph unsolvable.
+> - It matters because module composition increases abstraction, and with that abstraction comes a greater risk of accidentally creating cycles across module boundaries.
+>
+> > [!warning] Composition can reintroduce graph problems
+> >
+> > Modules make code cleaner, but they do not remove dependency rules. A cleaner directory structure still fails if the module relationships form a cycle.
+>
+> ---
+>
+> **Version pinning**
+> - The practice of constraining a module source or registry version so callers do not consume arbitrary upstream changes by accident.
+> - It matters because reused modules become shared dependencies, and unpinned updates can change infrastructure behavior across environments unexpectedly.
+>
+> > [!info] Reuse demands repeatability
+> >
+> > The more widely a module is reused, the more important controlled upgrades become. Pinning keeps module adoption deliberate instead of accidental.
 
 > [!tip] The core principle
 >
@@ -405,6 +555,7 @@ resource "google_compute_instance" "app" {
 Knowing when to extract a module is as important as knowing how. Premature extraction adds complexity without reuse benefit, while delayed extraction leads to copy-paste drift.
 
 Extract code into a module when:
+
 1. The same pattern appears in 2+ configurations
 2. A group of resources forms a logical unit (e.g., "a pipeline environment" = BigQuery + Pub/Sub + Cloud Run)
 3. You want to provide a stable interface to a complex configuration
@@ -414,6 +565,7 @@ Extract code into a module when:
 > Module composition in Terraform mirrors [software design patterns](https://alp78.github.io/elysium/02-Programming-Languages/Python/18_py_designpatterns) like facade (a module hides complexity behind a simple interface) and composition over inheritance (combining small modules rather than building monolithic configs).
 
 Do NOT extract when:
+
 - It is only used once and there is no plan for reuse
 - The extraction adds complexity without reuse benefit
 - The module's inputs/outputs would be nearly identical to the resource's own arguments
@@ -571,6 +723,7 @@ flowchart TD
 ## Related
 
 **Terraform chapter:**
+
 - [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — module inputs and outputs use the same variable system
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — the workflow for applying multi-environment configs
 - [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — each environment should have its own state
@@ -578,12 +731,14 @@ flowchart TD
 - [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — `count` and `for_each` patterns used inside modules
 
 **GCP services (Folder 06):**
+
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run job used in the pipeline module example
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — BigQuery dataset used in the pipeline module example
 - [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Pub/Sub topic used in the pipeline module example
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS backend for remote state
 
 **CI/CD:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — running `terraform plan` and `apply` in CI pipelines
 
 ## References

@@ -13,9 +13,198 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 >
 > — **Paul Graham**, *Hackers & Painters* (2004)
 
-Jinja2 is the templating layer that makes dbt SQL dynamic. Macros are reusable Jinja functions that live in the `macros/` directory and are compiled into plain SQL before execution. In financial data pipelines — where the same calculation pattern (z-score normalisation, cap-weighted return, factor exposure) is applied across dozens of index families and ESG providers — macros are the primary DRY mechanism.
+> [!abstract]- Summary
+>
+> dbt macros turn Jinja into a compile-time programming layer for SQL, and this note defines the templating, reusable macro, package, hook, and guardrail patterns needed to keep financial-data transformations DRY without confusing compile-time abstractions with warehouse-time execution.
+>
+> **Jinja and macro fundamentals**
+> - Explains the three Jinja delimiters, the roles of `var()`, `env_var()`, filters, loops, and conditionals, and the difference between scalar runtime variables and reusable macros.
+> - Frames macros as the primary reuse mechanism for repeated financial calculations such as z-scores, weighted averages, factor exposures, and cap-weighted returns.
+>
+> **Reusable macro design**
+> - Builds custom finance macros such as `z_score`, `weighted_average`, and `cap_weighted_return`, then extends reuse with `dbt_utils` helpers including surrogate keys, date spines, pivots, and `star` expansion.
+> - Shows how dynamic SQL generation can stay adapter-agnostic when macro interfaces are stable and SQL fragments remain narrow.
+>
+> **Cross-adapter and introspection patterns**
+> - Uses dispatch macros to hide adapter-specific SQL differences and `run_query()` plus `agate.Table` results to discover metadata during execution.
+> - Requires `{% if execute %}` guards so introspection macros still parse and compile safely outside full runs.
+>
+> **Hooks, audit logging, and safe design**
+> - Covers model-level `pre_hook` and `post_hook`, run-level `on-run-start` and `on-run-end`, grant and audit-log macros, and packaged utility patterns such as schema overrides, grants, pseudonymisation, and SQL Server date spines.
+> - Warnings: distinguish compile time from run time, guard all `run_query()` calls, keep macro dependencies shallow, and treat the anti-pattern checklist as the operational boundary.
+> - Recommendations table: the anti-pattern section and useful macro patterns form the note's safe implementation guide.
 
----
+> [!note]- Glossary
+>
+> **Jinja2**
+> - The templating language dbt uses to generate SQL before sending statements to the warehouse.
+> - It matters here because every macro, loop, filter, hook expression, and conditional in the note is evaluated by Jinja during compilation rather than by the database engine directly.
+>
+> > [!warning] Compile-time language
+> >
+> > Jinja feels embedded inside SQL, but it does not execute SQL expressions. Confusing Jinja evaluation with warehouse execution is the fastest way to write broken macros.
+>
+> ---
+>
+> **Macro**
+> - A reusable dbt function written in Jinja that returns SQL fragments, strings, or side-effect statements.
+> - It matters here because macros are the mechanism the note uses to standardize repeated financial calculations and operational hooks.
+>
+> > [!info] Reuse boundary
+> >
+> > Macros work best as small, composable generators. When they absorb full business transformations, testing and code review both get worse.
+>
+> ---
+>
+> **`{{ ... }}`**
+> - The Jinja expression delimiter that renders a value into the compiled SQL text.
+> - It matters here because refs, macro calls, and rendered literals use this syntax throughout dbt models and hooks.
+>
+> > [!info] Text substitution surface
+> >
+> > Expressions emit text into compiled SQL. If what you emit is invalid for the target adapter, the warehouse sees the invalid result exactly as rendered.
+>
+> ---
+>
+> **`{% ... %}`**
+> - The Jinja statement delimiter used for control flow, assignment, loops, and macro definitions.
+> - It matters here because macro bodies, `if execute` guards, loops, and hook logic all depend on statement blocks rather than rendered expressions.
+>
+> > [!warning] No direct SQL output
+> >
+> > Statement blocks control generation but do not print SQL by themselves. Assuming they behave like `{{ ... }}` produces confusing compile results.
+>
+> ---
+>
+> **`var()`**
+> - A dbt helper that reads project or CLI-supplied variables with an optional default.
+> - It matters here because the note treats variables as runtime configuration inputs rather than as substitutes for reusable SQL logic.
+>
+> > [!info] Externalized parameter
+> >
+> > Use `var()` for environment- or run-specific values, not for hiding logic that ought to remain explicit in model code.
+>
+> ---
+>
+> **`env_var()`**
+> - A dbt helper that reads environment variables from the OS process running dbt.
+> - It matters here because credentials, environment names, and secret-backed configuration belong outside project code and inside process environment state.
+>
+> > [!danger] Secret exposure surface
+> >
+> > `env_var()` is safer than hardcoding secrets in repo files, but the secret still exists in the runtime environment. Scope CI and shell environments carefully.
+>
+> ---
+>
+> **`dbt_utils`**
+> - A shared dbt package providing commonly used cross-database macros and helper patterns.
+> - It matters here because the note uses it as the default source of reusable primitives before recommending custom macro implementations.
+>
+> > [!info] Prefer existing primitives
+> >
+> > Start with the shared package before writing bespoke helpers. Custom macros should cover domain-specific gaps, not recreate standard utilities.
+>
+> ---
+>
+> **Dispatch macro**
+> - A macro pattern that routes a generic macro call to an adapter-specific implementation while preserving a stable interface.
+> - It matters here because adapter portability for expressions such as safe division depends on moving syntax differences out of model SQL.
+>
+> > [!warning] Stable contract required
+> >
+> > Dispatch is only useful when every override means the same thing semantically. If overrides drift into different business rules, the abstraction is lying.
+>
+> ---
+>
+> **`adapter.dispatch()`**
+> - The dbt helper that resolves which macro implementation should be used for the active adapter.
+> - It matters here because it is the compile-time mechanism behind portable macro calls across BigQuery, SQL Server, and other warehouses.
+>
+> > [!info] Adapter selection point
+> >
+> > Resolution happens before query execution. That makes dispatch ideal for portability, but it also means namespace and override mistakes fail early in compile or run preparation.
+>
+> ---
+>
+> **`run_query()`**
+> - A dbt macro helper that executes SQL during dbt execution and returns the results as an `agate.Table`.
+> - It matters here because introspection patterns in the note use it to discover providers, columns, or metadata before rendering final SQL.
+>
+> > [!warning] Execution-phase only
+> >
+> > `run_query()` is not safe during parse-only phases. Unguarded calls slow automation and can break commands that should never touch the warehouse.
+>
+> ---
+>
+> **`execute`**
+> - A dbt/Jinja boolean that tells a macro whether dbt is currently executing statements or only parsing and compiling.
+> - It matters here because all `run_query()` patterns in the note need `if execute` guards to remain safe during parse and compile commands.
+>
+> > [!warning] Mandatory guardrail
+> >
+> > Forgetting this guard is one of the most common macro mistakes. It turns harmless compilation into accidental warehouse access or parser errors.
+>
+> ---
+>
+> **`agate.Table`**
+> - The lightweight Python table object returned by `run_query()` that exposes query results to Jinja macros.
+> - It matters here because introspection macros pull values out of its columns to generate dynamic SQL.
+>
+> > [!info] Compile-time result container
+> >
+> > This is a Jinja-side object, not a warehouse table. Treat it as temporary metadata used to render SQL, not as a persistent runtime dataset.
+>
+> ---
+>
+> **`pre_hook` / `post_hook`**
+> - Model-level dbt config hooks that run SQL before or after a model materializes.
+> - It matters here because grant statements, audit logging, index creation, and maintenance commands attach to models through these hooks.
+>
+> > [!warning] Side effects need discipline
+> >
+> > Hooks change state outside the model's select statement. Keep them deterministic and idempotent so repeated runs do not create unpredictable warehouse state.
+>
+> ---
+>
+> **`on-run-start` / `on-run-end`**
+> - Project-level hooks that run once at the beginning or end of a dbt invocation.
+> - It matters here because pipeline-wide audit logging, setup, and teardown belong at run scope rather than on individual models.
+>
+> > [!warning] Different scope than model hooks
+> >
+> > These hooks execute once per invocation, not once per model. Putting model-specific assumptions here usually creates misleading audit rows or duplicated work.
+>
+> ---
+>
+> **Idempotence**
+> - The property that rerunning the same dbt command produces the same logical result without unintended side effects.
+> - It matters here because macros that introspect changing metadata or emit non-deterministic SQL can make incremental models and hooks unsafe across reruns.
+>
+> > [!warning] Re-run safety matters
+> >
+> > A macro that returns different SQL on identical reruns undermines reproducibility. Cache introspection results and avoid hidden state in macro design.
+>
+> ---
+>
+> **Compile time vs run time**
+> - The distinction between dbt rendering Jinja into SQL and the warehouse later executing the rendered SQL.
+> - It matters here because nearly every anti-pattern in the note comes from crossing that boundary incorrectly.
+>
+> > [!danger] Core mental model boundary
+> >
+> > If this distinction is blurred, macros, hooks, and dynamic SQL all become difficult to reason about. Treat compile time as code generation and run time as warehouse execution.
+
+> [!example] Macro Design Scope
+>
+> > [!success] Controlled Reuse
+> >
+> > - Use macros when the same SQL fragment, audit hook, or adapter abstraction repeats often enough that copy-paste would create maintenance drift across models or projects.
+> > - Keep macro interfaces narrow and explicit when generating finance calculations, hooks, or cross-adapter SQL so reviewers can still understand the compiled behavior.
+>
+> > [!failure] Opaque Logic
+> >
+> > - Avoid burying core business transformations inside deep macro stacks that make the real SQL hard to review, test, or debug.
+> > - Do not let macros generate non-idempotent side effects or depend on brittle environment-name branching when straightforward model SQL would be clearer and safer.
 
 ## Jinja2 Fundamentals
 
@@ -500,6 +689,7 @@ Macros are for reusable SQL *fragments*, not entire transformation logic. Comple
 Without `{% if execute %}`, the query runs during `dbt parse`, which fires on every `dbt` command including `dbt debug` and `dbt deps`. This dramatically slows CI.
 
 **3. Hardcoding target names**
+
 ```sql
 -- Bad
 {% if target.name == 'prod_us' or target.name == 'prod_eu' %}

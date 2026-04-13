@@ -13,9 +13,159 @@ description: "Business logic transforms, silver layer"
 >
 > — **Tristan Handy**
 
-Intermediate models are the business logic layer — the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) tier of the pipeline. They join, enrich, and transform staging data into analysis-ready building blocks that feed the mart layer. They are not intended for direct consumption by end users or BI tools — they are internal to the dbt DAG.
+> [!abstract]- Summary
+>
+> Explains how dbt intermediate models hold reusable business logic between staging and marts by joining, enriching, and reshaping clean inputs into composable analytical building blocks that stay internal to the DAG.
+>
+> **Intermediate-layer role and rules**
+> - Defines the intermediate layer as the business-logic tier that depends on staged refs rather than raw sources, uses clear `int_<verb>_<entity>` naming, and stays internal rather than consumer-facing
+> - Explains why small, composable intermediate models are easier to test, reuse, and refactor than large multi-purpose transformations
+>
+> **Materialization and transformation patterns**
+> - Compares view, table, ephemeral, and incremental choices for intermediate models and ties each to reuse frequency, computational cost, and rolling-calculation behavior
+> - Shows concrete patterns for returns, momentum, weights, and other reusable transformations that downstream marts can assemble without duplicating logic
+>
+> **Operational design boundary**
+> - Reinforces why intermediate models should reference only `ref()` nodes, keep one concept per model, and avoid direct BI exposure even when analysts find them convenient
+> - Positions the layer as the main place where domain logic becomes explicit and reusable before final publication in marts
+>
+> **Operations and safety**
+> - Warnings: direct `source()` use, overgrown multi-purpose models, premature heavy materialization, and accidental analyst dependence on internal intermediate relations
+> - Recommendations: keep one concept per model, prefer refs over raw sources, materialize heavily reused logic intentionally, and publish only the marts that are meant to be queried directly
 
----
+> [!note]- Glossary
+>
+> **Intermediate model**
+> - A dbt model that applies business logic on top of staged data and feeds other internal models rather than end-user tools directly.
+> - It matters here because the note defines the intermediate layer as the main reusable transformation boundary in the project.
+>
+> > [!info] Business logic lives here
+> >
+> > Intermediate models are where calculations and enrichments become explicit reusable assets. They sit between structural cleanup and published marts.
+>
+> ---
+>
+> **Business logic layer**
+> - The modeling layer where joins, enrichments, calculations, and domain-specific rules are applied to standardized upstream inputs.
+> - It matters here because the note's core design rule is that intermediate models should absorb this logic instead of leaking it into staging or marts.
+>
+> > [!warning] Wrong-layer logic is expensive
+> >
+> > Putting business logic in staging or marts often feels faster at first, but it quickly creates duplication, audit pain, and harder downstream refactors.
+>
+> ---
+>
+> **`int_<verb>_<entity>`**
+> - The common naming pattern for intermediate models, where the verb signals what the model does to the entity.
+> - It matters here because intermediate models are defined more by transformation intent than by source origin or final consumer shape.
+>
+> > [!info] Intent-driven naming
+> >
+> > Good intermediate names explain the transformation role at a glance. That matters more here than mimicking source names or mart naming conventions.
+>
+> ---
+>
+> **`ref()`**
+> - A dbt function that references another modeled relation and creates a dependency edge in the graph.
+> - It matters here because intermediate models should be built on prior dbt models, not on raw source tables, so the graph stays layered and auditable.
+>
+> > [!warning] Stay inside the modeled graph
+> >
+> > Directly reaching back to raw sources from intermediate logic bypasses the staging contract and makes the DAG harder to reason about.
+>
+> ---
+>
+> **Composability**
+> - The property that lets small models be combined safely into larger downstream transformations without repeating logic.
+> - It matters here because intermediate models are valuable only if they can be reused as stable building blocks across multiple marts.
+>
+> > [!info] Small models scale better
+> >
+> > A slightly larger number of narrow intermediate models is usually easier to maintain than a few giant SQL files that mix multiple concepts together.
+>
+> ---
+>
+> **View materialization**
+> - A materialization that leaves the model as a view, causing the underlying SQL to execute at query time.
+> - It matters here because most intermediate models start as views unless reuse or computational cost justifies persistence.
+>
+> > [!warning] Cheap default, not universal answer
+> >
+> > Views are a good default for many intermediate models, but heavy window logic or widely reused transformations can make view-on-view stacks too expensive.
+>
+> ---
+>
+> **Table materialization**
+> - A materialization that rebuilds and stores the full result as a physical table on each run.
+> - It matters here because some intermediate models deserve persistence when they are expensive or heavily reused downstream.
+>
+> > [!warning] Persistence is a performance choice
+> >
+> > Persisting intermediate logic can help many downstream consumers, but it also adds rebuild cost and storage. Use it because of workload shape, not by default.
+>
+> ---
+>
+> **Ephemeral model**
+> - A dbt model that is inlined as a CTE into dependent models instead of being created as a standalone warehouse relation.
+> - It matters here because single-use helper logic often belongs in the intermediate layer but does not always deserve its own persisted object.
+>
+> > [!warning] Reuse stops being visible
+> >
+> > Ephemeral models reduce warehouse clutter, but they also hide intermediate results from direct inspection. Use them for simple single-use logic, not for important shared transformations.
+>
+> ---
+>
+> **Incremental intermediate model**
+> - An intermediate model that processes only new or changed rows instead of rebuilding all history on every run.
+> - It matters here because rolling calculations and large reusable transformations sometimes need incremental behavior before the mart layer.
+>
+> > [!warning] Optimization adds correctness risk
+> >
+> > Incremental logic is valuable only when the business transformation can tolerate lookback windows, restatements, and unique-key semantics without drift.
+>
+> ---
+>
+> **Window function**
+> - A SQL function such as `lag`, `sum over`, or `count over` that computes results across related rows without collapsing them into grouped output.
+> - It matters here because many intermediate-layer calculations, such as returns and momentum, depend on windowed history over staged data.
+>
+> > [!info] Common intermediate building block
+> >
+> > Window functions are often the first reason an intermediate model stops being trivial. They are powerful, but they also drive materialization and performance choices.
+>
+> ---
+>
+> **Reusable building block**
+> - A model whose output is designed to be depended on by multiple downstream models without copying the same logic elsewhere.
+> - It matters here because intermediate models earn their place by removing duplication across marts and other higher-level transformations.
+>
+> > [!warning] Publish reuse intentionally
+> >
+> > If a model is reused but unstable or poorly named, downstream dependencies multiply confusion instead of reducing work.
+>
+> ---
+>
+> **Internal DAG surface**
+> - The set of dbt relations intended only for other models inside the project, not for direct analyst or BI consumption.
+> - It matters here because intermediate models are explicitly described as internal to the graph and should not become accidental consumer contracts.
+>
+> > [!warning] Consumer creep changes design obligations
+> >
+> > The moment end users rely on an intermediate model directly, it starts inheriting mart-like expectations for stability, documentation, and support.
+
+> [!example] Intermediate Layer Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when implementing shared business transformations, reusable enrichment logic, rolling calculations, or canonical building blocks that multiple marts need.
+> > - Use it when the goal is to encode business logic once, inside the modeled graph, without publishing it directly to consumers.
+> > - Use it to keep reusable calculations narrow, composable, and intentionally materialized only when reuse or performance justifies it.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this layer for raw cleanup that belongs in staging or for final consumer tables that should be promoted to marts with clearer documentation and contracts.
+> > - Do not let intermediate models become giant multi-purpose SQL files just because they are “internal.”
+> > - Do not let analysts or BI tools depend directly on unstable intermediate relations without recognizing that this changes their support contract.
 
 ### Intermediate Model Core Principles
 
@@ -514,7 +664,7 @@ from {{ ref('stg_market_data__daily_prices') }}
 ---
 
 ## Related
+
 - [dbt-staging-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-staging-models)
 - [dbt-mart-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models)
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
-

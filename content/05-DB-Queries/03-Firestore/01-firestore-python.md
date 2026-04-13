@@ -19,40 +19,156 @@ status: complete
 >
 > — **Michael Stonebraker**, ACM interview
 
-This note is an executable reference for Firestore operations using the `google-cloud-firestore` Python SDK. It covers the full CRUD lifecycle — reads, queries, writes, batches, transactions, real-time listeners, aggregations, collection group queries, pagination, and operational monitoring — all demonstrated against a live Euro Stoxx 50 dataset organized as Firestore documents and subcollections.
+> [!abstract]- Summary
+>
+> This note is the Firestore Python execution reference for the Euro Stoxx dataset: it rewrites the chapter's relational query problems into document-database terms, covering the full CRUD and monitoring lifecycle with the `google-cloud-firestore` SDK, composite indexes, subcollections, and real-time listeners rather than joins and warehouse scans.
+>
+> **Connection and data model foundations**
+> - covers ADC-based setup, Python admin-client helpers, composite-index creation, field-index exemptions, and the collection / subcollection layout used for stocks, prices, alerts, config, and pipeline runs
+>
+> **Reads, filters, and navigation**
+> - covers single-document reads, collection scans, explicit `FieldFilter` usage, ordering, limit patterns, nested-field predicates, array operators, subcollections, collection-group queries, and cursor-based pagination
+>
+> **Writes and consistency**
+> - covers `set`, `update`, `delete`, server timestamps, batch writes, transactions, document-size and throughput limits, overwrite semantics, and non-cascading deletes
+>
+> **Live operations and observability**
+> - covers real-time `on_snapshot` listeners, server-side aggregation queries, maintenance checks, stale-document detection, failed pipeline-run inspection, and operational config documents
+>
+> **Operations and safety**
+> - Warnings: local-dev key files, asynchronous index builds, preserving existing index definitions, full-download `stream()` reads, per-document read billing, chained-filter limitations, one-document write boundaries, overwrite-without-merge behavior, non-cascading deletes, listener leaks, and collection-group index requirements
+> - Recommendations table: 8 defaults covering denormalization, index deployment, batch writes, transaction use, cursor pagination, BigQuery export for analytics, listener lifecycle management, and collection-group indexes
+> - Troubleshooting: 7 failure modes covering missing indexes, empty query results, transaction aborts, initial listener callbacks, oversized batches, `array_contains_any` limits, and high read costs on scans
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Firestore** | Google Cloud's serverless NoSQL document database. Data is organized as collections (folders) containing documents (JSON-like objects), with optional subcollections nested under documents. | Firestore is the third query engine in this chapter — complementing SQL Server (relational/transactional) and BigQuery (analytical). It excels at low-latency document lookups and real-time sync. | Assuming Firestore is a relational database — it has no JOINs, no server-side aggregation beyond COUNT/SUM/AVG, no window functions, and no transactions across more than 500 documents. |
-| **Document** | A single record in Firestore, identified by a unique ID within its collection. Contains key-value fields that can be strings, numbers, booleans, timestamps, maps (nested objects), arrays, or references. | Each stock in the `stocks` collection is a document (e.g., `stocks/ASML.AS`) with fields like `short_name`, `sector`, `scores` (nested map), and `tags` (array). | Treating documents like SQL rows — documents have no fixed schema. Two documents in the same collection can have completely different fields. |
-| **Collection** | A group of documents at the same path level. Collections cannot contain other collections directly — only documents, which in turn can contain subcollections. | Top-level collections: `stocks`, `alerts`, `config`, `pipeline_runs`, `sectors`, `watchlists`. The `stocks/*/prices` path is a subcollection. | Expecting collections to enforce schema — Firestore collections are schema-less. Any document structure is valid. |
-| **Subcollection** | A collection nested under a specific document. `stocks/ASML.AS/prices` is a subcollection containing 30-day OHLCV price documents. | Subcollections model one-to-many relationships (stock → prices) without denormalization. Each price day is a separate document. | Assuming subcollection queries search across all parent documents — by default, a query on `stocks/ASML.AS/prices` only searches ASML's prices. Use **collection group queries** to search across all `prices` subcollections. |
-| **Composite index** | A Firestore index on two or more fields. Required for any query that filters or orders on multiple fields simultaneously. Firestore auto-creates single-field indexes but not composite ones. | Many queries in this note use `ensure_index()` to create composite indexes on first run. Without the index, the query fails with a `FAILED_PRECONDITION` error. | Forgetting the index — Firestore returns a clear error with a link to create the missing index. But in automated pipelines, this error can silently stall processing. |
-| **`FieldFilter`** | The Python SDK class for building query filters. `FieldFilter("sector", "==", "Technology")` creates an equality filter. Multiple filters can be chained with `.where()`. | All queries in this note use `FieldFilter` for explicit, type-safe filter construction. | Using the deprecated keyword argument syntax `.where("field", "==", "value")` — still works but generates deprecation warnings and will be removed in a future SDK version. |
-| **Transaction** | An atomic read-then-write operation. All reads happen first (snapshot isolation), then all writes execute atomically. Limited to 500 document operations per transaction. | Used for safe score updates and counter increments where read-then-write must be atomic to prevent race conditions. | Performing reads after writes inside a transaction — Firestore requires all reads to precede all writes. Violating this order raises a runtime error. |
-| **Batch write** | A group of up to 500 write operations (set, update, delete) that execute atomically — either all succeed or all fail. No read operations allowed inside a batch. | Used for bulk updates: acknowledging all alerts, inserting multiple price documents, or updating multiple stocks in one atomic operation. | Confusing batches with transactions — batches are write-only (no reads). Transactions support reads followed by writes. |
-| **Real-time listener** | A `on_snapshot` callback that Firestore invokes whenever documents matching a query change. The callback receives the full document snapshot, not just the delta. | Used for live dashboards and alerting — when a stock's score changes, the listener fires immediately. | Not unsubscribing — listeners hold an open gRPC stream. Forgetting to call `unsubscribe()` leaks connections and accumulates read costs. |
-| **Collection group query** | A query that searches across all subcollections with the same name, regardless of their parent document. `db.collection_group("prices")` searches prices under every stock. | Enables cross-stock price analysis without knowing the parent document IDs in advance. | Not creating the required collection group index — collection group queries need a special index type (scope: "COLLECTION_GROUP" instead of "COLLECTION"). |
-
-## What this note covers
-
-- **Setup & connection** — SDK initialization, ADC authentication, composite index utility
-- **Read operations** — single document get, full collection list, filtered queries
-- **Filtering & ordering** — equality, range, compound filters, ORDER BY, LIMIT
-- **Nested fields & arrays** — querying into nested maps, `array_contains`, `array_contains_any`
-- **Subcollections** — reading and querying nested price data under stock documents
-- **Write operations** — set (create/overwrite), update (partial), delete, server timestamps
-- **Batch operations & transactions** — atomic multi-document writes, read-then-write transactions
-- **Real-time listeners** — `on_snapshot` for live monitoring, unsubscribe patterns
-- **Aggregation queries** — server-side COUNT, SUM, AVG without downloading documents
-- **Collection group queries** — cross-stock price queries, volume spike detection
-- **Pagination & cursors** — `start_after`, `limit`, cursor-based page traversal
-- **Maintenance & monitoring** — collection health checks, stale document detection, failed run analysis, config management
-
-Comprehensive reference for querying, writing, and managing Firestore collections
-using the `google-cloud-firestore` Python SDK.
+> [!note]- Glossary
+>
+> **Firestore**
+> - Google's serverless document database, organizing data as collections of schema-flexible documents with optional nested subcollections.
+> - It matters because this note treats Firestore as the low-latency operational engine alongside SQL Server and BigQuery, not as a relational replacement.
+>
+> > [!warning] It is not a relational database
+> >
+> > Firestore has no joins, no window functions, and only limited server-side aggregation. Designs that assume relational query composition quickly become awkward or expensive.
+>
+> ---
+>
+> **Document**
+> - A single Firestore record addressed by a path and containing typed fields such as strings, numbers, booleans, timestamps, maps, arrays, or references.
+> - It matters because every stock, alert, config record, and pipeline-run entry in the note is modeled as a document rather than as a SQL row.
+>
+> > [!warning] Documents do not enforce a schema
+> >
+> > Two documents in the same collection can carry different field sets. That flexibility is useful, but it also means application code must handle absent or differently shaped fields deliberately.
+>
+> ---
+>
+> **Collection**
+> - A named container that groups documents at the same path level.
+> - It matters because top-level Firestore organization in the note starts from collections such as `stocks`, `alerts`, `watchlists`, and `pipeline_runs`.
+>
+> > [!info] Collections hold documents, not collections
+> >
+> > A collection does not directly nest another collection. The nesting point is always a document, which is why Firestore paths alternate collection and document segments.
+>
+> ---
+>
+> **Subcollection**
+> - A collection stored beneath a specific parent document, such as `stocks/ASML.AS/prices`.
+> - It matters because the note uses subcollections to model one-to-many price history without flattening all price documents into a single global collection.
+>
+> > [!warning] Parent scope is implicit
+> >
+> > Querying a specific subcollection path only searches under that parent document. Cross-parent search requires a separate collection-group query shape.
+>
+> ---
+>
+> **Composite index**
+> - A Firestore index spanning multiple fields so queries can combine filtering and ordering beyond the single-field indexes Firestore creates automatically.
+> - It matters because many non-trivial filters in the note depend on composite indexes and fail outright until those indexes exist.
+>
+> > [!warning] Missing indexes break queries
+> >
+> > Firestore does not silently fall back to a slower execution strategy. A missing required composite index typically raises `FAILED_PRECONDITION` and stops the query.
+>
+> ---
+>
+> **`FieldFilter`**
+> - The Python SDK class used to define an explicit field predicate in a Firestore query.
+> - It matters because the note uses `FieldFilter` as the canonical query-building surface instead of older positional `where()` arguments.
+>
+> > [!warning] Deprecated syntax still lingers
+> >
+> > Older `where("field", "==", value)` patterns may still run, but they are being phased out in favor of explicit filter objects. New code should not keep reinforcing the deprecated style.
+>
+> ---
+>
+> **Transaction**
+> - A Firestore atomic read-then-write unit where all reads occur against a consistent snapshot before any writes are committed.
+> - It matters because score updates, counters, and other read-modify-write patterns in the note depend on transaction semantics to avoid lost updates.
+>
+> > [!warning] Reads must come first
+> >
+> > Firestore transactions are stricter than many developers expect: once writes begin, you cannot introduce new reads. Violating that order causes runtime failure rather than a best-effort interpretation.
+>
+> ---
+>
+> **Batch write**
+> - A write-only bundle of up to 500 create, update, or delete operations that commits atomically.
+> - It matters because the note uses batches to group operational changes efficiently when no reads are required inside the atomic unit.
+>
+> > [!warning] Batches are not transactions
+> >
+> > A batch cannot read documents to make decisions. If the logic depends on current values, the correct primitive is a transaction, not a bigger batch.
+>
+> ---
+>
+> **Real-time listener**
+> - A live subscription created with `on_snapshot` that invokes application code whenever matching documents change.
+> - It matters because Firestore's real-time push model is one of the main reasons to choose it for dashboards, alerts, and live operational status.
+>
+> > [!warning] Listeners keep billing and streaming
+> >
+> > A listener stays attached until it is explicitly unsubscribed. Forgetting to tear it down leaks an open stream and continues to incur read activity.
+>
+> ---
+>
+> **Collection group query**
+> - A Firestore query that scans every subcollection with the same name, regardless of which parent document owns it.
+> - It matters because cross-stock price analysis in the note depends on querying all `prices` subcollections together instead of one stock at a time.
+>
+> > [!warning] Group scope needs its own index
+> >
+> > Collection-group queries use a distinct index scope from ordinary collection indexes. A normal collection index is not enough to satisfy them.
+>
+> ---
+>
+> **Application Default Credentials**
+> - Google's standard credential resolution chain for local development and runtime environments.
+> - It matters because both the Python SDK setup and the operational safety guidance in the note assume Firestore access is obtained through ADC rather than hardcoded credentials.
+>
+> > [!warning] Key files are a local-dev pattern
+> >
+> > Service-account JSON files are convenient for local testing but are the wrong default for deployed workloads. Production environments should rely on attached identities through Google's metadata and IAM model.
+>
+> ---
+>
+> **Cursor pagination**
+> - A pagination technique that resumes scanning from a document position such as `start_after` instead of skipping rows by offset.
+> - It matters because Firestore charges for documents it must traverse, so cursor-based paging is both cheaper and more consistent than offset-based paging.
+>
+> > [!info] Offsets waste reads
+> >
+> > With offset pagination, Firestore still has to read past the skipped documents. Cursors move the boundary instead of paying to revisit already seen data.
+>
+> ---
+>
+> **Aggregation query**
+> - A Firestore server-side query that computes limited aggregates such as `COUNT`, `SUM`, or `AVG` without downloading every matching document.
+> - It matters because the note uses aggregation queries as the narrow alternative to full analytical scans in an engine that otherwise does not support SQL-style grouping.
+>
+> > [!info] Aggregation is intentionally narrow
+> >
+> > Firestore aggregation queries are useful, but they do not turn Firestore into an analytics engine. Once the question needs joins, window logic, or broad scans, BigQuery is usually the right destination.
 
 | Collection | Description | Key Features |
 |---|---|---|
@@ -158,12 +274,14 @@ Connected to Firestore. Collections: ['alerts', 'config', 'pipeline_runs', 'sect
 ### Python | Firestore Admin API | index utility — `ensure_index()`
 
 Firestore requires **explicit indexes** for:
+
 - **Compound queries**: filtering on two fields (e.g., `country == "Germany"` AND `price < 200`)
 - **Collection group queries**: querying across all subcollections with the same name
 
 Single-field queries on a single collection work out of the box (auto-indexed).
 
 This utility function handles both cases:
+
 1. **Composite indexes** (multi-field): created via the Firestore Admin API
 2. **Field exemptions** (single-field collection group): created via the REST API
 
@@ -1644,15 +1762,15 @@ All three run server-side. The client receives a single number, not 50 documents
 ```python
 query = db.collection("stocks")
 
-sum_result = query.sum("index_weight").get()  
+sum_result = query.sum("index_weight").get()
 total_weight = sum_result[0][0].value # type: ignore
 print(f"Total index weight: {total_weight:.4f}")
 
-avg_result = query.avg("current_price").get()  
+avg_result = query.avg("current_price").get()
 avg_price = avg_result[0][0].value # type: ignore
 print(f"Average stock price: {avg_price:.2f}")
 
-count_result = query.count().get()  
+count_result = query.count().get()
 total = count_result[0][0].value # type: ignore
 print(f"Total stocks: {total}")
 ```
@@ -1721,7 +1839,6 @@ for attempt in range(12):  # retry up to 2 minutes while index builds
             _t.sleep(10)
         else:
             raise
-
 ```
 
 ```text
@@ -1877,18 +1994,18 @@ print(f"\nTotal pages: {page - 1}")
 === Paginated Stock List ===
 
 --- Page 1 (5 docs) ---
-  ABI.BR       AB INBEV            
+  ABI.BR       AB INBEV
   AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V.
-  ADS.DE       adidas AG           
-  ADYEN.AS     ADYEN               
-  AI.PA        AIR LIQUIDE         
+  ADS.DE       adidas AG
+  ADYEN.AS     ADYEN
+  AI.PA        AIR LIQUIDE
 
 --- Page 2 (5 docs) ---
-  AIR.PA       AIRBUS SE           
-  ALV.DE       Allianz SE          
-  ARGX.BR      ARGENX SE           
-  ASML.AS      ASML HOLDING        
-  BAS.DE       BASF SE             
+  AIR.PA       AIRBUS SE
+  ALV.DE       Allianz SE
+  ARGX.BR      ARGENX SE
+  ASML.AS      ASML HOLDING
+  BAS.DE       BASF SE
 
 Total pages: 2
 ```
@@ -2183,25 +2300,25 @@ for k, v in config.items():
   rows_per_page: 25
 ```
 
-## When to Use Firestore
-
-Firestore is the right tool when the workload needs low-latency single-document lookups, real-time sync to mobile or web clients, schema-flexible data, or operational metadata like pipeline run logs. Its document model and native push listeners excel where a relational database or a columnar warehouse would be overkill.
-
-- **Low-latency document lookups** — Firestore returns single documents in <10ms. For user-facing dashboards that need to render a single stock's data instantly, Firestore outperforms SQL queries.
-- **Real-time sync** — `on_snapshot` listeners push changes to clients within seconds. Ideal for live alerting dashboards, watchlist updates, and config propagation.
-- **Schema-flexible data** — when document structures vary between records (e.g., some stocks have ESG scores, others don't), Firestore's schema-less nature avoids nullable columns.
-- **Mobile / web clients** — Firestore has native SDKs for iOS, Android, and JavaScript with built-in offline persistence and automatic sync.
-- **Operational metadata** — pipeline run logs, alert queues, and singleton config documents are a natural fit for Firestore's document model.
-
-## When Not to Use Firestore
-
-Firestore is the wrong tool when the workload needs analytical aggregation, cross-collection joins, or cost-efficient full scans. These shapes belong on BigQuery or SQL Server, with Firestore restricted to the operational metadata layer.
-
-- **Analytical aggregation** — Firestore has no window functions, no GROUP BY, no JOINs. Server-side aggregation is limited to COUNT, SUM, AVG. Use BigQuery for analytics.
-- **Cross-collection queries** — Firestore has no JOINs. If you need to combine data from `stocks` and `sectors`, you must either denormalize the data or perform client-side joins.
-- **Large result sets** — Firestore charges per document read. Scanning 65,000 OHLCV rows costs 65,000 reads. BigQuery scans the same data for pennies.
-- **Complex filtering** — Firestore requires a composite index for every unique combination of filters and ordering. Queries with 3+ filter fields become index-management overhead.
-- **Transactions over 500 documents** — Firestore limits transactions to 500 operations. For batch processing thousands of rows, use BigQuery or SQL Server.
+> [!example] Document Model Fit
+>
+> > [!success] Operational Sweet Spot
+> >
+> > - Firestore is the right tool when the workload needs low-latency single-document lookups, real-time sync to mobile or web clients, schema-flexible data, or operational metadata like pipeline run logs. Its document model and native push listeners excel where a relational database or a columnar warehouse would be overkill.
+> > - **Low-latency document lookups** — Firestore returns single documents in <10ms. For user-facing dashboards that need to render a single stock's data instantly, Firestore outperforms SQL queries.
+> > - **Real-time sync** — `on_snapshot` listeners push changes to clients within seconds. Ideal for live alerting dashboards, watchlist updates, and config propagation.
+> > - **Schema-flexible data** — when document structures vary between records (e.g., some stocks have ESG scores, others don't), Firestore's schema-less nature avoids nullable columns.
+> > - **Mobile / web clients** — Firestore has native SDKs for iOS, Android, and JavaScript with built-in offline persistence and automatic sync.
+> > - **Operational metadata** — pipeline run logs, alert queues, and singleton config documents are a natural fit for Firestore's document model.
+>
+> > [!failure] Analytical Mismatch
+> >
+> > - Firestore is the wrong tool when the workload needs analytical aggregation, cross-collection joins, or cost-efficient full scans. These shapes belong on BigQuery or SQL Server, with Firestore restricted to the operational metadata layer.
+> > - **Analytical aggregation** — Firestore has no window functions, no GROUP BY, no JOINs. Server-side aggregation is limited to COUNT, SUM, AVG. Use BigQuery for analytics.
+> > - **Cross-collection queries** — Firestore has no JOINs. If you need to combine data from `stocks` and `sectors`, you must either denormalize the data or perform client-side joins.
+> > - **Large result sets** — Firestore charges per document read. Scanning 65,000 OHLCV rows costs 65,000 reads. BigQuery scans the same data for pennies.
+> > - **Complex filtering** — Firestore requires a composite index for every unique combination of filters and ordering. Queries with 3+ filter fields become index-management overhead.
+> > - **Transactions over 500 documents** — Firestore limits transactions to 500 operations. For batch processing thousands of rows, use BigQuery or SQL Server.
 
 ## Warnings
 

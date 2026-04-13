@@ -10,23 +10,53 @@ status: complete
 
 # Transparent Data Encryption (TDE)
 
-Transparent Data Encryption encrypts SQL Server data and log files at rest. It is designed for disk, snapshot, detached-file, and backup theft scenarios. It does not encrypt client/server traffic, and it does not keep plaintext out of the SQL Server buffer pool once pages are in memory.
+> [!abstract]- Summary
+>
+> Transparent Data Encryption encrypts SQL Server data and log files at rest. It is designed for disk, snapshot, detached-file, and backup-theft scenarios, but it does not encrypt client/server traffic or keep plaintext out of the buffer pool once pages are in memory. The critical operational truth is simple: TDE is only as recoverable as its certificate backup chain. If the certificate and private key are lost, encrypted backups and encrypted database files are no longer restorable on another instance.
+>
+> - **Protection boundary**
+>   - defines what TDE encrypts and what it does not, including the `tempdb` spillover rule, FILESTREAM gap, buffer-pool-extension gap, and the boundary with Always Encrypted and TLS
+> - **Key hierarchy and platform boundary**
+>   - explains the Service Master Key -> Database Master Key -> server certificate -> Database Encryption Key chain and why Google Cloud KMS is not part of the live runtime path here
+> - **Baseline and live example**
+>   - includes edition availability, current-state checks, and a disposable `codex_tde_demo` walkthrough captured live against the local SQL Server 2022 Developer Edition container
+> - **Recovery and lifecycle**
+>   - covers immediate certificate backup, encrypted-backup handling, disaster-recovery restore including the `Msg 33111` failure path, certificate rotation, and DEK regeneration
+> - **Operational interactions**
+>   - explains backup-compression behavior after the SQL Server 2019 CU5 change, AG interaction, health checks, and the distinction from backup encryption and Always Encrypted
+> - **Recommendations**
+>   - closes with the production rules for recoverability, key custody, and safe rollout decisions
+>
+> The note assumes an operational DBA or data engineer who needs to make safe TDE decisions rather than a conceptual introduction.
 
-For production use, the critical operational truth is simple: **TDE is only as recoverable as its certificate backup chain**. If the certificate and private key are lost, encrypted backups and encrypted database files are no longer restorable on another instance.
-
-> [!abstract] What this note covers
+> [!note]- Glossary
 >
-> This note documents TDE as it actually runs on SQL Server 2022 on Linux in this environment. It walks through:
->
-> - **What TDE protects and does not protect**, including the `tempdb` spillover rule, FILESTREAM gap, buffer-pool-extension gap, and the difference between TDE and Always Encrypted.
-> - **The certificate-based key hierarchy** (Service Master Key → Database Master Key → server certificate → Database Encryption Key) and why Google Cloud KMS is not part of the live runtime chain here.
-> - **Edition and version matrix** showing exactly where TDE is available across SQL Server 2016 through 2025 on Windows and Linux.
-> - **A complete disposable TDE example** on a database named `codex_tde_demo`, captured live against the local `stoxx` SQL Server 2022 Developer Edition container. Every SQL cell in the note is backed by a real execution.
-> - **Certificate backup**, **disaster-recovery restore** on the same instance (including the Msg 33111 failure mode), **certificate rotation**, and **DEK algorithm regeneration**.
-> - **Backup compression + TDE behavior** including the SQL Server 2019 CU5 change that removed the manual `MAXTRANSFERSIZE > 64 KB` workaround.
-> - **Always On availability group interaction** and an operational health-check query for scheduled monitoring.
->
-> The note assumes the reader is an operational DBA or data engineer who needs to make safe TDE decisions, not a newcomer to the concept. It does not cover Always Encrypted (column-level), backup encryption (`BACKUP ... WITH ENCRYPTION`), or TLS-in-transit — those are disambiguated briefly at the end but covered in their own notes.
+> - **TDE**
+>   - at-rest database encryption feature that encrypts SQL Server pages as they are written to disk
+> - **Database Encryption Key (DEK)**
+>   - symmetric key stored in the user database that actually encrypts and decrypts pages
+> - **Service Master Key (SMK)**
+>   - instance root key that anchors SQL Server’s internal encryption hierarchy
+> - **Database Master Key (DMK)**
+>   - database-scoped key used to protect certificates and other keys, including the `master` DMK used for TDE certificates
+> - **Server certificate**
+>   - certificate in `master` whose private key protects the DEK
+> - **Certificate backup chain**
+>   - exported certificate, private key, and passwords required to restore a TDE-protected database elsewhere
+> - **At-rest encryption**
+>   - protection of files on disk, snapshots, and backups rather than traffic in transit or authorized reads in memory
+> - **`tempdb` spillover**
+>   - instance-wide effect where `tempdb` becomes encrypted once any user database enables TDE
+> - **EKM**
+>   - Extensible Key Management, SQL Server’s integration point for external key providers
+> - **Always Encrypted**
+>   - column-level client-side encryption feature that protects plaintext from the SQL Server engine itself
+> - **Backup encryption**
+>   - `BACKUP ... WITH ENCRYPTION` feature that encrypts backup output independently of whether the source database uses TDE
+> - **Encryption scan**
+>   - background process that rewrites existing pages after TDE is enabled so the database becomes fully encrypted
+> - **`sys.dm_database_encryption_keys`**
+>   - DMV used to inspect TDE state, progress, and encryption metadata for databases
 
 ## What TDE Protects
 

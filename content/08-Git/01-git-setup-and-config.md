@@ -13,51 +13,374 @@ tags:
 >
 > — **Linus Torvalds**, TED interview (2016)
 
-Git is a distributed version control system created by Linus Torvalds in 2005. It tracks every change to every file in a project, lets multiple engineers work on the same codebase simultaneously, and provides tools to merge, revert, and inspect work at any point in history. This page is a **complete, zero-assumption setup guide** — a reader who has never used Git can follow it end-to-end to configure a production-ready environment, and a senior engineer will find it operationally complete and precise.
+> [!abstract]- Summary
+>
+> Explains how to turn a new machine or repository into a production-ready Git environment by covering installation, identity, authentication, config precedence, line-ending policy, repository bootstrap, and pre-commit quality gates.
+>
+> **Mental model and installation**
+> - Relates the working tree, staging area, object store, config files, hooks, remotes, and auth flow before covering Git installation on Windows, macOS, Linux, and WSL
+> - Verifies the active Git binary and highlights why Windows Git and WSL Git behave as separate environments with separate configs and credentials
+>
+> **Identity, authentication, and credentials**
+> - Configures `user.name` and `user.email`, compares HTTPS PAT versus SSH key workflows, and sets credential helpers for GitHub, enterprise SSO, and cross-platform use
+> - Distinguishes global, local, and system settings so personal and work identities do not bleed across repositories
+>
+> **Configuration and normalization**
+> - Explains config-scope precedence, recommended global defaults, editor and pager settings, line-ending normalization, and `.gitattributes` policy for mixed-OS teams
+> - Covers cross-platform file behavior, executable bits, case sensitivity, and other defaults that create noisy diffs or subtle collaboration bugs
+>
+> **Repository bootstrap and safeguards**
+> - Creates or clones repositories, sets the default branch, adds remotes, and prepares pre-commit hooks as automated quality gates for secrets, linting, and formatting
+> - Extends the setup to data-engineering teams, enterprise environments, large repositories, and new-machine onboarding checklists
+>
+> **Operations and safety**
+> - Warnings: mismatched config scope, PAT or SSH misconfiguration, WSL/Windows separation, line-ending drift, and large-binary handling that should move to Git LFS
+> - Recommendations: prefer shared normalization in `.gitattributes`, use credential helpers instead of embedding secrets, validate install and auth end to end, and separate work vs personal identity deliberately
+> - Troubleshooting: setup cookbook plus final validation for install-path, auth, scope, line-ending, and clone/bootstrap failures
 
----
+> [!note]- Glossary
+>
+> **Git**
+> - A distributed version control system that records file changes as snapshots (commits) in a local repository, with optional synchronization to remote servers. In plain terms, software that remembers every change ever made to your files and lets teams collaborate on the same project.
+> - Every command in this chapter operates through Git.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Version control**
+> - A system that records changes to files over time so you can recall any version later. In plain terms, an undo history for your entire project that never expires.
+> - Without it, overwritten work is lost permanently.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Repository (repo)**
+> - A directory tracked by Git, containing the working tree and a hidden `.git/` folder that stores the complete history, configuration, and object database. In plain terms, a project folder with a complete memory of every change ever made.
+> - Every Git operation targets a repository.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Working tree / working directory**
+> - The actual files on disk that you edit, outside the `.git/` directory. In plain terms, what you see in your file explorer or VS Code.
+> - Changes here are not recorded until staged and committed.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Staging area / index**
+> - A buffer between the working tree and the next commit. Files are added here with `git add` before they become part of a commit. In plain terms, a prep table — you choose exactly which changes go into the next snapshot.
+> - Gives fine-grained control over what each commit includes.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Commit**
+> - An immutable snapshot of all tracked files at a point in time, identified by a unique SHA-1 hash. Contains the tree, parent pointer(s), author, committer, timestamp, and message. In plain terms, a save point in a game — you can always go back to any previous save.
+> - The fundamental unit of history in Git.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Branch**
+> - A lightweight, movable pointer to a commit. The default branch is typically `main`. Branches let you work on features or fixes without affecting the mainline. In plain terms, a parallel universe where you can experiment freely. If it works, you merge it back.
+> - Enables concurrent work and isolation of changes.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Default branch**
+> - The branch Git creates when you initialize a repository (`main` by convention, `master` historically). The branch that pull requests typically target. In plain terms, the "production" line of your project.
+> - Mismatching default branch names between local and remote causes confusion.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Remote**
+> - A copy of the repository hosted on a server (GitHub, GitLab, Bitbucket). The default remote is named `origin`. In plain terms, the shared copy on GitHub that everyone syncs with.
+> - Enables collaboration — `push` sends commits to the remote, `pull` brings them down.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **`origin`**
+> - The conventional name for the default remote repository, automatically set by `git clone`. In plain terms, the "home server" your local repo syncs with.
+> - Almost every push/pull command targets `origin` by default.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Tracking branch**
+> - A local branch that has an upstream relationship with a remote branch (e.g., `main` tracks `origin/main`). In plain terms, your local branch "knows" which remote branch it corresponds to.
+> - Enables `git pull` and `git push` without specifying the remote and branch every time.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **`HEAD`**
+> - A pointer to the current commit you are working on. Usually points to the tip of the current branch. In detached HEAD state, it points directly to a commit. In plain terms, your "you are here" marker on the timeline.
+> - Determines what you see in your working tree and what the next commit builds on.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **SHA / hash**
+> - A 40-character hexadecimal string (often abbreviated to 7–8 characters) computed from the commit contents. Uniquely identifies a commit. In plain terms, a fingerprint for a commit — no two commits have the same one.
+> - Used to reference specific commits in `checkout`, `revert`, `cherry-pick`, and log inspection.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Clone**
+> - The operation of downloading a complete copy of a remote repository (all branches, tags, full history) to your local machine. In plain terms, downloading the entire project with its full memory.
+> - The standard way to start working on an existing project.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Init**
+> - The operation of creating a new Git repository from scratch in an existing directory by generating the `.git/` subdirectory. In plain terms, turning a regular folder into a Git-tracked project.
+> - Used when starting a brand-new project that has no remote yet.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Fork**
+> - A server-side copy of someone else's repository under your own GitHub account. Not a Git-native concept — it is a GitHub/GitLab feature. In plain terms, making your own copy of someone else's project to experiment with independently.
+> - Standard workflow for open-source contributions.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Pull request (PR)**
+> - A request to merge one branch into another, with a code review interface. Called "merge request" (MR) on GitLab. In plain terms, raising your hand and saying "I've finished this work, please review and merge it."
+> - The primary mechanism for code review and controlled merging in teams.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Config scope**
+> - The level at which a Git configuration value is stored: system, global, local, or worktree. More specific scopes override broader ones. In plain terms, whether a setting applies to the entire machine, your user account, one repo, or one worktree.
+> - Misconfigured scope causes identity mismatches, wrong credentials, or unexpected behavior.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Global config**
+> - Configuration stored in `~/.gitconfig` (or `$XDG_CONFIG_HOME/git/config`). Applies to all repositories for the current OS user. In plain terms, your personal default settings across all projects.
+> - Identity, editor, credential helper, and aliases typically live here.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Local config**
+> - Configuration stored in `.git/config` inside a specific repository. Overrides global and system values for that repo only. In plain terms, settings specific to one project (e.g., a work email different from your personal email).
+> - Essential for multi-identity setups (personal vs. work).
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **System config**
+> - Configuration stored in the Git installation directory (e.g., `C:/Program Files/Git/etc/gitconfig`). Applies to every user on the machine. Lowest precedence. In plain terms, machine-wide defaults set by the IT department or installer.
+> - Rarely edited manually; useful for corporate standardization.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Credential helper**
+> - A Git subsystem that stores and retrieves authentication credentials so you are not prompted on every remote operation. In plain terms, a password manager for Git.
+> - Without one, Git prompts for your username and password on every `push`, `pull`, and `fetch`.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **PAT (Personal Access Token)**
+> - A token generated on GitHub (Settings → Developer settings → Tokens) that replaces passwords for HTTPS authentication. Has configurable scopes and expiry. In plain terms, a password with an expiry date and limited powers.
+> - GitHub no longer accepts account passwords for Git operations over HTTPS — PATs are required.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **SSH key**
+> - A cryptographic key pair (public + private) used for passwordless authentication. The public key is uploaded to GitHub; the private key stays on your machine. In plain terms, a digital passport — GitHub recognizes your machine without needing a password.
+> - Preferred by many engineers for convenience; required when HTTPS is impractical.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Git hook**
+> - A script stored in `.git/hooks/` that Git executes automatically at specific lifecycle events (pre-commit, pre-push, post-merge, etc.). In plain terms, an automated quality gate — runs checks before you can commit or push.
+> - Catches secrets, lint errors, and formatting issues before they reach the repository.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Pre-commit hook**
+> - A hook that runs before a commit is created. If it exits with a non-zero status, the commit is aborted. In plain terms, a bouncer at the door — your commit only goes through if the checks pass.
+> - The most commonly used hook; the `pre-commit` framework manages these declaratively.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **`.gitignore`**
+> - A file listing patterns of files and directories that Git should not track. Supports glob syntax. In plain terms, a "do not touch" list for Git.
+> - Prevents secrets, build artifacts, virtual environments, and large generated files from entering the repository.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **`.gitattributes`**
+> - A file that defines per-path attributes — most importantly, line-ending normalization rules. Checked into the repository and shared with all collaborators. In plain terms, a team-wide policy file for how Git handles specific file types.
+> - The canonical solution for mixed-OS line-ending issues (safer than `core.autocrlf` alone).
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Line endings (LF / CRLF)**
+> - LF (`\n`) is the Unix/macOS line terminator. CRLF (`\r\n`) is the Windows line terminator. Mismatch between contributors causes noisy diffs that touch every line. In plain terms, different operating systems use different invisible characters to mark the end of a line.
+> - A misconfigured team produces diffs that show every line as changed even when only one word was edited.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Commit signing**
+> - Cryptographic signature embedded in a commit or tag, proving the author's identity. Git supports GPG and SSH signing backends. In plain terms, a tamper-proof seal that says "this commit really came from me."
+> - Many production teams require signed commits. GitHub shows a green "Verified" badge on signed commits.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Git LFS (Large File Storage)**
+> - An extension that replaces large files with lightweight pointer files in the repository, storing actual contents on a separate LFS server. In plain terms, a delivery service for big files — Git tracks a receipt, the actual parcel lives elsewhere.
+> - Without LFS, large binaries bloat the repository and make clones slow for everyone forever.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Partial clone**
+> - A clone that downloads only commit and tree objects, fetching file contents (blobs) on demand as they are checked out. Enabled with `--filter=blob:none`. In plain terms, downloading the table of contents without the full book — pages are fetched as you read them.
+> - Drastically reduces initial clone time and disk usage for large repositories.
+>
+> > [!info] Scale and workflow tradeoff
+> >
+> > This feature improves developer ergonomics or repository scale, but it adds assumptions that automation and teammates also need to understand.
+>
+> ---
+>
+> **Sparse checkout**
+> - A mode that limits which directories appear in the working tree. Files outside the sparse set are not checked out (and with partial clone, not downloaded). In plain terms, checking out only the chapters you need from a large book.
+> - Essential for monorepo workflows where each engineer only needs a subset of the codebase.
+>
+> > [!info] Scale and workflow tradeoff
+> >
+> > This feature improves developer ergonomics or repository scale, but it adds assumptions that automation and teammates also need to understand.
 
-## Core Concepts Glossary
-
-Understanding Git's terminology is the foundation for everything else. These terms appear throughout all Git documentation, team communication, and CI/CD pipeline definitions.
-
-| Term | Definition | Plain-English Meaning | Why It Matters |
-|---|---|---|---|
-| **Git** | A distributed version control system that records file changes as snapshots (commits) in a local repository, with optional synchronization to remote servers. | Software that remembers every change ever made to your files and lets teams collaborate on the same project. | Every command in this chapter operates through Git. |
-| **Version control** | A system that records changes to files over time so you can recall any version later. | An undo history for your entire project that never expires. | Without it, overwritten work is lost permanently. |
-| **Repository (repo)** | A directory tracked by Git, containing the working tree and a hidden `.git/` folder that stores the complete history, configuration, and object database. | A project folder with a complete memory of every change ever made. | Every Git operation targets a repository. |
-| **Working tree / working directory** | The actual files on disk that you edit, outside the `.git/` directory. | What you see in your file explorer or VS Code. | Changes here are not recorded until staged and committed. |
-| **Staging area / index** | A buffer between the working tree and the next commit. Files are added here with `git add` before they become part of a commit. | A prep table — you choose exactly which changes go into the next snapshot. | Gives fine-grained control over what each commit includes. |
-| **Commit** | An immutable snapshot of all tracked files at a point in time, identified by a unique SHA-1 hash. Contains the tree, parent pointer(s), author, committer, timestamp, and message. | A save point in a game — you can always go back to any previous save. | The fundamental unit of history in Git. |
-| **Branch** | A lightweight, movable pointer to a commit. The default branch is typically `main`. Branches let you work on features or fixes without affecting the mainline. | A parallel universe where you can experiment freely. If it works, you merge it back. | Enables concurrent work and isolation of changes. |
-| **Default branch** | The branch Git creates when you initialize a repository (`main` by convention, `master` historically). The branch that pull requests typically target. | The "production" line of your project. | Mismatching default branch names between local and remote causes confusion. |
-| **Remote** | A copy of the repository hosted on a server (GitHub, GitLab, Bitbucket). The default remote is named `origin`. | The shared copy on GitHub that everyone syncs with. | Enables collaboration — `push` sends commits to the remote, `pull` brings them down. |
-| **`origin`** | The conventional name for the default remote repository, automatically set by `git clone`. | The "home server" your local repo syncs with. | Almost every push/pull command targets `origin` by default. |
-| **Tracking branch** | A local branch that has an upstream relationship with a remote branch (e.g., `main` tracks `origin/main`). | Your local branch "knows" which remote branch it corresponds to. | Enables `git pull` and `git push` without specifying the remote and branch every time. |
-| **`HEAD`** | A pointer to the current commit you are working on. Usually points to the tip of the current branch. In detached HEAD state, it points directly to a commit. | Your "you are here" marker on the timeline. | Determines what you see in your working tree and what the next commit builds on. |
-| **SHA / hash** | A 40-character hexadecimal string (often abbreviated to 7–8 characters) computed from the commit contents. Uniquely identifies a commit. | A fingerprint for a commit — no two commits have the same one. | Used to reference specific commits in `checkout`, `revert`, `cherry-pick`, and log inspection. |
-| **Clone** | The operation of downloading a complete copy of a remote repository (all branches, tags, full history) to your local machine. | Downloading the entire project with its full memory. | The standard way to start working on an existing project. |
-| **Init** | The operation of creating a new Git repository from scratch in an existing directory by generating the `.git/` subdirectory. | Turning a regular folder into a Git-tracked project. | Used when starting a brand-new project that has no remote yet. |
-| **Fork** | A server-side copy of someone else's repository under your own GitHub account. Not a Git-native concept — it is a GitHub/GitLab feature. | Making your own copy of someone else's project to experiment with independently. | Standard workflow for open-source contributions. |
-| **Pull request (PR)** | A request to merge one branch into another, with a code review interface. Called "merge request" (MR) on GitLab. | Raising your hand and saying "I've finished this work, please review and merge it." | The primary mechanism for code review and controlled merging in teams. |
-| **Config scope** | The level at which a Git configuration value is stored: system, global, local, or worktree. More specific scopes override broader ones. | Whether a setting applies to the entire machine, your user account, one repo, or one worktree. | Misconfigured scope causes identity mismatches, wrong credentials, or unexpected behavior. |
-| **Global config** | Configuration stored in `~/.gitconfig` (or `$XDG_CONFIG_HOME/git/config`). Applies to all repositories for the current OS user. | Your personal default settings across all projects. | Identity, editor, credential helper, and aliases typically live here. |
-| **Local config** | Configuration stored in `.git/config` inside a specific repository. Overrides global and system values for that repo only. | Settings specific to one project (e.g., a work email different from your personal email). | Essential for multi-identity setups (personal vs. work). |
-| **System config** | Configuration stored in the Git installation directory (e.g., `C:/Program Files/Git/etc/gitconfig`). Applies to every user on the machine. Lowest precedence. | Machine-wide defaults set by the IT department or installer. | Rarely edited manually; useful for corporate standardization. |
-| **Credential helper** | A Git subsystem that stores and retrieves authentication credentials so you are not prompted on every remote operation. | A password manager for Git. | Without one, Git prompts for your username and password on every `push`, `pull`, and `fetch`. |
-| **PAT (Personal Access Token)** | A token generated on GitHub (Settings → Developer settings → Tokens) that replaces passwords for HTTPS authentication. Has configurable scopes and expiry. | A password with an expiry date and limited powers. | GitHub no longer accepts account passwords for Git operations over HTTPS — PATs are required. |
-| **SSH key** | A cryptographic key pair (public + private) used for passwordless authentication. The public key is uploaded to GitHub; the private key stays on your machine. | A digital passport — GitHub recognizes your machine without needing a password. | Preferred by many engineers for convenience; required when HTTPS is impractical. |
-| **Git hook** | A script stored in `.git/hooks/` that Git executes automatically at specific lifecycle events (pre-commit, pre-push, post-merge, etc.). | An automated quality gate — runs checks before you can commit or push. | Catches secrets, lint errors, and formatting issues before they reach the repository. |
-| **Pre-commit hook** | A hook that runs before a commit is created. If it exits with a non-zero status, the commit is aborted. | A bouncer at the door — your commit only goes through if the checks pass. | The most commonly used hook; the `pre-commit` framework manages these declaratively. |
-| **`.gitignore`** | A file listing patterns of files and directories that Git should not track. Supports glob syntax. | A "do not touch" list for Git. | Prevents secrets, build artifacts, virtual environments, and large generated files from entering the repository. |
-| **`.gitattributes`** | A file that defines per-path attributes — most importantly, line-ending normalization rules. Checked into the repository and shared with all collaborators. | A team-wide policy file for how Git handles specific file types. | The canonical solution for mixed-OS line-ending issues (safer than `core.autocrlf` alone). |
-| **Line endings (LF / CRLF)** | LF (`\n`) is the Unix/macOS line terminator. CRLF (`\r\n`) is the Windows line terminator. Mismatch between contributors causes noisy diffs that touch every line. | Different operating systems use different invisible characters to mark the end of a line. | A misconfigured team produces diffs that show every line as changed even when only one word was edited. |
-| **Commit signing** | Cryptographic signature embedded in a commit or tag, proving the author's identity. Git supports GPG and SSH signing backends. | A tamper-proof seal that says "this commit really came from me." | Many production teams require signed commits. GitHub shows a green "Verified" badge on signed commits. |
-| **Git LFS (Large File Storage)** | An extension that replaces large files with lightweight pointer files in the repository, storing actual contents on a separate LFS server. | A delivery service for big files — Git tracks a receipt, the actual parcel lives elsewhere. | Without LFS, large binaries bloat the repository and make clones slow for everyone forever. |
-| **Partial clone** | A clone that downloads only commit and tree objects, fetching file contents (blobs) on demand as they are checked out. Enabled with `--filter=blob:none`. | Downloading the table of contents without the full book — pages are fetched as you read them. | Drastically reduces initial clone time and disk usage for large repositories. |
-| **Sparse checkout** | A mode that limits which directories appear in the working tree. Files outside the sparse set are not checked out (and with partial clone, not downloaded). | Checking out only the chapters you need from a large book. | Essential for monorepo workflows where each engineer only needs a subset of the codebase. |
-
----
+> [!example] Bootstrap Context
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for first-time machine setup, repository bootstrap, identity changes, credential rotation, or policy hardening before collaborative Git work starts.
+> > - Use it when installation path, auth method, config scope, line-ending policy, or pre-commit safeguards still need to be made explicit and repeatable.
+> > - Use it to separate personal versus work identity and to prove the machine is ready before any day-to-day branch work begins.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as the main guide for conflict resolution, branch recovery, or routine daily Git flow once the environment is already operating normally.
+> > - Do not stop at local config if the real issue is collaborative policy around merge strategy, PR review, or remote topology.
+> > - Do not treat installation as complete until auth, normalization, and repository bootstrap have all been validated end to end.
 
 ## Mental Model — How Git's Layers Connect
 

@@ -2361,20 +2361,22 @@ my_list
 my_list: [1, 2, 3]
 ```
 
-## When to Use Python for These Concepts
-
-- **Interactive exploration and prototyping** — Python's REPL, Jupyter notebooks, and dynamic typing make it the fastest path from idea to working code for data exploration, one-off scripts, and ad-hoc analysis.
-- **Data engineering glue code** — connecting APIs, transforming files, orchestrating pipelines, parsing configuration. Python's ecosystem (`requests`, `pandas`, `polars`, `sqlalchemy`, `pydantic`) is unmatched for data plumbing.
-- **Rapid development over runtime performance** — when development speed matters more than microsecond execution time. Python's expressiveness reduces lines of code by 3–5x vs C# for typical data tasks.
-- **Team environments with mixed skill levels** — Python's low ceremony and readable syntax lower the barrier for analysts, data scientists, and junior engineers to contribute to shared codebases.
-
-## When Not to Use / Limits
-
-- **CPU-bound hot loops** — pure Python is 10–100x slower than C# for tight numerical loops. Use NumPy, Polars, or Cython for computation-heavy work, or move the logic to C#/.NET.
-- **Memory-constrained environments** — Python objects carry significant overhead (28 bytes for a single `int`). For millions of small objects, C# structs or arrays are far more memory-efficient.
-- **Type safety at compile time** — Python's dynamic typing means type errors surface at runtime. For large, long-lived codebases where refactoring safety matters, C#'s static type system catches more bugs earlier.
-- **Desktop/mobile GUI applications** — Python's GUI ecosystem (Tkinter, PyQt) is functional but inferior to C#'s WPF/MAUI/Blazor for production desktop applications.
-- **Concurrency with CPU parallelism** — the GIL (Global Interpreter Lock) prevents true parallel execution of Python threads. Use `multiprocessing`, `asyncio` (for I/O), or move CPU work to C#.
+> [!example] Usage
+>
+> > [!success] Applicability
+> >
+> > - **Interactive exploration and prototyping** — Python's REPL, Jupyter notebooks, and dynamic typing make it the fastest path from idea to working code for data exploration, one-off scripts, and ad-hoc analysis.
+> > - **Data engineering glue code** — connecting APIs, transforming files, orchestrating pipelines, parsing configuration. Python's ecosystem (`requests`, `pandas`, `polars`, `sqlalchemy`, `pydantic`) is unmatched for data plumbing.
+> > - **Rapid development over runtime performance** — when development speed matters more than microsecond execution time. Python's expressiveness reduces lines of code by 3–5x vs C# for typical data tasks.
+> > - **Team environments with mixed skill levels** — Python's low ceremony and readable syntax lower the barrier for analysts, data scientists, and junior engineers to contribute to shared codebases.
+>
+> > [!failure] Limitations
+> >
+> > - **CPU-bound hot loops** — pure Python is 10–100x slower than C# for tight numerical loops. Use NumPy, Polars, or Cython for computation-heavy work, or move the logic to C#/.NET.
+> > - **Memory-constrained environments** — Python objects carry significant overhead (28 bytes for a single `int`). For millions of small objects, C# structs or arrays are far more memory-efficient.
+> > - **Type safety at compile time** — Python's dynamic typing means type errors surface at runtime. For large, long-lived codebases where refactoring safety matters, C#'s static type system catches more bugs earlier.
+> > - **Desktop/mobile GUI applications** — Python's GUI ecosystem (Tkinter, PyQt) is functional but inferior to C#'s WPF/MAUI/Blazor for production desktop applications.
+> > - **Concurrency with CPU parallelism** — the GIL (Global Interpreter Lock) prevents true parallel execution of Python threads. Use `multiprocessing`, `asyncio` (for I/O), or move CPU work to C#.
 
 ## Warnings
 

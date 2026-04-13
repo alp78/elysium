@@ -9,33 +9,162 @@ updated: 2026-04-07
 status: complete
 ---
 
-# 03 — Transformations, Expressions & Chaining
+# Transforms, Expressions & Chaining - C#
 
 > [!quote]
 > "If you torture the data long enough, it will confess to anything."
 >
 > — **Ronald Coase**, attributed remark (c. 1960s)
 
-This note covers column creation, conditional logic, type casting, and multi-step pipeline composition in C# using Polars.NET expressions and Microsoft.Data.Analysis typed columns. It explains `WithColumns`, `IfElse`, `Cast`, expression chaining, and the practical differences between Polars.NET's immutable expression model and MDA's mutable column model.
+> [!abstract]- Summary
+>
+> Covers the core transformation model for C# dataframes by contrasting Polars.NET's expression-driven, immutable pipeline style with Microsoft.Data.Analysis' eager typed-column mechanics. The note exists to show how derived columns, conditional logic, casts, window-style calculations, and custom code paths should be expressed when the same business transformation must survive beyond an ad hoc notebook cell.
+>
+> **Column Transforms**
+> - Build and overwrite columns with `WithColumns`, explicit MDA column construction, arithmetic derivations, percentage-change calculations, and multiple transforms in one logical pass
+> - Show the practical difference between immutable expression returns in Polars.NET and explicit eager materialization in MDA when creating or replacing analytical fields
+>
+> **Expression System**
+> - Use `Col`, `Lit`, and `Alias` as the primitives for reusable Polars expressions, then layer `IfElse`, horizontal arithmetic, and string logic on top of them
+> - Contrast this with MDA, where the same intent is implemented by constructing typed columns directly instead of composing a reusable transform graph
+>
+> **Type Casting**
+> - Cast numeric and date values for downstream arithmetic and parsing, including `Cast(DataType.X)` in Polars.NET and explicit typed-column replacement in MDA
+> - Handle categorical encoding and type-shape transitions where CLR-native and Arrow-native representations diverge
+>
+> **Method Chaining & Window Functions**
+> - Compose fluent multi-step pipelines, then apply window functions, rolling aggregates, cumulative calculations, rank logic, and percent-change patterns over financial data
+> - Emphasize how Polars expressions stay composable across longer chains while MDA requires more explicit step-by-step materialization
+>
+> **Apply / Map / UDF**
+> - Use element-wise UDFs and row-wise logic only where built-in expression patterns stop being sufficient, and understand the cost of dropping out of vectorized dataframe-native operations
+>
+> **Operations and safety**
+> - Warnings: Polars.NET immutability requires reassignment, `IfElse` is not Python-style `When/Then/Otherwise`, and Arrow-versus-CLR type mismatches are common across libraries
+> - Recommendations: 4 practices covering Polars expressions for analytical transforms, MDA for ML.NET-oriented boundaries, schema validation after transforms, and Parquet for type-safe intermediate persistence
+> - Troubleshooting: 3 failure modes covering unchanged transform results from missed reassignment, `ComputeError` during casts, and MDA typed-column mismatches
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **WithColumns** | Polars.NET method that adds or replaces columns using expressions. Returns a new immutable DataFrame. | The primary column-creation mechanism — equivalent to Python Polars `with_columns()`. | Does not mutate — the original DataFrame is unchanged. Assign the result. |
-| **IfElse** | Polars.NET conditional expression: `Col("x").Gt(0).IfElse(Lit("pos"), Lit("neg"))`. | Applies different values based on a condition — equivalent to Python `when/then/otherwise`. | Not `When/Then` — the C# API uses `IfElse` chained on the boolean expression. |
-| **Cast** | Type conversion. Polars.NET: `Col("x").Cast(DataType.Float64)`. MDA: explicit column replacement. | Changes column types for downstream operations (e.g., string to numeric). | Cast failures in Polars.NET raise `ComputeError`. Validate data before casting. |
-| **Expression** | A composable operation description in Polars.NET built from `Col()`, `Lit()`, arithmetic, and method chains. | The core abstraction for all Polars.NET transforms — optimized by the query engine. | Expressions are descriptions, not executed code — they run when the DataFrame method is called. |
-
-## What this note covers
-
-- **Column creation** — `WithColumns`, `WithColumn`, direct column assignment (MDA)
-- **Conditional logic** — `IfElse` expressions, MDA manual column construction
-- **Type casting** — `Cast()` in Polars.NET, explicit column replacement in MDA
-- **Practical transforms** — return calculations, Z-scores, binning on financial data
-- **Chaining patterns** — composing multi-step transformations
-
----
+> [!note]- Glossary
+>
+> **`WithColumns`**
+> - The Polars.NET method for adding or replacing one or more columns through expressions.
+> - It matters because most non-trivial dataframe transforms in the note start here, and the method defines the immutable "return a new frame" style of Polars work.
+>
+> > [!warning] No in-place mutation
+> >
+> > `WithColumns` does not mutate the source dataframe. If you do not assign the returned frame, the transformation is effectively discarded.
+>
+> ---
+>
+> **`IfElse`**
+> - The Polars.NET conditional expression form that chooses between true and false branches based on a boolean expression.
+> - It matters because conditional logic, classification, binning, and label construction in the note all rely on this API shape.
+>
+> > [!warning] Not Python `when`
+> >
+> > Translating Python Polars literally will fail here. Polars.NET 0.4.0 expresses this pattern through `IfElse`, not `when().then().otherwise()`.
+>
+> ---
+>
+> **`Cast`**
+> - A conversion operation that changes a column from one physical or logical type to another.
+> - It matters because many transforms depend on moving between integer, float, string, date, or categorical representations before the next calculation is valid.
+>
+> > [!warning] Dirty values break casts
+> >
+> > Casting is not a magic cleanup step. If the input values cannot be represented in the target type, the cast fails and the pipeline needs a guard or pre-cleaning path.
+>
+> ---
+>
+> **Expression**
+> - A composable description of column logic in Polars.NET built from references, literals, operators, and method calls.
+> - It matters because the note’s central contrast is expression-graph thinking in Polars versus explicit materialized column mechanics in MDA.
+>
+> > [!info] Description, not immediate execution
+> >
+> > Expressions are reusable transformation definitions. They become concrete only when passed into dataframe operations that evaluate them.
+>
+> ---
+>
+> **`Col` / `Lit` / `Alias`**
+> - The three core expression-building primitives for column references, literal values, and output naming in Polars.NET.
+> - They matter because nearly every reusable transform in the note is assembled from these primitives before arithmetic, conditionals, or casting are layered on top.
+>
+> > [!info] Small primitives, large composability
+> >
+> > Once these three pieces are understood, many seemingly different transforms reduce to the same reusable pattern with different operators and target names.
+>
+> ---
+>
+> **Typed column**
+> - An MDA column whose CLR type is fixed explicitly, such as `PrimitiveDataFrameColumn<double>` or `StringDataFrameColumn`.
+> - It matters because Microsoft.Data.Analysis expresses most transforms by building or replacing typed columns directly rather than composing an expression tree.
+>
+> > [!warning] Type choice is an API contract
+> >
+> > In MDA, the target column type is part of the transform design. Choosing the wrong CLR type creates downstream friction immediately.
+>
+> ---
+>
+> **Immutability**
+> - A model where dataframe operations produce new objects instead of modifying the original object in place.
+> - It matters because Polars.NET uses immutability as a default, and many early mistakes in the note come from forgetting that assignment is part of the transform.
+>
+> > [!warning] Silent no-op feeling
+> >
+> > A missed reassignment often looks like the transform "did nothing," when the real problem is that the new frame was never captured.
+>
+> ---
+>
+> **Method chaining**
+> - Writing a sequence of dataframe operations as one fluent pipeline where each step feeds the next.
+> - It matters because the note moves from single-column transforms into multi-step pipelines that are easier to audit when the chain stays readable and intentional.
+>
+> > [!info] Chaining exposes model quality
+> >
+> > Fluent pipelines stay elegant only when the underlying API composes cleanly. That is one of the clearest practical differences between Polars.NET and MDA in this chapter.
+>
+> ---
+>
+> **Window function**
+> - A calculation that uses neighboring or partition-related rows without collapsing the dataframe to one row per group.
+> - It matters because rolling metrics, cumulative calculations, rank, and percent-change logic all depend on window-style semantics.
+>
+> > [!info] Row context without group collapse
+> >
+> > Window logic lets you calculate per-row analytical features while still keeping the original row grain intact.
+>
+> ---
+>
+> **Rolling aggregate**
+> - A moving calculation, such as a rolling mean or sum, evaluated across a sliding window of rows.
+> - It matters because time-series analytics in the note rely on rolling features rather than only whole-column aggregates.
+>
+> > [!warning] Ordering is part of correctness
+> >
+> > Rolling results are only meaningful if the dataframe is sorted on the intended sequence dimension before the window is applied.
+>
+> ---
+>
+> **Cumulative operation**
+> - A running calculation such as cumulative sum or cumulative count that carries state forward through an ordered sequence.
+> - It matters because cumulative metrics are a common transformation boundary between raw event rows and usable analytical signals.
+>
+> > [!info] Sequence dependence is explicit
+> >
+> > Cumulative logic is never purely column-local. The current row depends on every earlier row in the chosen ordering.
+>
+> ---
+>
+> **UDF**
+> - A user-defined function applied when built-in dataframe expressions are insufficient for a particular transformation.
+> - It matters because the note places UDFs late in the design stack, after vectorized and native expression options have been considered.
+>
+> > [!warning] Escape hatch, not default
+> >
+> > Custom code is flexible, but it is also where composability, optimizer visibility, and much of the dataframe engine’s performance advantage begin to weaken.
+>
+> ---
 
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. Run this cell once before any cells that use NuGet packages.
 
@@ -1182,4 +1311,3 @@ If the same transformation can run earlier in SQL, DuckDB, Spark, or a lakehouse
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

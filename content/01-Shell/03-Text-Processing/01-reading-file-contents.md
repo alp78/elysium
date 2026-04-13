@@ -51,8 +51,6 @@ status: complete
 > - Mermaid flowchart from incident report → file size branch → structured triage path.
 >
 > **Operations and safety**
-> - When to use: config verification, real-time monitoring, incident investigation, row-count validation, large-file navigation — 5 scenarios.
-> - When not to use: structured data transforms, binary files, JSON/XML parsing — 3 anti-patterns.
 > - Warnings: 4 (terminal flood from `cat`, `tail -f` vs rotation, `wc -l` newline count, `Get-Content` memory).
 > - Troubleshooting: 6 symptoms covered.
 
@@ -176,31 +174,6 @@ status: complete
 > >
 > > `Select-String` uses .NET regular expressions. Use `-SimpleMatch` when you want literal matching behavior closer to `grep -F`.
 
-A senior data engineer reads files differently depending on context. Checking a config file means reading the whole thing. Investigating a 50GB log file means surgical extraction. Understanding a Parquet file means reading metadata, not data. Choosing the wrong tool turns a 30-second task into a server-killing operation.
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `cat` | Concatenates and prints file contents to stdout. The simplest way to display a file. | Quick inspection of small config files, environment files, and script output. | Using `cat` on multi-GB log files -- it dumps the entire file to the terminal. Use `head`, `tail`, or `less` for large files. |
-| `head` / `tail` | `head` prints the first N lines of a file (default 10). `tail` prints the last N lines. | `head` previews file structure and headers. `tail` shows the most recent entries in log files. | Not knowing `tail -f` for real-time log following, or `tail -F` for rotation-safe following. |
-| `tail -f` / `tail -F` | Follows a file in real time, printing new lines as they are appended. `-F` reopens on rotation. | The primary tool for monitoring live log output during pipeline runs, deployments, and incident response. | `tail -f` does not survive log rotation. Use `tail -F` (capital F) to follow through file replacement. |
-| `less` | An interactive pager that displays file contents one screen at a time with search support (`/pattern`). | Reading large files without loading them entirely into memory. | Not knowing keybindings: `/` search forward, `?` search backward, `n`/`N` next/prev match, `q` quit. |
-| `wc` (word count) | Counts lines (`-l`), words (`-w`), or characters (`-c`) in a file. | `wc -l` is the fastest way to count rows in a CSV or lines in a log. | `wc -l` counts newlines, not lines. A file without a trailing newline reports one fewer line than expected. |
-| `ripgrep` (`rg`) | A modern, fast alternative to grep. Respects `.gitignore`, searches recursively by default. | 5-10x faster than grep on large codebases. Preferred for interactive searching. | Not installed by default. Requires `apt install ripgrep`. |
-| `Select-String` (PS) | The PowerShell equivalent of grep. Returns `MatchInfo` objects with line numbers and match details. | Pattern matching in PowerShell scripts and interactive sessions. | Uses .NET regex by default (different from POSIX regex). Use `-SimpleMatch` for literal strings. |
-| `Get-Content` (PS) | The PowerShell equivalent of `cat`. Returns an array of strings (one per line). `-Wait` = `tail -f`. | Reading files and following logs in PowerShell. | Loads entire file into memory by default. Use `-Tail` or `-ReadCount` for large files. |
-
-## What this note covers
-
-- Quick file inspection with `cat`, `head`, and `tail`
-- Real-time log monitoring with `tail -f` and `tail -F`
-- Interactive paging with `less`
-- Line, word, and character counting with `wc`
-- Fast searching with `ripgrep`
-- PowerShell equivalents: `Get-Content`, `Select-String`, `-Wait`
-- An incident log triage decision flowchart
 ## Linux file reading tools
 
 The choice of tool depends entirely on file size. `cat` is fine for small config files. For anything over a few MB, stream with `head`, `tail`, or `grep` — never load the whole file into memory. `less` provides an interactive pager for exploration. During incidents, `tail -f | grep` and `awk` range patterns are the fastest path to answers.
@@ -498,19 +471,21 @@ flowchart TD
 ```
 
 
-## When to use file reading tools
-
-- **Quick config verification** -- `cat .env` or `head -5 config.yaml` to confirm a setting before running a pipeline.
-- **Real-time log monitoring** -- `tail -F /var/log/pipeline.log` during a deployment or pipeline run to watch for errors as they occur.
-- **Incident investigation** -- `tail -1000 app.log | grep ERROR` to quickly surface recent errors without reading the entire file.
-- **Row count validation** -- `wc -l output.csv` to verify a pipeline produced the expected number of rows.
-- **Large file inspection** -- `less /var/log/syslog` to navigate a multi-GB log file interactively without loading it into memory.
-
-## When not to use file reading tools
-
-- **Structured data processing** -- if you need to filter columns, aggregate, or transform CSV data, use `awk`, `cut`, or a dataframe library instead of `cat | grep`.
-- **Binary files** -- `cat` on a binary file dumps garbage to the terminal and can corrupt the terminal state. Use `xxd`, `hexdump`, or `file` for binary inspection.
-- **Parsing structured output in scripts** -- do not pipe `cat` into `grep` into `awk` for JSON or XML. Use `jq` (JSON) or `xmlstarlet` (XML).
+> [!example] File Reading Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Quick config verification** -- `cat .env` or `head -5 config.yaml` to confirm a setting before running a pipeline.
+> > - **Real-time log monitoring** -- `tail -F /var/log/pipeline.log` during a deployment or pipeline run to watch for errors as they occur.
+> > - **Incident investigation** -- `tail -1000 app.log | grep ERROR` to quickly surface recent errors without reading the entire file.
+> > - **Row count validation** -- `wc -l output.csv` to verify a pipeline produced the expected number of rows.
+> > - **Large file inspection** -- `less /var/log/syslog` to navigate a multi-GB log file interactively without loading it into memory.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Structured data processing** -- if you need to filter columns, aggregate, or transform CSV data, use `awk`, `cut`, or a dataframe library instead of `cat | grep`.
+> > - **Binary files** -- `cat` on a binary file dumps garbage to the terminal and can corrupt the terminal state. Use `xxd`, `hexdump`, or `file` for binary inspection.
+> > - **Parsing structured output in scripts** -- do not pipe `cat` into `grep` into `awk` for JSON or XML. Use `jq` (JSON) or `xmlstarlet` (XML).
 
 ## Warnings
 

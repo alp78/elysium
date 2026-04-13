@@ -20,7 +20,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# GCP Pipeline Health and SLA Monitoring
+# GCP Pipeline Health and SLA
 
 > [!quote]
 > "SRE is what happens when you ask a software engineer to design an operations function."
@@ -31,9 +31,125 @@ status: complete
 >
 > — **Ben Treynor Sloss**, *Site Reliability Engineering* (2016)
 
-Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [DataOps discipline](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), ensuring that pipeline reliability is measured and reported systematically rather than reactively.
+> [!abstract]- Summary
+>
+> This note turns GCP-native observability into a pipeline reliability loop: freshness, correctness, completeness, SLA tracking, heartbeat monitoring, operator runbooks, and self-healing automation are all treated as one operating model for deciding whether data is safe to publish and when humans need to intervene.
+>
+> **Health model**
+> - Defines pipeline health through freshness, correctness, and completeness, then maps common failure modes onto those three questions.
+> - Establishes a policy vocabulary so alerts and dashboards reflect business risk instead of only process exit codes.
+>
+> **Freshness and quality checks**
+> - Covers freshness tables, custom metrics, metadata-driven freshness, and quality checks such as row counts, null rates, schema drift, duplicates, and value-distribution rules.
+> - Treats data quality as an observability concern because a successful run can still publish unusable data.
+>
+> **SLA and heartbeat monitoring**
+> - Explains SLA definition, tracking tables, reporting, dead man's switch patterns, and metric-absence detection for pipelines that silently stop running.
+> - Brings schedule adherence and business timeliness into the same health model as data quality.
+>
+> **Response and automation**
+> - Ends with the alerting runbook, on-call playbook, self-healing patterns, and dashboard guidance used once a health signal breaks.
+> - When to use: the platform needs a full operational model for pipeline reliability, not just isolated metric examples.
 
----
+> [!note]- Glossary
+>
+> **data freshness**
+> - The age of the latest successful data relative to the expected update cadence.
+> - It matters here because stale but technically successful data is one of the most dangerous pipeline failure modes.
+>
+> > [!info] Business-facing timeliness
+> >
+> > Infrastructure can look healthy while the product is already too old to trust.
+>
+> ---
+>
+> **SLA**
+> - The explicit service-level promise about pipeline timeliness or reliability.
+> - It matters here because the note treats pipeline reliability as a measurable commitment rather than an informal expectation.
+>
+> > [!tip] Reliability contract
+> >
+> > An SLA defines what counts as late or unacceptable before an incident begins.
+>
+> ---
+>
+> **heartbeat**
+> - A recurring signal that proves a pipeline or watcher is still running as expected.
+> - It matters here because some failures look like silence rather than errors.
+>
+> > [!info] Signal of life
+> >
+> > Missing expected activity can be just as operationally important as observed failure.
+>
+> ---
+>
+> **metric absence alert**
+> - An alert condition that fires when an expected metric stops arriving.
+> - It matters here because dead-man scenarios often have no error event to count.
+>
+> > [!tip] Silence is detectable
+> >
+> > Absence-based alerts are how monitoring catches things that simply stopped emitting.
+>
+> ---
+>
+> **row count validation**
+> - A quality check that compares observed row counts against expected ranges or prior runs.
+> - It matters here because pipelines can succeed operationally while writing far too little or too much data.
+>
+> > [!info] Cheap high-value quality gate
+> >
+> > Row counts are simple, but they catch many of the most damaging silent failures.
+>
+> ---
+>
+> **null-rate check**
+> - A validation that measures whether the fraction of null values in a field exceeds the allowed threshold.
+> - It matters here because pipelines often degrade gradually through missing data before they fail outright.
+>
+> > [!tip] Quality degradation signal
+> >
+> > Null inflation is often the earliest sign of an upstream contract problem.
+>
+> ---
+>
+> **schema drift**
+> - A change in source or target structure that can break assumptions in downstream transformations or consumers.
+> - It matters here because structural changes frequently produce silent bad data when they are not detected quickly.
+>
+> > [!info] Shape changed underneath you
+> >
+> > Schema drift is dangerous precisely because the pipeline may keep running while semantics break.
+>
+> ---
+>
+> **dead man's switch**
+> - A monitoring pattern that alerts unless a scheduled process reports in within the expected window.
+> - It matters here because pipelines that never start leave no normal failure trace behind.
+>
+> > [!tip] Alert on non-occurrence
+> >
+> > This pattern protects against the invisible failure where nothing happened at all.
+>
+> ---
+>
+> **auto-remediation**
+> - An automated recovery action triggered by a detected failure condition.
+> - It matters here because some pipeline faults can be handled faster and more safely by code than by waking a human immediately.
+>
+> > [!info] Automation after detection
+> >
+> > Self-healing helps most when the failure mode is well understood and the recovery action is safe to repeat.
+>
+> ---
+>
+> **on-call playbook**
+> - The documented response sequence for investigating and mitigating a live pipeline incident.
+> - It matters here because observability is only valuable if responders know what to do with the signal.
+>
+> > [!tip] Detection needs procedure
+> >
+> > Runbooks turn alerts from noise into action.
 
 ## Pipeline Health Monitoring Philosophy
 
@@ -1549,4 +1665,3 @@ Use this checklist when onboarding a new data pipeline to the monitoring stack.
 
 > [!tip] Checklist in practice
 > Run this checklist at pipeline design time, not after the first incident. The patterns that hurt most — missing heartbeat checks, no staleness alerting, no SLA definition — all feel optional until a pipeline silently fails for 48 hours before anyone notices.
-

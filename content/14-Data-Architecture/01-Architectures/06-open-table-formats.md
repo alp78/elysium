@@ -8,19 +8,133 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Open Table Formats and Lakehouse Architecture
+# Open Table Formats
 
 > [!quote]
 > "We didn't have correctness guarantees. We didn't have atomic transactions. The goal of Iceberg is to allow organizations to build true data lakehouses in an open architecture, avoiding vendor lock-in."
 >
 > — **Ryan Blue** (creator of Apache Iceberg)
 
-The data lakehouse combines the low-cost storage of a data lake with the transactional guarantees of a data warehouse. At its core are **open table formats** — metadata layers that sit on top of Parquet files and provide ACID transactions, time travel, schema evolution, and partition management. Major index providers are building their next-generation data platforms on Apache Iceberg. This chapter covers Iceberg, Delta Lake, and how they fit into a financial data architecture.
+> [!abstract]- Summary
+>
+> This note defines open table formats as the metadata layer that turns Parquet files on object storage into transactional analytical tables, then uses Iceberg, Delta Lake, and related lakehouse patterns to show how governance, evolution, maintenance, and deletion workflows actually work in production.
+>
+> **Why table formats exist and how Iceberg works**
+> - Explains why raw Parquet on cloud storage is insufficient for transactional analytics, then walks through Iceberg's metadata tree, snapshot model, time travel, schema evolution, and partition evolution.
+> - Treats metadata as both the correctness layer and the performance layer by tying manifests, statistics, and hidden partitioning to query pruning and safe change management.
+>
+> **Format comparison and platform integration**
+> - Compares Apache Iceberg, Delta Lake, and Hudi across engine support, mutation models, and ecosystem fit rather than only feature lists.
+> - Maps the architecture onto BigQuery and GCP, showing how lakehouse tables interact with catalog, engine, and serving choices in a cloud deployment.
+>
+> **Maintenance, privacy, and architecture patterns**
+> - Covers compaction, cleanup, medallion layering, and GDPR deletion workflows, making table maintenance part of the design rather than an afterthought.
+> - Connects row-level deletes, PII registry practices, and lakehouse zone design to the operational burden of keeping mutable analytics on immutable storage.
+>
+> **Operations and safety**
+> - Warnings: Parquet alone is not a lakehouse, format choice is ecosystem-dependent, and skipped compaction or metadata cleanup degrades both cost and query performance over time.
+> - Recommendations: default to Iceberg for multi-engine environments, design maintenance jobs up front, track PII locations explicitly, and treat deletion semantics as architecture rather than legal paperwork.
 
-> [!info] Why This Matters in Financial Data Engineering
-> Major index providers have adopted Apache Iceberg for their next-generation platforms. Understanding open table formats at the architecture level — not just API calls — is what separates a senior data engineer from a mid-level one.
-
----
+> [!note]- Glossary
+>
+> **Open table format**
+> - A metadata and transaction layer that manages analytical tables stored as open files on object storage.
+> - It matters here because the note explains how this layer supplies the correctness, evolution, and governance behavior missing from raw Parquet files.
+>
+> > [!warning] Files are not the table
+> >
+> > The table state lives in metadata, not in the file listing of a bucket. Reading files directly bypasses the guarantees the format is meant to provide.
+>
+> ---
+>
+> **Apache Iceberg**
+> - An open table format built around snapshots, manifests, field IDs, and strong multi-engine interoperability.
+> - It matters here because the note treats Iceberg as the recommended default for flexible lakehouse deployments.
+>
+> > [!info] Metadata-first design
+> >
+> > Iceberg's strengths come from how carefully it models table state and change, not just from exposing SQL features over Parquet.
+>
+> ---
+>
+> **Delta Lake**
+> - An open table format and transaction model centered on a log-driven table state, strongest within the Databricks ecosystem.
+> - It matters here because it is the main alternative to Iceberg and a common choice where Databricks already defines the surrounding platform.
+>
+> > [!info] Ecosystem fit matters
+> >
+> > Delta Lake can be a perfectly good choice, but its trade-offs are best evaluated alongside catalog and engine constraints, not in isolation.
+>
+> ---
+>
+> **Snapshot isolation**
+> - A read consistency model where queries see one committed table snapshot rather than partial results from a writer in progress.
+> - It matters here because this is the foundation that makes object-storage tables usable for concurrent analytics and pipeline writes.
+>
+> > [!warning] Prevents partial visibility
+> >
+> > Without snapshot isolation, a failed write can leave readers querying a half-updated table state with no reliable boundary between old and new data.
+>
+> ---
+>
+> **Time travel**
+> - The ability to query a prior table snapshot by version or timestamp.
+> - It matters here because audits, debugging, backfills, and historical comparisons depend on earlier table states remaining queryable.
+>
+> > [!info] Operational rollback aid
+> >
+> > Time travel is useful long after the demo. It becomes critical the first time a bad pipeline run needs to be inspected or reversed safely.
+>
+> ---
+>
+> **Schema evolution**
+> - The controlled modification of a table schema over time without corrupting existing data or breaking compatible readers.
+> - It matters here because analytical tables inevitably change, and safe evolution is one of the main reasons to adopt a table format at all.
+>
+> > [!warning] Safe change still needs rules
+> >
+> > Adding columns is easy. Renaming, repurposing, or narrowing fields is where engines and consumers can silently diverge if compatibility is not enforced.
+>
+> ---
+>
+> **Partition evolution**
+> - The ability to change how a table is partitioned over time without rewriting all historical data into a new layout.
+> - It matters here because data volume and query patterns evolve, especially in long-lived analytical tables.
+>
+> > [!info] Operational flexibility
+> >
+> > Partition evolution turns a potentially disruptive migration into a metadata change, which is a major advantage for growing datasets.
+>
+> ---
+>
+> **Hidden partitioning**
+> - A partitioning model where users filter by business columns while the engine resolves the physical partition mapping behind the scenes.
+> - It matters here because it reduces user error and query fragility when the physical layout changes.
+>
+> > [!info] Less leakage of storage layout
+> >
+> > Analysts should not need to memorize partition columns just to ask normal business questions. Hidden partitioning keeps storage concerns below the query surface.
+>
+> ---
+>
+> **Compaction**
+> - The maintenance process that rewrites many small or fragmented data files into fewer better-sized files and refreshes related metadata.
+> - It matters here because mutation-heavy or streaming-heavy tables will otherwise accumulate file and metadata overhead that slows every query.
+>
+> > [!warning] Deferred cost turns into latency
+> >
+> > Skipping compaction does not save work. It stores the work in future reads, future metadata scans, and harder recovery when table performance degrades.
+>
+> ---
+>
+> **Merge-on-Read / Copy-on-Write**
+> - Two mutation strategies where changes are either merged during reads from delta files or applied immediately by rewriting data files.
+> - It matters here because delete and update performance, read latency, and maintenance frequency all depend on which strategy a table uses.
+>
+> > [!warning] Write path versus read path
+> >
+> > Faster writes usually mean more complex reads later, while cleaner reads usually mean heavier rewrites at mutation time. The trade-off is workload-specific.
+>
 
 ### Why Open Table Formats Exist
 
@@ -67,6 +181,16 @@ Open table formats solve this by adding a metadata layer:
 ```
 
 ---
+
+> [!example] Open Table Format Adoption
+>
+> > [!success] Transactional Object Storage
+> >
+> > - Use open table formats when data must stay in open object storage but still needs ACID-like writes, time travel, schema evolution, multi-engine access, or auditable deletion workflows.
+>
+> > [!failure] Metadata Neglect
+> >
+> > - Do not adopt open table formats if a managed warehouse already fits the workload, open-file interoperability is unnecessary, or table maintenance and catalog ownership would be neglected.
 
 ## Apache Iceberg Deep Dive
 

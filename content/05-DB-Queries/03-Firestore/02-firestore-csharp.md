@@ -19,34 +19,136 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
-This note is the C# counterpart to the Firestore Python note, providing functional parity for all CRUD operations, queries, transactions, batches, real-time listeners, aggregations, collection group queries, pagination, and operational monitoring — using the `Google.Cloud.Firestore` C# SDK and the Firestore REST API as a .NET 10 workaround.
+> [!abstract]- Summary
+>
+> This note is the C# parity layer for the Firestore chapter: it mirrors the Python Firestore workflows for reads, writes, listeners, and maintenance, but adds typed POCO mapping with `Google.Cloud.Firestore` plus a REST fallback path for .NET 10, where SDK reads and listeners are currently broken.
+>
+> **Connection, typing, and compatibility**
+> - covers SDK initialization, REST client setup, ADC authentication, `[FirestoreData]` / `[FirestoreProperty]` mapping, and the .NET 10 read/listener/aggregation workaround boundary
+>
+> **Reads, filters, and document navigation**
+> - covers single-document fetches, full collection reads, structured REST queries, filtering and ordering, nested-field and array predicates, subcollections, collection-group queries, and pagination with cursors and offsets
+>
+> **Writes and consistency**
+> - covers `SetAsync`, `UpdateAsync`, deletes, server timestamps, `WriteBatch`, transactions, document-size and throughput limits, and overwrite semantics
+>
+> **Live operations and observability**
+> - covers real-time listeners on supported .NET versions, REST-based aggregation queries, collection health checks, stale-document detection, failed-run analysis, and raw-type inspection in maintenance code
+>
+> **Operations and safety**
+> - Warnings: .NET 10 SDK read incompatibility, local-dev key files, token-expiry handling for REST, asynchronous index builds, per-document read billing, one-array-filter limits, 500-operation batch and transaction ceilings, non-cascading deletes, and listener failures on .NET 10
+> - Recommendations table: 7 defaults covering .NET version choice, reusable REST helpers, typed documents, index deployment, batch writes, error handling, and exporting analytical workloads to BigQuery
+> - Troubleshooting: 8 failure modes covering missing methods on .NET 10, missing indexes, empty REST results, transaction aborts, expired bearer tokens, oversized batches, silent listener issues, and malformed aggregation JSON
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **`Google.Cloud.Firestore` SDK** | Google's official C# client library for Firestore. Provides typed document mapping via `[FirestoreData]` / `[FirestoreProperty]` attributes, async CRUD operations, snapshot listeners, and transaction support. | The primary SDK for all Firestore operations in this note. On .NET 10, read operations fail due to a missing assembly — REST API is used as a workaround. | Assuming the SDK works on all .NET versions — .NET 10 breaks reads (missing `AsyncInterfaces`). Writes via `SetAsync`/`UpdateAsync` still work. |
-| **Firestore REST API** | The HTTP/JSON API for Firestore operations. Endpoints include `runQuery` (structured queries), `runAggregationQuery` (COUNT/SUM/AVG), and document CRUD. | Used throughout this note as a .NET 10 workaround for read operations that the C# SDK cannot perform. | The REST API returns Firestore-typed JSON (e.g., `{"stringValue": "ASML.AS"}` instead of plain `"ASML.AS"`). Field extraction requires parsing the type wrapper. |
-| **`[FirestoreData]` / `[FirestoreProperty]`** | C# attributes that map a POCO class to a Firestore document. `[FirestoreData]` marks the class; `[FirestoreProperty("field_name")]` maps each property to a Firestore field. | Enables strongly-typed document reads and writes — deserialize a Firestore document directly into a C# object instead of working with raw dictionaries. | The class must have a parameterless constructor and all mapped properties must be public with getters and setters. Missing attributes cause silent null values. |
-| **Structured query (REST)** | The JSON request body format for `runQuery` REST calls. Specifies collection, field filters (`where`), ordering (`orderBy`), field selection (`select`), and pagination (`limit`, `offset`, `startAt`). | All filtered queries in this note that use the REST API build structured query JSON. The format differs significantly from SQL or the SDK's fluent API. | The `where` clause uses a nested `compositeFilter` → `filters[]` structure, not a flat predicate. Single-field filters use `fieldFilter` inside the array. |
-| **`WriteBatch`** | The C# SDK class for grouping up to 500 write operations (set, update, delete) that execute atomically. Created via `db.StartBatch()`. | Used for bulk updates — acknowledging alerts, inserting multiple price documents, or updating multiple stocks in one atomic operation. | Exceeding 500 operations — the batch silently queues them but fails on `CommitAsync()` with an `INVALID_ARGUMENT` error. |
-| **`Transaction`** | An atomic read-then-write operation using `db.RunTransactionAsync()`. The callback receives a `Transaction` object for reads (`GetSnapshotAsync`) and writes (`Set`, `Update`). | Used for safe score updates and counter increments where read-modify-write must be atomic. | Performing writes before reads — Firestore transactions require all reads to complete before any writes. Violating this order causes a runtime error. |
-| **ADC (Application Default Credentials)** | Google Cloud's credential resolution chain. In C# Polyglot Notebooks, ADC is initialized via `GoogleCredential.FromFile()` or the `GOOGLE_APPLICATION_CREDENTIALS` env var. | The C# SDK and REST API both use ADC for authentication. The REST API additionally requires an `Authorization: Bearer {token}` header. | Forgetting to refresh the access token for REST calls — tokens expire after 60 minutes. Long-running notebooks need token refresh logic. |
-
-## What this note covers
-
-- **Setup & connection** — SDK initialization, REST API client setup, ADC authentication, .NET 10 workaround
-- **Read operations** — single document get (SDK + REST), full collection list, filtered queries
-- **Filtering & ordering** — equality, range, compound filters via REST structured queries
-- **Nested fields & arrays** — querying into nested maps, `array_contains`, `array_contains_any`
-- **Subcollections** — reading and querying nested price data under stock documents
-- **Write operations** — set (create/overwrite), update (partial), delete, server timestamps
-- **Batch operations & transactions** — atomic multi-document writes, read-then-write transactions
-- **Real-time listeners** — `on_snapshot` for live monitoring (SDK, .NET 8/9 only)
-- **Aggregation queries** — server-side COUNT, SUM, AVG via REST API
-- **Collection group queries** — cross-stock price queries via REST API
-- **Pagination & cursors** — `startAt`, `offset`, `limit` for page traversal
-- **Maintenance & monitoring** — collection health checks, stale document detection, failed run analysis
+> [!note]- Glossary
+>
+> **`Google.Cloud.Firestore` SDK**
+> - Google's official .NET client library for Firestore, supporting async CRUD operations, typed document mapping, transactions, and snapshot listeners.
+> - It matters because the note uses the SDK as the primary C# surface whenever the runtime version supports reliable read behavior.
+>
+> > [!warning] Runtime version matters
+> >
+> > The same SDK code path does not behave identically across .NET versions in this note. On .NET 10, several read-oriented features fail even though writes still succeed.
+>
+> ---
+>
+> **Firestore REST API**
+> - Firestore's HTTP/JSON interface for querying, aggregation, and document operations outside the SDK.
+> - It matters because the note relies on the REST API as the practical fallback for read workloads when the .NET SDK is blocked.
+>
+> > [!warning] The payloads are Firestore-shaped
+> >
+> > REST responses do not look like plain JSON documents. Each field is wrapped in Firestore's typed JSON format, so parsing code has to understand `stringValue`, `doubleValue`, `mapValue`, and related wrappers.
+>
+> ---
+>
+> **`[FirestoreData]` / `[FirestoreProperty]`**
+> - Attributes that map a POCO class and its properties to Firestore document fields.
+> - It matters because typed mapping is one of the main ergonomic advantages of the C# SDK over dictionary-driven code.
+>
+> > [!warning] Mapping failures can look like empty data
+> >
+> > Missing attributes, inaccessible setters, or constructor issues often surface as null or default-valued properties rather than obvious compile errors. The class contract has to be compatible with the serializer.
+>
+> ---
+>
+> **Structured query**
+> - The JSON query shape used by Firestore REST `runQuery`, defining collection scope, filters, ordering, and pagination.
+> - It matters because complex reads in the note often need to be expressed in structured-query JSON rather than in SDK fluent syntax.
+>
+> > [!warning] Predicate trees are nested
+> >
+> > The REST `where` clause is not a flat expression string. Compound logic lives under nested filter objects, which makes manual JSON construction easy to get wrong without helper methods.
+>
+> ---
+>
+> **`WriteBatch`**
+> - The C# SDK type for accumulating up to 500 write operations into a single atomic commit.
+> - It matters because the note uses `WriteBatch` to reduce network round trips and keep related document changes all-or-nothing.
+>
+> > [!warning] Atomic still has a size limit
+> >
+> > A batch is convenient, but it does not scale indefinitely. Once the write count passes 500, the commit fails instead of partially succeeding.
+>
+> ---
+>
+> **Transaction**
+> - A Firestore read-then-write unit of work executed atomically, typically created with `RunTransactionAsync`.
+> - It matters because the note uses transactions for conditional updates and lost-update protection when the current stored value influences the next write.
+>
+> > [!warning] Read order is enforced
+> >
+> > Firestore transactions are not arbitrary scripts. Reads must complete before writes begin, which means the control flow has to be designed around that constraint.
+>
+> ---
+>
+> **Application Default Credentials**
+> - Google's standard credential-resolution flow used by both the .NET SDK and the REST helper code.
+> - It matters because the authentication approach in the note depends on ADC rather than on embedding long-lived secrets in code or notebook cells.
+>
+> > [!warning] REST calls also need tokens
+> >
+> > ADC gets you the underlying credential source, but raw REST requests still need an `Authorization: Bearer ...` header. The helper layer has to request and refresh that token explicitly.
+>
+> ---
+>
+> **Composite index**
+> - A Firestore index spanning multiple fields so compound filters and filter-plus-order queries can execute.
+> - It matters because several queries in the note fail until the matching composite index definition has been deployed.
+>
+> > [!warning] Index planning is part of query design
+> >
+> > In Firestore, a new query pattern often implies new index work. Unlike SQL engines that may limp along with a slower plan, Firestore commonly refuses the query until the index exists.
+>
+> ---
+>
+> **Collection group query**
+> - A Firestore query that searches every subcollection sharing the same name across all parent documents.
+> - It matters because the note uses collection-group reads to analyze price documents across all stocks without flattening them into one collection.
+>
+> > [!info] Cross-parent search stays hierarchical
+> >
+> > Collection-group queries are Firestore's way to search repeated subcollection structures globally while keeping the write model nested under each parent document.
+>
+> ---
+>
+> **Snapshot listener**
+> - A live subscription that pushes document or query changes to client code as they happen.
+> - It matters because real-time update flow is one of Firestore's core strengths, but in this note it is also one of the features affected by the .NET 10 incompatibility.
+>
+> > [!warning] Version support is not uniform
+> >
+> > Listener code that works on .NET 8 or .NET 9 may fail outright on .NET 10 in the current SDK state. Real-time features are therefore part runtime concern and part code concern.
+>
+> ---
+>
+> **Bearer token**
+> - A short-lived OAuth access token attached to REST requests in the `Authorization` header.
+> - It matters because the REST workaround in the note only works if token acquisition and refresh are handled correctly for long-running sessions.
+>
+> > [!warning] Tokens expire quietly
+> >
+> > A notebook that keeps running longer than the token lifetime will eventually start receiving 401 responses unless the helper refreshes credentials. Authentication success at startup is not enough.
 
 > [!danger] .NET 10 Breaks Firestore SDK Reads
 >
@@ -55,9 +157,6 @@ This note is the C# counterpart to the Firestore Python note, providing function
 > [!success] Safe Pattern
 >
 > Stay on .NET 8 or .NET 9 for production Firestore workloads until the SDK ships a .NET 10-compatible release. For .NET 10 notebooks or exploratory code, use the Firestore REST API (`runQuery` / `runAggregationQuery`) as shown throughout this page. Writes via `SetAsync` / `UpdateAsync` are unaffected and can be used normally.
-
-Comprehensive reference for querying, writing, and managing Firestore collections
-using the `Google.Cloud.Firestore` C# SDK and REST API.
 
 | Collection | Description | Key Features |
 |---|---|---|
@@ -146,7 +245,6 @@ Console.WriteLine("Warnings suppressed");
 Warnings suppressed
 ```
 
-
 ### C# | Firestore SDK + REST | client initialization
 
 This cell:
@@ -218,7 +316,6 @@ Installed Packages: Google.Cloud.Firestore, 4.2.0, Microsoft.Bcl.AsyncInterfaces
 Connected to Firestore (SDK + REST).
 ```
 
-
 ### C# | Firestore SDK | connect to a named database — `FirestoreDbBuilder`
 
 The setup above creates both an SDK client and a REST client for the `(default)` database. When targeting a **named database** (e.g. `main`), use `FirestoreDbBuilder` with an explicit `DatabaseId`. This approach is SDK-only and does not require a REST client.
@@ -283,7 +380,6 @@ Console.WriteLine("RestQuery() helper loaded.");
 RestQuery() helper loaded.
 ```
 
-
 ### C# | Firestore REST API | field extraction helpers
 
 Firestore REST API wraps every field value in a type envelope:
@@ -331,16 +427,17 @@ Console.WriteLine("Field extraction helpers loaded: GetStr, GetDbl, GetBool, Get
 Field extraction helpers loaded: GetStr, GetDbl, GetBool, GetInt
 ```
 
-
 ### C# | Firestore Admin REST API | index utility — `EnsureIndex()`
 
 Firestore requires **explicit indexes** for:
+
 - **Compound queries**: filtering on two fields (e.g., `country == "Germany"` AND `price < 200`)
 - **Collection group queries**: querying across all subcollections with the same name
 
 Single-field queries on a single collection work out of the box (auto-indexed).
 
 This utility:
+
 1. Calls the Firestore Admin REST API to create a composite index
 2. Polls until the index state is `READY`
 3. For single-field collection group indexes, creates a **field exemption** via PATCH
@@ -562,7 +659,6 @@ Console.WriteLine("EnsureIndex() utility loaded.");
 EnsureIndex() utility loaded.
 ```
 
-
 ### C# | Firestore REST API | verify connection — list collections
 
 Run this after setup to confirm the connection works and data is populated.
@@ -598,7 +694,6 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
   watchlists               3 documents
   config                   2 documents
 ```
-
 
 ## Read Operations
 
@@ -664,7 +759,6 @@ Document: ASML.AS
   Scores:     composite=0.17610432350282, rank=19
   Tags:       [technology, netherlands, euro_stoxx_50]
 ```
-
 
 ### C# | Firestore SDK + REST | list documents (top 10)
 
@@ -782,7 +876,6 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
   MC.PA: LVMH — 494.40
   SAP.DE: SAP SE — 153.82
 ```
-
 
 ## Filtering & Ordering
 
@@ -1094,7 +1187,6 @@ foreach (var fdoc in await RestQuery(compoundQuery))
   AI.PA        AIR LIQUIDE          price=168.02
 ```
 
-
 ### C# | Firestore SDK + REST | array contains
 
 Both the SDK and REST API can filter on array membership. The SDK uses `WhereArrayContains()`; the REST API uses the `ARRAY_CONTAINS` operator.
@@ -1356,7 +1448,6 @@ foreach (var r in inResults)
   DSY.PA       Technology      — 18.37
 ```
 
-
 ### C# | Firestore SDK + REST | ordering and limiting
 
 Both the SDK and REST API support ordering by nested fields using dot notation. This example orders stocks by `scores.composite` descending and takes the top 5.
@@ -1437,7 +1528,6 @@ foreach (var fdoc in await RestQuery(topQuery))
   # 4 TTE.PA       score=0.3913
   # 5 ABI.BR       score=0.3852
 ```
-
 
 ## Nested Fields & Arrays
 
@@ -1539,7 +1629,6 @@ foreach (var fdoc in await RestQuery(momentumQuery))
   SU.PA        momentum=0.5633
 ```
 
-
 ### C# | Firestore REST API | read nested maps from documents
 
 #### C# | REST API | unwrap mapValue envelope to read nested map fields
@@ -1605,7 +1694,6 @@ foreach (var fdoc in await RestQuery(alertMetaQuery))
   alert_004: type=PRICE_DROP      source=cloud_function  run=run_042
   alert_005: type=MOMENTUM_FLIP   source=manual          run=run_024
 ```
-
 
 ## Subcollections
 
@@ -1804,7 +1892,6 @@ foreach (var item in subResults.RootElement.EnumerateArray())
   2026-03-11: close=1198.80
 ```
 
-
 ## Write Operations
 
 Covers document creation and overwrite with `SetAsync`, field-level atomic updates with `UpdateAsync`, and permanent deletion with `DeleteAsync`.
@@ -1874,7 +1961,6 @@ Updated: added MC.PA, incremented count
 Deleted test_cs
 ```
 
-
 ### C# | Firestore SDK | update — ArrayUnion, Increment, ServerTimestamp
 
 #### C# | Firestore SDK | atomic array and counter updates
@@ -1924,7 +2010,6 @@ Modified: Timestamp: 2026-03-22T18:39:01.125Z
 Deleted test_update_cs
 ```
 
-
 ### C# | Firestore SDK | delete a document
 
 #### C# | Firestore SDK | delete and verify document removal
@@ -1972,7 +2057,6 @@ Created: test_delete_cs
 Deleted: test_delete_cs
 Exists after delete: False
 ```
-
 
 ## Batch Operations & Transactions
 
@@ -2026,7 +2110,6 @@ Batch committed: 3 alerts
 Cleaned up
 ```
 
-
 ### C# | Firestore SDK | transaction — acknowledge an alert
 
 #### C# | Firestore SDK | read-modify-write with optimistic concurrency
@@ -2079,7 +2162,6 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
   [UPDATED] alert_001: acknowledged=true
   [RESET] alert_001.acknowledged = false
 ```
-
 
 ## Real-Time Listeners
 
@@ -2191,7 +2273,6 @@ foreach (var country in new[] { "Germany", "France", "Netherlands", "Italy", "Sp
   Italy          : 5 stocks
   Spain          : 4 stocks
 ```
-
 
 ### C# | Firestore REST API | SUM and AVG — server-side
 
@@ -2359,7 +2440,6 @@ foreach (var item in cgResults.RootElement.EnumerateArray())
   RMS.PA       2026-03-11  close=   1920.50
 ```
 
-
 ### C# | Firestore SDK + REST | collection group — filter by date
 
 Both the SDK and REST API can combine collection group queries with equality filters. This example dynamically finds the latest available date from ASML's prices, then queries all `prices` subcollections for that date.
@@ -2481,7 +2561,6 @@ foreach (var fdoc in dateDocs)
   SAF.PA       close=    315.40  volume=     160'065
 ```
 
-
 ## Pagination & Cursors
 
 Firestore does not support offset-based pagination. Use cursor-based pagination: advance the cursor to the last document of each page with `StartAfter()` (SDK) or follow the `nextPageToken` from the REST response.
@@ -2594,7 +2673,6 @@ for (int page = 1; page <= 2; page++)
   BAS.DE       BASF SE
 ```
 
-
 ## Maintenance & Monitoring
 
 **`alerts` collection — field reference**
@@ -2687,7 +2765,6 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
   config                   2 documents
 ```
 
-
 ### C# | Firestore SDK + REST | list subcollections
 
 Both the SDK and REST API can list subcollections under a document. The SDK uses `ListCollectionsAsync()` to discover them; the REST version queries the known subcollection directly.
@@ -2754,7 +2831,6 @@ if (subCollJson.RootElement.TryGetProperty("documents", out var subDocs))
   prices: 1+ documents (showing 1)
     Sample: date=2026-02-20, close=1255.60
 ```
-
 
 ### C# | Firestore SDK + REST | find stale documents
 
@@ -2920,7 +2996,6 @@ foreach (var fdoc in await RestQuery(failedQuery))
   run_006: status=FAILED
 ```
 
-
 ### C# | Firestore SDK + REST | unacknowledged critical alerts
 
 Both the SDK and REST API support compound equality filters. This example returns alerts where `severity == "HIGH"` AND `acknowledged == false` — alerts needing immediate attention. Requires a composite index.
@@ -3013,7 +3088,6 @@ foreach (var fdoc in await RestQuery(alertQuery))
   alert_020: DHL.DE — DHL.DE triggered rank change alert
 ```
 
-
 ### C# | Firestore SDK + REST | read application config
 
 Both the SDK and REST API can read singleton config documents. Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
@@ -3101,7 +3175,6 @@ if (configJson.RootElement.TryGetProperty("fields", out var configFields))
       }
 ```
 
-
 *Read the display singleton config document via the REST API.*
 
 ```csharp
@@ -3128,23 +3201,23 @@ if (displayJson.RootElement.TryGetProperty("fields", out var displayFields))
   rows_per_page: 25
 ```
 
-## When to Use Firestore with C#
-
-Firestore paired with C# fits workloads that benefit from strong typing, async integration with ASP.NET, and automatic ADC authentication on Cloud Run or GKE. The SDK's `[FirestoreData]` attributes give compile-time safety that Python's dictionary-based API cannot match.
-
-- **ASP.NET / Blazor backends** — Firestore's async C# SDK integrates naturally with ASP.NET dependency injection and async controller patterns for low-latency document reads.
-- **Typed document mapping** — `[FirestoreData]` / `[FirestoreProperty]` attributes provide compile-time type safety that Python's dictionary-based API lacks. Ideal for teams with strong C# conventions.
-- **Cloud Run / GKE services** — C# microservices on Cloud Run get automatic ADC via the metadata server. No credentials to manage.
-- **Real-time sync (on .NET 8/9)** — `on_snapshot` listeners for Blazor Server dashboards that push Firestore changes to the UI in real time.
-
-## When Not to Use Firestore with C#
-
-The scenarios below call for a different engine, a different .NET version, or the REST fallback pattern demonstrated throughout this note.
-
-- **.NET 10 production reads** — the SDK fails on document reads due to a missing `AsyncInterfaces` assembly. Stay on .NET 8/9 for Firestore read workloads until the SDK is updated.
-- **Analytical queries** — no JOINs, no window functions, no GROUP BY beyond COUNT/SUM/AVG. Export to BigQuery for analytics.
-- **Bulk data processing** — Firestore's 500-document transaction limit and per-document pricing make it unsuitable for processing thousands of rows. Use SQL Server or BigQuery.
-- **Complex filtering without index planning** — every unique filter/order combination requires a composite index. In C# this means pre-deploying `firestore.indexes.json` or handling `RpcException` for missing indexes.
+> [!example] C# Firestore Fit
+>
+> > [!success] Typed Operational Fit
+> >
+> > - Firestore paired with C# fits workloads that benefit from strong typing, async integration with ASP.NET, and automatic ADC authentication on Cloud Run or GKE. The SDK's `[FirestoreData]` attributes give compile-time safety that Python's dictionary-based API cannot match.
+> > - **ASP.NET / Blazor backends** — Firestore's async C# SDK integrates naturally with ASP.NET dependency injection and async controller patterns for low-latency document reads.
+> > - **Typed document mapping** — `[FirestoreData]` / `[FirestoreProperty]` attributes provide compile-time type safety that Python's dictionary-based API lacks. Ideal for teams with strong C# conventions.
+> > - **Cloud Run / GKE services** — C# microservices on Cloud Run get automatic ADC via the metadata server. No credentials to manage.
+> > - **Real-time sync (on .NET 8/9)** — `on_snapshot` listeners for Blazor Server dashboards that push Firestore changes to the UI in real time.
+>
+> > [!failure] Runtime or Workload Mismatch
+> >
+> > - The scenarios below call for a different engine, a different .NET version, or the REST fallback pattern demonstrated throughout this note.
+> > - **.NET 10 production reads** — the SDK fails on document reads due to a missing `AsyncInterfaces` assembly. Stay on .NET 8/9 for Firestore read workloads until the SDK is updated.
+> > - **Analytical queries** — no JOINs, no window functions, no GROUP BY beyond COUNT/SUM/AVG. Export to BigQuery for analytics.
+> > - **Bulk data processing** — Firestore's 500-document transaction limit and per-document pricing make it unsuitable for processing thousands of rows. Use SQL Server or BigQuery.
+> > - **Complex filtering without index planning** — every unique filter/order combination requires a composite index. In C# this means pre-deploying `firestore.indexes.json` or handling `RpcException` for missing indexes.
 
 ## Warnings
 

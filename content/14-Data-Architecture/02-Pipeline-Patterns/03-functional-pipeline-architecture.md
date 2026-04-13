@@ -26,21 +26,136 @@ status: complete
 >
 > — **Nathan Marz** (creator of Apache Storm)
 
-This is a composite architecture combining five named principles from different engineering disciplines. No single established name exists for the combination — each principle has deep literature independently. Their power comes from using them together.
-
-Two reference implementations exist:
-- **Python:** [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) — Pydantic + Polars + tenacity + pyodbc
-- **C#:** [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — FluentValidation + LINQ + Polly + Dapper
-
-> [!info] Theory here, implementation there
+> [!abstract]- Summary
 >
-> This page explains WHAT each principle is and WHY it matters. The implementation
-> details (code, validation rules, SQL DDL) live in the paired notebooks. Every section
-> below links to the exact heading where the principle is built.
+> This note defines a functional pipeline architecture that combines a functional core, strict boundary validation, runtime quality gates, lineage capture, immutable value objects, and context propagation so data pipelines stay testable, explainable, and safe under failure.
+>
+> **Architecture and core principles**
+> - Explains the full pipeline shape, then separates pure transformation logic from the imperative shell that handles I/O, retries, and persistence.
+> - Treats functional structure as a practical engineering boundary for testability, reproducibility, and simpler debugging rather than as a purely stylistic preference.
+>
+> **Validation, gates, and trust signals**
+> - Covers contract-first validation, runtime quality gates, quarantine handling, and the two dimensions of data trustworthiness that determine whether data may advance or must stop.
+> - Connects typed contracts and quality decisions to both Python and C# reference implementations so the principles stay operational rather than abstract.
+>
+> **Lineage, context, and consumer contracts**
+> - Explains provenance tracking, immutable value objects, semantic context layers, and data contracts as the metadata surface that makes outputs self-describing and auditable.
+> - Shows how context accumulation and contract publication turn internal pipeline structure into reliable downstream interfaces.
+>
+> **Operations and safety**
+> - Warnings: I/O inside transforms, missing quarantine paths, or confusing tests with runtime quality gates undermines the entire architectural separation.
+> - Recommendations: keep transforms pure, validate at every stage boundary, preserve rejected rows with context, and attach lineage plus semantic metadata before publishing consumer-facing contracts.
 
-This architecture sits on TOP of [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (which defines the data layering) and [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (which defines safe re-runs). This page defines how the pipeline CODE is structured.
+> [!note]- Glossary
+>
+> **Functional core**
+> - The portion of a system made of pure deterministic transformations that depend only on their inputs and produce no side effects.
+> - It matters here because the note treats pure transforms as the foundation for testable and reproducible pipeline logic.
+>
+> > [!info] Debug by replay
+> >
+> > A functional core is valuable because bugs can be reproduced with the same input dataframe rather than by reconstructing network, database, and credential state.
+>
+> ---
+>
+> **Imperative shell**
+> - The I/O-handling layer that performs side effects such as fetching, writing, logging, retries, and orchestration around the pure core.
+> - It matters here because the architecture depends on keeping infrastructure concerns outside the transformation logic.
+>
+> > [!warning] Boundary discipline required
+> >
+> > Once database calls or file writes leak into transforms, the shell and core collapse together and the testability advantage disappears quickly.
+>
+> ---
+>
+> **Contract-first validation**
+> - A design approach where every stage boundary is guarded by explicit typed models and validation rules before data is allowed to cross.
+> - It matters here because bad data is meant to fail early at the boundary instead of poisoning deeper layers silently.
+>
+> > [!info] Boundary, not afterthought
+> >
+> > Validation is strongest when it is treated as part of the interface contract for a stage, not as an optional cleanup pass after loading.
+>
+> ---
+>
+> **Quality gate**
+> - A runtime decision point that checks whether data quality signals are good enough for the next stage to proceed.
+> - It matters here because the note distinguishes quality enforcement in production from unit tests in development.
+>
+> > [!warning] Not the same as tests
+> >
+> > Tests validate code before release. Quality gates validate live data during execution, often using thresholds and operational context the test suite does not have.
+>
+> ---
+>
+> **Quarantine pattern**
+> - A failure-handling pattern where invalid rows are diverted into a separate holding area with error context instead of being dropped or silently passed through.
+> - It matters here because the architecture needs a safe path for bad data that preserves evidence and supports later remediation.
+>
+> > [!info] Preserve the bad rows
+> >
+> > Quarantine is useful precisely because rejected data is still operationally important. Teams need to inspect it, classify it, and sometimes fix and replay it.
+>
+> ---
+>
+> **Data provenance**
+> - The lineage information that shows where data came from and which steps transformed it on the way to its current form.
+> - It matters here because the architecture aims to make every published output explainable under investigation.
+>
+> > [!warning] Hidden lineage blocks trust
+> >
+> > If a consumer cannot trace a number back through the pipeline, they will eventually stop trusting the number even if it is often correct.
+>
+> ---
+>
+> **Immutable value object**
+> - A data structure whose contents do not change after creation, so later operations produce new values instead of mutating shared state.
+> - It matters here because immutability reduces hidden coupling and makes transformation steps easier to reason about.
+>
+> > [!info] State changes become explicit
+> >
+> > Immutability forces each stage transition to be represented as a new output, which improves traceability and simplifies debugging.
+>
+> ---
+>
+> **Context propagation**
+> - The practice of carrying metadata such as warnings, stage state, and semantic meaning along with the data as it moves through the pipeline.
+> - It matters here because the note treats context as part of the trust model, not as an optional annotation added later.
+>
+> > [!info] Meaning travels with the data
+> >
+> > Context propagation prevents a pipeline from producing technically valid rows whose caveats or assumptions have been lost by the time they reach consumers.
+>
+> ---
+>
+> **Data contract**
+> - A consumer-facing agreement that defines the schema, semantics, and quality expectations of a published output.
+> - It matters here because the architecture ends with explicit contracts rather than informal assumptions about what the pipeline emits.
+>
+> > [!warning] Publish the guarantees you can keep
+> >
+> > A contract that overpromises freshness, completeness, or meaning becomes another failure path. Contracts must be grounded in what the pipeline actually enforces.
+>
+> ---
+>
+> **Data trustworthiness**
+> - The practical confidence that data is both structurally valid and contextually meaningful enough to be used safely.
+> - It matters here because the note treats trust as something engineered through contracts, lineage, and runtime checks rather than assumed from successful execution.
+>
+> > [!info] More than passing validation
+> >
+> > Data can satisfy a schema and still be untrustworthy if its provenance, freshness, or semantic caveats are unclear.
+>
 
----
+> [!example] Functional Pipeline Fit
+>
+> > [!success] Testable Batch Core
+> >
+> > - Use this architecture for batch or micro-batch pipelines that need strong testability, typed boundaries, recoverable failure paths, and explicit trust decisions before publication.
+>
+> > [!failure] Intentional Procedural Coupling
+> >
+> > - Do not force this pattern onto throwaway scripts, highly coupled procedural jobs, or systems where transformation logic and infrastructure concerns are intentionally inseparable.
 
 ## The Complete Architecture
 

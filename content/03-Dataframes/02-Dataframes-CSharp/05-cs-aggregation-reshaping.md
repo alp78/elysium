@@ -9,33 +9,154 @@ updated: 2026-04-07
 status: complete
 ---
 
-# 05 — Aggregation & Reshaping
+# Aggregation and Reshaping - C#
 
 > [!quote]
 > "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
 >
 > — **Aaron Levenstein**
 
-This note covers grouping, aggregation, window functions, joins, concatenation, and reshaping in C# using Polars.NET and Microsoft.Data.Analysis, with real EuroStoxx 50 financial data.
+> [!abstract]- Summary
+>
+> Covers the core dataframe operations that change row grain or table shape in C#: grouping, aggregation, window calculations, joins, concatenation, and reshape patterns across Polars.NET and Microsoft.Data.Analysis. This is the point where the library split becomes operationally obvious: Polars.NET keeps grouping, windowing, and reshaping inside a compact expression-and-join API, while MDA exposes a typed eager dataframe model that fits CLR loops and explicit in-process staging.
+>
+> **Setup**
+> - Configure the notebook runtime, load the shared C# dataframe packages, and prepare the EuroStoxx datasets used to compare grouped analytics and reshape operations side by side
+>
+> **Grouping & Aggregation**
+> - Group on one or multiple keys, compute named aggregates, and compare concise Polars `GroupBy(...).Agg(...)` pipelines with explicit accumulator-style MDA implementations
+> - Keep output-order expectations explicit, especially when grouped results need post-aggregation sorting for stable interpretation
+>
+> **Window Functions**
+> - Apply per-row grouped analytics such as mean-over-group, rank, rolling metrics, and cumulative logic through `.Over(...)` in Polars and explicit two-pass or loop-driven patterns in MDA
+> - Treat window calculations as row-preserving analytical features rather than simple group collapses
+>
+> **Joins**
+> - Build inner, left, anti, semi, and cross joins to enrich fact data with dimensions or membership logic, and understand which join forms are first-class in Polars versus emulated patterns in MDA
+> - Keep row-multiplication risk visible for many-to-many joins and cross joins
+>
+> **Concatenation**
+> - Stack frames vertically or align them horizontally when combining compatible outputs from separate preparation steps
+>
+> **Reshaping**
+> - Pivot and unpivot data between long and wide layouts for analysis, reporting, or export, with clear acknowledgment that MDA reshape support is more limited and often requires manual construction
+>
+> **Operations and safety**
+> - Warnings: the current note-level warning block still emphasizes broader Polars-versus-MDA transform differences such as immutability, conditional-expression API differences, and cross-library type mismatches
+> - Recommendations: 4 practices covering expression-first analytical transforms, MDA for ML.NET-style boundaries, schema validation after transforms, and Parquet for type-safe intermediates
+> - Troubleshooting: 3 failure modes covering missed reassignment in Polars, cast failures, and MDA typed-column mismatches
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **GroupBy** | Splits a DataFrame by key columns and applies aggregate functions. Polars.NET: `df.GroupBy("col").Agg(...)`. MDA: `df.GroupBy("col")`. | Per-group statistics (mean, sum, count). | Polars.NET `GroupBy` does not guarantee output order — chain `.Sort()` after aggregation. |
-| **Join** | Combines two DataFrames by key. Polars.NET: `df.Join(other, on, JoinType)`. MDA: `df.Merge(...)`. | Enriches fact data with dimension attributes. | Many-to-many joins multiply rows silently. |
-| **Window function** | Per-row computation over a group. Polars.NET: `.Over("group")`. | Rank, running total, moving average within groups. | MDA has no native window functions. |
-| **Pivot / Unpivot** | Reshape between wide and long formats. | Transforms data orientation for analysis or export. | MDA has very limited pivot support. |
-
-## What this note covers
-
-- **Group-by and aggregation** — single/multiple grouping, named aggregation
-- **Window functions** — rolling mean, rank, cumulative via `.Over()`
-- **Joins** — inner, left, anti, semi, cross
-- **Concatenation** — vertical, horizontal
-- **Reshaping** — pivot, unpivot
-
-Aggregation and reshaping are where the difference between the two C# dataframe libraries becomes operationally obvious. Polars.NET keeps grouping, windowing, and reshaping inside a compact expression and join API; Microsoft.Data.Analysis exposes a typed, eager `DataFrame` model that integrates naturally with CLR code, explicit loops, and ML.NET-style in-process data preparation.
+> [!note]- Glossary
+>
+> **`GroupBy`**
+> - A split-apply-combine operation that partitions rows by key columns and computes one or more aggregates per group.
+> - It matters because grouped summaries are the backbone of most analytical reporting and the first place where Polars and MDA diverge sharply in ergonomics.
+>
+> > [!warning] Grouped output order is not guaranteed
+> >
+> > Especially in Polars, grouped results should not be assumed to come back in a stable business order unless you sort them explicitly afterward.
+>
+> ---
+>
+> **Aggregation**
+> - A reduction that collapses multiple rows into summary values such as count, mean, sum, min, or max.
+> - It matters because nearly every reshape or join decision later in the note assumes a clear understanding of when row-level data has already been reduced.
+>
+> > [!info] Grain changes here
+> >
+> > Once an aggregate runs, you are no longer looking at the original row grain. That change in analytical level should be treated as a schema event, not just a math step.
+>
+> ---
+>
+> **Window function**
+> - A per-row calculation that uses group or neighborhood context without collapsing the dataframe to one row per group.
+> - It matters because rank, rolling features, cumulative metrics, and group-wise broadcasts all depend on this pattern.
+>
+> > [!warning] Not the same as `GroupBy`
+> >
+> > A window function preserves row count. If the result shrinks to one row per group, you performed an aggregation, not a window calculation.
+>
+> ---
+>
+> **`.Over()`**
+> - The Polars mechanism that applies an expression over a grouping context while keeping one output value per original row.
+> - It matters because it is the cleanest expression of window-style analytics in the note and a major contrast with MDA’s manual broadcast patterns.
+>
+> > [!info] Broadcast semantics are explicit
+> >
+> > `.Over()` makes group-wise metrics reusable as row-level features without forcing a second join step back onto the original data.
+>
+> ---
+>
+> **Join**
+> - A key-based combination of two dataframes that aligns rows from one side with matching rows from another.
+> - It matters because dimensional enrichment and table-shape expansion are central to analytical pipelines, and join choice directly affects row count and null behavior.
+>
+> > [!warning] Many-to-many joins multiply silently
+> >
+> > If both sides contain repeated keys, a join can explode row count without throwing an error. That is a data-model issue, not just a syntax issue.
+>
+> ---
+>
+> **Anti join**
+> - A join that returns only rows from the left side with no match on the right.
+> - It matters because anti joins are the cleanest way to find missing reference data, exclusions, or orphaned facts.
+>
+> > [!info] Best thought of as a mismatch detector
+> >
+> > Anti joins are often more readable than a left join followed by a null filter when the real goal is simply "show me what did not match."
+>
+> ---
+>
+> **Semi join**
+> - A join that keeps rows from the left side only when a match exists on the right, without bringing right-side columns into the result.
+> - It matters because presence checks and membership filters are a common analytical pattern distinct from full table enrichment.
+>
+> > [!info] Existence filter, not enrichment
+> >
+> > A semi join answers "does a match exist?" rather than "what are the matching attributes?"
+>
+> ---
+>
+> **Cross join**
+> - A Cartesian combination where every row on one side is paired with every row on the other.
+> - It matters because the note includes it as a valid join form, but also as one of the fastest ways to create explosive output sizes by accident.
+>
+> > [!warning] Tiny inputs only
+> >
+> > Cross joins scale multiplicatively. They are safe for deliberately small scaffolding sets, not for ordinary fact tables.
+>
+> ---
+>
+> **Concatenation**
+> - Combining dataframes either by stacking rows vertically or aligning columns horizontally.
+> - It matters because aggregation workflows often produce separate partial outputs that must be recombined before reporting or export.
+>
+> > [!warning] Shape compatibility still matters
+> >
+> > Vertical concatenation assumes aligned schemas; horizontal concatenation assumes compatible row alignment or a clearly defined padding strategy.
+>
+> ---
+>
+> **Pivot**
+> - A reshape that turns categorical values into new columns, producing a wider table.
+> - It matters because reporting-oriented summaries often need wide layouts even when the analytical source data is naturally long-form.
+>
+> > [!warning] Aggregation is usually implicit
+> >
+> > If multiple rows land in the same pivot cell, some aggregation rule must decide what survives. That rule is part of the business definition of the output.
+>
+> ---
+>
+> **Unpivot**
+> - A reshape that turns multiple value columns into key-value rows, producing a longer table.
+> - It matters because many analytical and visualization tools work better on long-form data than on manually widened tables.
+>
+> > [!info] Wide data is often just presentation
+> >
+> > Unpivoting is frequently the step that restores a report-shaped dataset back into a format suitable for grouping, plotting, or modeling.
+>
+> ---
 
 > [!info] Current API and execution-model check | 2026-04
 >
@@ -1290,7 +1411,6 @@ Melted shape: (20, 4)
 >
 > Source: Eberhard Wolff | Data Management at Scale Modern Data Architecture with Data Mesh and Data Fabric - 2nd Edition.pdf
 
-
 ---
 
 ## Warnings
@@ -1318,4 +1438,3 @@ Melted shape: (20, 4)
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

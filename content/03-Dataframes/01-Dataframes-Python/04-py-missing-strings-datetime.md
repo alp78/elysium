@@ -9,40 +9,204 @@ updated: 2026-04-04
 status: complete
 ---
 
-# 04 — Missing Data, Strings & DateTime
+# Missing Data, Strings & DateTime - Python
 
 > [!quote]
 > "Life is dirty. So is your data. Get used to it."
 >
 > — **Oz du Soleil**
 
-Three foundational topics for every data pipeline: detecting and filling missing values, cleaning and transforming string columns, and parsing, extracting, and computing with dates and times. Each operation is shown side by side in Pandas (index-based, eager) and Polars (expression-based, lazy-capable) so you can compare idioms and behavior directly.
+> [!abstract]- Summary
+>
+> Covers the three cleanup layers that shape nearly every tabular pipeline — missing-value handling, vectorized string processing, and datetime parsing plus time-series transforms — comparing Pandas' eager index-centric behavior with Polars' expression-based, lazy-capable model on real market, signal, calendar, and performance datasets.
+>
+> **Missing data**
+> - Compare `null`, `NaN`, and `pd.NA`, then detect missingness with `.isna()`, `.is_null()`, and per-column null counts before deciding to drop, fill, or interpolate
+> - Use `dropna()` / `drop_nulls()`, constant fills, forward/backward fill, and interpolation while preserving sort order and dtype intent
+> - Contrast Pandas' silent integer-to-`float64` promotion with Polars' dtype-preserving null model
+>
+> **String operations**
+> - Clean and normalize text with case transforms, `contains` / `starts_with` / `ends_with`, extract/split patterns, replace operations, length/slicing, concatenation, stripping, and padding
+> - Compare regex defaults and `.str` accessor behavior across Pandas and Polars so text filters and replacements do exactly what the pipeline expects
+>
+> **DateTime operations**
+> - Work across `pd.Timestamp`, `pl.Date`, and `pl.Datetime`, including parsing, `.dt` extraction, timezone handling, and calendar-aware range generation with `date_range`
+> - Build time-series features with rolling windows, `shift()` / lag, resampling via `.resample()` or `group_by_dynamic()`, and cumulative operations such as `cum_sum()` and running extrema
+>
+> **Operations and safety**
+> - Warnings: Pandas integer columns upcast when `NaN` appears, forward-fill on unsorted data is wrong, Pandas and Polars differ on regex defaults, naive and aware datetimes cannot be mixed safely, Pandas `resample()` needs a `DatetimeIndex`, and rolling windows emit null/NaN warm-up rows
+> - Recommendations: 7 practices covering null normalization at ingestion, nullable Pandas dtypes, UTC storage, pre-sort before time operations, proper null detection APIs, vectorized `.str` / `.dt` methods, and profiling null patterns before fill strategy selection
+> - Troubleshooting: 9 failure modes covering float-promotion surprises, ineffective fills, regex mismatches, ambiguous date parsing, DST conversion issues, missing `DatetimeIndex` for resampling, empty rolling outputs, shift semantics, and grouped cumulative resets
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **null** | An absent or missing value. Polars uses Arrow-native null (bitmask); Pandas uses `NaN` (float) or `pd.NA`. | Represents genuinely missing data that must be detected, filled, or dropped before downstream operations. | `NaN` is a float value — inserting it into an integer column silently promotes the column to `float64` in Pandas. Polars nulls preserve the dtype. |
-| **NaN** | "Not a Number" — IEEE 754 float sentinel. In Pandas, doubles as the default missing-value marker. | Signals undefined arithmetic or missing data in Pandas. | `NaN != NaN` is `True` — equality checks against NaN always fail. Polars distinguishes `NaN` (a float value) from `null` (absence). |
-| **pd.NA** | Pandas experimental missing-value sentinel that works with nullable dtypes (`Int64`, `StringDtype`, `BooleanDtype`). | Provides type-preserving missingness for Pandas nullable extension types. | Not interchangeable with `NaN` — mixing `pd.NA` and `NaN` in the same column causes unpredictable behavior. |
-| **fill_null / fillna** | Methods that replace missing values with a specified constant, strategy (forward, backward, mean, median), or expression. | Prepares data for operations that do not tolerate nulls (joins, aggregations, ML models). | Forward-fill on unsorted data propagates values in the wrong direction. Always sort by the relevant key (e.g., date) before forward-filling. |
-| **drop_nulls / dropna** | Methods that remove rows containing null/NaN values. | Eliminates incomplete records when missing data cannot be reliably filled. | Dropping nulls on the wrong subset of columns removes valid rows. Always pass `subset=` to target specific columns. |
-| **interpolate** | Method that estimates missing values from surrounding data points (linear, polynomial, etc.). | Fills gaps in time-series data where forward/backward fill is too coarse. | Interpolation requires sorted data and assumes the gap pattern is regular. Irregular gaps produce misleading fills. |
-| **.str accessor** | Pandas/Polars namespace that exposes string methods on a Series (`.str.lower()`, `.str.contains()`, `.str.replace()`). | Applies vectorized string operations without Python loops. | Pandas `.str` works on `object` or `StringDtype` columns only. Polars `.str` requires a `String`/`Utf8` column — `.cast(pl.String)` first if needed. |
-| **regex** | Regular expression — a pattern language for matching, extracting, and replacing text. | Powers advanced string extraction (e.g., parsing tickers from mixed-format strings). | Pandas `.str.contains()` uses regex by default. Polars `.str.contains()` uses literal matching by default — pass `literal=False` for regex. |
-| **.dt accessor** | Pandas/Polars namespace that exposes datetime methods on a Series (`.dt.year`, `.dt.month`, `.dt.weekday()`). | Extracts date/time components for grouping, filtering, and feature engineering. | Pandas `.dt.weekday` is a property (no parentheses). Polars `.dt.weekday()` is a method (requires parentheses). |
-| **Timestamp / Date / Datetime** | Pandas: `pd.Timestamp` (nanosecond precision). Polars: `pl.Date` (calendar date) and `pl.Datetime` (date + time with configurable precision). | Represents points in time for time-series operations. | Pandas `Timestamp` has a max date of ~2262 due to nanosecond storage. Polars `Datetime` supports microsecond precision, extending the range. |
-| **timezone** | A region-specific offset from UTC (e.g., `Europe/Berlin`, `US/Eastern`). | Converts wall-clock times to a common reference for cross-region comparison. | Naive datetimes (no timezone) cannot be compared with aware datetimes. Always localize or convert before arithmetic. |
-| **resample / group_by_dynamic** | Pandas: `.resample("ME")` groups a DatetimeIndex into regular intervals. Polars: `.group_by_dynamic("date", every="1mo")` does the same on any date column. | Aggregates time-series data into fixed intervals (daily, weekly, monthly). | Pandas `resample` requires a DatetimeIndex — use `.set_index()` first. Polars `group_by_dynamic` requires the data to be sorted by the time column. |
-| **rolling window** | A sliding window of fixed size that moves across rows, computing an aggregate (mean, sum, std) at each position. | Smooths noisy time-series data and computes moving averages. | Pandas `.rolling(n)` requires `n >= 1` and returns NaN for the first `n-1` rows. Polars `.rolling_mean(n)` returns null for incomplete windows. |
-| **shift / lag** | Moves values up or down by *n* positions, filling the gap with null/NaN. | Creates lag features (e.g., yesterday's close) for time-series analysis. | A positive `n` shifts values down (introduces lag). A negative `n` shifts values up (introduces lead). Easy to confuse direction. |
-| **cumulative operations** | Running aggregates that grow with each row: `cum_sum`, `cum_max`, `cum_min`, `cum_count`. | Computes running totals, running highs/lows, and monotonic counters. | Cumulative operations do not reset at group boundaries by default. Use `.over("group")` in Polars or `groupby().cumsum()` in Pandas for grouped cumulatives. |
-
-## What this note covers
-
-- **Missing data** — null representations, detection (`isna`, `is_null`, `null_count`), dropping, filling (constant, forward, backward, interpolation), and strategy comparison
-- **String operations** — case transforms, contains/starts_with/ends_with, extract/split, replace, length/slicing, concatenation, strip/pad, regex extraction
-- **DateTime operations** — type system, parsing, `.dt` accessor, `date_range`, rolling windows, shifting/lagging, resampling, and cumulative operations
+> [!note]- Glossary
+>
+> **Null**
+> - An absent value in a column, represented natively in Polars and through several sentinel forms in Pandas depending on dtype.
+> - It matters because missing-value semantics determine how filtering, arithmetic, fills, joins, and exports behave throughout this note.
+>
+> > [!warning] One concept, multiple representations
+> >
+> > Pandas can surface missingness as `NaN`, `None`, or `pd.NA`, while Polars uses a single null model. Mixing those behaviors mentally is a common source of bugs.
+>
+> ---
+>
+> **NaN**
+> - IEEE floating-point "not a number", used by Pandas as the default missing-value sentinel for many numeric columns.
+> - It matters because arithmetic, equality, and dtype behavior change once `NaN` enters a pipeline.
+>
+> > [!warning] `NaN` does not equal itself
+> >
+> > Comparisons such as `col == np.nan` never match missing values. Use `.isna()` or `.is_null()` style APIs instead of equality tests.
+>
+> ---
+>
+> **`pd.NA`**
+> - Pandas' nullable missing-value sentinel for extension dtypes such as `Int64`, `string`, and nullable booleans.
+> - It matters because it preserves logical column types more cleanly than forcing everything through float-based `NaN`.
+>
+> > [!warning] Not the same as `NaN`
+> >
+> > `pd.NA` participates differently in comparisons and dtype inference than `NaN`. Treating them as interchangeable leads to inconsistent column behavior.
+>
+> ---
+>
+> **`fill_null()` / `fillna()`**
+> - APIs that replace missing values with constants, directional fills, or strategy-based substitutes.
+> - They matter because many downstream operations in the note assume complete values or at least explicit missing-data policy.
+>
+> > [!warning] Sort before directional fill
+> >
+> > Forward-fill and backward-fill are only meaningful if rows are already ordered by the sequence that defines "previous" and "next", typically a date column.
+>
+> ---
+>
+> **`drop_nulls()` / `dropna()`**
+> - APIs that remove rows containing missing values, optionally constrained to a specific subset of columns.
+> - They matter when nulls cannot be imputed safely and incomplete rows would corrupt later calculations.
+>
+> > [!warning] Subset controls data loss
+> >
+> > Dropping rows on every column is often too aggressive for wide tables. Limit the subset to the fields that are truly required.
+>
+> ---
+>
+> **Interpolate**
+> - A method for estimating missing numeric values from surrounding observations instead of copying a fixed default or prior value.
+> - It matters in the note because time-series gaps sometimes need smoother fills than forward-fill or backward-fill.
+>
+> > [!warning] Assumes an ordered signal
+> >
+> > Interpolation on unsorted or irregularly spaced data can manufacture plausible-looking but misleading values. Validate ordering and business meaning first.
+>
+> ---
+>
+> **`.str` accessor**
+> - The vectorized string-method namespace used for case transforms, substring checks, regex extraction, replacements, and formatting operations.
+> - It matters because the note's text-cleaning section relies on `.str` methods instead of slow Python loops.
+>
+> > [!warning] String dtype still matters
+> >
+> > Pandas and Polars both expect string-like columns for `.str` operations. Cast or normalize the dtype first when raw data arrives as mixed objects.
+>
+> ---
+>
+> **Regex**
+> - A pattern language for matching, extracting, and replacing structured fragments inside text.
+> - It matters because many of the note's string transforms depend on parsing symbols, codes, or embedded tokens rather than exact literal matches.
+>
+> > [!warning] Default matching differs by library
+> >
+> > Pandas string contains operations are regex-oriented by default, while Polars defaults differ in important places. Make literal-versus-regex intent explicit.
+>
+> ---
+>
+> **`.dt` accessor**
+> - The datetime-method namespace used to extract components such as year, month, weekday, and other calendar/time attributes from temporal columns.
+> - It matters because almost every datetime feature in the note starts by turning a parsed timestamp into derived calendar fields.
+>
+> > [!warning] Same idea, slightly different API
+> >
+> > Pandas and Polars expose similar datetime operations, but some members are properties in Pandas and methods in Polars. Copy-pasting temporal code across libraries can break subtly.
+>
+> ---
+>
+> **Timestamp / `pl.Date` / `pl.Datetime`**
+> - The concrete temporal scalar and column types used by Pandas and Polars to represent dates and timestamps.
+> - They matter because precision, range limits, and downstream operation support depend on the chosen temporal dtype.
+>
+> > [!info] Precision changes the usable range
+> >
+> > Pandas timestamps default to nanosecond precision, while Polars commonly uses microseconds unless instructed otherwise. That tradeoff affects both range and compatibility.
+>
+> ---
+>
+> **Timezone**
+> - A regional clock-offset system such as `Europe/Berlin` or `US/Eastern` that maps local wall-clock times to UTC.
+> - It matters because comparing, joining, or resampling times across regions requires a consistent temporal reference.
+>
+> > [!warning] Normalize before comparing
+> >
+> > Naive and timezone-aware datetimes cannot be mixed safely. Localize or convert before any arithmetic, join, or filter that assumes comparable timestamps.
+>
+> ---
+>
+> **`date_range()`**
+> - A helper that generates a contiguous sequence of dates or datetimes between two endpoints at a defined frequency.
+> - It matters because regular calendar ranges are used in the note for time-axis construction, alignment, and gap-aware examples.
+>
+> > [!info] Range semantics follow frequency
+> >
+> > The generated values depend on the specified interval and inclusivity behavior. A monthly range is not just a daily range sampled every 30 days.
+>
+> ---
+>
+> **`resample()` / `group_by_dynamic()`**
+> - Time-bucketing APIs for aggregating observations into regular intervals such as days, weeks, or months.
+> - They matter because the note compares the Pandas and Polars approaches to monthly OHLCV-style aggregation and regular time-bucket reporting.
+>
+> > [!warning] Preconditions differ
+> >
+> > Pandas expects a `DatetimeIndex`, while Polars expects a sorted temporal column. If the prerequisite is missing, the aggregation is wrong or fails outright.
+>
+> ---
+>
+> **Rolling window**
+> - A fixed-size moving window over sequential rows used to compute trailing metrics such as moving averages, rolling volatility, or running counts.
+> - It matters because rolling features are one of the most common time-series transforms built on cleaned datetime data.
+>
+> > [!warning] Warm-up rows are incomplete
+> >
+> > The first `n-1` rows of an `n`-point rolling calculation do not have a full window. Expect null/NaN results there unless you choose an explicit minimum-period policy.
+>
+> ---
+>
+> **Shift / lag**
+> - An operation that offsets values by one or more rows, creating prior-period or next-period comparisons.
+> - It matters because lagged values are the basis for return calculations, event sequencing, and many temporal features.
+>
+> > [!warning] Direction is easy to invert
+> >
+> > Positive and negative shifts move values in opposite directions, and the resulting missing values appear at opposite ends of the column. Verify lag versus lead intent explicitly.
+>
+> ---
+>
+> **Cumulative operations**
+> - Running aggregates such as cumulative sum, cumulative max, and cumulative min that incorporate all prior rows up to the current position.
+> - They matter because the note uses them for running totals and running extrema across ordered time-series data.
+>
+> > [!warning] Group boundaries are not automatic
+> >
+> > A cumulative operation over a whole table does not reset per entity unless you group or window it explicitly. Cross-entity leakage is a common silent error.
+>
+> ---
+>
+> **Naive datetime / aware datetime**
+> - A naive datetime has no timezone attached; an aware datetime carries explicit timezone information.
+> - It matters because timezone conversion and cross-source comparisons fail or mislead when the two forms are mixed.
+>
+> > [!warning] Localize versus convert
+> >
+> > Localizing assigns a timezone to a naive timestamp; converting changes an already-aware timestamp into a different timezone. Using the wrong one shifts clock meaning.
 
 ---
 
@@ -74,7 +238,7 @@ scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}")
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ```python
 # Additional datasets
@@ -135,7 +299,7 @@ pd_s = pd.Series([1.0, None, 3.0, np.nan, 5.0])
 print(f"Pandas: {pd_s.tolist()}, dtype: {pd_s.dtype}")
 ```
 
-    Pandas: [1.0, nan, 3.0, nan, 5.0], dtype: float64
+Pandas: [1.0, nan, 3.0, nan, 5.0], dtype: float64
 
 #### Polars | Null representation as native null
 
@@ -148,7 +312,7 @@ pl_s = pl.Series([1.0, None, 3.0, None, 5.0])
 print(f"Polars: {pl_s.to_list()}, dtype: {pl_s.dtype}")
 ```
 
-    Polars: [1.0, None, 3.0, None, 5.0], dtype: Float64
+Polars: [1.0, None, 3.0, None, 5.0], dtype: Float64
 
 ## Detection
 
@@ -167,57 +331,57 @@ print("=== Pandas nulls ===")
 display(signals_pd.isna().sum().sort_values(ascending=False).to_frame("null_count").head(10))
 ```
 
-    === Pandas nulls ===
+=== Pandas nulls ===
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>null_count</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>ev_to_ebitda</th>
-      <td>71</td>
-    </tr>
-    <tr>
-      <th>dividend_yield</th>
-      <td>35</td>
-    </tr>
-    <tr>
-      <th>recommendation_mean</th>
-      <td>14</td>
-    </tr>
-    <tr>
-      <th>beta</th>
-      <td>8</td>
-    </tr>
-    <tr>
-      <th>symbol</th>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>id</th>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>_index</th>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>price_to_book</th>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>forward_pe</th>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>current_price</th>
-      <td>0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>null_count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>ev_to_ebitda</th>
+<td>71</td>
+</tr>
+<tr>
+<th>dividend_yield</th>
+<td>35</td>
+</tr>
+<tr>
+<th>recommendation_mean</th>
+<td>14</td>
+</tr>
+<tr>
+<th>beta</th>
+<td>8</td>
+</tr>
+<tr>
+<th>symbol</th>
+<td>0</td>
+</tr>
+<tr>
+<th>id</th>
+<td>0</td>
+</tr>
+<tr>
+<th>_index</th>
+<td>0</td>
+</tr>
+<tr>
+<th>price_to_book</th>
+<td>0</td>
+</tr>
+<tr>
+<th>forward_pe</th>
+<td>0</td>
+</tr>
+<tr>
+<th>current_price</th>
+<td>0</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Count nulls per column with null_count()
@@ -231,7 +395,7 @@ print("=== Polars nulls ===")
 display(signals_pl.null_count())
 ```
 
-    === Polars nulls ===
+=== Polars nulls ===
 
 <div><!-- shape: (1, 19) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>signal_date</th><th>current_price</th><th>forward_pe</th><th>price_to_book</th><th>ev_to_ebitda</th><th>dividend_yield</th><th>market_cap</th><th>beta</th><th>fifty_two_week_change</th><th>sandp_52_week_change</th><th>fifty_day_average</th><th>two_hundred_day_average</th><th>dist_from_52_week_high</th><th>target_median_price</th><th>recommendation_mean</th><th>upside_potential</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>71</td><td>35</td><td>0</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td></tr></tbody></table></div>
 
@@ -267,7 +431,7 @@ cleaned_pd = signals_pd.dropna(subset=["forward_pe", "price_to_book"])
 print(f"After: {len(cleaned_pd)}")
 ```
 
-    Before: 466
+Before: 466
     After: 466
 
 #### Polars | Drop rows with drop_nulls()
@@ -282,7 +446,7 @@ cleaned_pl = signals_pl.drop_nulls(subset=["forward_pe", "price_to_book"])
 print(f"After: {cleaned_pl.height}")
 ```
 
-    Before: 466
+Before: 466
     After: 466
 
 ## Filling Nulls
@@ -302,40 +466,40 @@ display(signals_pd[["symbol", "forward_pe"]].fillna({"forward_pe": 0.0}).head(5)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>forward_pe</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>32.141113</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>MC.PA</td>
-      <td>18.854280</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>RMS.PA</td>
-      <td>36.034904</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>OR.PA</td>
-      <td>25.504032</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>19.631992</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>forward_pe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>32.141113</td>
+</tr>
+<tr>
+<th>1</th>
+<td>MC.PA</td>
+<td>18.854280</td>
+</tr>
+<tr>
+<th>2</th>
+<td>RMS.PA</td>
+<td>36.034904</td>
+</tr>
+<tr>
+<th>3</th>
+<td>OR.PA</td>
+<td>25.504032</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>19.631992</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Fill nulls with a literal using fill_null()
@@ -370,76 +534,76 @@ display(asml_pd.ffill())
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>dividends</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>0.0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>dividends</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>0.0</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Forward and backward fill with fill_null(strategy=)
@@ -475,49 +639,49 @@ print(f"Mean PE: {mean_pe:.2f}")
 display(signals_pd[["symbol", "forward_pe"]].assign(pe_filled=signals_pd["forward_pe"].fillna(mean_pe)).head(5))
 ```
 
-    Mean PE: 27.55
+Mean PE: 27.55
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>forward_pe</th>
-      <th>pe_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>32.141113</td>
-      <td>32.141113</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>MC.PA</td>
-      <td>18.854280</td>
-      <td>18.854280</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>RMS.PA</td>
-      <td>36.034904</td>
-      <td>36.034904</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>OR.PA</td>
-      <td>25.504032</td>
-      <td>25.504032</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>19.631992</td>
-      <td>19.631992</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>forward_pe</th>
+<th>pe_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>32.141113</td>
+<td>32.141113</td>
+</tr>
+<tr>
+<th>1</th>
+<td>MC.PA</td>
+<td>18.854280</td>
+<td>18.854280</td>
+</tr>
+<tr>
+<th>2</th>
+<td>RMS.PA</td>
+<td>36.034904</td>
+<td>36.034904</td>
+</tr>
+<tr>
+<th>3</th>
+<td>OR.PA</td>
+<td>25.504032</td>
+<td>25.504032</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>19.631992</td>
+<td>19.631992</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Fill with mean or median using expression-based fill_null()
@@ -581,7 +745,7 @@ print(f"fill_nan(0):  {s.fill_nan(0).to_list()}")
 print(f"Both:         {s.fill_nan(0).fill_null(0).to_list()}")
 ```
 
-    Original: [1.0, nan, None, 4.0]
+Original: [1.0, nan, None, 4.0]
     fill_null(0): [1.0, nan, 0.0, 4.0]
     fill_nan(0):  [1.0, 0.0, None, 4.0]
     Both:         [1.0, 0.0, 0.0, 4.0]
@@ -618,76 +782,76 @@ display(asml_pd2[["date", "close"]].assign(interpolated=asml_pd2["close"].interp
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>interpolated</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11945</th>
-      <td>2026-02-13</td>
-      <td>1190.4</td>
-      <td>1190.40</td>
-    </tr>
-    <tr>
-      <th>11946</th>
-      <td>2026-02-16</td>
-      <td>1195.0</td>
-      <td>1195.00</td>
-    </tr>
-    <tr>
-      <th>11947</th>
-      <td>2026-02-17</td>
-      <td>1199.2</td>
-      <td>1199.20</td>
-    </tr>
-    <tr>
-      <th>11948</th>
-      <td>2026-02-18</td>
-      <td>1244.8</td>
-      <td>1244.80</td>
-    </tr>
-    <tr>
-      <th>11949</th>
-      <td>2026-02-19</td>
-      <td>1238.2</td>
-      <td>1238.20</td>
-    </tr>
-    <tr>
-      <th>11950</th>
-      <td>2026-02-20</td>
-      <td>NaN</td>
-      <td>1250.75</td>
-    </tr>
-    <tr>
-      <th>11951</th>
-      <td>2026-02-23</td>
-      <td>NaN</td>
-      <td>1263.30</td>
-    </tr>
-    <tr>
-      <th>11952</th>
-      <td>2026-02-24</td>
-      <td>NaN</td>
-      <td>1275.85</td>
-    </tr>
-    <tr>
-      <th>11953</th>
-      <td>2026-02-25</td>
-      <td>1288.4</td>
-      <td>1288.40</td>
-    </tr>
-    <tr>
-      <th>11954</th>
-      <td>2026-02-26</td>
-      <td>1232.4</td>
-      <td>1232.40</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>interpolated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11945</th>
+<td>2026-02-13</td>
+<td>1190.4</td>
+<td>1190.40</td>
+</tr>
+<tr>
+<th>11946</th>
+<td>2026-02-16</td>
+<td>1195.0</td>
+<td>1195.00</td>
+</tr>
+<tr>
+<th>11947</th>
+<td>2026-02-17</td>
+<td>1199.2</td>
+<td>1199.20</td>
+</tr>
+<tr>
+<th>11948</th>
+<td>2026-02-18</td>
+<td>1244.8</td>
+<td>1244.80</td>
+</tr>
+<tr>
+<th>11949</th>
+<td>2026-02-19</td>
+<td>1238.2</td>
+<td>1238.20</td>
+</tr>
+<tr>
+<th>11950</th>
+<td>2026-02-20</td>
+<td>NaN</td>
+<td>1250.75</td>
+</tr>
+<tr>
+<th>11951</th>
+<td>2026-02-23</td>
+<td>NaN</td>
+<td>1263.30</td>
+</tr>
+<tr>
+<th>11952</th>
+<td>2026-02-24</td>
+<td>NaN</td>
+<td>1275.85</td>
+</tr>
+<tr>
+<th>11953</th>
+<td>2026-02-25</td>
+<td>1288.4</td>
+<td>1288.40</td>
+</tr>
+<tr>
+<th>11954</th>
+<td>2026-02-26</td>
+<td>1232.4</td>
+<td>1232.40</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Interpolate with interpolate()
@@ -721,7 +885,6 @@ display(asml_null.select("date", "close", pl.col("close").interpolate().alias("i
 | Coalesce | combine_first() | pl.coalesce() |
 
 ---
----
 
 ```python
 dim_pd = pd.read_parquet(DATA / "index_dim.parquet")
@@ -748,52 +911,52 @@ display(dim_pd[["short_name", "sector"]].assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>short_name</th>
-      <th>sector</th>
-      <th>name_upper</th>
-      <th>sector_lower</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML HOLDING</td>
-      <td>Technology</td>
-      <td>ASML HOLDING</td>
-      <td>technology</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>LVMH</td>
-      <td>Consumer Cyclical</td>
-      <td>LVMH</td>
-      <td>consumer cyclical</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>HERMES INTL</td>
-      <td>Consumer Cyclical</td>
-      <td>HERMES INTL</td>
-      <td>consumer cyclical</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>L'OREAL</td>
-      <td>Consumer Defensive</td>
-      <td>L'OREAL</td>
-      <td>consumer defensive</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP SE</td>
-      <td>Technology</td>
-      <td>SAP SE</td>
-      <td>technology</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>short_name</th>
+<th>sector</th>
+<th>name_upper</th>
+<th>sector_lower</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+<td>ASML HOLDING</td>
+<td>technology</td>
+</tr>
+<tr>
+<th>1</th>
+<td>LVMH</td>
+<td>Consumer Cyclical</td>
+<td>LVMH</td>
+<td>consumer cyclical</td>
+</tr>
+<tr>
+<th>2</th>
+<td>HERMES INTL</td>
+<td>Consumer Cyclical</td>
+<td>HERMES INTL</td>
+<td>consumer cyclical</td>
+</tr>
+<tr>
+<th>3</th>
+<td>L'OREAL</td>
+<td>Consumer Defensive</td>
+<td>L'OREAL</td>
+<td>consumer defensive</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP SE</td>
+<td>Technology</td>
+<td>SAP SE</td>
+<td>technology</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Convert case with str.to_uppercase() and str.to_lowercase()
@@ -829,172 +992,172 @@ display(dim_pd[dim_pd["sector"].str.contains("Tech", na=False)][["symbol", "shor
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>short_name</th>
-      <th>sector</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>ASML HOLDING</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>SAP SE</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>IFX.DE</td>
-      <td>INFINEON TECHNOLOGIES AG</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>ADYEN.AS</td>
-      <td>ADYEN</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>51</th>
-      <td>6758.T</td>
-      <td>SONY GROUP CORPORATION</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>54</th>
-      <td>6861.T</td>
-      <td>KEYENCE CORP</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>72</th>
-      <td>8035.T</td>
-      <td>TOKYO ELECTRON</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>86</th>
-      <td>6981.T</td>
-      <td>MURATA MANUFACTURING CO</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>96</th>
-      <td>6702.T</td>
-      <td>FUJITSU</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>98</th>
-      <td>1810.HK</td>
-      <td>XIAOMI-W</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>99</th>
-      <td>NVDA</td>
-      <td>NVIDIA Corporation</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>100</th>
-      <td>AAPL</td>
-      <td>Apple Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>102</th>
-      <td>MSFT</td>
-      <td>Microsoft Corporation</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>105</th>
-      <td>AVGO</td>
-      <td>Broadcom Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>114</th>
-      <td>MU</td>
-      <td>Micron Technology, Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>117</th>
-      <td>ORCL</td>
-      <td>Oracle Corporation</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>127</th>
-      <td>PLTR</td>
-      <td>Palantir Technologies Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>128</th>
-      <td>AMD</td>
-      <td>Advanced Micro Devices, Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>129</th>
-      <td>CSCO</td>
-      <td>Cisco Systems, Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>131</th>
-      <td>AMAT</td>
-      <td>Applied Materials, Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>132</th>
-      <td>LRCX</td>
-      <td>Lam Research Corporation</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>143</th>
-      <td>INTC</td>
-      <td>Intel Corporation</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>144</th>
-      <td>IBM</td>
-      <td>International Business Machines</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>147</th>
-      <td>DSY.PA</td>
-      <td>DASSAULT SYSTEMES</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>148</th>
-      <td>CRM</td>
-      <td>Salesforce, Inc.</td>
-      <td>Technology</td>
-    </tr>
-    <tr>
-      <th>149</th>
-      <td>UBER</td>
-      <td>Uber Technologies, Inc.</td>
-      <td>Technology</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>SAP SE</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>31</th>
+<td>IFX.DE</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>46</th>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>51</th>
+<td>6758.T</td>
+<td>SONY GROUP CORPORATION</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>54</th>
+<td>6861.T</td>
+<td>KEYENCE CORP</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>72</th>
+<td>8035.T</td>
+<td>TOKYO ELECTRON</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>86</th>
+<td>6981.T</td>
+<td>MURATA MANUFACTURING CO</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>96</th>
+<td>6702.T</td>
+<td>FUJITSU</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>98</th>
+<td>1810.HK</td>
+<td>XIAOMI-W</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>99</th>
+<td>NVDA</td>
+<td>NVIDIA Corporation</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>100</th>
+<td>AAPL</td>
+<td>Apple Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>102</th>
+<td>MSFT</td>
+<td>Microsoft Corporation</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>105</th>
+<td>AVGO</td>
+<td>Broadcom Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>114</th>
+<td>MU</td>
+<td>Micron Technology, Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>117</th>
+<td>ORCL</td>
+<td>Oracle Corporation</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>127</th>
+<td>PLTR</td>
+<td>Palantir Technologies Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>128</th>
+<td>AMD</td>
+<td>Advanced Micro Devices, Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>129</th>
+<td>CSCO</td>
+<td>Cisco Systems, Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>131</th>
+<td>AMAT</td>
+<td>Applied Materials, Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>132</th>
+<td>LRCX</td>
+<td>Lam Research Corporation</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>143</th>
+<td>INTC</td>
+<td>Intel Corporation</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>144</th>
+<td>IBM</td>
+<td>International Business Machines</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>147</th>
+<td>DSY.PA</td>
+<td>DASSAULT SYSTEMES</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>148</th>
+<td>CRM</td>
+<td>Salesforce, Inc.</td>
+<td>Technology</td>
+</tr>
+<tr>
+<th>149</th>
+<td>UBER</td>
+<td>Uber Technologies, Inc.</td>
+<td>Technology</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Filter with str.contains()
@@ -1043,76 +1206,76 @@ display(dim_pd[["symbol"]].assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>exchange_code</th>
-      <th>ticker_only</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>AS</td>
-      <td>ASML</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>MC.PA</td>
-      <td>PA</td>
-      <td>MC</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>RMS.PA</td>
-      <td>PA</td>
-      <td>RMS</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>OR.PA</td>
-      <td>PA</td>
-      <td>OR</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>DE</td>
-      <td>SAP</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>SIE.DE</td>
-      <td>DE</td>
-      <td>SIE</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ITX.MC</td>
-      <td>MC</td>
-      <td>ITX</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>DTE.DE</td>
-      <td>DE</td>
-      <td>DTE</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>SAN.MC</td>
-      <td>MC</td>
-      <td>SAN</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>SU.PA</td>
-      <td>PA</td>
-      <td>SU</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>exchange_code</th>
+<th>ticker_only</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>AS</td>
+<td>ASML</td>
+</tr>
+<tr>
+<th>1</th>
+<td>MC.PA</td>
+<td>PA</td>
+<td>MC</td>
+</tr>
+<tr>
+<th>2</th>
+<td>RMS.PA</td>
+<td>PA</td>
+<td>RMS</td>
+</tr>
+<tr>
+<th>3</th>
+<td>OR.PA</td>
+<td>PA</td>
+<td>OR</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>DE</td>
+<td>SAP</td>
+</tr>
+<tr>
+<th>5</th>
+<td>SIE.DE</td>
+<td>DE</td>
+<td>SIE</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ITX.MC</td>
+<td>MC</td>
+<td>ITX</td>
+</tr>
+<tr>
+<th>7</th>
+<td>DTE.DE</td>
+<td>DE</td>
+<td>DTE</td>
+</tr>
+<tr>
+<th>8</th>
+<td>SAN.MC</td>
+<td>MC</td>
+<td>SAN</td>
+</tr>
+<tr>
+<th>9</th>
+<td>SU.PA</td>
+<td>PA</td>
+<td>SU</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Extract and split with str.extract() and str.split()
@@ -1191,46 +1354,46 @@ display(dim_pd[["short_name", "country"]].assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>short_name</th>
-      <th>country</th>
-      <th>display_name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML HOLDING</td>
-      <td>Netherlands</td>
-      <td>ASML HOLDING (Netherlands)</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>LVMH</td>
-      <td>France</td>
-      <td>LVMH (France)</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>HERMES INTL</td>
-      <td>France</td>
-      <td>HERMES INTL (France)</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>L'OREAL</td>
-      <td>France</td>
-      <td>L'OREAL (France)</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP SE</td>
-      <td>Germany</td>
-      <td>SAP SE (Germany)</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>short_name</th>
+<th>country</th>
+<th>display_name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML HOLDING</td>
+<td>Netherlands</td>
+<td>ASML HOLDING (Netherlands)</td>
+</tr>
+<tr>
+<th>1</th>
+<td>LVMH</td>
+<td>France</td>
+<td>LVMH (France)</td>
+</tr>
+<tr>
+<th>2</th>
+<td>HERMES INTL</td>
+<td>France</td>
+<td>HERMES INTL (France)</td>
+</tr>
+<tr>
+<th>3</th>
+<td>L'OREAL</td>
+<td>France</td>
+<td>L'OREAL (France)</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP SE</td>
+<td>Germany</td>
+<td>SAP SE (Germany)</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Concatenate with pl.concat_str()
@@ -1342,7 +1505,7 @@ print("Pandas Timestamp:", pd.Timestamp("2026-03-15"))
 print("Pandas Timedelta:", pd.Timedelta(days=5))
 ```
 
-    Pandas date dtype: object
+Pandas date dtype: object
     Pandas Timestamp: 2026-03-15 00:00:00
     Pandas Timedelta: 5 days 00:00:00
 
@@ -1358,7 +1521,7 @@ print("Polars Date:", pl.Series(["2026-03-15"]).str.to_date())
 print("Polars Duration:", pl.duration(days=5))
 ```
 
-    Polars date dtype: Date
+Polars date dtype: Date
     Polars Date: shape: (1,)
     Series: '' [date]
     [
@@ -1383,7 +1546,7 @@ date_strs = pd.Series(["2026-03-15", "15/03/2026", "March 15, 2026"])
 print(pd.to_datetime(date_strs, format="mixed"))
 ```
 
-    0   2026-03-15
+0   2026-03-15
     1   2026-03-15
     2   2026-03-15
     dtype: datetime64[ns]
@@ -1428,52 +1591,52 @@ display(asml_pd.assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>year</th>
-      <th>month</th>
-      <th>weekday</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>10634</th>
-      <td>2021-01-04</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Monday</td>
-    </tr>
-    <tr>
-      <th>10635</th>
-      <td>2021-01-05</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Tuesday</td>
-    </tr>
-    <tr>
-      <th>10636</th>
-      <td>2021-01-06</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Wednesday</td>
-    </tr>
-    <tr>
-      <th>10637</th>
-      <td>2021-01-07</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Thursday</td>
-    </tr>
-    <tr>
-      <th>10638</th>
-      <td>2021-01-08</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Friday</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>year</th>
+<th>month</th>
+<th>weekday</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>10634</th>
+<td>2021-01-04</td>
+<td>2021</td>
+<td>1</td>
+<td>Monday</td>
+</tr>
+<tr>
+<th>10635</th>
+<td>2021-01-05</td>
+<td>2021</td>
+<td>1</td>
+<td>Tuesday</td>
+</tr>
+<tr>
+<th>10636</th>
+<td>2021-01-06</td>
+<td>2021</td>
+<td>1</td>
+<td>Wednesday</td>
+</tr>
+<tr>
+<th>10637</th>
+<td>2021-01-07</td>
+<td>2021</td>
+<td>1</td>
+<td>Thursday</td>
+</tr>
+<tr>
+<th>10638</th>
+<td>2021-01-08</td>
+<td>2021</td>
+<td>1</td>
+<td>Friday</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Extract components with .dt.year(), .dt.month(), .dt.weekday()
@@ -1511,7 +1674,7 @@ dr_pd = pd.date_range("2026-01-01", "2026-01-10", freq="D")
 print(f"Pandas: {dr_pd.tolist()[:3]}...")
 ```
 
-    Pandas: [Timestamp('2026-01-01 00:00:00'), Timestamp('2026-01-02 00:00:00'), Timestamp('2026-01-03 00:00:00')]...
+Pandas: [Timestamp('2026-01-01 00:00:00'), Timestamp('2026-01-02 00:00:00'), Timestamp('2026-01-03 00:00:00')]...
 
 #### Polars | Generate with pl.date_range()
 
@@ -1551,87 +1714,87 @@ display(asml_pd_sorted.assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>sma_7</th>
-      <th>sma_30</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1251.514286</td>
-      <td>1201.400000</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1247.542857</td>
-      <td>1204.400000</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1234.142857</td>
-      <td>1205.126667</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1227.085714</td>
-      <td>1206.626667</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1216.028571</td>
-      <td>1206.946667</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1195.828571</td>
-      <td>1205.906667</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1183.714286</td>
-      <td>1204.893333</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1178.942857</td>
-      <td>1204.306667</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1177.285714</td>
-      <td>1204.453333</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1181.428571</td>
-      <td>1204.413333</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>sma_7</th>
+<th>sma_30</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1251.514286</td>
+<td>1201.400000</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1247.542857</td>
+<td>1204.400000</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1234.142857</td>
+<td>1205.126667</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1227.085714</td>
+<td>1206.626667</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1216.028571</td>
+<td>1206.946667</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1195.828571</td>
+<td>1205.906667</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1183.714286</td>
+<td>1204.893333</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1178.942857</td>
+<td>1204.306667</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1177.285714</td>
+<td>1204.453333</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1181.428571</td>
+<td>1204.413333</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Rolling mean with rolling_mean()
@@ -1670,87 +1833,87 @@ display(asml_pd_sorted.assign(
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>prev_close</th>
-      <th>daily_return</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1232.4</td>
-      <td>0.08</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1233.4</td>
-      <td>-1.86</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1210.4</td>
-      <td>-4.02</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1161.8</td>
-      <td>3.27</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1199.8</td>
-      <td>-1.15</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1186.0</td>
-      <td>-3.29</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1147.0</td>
-      <td>0.05</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1147.6</td>
-      <td>4.57</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1200.0</td>
-      <td>-0.10</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1198.8</td>
-      <td>-0.67</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>prev_close</th>
+<th>daily_return</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1232.4</td>
+<td>0.08</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1233.4</td>
+<td>-1.86</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1210.4</td>
+<td>-4.02</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1161.8</td>
+<td>3.27</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1199.8</td>
+<td>-1.15</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1186.0</td>
+<td>-3.29</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1147.0</td>
+<td>0.05</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1147.6</td>
+<td>4.57</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1200.0</td>
+<td>-0.10</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1198.8</td>
+<td>-0.67</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Shift with shift()
@@ -1796,74 +1959,74 @@ display(asml_monthly)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>volume</th>
-    </tr>
-    <tr>
-      <th>date</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>2025-10-31</th>
-      <td>818.0</td>
-      <td>938.6</td>
-      <td>812.1</td>
-      <td>918.1</td>
-      <td>16383868</td>
-    </tr>
-    <tr>
-      <th>2025-11-30</th>
-      <td>917.0</td>
-      <td>930.9</td>
-      <td>822.2</td>
-      <td>903.4</td>
-      <td>12064891</td>
-    </tr>
-    <tr>
-      <th>2025-12-31</th>
-      <td>910.0</td>
-      <td>977.1</td>
-      <td>866.4</td>
-      <td>921.4</td>
-      <td>10360738</td>
-    </tr>
-    <tr>
-      <th>2026-01-31</th>
-      <td>919.4</td>
-      <td>1309.0</td>
-      <td>919.2</td>
-      <td>1215.6</td>
-      <td>16549130</td>
-    </tr>
-    <tr>
-      <th>2026-02-28</th>
-      <td>1178.6</td>
-      <td>1312.8</td>
-      <td>1117.6</td>
-      <td>1233.4</td>
-      <td>11528098</td>
-    </tr>
-    <tr>
-      <th>2026-03-31</th>
-      <td>1192.8</td>
-      <td>1231.4</td>
-      <td>1060.2</td>
-      <td>1190.8</td>
-      <td>6344179</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+<tr>
+<th>date</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>2025-10-31</th>
+<td>818.0</td>
+<td>938.6</td>
+<td>812.1</td>
+<td>918.1</td>
+<td>16383868</td>
+</tr>
+<tr>
+<th>2025-11-30</th>
+<td>917.0</td>
+<td>930.9</td>
+<td>822.2</td>
+<td>903.4</td>
+<td>12064891</td>
+</tr>
+<tr>
+<th>2025-12-31</th>
+<td>910.0</td>
+<td>977.1</td>
+<td>866.4</td>
+<td>921.4</td>
+<td>10360738</td>
+</tr>
+<tr>
+<th>2026-01-31</th>
+<td>919.4</td>
+<td>1309.0</td>
+<td>919.2</td>
+<td>1215.6</td>
+<td>16549130</td>
+</tr>
+<tr>
+<th>2026-02-28</th>
+<td>1178.6</td>
+<td>1312.8</td>
+<td>1117.6</td>
+<td>1233.4</td>
+<td>11528098</td>
+</tr>
+<tr>
+<th>2026-03-31</th>
+<td>1192.8</td>
+<td>1231.4</td>
+<td>1060.2</td>
+<td>1190.8</td>
+<td>6344179</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Monthly OHLC with group_by_dynamic()
@@ -1926,20 +2089,20 @@ display(asml_pl_sorted.with_columns(
 
 ---
 
-## When to use these operations
-
-- **Null handling** — always address nulls before aggregations (which silently skip them), joins (where null keys never match), and exports (where downstream systems may reject or misinterpret nulls).
-- **String operations** — use for cleaning raw text data (user input, free-text fields, file names), standardizing formats (case, padding, delimiters), and extracting structured information from unstructured fields.
-- **DateTime operations** — use whenever data has a time dimension: time-series analysis, event sequencing, SLA calculations, rolling averages, resampling to regular intervals, and timezone normalization.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| Missing data imputation requiring domain logic | Simple `fill_null()` strategies cannot encode business rules (e.g., "fill with last known price only if gap < 5 days") | Write explicit conditional logic with `when/then` or use a domain-specific imputation model |
-| Heavy NLP or text parsing | DataFrame string methods are limited to pattern matching and simple transforms — no tokenization, stemming, or entity extraction | Use spaCy, NLTK, or a dedicated NLP library, then join results back |
-| Sub-millisecond or nanosecond-precision time math | Polars `Datetime` defaults to microsecond precision; Pandas `Timestamp` uses nanoseconds but overflows past year 2262 | For nanosecond work, stay in Pandas or use `pl.Datetime("ns")` explicitly |
-| Complex timezone-dependent business logic | Timezone conversions interact with DST transitions in non-obvious ways | Normalize all timestamps to UTC at ingestion, then convert to local time only for display |
+> [!example] Cleaning and Time-Series Fit
+>
+> > [!success] Applicability
+> >
+> > - **Null handling** — always address nulls before aggregations (which silently skip them), joins (where null keys never match), and exports (where downstream systems may reject or misinterpret nulls).
+> > - **String operations** — use for cleaning raw text data (user input, free-text fields, file names), standardizing formats (case, padding, delimiters), and extracting structured information from unstructured fields.
+> > - **DateTime operations** — use whenever data has a time dimension: time-series analysis, event sequencing, SLA calculations, rolling averages, resampling to regular intervals, and timezone normalization.
+>
+> > [!failure] Limitations
+> >
+> > - **Missing data imputation requiring domain logic** — Simple `fill_null()` strategies cannot encode business rules (e.g., "fill with last known price only if gap < 5 days"). Better approach: Write explicit conditional logic with `when/then` or use a domain-specific imputation model
+> > - **Heavy NLP or text parsing** — DataFrame string methods are limited to pattern matching and simple transforms — no tokenization, stemming, or entity extraction. Better approach: Use spaCy, NLTK, or a dedicated NLP library, then join results back
+> > - **Sub-millisecond or nanosecond-precision time math** — Polars `Datetime` defaults to microsecond precision; Pandas `Timestamp` uses nanoseconds but overflows past year 2262. Better approach: For nanosecond work, stay in Pandas or use `pl.Datetime("ns")` explicitly
+> > - **Complex timezone-dependent business logic** — Timezone conversions interact with DST transitions in non-obvious ways. Better approach: Normalize all timestamps to UTC at ingestion, then convert to local time only for display
 
 ## Warnings
 
@@ -1984,4 +2147,3 @@ display(asml_pl_sorted.with_columns(
 | Rolling mean shows all NaN | Window size > number of rows, or column has wrong dtype | Check `len(df)` vs window size; ensure column is numeric |
 | `shift()` fills with NaN instead of null | Pandas uses NaN; Polars uses null | Expected behavior — use the appropriate null check for each library |
 | Cumulative sum resets unexpectedly | Group boundary not respected | Use `.over("group")` (Polars) or `.groupby("group").cumsum()` (Pandas) |
-

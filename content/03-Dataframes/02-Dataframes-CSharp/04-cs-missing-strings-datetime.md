@@ -9,30 +9,148 @@ updated: 2026-04-07
 status: complete
 ---
 
-# 04 — Missing Data, Strings & DateTime
+# Missing Data, Strings & DateTime - C#
 
 > [!quote]
 > "Life is dirty. So is your data. Get used to it."
 >
 > — **Oz du Soleil**
 
-Three foundational topics that every data pipeline must handle correctly: detecting and filling missing values, cleaning and transforming string columns, and parsing, extracting, and computing with dates and times. Each operation is shown side by side in Polars.NET (expression-based, vectorized) and Microsoft.Data.Analysis (typed-column, CLR-oriented) so you can compare built-in columnar operations against explicit .NET materialization patterns directly.
+> [!abstract]- Summary
+>
+> Covers three failure-prone dataframe domains in one C# reference: missing-value handling, string cleanup, and datetime/time-series work across Polars.NET and Microsoft.Data.Analysis. The note exists because these are the places where row data stops being "clean columns" and starts exposing the real differences between Arrow-native vectorized expressions and explicit CLR-oriented column loops.
+>
+> **Setup**
+> - Configure the notebook, load Polars.NET and MDA packages, and establish the shared datasets used to compare null, string, and datetime behavior side by side
+>
+> **Missing Data**
+> - Detect nulls, understand how each library represents absence, and compare dropping, literal fill, forward fill, backward fill, and statistic-based fill patterns
+> - Keep the library boundary clear: Polars.NET exposes missing-data operations as expressions like `FillNull`, while MDA usually requires explicit typed-column scans and replacement loops
+>
+> **String Operations**
+> - Apply case transforms, substring search, replace, slicing, split, regex extraction, padding, and concatenation over identifier-style text columns
+> - Contrast Polars `.Str` vectorization with MDA's materialized string arrays and manual column reconstruction
+>
+> **DateTime Operations**
+> - Parse and round-trip dates, extract components with `.Dt`, apply date arithmetic, shift and lag values, filter by range, generate date sequences, and compute rolling or resampled time-series outputs
+> - Make the ordering requirement explicit for rolling windows and related financial calculations, especially when translating the same logic between Polars expressions and MDA loops
+>
+> **Operations and safety**
+> - Warnings: the current warning/recommendation sections in this note still emphasize the broader Polars-versus-MDA transform model, including immutability, conditional-expression API differences, and type mismatches across Arrow and CLR types
+> - Recommendations: 4 practices covering expression-first analytical transforms, MDA for ML.NET-oriented boundaries, schema validation after transforms, and Parquet for type-safe intermediates
+> - Troubleshooting: 3 failure modes covering missed reassignment in Polars, cast failures, and MDA typed-column mismatches
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **null** | An absent value. Polars.NET uses Arrow-native nulls. MDA uses .NET `null` in nullable value types and `NaN` for double columns. | Represents missing data that must be detected, filled, or dropped before downstream operations. | MDA `DoubleDataFrameColumn` stores `NaN` for missing values (not `null`). Polars.NET uses `null` exclusively. |
-| **FillNull / FillNulls** | Polars.NET: `Col("x").FillNull(strategy)`. MDA: manual column iteration with null checks. | Replaces missing values with a constant, forward-fill, or backward-fill. | MDA has no built-in `FillNull` — requires manual column-level replacement in a loop. |
-| **.Str accessor** | Polars.NET namespace for string operations: `Col("x").Str.ToLowercase()`, `.Str.Contains()`. | Vectorized string manipulation without CLR string loops. | MDA has no `.Str` accessor — use LINQ or manual iteration over `StringDataFrameColumn`. |
-| **.Dt accessor** | Polars.NET namespace for datetime operations: `Col("x").Dt.Year()`, `.Dt.Month()`. | Extracts date/time components for grouping and filtering. | MDA has no `.Dt` accessor — extract components via CLR `DateTime` methods on materialized values. |
-| **DateTime / DateOnly** | .NET types for date-time representation. Polars.NET maps to Arrow Date/Datetime types. | Time-series operations, parsing, and timezone handling. | .NET `DateTime` has tick-level precision; Polars Arrow `Datetime` defaults to microsecond. |
-
-## What this note covers
-
-- **Missing data** — null representation, detection, dropping, filling (Polars.NET expressions vs MDA manual patterns)
-- **String operations** — case transforms, contains, extract, replace, split (Polars.NET `.Str` vs MDA iteration)
-- **DateTime operations** — parsing, `.Dt` accessor, date_range, rolling windows, shifting, resampling, cumulative operations
+> [!note]- Glossary
+>
+> **Null**
+> - An absent value that represents missingness rather than a real business value.
+> - It matters because every fill, drop, string, and datetime operation in the note depends on understanding whether a value is actually missing or merely present in a different form.
+>
+> > [!warning] MDA may encode missingness as `NaN`
+> >
+> > In floating-point MDA columns, missing values may appear as `NaN` instead of CLR `null`. Treating those as ordinary numbers silently breaks data-quality checks.
+>
+> ---
+>
+> **`FillNull` / Fill strategy**
+> - A replacement operation that substitutes missing values with a constant, carried value, or derived statistic.
+> - It matters because filling is one of the main choices that changes how downstream aggregates and models interpret incomplete data.
+>
+> > [!warning] MDA has no single built-in equivalent
+> >
+> > In Microsoft.Data.Analysis, fill logic is usually a manual scan that builds a new typed column. The operation is conceptually simple but operationally explicit.
+>
+> ---
+>
+> **Forward fill**
+> - A strategy that replaces each missing value with the most recent prior non-missing value in sequence.
+> - It matters because time-ordered data often needs continuity without inventing a new constant or dropping the row entirely.
+>
+> > [!warning] Order defines correctness
+> >
+> > Forward fill only makes sense after the rows are ordered on the intended sequence key, usually time. On unsorted data it manufactures nonsense.
+>
+> ---
+>
+> **Backward fill**
+> - A strategy that replaces each missing value with the next available non-missing value later in the sequence.
+> - It matters because some analytical pipelines prefer future-known carryback logic when filling leading gaps or preparing aligned windows.
+>
+> > [!warning] Reverse scan is intentional
+> >
+> > Backward fill is not just forward fill with a different name. The implementation direction changes which neighboring value becomes authoritative.
+>
+> ---
+>
+> **`.Str` accessor**
+> - The Polars string-expression namespace for vectorized text operations such as lowercase conversion, contains checks, replace, split, and extraction.
+> - It matters because the note’s string-cleaning section is largely a contrast between `.Str`-native column logic and manual CLR string materialization in MDA.
+>
+> > [!info] Text stays inside the engine
+> >
+> > As long as the logic remains in `.Str`, Polars can keep the work columnar instead of forcing a per-row C# string loop.
+>
+> ---
+>
+> **Regex extract**
+> - Pulling a substring from text by matching a regular-expression pattern and returning a capture group.
+> - It matters because ticker or exchange-code cleanup often depends on pattern-based extraction rather than fixed-position slicing.
+>
+> > [!warning] Pattern mismatch returns missing output
+> >
+> > Extraction logic is only as stable as the identifier format. When the pattern stops matching, the result becomes null-like output instead of a clean token.
+>
+> ---
+>
+> **`.Dt` accessor**
+> - The Polars datetime-expression namespace for extracting and transforming date/time components.
+> - It matters because the note uses `.Dt` to derive year, month, weekday, offsets, and range-based filters without leaving the dataframe engine.
+>
+> > [!info] Datetime logic stays composable
+> >
+> > `.Dt` makes date operations behave like any other expression, so filtering, projection, and derived columns can share the same pipeline structure.
+>
+> ---
+>
+> **`DateTime` / `DateOnly`**
+> - CLR-native date representations used in .NET code and often bridged to Arrow-backed dataframe types.
+> - It matters because the note repeatedly crosses between dataframe-native datetime operations and explicit .NET parsing or materialization logic.
+>
+> > [!warning] Precision and semantics differ
+> >
+> > A .NET `DateTime` and an Arrow datetime may represent similar concepts with different precision defaults and conversion behavior.
+>
+> ---
+>
+> **Date range**
+> - A generated ordered sequence of dates used for filtering, joining, calendar construction, or time-axis expansion.
+> - It matters because time-series workflows often need explicit date scaffolding rather than only the dates already present in the source data.
+>
+> > [!info] Useful beyond filtering
+> >
+> > Generated ranges are often the bridge between sparse event rows and complete calendar-aware analysis.
+>
+> ---
+>
+> **Rolling window**
+> - A fixed-size moving slice over ordered rows used to compute smoothed or local statistics such as moving averages.
+> - It matters because the note uses rolling windows for financial-style indicators where current values depend on the immediately preceding history.
+>
+> > [!warning] Early rows are expected to be incomplete
+> >
+> > The first `N-1` rows in an `N`-period rolling calculation lack enough history, so null or partial results are a feature, not a bug.
+>
+> ---
+>
+> **Resampling**
+> - Converting time-series data from one temporal grain to another, such as daily to monthly.
+> - It matters because raw event frequency is often wrong for reporting, trend comparison, or downstream modeling windows.
+>
+> > [!warning] Aggregation rule is part of the metric
+> >
+> > Resampling is not just grouping by calendar period. You must decide whether the target metric wants sum, mean, last value, OHLC, or something else.
+>
+> ---
 
 > [!info] Current API and execution-model check | 2026-04
 >
@@ -1387,4 +1505,3 @@ new DataFrame(asmlCum.Columns["date"], asmlCum.Columns["close"], asmlCum.Columns
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

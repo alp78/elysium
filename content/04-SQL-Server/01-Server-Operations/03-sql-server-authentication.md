@@ -10,15 +10,164 @@ status: complete
 
 # SQL Server Authentication
 
-> [!abstract] Three boundaries define the SQL Server authentication surface
+> [!abstract]- Summary
 >
-> Authentication hardening for SQL Server running on Linux in GCP must cover three distinct, independent layers. A single weak link collapses the whole posture.
+> Defines SQL Server authentication hardening on Linux in GCP as a three-boundary problem: cloud and VM identity, host and transport security, and SQL Server principals and permissions. The note exists to prevent a common security mistake in administration work: improving one layer in isolation while a different layer still leaves the instance effectively exposed.
 >
-> - **Cloud and VM identity boundary.** GCP service account, firewall rules, and administrative ingress path (IAP/bastion). Controls who can even reach the host.
-> - **Host and transport-security boundary.** Linux process identity, TLS certificate material, `mssql-conf` network settings, and OS file permissions. Controls whether the wire is private and whether the server can prove its identity to clients.
-> - **SQL Server principal and permission boundary.** Logins, database users, fixed and user-defined roles, granular server/database permissions, and audit specifications. Controls what an authenticated caller can actually do.
+> **Identity boundaries**
+> - Frame the authentication surface in concentric layers: GCP service account, firewall, and IAP/bastion ingress; Linux process identity and TLS material; then SQL Server logins, users, roles, and permissions
+> - Treat the posture as only as strong as the weakest boundary rather than as a single "authentication setting" problem
 >
-> A perfectly permissioned login is still risky if the server accepts unencrypted client traffic, and TLS does not help if privileged instance principals are over-granted.
+> **Baseline the instance authentication posture**
+> - Verify engine edition and mixed-mode posture with `SERVERPROPERTY`, inventory server principals through `sys.server_principals` and `sys.sql_logins`, and review `sysadmin` exposure before making changes
+> - Use the baseline queries to distinguish SQL logins, Windows-mapped principals, password-policy flags, and high-privilege role membership explicitly
+>
+> **External identity integration**
+> - Compare Entra ID and Active Directory integration paths, including `adutil`, Arc-connected SQL Server support, and the places where centralized identity materially improves over standalone SQL logins
+>
+> **Transport encryption and TLS**
+> - Verify the transport-security boundary through TLS configuration, `mssql-conf`, certificate material, and `forceencryption` posture so successful login attempts are not traveling over a weak channel
+>
+> **Server audit**
+> - Use SQL Server Audit and related security telemetry to record authentication and permission activity in a way that supports investigation rather than only configuration
+>
+> **GCP perimeter recommendations**
+> - Keep the cloud edge narrow with least-privilege service accounts, tight firewall rules, and controlled administrative ingress rather than exposing SQL Server as if it were a flat VM-local problem
+>
+> **Operations and safety**
+> - Recommendations: identity and principals, Linux password-policy realities, database principal-surface review, TLS posture, and GCP perimeter controls all require deliberate hardening rather than product defaults
+
+> [!note]- Glossary
+>
+> **Mixed mode**
+> - The SQL Server authentication mode where both SQL logins and integrated logins are allowed.
+> - It matters because `IsIntegratedSecurityOnly = 0` immediately expands the password-management and secret-rotation surface of the instance.
+>
+> > [!warning] More compatibility, more attack surface
+> >
+> > Mixed mode is often operationally necessary, especially on Linux, but it also means SQL login hygiene becomes a first-class security problem.
+>
+> ---
+>
+> **Server principal**
+> - A login-capable or role-like security object defined at the SQL Server instance level.
+> - It matters because `sys.server_principals` is the authoritative inventory for who can authenticate to the instance and what kind of identity each principal represents.
+>
+> > [!info] Login inventory starts here
+> >
+> > If a principal can connect at the instance boundary, it will show up here before any database-level permissions are even considered.
+>
+> ---
+>
+> **SQL login**
+> - A SQL Server-managed username and password identity stored and authenticated by the engine itself.
+> - It matters because SQL logins remain common for application connectivity, but they require deliberate secret management and audit coverage.
+>
+> > [!warning] Convenience does not equal centralized identity
+> >
+> > SQL logins are portable and easy to provision, but they do not inherit the lifecycle controls, MFA posture, or centralized policy model of directory-backed identities.
+>
+> ---
+>
+> **`sysadmin`**
+> - The fixed server role with effectively unrestricted control over the entire SQL Server instance.
+> - It matters because reviewing `sysadmin` membership is the single highest-leverage audit step in the note: any principal here can bypass almost every lower permission boundary.
+>
+> > [!danger] This role collapses most other controls
+> >
+> > A weakly controlled `sysadmin` surface can make careful object-level permission design irrelevant in practice.
+>
+> ---
+>
+> **`securityadmin`**
+> - The fixed server role that can manage many login and permission operations.
+> - It matters because it is often treated as "less dangerous than sysadmin" when in practice it can still become an escalation path.
+>
+> > [!warning] Often treated too casually
+> >
+> > A principal that can reset passwords and grant access should be reviewed with nearly the same caution as a full instance administrator.
+>
+> ---
+>
+> **`CHECK_POLICY` / `CHECK_EXPIRATION`**
+> - SQL login settings that control whether password policy and expiration rules are enforced.
+> - It matters because the meaning of these flags differs between Windows-backed and Linux-backed SQL Server environments, which directly affects compliance interpretation.
+>
+> > [!warning] Linux enforcement is not Windows AD policy
+> >
+> > On Linux, `CHECK_POLICY` is not equivalent to full Active Directory password enforcement. Audits should document that limitation explicitly.
+>
+> ---
+>
+> **Microsoft Entra ID**
+> - Microsoft’s cloud identity platform, used for centralized authentication and group-based access control.
+> - It matters because Entra-backed access can materially reduce password sprawl and improve attribution compared with shared SQL login patterns.
+>
+> > [!info] Strongest when the platform path exists
+> >
+> > Entra integration is most valuable when the surrounding SQL Server deployment path actually supports it cleanly, such as Arc-connected scenarios.
+>
+> ---
+>
+> **`adutil`**
+> - The Linux-side utility used to integrate SQL Server with Active Directory-backed identities.
+> - It matters because Linux deployments do not inherit Windows-integrated authentication behavior automatically; identity integration has to be configured deliberately.
+>
+> > [!warning] Linux identity integration is never "just there"
+> >
+> > On Linux, directory integration is a designed capability, not a default operating state. The supporting host and domain assumptions have to be met first.
+>
+> ---
+>
+> **TLS / force encryption**
+> - The transport-security layer that protects client-server traffic and lets the server prove its identity through certificate-backed encryption.
+> - It matters because even perfectly permissioned principals are still risky if credentials or query traffic move over a weak or unauthenticated channel.
+>
+> > [!warning] Permissions do not compensate for plaintext transport
+> >
+> > A secure role model cannot rescue an insecure wire path. Authentication and transport security are separate boundaries.
+>
+> ---
+>
+> **`mssql-conf`**
+> - The Linux-side configuration utility and file surface used to manage SQL Server engine settings such as network and TLS behavior.
+> - It matters because transport hardening on Linux SQL Server depends on both database configuration and host-level configuration discipline.
+>
+> > [!info] Linux-specific operational boundary
+> >
+> > On Linux, instance security is partly a host-configuration problem. `mssql-conf` is one of the tools that makes that boundary explicit.
+>
+> ---
+>
+> **SQL Server Audit**
+> - The engine-native auditing feature that records selected security and activity events for later review.
+> - It matters because authentication hardening is incomplete if access and permission changes cannot be reconstructed during an investigation.
+>
+> > [!warning] Configuration without telemetry is blind trust
+> >
+> > A hardened surface still needs evidence. Without audit data, incident response becomes guesswork instead of analysis.
+>
+> ---
+>
+> **`CONTROL SERVER`**
+> - A server-level permission that grants near-instance-wide control without requiring explicit `sysadmin` membership.
+> - It matters because role review alone does not catch every high-risk privilege path; direct grants can create equivalent exposure outside fixed-role membership.
+>
+> > [!danger] Hidden admin path
+> >
+> > A principal can be non-sysadmin on paper and still be effectively administrative if permissions like `CONTROL SERVER` are granted directly.
+>
+> ---
+>
+> **GCP perimeter**
+> - The cloud-layer access boundary formed by the VM service account, firewall rules, and administrative ingress path such as IAP or bastion access.
+> - It matters because SQL Server on a cloud VM is never secured purely inside the engine; network reachability and VM identity decide who gets to try authenticating in the first place.
+>
+> > [!warning] Engine hardening starts outside the engine
+> >
+> > If the VM edge is too open, SQL Server is exposed before its own login model even gets a chance to help.
+>
+> ---
 
 ## Identity boundaries
 
@@ -1261,7 +1410,6 @@ Prefer an administrative path that is attributable and narrow:
 - keep SQL Server ports closed to broad source ranges
 - document which admin tools are expected to connect and from where
 
-
 ## Recommendations
 
 **Identity and principals:**
@@ -1301,5 +1449,3 @@ Prefer an administrative path that is attributable and narrow:
 
 - Run the VM under a dedicated GCP service account with backup-bucket and log-publication roles only. Do not use the default Compute Engine service account.
 - Close `tcp/1433` to broad source ranges. Use IAP TCP forwarding or a documented bastion for administrative access, and record the expected admin source IPs.
-
-

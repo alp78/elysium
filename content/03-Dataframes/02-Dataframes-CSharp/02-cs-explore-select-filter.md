@@ -9,32 +9,149 @@ updated: 2026-04-07
 status: complete
 ---
 
-# 02 — Exploration, Selection & Filtering
+# Explore, Select & Filter - C#
 
 > [!quote]
 > "If we have data, let's look at data. If all we have are opinions, let's go with mine."
 >
 > — **Jim Barksdale**
 
-This note covers the full exploration, selection, and filtering workflow in C# using Polars.NET and Microsoft.Data.Analysis. It demonstrates previewing data (head, tail, describe), statistical summaries, column selection by name and type, and row filtering using boolean expressions and membership tests on real EuroStoxx 50 data.
+> [!abstract]- Summary
+>
+> Covers the full dataframe inspection and subsetting workflow in C#, using Polars.NET and Microsoft.Data.Analysis to preview data, profile columns, narrow schemas, and isolate rows on real EuroStoxx inputs. The note exists to establish the basic read-first discipline for tabular work: inspect shape, types, nulls, and distributions before writing transforms, and understand where Polars expressions stay composable while MDA falls back to explicit boolean-column mechanics.
+>
+> **Data Exploration**
+> - Preview datasets with `Head`, `Tail`, and sample-style views, then inspect shape, schema, and general structure before narrowing the frame
+> - Run descriptive statistics, null audits, value counts, distinct-count checks, and reusable profiling helpers to understand numeric ranges, categorical distributions, and missing-data hotspots
+> - Select columns by name, index, and pattern, keeping only the fields needed for downstream work and understanding the difference between whole-frame selection and single-column references
+> - Filter rows with comparison expressions, combined predicates, and membership tests, contrasting Polars.NET expression trees with MDA's explicit `PrimitiveDataFrameColumn<bool>` mask pattern
+>
+> **Operations and safety**
+> - Warnings: MDA `Filter` requires a boolean column instead of an inline expression, and MDA string-index selection returns a live column reference rather than a copy
+> - Recommendations: 4 practices covering profiling before transforms, filtering early, preferring Polars.NET expressions for complex predicates, and checking column existence before selection
+> - Troubleshooting: 3 failure modes covering missing columns, empty filter results from restrictive or mistyped predicates, and MDA `Description()` omitting non-numeric columns
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Head / Tail** | Methods returning the first or last *n* rows. Both libraries: `df.Head(n)`, `df.Tail(n)`. | Quick preview without printing the full dataset. | Both return new DataFrames, not views. |
-| **Describe** | Summary statistics for columns. Polars.NET: `df.Describe()`. MDA: `df.Description()`. | First-pass quality check — reveals nulls, ranges, and distributions. | MDA `Description()` returns a DataFrame with string-typed statistics — numeric parsing required. |
-| **Filter** | Row selection by condition. Polars.NET: `df.Filter(expr)`. MDA: `df.Filter(boolColumn)`. | The primary mechanism for subsetting data by row. | Polars.NET takes an expression (`Col("x").Gt(5)`); MDA takes a `PrimitiveDataFrameColumn<bool>`. |
-| **Select** | Column selection. Polars.NET: `df.Select(cols)`. MDA: column indexing `df["col"]`. | Reduces width to needed columns only. | Polars.NET `Select` returns a new DataFrame; MDA indexer returns a single column reference. |
-
-## What this note covers
-
-- **Data preview** — Head, Tail, shape, schema inspection
-- **Statistical summaries** — Describe, null counts, value counts, unique counts
-- **Column selection** — by name, by index, multi-column patterns
-- **Row filtering** — boolean expressions, comparison operators, membership tests, combined conditions
-
----
+> [!note]- Glossary
+>
+> **Head / Tail**
+> - Methods that return the first or last `n` rows of a dataframe for quick inspection.
+> - They matter because the note starts with these previews to confirm load quality, row ordering, and schema shape before any deeper analysis.
+>
+> > [!info] Preview, not view
+> >
+> > These calls return new dataframe objects for display and inspection. They are not interactive windows into the original frame.
+>
+> ---
+>
+> **Sample**
+> - A random subset of rows used to inspect representative records without reading the full frame from top or bottom only.
+> - It matters because exploratory work often needs a spot-check that is not biased toward early or late rows.
+>
+> > [!warning] MDA sampling is manual
+> >
+> > In this note, MDA sampling is built through random row-index selection plus a boolean mask, which is the same pattern you later reuse for more complex row filters.
+>
+> ---
+>
+> **Describe / `Description()`**
+> - Summary-statistics helpers that compute high-level metrics such as min, max, mean, and other descriptive values over columns.
+> - They matter because these methods are the fastest first-pass signal for impossible ranges, suspicious sparsity, and distribution shape.
+>
+> > [!warning] Output shapes differ
+> >
+> > MDA `Description()` returns a dataframe whose statistics are often string-shaped for display, so downstream numeric reuse may require parsing rather than direct arithmetic.
+>
+> ---
+>
+> **`Info()`**
+> - A schema-inspection helper that reports column metadata such as names, types, and basic completeness characteristics.
+> - It matters because the note uses it as the structural counterpart to statistical profiling before selection or filtering begins.
+>
+> > [!info] Structure before logic
+> >
+> > `Info()` will not tell you whether values are analytically correct, but it quickly exposes whether the frame loaded with the columns and CLR types you expected.
+>
+> ---
+>
+> **`Select`**
+> - The operation that narrows a dataframe to a chosen subset of columns.
+> - It matters because schema reduction is one of the cheapest ways to make downstream logic clearer, safer, and lighter on memory.
+>
+> > [!warning] API symmetry is limited
+> >
+> > Polars.NET `Select` returns a new frame, while MDA often uses indexers or column collections directly. Similar intent does not imply identical object behavior.
+>
+> ---
+>
+> **`Filter`**
+> - The row-subsetting operation that keeps only records matching a condition.
+> - It matters because nearly every analytical workflow depends on turning a large frame into the exact subset relevant to the next calculation.
+>
+> > [!warning] Predicate input differs by library
+> >
+> > Polars.NET accepts composable expressions such as `Col("x").Gt(5)`. MDA expects an explicit boolean column whose length matches the dataframe.
+>
+> ---
+>
+> **Boolean mask**
+> - A boolean vector with one element per row, where `true` means keep the row and `false` means discard it.
+> - It matters because MDA filtering, manual sampling, and many reusable selection patterns in the note depend on building masks explicitly.
+>
+> > [!warning] Length and alignment matter
+> >
+> > A mask is only valid when it matches the dataframe row count exactly. If the lengths drift, the filter is invalid no matter how correct the logic seems.
+>
+> ---
+>
+> **Membership test**
+> - A filter condition that checks whether a value belongs to a specified set of allowed candidates.
+> - It matters because real filtering work often uses symbol lists, sector sets, or categorical whitelists rather than single-value comparisons.
+>
+> > [!info] Set-based filtering scales better mentally
+> >
+> > Once conditions stop being simple equality checks, membership tests are usually easier to read and maintain than long chains of `or` comparisons.
+>
+> ---
+>
+> **`NullCount`**
+> - A per-column measure of how many missing values are present.
+> - It matters because nulls change comparison behavior, descriptive statistics, and downstream transformation assumptions long before a pipeline throws an exception.
+>
+> > [!warning] Missingness is column-local information
+> >
+> > `NullCount` tells you which fields are sparse, but not whether those nulls are acceptable business logic or a failed ingestion step.
+>
+> ---
+>
+> **`ValueCounts()`**
+> - A column-level operation that returns each distinct value together with its frequency.
+> - It matters because categorical distributions are one of the fastest ways to spot unexpected codes, rare outliers, or mislabeled data.
+>
+> > [!info] Frequency is often more useful than uniqueness
+> >
+> > A distinct list shows what exists. `ValueCounts()` also shows what dominates, what is rare, and what may have gone wrong operationally.
+>
+> ---
+>
+> **Distinct / unique count**
+> - The set of unique values in a column, or the count of how many such values exist.
+> - It matters because uniqueness checks tell you whether identifier columns, dimensions, or categorical domains behave as expected.
+>
+> > [!warning] MDA often reaches for LINQ here
+> >
+> > In MDA, distinct-value workflows commonly involve casting and LINQ `Distinct()` rather than a single dataframe-native method that mirrors Polars exactly.
+>
+> ---
+>
+> **Column reference**
+> - A handle to an existing column object rather than an isolated copy of its values.
+> - It matters because MDA string-based column access returns a live reference, which affects whether later mutation changes the original dataframe.
+>
+> > [!warning] References propagate mutation
+> >
+> > If you treat an MDA column reference like a detached slice, you can accidentally modify shared state and misread the result of subsequent exploration steps.
+>
+> ---
 
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. Run this cell once before any cells that use NuGet packages.
 
@@ -916,4 +1033,3 @@ Unique symbols: 50 (from 66355 total rows)
 | `KeyNotFoundException` on column select | Column name not in DataFrame | Check `df.Columns` or `df.Schema` before selecting |
 | Filter returns empty DataFrame | Condition too restrictive or type mismatch in comparison | Verify filter values match column dtype |
 | `Describe()` missing columns | MDA excludes non-numeric columns by default | Handle separately with manual aggregation |
-

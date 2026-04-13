@@ -10,21 +10,181 @@ status: complete
 
 # Numeric and Aggregate Functions
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> Every analytical query eventually collapses rows into numbers: a total, an average, a top-N, a distribution, a ratio. This note is the authoritative reference for the aggregate and scalar-math layer of T-SQL. It covers:
+> Aggregate queries are where T-SQL turns rowsets into measurements: this note covers the semantics that govern grouped results, the numeric and statistical functions that compute them, and the safety rules that keep totals, ratios, and subtotals correct on real workloads and external files.
 >
-> - **Aggregate semantics** — how `NULL` flows through `SUM`/`AVG`/`MIN`/`MAX`/`COUNT`, logical processing order, `HAVING` vs `WHERE`, and the empty-grain `GROUP BY ()`.
-> - **COUNT family** — `COUNT(*)` vs `COUNT(column)`, `COUNT(DISTINCT x)`, `COUNT_BIG`, `APPROX_COUNT_DISTINCT`, and `CHECKSUM_AGG` for drift detection.
-> - **SUM, AVG, MIN, MAX, and the variance family** — with the `SUM(int)` overflow trap, integer-truncation `AVG` trap, float non-determinism, and `STDEV`/`STDEVP`/`VAR`/`VARP`.
-> - **Conditional aggregation** — `SUM(CASE WHEN ...)`, `COUNT(CASE WHEN ...)`, and the filtered-aggregate patterns that replace most `PIVOT` use cases.
-> - **Ratios, percentages, and divide-by-zero safety** — `NULLIF` guards, decimal-literal promotion, and window-aggregate percent-of-total.
-> - **Scalar math** — `ABS`/`SIGN`, `CEILING`/`FLOOR`/`ROUND` (including the 3-argument truncation mode), `POWER`/`SQUARE`/`SQRT`, `LOG`/`LOG10`/`EXP`, the trigonometric family (`SIN`/`COS`/`TAN`/`ATN2`/`RADIANS`/`DEGREES`/`PI`), and `RAND` vs `CRYPT_GEN_RANDOM`.
-> - **Multi-level grouping** — `ROLLUP`, `CUBE`, `GROUPING SETS`, and the `GROUPING`/`GROUPING_ID` helpers that distinguish real `NULL` values from subtotal markers.
-> - **Aggregating over external files** — running any aggregate directly over CSV, JSON, and XML files via `OPENROWSET(BULK ...)`, with the `OPENJSON` and `.nodes()` shredding patterns for semi-structured sources.
-> - **Window aggregates (cross-reference)** — a short bridge to `05-window-functions` showing running totals and percent-of-total.
+> **Aggregate semantics**
+> - covers null handling across aggregates, logical processing order, `WHERE` versus `HAVING`, and the empty-grain `GROUP BY ()` pattern
 >
-> Type-precedence rules, exact-vs-approximate numeric choice, and the `NULLIF`/`COALESCE`/`ISNULL` fallbacks themselves belong to the type-handling sibling note. Full window-function framing (`ROWS`/`RANGE`, `LAG`/`LEAD`, ranking) belongs to the window-functions sibling note. Parquet is out of scope — SQL Server can only read parquet through `CREATE EXTERNAL DATA SOURCE` backed by Azure Blob or S3, not from a local filesystem path.
+> **Count and summary functions**
+> - covers `COUNT(*)`, `COUNT(column)`, `COUNT(DISTINCT)`, `COUNT_BIG`, `APPROX_COUNT_DISTINCT`, `CHECKSUM_AGG`, `SUM`, `AVG`, `MIN`, `MAX`, `STDEV`, `STDEVP`, `VAR`, and `VARP`
+>
+> **Conditional and ratio patterns**
+> - covers `SUM(CASE WHEN ...)`, filtered averages, divide-by-zero protection with `NULLIF`, decimal promotion, and percent-of-total logic
+>
+> **Scalar math layer**
+> - covers rounding, truncation, powers, logarithms, trigonometry, and the difference between `RAND()` and `CRYPT_GEN_RANDOM`
+>
+> **Multi-level grouping**
+> - covers `ROLLUP`, `CUBE`, `GROUPING SETS`, `GROUPING`, and `GROUPING_ID` for subtotal and cube-style output
+>
+> **External and windowed aggregation**
+> - covers direct aggregation over CSV, JSON, and XML via `OPENROWSET(BULK ...)` and cross-references running totals and percent-of-total via window aggregates
+>
+> **Operations and safety**
+> - Warnings: `SUM(int)` can overflow, `AVG(int)` truncates, `COUNT(*)` and `COUNT(column)` answer different questions, `float` aggregates are order-sensitive, denominator zero must be guarded, subtotal `NULL`s are ambiguous without `GROUPING`, and local parquet is out of scope
+> - Recommendations: cast to `bigint` or `decimal` when needed, keep row predicates in `WHERE` and aggregate predicates in `HAVING`, prefer conditional aggregation over many `PIVOT` cases, use `COUNT_BIG` for reusable large-table paths, and pre-shred JSON or XML before grouped analysis
+
+> [!note]- Glossary
+>
+> **Aggregate**
+> - A function that consumes a set of input rows and returns one summary value for that set.
+> - It matters because the note’s first half is about how aggregates behave before the author worries about which specific function to call.
+>
+> > [!info] Semantics come before function choice
+> >
+> > The same aggregate can produce a correct or incorrect answer depending on grouping, null treatment, and filter placement. Syntax alone does not guarantee the intended measurement.
+>
+> ---
+>
+> **Grouped rowset**
+> - A result shape where rows have been collapsed according to the `GROUP BY` keys before the `SELECT` list is produced.
+> - It matters because grouped queries change row grain, which determines what can be selected and what later aggregates can mean.
+>
+> > [!warning] Grouping changes legal projection
+> >
+> > After grouping, each output column must either come from the grouping key or be reduced by an aggregate. Mixing detail columns into grouped output is not valid.
+>
+> ---
+>
+> **`HAVING`**
+> - The clause that filters groups after aggregation has already been computed.
+> - It matters because aggregate predicates belong there, while row predicates belong in `WHERE`.
+>
+> > [!warning] Same filter verb, different stage
+> >
+> > Moving a row predicate from `WHERE` into `HAVING` is often legal but wasteful. It forces SQL Server to aggregate rows that should have been eliminated earlier.
+>
+> ---
+>
+> **`COUNT(*)` / `COUNT(column)`**
+> - Two related count forms where `COUNT(*)` counts rows and `COUNT(column)` counts only non-null values in the specified expression.
+> - It matters because confusing them leads directly to wrong completeness, missingness, and row-count metrics.
+>
+> > [!warning] These are not interchangeable
+> >
+> > The difference between `COUNT(*)` and `COUNT(col)` is the number of nulls in `col`. Use that difference deliberately instead of assuming both represent row count.
+>
+> ---
+>
+> **`COUNT_BIG`**
+> - The count aggregate that returns a `bigint` instead of an `int`.
+> - It matters because reusable analytical code should not assume row counts always fit inside 2.1 billion.
+>
+> > [!info] Same semantics, wider return type
+> >
+> > `COUNT_BIG` is not a different counting rule. It is the same operation with a safer return type for very large tables and long-lived code paths.
+>
+> ---
+>
+> **`APPROX_COUNT_DISTINCT`**
+> - A probabilistic aggregate that estimates the number of distinct values with bounded error instead of computing the exact cardinality.
+> - It matters because large-scale monitoring and exploratory analysis often need fast cardinality estimates more than exact reconciliation.
+>
+> > [!warning] Approximation is a product choice
+> >
+> > The speed gain is real, but the result is not exact. Use it where a bounded estimate is acceptable, not where auditability depends on the exact number.
+>
+> ---
+>
+> **Conditional aggregation**
+> - The pattern of placing a `CASE` expression inside an aggregate to compute filtered counts, sums, or averages in one grouped pass.
+> - It matters because it replaces many awkward post-processing queries and a large share of static pivot-style reporting.
+>
+> > [!info] Filter inside the aggregate
+> >
+> > `SUM(CASE WHEN ... THEN value END)` is often the cleanest way to derive multiple segmented metrics from one grouped scan.
+>
+> ---
+>
+> **`NULLIF` guard**
+> - A divide-by-zero protection pattern that turns a zero denominator into `NULL` before division occurs.
+> - It matters because ratios and percentages are routine in analytical SQL, and denominator safety must be deliberate.
+>
+> > [!warning] Arithmetic errors abort the statement
+> >
+> > Without a guard, divide-by-zero raises an error and stops the query. `NULLIF(denom, 0)` converts that failure boundary into a controlled null result.
+>
+> ---
+>
+> **Scalar math function**
+> - A numeric function that operates on each row independently rather than across a group, such as `ROUND`, `LOG10`, or `SQRT`.
+> - It matters because analytical SQL often combines grouped metrics with row-wise transformations in the same statement.
+>
+> > [!warning] Row-wise math still obeys type rules
+> >
+> > Rounding, truncation, logarithms, and trigonometric functions all inherit the data type and scale of their inputs. Type choice still shapes the result.
+>
+> ---
+>
+> **`ROLLUP`**
+> - A grouping extension that produces hierarchical subtotals and a grand total by progressively removing keys from the right side of the grouping list.
+> - It matters because it is the standard way to ask for detail plus subtotal output in one grouped query.
+>
+> > [!info] Hierarchy comes from key order
+> >
+> > `ROLLUP` is not just “more totals.” The order of grouping keys defines which subtotal levels SQL Server emits.
+>
+> ---
+>
+> **`CUBE`**
+> - A grouping extension that returns subtotals for every combination of the listed grouping keys.
+> - It matters because it is powerful for multidimensional analysis but expands result size far more aggressively than `ROLLUP`.
+>
+> > [!warning] Combinations grow quickly
+> >
+> > Each added dimension multiplies the number of subtotal combinations. `CUBE` should be used only when every cross-combination subtotal is truly required.
+>
+> ---
+>
+> **`GROUPING SETS`**
+> - A grouping feature that lets the author specify the exact subtotal combinations to compute instead of accepting the full hierarchy or cube.
+> - It matters because it is often the most precise and efficient way to request only the subtotal levels the report actually needs.
+>
+> > [!info] Explicit beats implicit when requirements are selective
+> >
+> > `GROUPING SETS` avoids the extra subtotal rows that `ROLLUP` or `CUBE` would generate when the desired combinations are only a subset.
+>
+> ---
+>
+> **`GROUPING` / `GROUPING_ID`**
+> - Helper functions that identify whether a `NULL` in grouped output is a real source value or a subtotal marker introduced by grouping extensions.
+> - It matters because subtotal rows are otherwise indistinguishable from real null-valued data.
+>
+> > [!warning] Null alone is ambiguous
+> >
+> > A subtotal marker and a real source `NULL` render the same way in the result. Label subtotal rows with `GROUPING` metadata instead of guessing from the raw columns.
+>
+> ---
+>
+> **Window aggregate**
+> - An aggregate function used with `OVER (...)` so it computes across partitions or frames without collapsing the input rows.
+> - It matters because percent-of-total and running-total patterns belong to this boundary between grouped and row-preserving analytics.
+>
+> > [!info] Same math, different row behavior
+> >
+> > `SUM(x)` collapses rows. `SUM(x) OVER (...)` preserves them. That distinction is why window aggregates are treated as a bridge to the window-functions note.
+>
+> ---
+>
+> **`OPENROWSET(BULK ...)`**
+> - The SQL Server entry point for reading external files such as CSV, JSON, or XML directly inside a query.
+> - It matters because the note shows how to apply aggregates before a full ingest pipeline exists, provided the source is in a supported format and is shaped correctly first.
+>
+> > [!warning] External aggregation still needs shaping
+> >
+> > Flat CSV can often be aggregated directly, but JSON and XML usually need shredding before grouping. Unsupported formats such as local parquet require a different ingestion path.
 
 ## Aggregate Semantics and NULL Handling
 
@@ -1455,4 +1615,3 @@ A condensed checklist of habits derived from the rules and traps above. Each ite
 - **Prefer explicit truncation mode (`ROUND(x, n, 1)`)** when the business rule requires deterministic down-rounding. Default `ROUND` is "half away from zero", not banker's rounding.
 - **Use a window aggregate (`SUM(...) OVER ()`)** for percent-of-total and running-total patterns instead of self-joins or correlated subqueries. See the `## Window Aggregates (Cross-Reference)` section and the [05-window-functions](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/05-window-functions) sibling note for the full treatment.
 - **Aggregate directly over CSV/JSON/XML files with `OPENROWSET(BULK ...)`** for pre-ingest diagnostics and one-off analytical queries. Use `FORMAT='CSV'` with an inline `WITH(...)` schema for flat files, `SINGLE_CLOB + OPENJSON WITH(...)` for JSON, and `SINGLE_BLOB + CAST AS xml + .nodes()/.value()` for XML. Pre-shred XML into a CTE when you need `GROUP BY` or window functions over `.value()` results — XML methods are not allowed inside `GROUP BY` (error 4148). See the `## Aggregating Over External Files (CSV, JSON, XML)` section. Local parquet is not supported — use the external-data-source path in [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns) or convert to CSV first.
-

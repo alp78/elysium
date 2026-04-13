@@ -18,7 +18,7 @@ mindmap
     (Windows Task Scheduler)
 ```
 
-> [!abstract]- [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling)
+> [!abstract]- [[01-linux-scheduling]]
 >
 > Cron syntax and crontab management, systemd timers with OnCalendar, at/batch for one-time jobs, anacron for intermittent machines, overlap prevention with flock, cron environment and PATH gotchas, SSH configuration for remote scheduling, and a decision table for cron vs Airflow vs Cloud Scheduler.
 
@@ -29,5 +29,3 @@ mindmap
 > [!abstract]- [[02-windows-scheduling]]
 >
 > schtasks.exe (legacy CLI), PowerShell ScheduledTasks module (Register-ScheduledTask, triggers, settings), PSScheduledJob for native PowerShell output, data engineering patterns for SSIS/sqlcmd/Python pipelines, event-based triggers (ONLOGON, ONEVENT), and a mapping to Linux cron equivalents.
-
-> [!abstract]- [[01-linux-scheduling]]

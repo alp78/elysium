@@ -8,27 +8,170 @@ updated: 2026-04-12
 status: complete
 ---
 
-# VM SSH and File Transfer — Secure Remote Access
+# VM SSH and File Transfer
 
 > [!quote]
 > "Amateurs hack systems, professionals hack people."
 >
 > — **Bruce Schneier**, *Secrets and Lies* (2000)
+> [!abstract]- Summary
+>
+> Covers secure remote access and file transfer for Compute Engine VMs through Identity-Aware Proxy, using `gcloud compute ssh`, `gcloud compute scp`, `gcloud compute start-iap-tunnel`, and OS Login so `stoxx-vm` can remain private in `bq-wh-nb` with `--no-address`.
+>
+> **SSH access via IAP**
+> - Use `gcloud compute ssh ... --tunnel-through-iap` for interactive shells, non-interactive `--command` runs, privileged diagnostics with `sudo`, and one-off `--project` overrides
+> - Read OS Login-derived usernames, POSIX IDs, service state, kernel details, memory, disks, and filesystem output to confirm both identity and host health
+>
+> **File transfer via SCP**
+> - Upload single files, download remote files, transfer multiple files, and copy directories recursively with `gcloud compute scp`
+> - Use `/tmp/` as a staging area and follow with `sudo cp` and `sudo chown` when the real destination is owned by `root` or a service account
+>
+> **IAP tunnel architecture**
+> - Trace how `gcloud` opens the tunnel to `tunnel.cloudproxy.app`, how IAM and firewall prerequisites gate access, and why the VM never needs a public IP for SSH or SCP
+> - Forward local ports to private services with `gcloud compute start-iap-tunnel` or SSH `-L`, including local `1435` to remote SQL Server port `1433`
+>
+> **OS Login configuration**
+> - Enable `enable-oslogin=TRUE` at project level, verify `commonInstanceMetadata.items`, inspect `gcloud compute os-login describe-profile`, and map Google identities to POSIX accounts
+> - Compare IAM-bound OS Login with metadata-based SSH keys for identity binding, key lifecycle, 2FA support, auditability, and multi-project access
+>
+> **Operations and safety**
+> - Warnings: IAP requires `roles/iap.tunnelResourceAccessor`, firewall access from `35.235.240.0/20`, correct OS Login roles, and separate ownership handling for remote file writes
+> - Recommendations table: the OS Login comparison matrix contrasts identity binding, short-lived keys, 2FA, audit trail, multi-project behavior, and service-account limitations
+> - Troubleshooting: 5 failure modes covering SSH timeouts, `Permission denied (publickey)`, slow SCP transfers, remote-path permission errors, and stale host keys after VM recreation
 
-`gcloud compute ssh` and `gcloud compute scp` provide secure, certificate-based access to Compute Engine VMs through Google's Identity-Aware Proxy (IAP) tunnel. The IAP tunnel routes traffic through Google's internal network, meaning VMs do not need a public IP address — a significant security improvement over traditional public SSH. All examples in this page target `stoxx-vm` in project `bq-wh-nb`, zone `europe-west1-b`, created in [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) with `--no-address` (no external IP) and `--metadata=enable-oslogin=true`.
+> [!note]- Glossary
+>
+> **IAP (Identity-Aware Proxy)**
+> - A Google Cloud access layer that evaluates IAM identity and policy before permitting traffic to protected resources such as private Compute Engine VMs.
+> - In this note, IAP is the security boundary that lets `stoxx-vm` stay off the public internet while still allowing authenticated SSH, SCP, and TCP forwarding.
+>
+> > [!info] Private does not mean unreachable
+> >
+> > IAP replaces public exposure with identity-gated access. The VM stays private, but it is still reachable through Google's proxy once IAM and firewall requirements are satisfied.
+>
+> ---
+>
+> **IAP tunnel**
+> - An encrypted transport path from the local `gcloud` client through Google's proxy layer to the VM's private IP and target port.
+> - It matters because every SSH, SCP, and forwarded-port example in this note depends on that tunnel rather than on direct ingress to the VM.
+>
+> > [!warning] Tunnel needs prerequisites
+> >
+> > The tunnel does not bypass misconfiguration. Missing IAM permissions, disabled APIs, or absent firewall rules will still prevent access.
+>
+> ---
+>
+> **`gcloud compute ssh`**
+> - The Google Cloud CLI command that opens an SSH session or runs remote commands against a Compute Engine VM.
+> - The note uses it for interactive administration, one-shot diagnostics, privileged `sudo` checks, and SSH-based port forwarding through IAP.
+>
+> > [!info] More than interactive shells
+> >
+> > `gcloud compute ssh` is also a remote-execution wrapper. `--command` turns it into a non-interactive automation tool rather than only a login experience.
+>
+> ---
+>
+> **OS Login**
+> - A Compute Engine access model that maps IAM identities to POSIX users and manages short-lived SSH credentials for them.
+> - It matters here because the VM access path is tied to the user's Google identity instead of to long-lived metadata keys distributed across instances.
+>
+> > [!warning] Roles still decide login
+> >
+> > Enabling OS Login alone does not grant shell access. The user also needs the appropriate IAM role such as `roles/compute.osLogin` or `roles/compute.osAdminLogin`.
+>
+> ---
+>
+> **Metadata-based SSH key**
+> - A traditional SSH public key stored in project or instance metadata and matched to a username on the VM.
+> - The note contrasts this legacy model with OS Login to show why persistent keys are less suitable for normal human access.
+>
+> > [!warning] Key lifecycle is manual
+> >
+> > Metadata keys remain valid until someone removes them. That makes cleanup, auditing, and user offboarding weaker than IAM-bound OS Login flows.
+>
+> ---
+>
+> **POSIX account**
+> - The Linux user identity on the VM defined by a username, UID, GID, home directory, and group membership.
+> - It matters because OS Login materializes the authenticated Google identity as a concrete Linux account that owns files and runs processes on the guest.
+>
+> > [!info] Username is derived
+> >
+> > OS Login derives the Linux username from the Google identity, typically replacing `@` and `.` with underscores. That mapping explains usernames such as `alexper_recovery_gmail_com`.
+>
+> ---
+>
+> **`gcloud compute scp`**
+> - The Google Cloud CLI command that copies files between a local machine and a Compute Engine VM over SSH.
+> - The note uses it for uploads, downloads, multi-file transfers, and recursive directory copies that all travel through the same IAP-backed access path.
+>
+> > [!warning] Remote path permissions apply
+> >
+> > `gcloud compute scp` authenticates as your VM user, not as `root`. A target directory can still reject the write even when the tunnel and authentication are correct.
+>
+> ---
+>
+> **SCP**
+> - Secure Copy Protocol, a file-transfer protocol that operates over SSH.
+> - It matters in this note because `gcloud compute scp` wraps SCP semantics while handling the GCP-specific identity and tunneling details for you.
+>
+> > [!info] Same trust path as SSH
+> >
+> > SCP is not a separate access plane here. It reuses the same SSH and IAP trust path as the shell sessions.
+>
+> ---
+>
+> **Serial console**
+> - A text console exposed through the VM's virtual serial port, independent of normal network SSH access.
+> - It matters as the fallback access method when guest networking, SSH configuration, or the operating system itself prevents standard SSH logins.
+>
+> > [!warning] Use as break-glass path
+> >
+> > Serial console access is mainly for recovery scenarios. It is most valuable when normal SSH is broken, not as the default administration workflow.
+>
+> ---
+>
+> **Port forwarding**
+> - A tunneling pattern that binds a local TCP port and relays traffic to a port on the remote VM.
+> - The note uses it to reach SQL Server on `stoxx-vm` from local tools without exposing the database port publicly.
+>
+> > [!info] Local client stays unchanged
+> >
+> > With port forwarding active, the local application still connects to `localhost`. The tunnel handles the translation to the VM's private service port.
+>
+> ---
+>
+> **`gcloud compute start-iap-tunnel`**
+> - The Google Cloud CLI command that opens a raw TCP tunnel through IAP to a chosen VM port.
+> - It matters because it supports non-SSH protocols such as SQL Server while preserving the same private-network and IAM-controlled access model.
+>
+> > [!warning] Tunnel stays foregrounded
+> >
+> > The command keeps running until you terminate it. Closing the process immediately tears down access for any local client using the forwarded port.
+>
+> ---
+>
+> **WebSocket tunnel**
+> - The underlying transport IAP uses between the local client and Google's proxy endpoint for TCP forwarding.
+> - It matters because it explains why private-port access can work over standard outbound connectivity from the local workstation without opening inbound SSH on the VM.
+>
+> > [!info] Proxy endpoint is fixed
+> >
+> > The client connects to Google's IAP endpoint, not directly to the VM. Google then forwards the traffic internally to the guest network interface.
 
-## Key Definitions
-
-| Term | Definition |
-|---|---|
-| **IAP (Identity-Aware Proxy)** | Google Cloud service that verifies a user's IAM identity and context before granting access to a resource. For Compute Engine, IAP acts as a gatekeeper between the public internet and the VM's private network interface. |
-| **IAP tunnel** | An encrypted WebSocket connection from the local `gcloud` client to `tunnel.cloudproxy.app`, which Google routes internally to the VM's private IP on the target port. The VM never receives a direct external connection. |
-| **OS Login** | A Compute Engine feature that maps IAM identities to POSIX accounts on VMs. When enabled, `gcloud compute ssh` uses a short-lived, IAM-managed SSH key instead of a persistent key stored in instance metadata. Set via `enable-oslogin=true` in project or instance metadata. |
-| **SSH key (metadata-based)** | A traditional SSH public key stored in project or instance metadata. Each key grants access to any VM in scope. OS Login replaces this model with IAM-bound, short-lived keys. |
-| **SCP** | Secure Copy Protocol — file transfer over SSH. `gcloud compute scp` wraps SCP over the IAP tunnel, using the same credential and tunnel model as `gcloud compute ssh`. |
-| **Serial console** | A text-based console attached to the VM's serial port, accessible via `gcloud compute connect-to-serial-port`. Used as a fallback when SSH is unreachable (e.g., broken network config, kernel panic). |
-| **Port forwarding** | `gcloud compute start-iap-tunnel` maps a local TCP port to a port on the VM through IAP. Used to reach services (SQL Server, HTTP) running on VMs without public IPs. |
-| **WebSocket tunnel** | The transport protocol IAP uses for TCP forwarding. The `gcloud` client opens a WebSocket to `tunnel.cloudproxy.app`, which proxies the connection to the VM's private IP inside the VPC. |
+> [!example] Remote Access Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for SSH sessions, non-interactive remote commands, SCP transfers, and private-service forwarding into VMs that stay private behind IAP.
+> > - Use it when operators need secure access to instances without public IPs and must combine IAM, IAP, firewall rules, and OS Login correctly.
+> > - Use it when file transfer must respect remote ownership boundaries by staging into writable paths first and then elevating deliberately.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not copy directly into root-owned or service-owned paths when a staging path plus explicit `sudo cp` or `sudo chown` is the safe pattern.
+> > - Do not prefer metadata-based SSH keys for normal human access when OS Login is available and auditability matters.
+> > - Do not use `--internal-ip` unless the workstation already has valid same-network, VPN, or other private routing to the VM.
 
 ## SSH Access via IAP
 
@@ -425,7 +568,7 @@ The following must be in place before `--tunnel-through-iap` will work:
 | Prerequisite | Detail |
 |---|---|
 | **IAM role** | `roles/iap.tunnelResourceAccessor` on the project, folder, or individual VM resource. Project `Owner` and `Editor` roles implicitly include this permission. |
-| **API** | `compute.googleapis.com` must be enabled on the project (see [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis)). |
+| **API** | `compute.googleapis.com` must be enabled on the project (see [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services)). |
 | **Firewall rule** | An ingress rule allowing IAP's IP range `35.235.240.0/20` on TCP port 22 (for SSH) or the target port (for other services). The default VPC includes `default-allow-ssh` which allows TCP 22 from `0.0.0.0/0` — this is broader than needed but satisfies the IAP requirement. |
 | **VM network tag** | If the firewall rule uses target tags, the VM must carry the matching tag. `stoxx-vm` uses the `iap-ssh` tag for this purpose. |
 

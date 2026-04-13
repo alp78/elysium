@@ -12,30 +12,200 @@ tags:
 >
 > — **Linus Torvalds**, Git mailing list
 
-Every developer eventually commits to the wrong branch, pushes a secret, or wipes out an hour of work with a misplaced `reset --hard`. Git provides a layered recovery system — from safe, no-consequence operations like `restore` and `revert` to destructive history-rewriting commands like `reset --hard` and `rebase`. The key to safe recovery is knowing exactly which layer your mistake lives in, and choosing the tool that matches.
+> [!abstract]- Summary
+>
+> Maps Git recovery tools by blast radius so you can discard, unstage, revert, reset, stash, or recover lost commits intentionally instead of guessing which command is safe for working-tree edits, local history, or public branches.
+>
+> **Recovery model and local-state undo**
+> - Separates working-tree, staging-area, local-history, and public-history recovery so the note's commands are chosen by what should be preserved rather than by habit
+> - Uses `git restore`, `git clean`, and related file-level tools to discard or recover local changes without moving branch pointers when full history edits are unnecessary
+>
+> **Commit and history recovery**
+> - Compares `git commit --amend`, `git reset` modes, `git revert`, and `git reflog` so readers know when they are rewriting history versus adding a corrective commit
+> - Treats reflog as the main safety net for lost commits, rebases, deleted branches, and accidental pointer movement before garbage collection expires the evidence
+>
+> **Stash, advanced recovery, and scenarios**
+> - Uses stash operations, advanced recovery commands, and concrete workflow examples to recover from wrong-branch work, accidental deletion, rebases, and interrupted local changes
+> - Extends the guidance to public-history safety and data-engineering scenarios where migration files, secrets, or generated artifacts change the acceptable recovery path
+>
+> **Operations and safety**
+> - Warnings: destructive resets, reflog expiry, secret exposure that needs history cleanup, and recovering files without verifying which branch or commit should own the final state
+> - Recommendations: identify the state boundary first, prefer additive undo on shared branches, inspect reflog before panicking, and validate the recovered tree before pushing
+> - Troubleshooting: wrong-branch commits, lost work after reset or rebase, stash confusion, and file-level recovery failures
 
-This page covers every undo and recovery mechanism in Git, organized by where the mistake occurred and what state it affects. Every command output was captured from live operations on the [git-lab](https://github.com/alp78/git-lab) repository.
+> [!note]- Glossary
+>
+> **working tree**
+> - The file system directory where you edit files. Changes here are not yet recorded by Git until staged.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **staging area (index)**
+> - An intermediate holding area between the working tree and the repository. `git add` moves changes here; `git commit` records them permanently.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **commit**
+> - A snapshot of the staging area at a point in time, identified by a SHA-1 hash. Immutable once created.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **HEAD**
+> - A symbolic reference pointing to the current commit on the current branch. Most commands operate relative to HEAD.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **ref**
+> - A human-readable name that points to a commit SHA — branches, tags, and HEAD are all refs.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **reflog**
+> - A local, chronological log of every position HEAD has occupied. Entries expire after ~90 days (`gc.reflogExpire`). Not shared with remotes.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **restore**
+> - Discards or unstages changes in the working tree or index without touching commit history. Replacement for the overloaded `git checkout -- <file>`.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **revert**
+> - Creates a new commit that applies the inverse of a previous commit's diff. Preserves history — safe for shared branches.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **reset**
+> - Moves the branch pointer (and HEAD) to a different commit. Three modes control what happens to the un-done changes: `--soft` (staged), `--mixed` (unstaged), `--hard` (discarded).
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **amend**
+> - Replaces the most recent commit with a new one that combines the original changes plus any additional staged changes. Rewrites history — the original commit gets a new SHA.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **cherry-pick**
+> - Copies the diff of a single commit from one branch and applies it as a new commit on the current branch. The copy gets a new SHA.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **stash**
+> - A stack-based temporary storage area for uncommitted changes. Saves a dirty working tree without committing, allowing context switches.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **detached HEAD**
+> - A state where HEAD points directly to a commit SHA rather than a branch name. New commits made here are orphaned when you switch away unless you create a branch.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **force-push**
+> - Overwrites the remote branch pointer with the local one, discarding any remote commits not in local history. Destructive to collaborators who have already pulled.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **garbage collection (gc)**
+> - A periodic Git process that permanently deletes unreachable objects — commits no longer pointed to by any ref or reflog entry. Default expiry: 90 days for reflog entries, 14 days for unreachable objects.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **DAG**
+> - Directed Acyclic Graph — the data structure Git uses to represent commit history. Each commit points to its parent(s), forming a one-way chain that can never loop.
+> - It matters in this note because the workflows for undo choice, local recovery, and shared-history safety read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-## Key Definitions
-
-| Term | Definition |
-|---|---|
-| **working tree** | The file system directory where you edit files. Changes here are not yet recorded by Git until staged. |
-| **staging area (index)** | An intermediate holding area between the working tree and the repository. `git add` moves changes here; `git commit` records them permanently. |
-| **commit** | A snapshot of the staging area at a point in time, identified by a SHA-1 hash. Immutable once created. |
-| **HEAD** | A symbolic reference pointing to the current commit on the current branch. Most commands operate relative to HEAD. |
-| **ref** | A human-readable name that points to a commit SHA — branches, tags, and HEAD are all refs. |
-| **reflog** | A local, chronological log of every position HEAD has occupied. Entries expire after ~90 days (`gc.reflogExpire`). Not shared with remotes. |
-| **restore** | Discards or unstages changes in the working tree or index without touching commit history. Replacement for the overloaded `git checkout -- <file>`. |
-| **revert** | Creates a new commit that applies the inverse of a previous commit's diff. Preserves history — safe for shared branches. |
-| **reset** | Moves the branch pointer (and HEAD) to a different commit. Three modes control what happens to the un-done changes: `--soft` (staged), `--mixed` (unstaged), `--hard` (discarded). |
-| **amend** | Replaces the most recent commit with a new one that combines the original changes plus any additional staged changes. Rewrites history — the original commit gets a new SHA. |
-| **cherry-pick** | Copies the diff of a single commit from one branch and applies it as a new commit on the current branch. The copy gets a new SHA. |
-| **stash** | A stack-based temporary storage area for uncommitted changes. Saves a dirty working tree without committing, allowing context switches. |
-| **detached HEAD** | A state where HEAD points directly to a commit SHA rather than a branch name. New commits made here are orphaned when you switch away unless you create a branch. |
-| **force-push** | Overwrites the remote branch pointer with the local one, discarding any remote commits not in local history. Destructive to collaborators who have already pulled. |
-| **garbage collection (gc)** | A periodic Git process that permanently deletes unreachable objects — commits no longer pointed to by any ref or reflog entry. Default expiry: 90 days for reflog entries, 14 days for unreachable objects. |
-| **DAG** | Directed Acyclic Graph — the data structure Git uses to represent commit history. Each commit points to its parent(s), forming a one-way chain that can never loop. |
+> [!example] Recovery Path Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for undoing local mistakes, reconstructing lost commits, and selecting the least-destructive recovery path for a specific Git state boundary.
+> > - Use it when you must distinguish working-tree cleanup, index repair, local-history rewrite, and shared-history-safe correction before choosing a command.
+> > - Use it to treat reflog as the first recovery surface and to validate recovered state before pushing it back into collaboration.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not rewrite public history casually when additive recovery such as `revert` is the safer collaborative choice.
+> > - Do not reach for `reset --hard` before checking whether `restore`, `revert`, or reflog can solve the problem with less blast radius.
+> > - Do not recover files or commits without first deciding which branch and ownership boundary should contain the final state.
 
 ## Conceptual Model
 

@@ -9,14 +9,31 @@ tags:
 
 # MOC: DataOps
 
-DataOps methodology and team organization — from principles and CI/CD
-practices through platform engineering to leadership and collaboration.
+DataOps methodology and team organization, from delivery discipline and self-service platform design through team topology, leadership, and incident practice. Expand any section to browse the chapter by operating concern.
+
+```mermaid
+mindmap
+  ((Principles and Practice))
+    (DataOps foundations)
+    (CI/CD and testing)
+    (self-service platform)
+    (index operations)
+```
 
 > [!guide]+ Principles and Practice
 >
 > [[domain-principles-and-practice]]
 >
 > DataOps principles, CI/CD practices for data pipelines, index-specific operational patterns, and self-service platform engineering.
+
+```mermaid
+mindmap
+  ((People and Organization))
+    (team topology)
+    (roles and careers)
+    (collaboration)
+    (incident leadership)
+```
 
 > [!guide]+ People and Organization
 >

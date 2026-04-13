@@ -11,28 +11,180 @@ tags:
 >
 > "I was tired of everyone using version numbers in whatever way they wanted and knew we could do better if everyone agreed on what each part of a version number meant."
 
-Git tags are named pointers to specific commits, used to mark significant points in a repository's history — most commonly production releases. Unlike branches, tags do not move as new commits are added. A tag always points to the same commit SHA. This page covers tag types, creation, inspection, pushing, deletion, semantic versioning, GitHub Releases, release lifecycle workflows, tag governance, and troubleshooting. Every command output shown below was captured from live operations in the `git-lab` repository.
+> [!abstract]- Summary
+>
+> Explains how immutable Git tags anchor release points, how semantic versioning and GitHub Releases turn those pointers into publishable artifacts, and how teams keep release metadata, automation, and governance consistent.
+>
+> **Tag model and core operations**
+> - Defines lightweight, annotated, and signed tags, then covers creating, listing, filtering, pushing, and deleting tags without confusing them with branches or moving refs
+> - Shows why tags are stable names for release commits and how that immutability shapes rollback, deployment, and reproducibility workflows
+>
+> **Versioning and release publication**
+> - Connects semantic versioning to actual Git tag names, then layers GitHub Releases, release notes, release assets, and changelog structure on top of the underlying Git objects
+> - Distinguishes what lives in Git itself versus what the hosting platform adds when a tag becomes a formal release artifact
+>
+> **Automation and governance**
+> - Walks through release lifecycle stages, GitHub Actions integration, tag protection, immutability policy, and audit expectations for production release management
+> - Explains where manual tagging is still appropriate and where automation should own tag creation, validation, and publication sequencing
+>
+> **Operations and safety**
+> - Warnings: reusing tag names, unsigned or unaudited release points, mismatched SemVer intent, and automation pipelines that assume tags are mutable
+> - Recommendations: prefer annotated or signed tags for real releases, keep release metadata deterministic, and protect high-value tag namespaces on the server side
+> - Troubleshooting: tag push, deletion, release publication, versioning, and automation-trigger failures
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Tag**
+> - A named reference that points to a specific commit SHA in the Git object database. Tags are immutable by convention — they should not be moved after creation.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Lightweight tag**
+> - A tag stored as a simple ref (a pointer to a commit SHA) with no additional metadata. Functionally identical to a branch that never moves.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Annotated tag**
+> - A tag stored as a full Git object containing the tagger's name, email, date, and a message. The tag object points to the commit. Annotated tags are the standard for production releases.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Signed tag**
+> - An annotated tag that also includes a GPG or SSH cryptographic signature, allowing anyone to verify that the tag was created by the claimed author and has not been tampered with.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Release**
+> - A GitHub (or GitLab/Bitbucket) concept built on top of a Git tag. A release adds a title, release notes (markdown body), binary attachments, and metadata (draft, pre-release, latest) to a tag.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Semantic version (SemVer)**
+> - A versioning convention using the format `MAJOR.MINOR.PATCH` (e.g., `1.2.3`). Each part has a precise meaning: MAJOR for breaking changes, MINOR for backwards-compatible features, PATCH for backwards-compatible fixes.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Pre-release**
+> - A version marked as not production-ready, indicated by a hyphen suffix: `v1.2.0-rc.1`, `v1.2.0-beta.3`. Pre-releases have lower precedence than their associated release.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Build metadata**
+> - Optional metadata appended with `+` that does not affect version precedence: `v1.2.0+build.42`. Ignored in version comparison.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **Hotfix release**
+> - An urgent patch release that bypasses the normal release cycle to fix a critical bug in production. Typically a PATCH increment (e.g., `v1.1.0` → `v1.1.1`).
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **Rollback**
+> - Reverting a production environment to a previously tagged release after a failed deployment. Rollback uses an existing tag — it does not create a new one.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Changelog**
+> - A human-readable log of notable changes for each release, typically generated from commit messages or PR titles between two tags.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Release candidate (RC)**
+> - A pre-release version considered feature-complete and ready for final testing: `v1.2.0-rc.1`. If no issues are found, the RC is promoted to the release.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Tag object**
+> - The Git object stored for an annotated tag. Contains the target commit SHA, tag name, tagger identity, date, message, and optional signature. Lightweight tags do not create a tag object.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Ref**
+> - A human-readable name (branch, tag, HEAD) that Git maps to a commit SHA. Tags are refs stored under `refs/tags/`.
+> - It matters in this note because the workflows for tagging, release publication, versioning, and release governance read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-Every term used in this page is defined here. Return to this table when a term is unfamiliar.
-
-| Term | Definition |
-|------|-----------|
-| **Tag** | A named reference that points to a specific commit SHA in the Git object database. Tags are immutable by convention — they should not be moved after creation. |
-| **Lightweight tag** | A tag stored as a simple ref (a pointer to a commit SHA) with no additional metadata. Functionally identical to a branch that never moves. |
-| **Annotated tag** | A tag stored as a full Git object containing the tagger's name, email, date, and a message. The tag object points to the commit. Annotated tags are the standard for production releases. |
-| **Signed tag** | An annotated tag that also includes a GPG or SSH cryptographic signature, allowing anyone to verify that the tag was created by the claimed author and has not been tampered with. |
-| **Release** | A GitHub (or GitLab/Bitbucket) concept built on top of a Git tag. A release adds a title, release notes (markdown body), binary attachments, and metadata (draft, pre-release, latest) to a tag. |
-| **Semantic version (SemVer)** | A versioning convention using the format `MAJOR.MINOR.PATCH` (e.g., `1.2.3`). Each part has a precise meaning: MAJOR for breaking changes, MINOR for backwards-compatible features, PATCH for backwards-compatible fixes. |
-| **Pre-release** | A version marked as not production-ready, indicated by a hyphen suffix: `v1.2.0-rc.1`, `v1.2.0-beta.3`. Pre-releases have lower precedence than their associated release. |
-| **Build metadata** | Optional metadata appended with `+` that does not affect version precedence: `v1.2.0+build.42`. Ignored in version comparison. |
-| **Hotfix release** | An urgent patch release that bypasses the normal release cycle to fix a critical bug in production. Typically a PATCH increment (e.g., `v1.1.0` → `v1.1.1`). |
-| **Rollback** | Reverting a production environment to a previously tagged release after a failed deployment. Rollback uses an existing tag — it does not create a new one. |
-| **Changelog** | A human-readable log of notable changes for each release, typically generated from commit messages or PR titles between two tags. |
-| **Release candidate (RC)** | A pre-release version considered feature-complete and ready for final testing: `v1.2.0-rc.1`. If no issues are found, the RC is promoted to the release. |
-| **Tag object** | The Git object stored for an annotated tag. Contains the target commit SHA, tag name, tagger identity, date, message, and optional signature. Lightweight tags do not create a tag object. |
-| **Ref** | A human-readable name (branch, tag, HEAD) that Git maps to a commit SHA. Tags are refs stored under `refs/tags/`. |
+> [!example] Release Boundary Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for marking deployable versions, publishing releases, tying artifacts to exact commits, and enforcing reproducible rollback points.
+> > - Use it when the release boundary must be explicit in both Git and the hosting platform, including SemVer naming, release notes, automation, and governance.
+> > - Use it to decide when a tag should remain a simple internal marker and when it must become a protected, auditable release object.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use tags as moving bookmarks; once published, they should be treated as stable release references.
+> > - Do not delete or recreate published tags casually, because that breaks reproducibility and downstream automation assumptions.
+> > - Do not treat release notes as a substitute for actual versioning policy, signing, or tag-governance rules.
 
 ## Conceptual Model
 

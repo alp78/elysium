@@ -5,42 +5,225 @@ tags:
   - version-control
 ---
 
-# Git and GitHub Problems in Distributed Teams
+# Git Problems
 
 > [!quote] Linus Torvalds — Git mailing list
 >
 > "You must never EVER destroy other people's history. You must not rebase commits other people did. If it doesn't have your sign-off on it, it's off limits."
 
-This page is an **incident playbook** for distributed data engineering teams. It catalogs Git and GitHub problems ranked by severity, with root cause analysis, blast radius assessment, prevention protocols, and fix procedures. The focus is on high-level incident narratives, business impact, escalation thresholds, and prevention patterns — not on the underlying Git mechanics of each command. For detailed command references, see the dedicated pages linked in each scenario.
+> [!abstract]- Summary
+>
+> Frames Git and GitHub failures as team incidents rather than isolated command mistakes, ranking them by severity and pairing each class of problem with blast radius, escalation thresholds, and prevention controls for distributed data-engineering work.
+>
+> **Incident framing and triage**
+> - Starts with the severity matrix and first-response protocol so responders can classify whether a problem is about data loss, security, delivery velocity, operational friction, or process hygiene
+> - Treats Git problems as collaboration failures with technical symptoms, which is why detection, containment, communication, and rollback matter as much as the fixing command itself
+>
+> **Severity-based problem classes**
+> - Organizes incidents into critical, high, moderate, and low severity groups, then describes root causes, business impact, and prevention patterns for each class of distributed-team failure
+> - Connects repository mistakes to deployment, compliance, coordination, and production risk instead of stopping at the immediate local command failure
+>
+> **Scenario index and operational response**
+> - Uses the data-engineering scenario index, operating guidance, troubleshooting, and quick-reference material to turn the taxonomy into concrete response patterns for real incidents
+> - Keeps the focus on escalation, recovery boundaries, and long-term prevention rather than on one-off shell fixes in isolation
+>
+> **Operations and safety**
+> - Warnings: silent history loss, secret exposure, broken release lines, weak review controls, and cultural anti-patterns that normalize unsafe Git behavior
+> - Recommendations: classify severity before acting, contain blast radius first, document recovery decisions, and feed recurring incidents back into branch policy, review policy, and onboarding
 
-This page is designed for a regulated financial index platform where audit trails matter (EU BMR), broken main means no index publication, and leaked credentials can expose client financial data. Every scenario is drawn from real incidents in distributed data engineering teams.
+> [!note]- Glossary
+>
+> **blast radius**
+> - The scope of impact from an incident — how many engineers, systems, environments, or data consumers are affected.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **branch protection**
+> - GitHub repository rules that restrict who can push, force-push, or delete specific branches. Prevents direct pushes to main.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **credential rotation**
+> - Revoking a compromised secret (API key, password, token) and issuing a new one. Must happen before any history cleanup.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **DAG**
+> - Directed Acyclic Graph. In Git, the commit history. In Airflow, the pipeline definition. Context determines meaning.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **detached HEAD**
+> - A state where HEAD points directly to a commit SHA instead of a branch ref. Commits made in this state become orphaned when you switch branches.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **escalation**
+> - The process of raising an incident to a higher authority — team lead, security team, or management — based on severity.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **force-push**
+> - `git push --force` replaces the remote branch tip with the local ref. Commits on the remote not in the local history become unreachable.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **garbage collection**
+> - `git gc` removes unreachable objects (orphaned commits, dangling blobs) from the object store. Default retention: 90 days for reflog entries, 14 days for unreachable objects.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **gitGraph**
+> - A mermaid diagram type for visualizing Git branch and commit operations.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **history rewriting**
+> - Any operation that changes existing commit SHAs: rebase, amend, filter-repo, reset. Creates new commits with different hashes even if the diffs are identical.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **incident**
+> - An unplanned event that disrupts or risks disrupting the normal workflow, data integrity, or security posture of the team.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **LFS**
+> - Large File Storage. A Git extension that replaces large binary files with lightweight pointer files, storing the actual content on a separate server.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **merge debt**
+> - The accumulated divergence between a feature branch and main. Grows with every commit to main that touches shared files.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **orphaned commit**
+> - A commit not reachable from any branch or tag ref. Retained in the object store temporarily (reflog), then garbage collected.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **post-mortem**
+> - A structured review after an incident. Focuses on systemic causes, not individual blame. Also called a retrospective.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **reflog**
+> - Reference log. Records every movement of HEAD and branch tips locally. The safety net for recovering from resets, rebases, and detached HEAD work. Default retention: 90 days.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **severity**
+> - A classification of incident impact: critical (data loss, security breach), high (team velocity, code quality), moderate (operational pain), low (annoyances).
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **shared history**
+> - Commits that have been pushed to a remote and may have been pulled by other engineers. Rewriting shared history causes cascading failures.
+> - It matters in this note because the workflows for incident severity assessment, escalation, and prevention planning read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
----
-
-## Key Definitions
-
-| Term | Definition |
-|---|---|
-| **blast radius** | The scope of impact from an incident — how many engineers, systems, environments, or data consumers are affected. |
-| **branch protection** | GitHub repository rules that restrict who can push, force-push, or delete specific branches. Prevents direct pushes to main. |
-| **credential rotation** | Revoking a compromised secret (API key, password, token) and issuing a new one. Must happen before any history cleanup. |
-| **DAG** | Directed Acyclic Graph. In Git, the commit history. In Airflow, the pipeline definition. Context determines meaning. |
-| **detached HEAD** | A state where HEAD points directly to a commit SHA instead of a branch ref. Commits made in this state become orphaned when you switch branches. |
-| **escalation** | The process of raising an incident to a higher authority — team lead, security team, or management — based on severity. |
-| **force-push** | `git push --force` replaces the remote branch tip with the local ref. Commits on the remote not in the local history become unreachable. |
-| **garbage collection** | `git gc` removes unreachable objects (orphaned commits, dangling blobs) from the object store. Default retention: 90 days for reflog entries, 14 days for unreachable objects. |
-| **gitGraph** | A mermaid diagram type for visualizing Git branch and commit operations. |
-| **history rewriting** | Any operation that changes existing commit SHAs: rebase, amend, filter-repo, reset. Creates new commits with different hashes even if the diffs are identical. |
-| **incident** | An unplanned event that disrupts or risks disrupting the normal workflow, data integrity, or security posture of the team. |
-| **LFS** | Large File Storage. A Git extension that replaces large binary files with lightweight pointer files, storing the actual content on a separate server. |
-| **merge debt** | The accumulated divergence between a feature branch and main. Grows with every commit to main that touches shared files. |
-| **orphaned commit** | A commit not reachable from any branch or tag ref. Retained in the object store temporarily (reflog), then garbage collected. |
-| **post-mortem** | A structured review after an incident. Focuses on systemic causes, not individual blame. Also called a retrospective. |
-| **reflog** | Reference log. Records every movement of HEAD and branch tips locally. The safety net for recovering from resets, rebases, and detached HEAD work. Default retention: 90 days. |
-| **severity** | A classification of incident impact: critical (data loss, security breach), high (team velocity, code quality), moderate (operational pain), low (annoyances). |
-| **shared history** | Commits that have been pushed to a remote and may have been pulled by other engineers. Rewriting shared history causes cascading failures. |
-
----
+> [!example] Incident Response Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for incident review, on-call response, team training, and policy design around repeated Git or GitHub collaboration failures.
+> > - Use it when the real question is severity, blast radius, containment, escalation, and prevention rather than a single low-level command.
+> > - Use it to classify failures before acting so data loss, secret exposure, release breakage, and process drift are handled with the right urgency.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a low-level command tutorial when a narrower note on merge conflicts, recovery, remotes, or daily workflow is the better fit.
+> > - Do not jump into technical fixes before severity and blast radius have been assessed; the wrong early action can worsen the incident.
+> > - Do not treat recurring Git failures as isolated operator mistakes when the pattern actually indicates a policy or culture problem.
 
 ## Severity Matrix
 
@@ -1181,6 +1364,7 @@ No enforced commit message convention, no pre-commit hook validation, and a cult
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `perf`
 
 Examples:
+
 - `feat(esg): add Scope 3 emissions to index weighting model`
 - `fix(migrations): correct V005 column type from INT to DECIMAL(18,6)`
 - `chore(deps): upgrade dbt-bigquery to 1.7.4`
@@ -1210,7 +1394,6 @@ No branch cleanup policy, no auto-delete on merge, and cultural fear of losing w
 #### Prevention | auto-delete and cleanup
 
 1. **Enable auto-delete merged branches** in GitHub: Settings → General → Pull Requests → Automatically delete head branches.
-
 2. **Scheduled cleanup script** — run monthly:
 
 *List stale branches merged more than 30 days ago:*
@@ -1363,7 +1546,6 @@ Git LFS is an extension — `git lfs install` must be run once per machine befor
    - Install Git LFS: `brew install git-lfs` (macOS) or `choco install git-lfs` (Windows)
    - Enable LFS: `git lfs install`
    - Then clone
-
 2. **CI runner setup** — install LFS in every runner:
 
 ```yaml

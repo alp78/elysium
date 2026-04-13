@@ -9,37 +9,174 @@ updated: 2026-03-27
 status: complete
 ---
 
-# 01 – Foundations and Data Structures
+# Foundations and I/O - C#
 
 > [!quote]
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
 >
 > — **Linus Torvalds**, Git mailing list post (2006)
 
-This note is the C# counterpart to the Python foundations notebook. It defines the core data structures — Series and DataFrame — in both Polars.NET and Microsoft.Data.Analysis (MDA), compares their type systems, null handling, and memory layouts, and covers reading and writing data in CSV, Parquet, and JSON formats. Each section shows both libraries side by side with real EuroStoxx 50 data.
+> [!abstract]- Summary
+>
+> Establishes the C# dataframe foundation across Polars.NET and Microsoft.Data.Analysis, using the same EuroStoxx data to compare how the two libraries model series, frames, typing, nulls, and file I/O. The note exists to make the engine choice explicit early: Polars.NET is the Arrow-backed analytical core, while MDA is the managed .NET option that fits ML.NET and conventional application boundaries more naturally.
+>
+> **Setup & Imports**
+> - Configure the notebook runtime, suppress non-actionable .NET Interactive assembly warnings, load the required NuGet packages, and register HTML formatters so both libraries render cleanly in the notebook
+> - Establish the runtime and deployment constraints up front, including native-package expectations for Polars.NET, managed-library tradeoffs in MDA, and helper loaders for the EuroStoxx CSV datasets
+>
+> **Series**
+> - Build `Series` and typed MDA columns, perform arithmetic and aggregations, inspect summary statistics, and compare how one-dimensional column objects behave across the two libraries
+> - Contrast the underlying mental model directly: Polars.NET series are Arrow-backed and immutable, while MDA columns are mutable managed objects that stay closer to ordinary .NET data structures
+>
+> **DataFrames**
+> - Build `DataFrame` objects from arrays, dictionaries, and records, then inspect parameters, structure, and side-by-side behavior in Polars.NET and Microsoft.Data.Analysis
+> - Cover the I/O boundary through CSV, JSON, and Parquet examples, including native Polars.NET readers, `System.Text.Json` mapping for MDA JSON, and `ParquetSharp` bridge-based Parquet loading for MDA
+> - End with the decision matrix, architecture flow, and senior takeaways that define where each library fits in real C# analytical systems
+>
+> **Operations and safety**
+> - Warnings: immutability-model mismatch, typed-column CLR mismatch in MDA, NuGet/native-runtime version drift, and CSV type inference errors
+> - Recommendations: 5 practices covering Polars.NET as the default analytical engine, MDA only where `IDataView` matters, Parquet as the persistence default, schema validation after I/O, and ADO.NET for database access
+> - Troubleshooting: 5 failure modes covering `DllNotFoundException`, typed-column mismatch, MDA Parquet limitations, CSV type inference, and mistaken mutation attempts on Polars.NET frames
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Polars.NET** | A .NET wrapper around the Rust-based Polars engine. Provides `DataFrame`, `Series`, `LazyFrame`, and expression-based transforms via Apache Arrow memory. | High-performance columnar analytics in C# — same engine as Python Polars, accessed from .NET. | Not a drop-in replacement for LINQ — Polars.NET uses its own expression API, not `IEnumerable<T>`. |
-| **Microsoft.Data.Analysis (MDA)** | A Microsoft-maintained DataFrame library for .NET. Provides `DataFrame`, typed `DataFrameColumn` variants, and ML.NET integration via `IDataView`. | Lightweight tabular operations in .NET with direct handoff to ML.NET pipelines. | MDA is less mature than Pandas or Polars — some operations require manual column iteration. |
-| **Series** | A one-dimensional typed array. Polars.NET: `Series`. MDA: typed columns like `Int32DataFrameColumn`, `StringDataFrameColumn`. | The atomic unit of columnar data — each DataFrame column is a Series/Column internally. | Polars.NET `Series` is immutable (Arrow-backed). MDA columns are mutable — mutations propagate. |
-| **DataFrame** | A two-dimensional tabular structure of named, typed columns. Both libraries provide a `DataFrame` class. | The primary container for structured data in C# analytical workflows. | Polars.NET DataFrames are immutable — every operation returns a new DataFrame. MDA DataFrames are mutable. |
-| **NuGet** | The .NET package manager. Polars.NET: `Polars.Net`. MDA: `Microsoft.Data.Analysis`. | Installs and manages library dependencies in .NET projects and Polyglot Notebooks. | Version mismatches between Polars.NET and .NET runtime can cause `DllNotFoundException`. Check compatibility. |
-| **Arrow** | Apache Arrow columnar memory format — the internal representation used by Polars.NET. | Enables zero-copy interop with other Arrow-native tools (DuckDB.NET, Python Polars). | MDA does not use Arrow — it stores data in managed .NET arrays. No zero-copy exchange between MDA and Polars.NET. |
-| **IDataView** | The ML.NET data interface. MDA `DataFrame` implements `IDataView`, enabling direct use in ML.NET pipelines. | Bridges tabular data to ML.NET training and prediction workflows. | Polars.NET does not implement `IDataView` — convert to MDA or extract arrays for ML.NET. |
-| **Parquet** | Columnar binary file format with embedded schema and compression. | The preferred I/O format for both libraries — smallest files, fastest reads, type preservation. | MDA has limited Parquet support — use `MLContext.Data.LoadFromParquet()`. Polars.NET has native `ReadParquet()`. |
-
-## What this note covers
-
-- **Setup and imports** — NuGet packages, warning suppression, runtime and deployment guidance
-- **Series** — creating, arithmetic, aggregation, describe, and comparison across both libraries
-- **DataFrame** — building from dictionaries, arrays, and records in both libraries
-- **Decision matrix** — when to use Polars.NET vs MDA vs neither
-- **Architecture decision flow** — mermaid diagram for library selection
-
----
+> [!note]- Glossary
+>
+> **Polars.NET**
+> - A .NET binding over the Rust Polars engine that exposes columnar dataframe operations and expression-based transforms in C#.
+> - It matters because the note treats Polars.NET as the high-performance analytical option and uses it for the Arrow-backed side of every comparison.
+>
+> > [!warning] Not LINQ with columns
+> >
+> > Polars.NET is not a drop-in `IEnumerable<T>` abstraction. Its performance and semantics depend on the Polars expression model rather than ordinary row-wise C# iteration.
+>
+> ---
+>
+> **Microsoft.Data.Analysis (MDA)**
+> - A managed .NET dataframe library built around typed columns and integration with the wider Microsoft data tooling stack.
+> - It matters because the note uses MDA as the .NET-native counterpart to Polars.NET, especially where ML.NET and managed-only deployment matter more than Arrow-native execution.
+>
+> > [!info] Managed-first tradeoff
+> >
+> > MDA fits conventional .NET application boundaries more easily than Polars.NET, but it offers less analytical breadth and requires more manual work for some operations.
+>
+> ---
+>
+> **`Series`**
+> - A one-dimensional typed column object used as the basic building block of dataframe operations.
+> - It matters because the note starts at the column level, showing how arithmetic, aggregation, and summary behavior differ before whole-frame behavior is introduced.
+>
+> > [!warning] Same name, different mutability
+> >
+> > A Polars.NET `Series` behaves like an immutable Arrow-backed vector, while MDA columns are mutable and propagate in-place changes.
+>
+> ---
+>
+> **`DataFrame`**
+> - A tabular structure composed of named typed columns and exposed by both libraries as the primary analytical container.
+> - It matters because the note compares not just syntax, but the engineering consequences of immutable versus mutable frames in C# data workflows.
+>
+> > [!warning] Mutation expectations diverge
+> >
+> > If you carry MDA-style in-place expectations into Polars.NET, you will misread the API and accidentally drop returned frames.
+>
+> ---
+>
+> **`LazyFrame`**
+> - The deferred-execution query object in Polars that records a plan before materializing results.
+> - It matters because Polars.NET inherits the same analytical model as Python Polars, and understanding that model explains why Polars behaves differently from eager-only .NET libraries.
+>
+> > [!info] Plan first, execute later
+> >
+> > Even when a note section is eager, the existence of `LazyFrame` signals that Polars is designed around optimization and query planning, not only immediate mutation.
+>
+> ---
+>
+> **Apache Arrow**
+> - A standardized columnar in-memory format designed for analytical workloads and cross-language interoperability.
+> - It matters because Arrow explains both Polars.NET performance characteristics and why zero-copy interop is possible with other Arrow-aware systems.
+>
+> > [!warning] MDA is not Arrow-backed
+> >
+> > Microsoft.Data.Analysis stores data in managed .NET memory, so moving data between MDA and Arrow-native tools is not a zero-copy boundary.
+>
+> ---
+>
+> **`DataFrameColumn`**
+> - The MDA column abstraction, instantiated through concrete typed variants such as `Int32DataFrameColumn` or `StringDataFrameColumn`.
+> - It matters because the note uses typed columns to show how MDA models tabular data explicitly through CLR types rather than a single expression engine.
+>
+> > [!warning] CLR type must match exactly
+> >
+> > MDA is unforgiving about type mismatches. Feeding `long` values into an `Int32DataFrameColumn` is a correctness bug, not a convenience conversion.
+>
+> ---
+>
+> **NuGet**
+> - The .NET package manager used to resolve, install, and version the notebook dependencies required by each dataframe library.
+> - It matters because the note begins with package loading, and Polars.NET in particular depends on compatible managed and native package versions.
+>
+> > [!warning] Version drift becomes runtime failure
+> >
+> > A NuGet reference that restores successfully can still fail at execution time if the native runtime package or target RID does not line up with the environment.
+>
+> ---
+>
+> **`IDataView`**
+> - The ML.NET tabular data interface implemented by Microsoft.Data.Analysis but not by Polars.NET.
+> - It matters because this interface is the cleanest reason to choose MDA when the dataframe layer feeds directly into ML.NET pipelines.
+>
+> > [!info] Boundary-defining feature
+> >
+> > `IDataView` is less about dataframe ergonomics and more about ecosystem fit. It is one of the clearest architectural separators between MDA and Polars.NET.
+>
+> ---
+>
+> **CSV**
+> - A plain-text row-oriented exchange format that is easy to produce but weak at preserving types and schema fidelity.
+> - It matters because both libraries can ingest CSV, and the note uses it as the common entry point for the EuroStoxx datasets and schema-inspection examples.
+>
+> > [!warning] Type inference is fragile
+> >
+> > CSV readers guess based on text content. Production code should not treat those guesses as a stable schema contract.
+>
+> ---
+>
+> **JSON**
+> - A flexible hierarchical text format that often represents records as arrays of objects rather than strongly typed tables.
+> - It matters because the note shows that JSON ingestion is straightforward in Polars.NET but requires an explicit `System.Text.Json` deserialization-and-mapping step in MDA.
+>
+> > [!info] Table shape is not guaranteed
+> >
+> > JSON must often be normalized into columns first. The format itself does not guarantee consistent fields or homogeneous types across records.
+>
+> ---
+>
+> **Parquet**
+> - A columnar binary file format with embedded schema metadata and efficient analytical read patterns.
+> - It matters because the note treats Parquet as the preferred persistence boundary for dataframe workflows in both ecosystems.
+>
+> > [!warning] Support is asymmetric
+> >
+> > Polars.NET reads Parquet natively, while MDA generally reaches Parquet through ML.NET or a bridge library rather than a first-class built-in reader.
+>
+> ---
+>
+> **ParquetSharp**
+> - A .NET library that exposes Parquet read/write support and can bridge Parquet data into MDA structures.
+> - It matters because the note uses it as the practical workaround when Microsoft.Data.Analysis needs Parquet access without switching engines.
+>
+> > [!info] Bridge, not native engine feature
+> >
+> > When MDA reads Parquet through ParquetSharp, the capability comes from an auxiliary library stack rather than the core dataframe API itself.
+>
+> ---
+>
+> **Immutability**
+> - A data-model property where transformations return new objects instead of mutating the original in place.
+> - It matters because the note’s biggest behavioral difference between Polars.NET and MDA is not syntax, but whether frame and column operations mutate state or produce replacements.
+>
+> > [!warning] Mental-model mismatch causes bugs
+> >
+> > Teams that mix immutable and mutable dataframe assumptions in the same codebase often mis-handle assignment, reuse stale references, or accidentally overwrite shared state.
 
 ## Setup & Imports
 
@@ -1229,20 +1366,20 @@ The operationally correct choice is usually obvious once the source boundary and
 
 ---
 
-## When to use each library
-
-- **Polars.NET** — when the DataFrame engine is the analytical heart of the workflow: heavy filtering, grouping, joining, and lazy evaluation on columnar data. Best for data engineering pipelines and analytical notebooks.
-- **Microsoft.Data.Analysis** — when the DataFrame is a managed structure inside a larger .NET or ML.NET workflow. Best for feature preparation and ML.NET handoff.
-- **Neither** — for orchestration, CDC, warehouse publication, or streaming. Use ADO.NET, Entity Framework, or platform-native tools.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| ML.NET integration | Polars.NET does not implement `IDataView` | Use MDA for the ML.NET boundary; convert from Polars via arrays |
-| Data larger than RAM | Both libraries are single-node, in-memory | Push computation to SQL, Spark, or a warehouse engine |
-| Real-time streaming | DataFrames are batch-oriented | Use Kafka, Azure Event Hubs, or Spark Structured Streaming |
-| Complex relational logic (5+ joins) | DataFrame join chains become unreadable | Use SQL via DuckDB.NET or push to the database |
+> [!example] C# DataFrame Engine Fit
+>
+> > [!success] Applicability
+> >
+> > - **Polars.NET** — when the DataFrame engine is the analytical heart of the workflow: heavy filtering, grouping, joining, and lazy evaluation on columnar data. Best for data engineering pipelines and analytical notebooks.
+> > - **Microsoft.Data.Analysis** — when the DataFrame is a managed structure inside a larger .NET or ML.NET workflow. Best for feature preparation and ML.NET handoff.
+> > - **Neither** — for orchestration, CDC, warehouse publication, or streaming. Use ADO.NET, Entity Framework, or platform-native tools.
+>
+> > [!failure] Limitations
+> >
+> > - **ML.NET integration** — Polars.NET does not implement `IDataView`. Better approach: Use MDA for the ML.NET boundary; convert from Polars via arrays
+> > - **Data larger than RAM** — Both libraries are single-node, in-memory. Better approach: Push computation to SQL, Spark, or a warehouse engine
+> > - **Real-time streaming** — DataFrames are batch-oriented. Better approach: Use Kafka, Azure Event Hubs, or Spark Structured Streaming
+> > - **Complex relational logic (5+ joins)** — DataFrame join chains become unreadable. Better approach: Use SQL via DuckDB.NET or push to the database
 
 ## Warnings
 
@@ -1275,4 +1412,3 @@ The operationally correct choice is usually obvious once the source boundary and
 | Parquet read fails in MDA | MDA's Parquet support is limited | Use `MLContext.Data.LoadFromParquet()` or read with Polars.NET and convert |
 | CSV import has wrong types | Type inference guessed wrong | Pass explicit schema or type overrides |
 | `InvalidOperationException` on DataFrame | Attempted mutation on Polars.NET DataFrame | Polars.NET is immutable — use `WithColumn()` or `WithColumns()` to create a new DataFrame |
-

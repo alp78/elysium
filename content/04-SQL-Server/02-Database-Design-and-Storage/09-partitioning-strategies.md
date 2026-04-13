@@ -13,18 +13,130 @@ status: complete
 
 # Partitioning Strategies
 
-Partitioning divides one logical table into multiple physical partitions based on a partition key. In SQL Server, partitioning is primarily a **manageability** and **data-lifecycle** feature. It can help query performance through partition elimination, but it is not a universal speed feature on its own.
+> [!abstract]- Summary
+>
+> Partitioning divides one logical table into multiple physical partitions based on a partition key. In SQL Server, partitioning is primarily a **manageability** and **data-lifecycle** feature. It can help query performance through partition elimination, but it is not a universal speed feature on its own.
+>
+> **When partitioning helps**
+> - use it for sliding-window retention, very fast archival or load-exchange operations with `SWITCH`, per-partition rebuild or compression, and predictable time-sliced access on very large tables
+>
+> **Partitioning model**
+> - explains partition keys, partition functions, partition schemes, `RANGE LEFT` vs `RANGE RIGHT`, and the live baseline in `stoxx`
+>
+> **Operational patterns**
+> - covers reproducible demo setup, partition elimination, `SWITCH`, sliding-window `SPLIT` and `MERGE`, aligned versus non-aligned indexes, per-partition compression, lock escalation, and partition-specific `TRUNCATE TABLE`
+>
+> **Monitoring and limits**
+> - includes partition statistics, `sys.dm_db_partition_stats`, sizing and skew detection, edition limits, and practical cases where partitioning should not be used at all
+>
+> **Operations and safety**
+> - When not to use: if the partition key is not part of real workload predicates, partitioning adds complexity with little benefit
+> - Warnings: populated `SPLIT` or `MERGE`, non-aligned indexes, and cosmetic partitioning all turn manageability tooling into expensive data movement or blocked operations
+> - Recommendations: partition for lifecycle and manageability first, not for vague hopes of universal speed
 
-Use partitioning when you need one or more of these:
+> [!note]- Glossary
+>
+> **Partition key**
+> - The column whose value decides which partition each row lands in.
+> - It matters because every operational benefit in the note depends on whether the workload actually filters, maintains, or ages data by that key.
+>
+> > [!warning] Wrong key, wrong payoff
+> >
+> > If queries do not filter by the partition key, partitioning usually adds complexity without delivering elimination benefits.
+>
+> ---
+>
+> **Partition function**
+> - The database object that defines the ordered boundary values and left-or-right boundary semantics for partitions.
+> - It matters because it is the logical blueprint for where the table is cut.
+>
+> > [!warning] The function defines boundaries, not storage
+> >
+> > A partition function says where cuts occur. It does not decide which filegroup stores those cuts.
+>
+> ---
+>
+> **Partition scheme**
+> - The database object that maps partitions from the function onto filegroups.
+> - It matters because storage placement, manageability, and some restore strategies are expressed through the scheme layer.
+>
+> > [!info] Logical and physical mapping are separate on purpose
+> >
+> > SQL Server splits the partitioning model into function and scheme so logical boundaries and physical placement can evolve independently.
+>
+> ---
+>
+> **`RANGE LEFT` / `RANGE RIGHT`**
+> - The setting that decides which side of a boundary value owns that boundary row.
+> - It matters because date-based sliding windows are often far easier to reason about with one direction than the other.
+>
+> > [!warning] Boundary direction changes real data placement
+> >
+> > Choosing the wrong range direction can shift boundary dates into the wrong monthly bucket and quietly break retention logic.
+>
+> ---
+>
+> **Partition elimination**
+> - The optimizer’s ability to skip partitions proven irrelevant by the query predicate.
+> - It matters because it is the main performance upside of partitioning, but only when predicates line up with the partition design.
+>
+> > [!warning] Elimination is conditional, not automatic
+> >
+> > A partitioned table can still be scanned across every partition if the predicate does not constrain the partition key.
+>
+> ---
+>
+> **Aligned index**
+> - An index partitioned in the same way as the base table, using the same function, scheme, and key alignment rules.
+> - It matters because aligned indexes are required for metadata-only `SWITCH` operations.
+>
+> > [!warning] One non-aligned index can block the workflow
+> >
+> > Partition switching is structurally strict. A single non-aligned index is enough to make the operation impossible.
+>
+> ---
+>
+> **`SWITCH`**
+> - The metadata-only operation that reassigns one partition’s pages to another table or partition target without moving rows physically.
+> - It matters because `SWITCH` is the strongest operational reason to partition large fact tables in the first place.
+>
+> > [!warning] Metadata-only is still rule-heavy
+> >
+> > `SWITCH` is fast only when the source, target, constraints, and index alignment all match exactly. Otherwise it fails rather than “doing its best.”
+>
+> ---
+>
+> **Sliding window**
+> - The recurring pattern of splitting future boundaries, loading new data, switching out old data, and merging away empty old ranges.
+> - It matters because sliding windows are how date-partitioned fact tables keep retention stable over time without bulk delete pain.
+>
+> > [!warning] Empty-range discipline matters
+> >
+> > `SPLIT` and `MERGE` should operate on empty partitions whenever possible. Doing them on populated ranges turns metadata maintenance into logged data movement.
+>
+> ---
+>
+> **`$PARTITION`**
+> - The T-SQL function that returns the partition number for a supplied value.
+> - It matters because it is one of the easiest ways to verify which partition a value maps to when testing boundaries and elimination.
+>
+> > [!info] It returns numbers, not boundary labels
+> >
+> > `$PARTITION` tells you which partition number a value lands in. Use catalog views to inspect the actual boundary values.
+>
+> ---
+>
+> **`sys.dm_db_partition_stats`**
+> - The DMV that exposes row counts and page counts per partition and per index.
+> - It matters because production partitioning decisions depend on sizing, skew, and compression state, not just on the existence of partition objects.
+>
+> > [!warning] Size and skew decide whether the design is healthy
+> >
+> > A partitioned table can be structurally correct and still operationally bad if one partition holds nearly all the rows or pages.
+>
+> ---
 
-- sliding-window data retention
-- very fast archival or load-exchange operations with `SWITCH`
-- per-partition rebuild, compression, or maintenance
-- predictable time-sliced access on very large tables
-
-Do not use partitioning as a reflex for every large table. If the partition key is not part of the real workload predicates, partitioning adds complexity with little benefit.
-
-## Key terms used in this note
+## Key Concepts
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -43,24 +155,6 @@ Do not use partitioning as a reflex for every large table. If the partition key 
 | **`sys.partitions`** | A catalog view with one row per partition per index per table. Key columns: `partition_number`, `rows` (row count), `data_compression_desc`. For a non-partitioned table, there is exactly one row with `partition_number = 1`. | The primary view for verifying row distribution, compression state, and partition count. | Forgetting to filter on `index_id`. A partitioned table with a clustered index (`index_id = 1`) and two non-clustered indexes (`index_id = 2, 3`) has three rows per partition in `sys.partitions`. |
 | **`sys.partition_range_values`** | A catalog view with one row per boundary value per partition function. Columns: `function_id`, `boundary_id`, `parameter_id`, `value`. | The authoritative source for verifying what boundaries exist and in what order. | Not casting `value` to the function's data type. The `value` column is `sql_variant`, so display may be misleading without an explicit `CONVERT`. |
 | **`sys.dm_db_partition_stats`** | A DMV with one row per partition per index. Extends `sys.partitions` with physical metrics: `reserved_page_count`, `used_page_count`, `in_row_data_page_count`, `row_count`. | The production-grade view for sizing partitions, detecting skew, and planning compression or archival. `sys.partitions.rows` is an *estimate*; `sys.dm_db_partition_stats.row_count` is authoritative. | Using `sys.partitions.rows` for exact counts. That column is updated asynchronously and can lag behind actual row counts, especially after large bulk loads. |
-
-## What this note covers
-
-- [[#Current Baseline In stoxx]] — verify the database has no existing partitioning, establishing a clean baseline for the demo.
-- [[#Reproducible Partition Demo]] — create a disposable partition function, scheme, and table with live `stoxx` data across four monthly partitions.
-- [[#Partition Elimination]] — prove that predicates on the partition key skip irrelevant partitions using `$PARTITION`.
-- [[#SWITCH — Metadata-Only Movement]] — move partitions in and out with `ALTER TABLE ... SWITCH`, demonstrating instant archival and staging loads.
-- [[#Sliding Window With SPLIT And MERGE]] — add and remove boundaries to implement the rolling-retention pattern.
-- [[#Partition-Aligned vs Non-Aligned Indexes]] — why alignment matters, how to verify it, and what breaks when an index is non-aligned.
-- [[#Per-Partition Compression]] — apply different compression levels to hot and cold partitions.
-- [[#Lock Escalation on Partitioned Tables]] — configure `LOCK_ESCALATION = AUTO` so locks escalate to the partition level instead of the table level.
-- [[#TRUNCATE TABLE With Partitions]] — delete data from specific partitions without touching the rest (SQL Server 2016+).
-- [[#Partition Statistics and Stale Stats]] — how SQL Server maintains statistics per partition and when manual updates are needed.
-- [[#Partition Sizing With sys.dm_db_partition_stats]] — production-grade sizing and skew detection.
-- [[#Partitioning Limitations and Edition Requirements]] — max 15,000 partitions, Enterprise-only restrictions before 2016 SP1, and other constraints.
-- [[#When Not to Partition]] — anti-patterns and scenarios where partitioning adds complexity without benefit.
-- [[#Production Recommendations]] — actionable guidance with decision logic and feedback signals.
-- [[#Warnings]], [[#Troubleshooting]], [[#Cross-references]]
 
 ## Current Baseline In `stoxx`
 
@@ -922,7 +1016,6 @@ _Partition 2 is now empty. The operation completed with minimal logging and with
 SQL Server maintains statistics objects on partitioned tables to help the query optimizer estimate row counts and choose execution plans. Two behaviors are particularly important for partitioned tables:
 
 1. **Partitioned index statistics default to sampling, not full scan.** When a partitioned index is created or rebuilt, statistics are created using the default sampling algorithm — *not* a full scan. This can produce lower-quality histograms, especially for skewed data distributions. Use `WITH FULLSCAN` explicitly when accuracy matters.
-
 2. **Incremental statistics (SQL Server 2014+)** allow per-partition statistics updates. With `INCREMENTAL = ON`, SQL Server maintains statistics per partition and only refreshes the partitions whose data has changed. This avoids full-table statistics scans on large partitioned tables.
 
 > [!info] Auto-update thresholds for large partitioned tables

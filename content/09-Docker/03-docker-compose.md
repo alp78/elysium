@@ -1,680 +1,592 @@
 ---
 title: "03 - Docker Compose"
-tags: [docker]
-aliases: [Docker Compose, docker compose, docker-compose, compose, multi-container, compose file, docker-compose.yaml, docker-compose.yml]
-description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
+tags:
+  - docker
+aliases:
+  - Docker Compose
+  - docker compose
+  - docker-compose
+  - compose
+  - multi-container
+  - compose file
+  - docker-compose.yaml
+  - docker-compose.yml
+description: "Compose guide grounded in the actual ESG local stack and the live Airflow VM. Covers real compose files, env interpolation, bind mounts, systemd boot flow, and the current and historical troubleshooting trail."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
 status: complete
 ---
 
-# Docker Compose — Complete Reference
+# Docker Compose
 
-> [!quote]
-> "Everyone is looking for a standardized way to build distributed applications."
+> [!abstract]- Summary
 >
-> — **Solomon Hykes**, DockerCon talk
+> Explains the real Docker Compose control plane for the ESG workstation and the live `stoxx-airflow` VM so operators can resolve actual stack shape, inspect boot orchestration, and diagnose compose-specific drift and healthcheck issues.
+>
+> **Local and remote topology**
+> - Resolve the Windows `docker-compose.yml` model and concrete `stoxx` object names, services, named volumes, bind mounts, published ports, and SQL Server persistence layout
+> - Contrast the local developer stack with the VM `app` project so container, network, and volume names are not assumed to match across environments
+>
+> **Live Airflow VM compose stack**
+> - Inspect the live `docker-compose.yaml`, redacted `.env`, shared `x-airflow-common` block, `CeleryExecutor` wiring, bind-mounted paths, and job-binding variables
+> - Read the `stoxx-airflow.service` systemd unit and current-boot journal to see how Compose comes up on reboot, including `airflow-init`, `--remove-orphans`, and dependency sequencing
+>
+> **Real problems and setup trail**
+> - Reconcile repo-era `docker run` and `stoxx-index-intelligence` documentation with the live Compose labels and project `bq-wh-nb`
+> - Diagnose live false-unhealthy Airflow probes and preserve historical fixes for CRLF-corrupted startup scripts and bind-mount ownership mismatches in the older deployment model
+>
+> **Operations and safety**
+> - Warnings: startup order is not readiness without health gating, host path semantics differ sharply between Windows and Linux, and CLI-based Airflow probes can time out even when the job is alive
+> - Troubleshooting: 4 cases covering project drift, false-unhealthy probes, CRLF startup-script failure, and host UID or GID ownership mismatch
 
-Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [Airflow stack](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [Cloud Run services](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) managed by Terraform.
+> [!note]- Glossary
+>
+> **Compose file**
+> - A YAML document that defines services, networks, volumes, environment, and startup behavior for a multi-container application.
+> - The note compares two compose files because local and VM behavior only make sense once the correct file is identified.
+>
+> > [!warning] One file is not universal
+> >
+> > The local workstation and the Airflow VM do not share the same compose file. Assuming one YAML file describes both environments leads directly to wrong object names and wrong remediation steps.
+>
+> ---
+>
+> **Service**
+> - A logical workload definition inside a compose file that tells Docker how a container should be created and run.
+> - The note repeatedly separates services declared on disk from containers that already exist on the host.
+>
+> > [!warning] Declaration is not runtime
+> >
+> > A service can be present in YAML without a matching container on the host. Runtime inspection is still required before you assume the service exists.
+>
+> ---
+>
+> **Compose project name**
+> - The namespace prefix Docker Compose applies to stack-owned containers, networks, and volumes.
+> - It explains why local objects are named `stoxx-*` while VM objects are named `app-*`, which matters in every inspect command shown in the note.
+>
+> > [!info] Prefix controls identity
+> >
+> > Changing the compose project name silently changes almost every runtime identifier. A command copied from another environment often fails for this reason alone.
+>
+> ---
+>
+> **`depends_on`**
+> - A Compose setting that expresses startup ordering and, when configured, dependency conditions between services.
+> - The note uses it as part of the explanation for why boot sequence and health-gated startup must be read carefully on the VM.
+>
+> > [!warning] Order is not readiness
+> >
+> > Starting one container before another does not prove the dependency is ready to serve traffic. Health conditions or explicit readiness checks are still required.
+>
+> ---
+>
+> **`airflow-init`**
+> - A one-shot initialization container in the Airflow stack that prepares metadata state and initial configuration before long-running services depend on it.
+> - The note treats its clean exit as a normal part of the VM boot sequence rather than as a failure.
+>
+> > [!info] Exit is expected
+> >
+> > `airflow-init` is supposed to stop after completing its work. A stopped init container is healthy behavior if the exit code is successful and downstream services start correctly.
+>
+> ---
+>
+> **Bind mount**
+> - A direct host-path mount into a container.
+> - Bind mounts are central to the note because they explain live code, config, log, and script behavior on both Windows and Linux hosts.
+>
+> > [!warning] Host behavior leaks through
+> >
+> > File permissions, path syntax, and line endings come from the host filesystem, not the image. Many compose bugs are really host-path bugs.
+>
+> ---
+>
+> **Named volume**
+> - Docker-managed persistent storage attached to a container by logical volume name rather than explicit host path.
+> - The note uses named volumes to distinguish durable database storage from bind-mounted configuration and bootstrap content.
+>
+> > [!info] Persistence lives here
+> >
+> > Recreating a container does not discard data stored in a named volume. Troubleshooting data loss requires knowing whether the path is a bind mount or a volume.
+>
+> ---
+>
+> **`docker compose config`**
+> - A Docker Compose command that resolves the effective compose model after interpolation and merge.
+> - The note uses it to expose actual services and named volumes without relying on a quick visual skim of raw YAML.
+>
+> > [!info] Resolved view matters
+> >
+> > `docker compose config` shows what Docker will act on after variable interpolation. That makes it safer than reasoning from partially templated YAML by eye.
+>
+> ---
+>
+> **`docker inspect`**
+> - A Docker command that returns the full structured metadata for a container, image, volume, or other Docker object.
+> - The note relies on inspect output for mounts, labels, and health state because those details are not fully visible in simple list commands.
+>
+> > [!warning] Narrow the output
+> >
+> > Full inspect documents are noisy. Using `--format` against a specific field reduces the risk of missing the one property that actually explains the problem.
+>
+> ---
+>
+> **Extension field / `x-airflow-common`**
+> - A YAML extension pattern used in compose files to define reusable fragments that are merged into multiple services.
+> - The VM stack uses `x-airflow-common` to keep shared Airflow settings consistent across several service definitions.
+>
+> > [!info] Shared config reduces drift
+> >
+> > When common environment, volume, and image settings live in one shared fragment, updating the stack becomes safer because the same change propagates everywhere that fragment is merged.
+>
+> ---
+>
+> **`AIRFLOW_UID`**
+> - An environment variable that controls the numeric user ID the Airflow containers run as on the host.
+> - It matters in the note because host directory ownership must match this UID for bind-mounted logs, DAGs, and config to remain writable.
+>
+> > [!warning] UID mismatch breaks mounts
+> >
+> > If host paths are owned by the wrong numeric user, the container may start but fail to read or write critical files. The resulting errors often look like application bugs instead of filesystem bugs.
+>
+> ---
+>
+> **`--remove-orphans`**
+> - A `docker compose up` flag that deletes containers no longer declared in the current compose model.
+> - The systemd unit uses it so VM boot converges on the current desired stack instead of preserving stale containers from older revisions.
+>
+> > [!warning] Old containers disappear
+> >
+> > This flag is useful for drift control, but it also removes forgotten legacy services. Do not use it casually if you are relying on undeclared containers still being present.
+>
+> ---
+>
+> **Systemd unit**
+> - A service definition managed by systemd that controls how a process or one-shot task starts, stops, and integrates with boot.
+> - The Airflow VM uses a systemd unit as the outer control plane that launches Docker Compose on reboot.
+>
+> > [!info] Boot behavior lives here
+> >
+> > If the stack comes up unexpectedly, fails on reboot, or runs under the wrong user, inspect the unit first. Compose is only one layer of the control plane on the VM.
 
----
+> ---
+>
+> **`journalctl`**
+> - The standard Linux command for reading logs emitted by systemd-managed units and the broader system journal.
+> - The note uses `journalctl` to reconstruct the VM boot path of the compose wrapper service without relying only on container logs.
+>
+> > [!info] Boot logs show sequencing
+> >
+> > Container logs explain what a service did after it started. `journalctl` explains whether the service started at all, when it started, and what systemd believed happened around it.
+>
+> ---
+>
+> **Compose labels**
+> - Metadata labels Docker Compose writes onto managed containers to record project, service, config path, and related identity information.
+> - They are the definitive evidence used in the note to prove which compose file and project name the live VM is actually using.
+>
+> > [!warning] Labels beat assumptions
+> >
+> > Repo docs and naming conventions can drift. Container labels come from the live runtime and are the more trustworthy source when documentation disagrees with the host.
+>
+> ---
+>
+> **Healthcheck timeout**
+> - The maximum duration Docker allows a health probe to run before treating the probe attempt as failed.
+> - The false-unhealthy Airflow investigation in the note depends on recognizing that a timeout can fail even when the underlying process is still alive.
+>
+> > [!warning] Slow is not dead
+> >
+> > A probe that consistently completes just under the timeout threshold is fragile and can flap between healthy and unhealthy with small runtime variations. Probe budget and probe correctness are separate questions.
 
-## Compose File Structure
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+  A[Windows host\nC:\\Users\\aperi\\DEV\\ESG] --> B[docker-compose.yml]
+  B --> C[stoxx-db]
+  B --> D[stoxx-pipeline]
+  B --> E[stoxx-dashboard]
+  F[stoxx-airflow VM\nbq-wh-nb] --> G[systemd\nstoxx-airflow.service]
+  G --> H[/home/alexper_recovery_gmail_com/app/docker-compose.yaml]
+  H --> I[airflow-apiserver]
+  H --> J[airflow-scheduler]
+  H --> K[airflow-worker]
+  H --> L[airflow-dag-processor]
+  H --> M[airflow-triggerer]
+  H --> N[postgres + redis]
+  J --> O[Cloud Run jobs\nstage-fetch, bronze-load,\ntransforms, serving]
+  K --> O
+```
 
-### Complete Data Engineering Stack Example
+> [!example] Compose Operations Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note before `docker compose up`, after reboot, before editing the VM stack, or whenever service names, mounts, startup order, or health state differ from expectation.
+> > - Use it when you need to reconcile the local workstation stack with the live Airflow VM instead of assuming both environments share one compose truth.
+> > - Use it to inspect the full control plane around Compose, including `.env` interpolation, systemd boot behavior, bind mounts, and health-gated startup.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not treat older repo infrastructure notes as authoritative for the live VM if the compose project name, service set, or boot path has changed.
+> > - Do not apply healthcheck remediations blindly without considering restart impact and whether the probe is the problem or only the symptom.
+> > - Do not reason from raw YAML alone when the effective runtime model depends on interpolation, project naming, and systemd orchestration.
 
-The following `docker-compose.yaml` defines a realistic Airflow + PostgreSQL + Redis stack with all common configuration keys annotated.
+## Local And Remote Topology
+
+The same Docker Compose command family is driving two very different environments. The local stack is a developer-facing integration environment. The VM stack is a production-like orchestration environment that must survive reboots and start automatically.
+
+### Stack Topology Resolution
+
+This section uses real resolved config and live object state rather than generic YAML fragments. That matters because Compose is doing interpolation, path resolution, project naming, and mount construction that are not obvious from a quick skim of the files.
+
+| Aspect | Local Windows stack | Live Airflow VM stack | Operational consequence |
+|---|---|---|---|
+| Compose file | `C:\Users\aperi\DEV\ESG\docker-compose.yml` | `/home/alexper_recovery_gmail_com/app/docker-compose.yaml` | Never assume one file describes both environments. |
+| Compose project name | `stoxx` | `app` | Container, volume, and network names differ completely. |
+| Startup owner | Interactive operator on Windows | `stoxx-airflow.service` under systemd | VM boot recovery is automated; local startup is manual. |
+| Stateful service | SQL Server 2022 | PostgreSQL 16 and Redis 7.2 | Database engine, volume paths, and health semantics differ. |
+| Port exposure | Host `1434` and `8080` locally | Host `8080` on the VM API server only | Internal VM services are not published to the host. |
+| Host-mounted paths | Windows repo paths | `/home/alexper_recovery_gmail_com/app/{dags,logs,config,plugins}` | Filesystem behavior and line-ending risk differ. |
+
+#### PowerShell | docker compose config | resolve the local compose services and named volumes
+
+**When to run:** Before `docker compose up`, before cleanup, or when you need to know which objects the local stack is supposed to create.
+**Trigger:** The compose file has changed or the local object names are unclear.
+**Context:** PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. These are read-only config resolution commands.
+**Purpose:** Confirm the service keys and named volumes that the local compose file actually defines.
+
+*Resolves the local service keys from the compose file.*
+
+```powershell
+docker compose -f C:\Users\aperi\DEV\ESG\docker-compose.yml config --services
+```
+
+```text
+db
+dashboard
+pipeline
+```
+
+*Resolves the named volumes declared by the same compose file.*
+
+```powershell
+docker compose -f C:\Users\aperi\DEV\ESG\docker-compose.yml config --volumes
+```
+
+```text
+sqlserver_data
+pipeline_logs
+```
+
+These outputs prove that the local stack is not an Airflow stack. It is a three-service development stack with one database service and two application services, plus two named volumes. The live local container inventory in [[01-container-lifecycle]] only showed `stoxx-db` running, but the compose model itself still defines all three services and both named volumes.
+
+#### PowerShell | docker inspect | inspect the local SQL Server mount model
+
+**When to run:** When persistence, bootstrap scripts, or schema seed files are not behaving as expected on the local stack.
+**Trigger:** SQL Server starts but does not see bootstrap content, or data persistence is unclear.
+**Context:** PowerShell on the Windows host. This is a read-only inspect command against the existing `stoxx-db` container.
+**Purpose:** Show exactly which host files and which named volume the local SQL Server container is using.
+
+*Inspects the concrete mount set of the running local SQL Server container.*
+
+```powershell
+docker inspect stoxx-db --format '{{json .Mounts}}'
+```
+
+```text
+[{"Type":"volume","Name":"stoxx_sqlserver_data","Source":"/var/lib/docker/volumes/stoxx_sqlserver_data/_data","Destination":"/var/opt/mssql","Driver":"local","Mode":"rw","RW":true,"Propagation":""},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\db\\ddl\\bronze_schema.sql","Destination":"/docker-entrypoint-initdb.d/bronze_schema.sql","Mode":"rw","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\db\\seed\\countries.sql","Destination":"/docker-entrypoint-initdb.d/countries.sql","Mode":"rw","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\docker\\db-init.sh","Destination":"/docker-entrypoint-initdb.d/db-init.sh","Mode":"rw","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\db\\ddl\\gold_schema.sql","Destination":"/docker-entrypoint-initdb.d/gold_schema.sql","Mode":"rw","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\db\\ddl\\silver_schema.sql","Destination":"/docker-entrypoint-initdb.d/silver_schema.sql","Mode":"rw","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"C:\\Users\\aperi\\DEV\\ESG\\docker\\db-entrypoint.sh","Destination":"/entrypoint.sh","Mode":"rw","RW":true,"Propagation":"rprivate"}]
+```
+
+This is the real local persistence model. SQL Server data itself lives in the named volume `stoxx_sqlserver_data`, while the bootstrap scripts and seed DDL are bind-mounted directly from the repo. That means data survives container recreation, but bootstrap script edits are instantly visible because they come straight from the host filesystem.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `config --services` | `docker compose config --services` | Lists only the service keys after interpolation and merge. |
+| `config --volumes` | `docker compose config --volumes` | Lists the named volumes declared by the compose file. |
+| `-f` | `docker compose -f <file> ...` | Forces the intended compose file. |
+| `--format` | `docker inspect --format '{{json .Mounts}}'` | Extracts only the mount information instead of the full inspect document. |
+
+## Live Airflow VM Compose Stack
+
+The Airflow VM is a different Compose estate entirely. It has its own compose file, its own `.env`, its own bind-mount root, and a systemd wrapper that starts Compose on boot. This is the operational truth of the current VM on April 13, 2026.
+
+### Live Compose Host Inspection
+
+This section matters because the repo still contains older Airflow documentation for a `docker run` + startup-script deployment. The live VM no longer matches that model. The only safe way to operate the host is to inspect the running compose project and its boot unit directly.
+
+#### Linux | compose.yaml / .env | read the live compose file and its redacted environment keys
+
+**When to run:** Before modifying the VM stack, before restarting the Airflow services, or when a DAG or job binding seems to come from the wrong environment.
+**Trigger:** The Airflow VM behavior no longer matches the repo docs or expected service names.
+**Context:** Linux shell on `stoxx-airflow`. This is a read-only inspection of the live compose file and `.env`.
+**Purpose:** Show the actual service graph, healthchecks, bind mounts, and environment keys used by the live VM.
+
+The live compose file anchors a shared `x-airflow-common` block, uses `CeleryExecutor`, and drives seven long-running services plus one one-shot init service. The VM `.env` below is shown with secrets redacted but with live operational values preserved.
+
+_Shows the shared `x-airflow-common` definition, CeleryExecutor wiring, bind-mounted project paths, and the live `.env` values that bind the VM stack to the `bq-wh-nb` Cloud Run jobs._
 
 ```yaml
-# docker-compose.yaml — Airflow + PostgreSQL + Redis data engineering stack
-
-# Top-level version key is deprecated as of Compose v2 but still widely seen in older files
-# Omit it for new projects; Compose v2+ (docker compose) ignores it gracefully
-
-# ── Named volumes ─────────────────────────────────────────────────────────────
-# Volumes declared here are managed by Docker; data persists across container restarts
-volumes:
-  postgres-db-volume:    # stores PostgreSQL data files
-  redis-data:            # stores Redis AOF/RDB persistence files
-
-# ── Networks ──────────────────────────────────────────────────────────────────
-# Named networks allow services to communicate by service name (DNS)
-networks:
-  airflow-net:
-    driver: bridge       # default for single-host networking
-
-# ── Services ──────────────────────────────────────────────────────────────────
-services:
-
-  # ── PostgreSQL (Airflow metadata database) ──────────────────────────────────
-  postgres:
-    image: postgres:16-alpine          # image: pull from Docker Hub (no build step)
-    restart: unless-stopped            # restart: unless-stopped | always | on-failure | no
-    environment:                       # environment: inline key=value pairs
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
-    env_file:                          # env_file: load additional vars from file
-      - .env                           # values here supplement (not replace) environment block
-    volumes:
-      - postgres-db-volume:/var/lib/postgresql/data   # named volume mount
-      - ./initdb:/docker-entrypoint-initdb.d          # bind mount: host_path:container_path
-    ports:
-      - "5432:5432"                    # host_port:container_port — expose to host
-    networks:
-      - airflow-net
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 10s                    # how often to run the check
-      timeout: 5s                      # max wait before marking unhealthy
-      retries: 5                       # failed attempts before unhealthy status
-      start_period: 30s               # grace period before health checks count
-
-  # ── Redis (Airflow CeleryExecutor broker) ───────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    volumes:
-      - redis-data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - airflow-net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ── Airflow Webserver ────────────────────────────────────────────────────────
-  airflow-webserver:
-    build:                             # build: build image from local Dockerfile
-      context: .                       # context: directory sent to Docker daemon
-      dockerfile: Dockerfile           # dockerfile: path to Dockerfile (default: Dockerfile)
-      args:                            # args: passed as build-time ARGs
-        AIRFLOW_VERSION: "2.9.0"
-    image: my-airflow:2.9.0            # image: tag the built image with this name
-    restart: unless-stopped
-    depends_on:                        # depends_on: control startup order
-      postgres:
-        condition: service_healthy     # wait until healthcheck passes (requires healthcheck block)
-      redis:
-        condition: service_healthy
-    environment:
-      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY}   # variable substitution from .env
-    env_file:
-      - .env
-    volumes:
-      - ./dags:/opt/airflow/dags               # bind mount: live-reload DAGs from host
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-    ports:
-      - "8080:8080"
-    command: webserver                          # command: override CMD from Dockerfile
-    networks:
-      - airflow-net
-    deploy:                                    # deploy: resource limits (Compose v2 standalone)
-      resources:
-        limits:
-          cpus: "1.0"                          # max CPU cores
-          memory: 2G                           # max RAM
-        reservations:
-          cpus: "0.5"
-          memory: 512M
-
-  # ── Airflow Scheduler ────────────────────────────────────────────────────────
-  airflow-scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: my-airflow:2.9.0
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-    command: scheduler
-    networks:
-      - airflow-net
-
-  # ── Airflow Worker (Celery) ──────────────────────────────────────────────────
-  airflow-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: my-airflow:2.9.0
-    restart: unless-stopped
-    depends_on:
-      - airflow-scheduler
-    environment:
-      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
-    volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-    command: celery worker
-    entrypoint: ["/usr/local/bin/airflow"]     # entrypoint: override ENTRYPOINT from Dockerfile
-    networks:
-      - airflow-net
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 4G
+x-airflow-common:
+  &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-stoxx-airflow:3.2.0}
+  build: .
+  env_file:
+    - .env
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
 ```
 
-### Key Compose File Concepts
-
-**Named volumes vs bind mounts**
-
-```yaml
-volumes:
-  # Named volume — Docker manages storage location; survives container removal
-  - postgres-db-volume:/var/lib/postgresql/data
-
-  # Bind mount (absolute host path) — mounts a specific host directory
-  - /host/absolute/path:/container/path
-
-  # Bind mount (relative host path) — relative to the compose file location
-  - ./dags:/opt/airflow/dags
-
-  # Read-only bind mount — container cannot write to the mounted path
-  - ./config:/opt/airflow/config:ro
-
-  # tmpfs — in-memory filesystem, not persisted anywhere
-  - type: tmpfs
-    target: /tmp/scratch
+```text
+AIRFLOW_UID=50000
+AIRFLOW_IMAGE_NAME=stoxx-airflow:3.2.0
+AIRFLOW_PROJ_DIR=/home/alexper_recovery_gmail_com/app
+_AIRFLOW_WWW_USER_USERNAME=admin
+_AIRFLOW_WWW_USER_PASSWORD=<redacted>
+FERNET_KEY=<redacted>
+AIRFLOW__API_AUTH__JWT_SECRET=<redacted>
+AIRFLOW__API_AUTH__JWT_ISSUER=airflow
+GCP_PROJECT_ID=bq-wh-nb
+STAGE_BUCKET=stoxx-stage-bucket
+GCP_REGION=europe-west1
+STAGE_FETCH_JOB=stoxx-stage-fetch
+STAGE_LOAD_JOB=stoxx-bronze-load
+TRANSFORM_JOB=stoxx-transforms
+SERVING_JOB=stoxx-serving
 ```
 
-> [!tip] Named Volumes vs Bind Mounts
->
-> When to Use Named Volumes vs Bind Mounts.
-> Use **named volumes** for database data and other persistent state that Docker should fully manage. Use **bind mounts** for source code, DAGs, and config files you need to edit on the host and have reflected immediately inside the container without a rebuild.
+This is a compose-based Airflow 3.2.0 stack with explicit job bindings to the current `bq-wh-nb` Cloud Run jobs. It also shows the real bind-mount root on the VM: `/home/alexper_recovery_gmail_com/app`, not `/home/airflow`.
 
-**`restart` policy options**
+#### Linux | systemd | read the unit that starts Compose on boot
 
-| Policy | Behavior |
-|---|---|
-| `no` | Never restart (default) |
-| `always` | Always restart, including on Docker daemon restart |
-| `unless-stopped` | Restart unless manually stopped; survives daemon restart |
-| `on-failure` | Restart only on non-zero exit; optionally `on-failure:3` for max retries |
+**When to run:** After reboot problems, after Compose file changes, or when you need to know how the VM converges back to the desired stack.
+**Trigger:** The VM came back but the stack composition looks wrong or stale containers remain after service edits.
+**Context:** Linux shell on `stoxx-airflow`. This is a read-only host configuration inspection.
+**Purpose:** Show the real boot-time mechanism that starts the Airflow compose project.
 
-**`depends_on` conditions**
+*Shows the live systemd unit that starts the Airflow compose stack on the VM.*
 
-```yaml
-depends_on:
-  postgres:
-    condition: service_healthy    # wait for healthcheck to pass
-  redis:
-    condition: service_started    # wait only for container to start (not healthy) — default
-  migrations:
-    condition: service_completed_successfully  # wait for a one-shot container to exit 0
+```ini
+[Unit]
+Description=STOXX Airflow Docker Compose Stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=alexper_recovery_gmail_com
+Group=docker
+WorkingDirectory=/home/alexper_recovery_gmail_com/app
+Environment=HOME=/home/alexper_recovery_gmail_com
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-> [!danger] depends_on Needs service_healthy
->
-> `depends_on` Without `service_healthy` Causes Silent Startup Failures.
-> `service_started` only waits for the container process to start, not for the application inside to be ready. If Airflow starts before PostgreSQL finishes initialization, the scheduler crashes with a connection error, enters a restart loop, and the logs fill with misleading "database does not exist" errors. Always use `condition: service_healthy` with a `healthcheck` that verifies the service is actually accepting connections.
+This unit is the reason the live VM must be treated as a systemd-managed Compose host, not as a metadata-startup-script host. It uses `docker compose up -d --remove-orphans` from the real working directory and keeps the stack converged to the current compose model on boot.
 
-> [!success] Correct depends_on pattern
->
-> Always pair `condition: service_healthy` with a `healthcheck` block on the dependency. For PostgreSQL: `test: ["CMD", "pg_isready", "-U", "airflow"]`. For Redis: `test: ["CMD", "redis-cli", "ping"]`. Set `start_period` to account for slow initialization on first boot.
+#### Linux | journalctl | read the actual boot trail from systemd
 
-**Network configuration**
+**When to run:** After reboot, after enabling a new service, or when `airflow-init` and health-gated dependencies do not start in the expected order.
+**Trigger:** The VM finished booting but the Airflow stack looks incomplete or misordered.
+**Context:** Linux shell on `stoxx-airflow`. This is a read-only journal query against the compose wrapper service.
+**Purpose:** Prove the real boot sequence of the current VM stack.
 
-```yaml
-networks:
-  # Default bridge network — services on the same network resolve each other by service name
-  airflow-net:
-    driver: bridge
-
-  # Attach a service to multiple networks
-  services:
-    app:
-      networks:
-        - airflow-net
-        - monitoring-net
-
-  # Use an externally created network (not managed by this compose file)
-  networks:
-    shared-net:
-      external: true
-      name: my-preexisting-network
-```
-
----
-
-### Environment Variable Substitution
-
-Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [environment variable patterns](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) used throughout shell scripting and CI):
-
-1. Shell environment variables (highest priority)
-2. `.env` file in the same directory as the compose file
-3. `environment` block defaults
-
-```yaml
-# docker-compose.yaml
-services:
-  app:
-    image: myapp:${APP_VERSION:-latest}   # use APP_VERSION, default to "latest" if unset
-    environment:
-      DB_HOST: ${DB_HOST}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}       # inline default with :-
-```
+*Reads the current-boot journal for the systemd unit that starts Compose on the VM.*
 
 ```bash
-# .env — loaded automatically by docker compose; never commit secrets to git
-APP_VERSION=2.9.0
-DB_HOST=postgres
-LOG_LEVEL=DEBUG
-WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
+gcloud compute ssh stoxx-airflow --project bq-wh-nb --zone europe-west1-b --tunnel-through-iap --command "sudo journalctl -u stoxx-airflow.service -b --no-pager"
 ```
 
-> [!danger] Auto-Loaded .env File Risk
->
-> `.env` Files Are Loaded Automatically and Often Leaked.
-> `docker compose` silently loads `.env` from the compose file's directory -- even if you did not specify `env_file`. If this file contains production secrets and gets committed to git, the credentials are exposed in git history permanently. Add `.env` to `.gitignore` on day one. For production, use a secrets manager (GCP Secret Manager, Vault) and inject values via CI/CD -- never store production credentials in `.env` files on disk.
+```text
+Apr 13 14:30:23 stoxx-airflow systemd[1]: Starting STOXX Airflow Docker Compose Stack...
+Apr 13 14:30:23 stoxx-airflow docker[26536]:  Container app-postgres-1 Running
+Apr 13 14:30:23 stoxx-airflow docker[26536]:  Container app-redis-1 Running
+Apr 13 14:30:24 stoxx-airflow docker[26536]:  Container app-airflow-init-1 Starting
+Apr 13 14:31:09 stoxx-airflow docker[26536]:  Container app-airflow-init-1 Exited
+Apr 13 14:31:09 stoxx-airflow docker[26536]:  Container app-airflow-apiserver-1 Healthy
+Apr 13 14:31:09 stoxx-airflow systemd[1]: Finished STOXX Airflow Docker Compose Stack.
+```
 
-> [!success] Safe .env handling
->
-> Add `.env` to `.gitignore` immediately when creating the project. Commit a `.env.example` file with placeholder values so the team knows what variables are required. In CI/CD, inject secrets via GitHub Actions secrets or GCP Secret Manager rather than a `.env` file on disk.
+This is the clean boot path of the current VM. PostgreSQL and Redis are treated as prerequisites, `airflow-init` is expected to run and exit, and the systemd unit only finishes after the long-running stack has been brought up under Compose.
 
-> [!tip] Related pattern
->
-> The `env_file` and `environment` directives here mirror the [shell environment variable](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
+| Flag | Syntax | Description |
+|---|---|---|
+| `--remove-orphans` | `docker compose up -d --remove-orphans` | Removes containers from older compose models that are no longer declared. |
+| `-u` | `journalctl -u stoxx-airflow.service` | Filters the journal to the specific systemd unit. |
+| `-b` | `journalctl -b` | Limits the log view to the current boot only. |
+| `--no-pager` | `journalctl --no-pager` | Prevents interactive paging, which is required for scripted capture. |
+| `--project` | `gcloud compute ssh ... --project bq-wh-nb` | Forces the command to the live GCP project. |
+| `--zone` | `gcloud compute ssh ... --zone europe-west1-b` | Targets the correct zone. |
+| `--tunnel-through-iap` | `gcloud compute ssh ... --tunnel-through-iap` | Uses IAP for VM access. |
+| `--command` | `gcloud compute ssh ... --command "<cmd>"` | Runs a non-interactive remote command. |
 
----
+## Real Problems And Setup Trail
 
-## Lifecycle Commands
+Compose is where environment drift and startup problems become visible first. This section records the problems that were actually encountered while updating this chapter. Some apply to the live Airflow 3.2.0 compose stack. Others belong to the older startup-script-based Airflow generation preserved in the repo and are included because they explain why the repo docs no longer match the running VM.
 
-### Starting Services
+### Environment Drift Reconciliation
+
+The first compose problem encountered during this chapter rewrite was not a YAML syntax error. It was documentation drift. The repo and the live VM no longer described the same Airflow deployment.
+
+#### Linux | docker inspect | reconcile the repo-era Airflow description with the live VM
+
+**When to run:** Before changing the Airflow VM, before following older repo docs, or before documenting the runtime.
+**Trigger:** The repo says `docker run` and `stoxx-index-intelligence`, but the live host looks different.
+**Context:** Live VM inspection via `gcloud compute ssh` and Docker container labels. Read-only.
+**Purpose:** Identify the actual compose project path, compose file, and project name that the live VM is using.
+**Problem:** The repo still documents an older Airflow deployment pattern, while the live VM on April 13, 2026 is a Compose stack in a different GCP project.
+**Context:** The first live queries against `stoxx-index-intelligence` failed, and the repo's earlier `docker run`-based Airflow guide did not match the actual running containers.
+
+*Reads the live Compose labels from the running Airflow API server container.*
 
 ```bash
-# Start all services in detached mode (background)
-docker compose up -d
-# -d / --detach: run containers in the background; print container names and exit
-
-# Start a specific service only (and its dependencies via depends_on)
-docker compose up -d airflow-webserver
-
-# Rebuild images before starting (after Dockerfile or requirements change)
-docker compose up -d --build
-
-# Rebuild a specific service only
-docker compose up -d --build airflow-scheduler
-
-# Force recreate containers even if config is unchanged
-docker compose up -d --force-recreate
-# Useful when an image was rebuilt outside compose (e.g., docker build manually)
-
-# Force recreate a specific service
-docker compose up -d --force-recreate airflow-worker
-
-# Combine: rebuild AND force recreate
-docker compose up -d --build --force-recreate airflow-webserver
+gcloud compute ssh stoxx-airflow --project bq-wh-nb --zone europe-west1-b --tunnel-through-iap --command "docker inspect app-airflow-apiserver-1 --format '{{json .Config.Labels}}'"
 ```
 
-> [!info] up vs start
->
-> `up` vs `start`.
-> `docker compose up` creates containers if they don't exist, then starts them. `docker compose start` only starts existing stopped containers — it cannot create new ones.
+```text
+{"com.docker.compose.project":"app","com.docker.compose.project.config_files":"/home/alexper_recovery_gmail_com/app/docker-compose.yaml","com.docker.compose.project.working_dir":"/home/alexper_recovery_gmail_com/app","com.docker.compose.service":"airflow-apiserver","com.docker.compose.version":"5.1.2","org.apache.airflow.version":"3.2.0"}
+```
 
-### Stopping Services
+**Diagnosis:** The live host is not using the repo's older `infra/scripts/airflow-startup.sh` model. It is running a Compose project named `app` from `/home/alexper_recovery_gmail_com/app/docker-compose.yaml` in project `bq-wh-nb`.
+**Resolution:** This chapter was rewritten against the live `bq-wh-nb` stack and the actual Compose labels instead of repeating the stale repo path.
+**Validation:** The label output above aligns with the live `docker compose ps`, `.env`, systemd unit, and Cloud Run job bindings captured elsewhere in this chapter.
+**Prevention rule:** Always verify the live project ID, compose working directory, and compose labels before treating existing docs as authoritative.
 
-> [!info] docker compose down — what each flag removes
->
-> - **`down`** (no flags) — removes containers and networks; volumes are preserved. Safe to run repeatedly.
-> - **`down -v`** — also removes named volumes declared in the `volumes` section. Data will be lost.
-> - **`down --rmi all`** — also removes all images used by services. `--rmi local` removes only locally built images.
-> - **`down -v --rmi all`** — nuclear option: removes everything.
-> - **`stop`** (not `down`) — stops containers WITHOUT removing them, preserving container state.
+### Healthcheck Timeout Investigation
+
+The second compose problem is current and live. Two Airflow containers are running, producing logs, and still being marked unhealthy by Compose.
+
+#### Linux | docker inspect / docker exec | capture the false-unhealthy state and time the real probe
+
+**When to run:** When `docker compose ps` reports `unhealthy` but the container logs still show forward progress.
+**Trigger:** `airflow-dag-processor` or `airflow-triggerer` appear degraded even though the stack is otherwise functioning.
+**Context:** Linux shell on `stoxx-airflow`. Read-only inspection plus a manual execution of the same healthcheck command.
+**Purpose:** Distinguish a dead process from a slow probe.
+**Problem:** On April 13, 2026, `app-airflow-dag-processor-1` and `app-airflow-triggerer-1` were running but marked unhealthy.
+**Context:** The live compose file gives both services a `timeout: 10s` CLI-based healthcheck.
+
+*Reads Docker's recorded health state for the live `airflow-dag-processor` container.*
 
 ```bash
-docker compose down                    # standard tear-down (keeps volumes)
-docker compose down -v                 # also remove named volumes
-docker compose down --rmi all          # also remove all images
-docker compose down -v --rmi all       # remove everything
-
-docker compose stop                    # stop without removing
-docker compose stop airflow-scheduler  # stop a specific service
+gcloud compute ssh stoxx-airflow --project bq-wh-nb --zone europe-west1-b --tunnel-through-iap --command "docker inspect app-airflow-dag-processor-1 --format '{{json .State.Health}}'"
 ```
 
-> [!warning] down -v Deletes All Volumes
+```text
+{"Status":"unhealthy","FailingStreak":7,"Log":[{"Start":"2026-04-13T17:33:59.268912979Z","End":"2026-04-13T17:34:09.386842741Z","ExitCode":-1,"Output":"Health check exceeded timeout (10s): ... Found one alive job.\n"}]}
+```
+
+*Runs the same Airflow job check manually and measures how long it really takes.*
+
+```bash
+gcloud compute ssh stoxx-airflow --project bq-wh-nb --zone europe-west1-b --tunnel-through-iap --command "/usr/bin/time -f %E docker exec app-airflow-dag-processor-1 airflow jobs check --job-type DagProcessorJob --hostname 33e75f7b8725 && /usr/bin/time -f %E docker exec app-airflow-triggerer-1 airflow jobs check --job-type TriggererJob --hostname 04af152e5d81"
+```
+
+```text
+Found one alive job.
+0:07.99
+Found one alive job.
+0:07.95
+```
+
+**Diagnosis:** The process heartbeat exists, but the CLI-based probe is running close enough to the `10s` budget that Docker occasionally records it as a timeout. This is a probe-budget problem, not evidence that the Airflow job itself is dead.
+**Resolution:** The next safe infrastructure change is to increase these healthcheck timeouts above `10s` or replace the CLI probe with a lighter check. That change was not applied during this documentation pass because it would mutate the live orchestration host.
+**Validation:** Manual execution returned `Found one alive job.` for both services in `0:07.99` and `0:07.95`, proving that the job heartbeats exist even when Compose reports `unhealthy`.
+**Prevention rule:** If a CLI-based Airflow healthcheck routinely consumes more than about 80% of its timeout budget on the live VM, raise the timeout before the next rollout.
+
+> [!info] Live Verified Workflow
 >
-> `docker compose down -v` is Destructive.
-> This deletes all named volumes — including your database data. Run `docker compose down` (without `-v`) when you just want to stop the stack. Only use `-v` when you explicitly want to wipe state and start fresh.
+> The unhealthy state and the manual probe timings above are live captures from the current VM.
 
-> [!success] Safe teardown pattern
+> [!example] Important Conceptual Note Not Executed Here
 >
-> Use `docker compose down` (no flags) to stop and remove containers and networks while preserving all volume data. Only add `-v` when you explicitly need a clean slate — for example, when resetting a local dev environment after a schema migration.
+> The remediation change itself was not executed here because it would require editing the live compose file and restarting active Airflow services on the VM.
 
-### Starting and Restarting
+### Historical Setup Remediation
 
-```bash
-# Start previously stopped containers (does not create new ones)
-docker compose start
+The repo still contains an older Airflow-on-COS deployment model. That model is no longer the live VM, but the setup failures recorded there remain important because they explain why the repo added line-ending normalization and permission-fix guidance.
 
-# Start a specific stopped service
-docker compose start postgres
+#### Linux | sed / terraform | fix CRLF line endings in the earlier startup-script deployment
 
-# Restart all services (stop + start in sequence)
-docker compose restart
+**When to run:** Only when working with the older metadata-startup-script deployment preserved in the repo.
+**Trigger:** The VM boot log shows the shell cannot execute the startup script even though the script is present.
+**Context:** Historical setup trail from the repo's earlier Airflow deployment model. The commands below are the actual fix path recorded during that deployment.
+**Purpose:** Keep the earlier setup history because it explains a real class of Windows-to-Linux drift.
+**Problem:** The startup script failed with `env: 'bash\r': No such file or directory`.
+**Context:** The repo originally pushed `infra/scripts/airflow-startup.sh` into VM metadata for a `docker run`-based Airflow stack.
 
-# Restart a specific service
-docker compose restart airflow-scheduler
-# Common workflow after editing a DAG that requires a scheduler reload
-
-# Pause all services (freeze processes, keep memory state)
-docker compose pause
-
-# Unpause all services (resume from frozen state)
-docker compose unpause
-
-# Pause a specific service
-docker compose pause airflow-worker
-```
-
----
-
-### Scaling and Individual Service Management
+_Normalizes Windows CRLF line endings in `infra/scripts/airflow-startup.sh` with `sed`, then reapplies only the Airflow VM Terraform target so the startup metadata is rewritten with Linux-safe line endings._
 
 ```bash
-# Scale a service to N replicas at startup
-docker compose up -d --scale airflow-worker=3
-# Starts 3 instances of airflow-worker; ports must not be published (conflicts)
-# Named containers will be: airflow-worker-1, airflow-worker-2, airflow-worker-3
-
-# Scale down while the stack is running
-docker compose up -d --scale airflow-worker=1
-# Compose removes the extra containers gracefully
-
-# Rebuild and restart a single service without touching others
-docker compose up -d --build --force-recreate airflow-scheduler
-# Equivalent to: stop → remove → rebuild image → create → start — for that service only
-
-# Pull a new image and restart a single service (for pre-built images)
-docker compose pull postgres && docker compose up -d --force-recreate postgres
+sed -i 's/\r$//' infra/scripts/airflow-startup.sh
+terraform -chdir=infra apply -target=google_compute_instance.airflow
 ```
 
-> [!warning] Scaling with Published Ports
->
-> Scaling Services with Published Ports.
-> If a service has `ports: - "5432:5432"`, you cannot scale it beyond 1 replica — only one process can bind to host port 5432. Remove the `ports` key or use host-port 0 (dynamic assignment) before scaling.
+```text
+env: 'bash\r': No such file or directory
+```
 
-> [!success] Scaling without port conflicts
->
-> Remove the `ports:` key from any service you intend to scale. Allow inter-service communication to use the internal Docker network (containers reach each other by service name). For services that need external access, put a load balancer (e.g., nginx) in front and scale only the backend workers.
+**Diagnosis:** The script had Windows CRLF line endings, so the Linux shebang and shell parser could not execute it correctly on the VM.
+**Resolution:** Normalize line endings before applying Terraform, and use the `replace(file(...), "\r\n", "\n")` pattern in Terraform so the metadata copy is always LF-normalized.
+**Validation:** The repo's later `infra/compute.tf` changed the startup-script metadata assignment to `replace(file("${path.module}/scripts/airflow-startup.sh"), "\r\n", "\n")`, which is the durable infrastructure fix.
+**Prevention rule:** Any shell script that crosses from Windows editing to Linux execution should be normalized to LF before it becomes a Docker entrypoint or VM startup script.
 
----
+#### Linux | chown / ls | fix host-path ownership in the earlier Airflow bind mounts
 
-### Logs and Monitoring
+**When to run:** When an Airflow container can see mounted DAG or log paths but cannot write to them.
+**Trigger:** Airflow containers start, but logs fail to write or DAG files do not load because ownership is wrong.
+**Context:** Historical setup trail from the earlier Airflow deployment model in the repo.
+**Purpose:** Preserve the real mount-permission fix because the same UID pattern still exists in the current Compose-based VM stack.
+**Problem:** Host-mounted Airflow paths failed with permission errors because they were owned by the wrong UID or GID.
+**Context:** The older Airflow stack mounted `/home/airflow/dags` and `/home/airflow/logs` into containers that ran as UID `50000`, while PostgreSQL required UID `999` on its data path.
+
+_Reassigns the Airflow DAG and log directories to UID `50000`, reassigns PostgreSQL data to UID and GID `999`, and verifies the corrected ownership numerically with `ls -ln`._
 
 ```bash
-# Stream logs from all services (most recent 50 lines, then follow)
-docker compose logs -f --tail 50
-# -f / --follow: stream new log lines as they arrive
-# --tail N: start from the last N lines (default: all)
-
-# Stream logs from specific services only
-docker compose logs -f airflow-scheduler airflow-worker
-
-# View logs without following (dump and exit)
-docker compose logs --tail 100 postgres
-
-# Show timestamps on each log line
-docker compose logs -f --timestamps airflow-webserver
-
-# Show running processes inside each container (like top, per service)
-docker compose top
-
-# Show processes for a specific service
-docker compose top airflow-scheduler
-
-# Show status of all services (running, stopped, ports)
-docker compose ps
-
-# Show only service names (useful in scripts)
-docker compose ps --services
-
-# Show only running services
-docker compose ps --status running
+sudo chown -R 50000:0 /home/airflow/dags /home/airflow/logs
+sudo chown -R 999:999 /home/airflow/pgdata
+ls -ln /home/airflow/
 ```
 
----
-
-## Updating Images (Rolling Updates)
-
-```bash
-# Pull latest versions of all images declared with a tag
-docker compose pull
-# Downloads updated layers; does not restart containers
-
-# Pull a specific service's image
-docker compose pull postgres
-
-# Apply updates: recreate containers with the newly pulled images
-docker compose up -d
-# Compose detects the new image digest and recreates only changed containers
-
-# Explicit pull-then-recreate for a single service (safest pattern)
-docker compose pull airflow-webserver
-docker compose up -d --force-recreate airflow-webserver
+```text
+drwxr-xr-x  50000 0     dags
+drwxr-xr-x  50000 0     logs
+drwx------  999   999   pgdata
 ```
 
-#### Safe rolling update pattern for production-like stacks
-
-```bash
-# 1. Pull new images while stack is running (no downtime yet)
-docker compose pull
-
-# 2. Review what changed
-docker compose images   # shows current images and digests per service
-
-# 3. Recreate services one at a time to minimize downtime
-docker compose up -d --force-recreate postgres
-docker compose up -d --force-recreate redis
-docker compose up -d --force-recreate airflow-webserver airflow-scheduler
-```
-
----
-
-### Exec and Debug
-
-```bash
-# Open an interactive shell inside a running container
-docker compose exec airflow-webserver bash
-# exec runs inside the EXISTING running container (no new container created)
-
-# Run a single command inside a running container (non-interactive)
-docker compose exec postgres psql -U airflow -d airflow -c "\dt"
-
-# Run airflow CLI commands inside the webserver container
-docker compose exec airflow-webserver airflow dags list
-docker compose exec airflow-webserver airflow tasks test my_dag my_task 2024-01-01
-
-# Specify user for exec (useful when container runs as non-root)
-docker compose exec --user root airflow-webserver bash
-
-# Run a one-off command in a NEW container based on the service image
-docker compose run --rm airflow-webserver airflow db migrate
-# --rm: remove the temporary container after the command exits
-# run creates a new container; exec uses an existing running one
-
-# Run with a different entry point
-docker compose run --rm --entrypoint bash airflow-webserver
-
-# Copy files between host and container
-docker compose cp airflow-webserver:/opt/airflow/logs/scheduler ./local-logs
-docker compose cp ./my-config.cfg airflow-webserver:/opt/airflow/
-```
-
-> [!tip] exec vs run
->
-> `exec` vs `run`.
-> Use `exec` to interact with an already-running service (most common — checking logs, running admin commands). Use `run` for one-off tasks like database migrations or initialization scripts, especially when the service is not yet started.
-
----
-
-## Configuration: Validation and Overrides
-
-### Validate and Inspect Resolved Config
-
-```bash
-# Validate the compose file and print the fully resolved configuration
-docker compose config
-# Expands all variable substitutions, merges override files, and validates syntax
-# Excellent for debugging why a service isn't picking up the right environment vars
-
-# Print only service names
-docker compose config --services
-
-# Print only volume names
-docker compose config --volumes
-```
-
-### Multiple Compose Files (Overrides)
-
-Compose merges multiple files in order. Later files override earlier ones — useful for separating base config from environment-specific overrides.
-
-```bash
-# Merge base + override files
-docker compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
-
-# Common pattern: base + production overrides
-docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
-
-# Common pattern: base + local dev overrides
-docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d
-```
-
-```yaml
-# docker-compose.override.yaml — automatically loaded if present alongside docker-compose.yaml
-# Override specific keys without duplicating the full service definition
-
-services:
-  airflow-webserver:
-    ports:
-      - "8080:8080"       # expose to host in dev; omit in prod
-    environment:
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
-    volumes:
-      - ./dags:/opt/airflow/dags   # bind mount DAGs for live reload in dev
-
-  postgres:
-    ports:
-      - "5432:5432"       # expose DB port to host in dev for direct access
-```
-
-> [!info] Automatic Override Loading
->
-> If a file named `docker-compose.override.yaml` exists alongside `docker-compose.yaml`, Compose loads and merges it automatically. You don't need the `-f` flag. Rename it to `docker-compose.dev.yaml` if you want explicit control over when it applies.
-
-### Project Name
-
-```bash
-# Set project name (default: directory name — used as prefix on container/network/volume names)
-docker compose -p myproject up -d
-# Container names become: myproject-postgres-1, myproject-airflow-webserver-1, etc.
-
-# Or set via environment variable
-COMPOSE_PROJECT_NAME=myproject docker compose up -d
-```
-
----
-
-### Cleanup and Disk Management
-
-```bash
-# Remove stopped containers, dangling images, unused networks, and build cache
-docker system prune -f
-# -f / --force: skip confirmation prompt
-# Safe to run regularly — only removes unused resources
-
-# Also remove unused volumes (adds to prune scope)
-docker system prune -f --volumes
-# ⚠️ This is the same as docker volume prune — removes volumes not attached to any container
-
-# Remove only unused volumes
-docker volume prune -f
-
-# Remove only dangling images (untagged layers from old builds)
-docker image prune -f
-
-# Remove ALL unused images (not just dangling — includes tagged images with no running container)
-docker image prune -af
-
-# Show disk usage breakdown: images, containers, volumes, build cache
-docker system df
-
-# Verbose disk usage with per-item details
-docker system df -v
-```
-
-> [!warning] Volume Pruning
->
-> `docker volume prune` removes ALL volumes not currently mounted by at least one container. If your database container is stopped (but not removed), its volume is still "in use" — but if the container was removed (via `docker compose down`), the volume becomes "unused" and will be deleted. Always run `docker compose down` (without `-v`) instead of letting volumes accumulate for pruning.
-
-> [!success] Safe volume management
->
-> Prefer `docker compose down` (no flags) to stop stacks — this removes containers and networks but preserves named volumes. Only run `docker volume prune` after explicitly confirming you have no data in those volumes. Use `docker volume ls` to review volumes before pruning.
-
-> [!tip] Routine Cleanup Pattern
->
-> After tearing down a dev stack you no longer need:
-> ```bash
-> docker compose down          # remove containers and networks; keep volumes
-> docker system prune -f       # clean dangling images, stopped containers, unused networks
-> # Only add --volumes if you confirmed you don't need the data
-> ```
-
----
-
-### Quick Reference Summary
-
-| Task | Command |
-|---|---|
-| Start all (background) | `docker compose up -d` |
-| Start and rebuild | `docker compose up -d --build` |
-| Start specific service | `docker compose up -d postgres` |
-| Force recreate | `docker compose up -d --force-recreate` |
-| Stop and remove | `docker compose down` |
-| Stop + remove volumes | `docker compose down -v` |
-| Stop without removing | `docker compose stop` |
-| Start stopped containers | `docker compose start` |
-| Restart all | `docker compose restart` |
-| Restart one service | `docker compose restart airflow-scheduler` |
-| Pause / unpause | `docker compose pause` / `docker compose unpause` |
-| Scale service | `docker compose up -d --scale worker=3` |
-| Stream all logs | `docker compose logs -f --tail 50` |
-| Stream specific logs | `docker compose logs -f service1 service2` |
-| Service status | `docker compose ps` |
-| Process list | `docker compose top` |
-| Shell into container | `docker compose exec service bash` |
-| Run one-off command | `docker compose run --rm service cmd` |
-| Pull updated images | `docker compose pull` |
-| Validate config | `docker compose config` |
-| Multi-file merge | `docker compose -f base.yaml -f override.yaml up -d` |
-| Disk usage | `docker system df` |
-| Prune unused resources | `docker system prune -f` |
-| Prune volumes | `docker volume prune -f` |
-
----
+**Diagnosis:** The container runtime user IDs and the host directory ownership did not match. Airflow could not write to `dags` and `logs`, and PostgreSQL could not own `pgdata` safely.
+**Resolution:** Align the host directory ownership to the runtime UIDs before or immediately after the stack starts.
+**Validation:** The expected ownership pattern above is the operational proof that the host paths match the container UIDs.
+**Prevention rule:** Every bind-mounted state path should be checked against the service's runtime UID before blaming the application itself.
 
 ## Related
 
-- [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
-- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Building and pushing Docker images
-- the Airflow DAGs — Airflow runs via Docker Compose on the Airflow VM
+- [[01-container-lifecycle]]
+- [[02-image-management]]

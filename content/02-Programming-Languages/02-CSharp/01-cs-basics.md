@@ -2322,21 +2322,23 @@ Console.WriteLine(string.Join(",", myList));   // list after
 | Reference + Immutable | `string`, `record`, `delegate` | Safe to share |
 | Reference + Mutable | `class`, `List`, `Dict`, arrays | Careful with sharing |
 
-## When to Use C# for These Concepts
-
-- **Production services and long-lived applications** — C#'s static type system, compile-time checks, and IDE refactoring support make it ideal for large codebases where correctness and maintainability matter more than development speed.
-- **Performance-sensitive workloads** — C# is 10–100x faster than Python for CPU-bound loops, with precise control over memory layout (structs, `Span<T>`, `stackalloc`). Ideal for high-throughput data processing, real-time systems, and low-latency APIs.
-- **Strong type safety requirements** — when incorrect types must be caught before deployment, not at runtime. Financial calculations, regulatory systems, and safety-critical code benefit from compile-time guarantees.
-- **Windows ecosystem and .NET platform** — native integration with SQL Server, Azure, WPF, ASP.NET, and the entire Microsoft stack. The natural choice when the deployment target is Windows or Azure.
-- **Enterprise data pipelines** — when the pipeline is part of a larger .NET application, or when performance, thread safety, and dependency injection matter more than scripting convenience.
-
-## When Not to Use / Limits
-
-- **Ad-hoc data exploration** — C#'s ceremony (compilation, type declarations, project files) makes it slower for quick experiments. Use Python with Jupyter for exploration, then port to C# for production.
-- **Small scripts and automation** — a 10-line Python script becomes 30+ lines in C#. For glue code, cron jobs, and one-off tasks, Python is more productive.
-- **Ecosystem coverage** — Python's data science and ML ecosystem (pandas, scikit-learn, transformers, dbt) is broader. C# equivalents exist but are less mature.
-- **Linux-first environments** — while .NET runs on Linux, the ecosystem and community tooling still lean toward Windows. Python is more at home on Linux.
-- **Rapid prototyping** — dynamic typing and Python's REPL make it faster to iterate on ideas before committing to a typed design.
+> [!example] Usage
+>
+> > [!success] Applicability
+> >
+> > - **Production services and long-lived applications** — C#'s static type system, compile-time checks, and IDE refactoring support make it ideal for large codebases where correctness and maintainability matter more than development speed.
+> > - **Performance-sensitive workloads** — C# is 10–100x faster than Python for CPU-bound loops, with precise control over memory layout (structs, `Span<T>`, `stackalloc`). Ideal for high-throughput data processing, real-time systems, and low-latency APIs.
+> > - **Strong type safety requirements** — when incorrect types must be caught before deployment, not at runtime. Financial calculations, regulatory systems, and safety-critical code benefit from compile-time guarantees.
+> > - **Windows ecosystem and .NET platform** — native integration with SQL Server, Azure, WPF, ASP.NET, and the entire Microsoft stack. The natural choice when the deployment target is Windows or Azure.
+> > - **Enterprise data pipelines** — when the pipeline is part of a larger .NET application, or when performance, thread safety, and dependency injection matter more than scripting convenience.
+>
+> > [!failure] Limitations
+> >
+> > - **Ad-hoc data exploration** — C#'s ceremony (compilation, type declarations, project files) makes it slower for quick experiments. Use Python with Jupyter for exploration, then port to C# for production.
+> > - **Small scripts and automation** — a 10-line Python script becomes 30+ lines in C#. For glue code, cron jobs, and one-off tasks, Python is more productive.
+> > - **Ecosystem coverage** — Python's data science and ML ecosystem (pandas, scikit-learn, transformers, dbt) is broader. C# equivalents exist but are less mature.
+> > - **Linux-first environments** — while .NET runs on Linux, the ecosystem and community tooling still lean toward Windows. Python is more at home on Linux.
+> > - **Rapid prototyping** — dynamic typing and Python's REPL make it faster to iterate on ideas before committing to a typed design.
 
 ## Warnings
 

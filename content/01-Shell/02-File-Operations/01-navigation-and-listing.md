@@ -138,31 +138,6 @@ status: complete
 > >
 > > Without `-PSProvider FileSystem`, `Get-PSDrive` returns registry (`HKLM:`, `HKCU:`), certificate (`Cert:`), and environment (`Env:`) drives alongside disk drives, making disk-space readings unreadable.
 
-The `ls` command is your window into the file system. The flags you choose determine whether you see just filenames or a complete picture of sizes, permissions, ownership, and modification times. As a data engineer you regularly deal with directories containing gigabytes of data — the right listing command tells you what changed, what's consuming space, and whether a pipeline produced what it should.
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `ls` | The primary Linux command for listing directory contents. Returns filenames, and with flags, shows permissions, sizes, timestamps, and ownership. | The first tool you reach for to verify pipeline output, check what changed, and confirm file presence. | Parsing `ls` output in scripts -- `ls` is designed for humans. Use `find`, `stat`, or shell globs for programmatic file handling. |
-| `tree` | A recursive directory listing tool that displays the filesystem as an indented tree structure. Not installed by default on minimal images. | Quickly visualize project structure, pipeline output directories, or deployment layouts. | Running `tree` without `-L` on a large tree -- it traverses everything, producing unusable output on directories with thousands of files. |
-| `du` (disk usage) | Reports how much disk space files and directories actually occupy on disk. Measures allocated blocks, not logical file sizes. | The starting point for diagnosing disk pressure: which directories are consuming the most space. | Confusing `du` output with `ls -l` sizes. `du` reports block allocation; `ls -l` reports logical file size. Sparse files show different values. |
-| `df` (disk free) | Reports filesystem-level disk usage: total, used, available, and percent-used for each mounted filesystem. | Confirms how much headroom remains after identifying large consumers with `du`. Critical for preventing disk-full outages. | Trusting `df` alone when `du` disagrees -- deleted files held open by running processes consume space that `df` counts but `du` does not. |
-| Inode | A data structure on the filesystem that stores metadata about a file (permissions, owner, timestamps, block pointers) but not the filename or content. Each file consumes one inode. | Inode exhaustion produces the same "No space left on device" error as disk-full, but `df -h` shows plenty of free space. `df -i` reveals the true cause. | Not monitoring inodes. Millions of small files (logs, cache entries, lock files) can exhaust inodes while disk bytes remain plentiful. |
-| Hidden file (dotfile) | A file whose name starts with `.` (e.g., `.env`, `.git/`, `.dockerignore`). Hidden by `ls` and `Get-ChildItem` by default. | Critical config files like `.env` and `.dbt/` are hidden. If a pipeline cannot find its config, check hidden files first. | Assuming `ls` shows everything -- it hides dotfiles unless `-a` is used. PowerShell requires `-Force`. |
-| `ncdu` | An interactive, ncurses-based disk usage explorer. Displays directories sorted by size with keyboard navigation. | Far more efficient than running `du` repeatedly when investigating which directories consume the most space. | Not installed by default -- requires `apt install ncdu` on Debian/Ubuntu. |
-| `Get-ChildItem` | The PowerShell cmdlet for listing files and directories. Returns typed `FileInfo`/`DirectoryInfo` objects, not text. Aliases: `ls`, `dir`, `gci`. | The PowerShell equivalent of `ls`. Objects pipeline directly into `Sort-Object`, `Where-Object`, `Measure-Object` without text parsing. | Not using `-Force` to see hidden files. Not using `-Filter` vs `-Include` appropriately (performance difference is 10x on large directories). |
-| `Get-PSDrive` | A PowerShell cmdlet that returns drive objects including `Used` and `Free` byte counts. Filter to `FileSystem` provider for disk drives. | The PowerShell equivalent of `df -h`. Reports free space across all mounted drives. | Not filtering to `-PSProvider FileSystem` -- returns registry, certificate, and environment drives alongside disk drives. |
-
-## What this note covers
-
-- Linux `ls` flags for sorting by time, size, showing hidden files, and listing directories
-- `tree` for visual directory structure with depth limiting
-- `du` for measuring directory size and finding space consumers
-- `df` for monitoring filesystem free space and inode usage
-- The `du` vs `df` discrepancy: deleted files held open, reserved blocks, sparse files
-- PowerShell equivalents: `Get-ChildItem`, `Get-PSDrive`, calculated human-readable sizes
 ## Linux navigation and listing tools
 
 Linux provides `ls` for directory listing, `tree` for visual structure, `du` for measuring disk consumption, and `df` for monitoring free space. In data engineering, you use these constantly to verify pipeline output, diagnose disk pressure, and track what changed between runs.
@@ -458,19 +433,21 @@ Get-PSDrive -PSProvider FileSystem | Format-Table Name,
 For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [system-resources](https://alp78.github.io/elysium/01-Shell/04-Process-Management/04-system-resources) which covers `vmstat`, `iostat`, and automated alerting patterns.
 
 
-## When to use navigation and listing tools
-
-- **Verifying pipeline output** -- after a pipeline run, `ls -lhrt` confirms what files were produced, their sizes, and when they were written.
-- **Diagnosing disk pressure** -- `du -h --max-depth=1 | sort -rh` identifies the largest consumers. `df -h` confirms remaining headroom. Run these before any remediation.
-- **Investigating inode exhaustion** -- `df -i` reveals whether "no space left on device" is a byte problem or an inode problem.
-- **Surveying project structure** -- `tree -L 2 --dirsfirst` gives a quick visual overview of a repo or data directory.
-- **Pre-flight checks in scripts** -- verify that target directories exist and have sufficient space before starting large data operations.
-
-## When not to use navigation and listing tools
-
-- **Parsing `ls` output in scripts** -- `ls` output is for humans. Filenames with spaces, newlines, or glob characters break any script that parses `ls`. Use `find`, `stat`, or shell globs instead.
-- **Monitoring disk space in production** -- manual `df` checks do not scale. Use a monitoring agent (Datadog, Cloud Monitoring, Prometheus node_exporter) with threshold-based alerts.
-- **Counting files in very large directories** -- `ls` and `Get-ChildItem` load all entries into memory. For directories with millions of files, use `find . -maxdepth 1 | wc -l` which streams results.
+> [!example] Filesystem Survey Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Verifying pipeline output** -- after a pipeline run, `ls -lhrt` confirms what files were produced, their sizes, and when they were written.
+> > - **Diagnosing disk pressure** -- `du -h --max-depth=1 | sort -rh` identifies the largest consumers. `df -h` confirms remaining headroom. Run these before any remediation.
+> > - **Investigating inode exhaustion** -- `df -i` reveals whether "no space left on device" is a byte problem or an inode problem.
+> > - **Surveying project structure** -- `tree -L 2 --dirsfirst` gives a quick visual overview of a repo or data directory.
+> > - **Pre-flight checks in scripts** -- verify that target directories exist and have sufficient space before starting large data operations.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Parsing `ls` output in scripts** -- `ls` output is for humans. Filenames with spaces, newlines, or glob characters break any script that parses `ls`. Use `find`, `stat`, or shell globs instead.
+> > - **Monitoring disk space in production** -- manual `df` checks do not scale. Use a monitoring agent (Datadog, Cloud Monitoring, Prometheus node_exporter) with threshold-based alerts.
+> > - **Counting files in very large directories** -- `ls` and `Get-ChildItem` load all entries into memory. For directories with millions of files, use `find . -maxdepth 1 | wc -l` which streams results.
 
 ## Warnings
 

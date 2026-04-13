@@ -1401,20 +1401,22 @@ partial class MyRegexHelper
 var match = MyRegexHelper.PhonePattern().Match(text);
 ```
 
-## When to Use
-
-- **Production string processing** — C#'s static typing, `Span<char>`, and `StringBuilder` provide predictable performance for high-throughput text handling in services and pipelines.
-- **Zero-allocation parsing** — `ReadOnlySpan<char>` with `int.Parse(span)` and `string.AsSpan()` enables parsing without substring allocations — critical for hot paths processing millions of records.
-- **Complex regex with compile-time safety** — `[GeneratedRegex]` (C# 11/.NET 7+) produces optimized, AOT-compatible matching code with compile-time pattern validation.
-- **Culture-aware string operations** — `StringComparison` enum and `CultureInfo` provide fine-grained control over case folding, sorting, and collation rules.
-- **Windows and .NET ecosystem** — native integration with ASP.NET, EF Core, and Azure SDKs where `string` APIs are designed for the platform.
-
-## When Not to Use / Limits
-
-- **Ad-hoc text exploration** — C#'s ceremony makes quick regex experimentation slower than Python's REPL. Prototype patterns in Python, then port to C#.
-- **Dynamic scripting** — Python's `split()`/`join()` with list comprehensions is more concise for one-off text transformations.
-- **No built-in `translate()` equivalent** — C# lacks Python's `str.maketrans`/`str.translate` for single-pass multi-character substitution. Use `Regex.Replace` or manual `StringBuilder` loops.
-- **UTF-16 surrogate pair complexity** — C# strings are UTF-16 internally. Characters outside the Basic Multilingual Plane (emoji, rare scripts) are stored as surrogate pairs, making `string[i]` return half a character. Use `StringInfo.GetTextElementEnumerator()` for correct grapheme iteration.
+> [!example] C# String Workloads
+>
+> > [!success] Applicability
+> >
+> > - **Production string processing** — C#'s static typing, `Span<char>`, and `StringBuilder` provide predictable performance for high-throughput text handling in services and pipelines.
+> > - **Zero-allocation parsing** — `ReadOnlySpan<char>` with `int.Parse(span)` and `string.AsSpan()` enables parsing without substring allocations — critical for hot paths processing millions of records.
+> > - **Complex regex with compile-time safety** — `[GeneratedRegex]` (C# 11/.NET 7+) produces optimized, AOT-compatible matching code with compile-time pattern validation.
+> > - **Culture-aware string operations** — `StringComparison` enum and `CultureInfo` provide fine-grained control over case folding, sorting, and collation rules.
+> > - **Windows and .NET ecosystem** — native integration with ASP.NET, EF Core, and Azure SDKs where `string` APIs are designed for the platform.
+>
+> > [!failure] Limitations
+> >
+> > - **Ad-hoc text exploration** — C#'s ceremony makes quick regex experimentation slower than Python's REPL. Prototype patterns in Python, then port to C#.
+> > - **Dynamic scripting** — Python's `split()`/`join()` with list comprehensions is more concise for one-off text transformations.
+> > - **No built-in `translate()` equivalent** — C# lacks Python's `str.maketrans`/`str.translate` for single-pass multi-character substitution. Use `Regex.Replace` or manual `StringBuilder` loops.
+> > - **UTF-16 surrogate pair complexity** — C# strings are UTF-16 internally. Characters outside the Basic Multilingual Plane (emoji, rare scripts) are stored as surrogate pairs, making `string[i]` return half a character. Use `StringInfo.GetTextElementEnumerator()` for correct grapheme iteration.
 
 ## Warnings
 

@@ -8,21 +8,143 @@ updated: 2026-03-22
 status: complete
 ---
 
-# dbt: The Transformation Layer
+# dbt Transformation Layer
 
 > [!quote]
 > "Analytics code should be version-controlled, tested, and modular — the same standards we apply to software should apply to SQL."
 >
 > — **Tristan Handy** (creator of dbt)
 
-> For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt).
+> [!abstract]- Summary
+>
+> This note defines dbt as the SQL transformation layer inside the warehouse, showing how staging, intermediate, and mart models, tests, snapshots, macros, orchestration, and slim CI turn warehouse SQL into a modular software-engineering workflow rather than a pile of ad hoc scripts.
+>
+> **What dbt does and how projects are structured**
+> - Explains dbt's exact role as the transformation step in ELT, distinguishes dbt Core from dbt Cloud, and maps a financial-data project layout across models, snapshots, tests, macros, seeds, and packages.
+> - Connects the tool's role back to medallion-style layering so dbt fits into the broader platform instead of being treated as a standalone product.
+>
+> **Models, testing, and snapshots**
+> - Covers staging, intermediate, and mart model responsibilities, then adds schema tests, custom data tests, and SCD Type 2 snapshots as the mechanisms that keep warehouse transformations correct and traceable.
+> - Treats modeling patterns and test declarations as one transformation discipline rather than separate concerns.
+>
+> **Reuse, orchestration, and CI/CD**
+> - Explains macros for reusable SQL, Airflow integration for scheduled execution, and slim-build CI workflows that limit warehouse work to changed models and their dependencies.
+> - Uses edge cases and gotchas to show where dbt fits well and where teams need to stay explicit about target selection, model boundaries, and warehouse cost.
+>
+> **Operations and safety**
+> - Warnings: the default target must stay non-prod, staging models should remain close to sources, and warehouse transforms still need orchestration, cost control, and explicit testing.
+> - Recommendations: keep dbt focused on the T in ELT, organize models by layer, declare tests near models, use snapshots for history, and run slim CI before production promotion.
 
-dbt (Data Build Tool) has become the standard for managing SQL-based transformations in modern data platforms. Leading data platform teams require expertise in dbt for implementing layered transformation flows and managing lakehouse concepts. dbt does not extract or load data — it transforms data that is already in your warehouse, applying software engineering practices (version control, testing, documentation) to SQL.
+> [!note]- Glossary
+>
+> **dbt**
+> - A framework for building, testing, documenting, and versioning SQL transformations that run inside a warehouse or query engine.
+> - It matters here because the note positions dbt as the standard transformation layer for modern analytical platforms.
+>
+> > [!info] SQL plus engineering discipline
+> >
+> > dbt's real value is not just templated SQL. It is the way it wraps warehouse transforms in version control, testing, and deployment practices.
+>
+> ---
+>
+> **ELT**
+> - A pipeline pattern where data is extracted and loaded before transformations run inside the target analytical system.
+> - It matters here because dbt is explicitly framed as the transformation layer after data has already landed in the warehouse.
+>
+> > [!info] dbt owns the T only
+> >
+> > dbt is strongest when teams let it focus on in-warehouse transformation rather than forcing it to do extraction, transport, or orchestration work it was not built for.
+>
+> ---
+>
+> **Staging model**
+> - A dbt model that stays close to one source table, usually applying renaming, casting, and light cleanup without heavy business logic.
+> - It matters here because staging is the first layer that stabilizes raw loaded data for later transformations.
+>
+> > [!warning] Keep staging thin
+> >
+> > Once joins and business rules accumulate in staging, the project loses the clear boundary that makes downstream models easier to reason about and debug.
+>
+> ---
+>
+> **Intermediate model**
+> - A dbt model that applies reusable business logic and prepares cleaned or enriched data for marts.
+> - It matters here because the note uses intermediate models as the main expression layer for transformation logic inside the warehouse.
+>
+> > [!info] Reuse before publish
+> >
+> > Intermediate models are valuable because they let teams centralize reusable business logic without exposing every internal step directly to end users.
+>
+> ---
+>
+> **Mart model**
+> - A consumer-facing dbt model shaped for reporting, analytics, or application access rather than for raw transformation reuse.
+> - It matters here because marts are where warehouse transformations become published outputs with clearer business meaning.
+>
+> > [!warning] Shape for the consumer
+> >
+> > A mart that still looks like a raw source table has probably not completed the transformation job the consumer actually needs.
+>
+> ---
+>
+> **Schema test**
+> - A declarative dbt test that validates generic structural properties such as uniqueness, non-nullness, accepted values, or relationships.
+> - It matters here because schema tests are the fastest way to attach repeatable quality checks directly to models.
+>
+> > [!info] Cheap guardrails
+> >
+> > Generic tests catch a large class of model regressions with very little custom code, which is why they should be the baseline in most projects.
+>
+> ---
+>
+> **Custom data test**
+> - A SQL-based test that encodes project-specific business assertions which generic schema tests cannot express.
+> - It matters here because real analytical domains usually need rules beyond `not_null` and `unique`.
+>
+> > [!warning] Business rules deserve SQL too
+> >
+> > If a rule matters operationally, it should be executable as a test rather than documented only in a wiki or code review comment.
+>
+> ---
+>
+> **Snapshot**
+> - A dbt mechanism for tracking historical row versions over time, often used to implement SCD Type 2 behavior.
+> - It matters here because the note uses snapshots to preserve change history without rewriting the whole table manually.
+>
+> > [!info] History as modeled state
+> >
+> > Snapshots are useful when teams need a warehouse-native record of how dimensions changed, not just their latest current value.
+>
+> ---
+>
+> **Macro**
+> - A reusable Jinja-templated SQL function or snippet that helps standardize logic across many models.
+> - It matters here because macros let projects reuse complex SQL patterns without copy-pasting them throughout the model graph.
+>
+> > [!warning] Reuse, not obscurity
+> >
+> > Macros are powerful, but over-abstracting simple SQL can make projects harder to read. Use them to remove duplication, not to hide ordinary logic.
+>
+> ---
+>
+> **Slim CI**
+> - A dbt build strategy that runs only changed models and their affected dependencies by comparing current state to a saved prior state.
+> - It matters here because warehouse-aware CI must stay fast enough to run often without rebuilding the whole project every time.
+>
+> > [!info] Faster feedback loop
+> >
+> > Slim CI keeps analytical projects deployable by cutting warehouse work to the models touched by the change instead of paying for full graph rebuilds on every PR.
+>
 
-> [!info] dbt's Role
-> dbt is the **T in ELT**. It does not connect to external APIs, read CSV files, or move data between systems. It takes tables that already exist in your warehouse and produces new tables/views from them. Extraction and loading are handled by Python pipelines (see fastapi and polars) or Cloud Run jobs.
-
----
+> [!example] Transformation Layer Fit
+>
+> > [!success] Warehouse-Native SQL Discipline
+> >
+> > - Use dbt when data is already loaded into the warehouse and the team needs modular, tested SQL transformations with documentation and CI/CD discipline.
+>
+> > [!failure] Orchestration Stretch
+> >
+> > - Do not stretch dbt into extraction, file movement, or cross-system ingestion; those concerns still belong elsewhere.
 
 ## What dbt Actually Does (and Does Not Do)
 

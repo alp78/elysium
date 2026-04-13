@@ -1,1215 +1,458 @@
 ---
 title: "04 - Airflow Troubleshooting"
-tags: [orchestration, python, airflow]
-aliases:
-  - Airflow DAG import errors
-  - Airflow task failure
-  - Airflow scheduler stuck
-  - Airflow scheduler not picking up DAGs
-  - Airflow tasks stuck in queued
-  - Airflow tasks stuck in running
-  - Airflow connection refused metadata database
-  - Airflow XCom too large
-  - Airflow deadlock metadata DB
-  - Airflow worker killed OOM
-  - Airflow zombie task
-  - Airflow debugging
-  - airflow tasks test
-  - airflow dags list
-  - airflow tasks clear
-  - Airflow log locations
-  - Airflow DAG serialization
-  - Airflow slow DAG parsing
-  - Airflow webserver port 8080
-  - airflow db check
-  - airflow db clean
-description: "Comprehensive Airflow troubleshooting guide covering the most common errors with exact error messages and fixes: DAG import errors, stuck tasks, scheduler issues, XCom size limits, metadata DB deadlocks, OOM worker kills, and slow DAG parsing. Includes the full debugging CLI reference."
+tags:
+  - orchestration
+  - airflow
+description: "Operational troubleshooting runbook for the live STOXX Airflow deployment, using the actual failure modes, logs, and fixes encountered on stoxx-airflow, Cloud Run, SQL Server, BigQuery, and Firestore."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
 status: complete
+parent: "[[domain-airflow]]"
+links:
+  - "[[01-airflow-core-concepts]]"
+  - "[[02-airflow-dag-patterns]]"
+  - "[[03-airflow-deployment]]"
+  - "[[05-airflow-problems]]"
 ---
 
-# Airflow Troubleshooting Guide
+# Airflow Troubleshooting
 
-> [!quote]
-> "'Debugging' isn't an adequate term to describe the various activities in responding to an incident in production. Increasing time pressure and consequences make it fundamentally different."
+This runbook is built from the failures that actually happened while bringing the STOXX Airflow pipeline online. It is not a generic list of Airflow symptoms. Every troubleshooting path below ties to a real command, a real output, a real root cause, and a fix that was validated on the live platform.
+
+## What This Note Covers
+
+This note gives the shortest reliable path from Airflow symptom to root cause for the current deployment on `stoxx-airflow`.
+
+- How to tell whether the problem is DAG discovery, DAG pause state, container startup, Cloud Run execution, SQL permissions, BigQuery SQL, or a bad operator-side diagnostic.
+- The exact commands and outputs that identified the real failures in this environment.
+- The validation sequence that proved the platform was healthy again after each fix.
+
+## Glossary / Key Terms
+
+> [!info] Key Terms
 >
-> — **John Allspaw**, *The Art of Capacity Planning* (2008)
->
-> "Automation is the serialization of understanding."
->
-> — **Kelsey Hightower**, tweet (2017)
+> | Term | Definition | Why it matters here | Caveat |
+> |---|---|---|---|
+> | Import error | A DAG parse failure that stops Airflow from registering a workflow. | It is the first thing to eliminate when a DAG is missing. | A DAG can also be visible but paused, which is a different problem. |
+> | Paused DAG | A DAG that Airflow knows about but will not schedule automatically. | `stoxx_stage_yfinance` was visible but paused during rollout. | Visibility in the DAG list does not guarantee schedulability. |
+> | Queued task | A task instance that the scheduler has released but the executor has not yet completed. | It helps separate scheduler problems from downstream execution problems. | A queued task may still fail because the external service rejects the request. |
+> | Downstream failure | A task failure caused by the system Airflow invoked rather than by Airflow itself. | Most STOXX task failures happened in Cloud Run, SQL Server, or BigQuery. | Airflow records the failure, but the real fix may live outside Airflow. |
+> | False alarm | A failure signal produced by the diagnostic tool or monitoring wrapper rather than by the platform itself. | The SQL-escaping error in the DAG monitor loop looked like an Airflow outage but was not one. | False alarms waste incident time because they mimic real failures. |
 
-A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-problems).
+## Triage Flow For This Platform
 
-> [!info] Structure
-> Issues are organized by symptom. Use `Ctrl+F` to search for an exact error message. For CLI commands used in debugging, see the [CLI Debugging Reference](#cli-debugging-reference) section.
+When the STOXX workflow looks broken, do not jump straight into Cloud Run or SQL logs. First isolate the failure surface.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Airflow symptom] --> B{DAG visible?}
+    B -->|NO| C[Check DAG delivery and import errors]
+    B -->|YES| D{Paused?}
+    D -->|YES| E[Unpause DAG]
+    D -->|NO| F{Task reached Cloud Run?}
+    F -->|NO| G[Check connection, IAM, scheduler, worker]
+    F -->|YES| H{Downstream system failed?}
+    H -->|YES| I[Inspect Cloud Run logs, SQL errors, BigQuery errors]
+    H -->|NO| J[Check monitoring script and diagnostic accuracy]
+```
+
+The rest of the note follows that decision tree.
+
+## Control-Plane Failures
+
+Control-plane failures are problems with Airflow's ability to see, schedule, or keep its own services alive.
+
+### The DAG Was Missing From The UI Or Suspected To Be Broken
+
+The first task is to distinguish three very different states:
+
+- the DAG file is not being parsed at all
+- the DAG is parsed but paused
+- the DAG is present and healthy, and the failure lives elsewhere
+
+#### Problem
+
+Operators suspected that the DAG might not have loaded correctly after a deployment.
+
+#### Context
+
+The goal was to confirm whether `stoxx_stage_yfinance` had been registered by the Airflow runtime and whether any import error blocked it.
+
+#### Exact Command / Action
+
+Run `airflow dags list | grep stoxx_stage_yfinance` and then `airflow dags list-import-errors`.
+
+#### Actual Output / Logs
+
+The rollout artifact recorded both checks together:
+
+```text
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | True      | dags-folder | None
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | True      | dags-folder | None
+...
 ---
-
-> [!danger] Silent DAG import errors
->
-> When a DAG file has a Python syntax error or missing import, the Scheduler logs a warning but continues processing other DAGs. The broken DAG simply vanishes from the UI with no alert. If you rely on DAG-level failure callbacks for alerting, they will NOT fire for import errors because the DAG never loads. Monitor the `airflow.dag_processing.import_errors` metric in Datadog and alert when it exceeds 0.
-
-> [!success] Fix: monitor import errors metric and validate DAGs in CI
-> Create an alert on the `airflow.dag_processing.import_errors` StatsD/Datadog metric so any import error triggers an immediate notification. Additionally, add `airflow dags list-import-errors` (exit code non-zero on any error) as a mandatory CI gate before deploying new DAG files.
-
-## Issue 1: DAG Import Errors
-
-**Symptom:** The Airflow UI shows a red banner: `DAG Import Errors` on the DAGs list page, or a specific DAG has an "Import Error" badge. The DAG does not appear as runnable.
-
-#### Where to look first
-
-```bash
-# List all current import errors
-airflow dags list-import-errors
-
-# Or check the scheduler log — import errors appear here as they are parsed
-journalctl -u airflow-scheduler -n 200 | grep -i "import error|broken dag|error loading"
-
-# For Docker Compose setups
-docker compose logs airflow-scheduler | grep -i "error|import"
-```
-
-### Root Cause 1a: Python Syntax Error
-
-#### Error message in logs — Root Cause 1a: Python Syntax Error
-```
-Broken DAG: [/opt/airflow/dags/my_dag.py] Traceback (most recent call last):
-  File "/opt/airflow/dags/my_dag.py", line 24
-    from airflow.operators.python import PythonOperator
-    ^
-SyntaxError: invalid syntax
-```
-
-**Fix:** Validate the file before deploying.
-
-```bash
-# Check Python syntax without importing Airflow
-python -m py_compile /opt/airflow/dags/my_dag.py
-echo $?  # 0 = OK, 1 = syntax error
-
-# Get the full error
-python -c "import ast; ast.parse(open('/opt/airflow/dags/my_dag.py').read())"
-
-# In CI/CD — always run this before deploying
-find ./dags -name "*.py" -exec python -m py_compile {} \; && echo "All DAGs syntax OK"
-```
-
-### Root Cause 1b: Missing Python Module
-
-#### Error message — Root Cause 1b: Missing Python Module
-```
-Broken DAG: [/opt/airflow/dags/my_dag.py] Traceback (most recent call last):
-  File "/opt/airflow/dags/my_dag.py", line 3, in <module>
-    from google.cloud import bigquery
-ModuleNotFoundError: No module named 'google.cloud.bigquery'
-```
-
-**Fix:** Install the missing package in all Airflow components (Scheduler, Webserver, Workers all need it).
-
-```bash
-# For Docker Compose: add to requirements.txt and rebuild
-echo "google-cloud-bigquery==3.15.0" >> requirements.txt
-docker compose build
-docker compose up -d
-
-# For Cloud Composer: install via gcloud
-gcloud composer environments update my-env \
-    --location us-central1 \
-    --update-pypi-package google-cloud-bigquery==3.15.0
-
-# For self-hosted: install in the Airflow virtual environment
-source ~/airflow-venv/bin/activate
-pip install google-cloud-bigquery==3.15.0
-# Then restart the scheduler and webserver
-sudo systemctl restart airflow-scheduler airflow-webserver
-```
-
-### Root Cause 1c: Import at Module Level (Parse-Time Error)
-
-**Symptom:** The DAG has a database call, API call, or slow/failing import at module level (outside any function), which fails during the Scheduler's parse cycle.
-
-#### Error message — Root Cause 1c: Import at Module Level (Parse-Time Error)
-```
-Broken DAG: [/opt/airflow/dags/my_dag.py]
-  File "/opt/airflow/dags/my_dag.py", line 8, in <module>
-    config = requests.get("http://config-service/api/config").json()
-ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
-```
-
-**Fix:** Move all I/O and imports inside task callables or factory functions, never at module level.
-
-```python
-# WRONG — this runs every time the DAG file is parsed (every 30 seconds!)
-import requests
-config = requests.get("http://config-service/api/config").json()  # Fails if service is down
-
-with DAG("my_dag", ...) as dag:
-    PythonOperator(task_id="task", python_callable=lambda: config["value"])
-
-# CORRECT — I/O happens inside the task, not during parsing
-with DAG("my_dag", ...) as dag:
-    def my_task():
-        import requests  # Import inside the function
-        config = requests.get("http://config-service/api/config").json()
-        return config["value"]
-
-    PythonOperator(task_id="task", python_callable=my_task)
-```
-
-### Root Cause 1d: No DAG Object Found
-
-#### Error message — Root Cause 1d: No DAG Object Found
-```
-Failed to import: /opt/airflow/dags/my_dag.py
-The DAG file doesn't contain valid DAG, it may be a utility module.
-```
-
-**Fix:** Ensure the file contains a `DAG` object at module level with an `@dag`-decorated function call or `with DAG(...)` context manager.
-
-```python
-# WRONG — DAG is defined but never instantiated
-def create_dag():
-    with DAG("my_dag", ...) as dag:
-        ...
-    return dag
-# Airflow cannot find the DAG because create_dag() is never called
-
-# CORRECT — call the factory function at module level
-def create_dag():
-    with DAG("my_dag", ...) as dag:
-        ...
-    return dag
-
-dag = create_dag()  # This line makes the DAG discoverable
-
-# OR use the @dag decorator pattern which instantiates automatically
-@dag(dag_id="my_dag", ...)
-def my_dag():
-    ...
-
-my_dag()  # Always call the decorated function at module level
-```
-
----
-
-## Issue 2: Task Fails with Non-Zero Exit Code
-
-**Symptom:** A task shows `failed` status in the UI. The task log ends with:
-
-```
-Command exited with return code 1
-```
-
-or for PythonOperator:
-
-```
-airflow.exceptions.AirflowException: Task failed with return code 1
-```
-
-#### Debugging steps — Root Cause 1d: No DAG Object Found
-
-```bash
-# Step 1: Read the full task log in the UI
-# Airflow UI → DAG → Grid view → click the failed task square → Log
-
-# Step 2: Run the task in test mode (executes the task without changing state in the DB)
-# This is the fastest way to reproduce and debug a failing task
-airflow tasks test my_dag_id my_task_id 2024-01-15
-
-# Step 3: Run interactively with debug logging
-airflow tasks test my_dag_id my_task_id 2024-01-15 --verbose
-
-# Step 4: Check environment inside the container/venv where the task runs
-docker compose exec airflow-scheduler bash
-# Then try to run the command manually
-python /opt/scripts/extract.py --date 2024-01-15
-```
-
-### Common Sub-Causes
-
-**BashOperator: command not found**
-
-```
-bash: /opt/scripts/extract.py: No such file or directory
-```
-
-Fix: Verify the file exists in the container/VM at the exact path. Check volume mounts in Docker Compose.
-
-**PythonOperator: unhandled exception**
-
-```python
-# The task log will show the full Python traceback
-# Read it carefully — the root cause is always in the last few lines before "Command exited with return code 1"
-
-# Fix: Add try/except to distinguish expected vs unexpected failures
-def my_task(**context):
-    try:
-        result = do_work()
-        return result
-    except MyExpectedError as e:
-        # Log and skip (soft fail pattern)
-        print(f"Expected error: {e} — marking as skipped")
-        raise AirflowSkipException(str(e))
-    except Exception as e:
-        # Unexpected — fail the task with a clear message
-        raise AirflowException(f"Unexpected error in my_task: {e}") from e
-```
-
-**Permission denied**
-
-```
-PermissionError: [Errno 13] Permission denied: '/data/output/2024-01-15/'
-```
-
-Fix: Check that the Airflow user (default UID 50000) has write access to the output path. In Docker Compose, check volume mount permissions.
-
----
-
-## Issue 3: Scheduler Not Picking Up New DAGs
-
-**Symptom:** You added a new DAG file to the `dags/` folder but it does not appear in the Airflow UI after several minutes.
-
-#### Diagnosis — Common Sub-Causes
-
-```bash
-# Step 1: Verify the file is in the correct dags_folder
-airflow config get-value core dags_folder
-# Should match where you deployed the file
-
-# Step 2: Check if the file has a syntax error preventing parsing
-airflow dags list-import-errors
-
-# Step 3: Force immediate re-parse of a specific file
-airflow dags reserialize
-
-# Step 4: Check the scheduler is running and processing files
-airflow jobs check --job-type SchedulerJob --allow-multiple --limit 10
-
-# Step 5: Watch the scheduler log for the specific file
-docker compose logs -f airflow-scheduler | grep "my_new_dag.py"
-```
-
-#### Common root causes — Common Sub-Causes
-
-| Root Cause | Symptom in Logs | Fix |
-|---|---|---|
-| Import error in the new file | `Broken DAG` in scheduler log | Fix the syntax/import error |
-| File not in the correct folder | File not mentioned in any scheduler log | Check `dags_folder` config |
-| Scheduler is not running | No scheduler heartbeat in logs | Restart the scheduler |
-| Parse interval too slow | File appears but takes > 5 min | Reduce `min_file_process_interval` |
-| DAG is paused | Appears in UI with pause icon | Click the toggle to unpause |
-
-```ini
-# airflow.cfg — reduce parse interval for faster DAG discovery in development
-[scheduler]
-min_file_process_interval = 10   # Parse every 10 seconds (default: 30)
-dag_dir_list_interval = 30       # Rescan the dags folder every 30 seconds (default: 300)
-```
-
-> [!warning] Parse Interval in Production
-> Setting `min_file_process_interval` very low (< 10s) in production with many DAG files will overload the Scheduler CPU. The Scheduler spends significant time parsing — balance discovery speed against resource usage.
-
-> [!success] Safe setting: tune parse interval based on DAG count
-> Set `min_file_process_interval=30` (the default) in production. For fast DAG discovery during development use `10s`. If you have many DAG files, increase `parsing_processes` to parallelise parsing rather than lowering the interval.
-
----
-
-## Issue 4: Tasks Stuck in Queued or Running State
-
-**Symptom:** One or more tasks show `queued` or `running` state in the UI for far longer than expected. The task never actually executes (queued) or never finishes (running).
-
-### Stuck in Queued
-
-**Root Cause 1: No worker capacity (all slots used)**
-
-```bash
-# Check how many tasks are running vs the parallelism limit
-airflow tasks states-for-dag-run my_dag manual__2024-01-15
-
-# Check pool slot usage (if using task pools)
-airflow pools list
-
-# Check the global parallelism setting
-airflow config get-value core parallelism
-```
-
-#### Fix — Stuck in Queued
-
-```bash
-# Temporarily increase parallelism (hot-reload not always supported — may require restart)
-airflow config set core parallelism 64
-
-# Or add more capacity to the pool being used
-airflow pools set default_pool 32 "Default pool"
-```
-
-**Root Cause 2: CeleryExecutor — no Celery workers running**
-
-```bash
-# Check if Celery workers are running
-docker compose ps | grep worker
-celery -A airflow.executors.celery_executor.app status
-
-# Start a worker if none are running
-docker compose up -d airflow-worker
-# Or for self-hosted:
-airflow celery worker --concurrency 8
+No data found
 ```
-
-**Root Cause 3: Task dependencies not met**
-
-A task stays queued if its upstream tasks are not in `success` state. Check the task's direct upstream tasks in the Graph view.
-
-```bash
-# Check the state of all tasks in a DAG Run
-airflow tasks states-for-dag-run my_dag scheduled__2024-01-15T00:00:00+00:00
-```
-
-### Stuck in Running (Zombie Tasks)
 
-A task shows `running` in the UI but the actual worker process is dead (killed by OOM, VM restart, etc.). Airflow's Zombie Detector eventually marks these as failed (after `scheduler_zombie_task_threshold` seconds, default 300s), but you can fix them immediately.
+#### Diagnosis
 
-```bash
-# List running task instances that may be zombies
-airflow tasks states-for-dag-run my_dag run_id
+`No data found` in `list-import-errors` means there was no import error. The DAG was present in the catalog, so the issue was not parse-time failure. The `True` paused flag meant the real problem was scheduling state, not discovery.
 
-# Clear the stuck task — sets it back to None (will be re-queued)
-airflow tasks clear my_dag \
-    --task-ids my_stuck_task \
-    --start-date 2024-01-15 \
-    --end-date 2024-01-15 \
-    --yes
+#### Resolution
 
-# If many tasks are stuck across many DAG Runs — use the UI's "Clear" on the Grid view
-# Select the task → Clear → Set end date to today → Yes
-```
-
-> [!tip] Prevent Zombie Tasks
-> Set `execution_timeout` on long-running tasks. Airflow will kill the task process and mark it as `failed` (triggering retries) instead of leaving it stuck in `running` forever.
-
-```python
-PythonOperator(
-    task_id="long_running_task",
-    python_callable=my_function,
-    execution_timeout=timedelta(hours=4),  # Kill if not done in 4 hours
-)
-```
+Treat this as a pause-state problem, not a DAG code problem. Do not start rewriting the DAG or restarting services until you confirm the pause flag.
 
----
+#### Validation
 
-## Issue 5: Connection Refused to Metadata Database
+After unpausing, the DAG catalog showed:
 
-**Symptom:** The Scheduler, Webserver, or Workers fail to start with:
-
-```
-sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "postgres" (172.18.0.2),
-port 5432 failed: Connection refused
-    Is the server running on that host and accepting TCP/IP connections?
+```text
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | False     | dags-folder | None
 ```
 
-#### Diagnosis and Fix — Stuck in Running (Zombie Tasks)
+#### Prevention Rule
 
-```bash
-# Step 1: Verify the Metadata DB is running
-docker compose ps postgres          # Docker Compose
-systemctl status postgresql         # Self-hosted
+Always run the visibility check and the import-error check together. A visible paused DAG and an invisible import-broken DAG are different incidents that require different fixes.
 
-# Step 2: Test the connection manually
-psql -h localhost -U airflow -d airflow -c "SELECT 1"
+### The DAG Was Visible But Paused
 
-# Step 3: Verify the connection string
-airflow config get-value database sql_alchemy_conn
+This was the actual reason a later run did not advance when expected.
 
-# Step 4: Check for Cloud SQL proxy (if using Cloud SQL from GCE)
-# The Cloud SQL Auth Proxy must be running before Airflow starts
-systemctl status cloud-sql-proxy
-```
-
-**For Docker Compose:** The most common cause is the `postgres` container not being healthy when `airflow-scheduler` starts. Ensure `depends_on` is set correctly.
-
-```yaml
-# docker-compose.yaml — ensure scheduler waits for DB to be healthy
-airflow-scheduler:
-  depends_on:
-    postgres:
-      condition: service_healthy   # NOT just "service_started" — wait for health check
-```
+#### Problem
 
-**For Cloud SQL:** The Cloud SQL Auth Proxy must use the correct instance connection name and the service account must have `roles/cloudsql.client`.
+Airflow knew about the DAG, but the DAG remained paused after deployment.
 
-```bash
-# Start the Cloud SQL Auth Proxy before Airflow
-cloud-sql-proxy --port 5432 my-project:us-central1:my-airflow-db &
+#### Context
 
-# Verify it's listening
-nc -zv 127.0.0.1 5432
-
-# Verify the IAM binding
-gcloud projects get-iam-policy my-project \
-    --filter="bindings.members:airflow-sa@my-project.iam.gserviceaccount.com"
-```
+The goal was to start the live serving rollout through Airflow after refreshing the DAG and restarting services.
 
----
+#### Exact Command / Action
 
-## Issue 6: XCom Too Large
+Inspect the pause state, then unpause `stoxx_stage_yfinance`.
 
-**Symptom:** A task fails with:
+#### Actual Output / Logs
 
-```
-airflow.exceptions.AirflowException: Task with id 'extract' failed to serialize return value: Object of type DataFrame is not JSON serializable
-```
+The pause-state artifact showed the before-and-after state:
 
-or the task succeeds but a downstream task fails with:
+```text
+dag_id               | is_paused
+=====================+==========
+stoxx_stage_yfinance | True
 
+stoxx_stage_yfinance | /opt/airflow/dags/stoxx_stage_yfinance.py | airflow | False     | dags-folder | None
 ```
-_pickle.UnpicklingError: invalid load key, ' '.
-```
 
-or for very large XComs against a MySQL backend:
-
-```
-mysql.connector.errors.DataError: 1406 (22001): Data too long for column 'value' at row 1
-```
+#### Diagnosis
 
-**Root Cause:** XComs are stored in the Metadata DB. The `value` column is a `LargeBinary` field, but pushing large objects (DataFrames, file contents, query results) hits practical limits and causes serialization failures or DB errors.
+The workflow was operationally blocked by Airflow state, not by container health or DAG code. This is a common Airflow trap: visibility alone is not permission to schedule.
 
-#### Fix — Pass Paths, Not Data — Stuck in Running (Zombie Tasks)
+#### Resolution
 
-```python
-# WRONG — pushing a DataFrame as XCom
-def extract(**context):
-    import pandas as pd
-    df = pd.read_csv("gs://bucket/large-file.csv")  # Could be millions of rows
-    return df  # This DataFrame gets pickled and stored in the DB — WILL FAIL or cause issues
+Unpause the DAG before trying to trigger or monitor it.
 
-# CORRECT — push the GCS path, not the data
-def extract(**context):
-    import pandas as pd
-    from google.cloud import storage
+#### Validation
 
-    ds = context["ds"]
-    df = pd.read_csv("gs://bucket/source/large-file.csv")
+After unpausing, the later full run `manual__2026-04-13T17:28:30Z_serving` completed with every task in `success`.
 
-    # Write to GCS
-    output_path = f"gs://my-bucket/staging/{ds}/extracted.parquet"
-    df.to_parquet(output_path, index=False)
+#### Prevention Rule
 
-    # Push only the path (tiny string)
-    return output_path  # XCom value is now just a string path
+After every DAG deployment, add an explicit pause-state check to the validation checklist. Never assume a visible DAG is schedulable.
 
-def transform(**context):
-    import pandas as pd
+### Dag Processor Or Triggerer Looked Unhealthy Right After Restart
 
-    # Pull the path from XCom
-    input_path = context["task_instance"].xcom_pull(task_ids="extract")
+This is a real operational condition on the platform, but it is not always a persistent incident.
 
-    # Read from GCS — data never touches the Metadata DB
-    df = pd.read_parquet(input_path)
-    # ... transform ...
-```
+#### Problem
 
-> [!info] XCom Size Limits by Backend
-> - **PostgreSQL** (recommended): XComs stored as `bytea`. Practical limit ~1 MB before performance degrades. Hard limit ~1 GB (but never push anywhere near this).
-> - **MySQL**: `MEDIUMBLOB` column, limit = 16 MB. Smaller than PostgreSQL.
-> - **Custom XCom backends**: Airflow 2.0+ supports custom backends (e.g., GCS-backed XComs) that remove size limits entirely. See the Airflow docs for `AIRFLOW__CORE__XCOM_BACKEND`.
-
-#### Optional: GCS-backed XCom Backend (Airflow 2.0+)
-
-```python
-# plugins/gcs_xcom_backend.py
-# Store all XCom values in GCS — unlimited size
-from airflow.models.xcom import BaseXCom
-from google.cloud import storage
-import json, pickle
-
-class GCSXComBackend(BaseXCom):
-    PREFIX = "xcom_gcs://"
-    BUCKET = "my-airflow-xcom-bucket"
-
-    @staticmethod
-    def serialize_value(value, **kwargs):
-        if not isinstance(value, (str, int, float, bool, type(None))):
-            # Large object — write to GCS
-            client = storage.Client()
-            bucket = client.bucket(GCSXComBackend.BUCKET)
-            run_id = kwargs.get("run_id", "unknown")
-            task_id = kwargs.get("task_id", "unknown")
-            key = f"xcoms/{run_id}/{task_id}.pkl"
-            bucket.blob(key).upload_from_string(pickle.dumps(value))
-            value = GCSXComBackend.PREFIX + key
-        return BaseXCom.serialize_value(value)
-
-    @staticmethod
-    def deserialize_value(result):
-        value = BaseXCom.deserialize_value(result)
-        if isinstance(value, str) and value.startswith(GCSXComBackend.PREFIX):
-            key = value[len(GCSXComBackend.PREFIX):]
-            client = storage.Client()
-            data = client.bucket(GCSXComBackend.BUCKET).blob(key).download_as_bytes()
-            value = pickle.loads(data)
-        return value
-```
+Immediately after a Compose restart, `airflow-dag-processor` and `airflow-triggerer` appeared unhealthy or stuck in `health: starting`.
 
-```ini
-# airflow.cfg — use the custom backend
-[core]
-xcom_backend = plugins.gcs_xcom_backend.GCSXComBackend
-```
+#### Context
 
----
+The goal was to refresh the Airflow stack after the serving extension was deployed.
 
-## Issue 7: Deadlock Detected in Metadata Database
+#### Exact Command / Action
 
-Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
+Restart the stack and inspect `docker compose ps` too early.
 
-**Symptom:** Scheduler or Worker logs contain:
+#### Actual Output / Logs
 
+```text
+time="2026-04-13T17:23:43Z" level=warning msg="The \"SERVING_JOB\" variable is not set. Defaulting to a blank string."
+...
+app-airflow-dag-processor-1   ... Up 7 seconds (health: starting)
+app-airflow-triggerer-1       ... Up 8 seconds (health: starting)
+app-airflow-worker-1          ... Up 1 second (health: starting)
 ```
-sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) ERROR: deadlock detected
-DETAIL: Process 12345 waits for ShareLock on transaction 67890; blocked by process 23456.
-        Process 23456 waits for ShareLock on transaction 12345; blocked by process 12345.
-```
-
-#### Deadlock in Metadata Database — Root Causes and Fixes
 
-**Root Cause 1: Too many concurrent database writes**
+#### Diagnosis
 
-With a high `parallelism` setting and many task instances completing simultaneously, the Metadata DB receives concurrent `UPDATE task_instance` statements that deadlock.
+Two things were happening at once:
 
-```ini
-# airflow.cfg — reduce pool size and concurrency to reduce DB pressure
-[database]
-sql_alchemy_pool_size = 5          # Reduce from default (5-10)
-sql_alchemy_max_overflow = 10      # Reduce from default (10-20)
+- the services were still inside their normal startup window
+- the blank `SERVING_JOB` variable had created configuration drift that made the restart noisy and suspect
 
-[core]
-parallelism = 16                   # Reduce total parallelism if deadlocks persist
-```
-
-**Root Cause 2: Database maintenance required**
+This was not the same as a proven long-lived unhealthy container state.
 
-PostgreSQL accumulates dead tuples from frequent `UPDATE` operations on `task_instance`. Run `VACUUM` to reclaim space and prevent deadlocks.
+#### Resolution
 
-```bash
-# Connect to the Metadata DB
-psql -h localhost -U airflow -d airflow
+Fix the Compose default for `SERVING_JOB`, restart again, and wait for the health checks to settle before declaring an incident.
 
--- Check table bloat
-SELECT schemaname, tablename, n_dead_tup, n_live_tup,
-       round(n_dead_tup::numeric / GREATEST(n_live_tup, 1) * 100, 1) AS dead_pct
-FROM pg_stat_user_tables
-ORDER BY n_dead_tup DESC
-LIMIT 10;
+#### Validation
 
--- Run VACUUM on the most bloated tables
-VACUUM ANALYZE task_instance;
-VACUUM ANALYZE dag_run;
-VACUUM ANALYZE xcom;
+The later steady-state `docker compose ps` output showed:
 
--- Enable autovacuum for Airflow tables (should already be enabled — verify)
-SELECT reloptions FROM pg_class WHERE relname = 'task_instance';
+```text
+app-airflow-dag-processor-1   ... Up 2 hours (healthy)
+app-airflow-triggerer-1       ... Up 2 hours (healthy)
 ```
 
-**Root Cause 3: Too many scheduler instances (HA setup)**
+#### Prevention Rule
 
-Running too many Scheduler instances on a small database increases contention.
+Do not treat `health: starting` as a final diagnosis during the first seconds after restart. Wait for the health-check window, then reassess the state with a second `compose ps`.
 
-```bash
-# Check how many scheduler jobs are running
-airflow jobs check --job-type SchedulerJob
+## Execution-Plane Failures
 
-# For small deployments, run only 1 scheduler
-# For HA, limit to 2-3 schedulers
-```
+Execution-plane failures occur after Airflow has already accepted the DAG and attempted to run a task. At that point, the fault may still be inside Airflow, but on this platform it more often lives in a downstream service.
 
----
+### Cloud Run Job Could Not Start Because The Network Configuration Was Wrong
 
-## Issue 8: Worker Killed (OOM on CeleryExecutor)
+This failure looked like an Airflow task problem from the UI, but the root cause was Cloud Run networking.
 
-**Symptom:** A task disappears from the `running` state without setting `failed`. The Celery worker log shows:
-
-```
-[2024-01-15 06:35:22,113: ERROR/MainProcess] Task airflow.executors.celery_executor.execute_command[abc-123] raised unexpected: WorkerLostError('Worker exited prematurely: signal 9 (SIGKILL) Job: 42.')
-```
+#### Problem
 
-On Linux: `dmesg | grep -i "out of memory"` shows the OOM killer targeting the Celery worker process.
+The serving job failed before the container code could run because the configured VPC connector did not exist.
 
-**Root Cause:** A task loaded too much data into memory (e.g., a large Pandas DataFrame), causing the Celery worker process to exceed available RAM. The Linux OOM killer terminates the process with SIGKILL (signal 9), bypassing Python exception handling — hence no clean `failed` state.
+#### Context
 
-#### Fix — Immediate — Stuck in Running (Zombie Tasks)
+The goal was to execute the `stoxx-serving` job from Airflow for the `sync-replica` step.
 
-```bash
-# The task will be marked as zombie and eventually fail via the Zombie Detector
-# Speed it up by clearing the task manually
-airflow tasks clear my_dag --task-ids memory_heavy_task --start-date 2024-01-15 --yes
+#### Exact Command / Action
 
-# Restart the killed Celery worker
-docker compose restart airflow-worker
-# Or for self-hosted:
-sudo systemctl restart airflow-worker
-```
+Airflow launched the Cloud Run job using a configuration that referenced a nonexistent VPC connector.
 
-#### Fix — Structural (prevent recurrence) — Stuck in Running (Zombie Tasks)
-
-```python
-# 1. Profile memory usage before scaling up
-import tracemalloc
-tracemalloc.start()
-# ... your code ...
-current, peak = tracemalloc.get_traced_memory()
-print(f"Peak memory: {peak / 1024 / 1024:.1f} MB")
-tracemalloc.stop()
-
-# 2. Process data in chunks instead of loading it all at once
-def process_large_file(**context):
-    """Process a large CSV in 100k-row chunks to stay within memory limits."""
-    import pandas as pd
-
-    CHUNK_SIZE = 100_000  # Adjust based on available worker memory
-    output_rows = 0
-
-    for chunk in pd.read_csv("gs://bucket/large-file.csv", chunksize=CHUNK_SIZE):
-        # Process one chunk at a time
-        processed = chunk[chunk["status"] == "active"].copy()
-        processed.to_parquet(
-            f"gs://bucket/output/{context['ds']}/part_{output_rows}.parquet"
-        )
-        output_rows += len(processed)
-        del chunk, processed  # Explicitly free memory between chunks
-
-    return {"rows_processed": output_rows}
-
-# 3. Use KubernetesPodOperator for memory-intensive tasks
-# This gives each task its own pod with configurable memory limits
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
-from kubernetes.client import models as k8s
-
-memory_task = KubernetesPodOperator(
-    task_id="memory_heavy_task",
-    image="my-repo/heavy-task:latest",
-    resources=k8s.V1ResourceRequirements(
-        requests={"memory": "4Gi"},
-        limits={"memory": "8Gi"},  # Task is killed if it exceeds 8 GB
-    ),
-    # The pod is isolated — killing it doesn't affect the Airflow worker
-)
-```
+#### Actual Output / Logs
 
-```ini
-# airflow.cfg — reduce Celery worker concurrency to leave more RAM per task
-[celery]
-worker_concurrency = 4   # Fewer concurrent tasks per worker = more RAM per task
+```text
+X VPC connector projects/bq-wh-nb/locations/europe-west1/connectors/default does not exist, or Cloud
+Run does not have permission to use it.
 ```
-
----
-
-## CLI Debugging Reference
 
-The Airflow CLI is the primary debugging tool. All commands below assume Airflow is installed and `AIRFLOW_HOME` is set correctly.
+#### Diagnosis
 
-### DAG Commands
+The job was configured as if a named connector existed, but the platform actually used direct network and subnet settings instead of a connector resource. Airflow only reported the job failure; Cloud Run explained the real cause.
 
-```bash
-# List all DAGs (shows pause status, schedule, and last run)
-airflow dags list
+#### Resolution
 
-# List DAGs matching a filter
-airflow dags list | grep "my_pipeline"
+Redeploy the job using direct VPC networking:
 
-# Show all import errors
-airflow dags list-import-errors
+- `--network=default`
+- `--subnet=default`
+- `--vpc-egress=private-ranges-only`
 
-# Show details about a specific DAG
-airflow dags show my_dag_id
+#### Validation
 
-# Trigger a DAG Run manually (for schedule=None DAGs)
-airflow dags trigger my_dag_id
+Later serving executions advanced past job creation and reached container execution and BigQuery SQL, proving the network boundary had been fixed.
 
-# Trigger with custom config
-airflow dags trigger my_dag_id --conf '{"param1": "value1"}'
+#### Prevention Rule
 
-# Trigger with a specific execution date
-airflow dags trigger my_dag_id --exec-date 2024-01-15T00:00:00+00:00
+Do not assume that a network name and a VPC connector name are interchangeable. Validate the exact Cloud Run networking mode during deployment, not after the first DAG failure.
 
-# Pause a DAG (prevent Scheduler from creating new runs)
-airflow dags pause my_dag_id
+### SQL Transform Step Failed Because The Pipeline Login Lacked Read Permission On Silver Tables
 
-# Unpause a DAG
-airflow dags unpause my_dag_id
+This was a downstream SQL authorization fault surfaced through a Cloud Run task.
 
-# Delete a DAG and all its history from the Metadata DB
-airflow dags delete my_dag_id --yes
+#### Problem
 
-# Force re-serialization of all DAGs
-airflow dags reserialize
+`transform_ohlcv_to_silver` failed with a SQL `229` permission error.
 
-# Backfill a date range
-airflow dags backfill my_dag_id --start-date 2024-01-01 --end-date 2024-01-31
-```
+#### Context
 
-### Task Commands
-
-```bash
-# List all tasks in a DAG
-airflow tasks list my_dag_id
-
-# List tasks with dependencies shown as a tree
-airflow tasks list my_dag_id --tree
-
-# TEST a specific task instance (does NOT record result in the Metadata DB)
-# This is the single most useful debugging command — use it before clearing/retrying
-airflow tasks test my_dag_id my_task_id 2024-01-15
-
-# TEST with verbose logging
-airflow tasks test my_dag_id my_task_id 2024-01-15 --verbose
-
-# RUN a specific task instance and record the result in the Metadata DB
-# Use this to re-run a specific failed task after fixing it
-airflow tasks run my_dag_id my_task_id 2024-01-15 --local
-
-# CLEAR task state (reset to None — task will be re-queued on next Scheduler cycle)
-airflow tasks clear my_dag_id \
-    --task-ids my_task_id \
-    --start-date 2024-01-15 \
-    --end-date 2024-01-15 \
-    --yes
-
-# Clear all failed tasks in a DAG Run
-airflow tasks clear my_dag_id \
-    --only-failed \
-    --start-date 2024-01-15 \
-    --end-date 2024-01-15 \
-    --yes
-
-# Clear a task AND all its downstream tasks (cascade)
-airflow tasks clear my_dag_id \
-    --task-ids my_task_id \
-    --downstream \
-    --start-date 2024-01-15 \
-    --end-date 2024-01-15 \
-    --yes
-
-# Get the state of a specific task instance
-airflow tasks state my_dag_id my_task_id 2024-01-15
-
-# Get states of all task instances in a DAG Run
-airflow tasks states-for-dag-run my_dag_id manual__2024-01-15T00:00:00+00:00
-
-# Render Jinja template for a task (useful for debugging template values)
-airflow tasks render my_dag_id my_bash_task 2024-01-15
-```
+The goal was to run the silver OHLCV transformation as step `3` inside the `stoxx-transforms` Cloud Run job.
 
-### DAG Run Commands
+#### Exact Command / Action
 
-```bash
-# List DAG Runs for a specific DAG
-airflow dags list-runs --dag-id my_dag_id
+Airflow launched the transform task, which connected to SQL Server using the `stoxx_pipeline` login and attempted to read the silver table.
 
-# List runs with date filter
-airflow dags list-runs --dag-id my_dag_id \
-    --start-date 2024-01-01 \
-    --end-date 2024-01-31
+#### Actual Output / Logs
 
-# Delete a specific DAG Run (does not re-run it — permanently removes history)
-airflow dags delete-run my_dag_id scheduled__2024-01-15T00:00:00+00:00
+```text
+pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]The SELECT permission was denied on the object 'eurostoxx50_ohlcv', database 'stoxx', schema 'silver'. (229) (SQLExecDirectW)")
+ERROR | Step 3 (transform_ohlcv) failed | step=pipeline step_num=3 step_name=transform_ohlcv
 ```
 
-### Connection and Variable Commands
+#### Diagnosis
 
-```bash
-# List all connections
-airflow connections list
+The pipeline login had enough permission to execute part of the transform path but not enough to read the silver object used by the transform logic. Airflow was healthy; the task payload was underprivileged.
 
-# Test a connection
-airflow connections test my_postgres_conn
+#### Resolution
 
-# Add a connection
-airflow connections add my_postgres \
-    --conn-type postgres \
-    --conn-host localhost \
-    --conn-login user \
-    --conn-password secret \
-    --conn-port 5432 \
-    --conn-schema mydb
+Grant the missing transform permissions to the pipeline login on the affected schemas and tables.
 
-# Delete a connection
-airflow connections delete my_postgres
+#### Validation
 
-# List all variables
-airflow variables list
+After the grant, the transform steps for OHLCV, daily signals, and quarterly signals succeeded, and the DAG advanced into the gold tasks.
 
-# Get a variable value
-airflow variables get my_variable_key
+#### Prevention Rule
 
-# Set a variable
-airflow variables set my_variable_key "my_value"
+For service logins, test the full read-and-write path of each transform stage. A loader account and a transform account often need different privileges even when they hit the same database.
 
-# Export all variables to a JSON file (for backup/migration)
-airflow variables export variables.json
+### BigQuery Mart Build Failed Because The SQL Shape Was Unsupported
 
-# Import variables from a JSON file
-airflow variables import variables.json
-```
+This was a mart-design problem, not an Airflow problem.
 
-### Database Maintenance Commands
-
-```bash
-# Check the Metadata DB connection and schema version
-airflow db check
-
-# Run database migrations (after upgrading Airflow)
-airflow db migrate
-
-# Clean up old records from the Metadata DB
-# Keeps the last N days of DAG Runs, Task Instances, XComs, logs
-airflow db clean \
-    --clean-before-timestamp "2024-01-01 00:00:00" \
-    --tables dag_run,task_instance,xcom,log \
-    --dry-run   # First: see what would be deleted
-
-airflow db clean \
-    --clean-before-timestamp "2024-01-01 00:00:00" \
-    --tables dag_run,task_instance,xcom,log \
-    --yes       # Then: actually delete
-
-# Reset the database (DESTRUCTIVE — deletes ALL data)
-# Only for development! This wipes all history, runs, connections, variables
-airflow db reset --yes
-```
+#### Problem
 
----
+`build_bigquery_marts` failed with a BigQuery `400` because the factsheet SQL used a correlated subquery pattern that BigQuery could not de-correlate.
 
-## Issue 9: Log Locations and Reading Task Logs
+#### Context
 
-### Default Log Locations
+The goal was to build the serving marts after syncing the replica layer to BigQuery.
 
-```bash
-# Local logs (Docker Compose or self-hosted)
-# Pattern: $AIRFLOW_HOME/logs/dag_id/task_id/YYYY-MM-DDTHH:MM:SS+00:00/attempt_number.log
+#### Exact Command / Action
 
-ls $AIRFLOW_HOME/logs/my_dag_id/my_task_id/
-# 2024-01-15T06:00:00+00:00/
-#   1.log    <- First attempt
-#   2.log    <- Second attempt (retry)
+Airflow launched the `stoxx-serving` job with `--mode=build-marts`.
 
-# Read the log for a specific attempt
-cat "$AIRFLOW_HOME/logs/my_dag_id/my_task_id/2024-01-15T06:00:00+00:00/1.log"
+#### Actual Output / Logs
 
-# For Docker Compose
-docker compose exec airflow-scheduler \
-    cat /opt/airflow/logs/my_dag_id/my_task_id/2024-01-15T06:00:00+00:00/1.log
+```text
+google.api_core.exceptions.BadRequest: 400 GET https://bigquery.googleapis.com/...:
+Correlated subqueries that reference other tables are not supported unless they can be de-correlated,
+such as by transforming them into an efficient JOIN.
 ```
-
-### Remote Logs (GCS)
 
-```bash
-# If remote logging is enabled (recommended for production)
-# Logs are written to: gs://BUCKET/REMOTE_LOG_FOLDER/dag_id/task_id/run_id/attempt.log
+#### Diagnosis
 
-# View a log from GCS
-gsutil cat "gs://my-airflow-logs-bucket/airflow-logs/my_dag_id/my_task_id/scheduled__2024-01-15T06:00:00+00:00/1.log"
+The mart SQL was logically valid as an analytical idea but invalid for BigQuery's execution rules. Airflow did exactly what it should do: record the failure of the downstream build step.
 
-# List all logs for a DAG
-gsutil ls -r "gs://my-airflow-logs-bucket/airflow-logs/my_dag_id/"
-```
+#### Resolution
 
-### Scheduler Logs
+Rewrite the mart SQL to use pre-aggregated CTEs and arrays instead of the unsupported correlated-subquery pattern.
 
-```bash
-# Docker Compose
-docker compose logs -f airflow-scheduler
-docker compose logs airflow-scheduler | grep -E "ERROR|WARNING|CRITICAL" | tail -100
+#### Validation
 
-# Systemd (self-hosted) — see [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) for systemd fundamentals
-journalctl -u airflow-scheduler -n 500
-journalctl -u airflow-scheduler -f                           # Follow
-journalctl -u airflow-scheduler --since "2024-01-15 06:00"  # Since a specific time
+After the SQL rewrite, `build_bigquery_marts` succeeded in the final DAG run and the serving chain advanced into Firestore publication.
 
-# Webserver logs
-journalctl -u airflow-webserver -n 100
-```
+#### Prevention Rule
 
----
+Test non-trivial BigQuery SQL directly against BigQuery before wiring it into Airflow. Airflow is the wrong place to discover engine-specific SQL limits for the first time.
 
-## Issue 10: DAG Serialization Issues
+## Diagnostic Mistakes That Looked Like Incidents
 
-**Symptom:** After enabling DAG serialization (default in Airflow 2.0+), tasks fail with:
+Not every red screen or repeated error line was a real platform fault. One of the most misleading failure trails came from the monitoring loop itself.
 
-```
-airflow.exceptions.SerializationError: Failed to serialize DAG
-AttributeError: 'MyCustomOperator' object has no attribute 'serialize'
-```
+### The Monitoring Query Was Broken, Not The DAG
 
-**Root Cause:** DAG serialization stores DAG definitions in the Metadata DB as JSON, allowing the Webserver to display DAGs without parsing Python files. Custom Operators or objects that are not JSON-serializable break this.
+This problem mattered because it created the appearance of repeated Airflow failure while the actual DAG run continued.
 
-#### Fix — DAG Serialization Issues
+#### Problem
 
-```python
-# Custom Operators must inherit from BaseOperator properly
-from airflow.models import BaseOperator
+A monitoring loop generated repeated SQL syntax errors referencing `stoxx_stage_yfinance`.
 
-class MyCustomOperator(BaseOperator):
-    # Declare template_fields for Jinja templating
-    template_fields = ["my_arg"]
+#### Context
 
-    def __init__(self, my_arg: str, **kwargs):
-        super().__init__(**kwargs)
-        self.my_arg = my_arg  # Store as instance attribute
+The goal was to poll DAG and task state repeatedly from the Airflow metadata database during the live run.
 
-    def execute(self, context):
-        # Task logic here
-        print(f"Running with {self.my_arg} for {context['ds']}")
+#### Exact Command / Action
 
-# WRONG — passing non-serializable objects as constructor args
-import pandas as pd
-my_df = pd.DataFrame(...)  # Not JSON-serializable
+The monitoring wrapper issued SQL with incorrectly escaped quoted identifiers inside the loop.
 
-MyCustomOperator(
-    task_id="bad",
-    my_arg=my_df,  # This will fail serialization
-)
+#### Actual Output / Logs
 
-# CORRECT — pass serializable values only
-MyCustomOperator(
-    task_id="good",
-    my_arg="gs://bucket/data.parquet",  # String path — serializable
-)
+```text
+ERROR:  syntax error at or near "stoxx_stage_yfinance"
+LINE 1: ... HH24:MI:SS TZ'), '') FROM dag_run WHERE dag_id=''stoxx_stag...
+                                                             ^
+...
+ERROR:  syntax error at or near "stoxx_stage_yfinance"
+LINE 1: ...MI:SS TZ'), '') FROM task_instance WHERE dag_id=''stoxx_stag...
 ```
-
----
 
-## Issue 11: Slow DAG Parsing / Scheduler Performance
+#### Diagnosis
 
-**Symptom:** The Scheduler is consuming high CPU. New DAGs take minutes to appear. The UI shows an old `Last Parsed` time in the DAG list. If the scheduler process has stopped entirely, follow the airflow scheduler down runbook.
+The query string itself was malformed. The Airflow platform was not reporting a DAG failure; the diagnostic tool was failing before it could read the metadata database correctly.
 
-#### Diagnosis — Scheduler Logs
+#### Resolution
 
-```bash
-# Check scheduler parsing times per DAG file
-# Look for "Processing file" lines with timing info
-docker compose logs airflow-scheduler | grep "Processing file|finish processing file" | tail -50
+Stop using the broken monitor loop and validate state through the native Airflow CLI commands such as `airflow tasks states-for-dag-run`.
 
-# Count how many DAG files are being parsed
-ls -la $AIRFLOW_HOME/dags/*.py | wc -l
+#### Validation
 
-# Check the scheduler's own heartbeat rate
-airflow jobs check --job-type SchedulerJob
-```
-
-#### Common Causes and Fixes — Scheduler Logs
-
-#### Too many DAG files
-
-```ini
-# airflow.cfg — limit the file parsing worker pool
-[scheduler]
-parsing_processes = 4      # Number of processes for parallel DAG parsing
-                           # Set to number of CPU cores available to scheduler
-                           # Increase for faster parsing of many files
-```
+The DAG later completed successfully with every task instance in `success`, proving the monitor loop was the faulty component.
 
-#### Expensive module-level code
-
-```python
-# WRONG — slow code at module level runs every 30 seconds during parsing
-from my_heavy_library import HeavyClass  # Slow import
-import pandas as pd
-LARGE_CONFIG = pd.read_csv("/data/config.csv")  # I/O at parse time
-
-# CORRECT — lazy imports and load config inside tasks only
-def my_task():
-    from my_heavy_library import HeavyClass  # Import at task runtime, not parse time
-    config = pd.read_csv("/data/config.csv")  # I/O at task runtime
-```
-
-#### Too many XCom entries slowing DB queries
-
-```bash
-# Run airflow db clean to remove old XComs
-airflow db clean \
-    --clean-before-timestamp "$(date -d '30 days ago' '+%Y-%m-%d 00:00:00')" \
-    --tables xcom \
-    --yes
-```
+#### Prevention Rule
 
----
+Treat ad-hoc monitoring wrappers as code with their own failure modes. When a custom monitor reports repeated SQL syntax errors, verify the same state through a native CLI before escalating.
 
-## Issue 12: Webserver Not Starting (Port 8080)
+## Post-Fix Validation
 
-#### Symptom — Scheduler Logs
-
-```
-[2024-01-15 06:00:01,123] {manager.py:92} ERROR - Webserver exited with return code 1
-OSError: [Errno 98] Address already in use
-```
+Every fix in this note ultimately flowed into the same validation surface: the DAG had to complete, not just start.
 
-#### Fix — Scheduler Logs
+### Use The Final DAG-Run State Table As The Ground Truth
 
-```bash
-# Find what is using port 8080
-lsof -i :8080
-ss -tlnp | grep 8080
+Once a fix is applied, the fastest trustworthy validation is the task-state table for the full DAG run.
 
-# Kill the process using the port
-kill -9 $(lsof -t -i:8080)
+#### Problem
 
-# Or change the webserver port
-airflow webserver --port 8081
+A fix is not complete until the entire workflow reaches the final validation task successfully.
 
-# Set permanently in airflow.cfg or environment variable
-export AIRFLOW__WEBSERVER__WEB_SERVER_PORT=8081
-```
+#### Context
 
-#### Flask secret key warning (non-fatal but important)
+The goal is to prove that the control plane, Cloud Run jobs, SQL transforms, BigQuery marts, and Firestore publication all worked together after the fix.
 
-```
-[WARNING] No SECRET_KEY found. Falling back to a random key - sessions will be lost between Webserver restarts.
-```
+#### Exact Command / Action
 
-#### Fix — Scheduler Logs
+Run `airflow tasks states-for-dag-run` for the target run.
 
-```bash
-# Generate a secure secret key
-python -c "import secrets; print(secrets.token_hex(32))"
-# Add to airflow.cfg:
-# [webserver]
-# secret_key = <generated-key>
+#### Actual Output / Logs
 
-# Or set via environment variable (preferred)
-export AIRFLOW__WEBSERVER__SECRET_KEY="your-generated-key"
+```text
+stoxx_stage_yfinance | fetch_bronze_stage_into_gcs           | success
+stoxx_stage_yfinance | load_bronze_into_sql                  | success
+stoxx_stage_yfinance | transform_ohlcv_to_silver             | success
+stoxx_stage_yfinance | transform_signals_daily_to_silver     | success
+stoxx_stage_yfinance | transform_signals_quarterly_to_silver | success
+stoxx_stage_yfinance | build_gold_scores                     | success
+stoxx_stage_yfinance | build_gold_index_performance          | success
+stoxx_stage_yfinance | sync_gold_to_bigquery                 | success
+stoxx_stage_yfinance | build_bigquery_marts                  | success
+stoxx_stage_yfinance | publish_serving_to_firestore          | success
+stoxx_stage_yfinance | validate_serving_layer                | success
 ```
-
----
 
-## Issue 13: Database Maintenance and Health
+#### Diagnosis
 
-Regular Metadata DB maintenance prevents performance degradation and disk growth.
+The platform is healthy only when the final validation task succeeds. Intermediate success is not enough.
 
-```bash
-# Check database connection and schema version
-airflow db check
-# Expected output: "Connection to the database successful"
+#### Resolution
 
-# Check current Alembic schema version
-airflow db show-migrations
+Use the final task-state table as the standard post-fix sign-off artifact.
 
-# Run pending migrations (after Airflow version upgrade)
-airflow db migrate
+#### Validation
 
-# Automated cleanup script (run weekly via cron or a maintenance DAG)
-# Remove data older than 90 days
-airflow db clean \
-    --clean-before-timestamp "$(date -d '90 days ago' '+%Y-%m-%d %H:%M:%S')" \
-    --tables dag_run,task_instance,xcom,log,import_error,job \
-    --yes
+The validated full run was `manual__2026-04-13T17:28:30Z_serving`.
 
-# PostgreSQL-specific: rebuild table statistics after cleanup
-psql -h localhost -U airflow -d airflow -c "ANALYZE task_instance; ANALYZE dag_run; ANALYZE xcom;"
-```
-
-#### Maintenance DAG pattern
-
-```python
-# dags/airflow_db_maintenance.py
-# Run weekly Airflow DB cleanup via a DAG (so it's scheduled and logged)
-
-from airflow.decorators import dag, task
-from airflow.operators.bash import BashOperator
-from datetime import datetime, timedelta
-
-@dag(
-    dag_id="airflow_db_maintenance",
-    schedule="@weekly",
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-    tags=["maintenance", "airflow-internal"],
-    default_args={"owner": "platform-team"},
-)
-def maintenance():
-
-    clean_old_records = BashOperator(
-        task_id="clean_old_db_records",
-        bash_command="""
-        airflow db clean \
-            --clean-before-timestamp "$(date -d '90 days ago' '+%Y-%m-%d %H:%M:%S')" \
-            --tables dag_run,task_instance,xcom,log \
-            --yes
-        """,
-    )
-
-    @task
-    def report_db_size():
-        """Log current Metadata DB table sizes."""
-        from airflow.settings import Session
-        from sqlalchemy import text
-        with Session() as session:
-            result = session.execute(text("""
-                SELECT relname AS table_name,
-                       pg_size_pretty(pg_total_relation_size(relid)) AS total_size
-                FROM pg_catalog.pg_statio_user_tables
-                ORDER BY pg_total_relation_size(relid) DESC
-                LIMIT 10
-            """))
-            for row in result:
-                print(f"{row.table_name}: {row.total_size}")
-
-    clean_old_records >> report_db_size()
-
-maintenance()
-```
+#### Prevention Rule
 
----
+Never sign off a fix based only on one restarted container or one successful intermediate task. Validate the full orchestration chain.
 
-### Airflow Task State Machine Reference
+## What To Remember
 
-Understanding task states is essential for diagnosing stuck or unexpected behavior.
-
-```
-           ┌─────────────────────────────────────────────────────┐
-           │              TASK STATE MACHINE                      │
-           │                                                       │
-           │  None ──► queued ──► running ──► success             │
-           │    │                    │                             │
-           │    │                    ├──► failed ──► up_for_retry  │
-           │    │                    │         └──► queued (retry) │
-           │    │                    │                             │
-           │    │                    └──► up_for_reschedule        │
-           │    │                         (Sensor reschedule mode) │
-           │    │                                                   │
-           │    ├──► skipped  (BranchOperator skip)                │
-           │    │                                                   │
-           │    └──► removed  (task removed from DAG definition)   │
-           └─────────────────────────────────────────────────────┘
-```
+Troubleshooting this platform is easiest when you keep the layers separate:
 
-| State | Meaning | Action |
-|---|---|---|
-| `none` | Not yet scheduled | Normal — Scheduler will queue when ready |
-| `queued` | Waiting for a worker slot | Normal — or check parallelism limits |
-| `scheduled` | About to be queued | Transient — usually resolves in seconds |
-| `running` | Worker is executing | Normal — or zombie if worker died |
-| `success` | Completed successfully | No action needed |
-| `failed` | Failed, no retries left | Check task log; fix then clear |
-| `up_for_retry` | Failed, retry pending | Normal — will retry after `retry_delay` |
-| `skipped` | Skipped by BranchOperator | Normal — expected for non-chosen branches |
-| `up_for_reschedule` | Sensor waiting to re-check | Normal for `mode="reschedule"` sensors |
-| `removed` | Task no longer in DAG | DAG was modified while run was active |
-| `shutdown` | Task was manually stopped | Cleared via UI or CLI |
-
----
-
-## Related Notes
-
-- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, XCom mechanics, connection setup
-- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAG issues, trigger rule bugs, backfill problems
-- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Deployment-specific issues: Docker Compose, Cloud Composer, secrets
-
-## References
-
-- [Airflow Troubleshooting Guide](https://airflow.apache.org/docs/apache-airflow/stable/troubleshooting.html)
-- [Airflow CLI Reference](https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html)
-- [Airflow Best Practices](https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html)
-- [Airflow FAQ](https://airflow.apache.org/docs/apache-airflow/stable/faq.html)
+- first decide whether the problem is Airflow discovery, Airflow scheduling state, or downstream execution
+- then inspect the native output of the layer that actually failed
+- finally validate the whole DAG run, not just the local fix
 
+The next note steps back from individual incidents and captures the recurring architectural mistakes and guardrails that these failures exposed.

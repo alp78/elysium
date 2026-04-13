@@ -1,923 +1,516 @@
 ---
 title: "03 - Airflow Deployment"
-tags: [orchestration, docker, airflow, gcp]
-aliases:
-  - Cloud Composer
-  - Cloud Composer setup
-  - Airflow Docker Compose
-  - Airflow Docker
-  - Airflow self-hosted
-  - MWAA
-  - Managed Workflows for Apache Airflow
-  - Astronomer
-  - Astro
-  - Airflow Helm
-  - Airflow Kubernetes deployment
-  - Airflow GCE
-  - Airflow configuration
-  - airflow.cfg
-  - Airflow secrets backend
-  - GCP Secret Manager Airflow
-  - Airflow DAG deployment
-  - git sync DAGs
-  - Airflow StatsD
-  - Airflow monitoring
-description: "Step-by-step how-to guide for deploying Apache Airflow: local Docker Compose development setup, self-hosted on GCE, GCP Cloud Composer managed service, AWS MWAA, configuration of airflow.cfg, DAG deployment strategies, secrets management, and monitoring integration."
+tags:
+  - orchestration
+  - airflow
+  - gcp
+  - docker
+description: "The real deployment story for the live STOXX Airflow 3.2 platform on the stoxx-airflow VM, including Docker Compose topology, Google provider wiring, DAG delivery, and the actual setup failures and fixes."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
 status: complete
+parent: "[[domain-airflow]]"
+links:
+  - "[[01-airflow-core-concepts]]"
+  - "[[02-airflow-dag-patterns]]"
+  - "[[04-airflow-troubleshooting]]"
+  - "[[05-airflow-problems]]"
 ---
 
-# How To: Deploy Apache Airflow
+# Airflow Deployment
 
-> [!quote]
-> "There is no single continuous integration and delivery setup that will work for everyone. You are essentially trying to automate your company's culture using bash scripts."
+The Airflow deployment that matters in this vault is not a hypothetical Cloud Composer environment and not a laptop-only tutorial stack. It is the self-hosted Airflow 3.2 runtime currently running on the private Compute Engine VM `stoxx-airflow` in project `bq-wh-nb`, and it orchestrates the real STOXX data path from yfinance to GCS, SQL Server, BigQuery, Firestore, and Eventarc.
+
+## What This Note Covers
+
+This note documents the actual deployment model used for the live STOXX orchestration platform and the exact setup issues that had to be solved before the DAG could run end to end.
+
+- Why the platform uses a private VM plus Docker Compose instead of Composer.
+- The real Compose topology, executor choice, Google provider wiring, and DAG delivery method.
+- The commands used to validate the runtime after bootstrap.
+- The setup failures that actually occurred, with their error text, diagnosis, resolution, and guardrails.
+
+## Glossary / Key Terms
+
+> [!info] Key Terms
 >
-> — **Kelsey Hightower**, tweet (2018)
+> | Term | Definition | Why it matters here | Caveat |
+> |---|---|---|---|
+> | Self-hosted Airflow | An Airflow deployment where the team owns the VM, containers, upgrades, and supporting services. | `stoxx-airflow` is self-hosted on Compute Engine. | This gives control, but it also makes bootstrap and incident handling your responsibility. |
+> | Compose stack | A multi-container application defined in `docker-compose.yaml`. | Airflow, Postgres, and Redis are deployed as one Compose application. | Compose startup order is not enough by itself; health checks still matter. |
+> | CeleryExecutor | An Airflow executor that queues work through a broker and runs it on workers. | The live platform uses Redis plus a Celery worker. | It introduces two critical dependencies: broker availability and worker health. |
+> | Application Default Credentials | Google client libraries resolving credentials from the VM service account. | The Google provider uses the VM's service account to call Cloud Run. | ADC does not remove the requirement for the Airflow connection record. |
+> | DAG delivery | The method used to move DAG code onto the runtime host. | The live deployment copies DAG files onto the VM and installs them into the mounted DAG directory. | Host ownership and container UID mismatches can break direct copies. |
+> | Health check | A probe that marks a container healthy, unhealthy, or starting. | The Airflow containers each have explicit health checks in Compose. | A container can be running while still failing its health check. |
+> | Drift | Configuration differences between the intended and actual runtime state. | The blank `SERVING_JOB` variable created deployment drift during restart. | Drift often appears as noisy restarts rather than a clean failure message. |
 
-A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.
+## The Real Deployment Model
 
-> [!tip] Prerequisites
-> Familiarity with [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
+The platform is intentionally simple and inspectable. One private VM hosts the Airflow control plane. Airflow delegates all heavy work to Cloud Run jobs that connect to GCS, SQL Server, BigQuery, and Firestore.
 
----
+### Why This Platform Uses A VM Instead Of Composer
 
-## Option 1: Local Development with Docker Compose
+The current platform is a production-demo environment with strong needs for inspectability and direct control:
 
-Docker Compose is the fastest way to run a full Airflow environment locally. The official `docker-compose.yaml` from Apache runs all components in containers (see [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) for foundational Compose concepts), making it easy to reproduce the production environment on a laptop.
+- the team needs SSH-level access to the runtime during rollout
+- the DAG and images change quickly during demo preparation
+- the runtime is intentionally small and private
+- the pipeline already externalizes compute into Cloud Run jobs, so Airflow itself does not need to autoscale large in-cluster workloads
 
-### Step 1: Fetch the Official Docker Compose File
-
-```bash
-# Always use the specific version matching your target production version
-AIRFLOW_VERSION=2.9.2
-
-# Download the official docker-compose.yaml from Apache
-curl -LfO "https://airflow.apache.org/docs/apache-airflow/${AIRFLOW_VERSION}/docker-compose.yaml"
-
-# Create required directories
-mkdir -p ./dags ./logs ./plugins ./config
-
-# Set the Airflow UID to avoid permission issues on Linux
-echo -e "AIRFLOW_UID=$(id -u)" > .env
-```
-
-### Step 2: Full `docker-compose.yaml` (Production-Like Local Setup)
-
-The following is an annotated version of the official file with key customizations for data engineering workflows:
-
-```yaml
-# docker-compose.yaml
-# Apache Airflow — Local development environment
-# Based on: https://airflow.apache.org/docs/apache-airflow/2.9.2/docker-compose.yaml
-
-version: '3.8'
-
-# Shared environment variables for all Airflow containers
-x-airflow-common: &airflow-common
-  image: apache/airflow:2.9.2-python3.11  # Pin the version explicitly
-  environment: &airflow-common-env
-    # Core configuration
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-    AIRFLOW__CORE__PARALLELISM: 32          # Max tasks running across all DAGs
-    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: 16
-    AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 3
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'   # Disable example DAGs
-
-    # Database
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-
-    # Scheduler
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    AIRFLOW__SCHEDULER__HEARTBEAT_SEC: 5
-    AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 30  # Parse DAG files every 30s
-
-    # Webserver
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'     # Show config in UI (dev only)
-    AIRFLOW__WEBSERVER__SECRET_KEY: 'dev-secret-key-change-in-prod'  # CHANGE IN PROD
-
-    # Email (configure SMTP for local testing)
-    AIRFLOW__EMAIL__EMAIL_BACKEND: airflow.utils.email.send_email_smtp
-    AIRFLOW__SMTP__SMTP_HOST: mailhog        # Local SMTP mock (mailhog container)
-    AIRFLOW__SMTP__SMTP_PORT: '1025'
-    AIRFLOW__SMTP__SMTP_MAIL_FROM: airflow@example.com
-
-    # Connections (set via env — avoids storing creds in the Metadata DB)
-    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?project=my-project&key_path=/opt/secrets/sa-key.json'
-    AIRFLOW_CONN_MY_POSTGRES: 'postgresql://user:pass@host:5432/mydb'
-
-    # Variables
-    AIRFLOW_VAR_ENVIRONMENT: development
-    AIRFLOW_VAR_GCS_BUCKET: my-dev-bucket
-
-    # GCP credentials (mount service account key)
-    GOOGLE_APPLICATION_CREDENTIALS: /opt/secrets/sa-key.json
-
-  volumes:
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags          # Your DAG files
-    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs          # Task logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config      # airflow.cfg overrides
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins    # Custom plugins
-    - ./secrets:/opt/secrets:ro                               # GCP service account keys
-  user: "${AIRFLOW_UID:-50000}:0"  # See [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) for chown/chmod patterns when DAG file permissions cause issues
-  depends_on: &airflow-common-depends-on
-    postgres:
-      condition: service_healthy
-
-services:
-
-  # --- Metadata Database ---
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
-    volumes:
-      - postgres-db-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 10s
-      retries: 5
-      start_period: 5s
-    restart: always
-
-  # --- Airflow Scheduler ---
-  airflow-scheduler:
-    <<: *airflow-common
-    command: scheduler
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: always
-
-  # --- Airflow Webserver ---
-  airflow-webserver:
-    <<: *airflow-common
-    command: webserver
-    ports:
-      - "8080:8080"    # Airflow UI available at http://localhost:8080
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: always
-
-  # --- Airflow Init (one-shot setup container) ---
-  airflow-init:
-    <<: *airflow-common
-    entrypoint: /bin/bash
-    command:
-      - -c
-      - |
-        # Initialize the Metadata DB and create the admin user
-        airflow db migrate
-        airflow users create \
-          --username admin \
-          --firstname Admin \
-          --lastname User \
-          --role Admin \
-          --email admin@example.com \
-          --password admin
-    environment:
-      <<: *airflow-common-env
-      _AIRFLOW_DB_MIGRATE: 'true'
-
-  # --- Local SMTP mock for testing email alerts ---
-  mailhog:
-    image: mailhog/mailhog:latest
-    ports:
-      - "8025:8025"    # MailHog UI at http://localhost:8025
-
-volumes:
-  postgres-db-volume:
-```
-
-### Step 3: Start and Verify
-
-```bash
-# Initialize the database and create the admin user (run once)
-docker compose up airflow-init
-
-# Start all services in the background
-docker compose up -d
-
-# Verify all containers are healthy
-docker compose ps
-
-# Tail the scheduler logs
-docker compose logs -f airflow-scheduler
-
-# Open the Airflow UI
-open http://localhost:8080  # macOS; use xdg-open on Linux
-# Default credentials: admin / admin
-
-# Stop all services
-docker compose down
-
-# Stop AND delete volumes (clean slate — destroys all metadata and logs)
-docker compose down -v
-```
-
-> [!tip] Custom Python Packages
-> Add packages to a `requirements.txt` file and reference it in a custom Dockerfile that extends the official image. Do not install packages into the running container — they won't persist across restarts.
-
-```dockerfile
-# Dockerfile — extend the official image with custom packages
-FROM apache/airflow:2.9.2-python3.11
-
-# Copy and install additional Python packages
-COPY requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
-```
-
-```bash
-# requirements.txt — packages for your DAGs
-google-cloud-bigquery==3.15.0
-google-cloud-storage==2.14.0
-pandas==2.2.0
-dbt-bigquery==1.7.2
-apache-airflow-providers-google==10.13.0
-apache-airflow-providers-postgres==5.10.0
-```
-
----
-
-## Option 2: Self-Hosted on Google Compute Engine (GCE)
-
-For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute).
-
-### Architecture
+That makes a private VM plus Docker Compose a reasonable control-plane choice for this phase.
 
 ```mermaid
-flowchart TD
-    subgraph VM["GCE VM (e2-standard-4 or larger)"]
-        SCH[Scheduler<br/>systemd]
-        WEB[Webserver<br/>systemd]
-        EXE[LocalExecutor<br/>subprocess]
-        DB[(Cloud SQL<br/>PostgreSQL)]
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    WS[Operator workstation]
+    IAP[IAP SSH tunnel]
+    VM[stoxx-airflow VM<br>10.132.0.9]
+    AF[Airflow 3.2 Compose stack]
+    CR[Cloud Run jobs]
+    SQL[stoxx-vm SQL Server]
+    GCS[stoxx-stage-bucket]
+    BQ[BigQuery marts]
+    FS[Firestore main]
 
-        SCH --> EXE
-        WEB --> EXE
-        EXE --> DB
-    end
-
-    GCS[(GCS Bucket<br/>DAG sync, logs)]
-    VM --> GCS
-
-    style VM fill:#1a1a2e,stroke:#7aa2f7,color:#fff
-    style SCH fill:#1a1a2e,stroke:#9ece6a,color:#fff
-    style WEB fill:#1a1a2e,stroke:#9ece6a,color:#fff
-    style EXE fill:#1a1a2e,stroke:#e0af68,color:#fff
-    style DB fill:#1a1a2e,stroke:#bb9af7,color:#fff
-    style GCS fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    WS --> IAP --> VM --> AF
+    AF --> CR
+    CR --> GCS
+    CR --> SQL
+    CR --> BQ
+    CR --> FS
 ```
 
-### Install Airflow on a GCE VM
+### The Live Compose Topology
 
-```bash
-# 1. Install system dependencies
-sudo apt-get update && sudo apt-get install -y \
-    python3.11 python3.11-dev python3.11-venv \
-    libpq-dev build-essential git curl
+The deployment is defined in the real [docker-compose.yaml](</C:/Users/aperi/My Drive/VAULT/.codex-temp/airflow-vm/docker-compose.yaml:1>) file, not in an example stack.
 
-# 2. Create a dedicated airflow user
-sudo useradd -m -s /bin/bash airflow
-sudo su - airflow
+#### Read The Real Compose Core
 
-# 3. Create a virtual environment
-python3.11 -m venv ~/airflow-venv
-source ~/airflow-venv/bin/activate
+The excerpt below is the actual deployment shape used by the live runtime.
 
-# 4. Install Airflow with constraints for reproducibility
-AIRFLOW_VERSION=2.9.2
-PYTHON_VERSION=3.11
-CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+> [!example] Real Compose Configuration
+>
+> ```yaml
+> environment:
+>   AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+>   AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+>   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+>   AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql+psycopg2://airflow:airflow@postgres/airflow
+>   AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+>   GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+>   GCP_REGION: ${GCP_REGION}
+>   STAGE_FETCH_JOB: ${STAGE_FETCH_JOB}
+>   STAGE_LOAD_JOB: ${STAGE_LOAD_JOB}
+>   TRANSFORM_JOB: ${TRANSFORM_JOB}
+>   SERVING_JOB: ${SERVING_JOB:-stoxx-serving}
+>
+> services:
+>   airflow-apiserver:
+>     command: api-server
+>   airflow-scheduler:
+>     command: scheduler
+>   airflow-dag-processor:
+>     command: dag-processor
+>   airflow-worker:
+>     command: celery worker
+>   airflow-triggerer:
+>     command: triggerer
+>   postgres:
+>     image: postgres:16
+>   redis:
+>     image: redis:7.2-bookworm
+> ```
 
-pip install "apache-airflow[postgres,google,celery]==${AIRFLOW_VERSION}" \
-    --constraint "${CONSTRAINT_URL}"
+Operationally, that means:
 
-# 5. Configure Airflow home
-export AIRFLOW_HOME=/opt/airflow
-mkdir -p $AIRFLOW_HOME/dags $AIRFLOW_HOME/logs $AIRFLOW_HOME/plugins
+- Airflow state lives in Postgres.
+- Celery queueing depends on Redis.
+- provider operators inherit environment variables such as the project, region, and Cloud Run job names.
+- the `SERVING_JOB` line has a baked-in fallback because the blank-variable failure already happened once and was fixed directly in the file.
 
-# 6. Set the database connection to Cloud SQL
-export AIRFLOW__DATABASE__SQL_ALCHEMY_CONN="postgresql+psycopg2://airflow:PASSWORD@/airflow?host=/cloudsql/PROJECT:REGION:INSTANCE"
+## Bootstrap And Validation Steps
 
-# 7. Initialize the database
-airflow db migrate
+The following steps are the live bootstrap and validation path that turned the VM into a working Airflow runtime.
 
-# 8. Create admin user
-airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password SECURE_PASSWORD
+### Bring The Compose Stack Up
+
+This subsection covers the point where the Airflow services become a real control plane instead of a collection of files on disk.
+
+#### Start The Stack And Verify Container Health
+
+**When to run:** Run this on first bootstrap, after upgrading the Airflow image, or after editing Compose configuration.
+**Trigger:** The Airflow runtime must be started or restarted.
+**Context:** This is a state-changing remote command executed through IAP. It requires SSH access to the VM and Docker permissions via `sudo`.
+**Purpose:** Start the Compose stack and confirm that the core services become healthy.
+
+*The live validation command for the running platform is the same one used during the rollout.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose ps"
 ```
 
-### Systemd Service Files
-
-```ini
-# /etc/systemd/system/airflow-scheduler.service
-[Unit]
-Description=Airflow Scheduler
-After=network.target postgresql.service
-Requires=network.target
-
-[Service]
-User=airflow
-Group=airflow
-Type=simple
-Environment="AIRFLOW_HOME=/opt/airflow"
-Environment="AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://..."
-ExecStart=/home/airflow/airflow-venv/bin/airflow scheduler
-Restart=on-failure
-RestartSec=5s
-# Send logs to journald
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=airflow-scheduler
-
-[Install]
-WantedBy=multi-user.target
+```text
+NAME                          IMAGE                 COMMAND                  SERVICE                 CREATED       STATUS                 PORTS
+app-airflow-apiserver-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-apiserver       2 hours ago   Up 2 hours (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+app-airflow-dag-processor-1   stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-dag-processor   2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-scheduler-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-scheduler       2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-triggerer-1       stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-triggerer       2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-airflow-worker-1          stoxx-airflow:3.2.0   "/usr/bin/dumb-init …"   airflow-worker          2 hours ago   Up 2 hours (healthy)   8080/tcp
+app-postgres-1                postgres:16           "docker-entrypoint.s…"   postgres                5 hours ago   Up 5 hours (healthy)   5432/tcp
+app-redis-1                   redis:7.2-bookworm    "docker-entrypoint.s…"   redis                   5 hours ago   Up 5 hours (healthy)   6379/tcp
 ```
 
-```ini
-# /etc/systemd/system/airflow-webserver.service
-[Unit]
-Description=Airflow Webserver
-After=network.target airflow-scheduler.service
+This output is the current health baseline for the environment. It is the first thing to compare against after any deployment change.
 
-[Service]
-User=airflow
-Group=airflow
-Type=simple
-Environment="AIRFLOW_HOME=/opt/airflow"
-Environment="AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://..."
-ExecStart=/home/airflow/airflow-venv/bin/airflow webserver --port 8080
-Restart=on-failure
-RestartSec=5s
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=airflow-webserver
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Enable and start the services
-sudo systemctl daemon-reload
-sudo systemctl enable airflow-scheduler airflow-webserver
-sudo systemctl start airflow-scheduler airflow-webserver
-
-# Check status
-sudo systemctl status airflow-scheduler
-journalctl -u airflow-scheduler -f  # Follow logs
-```
-
----
-
-## Option 3: GCP Cloud Composer
-
-Google Cloud Composer is the fully managed Airflow service on GCP. It handles Scheduler, Webserver, Workers, and Metadata DB. You only manage DAGs and configuration.
-
-### Cloud Composer 2 vs Cloud Composer 1
-
-| Feature | Composer 1 | Composer 2 |
+| Flag | Syntax | Description |
 |---|---|---|
-| Executor | CeleryExecutor | LocalKubernetesExecutor |
-| Worker sizing | Fixed VMs | Auto-scaling pods |
-| Environment updates | Slow (GKE node pool) | Fast (pod replacement) |
-| Price | Per worker VM | Per vCPU-hour used |
-| Python version support | Limited | Python 3.8–3.11 |
-| Recommendation | Legacy | **Use Composer 2** |
+| `compose ps` | `docker compose ps` | Prints service state, health, and exposed ports for the stack. |
+| `sudo` | `sudo docker compose ...` | Runs Docker commands with the required host privileges. |
+| `--tunnel-through-iap` | `gcloud compute ssh ... --tunnel-through-iap` | Reaches the private VM through IAP. |
 
-### Creating a Cloud Composer 2 Environment
+### Register The Google Provider Surfaces
 
-```bash
-# Create a Cloud Composer 2 environment via gcloud CLI
-gcloud composer environments create my-airflow-env \
-    --location us-central1 \
-    --image-version composer-2.6.6-airflow-2.7.3 \
-    --environment-size SMALL \                  # SMALL / MEDIUM / LARGE
-    --scheduler-count 1 \                       # Number of scheduler replicas
-    --scheduler-cpu 0.5 \
-    --scheduler-memory 1.875GB \
-    --web-server-cpu 0.5 \
-    --web-server-memory 1.875GB \
-    --worker-cpu 0.5 \
-    --worker-memory 1.875GB \
-    --min-workers 1 \                           # Min workers (auto-scales)
-    --max-workers 6 \
-    --service-account composer-sa@my-project.iam.gserviceaccount.com \
-    --network my-vpc \
-    --subnetwork my-subnet \
-    --enable-private-endpoint \                 # Private IP — recommended for production
-    --enable-ip-masq-agent
+The Airflow runtime was not usable until the Google provider surfaces were wired correctly. Two separate fixes were required: a connection record and an IAM role.
 
-# Get the DAGs GCS bucket path (deploy DAGs here)
-gcloud composer environments describe my-airflow-env \
-    --location us-central1 \
-    --format="value(config.dagGcsPrefix)"
-# Output: gs://us-central1-my-airflow-env-XXXXX-bucket/dags
+#### Add `google_cloud_default`
 
-# Get the Airflow web UI URL
-gcloud composer environments describe my-airflow-env \
-    --location us-central1 \
-    --format="value(config.airflowUri)"
+**When to run:** Run this on a fresh Airflow metadata database or any rebuilt environment where the Google connection has not been created yet.
+**Trigger:** Google provider tasks complain about missing `google_cloud_default`, or the connection list does not contain it.
+**Context:** This is a state-changing Airflow CLI command executed inside the worker container. It writes to the Airflow metadata database.
+**Purpose:** Create the default Google connection record that `CloudRunExecuteJobOperator` resolves implicitly.
+
+*This is the exact command that fixed the missing-connection issue during rollout.*
+
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "
+    cd /home/alexper_recovery_gmail_com/app &&
+    sudo docker compose exec -T airflow-worker `
+      airflow connections add google_cloud_default `
+      --conn-uri 'google-cloud-platform://'
+  "
 ```
 
-### When to Use Cloud Composer
-
-#### Use Cloud Composer when
-- You need a fully managed, enterprise-grade Airflow with GCP IAM integration
-- Your team cannot or should not manage Airflow infrastructure
-- You need GCP-native features: IAP for UI access, VPC-SC, Audit Logs
-- Budget allows (~$300-1500+/month depending on size)
-
-#### Do NOT use Cloud Composer when
-- You have fewer than 5-10 DAGs (massive over-engineering)
-- Budget is very tight (a single GCE e2-standard-4 + Cloud SQL is far cheaper)
-- You need executor customization (Composer fixes the executor)
-
-> [!warning] Cloud Composer Costs
-> Cloud Composer is expensive relative to self-hosted. A SMALL environment is ~$300-500/month. A MEDIUM environment with multiple workers can exceed $1500/month. Always set `--min-workers 1` and `--max-workers N` to enable auto-scaling and control costs. See the [Cost Comparison](#cost-comparison) section below.
-
-> [!success] Cost control: enable auto-scaling and set min-workers=1
-> Always specify `--min-workers 1` and a realistic `--max-workers` cap when creating or updating a Cloud Composer 2 environment. This enables the auto-scaler to scale down to a single worker during off-peak hours and avoids paying for idle pods.
-
-### Installing PyPI Packages in Cloud Composer
-
-```bash
-# Install Python packages (triggers environment update — takes 5-20 minutes)
-gcloud composer environments update my-airflow-env \
-    --location us-central1 \
-    --update-pypi-package google-cloud-bigquery==3.15.0 \
-    --update-pypi-package pandas==2.2.0
-
-# Or use a requirements file
-gcloud composer environments update my-airflow-env \
-    --location us-central1 \
-    --update-pypi-packages-from-file requirements.txt
+```text
+Successfully added conn_id=google_cloud_default : google-cloud-platform://
 ```
 
----
+*The follow-up verification command proves the record exists in the metadata database.*
 
-### AWS MWAA — Managed Airflow on AWS
+```powershell
+gcloud compute ssh stoxx-airflow `
+  --project=bq-wh-nb `
+  --zone=europe-west1-b `
+  --tunnel-through-iap `
+  --command "cd /home/alexper_recovery_gmail_com/app && sudo docker compose exec -T airflow-worker airflow connections get google_cloud_default"
+```
 
-Amazon Managed Workflows for Apache Airflow (MWAA) is AWS's equivalent to Cloud Composer.
+```text
+id | conn_id              | conn_type             | description | host | schema | login | password | port | is_encrypted | is_extra_encrypted | extra_dejson | get_uri
+===+======================+=======================+=============+======+========+=======+==========+======+==============+====================+==============+=========================
+1  | google_cloud_default | google_cloud_platform | None        |      |        | None  | None     | None | False        | False              | {}           | google-cloud-platform://
+```
 
-| Feature | Cloud Composer 2 | AWS MWAA |
+The provider then combined that connection object with the VM's service-account credentials through `google.auth.default()`.
+
+#### Grant Cloud Run Execution Permission
+
+**When to run:** Run this after provisioning the VM service account if the Airflow worker must execute Cloud Run jobs.
+**Trigger:** `CloudRunExecuteJobOperator` receives a `403 Permission 'run.jobs.run' denied` error.
+**Context:** This is a state-changing IAM command run from the workstation. It modifies the project IAM policy.
+**Purpose:** Allow the Airflow VM service account to execute Cloud Run jobs in project `bq-wh-nb`.
+
+*This is the exact IAM fix applied during rollout.*
+
+```powershell
+gcloud projects add-iam-policy-binding bq-wh-nb `
+  --member="serviceAccount:bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com" `
+  --role="roles/run.developer" `
+  --condition=None
+```
+
+```text
+Updated IAM policy for project [bq-wh-nb].
+```
+
+The reason this matters is subtle but important: the VM service account already had broad data-service permissions, yet the Airflow Google operator still could not execute Cloud Run jobs until `run.jobs.run` was granted.
+
+| Flag | Syntax | Description |
 |---|---|---|
-| Platform | GCP | AWS |
-| Executor | LocalKubernetesExecutor | CeleryExecutor |
-| Worker sizing | Auto-scaling K8s pods | Fixed environment class |
-| Startup time | ~15 min to create | ~20-30 min to create |
-| S3 integration | Via GCS hook | Native (DAGs in S3 bucket) |
-| Minimum cost | ~$300/month | ~$400/month (mw1.small) |
-| Best for | GCP-primary shops | AWS-primary shops |
+| `connections add` | `airflow connections add <conn_id> --conn-uri <uri>` | Creates or registers an Airflow connection in the metadata database. |
+| `--conn-uri` | `--conn-uri 'google-cloud-platform://'` | Stores the connection as a URI-style connection definition. |
+| `--member` | `gcloud projects add-iam-policy-binding ... --member=...` | Specifies which principal receives the IAM role. |
+| `--role` | `... --role=roles/run.developer` | Grants the required Cloud Run execution permission surface. |
+| `--condition=None` | `... --condition=None` | Adds the binding without an IAM condition. |
 
-MWAA DAGs are deployed by uploading to an S3 bucket (configured at environment creation time). Package management uses a `requirements.txt` in S3 + a custom Docker image for plugins.
+### Deliver DAG Code To The VM
 
----
+The live DAG directory is host-mounted into the Airflow containers. That makes DAG delivery easy when permissions are correct and surprisingly brittle when they are not.
 
-### Astronomer Astro — SaaS Airflow Platform
+#### Install The DAG File Using A Temp Copy And `install`
 
-Astronomer provides a SaaS Airflow platform (Astro) with:
-- Managed Airflow clusters in any cloud (GCP, AWS, Azure)
-- Built-in CI/CD for DAG deployment (git push → deploy)
-- The `astro` CLI for local development (replaces Docker Compose for Airflow dev)
-- Alerts, observability, and role-based access built-in
+**When to run:** Run this when updating a DAG file on the VM and the mounted DAG directory is owned by container UID `50000`.
+**Trigger:** A direct `gcloud compute scp` into `/home/alexper_recovery_gmail_com/app/dags` fails with `permission denied`.
+**Context:** This is a state-changing deployment step. It copies the file to the operator's home directory first, then installs it into the DAG directory with the correct ownership and mode.
+**Purpose:** Publish the DAG file without breaking host ownership or container-readability.
 
-**When to consider Astronomer:** When you want managed Airflow but need more flexibility than Cloud Composer (custom executors, bring-your-own Docker images, multi-cloud) and your company uses dbt Core + Airflow heavily.
+*The direct copy failed first.*
 
-```bash
-# Install the Astro CLI for local development
-brew install astro  # macOS
-
-# Initialize a new Astro project
-mkdir my-airflow-project && cd my-airflow-project
-astro dev init
-
-# Start a local Airflow environment (replaces docker compose)
-astro dev start
-# Opens Airflow UI at http://localhost:8080, admin/admin
-
-# Deploy to Astro Cloud (requires account)
-astro deploy
+```text
+gcloud compute scp dags/stoxx_stage_yfinance.py -> stoxx-airflow:/home/alexper_recovery_gmail_com/app/dags/stoxx_stage_yfinance.py
+pscp: unable to open /home/alexper_recovery_gmail_com/app/dags/stoxx_stage_yfinance.py: permission denied
+ERROR: (gcloud.compute.scp) ... exited with return code [1].
 ```
 
----
+*The working deployment path copied to the home directory and then installed the file with the correct owner.*
 
-### Key airflow.cfg Configuration Settings
+```text
+gcloud compute scp dags/stoxx_stage_yfinance.py -> ~/stoxx_stage_yfinance.py
 
-The most important settings for performance and reliability. All can be set via environment variables using the pattern `AIRFLOW__SECTION__KEY`.
-
-```ini
-# airflow.cfg — Key production settings
-# Equivalent env var format: AIRFLOW__CORE__PARALLELISM=32
-
-[core]
-# Max tasks running simultaneously across ALL DAG Runs
-parallelism = 32
-
-# Max tasks running simultaneously within a single DAG Run
-max_active_tasks_per_dag = 16
-
-# Max concurrent DAG Runs for a single DAG
-max_active_runs_per_dag = 3
-
-# How often to re-scan the dags folder for new/changed DAG files (seconds)
-min_file_process_interval = 30
-
-# How long to keep task logs (days)
-# Important: logs grow fast — archive to GCS and set a short local retention
-log_file_max = 30
-
-# Executor type — the most impactful single setting
-executor = LocalExecutor
-
-[scheduler]
-# Scheduler heartbeat interval (seconds)
-heartbeat_sec = 5
-
-# How many seconds to wait before considering a task "zombie" (not reporting)
-# Tasks that fail silently without updating the DB are cleaned up after this
-scheduler_zombie_task_threshold = 300
-
-# Catch up on missed DAG Runs at startup (usually False — use catchup=False in DAGs)
-catchup_by_default = False
-
-[webserver]
-# Number of Gunicorn worker processes for the webserver
-workers = 4
-
-# Session timeout (seconds) — set to 0 to never expire
-web_server_worker_timeout = 120
-
-[database]
-# Connection string for the Metadata DB
-sql_alchemy_conn = postgresql+psycopg2://airflow:password@postgres:5432/airflow
-
-# Connection pool size — increase if you see "QueuePool limit" errors
-sql_alchemy_pool_size = 5
-sql_alchemy_max_overflow = 10
-
-[celery]
-# Only applies to CeleryExecutor
-broker_url = redis://redis:6379/0
-result_backend = db+postgresql://airflow:password@postgres/airflow
-worker_concurrency = 16    # Tasks per Celery worker process
+stoxx_stage_yfinance.py   | 1 kB |   1.8 kB/s | ETA: 00:00:00 | 100%
+sudo install -o 50000 -g root -m 664 ~/stoxx_stage_yfinance.py /home/alexper_recovery_gmail_com/app/dags/stoxx_stage_yfinance.py
 ```
 
----
+This fix is specific to the host-mounted DAG directory pattern. It is not a generic Airflow issue; it is a deployment-ownership issue caused by the way the containers mount host storage.
 
-## DAG Deployment Strategies
+## Real Deployment Problems Encountered
 
-How DAG files get from your code editor to the Airflow Scheduler's `dags_folder`.
+The rest of this note preserves the actual deployment failures. They are part of the platform now because every future operator needs to know what already broke and why.
 
-### Strategy 1: GCS Bucket Sync (Cloud Composer — Built-In)
+### Problem 1: Missing `google_cloud_default`
 
-Cloud Composer automatically syncs DAGs from a GCS bucket. Deploy by copying files to the bucket.
+The VM had valid Google credentials through its service account, but Airflow still failed because the connection record itself did not exist.
 
-```bash
-# Deploy a single DAG to Cloud Composer
-gcloud composer environments storage dags import \
-    --environment my-airflow-env \
-    --location us-central1 \
-    --source my_dag.py
+#### Problem
 
-# Deploy all DAGs from a local directory
-gsutil -m cp -r ./dags/* gs://us-central1-my-env-XXXXX-bucket/dags/
+Airflow's Google provider surface was incomplete on first bootstrap.
 
-# CI/CD pipeline step (GitHub Actions, Cloud Build, etc.)
-gsutil rsync -r -d ./dags gs://us-central1-my-env-XXXXX-bucket/dags/
-# -d: delete from destination if not in source (keeps bucket in sync)
+#### Context
+
+The goal was to run `CloudRunExecuteJobOperator` tasks from the fresh Airflow 3.2 deployment on `stoxx-airflow`.
+
+#### Exact Command / Action
+
+The first Airflow task tests attempted to run the STOXX DAG before the default Google connection had been created.
+
+#### Actual Output / Logs
+
+The deployment record in [05-airflow-on-compute-engine](</C:/Users/aperi/My Drive/VAULT/Elysium/06-GCP/02-Compute/05-airflow-on-compute-engine.md:575>) captured the required fix, and the successful creation output was:
+
+```text
+Successfully added conn_id=google_cloud_default : google-cloud-platform://
 ```
 
-### Strategy 2: Git Sync (Self-Hosted with git-sync Sidecar)
+#### Diagnosis
 
-The `git-sync` container clones a git repository and keeps it updated at a configurable interval. Mount the synced folder as the `dags_folder`.
+Application Default Credentials only solved the credential source. The Airflow provider still expected the named Airflow connection object to exist.
+
+#### Resolution
+
+Create `google_cloud_default` with `airflow connections add ... --conn-uri 'google-cloud-platform://'`.
+
+#### Validation
+
+`airflow connections get google_cloud_default` returned the expected record, and subsequent task tests logged:
+
+```text
+Getting connection using `google.auth.default()` since no explicit credentials are provided.
+```
+
+#### Prevention Rule
+
+Treat the Airflow connection object and the credential source as two separate setup steps. A VM service account does not remove the need to seed the connection catalog.
+
+### Problem 2: The VM Service Account Could Not Execute Cloud Run Jobs
+
+This was the first real orchestration permission failure.
+
+#### Problem
+
+The Airflow worker could authenticate to Google APIs but still could not execute Cloud Run jobs.
+
+#### Context
+
+The goal was to run the first Cloud Run-backed Airflow tasks for the STOXX pipeline.
+
+#### Exact Command / Action
+
+`CloudRunExecuteJobOperator` attempted to execute `stoxx-stage-fetch` from inside the Airflow task.
+
+#### Actual Output / Logs
+
+The live deployment note recorded the exact failure:
+
+```text
+google.api_core.exceptions.PermissionDenied:
+403 Permission 'run.jobs.run' denied on resource
+'projects/bq-wh-nb/locations/europe-west1/jobs/stoxx-stage-fetch'
+```
+
+#### Diagnosis
+
+The service account `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com` had enough access for storage and data services, but not the specific Cloud Run job execution permission needed by the operator.
+
+#### Resolution
+
+Grant `roles/run.developer` at the project level.
+
+#### Validation
+
+The follow-up Airflow task tests for `fetch_bronze_stage_into_gcs` and `load_bronze_into_sql` both completed successfully.
+
+#### Prevention Rule
+
+When an Airflow task triggers another control-plane service, check the invoked service's execution permissions explicitly instead of assuming broad project access is enough.
+
+### Problem 3: Direct DAG Copy Failed Because The Mounted DAG Directory Was Not Writable
+
+The deployment method itself broke before Airflow had a chance to parse the DAG.
+
+#### Problem
+
+A direct copy into the host-mounted DAG directory failed with `permission denied`.
+
+#### Context
+
+The goal was to publish the updated `stoxx_stage_yfinance.py` file onto the VM after extending the DAG.
+
+#### Exact Command / Action
+
+`gcloud compute scp` tried to write directly into `/home/alexper_recovery_gmail_com/app/dags/`.
+
+#### Actual Output / Logs
+
+```text
+pscp: unable to open /home/alexper_recovery_gmail_com/app/dags/stoxx_stage_yfinance.py: permission denied
+ERROR: (gcloud.compute.scp) ... exited with return code [1].
+```
+
+#### Diagnosis
+
+The host-mounted DAG directory was effectively controlled by container UID `50000`, so the direct copy path from the workstation did not have the required write ownership.
+
+#### Resolution
+
+Copy the DAG to the operator's home directory first, then install it into the DAG folder with `sudo install -o 50000 -g root -m 664 ...`.
+
+#### Validation
+
+After the temp-copy installation, `airflow dags list | grep stoxx_stage_yfinance` showed the DAG from `/opt/airflow/dags/stoxx_stage_yfinance.py`.
+
+#### Prevention Rule
+
+For host-mounted DAG volumes, standardize a deployment path that writes to a temp location first and then uses `install` or `mv` with explicit ownership.
+
+### Problem 4: `SERVING_JOB` Was Blank During Compose Restart
+
+This was a configuration-drift failure that looked like a health incident.
+
+#### Problem
+
+The Compose restart used an unset `SERVING_JOB` environment variable, producing repeated warnings and briefly leaving all Airflow containers in `health: starting`.
+
+#### Context
+
+The goal was to deploy the extended DAG and refresh the Airflow services after adding the serving steps.
+
+#### Exact Command / Action
+
+The stack was restarted before `SERVING_JOB` had a default value in the Compose file.
+
+#### Actual Output / Logs
+
+```text
+time="2026-04-13T17:23:43Z" level=warning msg="The \"SERVING_JOB\" variable is not set. Defaulting to a blank string."
+...
+app-airflow-dag-processor-1   ... Up 7 seconds (health: starting)
+app-airflow-triggerer-1       ... Up 8 seconds (health: starting)
+app-airflow-worker-1          ... Up 1 second (health: starting)
+```
+
+#### Diagnosis
+
+The Airflow environment depended on a variable that was not guaranteed to be present. The stack was not fully broken, but the deployment was noisy and fragile because the DAG could resolve an empty serving job name.
+
+#### Resolution
+
+Bake the default into Compose:
 
 ```yaml
-# docker-compose.yaml addition for git-sync
-services:
-  git-sync:
-    image: registry.k8s.io/git-sync/git-sync:v4.2.1
-    environment:
-      GITSYNC_REPO: "https://github.com/my-org/airflow-dags.git"
-      GITSYNC_BRANCH: "main"
-      GITSYNC_ROOT: "/git"
-      GITSYNC_LINK: "dags"
-      GITSYNC_PERIOD: "60s"              # Sync every 60 seconds
-      GITSYNC_USERNAME: "git-user"
-      GITSYNC_PASSWORD_FILE: "/secrets/git-token"
-    volumes:
-      - dags-volume:/git
-      - ./secrets/git-token:/secrets/git-token:ro
-    restart: always
-
-  airflow-scheduler:
-    volumes:
-      - dags-volume:/opt/airflow/dags    # Shared volume from git-sync
+SERVING_JOB: ${SERVING_JOB:-stoxx-serving}
 ```
 
-### Strategy 3: CI/CD Pipeline Push
+#### Validation
 
-The most production-grade approach: DAG files are tested in CI and deployed automatically on merge to main.
+After the Compose fix, the stack returned to a clean steady state:
 
-```yaml
-# .github/workflows/deploy-dags.yml
-# GitHub Actions: test then deploy DAGs on push to main
-
-name: Deploy DAGs
-
-on:
-  push:
-    branches: [main]
-    paths: ['dags/**', 'plugins/**']
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install apache-airflow pytest
-
-      - name: Validate DAG syntax
-        run: |
-          # Parse all DAG files — fails if any have syntax errors
-          python -c "
-          import glob, importlib.util, sys
-          for f in glob.glob('dags/*.py'):
-              spec = importlib.util.spec_from_file_location('dag', f)
-              mod = importlib.util.module_from_spec(spec)
-              try:
-                  spec.loader.exec_module(mod)
-                  print(f'OK: {f}')
-              except Exception as e:
-                  print(f'FAIL: {f}: {e}')
-                  sys.exit(1)
-          "
-
-      - name: Run DAG unit tests
-        run: pytest tests/ -v
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Deploy DAGs to Cloud Composer
-        run: |
-          gsutil rsync -r -d ./dags \
-            gs://us-central1-my-env-XXXXX-bucket/dags/
+```text
+app-airflow-dag-processor-1   ... Up 13 minutes (healthy)
+app-airflow-triggerer-1       ... Up 13 minutes (healthy)
 ```
 
----
+#### Prevention Rule
 
-## Secrets Management
+Every environment variable that maps to a named runtime dependency should either be required and validated before startup or given a safe default directly in the deployment file.
 
-### Option 1: Environment Variables (Simplest)
+## Deployment Guardrails
 
-```bash
-# Set connections and variables via environment variables
-# These override any values in the Metadata DB — preferred for secrets
+The live rollout established a few rules that should now be treated as platform standards.
 
-# Connections
-export AIRFLOW_CONN_MY_DB="postgresql://user:pass@host:5432/db"
+### Use Non-Interactive Validation After Every Change
 
-# Variables
-export AIRFLOW_VAR_API_KEY="super-secret-key"
-```
+After any DAG, image, or Compose change, validate at least these surfaces:
 
-### Option 2: GCP Secret Manager Backend
+- `docker compose ps`
+- `airflow dags list | grep stoxx_stage_yfinance`
+- `airflow config get-value core executor`
+- `airflow connections get google_cloud_default`
 
-Configure Airflow to read secrets from GCP Secret Manager instead of the Metadata DB. Secrets never touch the Airflow DB.
+That sequence is fast, reproducible, and catches most drift before an operator triggers a full DAG run.
 
-```ini
-# airflow.cfg — enable Secret Manager backend
-[secrets]
-backend = airflow.providers.google.cloud.secrets.secret_manager.CloudSecretManagerBackend
-backend_kwargs = {"project_id": "my-gcp-project", "connections_prefix": "airflow-connections", "variables_prefix": "airflow-variables", "sep": "-"}
-```
+### Treat Health State Separately From Running State
 
-```bash
-# Create a connection secret in Secret Manager
-# The secret name must match: {connections_prefix}{sep}{conn_id}
-# e.g., "airflow-connections-my-postgres"
+A service being `Up` is not enough. During the `SERVING_JOB` incident, the containers were running but still reported `health: starting`. For this platform, healthy means:
 
-echo -n "postgresql://user:pass@host:5432/mydb" | \
-    gcloud secrets create airflow-connections-my-postgres \
-        --data-file=- \
-        --replication-policy=automatic
+- the scheduler health endpoint returns `200`
+- the dag processor and triggerer job checks succeed
+- the worker answers the Celery ping health check
 
-# Create a variable secret
-echo -n "my-secret-api-key" | \
-    gcloud secrets create airflow-variables-api-key \
-        --data-file=- \
-        --replication-policy=automatic
+### Keep DAG Delivery Boring
 
-# Grant the Airflow service account access to read secrets
-gcloud projects add-iam-policy-binding my-gcp-project \
-    --member="serviceAccount:airflow-sa@my-gcp-project.iam.gserviceaccount.com" \
-    --role="roles/secretmanager.secretAccessor"
-```
+The deployment path is now known:
 
-### Option 3: HashiCorp Vault Backend
+- copy to a safe temp path
+- install into the DAG directory with explicit ownership
+- restart only the services that need a refresh
+- validate DAG visibility before triggering any run
 
-```ini
-# airflow.cfg
-[secrets]
-backend = airflow.providers.hashicorp.secrets.vault.VaultBackend
-backend_kwargs = {"connections_path": "airflow/connections", "variables_path": "airflow/variables", "url": "http://vault:8200", "token": "vault-token"}
-```
+That is simpler and safer than improvising direct host writes into mounted directories.
 
-> [!warning] No secrets in DAG files
->
-> Never hardcode passwords, API keys, or service account JSON in DAG code. Use environment variables, Secret Manager, or the Connections/Variables store. DAG files are typically version-controlled and visible to all developers.
+## What To Remember
 
-> [!success] Safe pattern: store secrets in GCP Secret Manager or env vars
-> Configure the `CloudSecretManagerBackend` in `airflow.cfg` so that `Connection` and `Variable` lookups resolve from Secret Manager automatically. For Docker Compose environments, inject secrets as `AIRFLOW_CONN_*` or `AIRFLOW_VAR_*` environment variables — they override the Metadata DB and never appear in DAG code.
+The live Airflow deployment is a self-hosted, private, Compose-based control plane with three critical properties:
 
----
+- Airflow itself is small and stateful.
+- Google integration depends on both Airflow metadata objects and GCP IAM.
+- the deployment path is only reliable when ownership, defaults, and health checks are explicit.
 
-## Monitoring
-
-### Health Check Endpoint
-
-Airflow exposes a health check endpoint. Use it in load balancer health checks and alerting.
-
-```bash
-# Scheduler health
-curl http://airflow-scheduler:8974/health
-# Returns: {"metadatabase":{"status":"healthy"},"scheduler":{"status":"healthy","latest_scheduler_heartbeat":"2024-01-15T06:00:05+00:00"}}
-
-# Webserver health
-curl http://airflow-webserver:8080/health
-
-# Configure in Cloud Monitoring, Datadog, or Prometheus to alert on health check failures
-```
-
-### StatsD Metrics
-
-Airflow emits metrics via StatsD. Configure Prometheus + Grafana or Datadog to scrape them.
-
-```ini
-# airflow.cfg — enable StatsD
-[metrics]
-statsd_on = True
-statsd_host = statsd-exporter           # StatsD exporter container hostname
-statsd_port = 8125
-statsd_prefix = airflow
-```
-
-#### Key metrics to alert on
-
-```
-# Task metrics
-airflow.task_instance.duration         # Task execution time
-airflow.task_instance.failures         # Task failure count
-airflow.task_instance.successes        # Task success count
-
-# Scheduler metrics
-airflow.scheduler.heartbeat            # Scheduler alive (alert if missing)
-airflow.scheduler.tasks_executable     # Tasks waiting to be executed
-airflow.scheduler.tasks_running        # Tasks currently running
-
-# DAG metrics
-airflow.dagrun.duration.success        # DAG Run duration on success
-airflow.dagrun.duration.failed         # DAG Run duration on failure
-
-# Pool metrics
-airflow.pool.open_slots                # Available task slots
-airflow.pool.used_slots                # Slots in use
-```
-
-### Datadog Integration
-
-```python
-# requirements.txt — add Datadog integration
-datadog==0.47.0
-apache-airflow-providers-datadog==3.3.0
-
-# In airflow.cfg
-# [metrics]
-# statsd_on = True
-# statsd_host = datadog-agent
-# statsd_port = 8125
-```
-
-### Log Management
-
-```ini
-# airflow.cfg — remote logging to GCS (recommended for production)
-[logging]
-remote_logging = True
-remote_log_conn_id = google_cloud_default
-remote_base_log_folder = gs://my-bucket/airflow-logs
-encrypt_s3_logs = False
-
-# Retention: task logs are written locally AND uploaded to GCS
-# Set a short local retention to save disk space
-logging_level = INFO
-log_file_max = 7          # Keep local logs for 7 days only
-```
-
----
-
-## Resource Sizing Guide
-
-### Executor Choice vs Workload
-
-| Workload Profile | Recommended Executor | Reasoning |
-|---|---|---|
-| < 50 concurrent tasks | LocalExecutor | Simple, no broker, single machine |
-| 50-200 concurrent tasks | CeleryExecutor | Horizontal workers, predictable latency |
-| Variable/bursty workloads | KubernetesExecutor | Scales to zero, full isolation per task |
-| Cloud Composer | LocalKubernetesExecutor | Managed, auto-scaling |
-
-### Memory and CPU Guidelines
-
-```
-Scheduler:
-  Minimum:     2 vCPU, 4 GB RAM
-  Production:  4 vCPU, 8 GB RAM
-  HA (x2):     4 vCPU, 8 GB RAM each
-
-Webserver:
-  Minimum:     1 vCPU, 2 GB RAM
-  Production:  2 vCPU, 4 GB RAM
-
-Workers (LocalExecutor — same VM as scheduler):
-  Budget:      4 vCPU, 16 GB RAM (total for scheduler + workers)
-  Production:  8 vCPU, 32 GB RAM
-
-Workers (CeleryExecutor — separate VMs):
-  Per worker:  4 vCPU, 8 GB RAM (adjust per task memory requirements)
-  Concurrency: 8-16 tasks per worker (lower for memory-heavy tasks)
-
-Metadata DB:
-  Minimum:     db-f1-micro (dev only)
-  Production:  db-n1-standard-2 (2 vCPU, 7.5 GB) with HA
-```
-
----
-
-### Airflow Hosting Cost Comparison
-
-Approximate monthly costs for running Airflow at small/medium scale (us-central1, March 2024 pricing):
-
-| Option | Setup | Est. Monthly Cost | Best For |
-|---|---|---|---|
-| Local Docker Compose | 5 min | $0 | Development only |
-| Self-hosted GCE (e2-standard-4) + Cloud SQL (db-n1-standard-2) | 2-4 hours | ~$150-250 | Cost-sensitive small teams |
-| Cloud Composer 2 (SMALL, min-workers=1) | 15-30 min | ~$300-600 | GCP-native, managed |
-| Cloud Composer 2 (MEDIUM, max-workers=6) | 15-30 min | ~$700-1500 | Production, auto-scaling |
-| AWS MWAA (mw1.small) | 20-30 min | ~$400-600 | AWS-primary teams |
-| Astronomer Astro | Variable | ~$500+ | Enterprise, dbt-heavy |
-
-> [!tip] Self-hosted wins at small scale
->
-> For teams with < 100 DAG Runs/day and strong infra skills, self-hosted on a single GCE VM with Cloud SQL is often the right choice. You get full control and pay ~$200/month instead of $600+. The operational cost is the Airflow knowledge required — not the infra.
-
----
-
-## Related Notes
-
-- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, DAG structure
-- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAGs, idempotency, backfill patterns
-- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging deployment issues, health checks, log analysis
-
-## References
-
-- [Airflow Docker Compose quick-start](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html)
-- [Cloud Composer documentation](https://cloud.google.com/composer/docs)
-- [Airflow Helm Chart](https://airflow.apache.org/docs/helm-chart/stable/index.html)
-- [Airflow Configuration Reference](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html)
-- [GCP Secret Manager backend](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/secrets-backends/google-cloud-secret-manager-backend.html)
-
-## Related
-- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How Airflow connections and deployment fit into the full dev/staging/prod strategy
+The next note turns those facts into an operational runbook by showing how to diagnose the failures that actually occurred on this platform.

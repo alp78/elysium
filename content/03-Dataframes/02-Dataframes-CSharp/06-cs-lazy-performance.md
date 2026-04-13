@@ -9,7 +9,7 @@ updated: 2026-03-27
 status: complete
 ---
 
-# 06 — Lazy API & Performance
+# Lazy API and Performance - C#
 
 > [!quote]
 > "Premature optimization is the root of all evil."
@@ -20,27 +20,142 @@ status: complete
 >
 > — **Michael A. Jackson**, *Principles of Program Design* (1975)
 
-This note explains lazy vs eager execution in C# DataFrame libraries, demonstrates Polars.NET's LazyFrame API (ScanParquet, query plans, predicate/projection pushdown, collect), and benchmarks against eager operations. Deedle is included as an eager-only comparison point.
+> [!abstract]- Summary
+>
+> Explains how lazy execution changes dataframe performance in C#, focusing on Polars.NET `LazyFrame` planning, collection boundaries, query-plan inspection, and scan-time pushdown behavior. The note exists to separate two questions that are often conflated: whether a dataframe operation is correct, and whether the engine is allowed to avoid unnecessary reads, columns, materializations, and passes over the data.
+>
+> **Setup**
+> - Configure the notebook runtime, load Polars.NET and its native runtime package, and prepare the shared benchmark and Parquet inputs used throughout the note
+>
+> **Lazy Fundamentals**
+> - Contrast eager and lazy execution, show how `DataFrame.Lazy()` and scan-based entry points create `LazyFrame` plans, and make `.Collect()` the explicit execution boundary
+> - Treat Deedle as the eager-only comparison point so the execution-model difference is visible even before optimization details appear
+>
+> **Query Optimization**
+> - Inspect query plans, use `ScanParquet`, and understand predicate and projection pushdown as storage-aware optimizations rather than syntax tricks
+> - Keep the optimizer contract clear: native expressions and scan-based sources preserve pushdown opportunities better than eager reads or custom code paths
+>
+> **Performance Comparison**
+> - Benchmark eager versus lazy patterns, compare materialization costs, and evaluate where lazy planning actually reduces work instead of just changing API style
+> - Include streaming-mode discussion for workloads that pressure memory even when lazy planning is available
+>
+> **Deedle Note**
+> - Use Deedle as a deliberately eager reference point rather than a feature-for-feature competitor to Polars.NET's lazy engine
+>
+> **Operations and safety**
+> - Warnings: the current note-level warnings still reflect broader transform-model issues rather than lazy-specific hazards, so the Summary keeps the operational focus on plan boundaries, repeated collection, and optimizer visibility instead
+> - Recommendations: 4 practices covering expression-first transforms, MDA-oriented boundaries, schema validation, and Parquet persistence
+> - Troubleshooting: 3 failure modes in the current note-level table, while the actual lazy-workflow risks are repeated `Collect()` calls, non-pushdown sources, and plan assumptions that differ from the optimized result
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **LazyFrame** | Polars.NET deferred-execution object. Created via `DataFrame.Lazy()` or `Polars.ScanParquet()`. | Records operations as a query plan; executes only on `.Collect()`. | Cannot inspect data until `.Collect()` materializes the result. |
-| **Collect** | Triggers execution of a LazyFrame's plan, returning a DataFrame. | The boundary between planning and execution. | Calling `.Collect()` in a loop re-executes the full plan each time. |
-| **ScanParquet** | Polars.NET method that creates a LazyFrame from a Parquet file without reading it. | Enables predicate and projection pushdown — only reads needed rows/columns. | Only works with Parquet (columnar). CSV scanning has limited pushdown. |
-| **Query plan** | Internal representation of LazyFrame operations. Inspected with `.Describe()`. | Reveals what the optimizer will actually execute. | The optimized plan may differ from the code you wrote. |
-| **Predicate pushdown** | Optimizer moves filters closer to storage, reducing rows read. | Avoids loading irrelevant rows from disk. | Only works with `Scan*()` sources and native expressions (not UDFs). |
-
-## What this note covers
-
-- **Eager vs Lazy** — execution model comparison, Deedle (eager-only) vs Polars.NET
-- **LazyFrame API** — ScanParquet, Collect, query plan inspection, pushdown
-- **Streaming mode** — processing data larger than RAM
-- **Benchmarks** — eager vs lazy timing comparisons
-- **Architecture** — Polars Rust engine, Arrow memory, multi-threading
-
----
+> [!note]- Glossary
+>
+> **`LazyFrame`**
+> - The deferred-execution dataframe object in Polars.NET that records operations as a plan instead of running them immediately.
+> - It matters because the entire note turns on understanding that the pipeline can be designed, optimized, and only then materialized.
+>
+> > [!warning] Not directly inspectable as rows
+> >
+> > A `LazyFrame` is a plan, not a rendered table. If you expect eager row inspection at every step, you will force materialization too early.
+>
+> ---
+>
+> **`Collect()`**
+> - The method that executes a lazy query plan and returns a materialized `DataFrame`.
+> - It matters because it is the boundary between planning and actual cost: memory use, CPU time, and I/O happen here.
+>
+> > [!warning] Repeated collection repeats work
+> >
+> > Calling `Collect()` inside a loop or after every incremental tweak re-runs the full lazy plan unless you explicitly cache or restructure the workflow.
+>
+> ---
+>
+> **Eager execution**
+> - An execution model where each dataframe operation runs immediately and produces a concrete result at that step.
+> - It matters because Deedle and ordinary eager Polars workflows provide the baseline behavior that lazy planning is trying to improve upon.
+>
+> > [!info] Simpler mental model, fewer optimizer opportunities
+> >
+> > Eager code can be straightforward to debug, but it gives the engine fewer chances to fuse, reorder, or skip work.
+>
+> ---
+>
+> **Lazy execution**
+> - An execution model where operations are accumulated into a query plan and optimized before running.
+> - It matters because the note is fundamentally about how delaying execution changes both API design and performance outcomes.
+>
+> > [!info] Delay enables optimization
+> >
+> > The point of laziness is not delay for its own sake. It is delay so the engine can see the whole graph before touching the data.
+>
+> ---
+>
+> **`ScanParquet`**
+> - A lazy file-source constructor that creates a query plan over Parquet data without reading the full file immediately.
+> - It matters because scan-based entry points are where predicate and projection pushdown become possible in a meaningful way.
+>
+> > [!warning] Source type matters
+> >
+> > Pushdown wins depend heavily on columnar scan sources like Parquet. An eager `ReadCsv()` followed by `.Lazy()` does not offer the same storage-level advantages.
+>
+> ---
+>
+> **Query plan**
+> - The internal representation of a lazy pipeline after the engine has captured its operations and before or during optimization.
+> - It matters because the plan tells you what the engine is actually going to execute, which is more authoritative than the surface method chain.
+>
+> > [!warning] Optimized plan may surprise you
+> >
+> > The plan the engine executes can differ materially from the order you wrote in code. That is usually a benefit, but it means you should inspect rather than assume.
+>
+> ---
+>
+> **Predicate pushdown**
+> - An optimization that moves filters as close to the data source as possible so irrelevant rows are never fully read.
+> - It matters because row pruning is one of the fastest ways a lazy engine can reduce I/O and memory pressure on large sources.
+>
+> > [!warning] Custom code can block it
+> >
+> > Pushdown depends on the engine understanding the filter. Once the logic leaves native expressions, the optimizer may lose that opportunity.
+>
+> ---
+>
+> **Projection pushdown**
+> - An optimization that reads only the columns required by the final query instead of loading the full schema eagerly.
+> - It matters because wide datasets often waste more time on unnecessary columns than on unnecessary rows.
+>
+> > [!info] Column pruning is a real performance feature
+> >
+> > Selecting the needed fields early is not just cleaner code. In lazy scan workflows, it can materially reduce the storage work itself.
+>
+> ---
+>
+> **Streaming mode**
+> - An execution mode where the engine processes data in smaller chunks instead of requiring full in-memory materialization at once.
+> - It matters because lazy planning alone does not guarantee safe execution when datasets approach or exceed RAM limits.
+>
+> > [!warning] Lazy is not the same as memory-free
+> >
+> > A lazy plan can still materialize to a large result. Streaming helps only when the specific operations in the plan are compatible with streamed execution.
+>
+> ---
+>
+> **Benchmark**
+> - A measured comparison of runtime behavior under defined conditions such as source type, operation pattern, and materialization strategy.
+> - It matters because performance claims about lazy execution are only useful when backed by comparable workloads instead of intuition.
+>
+> > [!warning] Benchmark the real bottleneck
+> >
+> > If the workload is dominated by parsing, disk speed, or repeated materialization, a benchmark that hides those costs can mislead architectural decisions.
+>
+> ---
+>
+> **Deedle**
+> - A .NET dataframe and series library used here as an eager-only comparison point.
+> - It matters because it helps illustrate what Polars lazy execution buys you by contrasting it with a model that materializes more directly.
+>
+> > [!info] Reference point, not same architecture
+> >
+> > Deedle is useful in this note as a conceptual foil. It is not trying to solve the exact same optimization problem in the same way as Polars.
 
 ## Setup
 
@@ -94,9 +209,10 @@ var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+Data directory: c:\Users\aperi\DEV\LANG\data
 
 ---
+
 ## Lazy Fundamentals
 
 Polars has two execution modes:
@@ -145,7 +261,7 @@ Console.WriteLine($"Type: {lf.GetType().Name}");
 Console.WriteLine("No data has been loaded yet — just a query plan.");
 ```
 
-    Type: LazyFrame
+Type: LazyFrame
     No data has been loaded yet — just a query plan.
 
 #### Polars.NET | Eager to Lazy conversion
@@ -163,7 +279,7 @@ Console.WriteLine($"LazyFrame type: {lfFromEager.GetType().Name}");
 Console.WriteLine("Eager -> Lazy conversion is free (no copy).");
 ```
 
-    Eager DataFrame shape: (66355, 12)
+Eager DataFrame shape: (66355, 12)
     LazyFrame type: LazyFrame
     Eager -> Lazy conversion is free (no copy).
 
@@ -184,7 +300,7 @@ Console.WriteLine($"Collected shape: {result.Shape}");
 result.Head(5)
 ```
 
-    Collected shape: (66355, 12)
+Collected shape: (66355, 12)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
@@ -215,12 +331,13 @@ catch (Exception ex)
 }
 ```
 
-    Optimized query plan:
+Optimized query plan:
     Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
     PROJECT */12 COLUMNS
     ESTIMATED ROWS: 66355
 
 ---
+
 ## Query Optimization
 
 When you build a lazy query, Polars applies **automatic optimizations** before execution:
@@ -253,7 +370,7 @@ Console.WriteLine($"Rows matching symbol='SAP.DE': {dfFiltered.Shape}");
 dfFiltered.Head(5)
 ```
 
-    Rows matching symbol='SAP.DE': (1324, 12)
+Rows matching symbol='SAP.DE': (1324, 12)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>5301</td><td>SAP.DE</td><td>2021-01-04</td><td>108.1</td><td>108.5</td><td>104.78</td><td>105.32</td><td>97.0102</td><td>2928515</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5302</td><td>SAP.DE</td><td>2021-01-05</td><td>104.98</td><td>106.2</td><td>104.46</td><td>105.04</td><td>96.7523</td><td>2798888</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5303</td><td>SAP.DE</td><td>2021-01-06</td><td>105.14</td><td>106.26</td><td>103.6</td><td>105.48</td><td>97.1576</td><td>3018802</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5304</td><td>SAP.DE</td><td>2021-01-07</td><td>105.58</td><td>105.7</td><td>104.04</td><td>104.52</td><td>96.2734</td><td>3176143</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5305</td><td>SAP.DE</td><td>2021-01-08</td><td>105.14</td><td>106.72</td><td>105.04</td><td>106.18</td><td>97.8024</td><td>3068744</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
@@ -273,7 +390,7 @@ Console.WriteLine($"Projected shape: {dfProjected.Shape} (only 4 of 12 columns r
 dfProjected.Head(5)
 ```
 
-    Projected shape: (66355, 4) (only 4 of 12 columns read)
+Projected shape: (66355, 4) (only 4 of 12 columns read)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
@@ -297,7 +414,7 @@ Console.WriteLine($"High-volume trades: {dfCombined.Shape}");
 dfCombined.Head(10)
 ```
 
-    High-volume trades: (14330, 4)
+High-volume trades: (14330, 4)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.338</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.1555</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>2.3305</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>3.31</td><td>306973344</td></tr></tbody></table></div>
 
@@ -323,7 +440,7 @@ Console.WriteLine($"Grouped result: {dfGrouped.Shape}");
 dfGrouped.Head(10)
 ```
 
-    Grouped result: (50, 4)
+Grouped result: (50, 4)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>num_days</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td><td>1321</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td><td>1329</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td><td>1321</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td><td>1329</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td><td>1321</td></tr></tbody></table></div>
 
@@ -348,11 +465,12 @@ Console.WriteLine($"With computed columns: {dfWithCols.Shape}");
 dfWithCols.Head(5)
 ```
 
-    With computed columns: (1324, 5)
+With computed columns: (1324, 5)
 
 <!-- Polars DataFrame: (5 rows, 5 columns) --><table><thead><tr><th>date</th><th>open</th><th>close</th><th>daily_range</th><th>daily_change</th></tr></thead><tbody><tr><td>2021-01-04</td><td>108.1</td><td>105.32</td><td>3.72</td><td>-2.78</td></tr><tr><td>2021-01-05</td><td>104.98</td><td>105.04</td><td>1.74</td><td>0.06</td></tr><tr><td>2021-01-06</td><td>105.14</td><td>105.48</td><td>2.66</td><td>0.34</td></tr><tr><td>2021-01-07</td><td>105.58</td><td>104.52</td><td>1.66</td><td>-1.06</td></tr><tr><td>2021-01-08</td><td>105.14</td><td>106.18</td><td>1.68</td><td>1.04</td></tr></tbody></table></div>
 
 ---
+
 ## Performance Comparison
 
 We compare **eager** vs **lazy** execution on real data to measure the impact of query optimization.
@@ -393,7 +511,7 @@ static (double avgMs, double minMs, double maxMs) Benchmark(Action action, int w
 Console.WriteLine("Benchmark helper defined.");
 ```
 
-    Benchmark helper defined.
+Benchmark helper defined.
 
 ### Eager vs Lazy Benchmarks
 
@@ -430,11 +548,11 @@ var speedup = eagerAvg / lazyAvg;
 Console.WriteLine($"\nLazy is ~{speedup:F1}x faster than eager on this query.");
 ```
 
-    Benchmark file: ..\data\bench_large.parquet
+Benchmark file: ..\data\bench_large.parquet
     EAGER  — avg: 141.5 ms  (min: 99.1, max: 218.3)
     LAZY   — avg: 15.8 ms  (min: 15.1, max: 16.2)
-    
-    Lazy is ~9.0x faster than eager on this query.
+
+Lazy is ~9.0x faster than eager on this query.
 
 #### Polars.NET | Eager vs Lazy: CSV read + filter + select
 
@@ -491,11 +609,11 @@ catch (Exception ex)
 }
 ```
 
-    CSV benchmark file: ..\data\bench_medium.csv (~2.5M rows)
+CSV benchmark file: ..\data\bench_medium.csv (~2.5M rows)
     EAGER CSV  — avg: 103.8 ms  (min: 102.4, max: 105.5)
     LAZY  CSV  — avg: 76.8 ms  (min: 75.1, max: 77.7)
-    
-    Lazy CSV speedup: ~1.4x
+
+Lazy CSV speedup: ~1.4x
 
 ### Projection Impact and Summary
 
@@ -525,10 +643,10 @@ Console.WriteLine($"Only 2 columns — avg: {twoColsAvg:F1} ms");
 Console.WriteLine($"\nProjection pushdown saves ~{(1 - twoColsAvg / allColsAvg) * 100:F0}% read time.");
 ```
 
-    All 12 columns — avg: 73.4 ms
+All 12 columns — avg: 73.4 ms
     Only 2 columns — avg: 17.7 ms
-    
-    Projection pushdown saves ~76% read time.
+
+Projection pushdown saves ~76% read time.
 
 #### Polars.NET | Benchmark summary
 
@@ -550,6 +668,7 @@ summaryDf
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>approach</th><th>avg_ms</th><th>vs_eager</th></tr></thead><tbody><tr><td>Eager Parquet</td><td>141.5324667</td><td>1</td></tr><tr><td>Lazy Parquet</td><td>15.79983333</td><td>8.957845547</td></tr><tr><td>Lazy 2-col Parquet</td><td>17.7476</td><td>7.974738368</td></tr></tbody></table></div>
 
 ---
+
 ## Deedle Note
 
 > [!info] Deedle has no lazy mode
@@ -567,6 +686,7 @@ For large datasets, Polars.NET's lazy evaluation with predicate and projection p
 If your workflow fits in memory and you only need basic operations, Deedle works fine. For analytical queries on larger-than-memory data, Polars.NET's lazy API is the right tool.
 
 ---
+
 ## Summary
 
 ### Summary | Lazy API cheat sheet
@@ -618,4 +738,3 @@ If your workflow fits in memory and you only need basic operations, Deedle works
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

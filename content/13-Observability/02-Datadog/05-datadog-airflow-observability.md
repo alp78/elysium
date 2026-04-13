@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Airflow Observability — StatsD Metrics and Dashboard
+# Datadog Airflow Observability
 
 > [!quote]
 > "Do you know what's better than debugging at 3 AM with really great tools? Not having to wake up at 3 AM."
 >
 > — **Liz Fong-Jones**
 
-The [Airflow VM Datadog agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [Airflow's architecture](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
+> [!abstract]- Summary
+>
+> This note shifts from installing the Airflow VM agent to using it: Airflow emits StatsD metrics into the local Datadog agent, which turns scheduler health, DAG timing, task outcomes, pool pressure, and triggerer activity into dashboard and monitor signals for the orchestration layer.
+>
+> **Metric flow and enablement**
+> - Explains how StatsD metrics move from Airflow through DogStatsD into Datadog and which Docker Compose settings make that path live.
+> - Keeps the metric transport mechanics separate from host-agent installation so orchestration visibility can be reasoned about on its own.
+>
+> **Verification and integration**
+> - Covers the checks that prove Airflow metrics are arriving and the Datadog-side integration toggle that unlocks Airflow-specific views.
+> - Treats verification as both a container config problem and an indexing problem inside Datadog.
+>
+> **Metric families and dashboards**
+> - Groups the important Airflow metrics into scheduler, DAG run, task execution, pool, and triggerer surfaces, then maps them into a practical orchestration dashboard.
+> - Helps the reader move from raw metric names to an operating view that actually supports triage.
+>
+> **Monitor design and limits**
+> - Ends with recommended monitors and the visibility limits of self-hosted Airflow relative to more managed orchestration platforms.
+> - When to use: the team needs operational meaning for Airflow metrics, not just the infrastructure steps that make them appear.
 
----
+> [!note]- Glossary
+>
+> **StatsD**
+> - A UDP-based metric protocol that applications use to emit counters, gauges, and timers.
+> - It matters here because Airflow's orchestration metrics leave the application through this protocol before Datadog ever sees them.
+>
+> > [!info] Application-first metrics
+> >
+> > Airflow health signals start inside the scheduler, not in the host telemetry collected around it.
+>
+> ---
+>
+> **DogStatsD**
+> - Datadog's StatsD-compatible listener that receives application metrics and forwards them into Datadog.
+> - It matters here because the local agent is the bridge between Airflow emission and Datadog indexing.
+>
+> > [!tip] Receiver in the middle
+> >
+> > If DogStatsD is unreachable, the host can look healthy while orchestration metrics stay absent.
+>
+> ---
+>
+> **scheduler heartbeat**
+> - A recurring signal that shows whether the Airflow scheduler loop is still alive and making progress.
+> - It matters here because stale or missing heartbeats are one of the fastest signs that orchestration is degraded.
+>
+> > [!info] Core liveness signal
+> >
+> > If the scheduler stops advancing, downstream task metrics become historical noise rather than current health.
+>
+> ---
+>
+> **DAG run duration**
+> - The time a DAG run spends from start to completion.
+> - It matters here because orchestration latency is often the earliest signal that data freshness risk is building.
+>
+> > [!tip] Latency before failure
+> >
+> > Runs can remain successful while still drifting outside the time budget the business expects.
+>
+> ---
+>
+> **task failure count**
+> - The count of failed Airflow task executions over a time window.
+> - It matters here because repeated task failure patterns usually surface workflow breakage before operators inspect logs manually.
+>
+> > [!info] Failure rate surface
+> >
+> > Trend and rate matter more than isolated single-task noise when deciding whether to alert.
+>
+> ---
+>
+> **pool slots**
+> - The Airflow capacity controls that limit how many tasks can run against a shared resource class.
+> - It matters here because saturation here explains queueing and apparent scheduler slowness that is actually intentional throttling.
+>
+> > [!tip] Capacity bottleneck clue
+> >
+> > Pool pressure helps distinguish an overloaded system from one that is respecting deliberate concurrency guardrails.
+>
+> ---
+>
+> **triggerer**
+> - The Airflow component that manages deferred tasks and async triggers.
+> - It matters here because its health becomes important once sensors and deferrable operators are part of the orchestration design.
+>
+> > [!info] Async orchestration path
+> >
+> > If deferred work stalls, the scheduler may look active while waiting tasks quietly stop progressing.
+>
+> ---
+>
+> **Airflow integration**
+> - The Datadog product integration that provides Airflow-specific dashboards, metadata, and curated views.
+> - It matters here because raw StatsD arrival alone does not give the best operator experience.
+>
+> > [!tip] Metrics plus semantics
+> >
+> > The integration layer turns generic metric ingestion into a product-aware observability surface.
 
 ### How StatsD Metrics Flow from Airflow to Datadog
 

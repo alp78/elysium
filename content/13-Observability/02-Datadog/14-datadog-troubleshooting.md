@@ -15,9 +15,105 @@ status: complete
 >
 > — **Charity Majors**, charity.wtf (2018)
 
-Common issues with the Datadog agent and observability setup for the data platform. For pipeline-specific errors (missing APM traces root cause), see also common pipeline errors.
+> [!abstract]- Summary
+>
+> This note is the operational repair manual for the Datadog stack: it covers what to check when agents do not appear, traces stop flowing, logs stay empty, Cloud Run metrics never show up, or host-specific quirks like COS filesystem rules and CRLF startup scripts break the intended monitoring path.
+>
+> **Agent and ingestion failures**
+> - Starts with the basic host and agent checks for missing infrastructure presence, then moves through traces, logs, and Cloud Run metric gaps.
+> - Uses the real collection path of each signal so troubleshooting follows the system's architecture instead of generic guesswork.
+>
+> **Host-specific edge cases**
+> - Covers platform-specific failure modes such as COS read-only paths, Windows line endings in startup scripts, and duplicate or ghost hosts in Datadog.
+> - Keeps environment quirks visible because many observability issues are deployment-shape issues, not product bugs.
+>
+> **Command references**
+> - Includes the management commands and config file locations needed to inspect or restart agents on both the Airflow and SQL VMs.
+> - Turns the note into a practical first-stop runbook rather than only a list of symptoms.
+>
+> **Disable and recover**
+> - Ends with the disable path for agents and integrations when the safest move is to reset or remove part of the stack.
+> - When to use: one of the Datadog signal paths is broken and the operator needs a structured diagnostic sequence.
 
----
+> [!note]- Glossary
+>
+> **agent not reporting**
+> - A condition where the Datadog collector is installed or expected but the host does not appear healthy in Datadog.
+> - It matters here because most other Datadog features depend on the base agent path being alive first.
+>
+> > [!info] Start at the collector
+> >
+> > If the host is absent, dashboards and monitors are downstream symptoms rather than the root problem.
+>
+> ---
+>
+> **APM intake**
+> - The Datadog path that receives trace payloads from an instrumented application.
+> - It matters here because trace failures often come from transport or agent-reachability issues rather than missing instrumentation code.
+>
+> > [!tip] Tracing needs transport
+> >
+> > A correct tracer with no intake path behaves like tracing that was never enabled.
+>
+> ---
+>
+> **metadata startup script**
+> - The VM bootstrap script delivered through instance metadata and executed on startup.
+> - It matters here because several agent installation and update issues trace back to whether this script reran correctly.
+>
+> > [!info] Bootstrap source of truth
+> >
+> > When infrastructure changes do not appear on the host, inspect the metadata-driven startup path first.
+>
+> ---
+>
+> **COS filesystem constraint**
+> - The limited writable-path model on Container-Optimized OS.
+> - It matters here because writing Datadog state or config to the wrong path can break the Airflow VM agent.
+>
+> > [!tip] Host OS rules matter
+> >
+> > Collector failures on COS are often path-assumption failures imported from more general Linux guides.
+>
+> ---
+>
+> **CRLF line endings**
+> - Windows-style line endings that can break shell script execution on Linux hosts.
+> - It matters here because startup scripts with CRLF can prevent agent updates or restarts from applying.
+>
+> > [!info] Formatting can stop bootstrap
+> >
+> > A script that looks right in the editor can still fail before any Datadog logic runs.
+>
+> ---
+>
+> **ghost host**
+> - A stale or duplicate infrastructure entry that remains in Datadog after the real host changed or disappeared.
+> - It matters here because duplicate host identities confuse dashboards, host maps, and monitor targeting.
+>
+> > [!tip] Identity cleanup problem
+> >
+> > Not every infrastructure anomaly is live telemetry; some are stale inventory artifacts.
+>
+> ---
+>
+> **bytes-read zero**
+> - The state where a log source is configured but the agent reports no bytes consumed from it.
+> - It matters here because empty SQL log streams usually show up here before they are noticed in Log Explorer.
+>
+> > [!info] Local log failure clue
+> >
+> > This points troubleshooting toward file path, permissions, or source config rather than toward search syntax.
+>
+> ---
+>
+> **disable path**
+> - The controlled way to turn off Datadog agents or integrations when troubleshooting or cost control requires rollback.
+> - It matters here because a clean shutdown path is safer than leaving half-broken collection components running.
+>
+> > [!tip] Reset safely
+> >
+> > Being able to disable observability cleanly is part of operating it responsibly.
 
 ## Agent Not Appearing in Datadog
 
@@ -257,9 +353,11 @@ When the trial ends or you want to remove Datadog:
 3. SSH into Airflow VM and remove the agent: `docker rm -f dd-agent`
 4. SSH into SQL VM and stop the agent: `sudo systemctl disable datadog-agent && sudo systemctl stop datadog-agent`
 5. Revert Dockerfile entrypoint:
-   ```dockerfile
+
+```dockerfile
    ENTRYPOINT ["python", "utils/run_pipeline.py"]
-   ```
+```
+
 6. Remove `ddtrace>=2.10.0` from `requirements.txt`
 7. Rebuild and push the pipeline image
 8. The logger and run_pipeline trace code no-ops automatically (`ImportError` guard)

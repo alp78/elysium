@@ -8,21 +8,219 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Cloud Run Jobs vs Services — Serverless Containers for Data Pipelines
+# Cloud Run Jobs vs Services
 
 > [!quote]
 > "Functions are the verbs of serverless; containers are the nouns. You need both parts of speech to write a complete sentence."
 >
 > — **Ben Kehoe**, iRobot cloud robotics engineer
 
-Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running. Cloud Run is a regional service — each job or service deploys to a single region and cannot span multiple regions.
-
-> [!todo] Prerequisites
+> [!abstract]- Summary
 >
-> 1. Enable the Cloud Run API: `gcloud services enable run.googleapis.com`
-> 2. A container image in Artifact Registry (or another registry Cloud Run can access)
-> 3. IAM roles: `roles/run.developer` to create/update jobs, `roles/run.invoker` to execute jobs
-> 4. A service account attached to the job with permissions for downstream resources (GCS, BigQuery, Secret Manager)
+> Covers how Cloud Run Jobs and Cloud Run Services differ operationally for data pipelines, including resource selection, execution and update workflows, parallel task fan-out, cold-start tradeoffs, pricing, and secure runtime configuration with environment variables and secrets.
+>
+> **Prerequisites**
+> - Enable `run.googleapis.com`, publish a runnable container image to Artifact Registry or another accessible registry, and grant `roles/run.developer` for job definition changes plus `roles/run.invoker` for execution
+> - Attach a service account with the downstream permissions the container needs for GCS, BigQuery, Secret Manager, and private networking access
+>
+> **Jobs vs services**
+> - Use Jobs for containers that run to completion and exit, and use Services for HTTP-driven workloads that stay listening for traffic
+> - Compare lifecycle, trigger model, scaling, timeout ceilings, concurrency behavior, billing shape, and cold-start mitigation across Jobs, Services, and Cloud Functions
+>
+> **Cloud Run Jobs**
+> - List, describe, execute, monitor, update, and delete jobs with `gcloud run jobs ...`, and distinguish the persistent job definition from the per-run execution records
+> - Override arguments and environment variables at execution time, and scale work horizontally with `--tasks` plus `--parallelism`
+>
+> **Pipeline architecture**
+> - Treat each ETL stage as its own job execution so orchestrators such as Airflow can retry, replace, or reorder stages independently
+> - Use the three execution models in the note: manual tool jobs, scheduled jobs, and array jobs that fan out parallel work
+>
+> **Cold start, pricing, and performance**
+> - Expect Cloud Run Jobs to cold start every run and use image size, multi-stage builds, and lazy initialization to control startup latency
+> - Use `--min-instances` and always-allocated CPU only for latency-sensitive services, and weigh those settings against their idle-cost impact
+> - Distinguish service billing from job billing, and account for networking charges plus committed-use discounts where applicable
+>
+> **Environment variables and secrets**
+> - Use `--set-env-vars` for non-sensitive configuration and `--set-secrets` for Secret Manager-backed credentials injected at runtime
+> - Support multi-container sidecar patterns when one job or service revision needs logging agents, proxies, or metrics collectors next to the main container
+>
+> **Operations and safety**
+> - Warnings: jobs always cold start, `--min-instances` and always-allocated CPU create idle cost, hardcoded secrets leak through job definitions, and a regional deployment does not span multiple regions automatically
+> - Recommendations table: the Jobs-versus-Services comparison table and the cold-start guidance map workload lifecycle, timeout, concurrency, trigger style, and cost profile to the correct Cloud Run resource type
+
+> [!note]- Glossary
+>
+> **Cloud Run**
+> - Google Cloud's managed serverless container runtime for deploying and executing containers without managing the underlying servers directly.
+> - It matters because the note frames Cloud Run as the serverless execution layer for both long-lived HTTP endpoints and run-to-completion pipeline stages.
+>
+> > [!info] Container runtime, not VM replacement
+> >
+> > Cloud Run removes server management, but it does not remove application concerns such as image size, startup time, identity, and network access design.
+>
+> ---
+>
+> **Cloud Run Service**
+> - A Cloud Run resource that keeps a container revision ready to receive HTTP requests and scale based on traffic.
+> - It matters because Services are the right fit for APIs, webhooks, dashboards, and push-trigger endpoints rather than batch ETL steps.
+>
+> > [!info] Request lifecycle defines it
+> >
+> > A Service exists to answer requests. If the workload's success condition is "finish once and exit," it is usually a Job instead.
+>
+> ---
+>
+> **Cloud Run Job**
+> - A Cloud Run resource that launches containers to run to completion and then stop.
+> - It matters because the note treats Jobs as the default serverless primitive for ETL stages, exports, scoring runs, and migrations.
+>
+> > [!warning] Jobs do not stay warm
+> >
+> > Jobs always start from a fresh execution path. There is no warm pool equivalent to `min-instances` for keeping a Job prestarted.
+>
+> ---
+>
+> **execution**
+> - One concrete run of a Cloud Run Job after it has been triggered manually or by another system.
+> - It matters because status, logs, duration, and failures are tracked at the execution level, not only at the job-definition level.
+>
+> > [!info] Definition and run differ
+> >
+> > Updating a Job changes future executions, not the one already running. Operational debugging usually starts from the execution record.
+>
+> ---
+>
+> **task**
+> - One worker instance inside a Job execution, used when the execution fans out across multiple parallel containers.
+> - It matters because tasks are how Cloud Run Jobs parallelize work without requiring multiple separate job definitions.
+>
+> > [!info] One execution can have many tasks
+> >
+> > A Job execution is the umbrella event; tasks are the parallel workers inside it. That distinction matters when reading status and scaling settings.
+>
+> ---
+>
+> **parallelism**
+> - The maximum number of Job tasks allowed to run at the same time within one execution.
+> - It matters because wall-clock duration and downstream load are shaped by how aggressively the Job fans work out.
+>
+> > [!warning] More workers can mean more pressure
+> >
+> > Raising parallelism reduces elapsed time only if downstream systems can absorb the load. Storage, databases, and APIs may become the real bottleneck.
+>
+> ---
+>
+> **concurrency**
+> - The number of simultaneous requests a Cloud Run Service instance is allowed to process.
+> - It matters because Services can multiplex traffic per instance, while Jobs effectively run one task per container instance.
+>
+> > [!info] Service and Job scaling differ
+> >
+> > Concurrency is a Service concept tied to request serving. Job scaling is described instead through tasks and parallelism.
+>
+> ---
+>
+> **cold start**
+> - The startup delay that happens when Cloud Run has to pull, start, and initialize a container before it can do useful work.
+> - It matters because startup latency affects every Job run and every Service scale-from-zero event.
+>
+> > [!warning] Small images matter
+> >
+> > Large images and heavy initialization directly turn into slower starts. Cold-start optimization is often more about image discipline than about the platform itself.
+>
+> ---
+>
+> **`min-instances`**
+> - A Cloud Run Service setting that keeps a minimum number of container instances running even when traffic is idle.
+> - It matters because it is the main platform feature for reducing cold-start latency on Services.
+>
+> > [!warning] Warmth costs money
+> >
+> > Keeping instances warm means paying for idle capacity. It is a latency tradeoff, not a free performance feature.
+>
+> ---
+>
+> **Artifact Registry**
+> - Google's managed repository service for storing versioned container images and related artifacts.
+> - It matters because Cloud Run needs an image source, and Artifact Registry is the standard regional image store in the note's workflows.
+>
+> > [!info] Region alignment helps
+> >
+> > Keeping the registry close to the Cloud Run region reduces unnecessary image-pull friction and keeps deployments simpler to reason about.
+>
+> ---
+>
+> **service account**
+> - A non-human Google Cloud identity attached to a Job or Service so the running container can call downstream APIs.
+> - It matters because Cloud Run workloads need explicit runtime identity for storage access, BigQuery work, secret retrieval, and private networking integrations.
+>
+> > [!warning] Runtime identity is policy boundary
+> >
+> > The attached service account defines what the container can do once it starts. A correct image with the wrong runtime identity still fails operationally.
+>
+> ---
+>
+> **`--set-env-vars`**
+> - A Cloud Run deployment flag that stores non-sensitive environment variables on the Job or Service definition.
+> - It matters because configuration such as hostnames, log levels, and stage names should be injected cleanly rather than hardcoded into the image.
+>
+> > [!warning] Plain text stays visible
+> >
+> > Environment variables set this way are convenient, but they are not secret storage. Operators can see them in CLI output, console views, and infrastructure state.
+>
+> ---
+>
+> **`--set-secrets`**
+> - A Cloud Run deployment flag that injects Secret Manager values into the container environment at runtime.
+> - It matters because it is the safe path for passwords, keys, and tokens that should not appear in plain-text job configuration.
+>
+> > [!info] Secret value, not secret metadata
+> >
+> > The container receives the resolved secret value through the environment variable. The secret reference remains in configuration, but the raw secret text does not.
+>
+> ---
+>
+> **VPC connector**
+> - A networking component that gives serverless workloads controlled access to private VPC resources.
+> - It matters because Jobs and Services often need to reach databases or private services that are not exposed over the public internet.
+>
+> > [!warning] Private access is explicit
+> >
+> > Serverless workloads do not automatically inherit private-network reachability. Private access must be designed with the correct connector or network settings.
+>
+> ---
+>
+> **sidecar**
+> - An additional container deployed alongside the main container in the same Job or Service revision.
+> - It matters because sidecars provide patterns for proxies, metrics agents, or logging helpers without baking every concern into the primary image.
+>
+> > [!info] Shared resources still apply
+> >
+> > Sidecars share the Job or Service revision's CPU and memory envelope. Adding one changes runtime resource pressure even if the main container is unchanged.
+>
+> ---
+>
+> **Cloud Functions (2nd gen)**
+> - Google's higher-level event-function product that runs on top of Cloud Run infrastructure.
+> - It matters because the note uses Cloud Functions as the lighter-weight comparison point when the workload does not need a fully custom container.
+>
+> > [!info] Simpler can be enough
+> >
+> > If the workload is small and event-driven, Cloud Functions may remove container-management overhead entirely. Cloud Run is strongest when runtime control is the priority.
+
+> [!example] Execution Model Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use Cloud Run Jobs for run-to-completion pipeline stages such as ETL, exports, backfills, scoring runs, or migrations that should start, finish, and leave an execution record.
+> > - Use Cloud Run Services for HTTP-facing workloads such as APIs, webhook receivers, Pub/Sub push endpoints, and dashboards that must stay ready for requests.
+> > - Use Cloud Run when the workload needs custom containers, regional serverless deployment, managed identity, and scale-to-zero economics without VM administration.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not put finite batch work behind a Service just because it uses HTTP somewhere in the surrounding architecture; that usually creates the wrong lifecycle and billing model.
+> > - Do not choose a Job for an always-on request path, because Jobs do not expose a stable serving endpoint and they cold start on every execution.
+> > - Do not pay for `min-instances`, always-allocated CPU, or other latency tuning unless the request SLO or business deadline is strong enough to justify the idle spend.
 
 ## Jobs vs Services Overview
 
@@ -306,7 +504,7 @@ The secret value is injected as an environment variable at runtime. The containe
 - [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Cloud Run Services as push subscription endpoints
 - [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — Jobs typically read input from and write output to GCS
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/run.invoker` to trigger jobs; SA attached to the job for GCS/BQ access
-- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `run.googleapis.com` must be enabled
+- [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) — `run.googleapis.com` must be enabled
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Job logs are available in Cloud Logging by resource type `cloud_run_job`
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler triggers for scheduled job executions
 - [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — BigQuery query patterns for downstream tables written by Cloud Run Jobs

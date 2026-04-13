@@ -15,11 +15,126 @@ status: complete
 >
 > — **Jay Kreps**, *I Heart Logs* (2014)
 
-Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
+> [!abstract]- Summary
+>
+> This note defines streaming architecture as the family of low-latency event-processing patterns that trade simplicity for timeliness, then compares the major processing models, broker and engine choices, CDC integration paths, and operational controls needed to keep real-time pipelines correct under replay, disorder, and constant load.
+>
+> **Processing models and architectural patterns**
+> - Contrasts batch, micro-batch, and true streaming, then compares Lambda, Kappa, and broader event-driven architectures to show where latency, reprocessing, and codebase complexity actually move.
+> - Treats replay, dual-codebase risk, and broker retention as first-order design constraints rather than implementation details.
+>
+> **Brokers, engines, and streaming semantics**
+> - Covers Kafka, Pub/Sub, Kinesis, Flink, Beam/Dataflow, and related processing engines, linking each choice to state management, exactly-once behavior, and delivery guarantees.
+> - Explains windowing, watermarks, and late-data handling as the core mechanisms that make distributed event time usable in practice.
+>
+> **CDC and platform implementations**
+> - Explains how change data capture connects relational systems into streaming pipelines through tools such as Debezium and Datastream, then maps the architecture to the canonical GCP stack of Pub/Sub, Dataflow, and BigQuery.
+> - Connects streaming choices back to lakehouse serving layers, event sourcing, and CQRS so the note stays anchored in downstream system design.
+>
+> **Operations and safety**
+> - Warnings: streaming is expensive to operate, exactly-once semantics remain hard, and poorly justified real-time requirements often create permanent complexity for little business gain.
+> - Recommendations: default to batch or micro-batch unless latency is truly critical, keep shared logic between processing paths where possible, and design retention, replay, checkpointing, and late-data policy before production launch.
 
-The canonical GCP streaming stack — [Pub/Sub](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) and [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) respectively.
-
----
+> [!note]- Glossary
+>
+> **Streaming architecture**
+> - A system design where events are processed continuously as they arrive instead of being accumulated for large scheduled batches.
+> - It matters here because the note frames streaming as a latency-oriented architecture with specific correctness and operational trade-offs.
+>
+> > [!warning] Real time has a carrying cost
+> >
+> > Continuous processing means continuous infrastructure, monitoring, and failure handling. The latency gain is real, but so is the permanent operational burden.
+>
+> ---
+>
+> **Micro-batch**
+> - A compromise model that processes data in frequent short intervals rather than truly one event at a time.
+> - It matters here because many business requirements labeled real time are actually satisfied more safely and cheaply by micro-batch systems.
+>
+> > [!info] Often the right default
+> >
+> > If a dashboard can wait one to five minutes, micro-batch usually captures most of the value without the full complexity of continuous streaming.
+>
+> ---
+>
+> **Lambda architecture**
+> - A dual-path pattern that combines a batch layer for authoritative recomputation with a speed layer for low-latency approximate results.
+> - It matters here because it solves late-data correction at the cost of duplicated logic and higher operational complexity.
+>
+> > [!warning] Two codebases diverge
+> >
+> > Lambda fails most often when the batch and speed implementations stop behaving the same, leaving teams to argue over which output is authoritative.
+>
+> ---
+>
+> **Kappa architecture**
+> - A streaming-first pattern that keeps one processing codebase and relies on replaying the retained event log instead of maintaining a separate batch layer.
+> - It matters here because it simplifies logic ownership while pushing more responsibility onto broker retention and replay workflows.
+>
+> > [!info] Replay replaces batch
+> >
+> > Kappa only works if historical events remain available long enough to rebuild outputs after logic changes or failure recovery.
+>
+> ---
+>
+> **Event-driven architecture**
+> - A broader system style where components communicate through events published to and consumed from a broker or log.
+> - It matters here because streaming data pipelines are a specialized form of event-driven design rather than an isolated tool choice.
+>
+> > [!info] Decoupling by events
+> >
+> > Producers and consumers stay independent when the broker is the system boundary, which is why event-driven designs scale organizationally as well as technically.
+>
+> ---
+>
+> **Message broker**
+> - The durable transport layer that accepts events from producers and makes them available to consumers through topics, partitions, offsets, or equivalent mechanisms.
+> - It matters here because every streaming architecture depends on the broker for ordering, replay, fan-out, and retention behavior.
+>
+> > [!warning] Retention is architecture
+> >
+> > Broker settings decide whether replay, backfill, and recovery are possible. Short retention silently removes options you may need later.
+>
+> ---
+>
+> **Change Data Capture / CDC**
+> - A pattern that turns database inserts, updates, and deletes into ordered change events by reading transaction logs or equivalent source-system change streams.
+> - It matters here because CDC is the main bridge between relational operational systems and event-driven downstream pipelines.
+>
+> > [!info] Log-based integration
+> >
+> > Good CDC avoids polling tables repeatedly. It uses the database's own change history so downstream systems see ordered mutations with less source load.
+>
+> ---
+>
+> **Exactly-once semantics**
+> - A processing guarantee that each logical event affects downstream state once even if underlying transport or execution retries occur.
+> - It matters here because many streaming designs promise correctness under replay and failure, but exactly-once behavior is one of the hardest guarantees to sustain.
+>
+> > [!warning] Usually conditional
+> >
+> > Exactly-once is often scoped to a particular engine and sink combination. Outside that boundary, idempotency and deduplication still matter.
+>
+> ---
+>
+> **Windowing**
+> - The grouping of streaming events into time- or activity-based buckets so stateful aggregations can produce meaningful intermediate results.
+> - It matters here because streaming analytics needs explicit windows to define what counts as one aggregation period.
+>
+> > [!info] Time has to be modeled
+> >
+> > Unlike batch jobs, streaming systems cannot assume all relevant rows are already present. Windows create the working boundary for partial completeness.
+>
+> ---
+>
+> **Watermark**
+> - A progress signal that estimates how far event time has advanced so the engine can decide when to close windows and how to treat late data.
+> - It matters here because late arrivals are normal in distributed streams, and watermarks are the control for balancing completeness against latency.
+>
+> > [!warning] Too early or too late
+> >
+> > Aggressive watermarks drop late events; conservative watermarks delay outputs and increase state retention. The choice is a business trade-off, not only a technical knob.
+>
 
 ### Batch vs Streaming vs Micro-Batch
 
@@ -43,6 +158,16 @@ These three processing models represent fundamentally different trade-offs betwe
 > Pure streaming (millisecond latency) is expensive and operationally demanding. Most "real-time" business requirements actually need data within 1–5 minutes — which micro-batch (Spark Structured Streaming, Dataflow with windowing) handles at far lower cost and complexity. Before building a streaming system, confirm the latency requirement is genuine.
 
 ---
+
+> [!example] Streaming Architecture Fit
+>
+> > [!success] Latency-Driven Processing
+> >
+> > - Use streaming architecture when business value depends on low-latency updates, replayable event streams, continuous stateful processing, or CDC-driven propagation from operational systems.
+>
+> > [!failure] Batch Is Sufficient
+> >
+> > - Do not choose streaming when minute-level freshness is enough, batch reprocessing is simpler, or the team cannot sustain always-on operations, broker retention, and stateful failure recovery.
 
 ## Lambda Architecture
 

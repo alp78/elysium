@@ -15,11 +15,105 @@ status: complete
 >
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
-Datadog monitoring for the data platform uses two agents and one GCP Integration to deliver full observability — metrics, logs, and traces — across every component from the SQL Server VM to ephemeral Cloud Run jobs.
+> [!abstract]- Summary
+>
+> This note maps Datadog as a layered observability surface for the platform: two host agents cover the persistent SQL and Airflow VMs, while the GCP integration pulls Cloud Run and other managed-service metrics that cannot be collected from an in-container agent.
+>
+> **Topology and coverage**
+> - Explains the two-agent-plus-integration topology, the Datadog EU site boundary, and which hosts, containers, databases, logs, and traces each collection path is responsible for.
+> - Ties the architecture back to the three observability pillars so the reader can see which signal comes from the agent, which comes from Cloud Monitoring, and which comes from application tracing.
+>
+> **Bootstrap prerequisites**
+> - Lists the Datadog account, API and application keys, and the Terraform variable gate that turns the whole monitoring stack on or off.
+> - Shows how the platform keeps Datadog resources conditional so the observability footprint stays explicit in infrastructure code.
+>
+> **GCP integration onboarding**
+> - Walks through the manual GCP integration flow, the supporting Terraform resources, and the host-map checks that confirm Datadog can see the project estate.
+> - Frames the integration as the bridge for ephemeral Cloud Run jobs that have no long-lived host for a resident agent.
+>
+> **Verification and shutdown**
+> - Covers the verification path for hosts and Cloud Run metrics and the disable path when `dd_api_key` is emptied or the integration is removed.
+> - When to use: the team needs the control-plane view of how Datadog fits across the full stack before going deeper into per-component notes.
 
-**Datadog Region: EU (`datadoghq.eu`) | GCP Region: europe-west1 | Agents: 2 (Airflow VM + SQL VM)**
-
----
+> [!note]- Glossary
+>
+> **Datadog Agent**
+> - The host-side collector that ships metrics, logs, and traces from a VM or container environment into Datadog.
+> - It matters here because the architecture relies on one package-based agent on SQL Server and one Docker-based agent on Airflow.
+>
+> > [!info] Host collection boundary
+> >
+> > Agents can only observe what the host exposes. Managed or ephemeral services still need an API-based integration path.
+>
+> ---
+>
+> **GCP Integration**
+> - The Datadog integration that reads Google Cloud resource metadata and monitoring metrics through Google APIs.
+> - It matters here because Cloud Run job metrics enter Datadog through this pull path rather than through an in-guest agent.
+>
+> > [!info] API pull path
+> >
+> > For managed services, the integration is the observability control plane, not an optional add-on.
+>
+> ---
+>
+> **Three pillars**
+> - The metrics, logs, and traces that together describe system health and execution behavior.
+> - It matters here because the note maps each pillar to a concrete collection path in the project architecture.
+>
+> > [!tip] Different signals, different jobs
+> >
+> > Metrics show shape, logs explain events, and traces localize latency across service boundaries.
+>
+> ---
+>
+> **Datadog site**
+> - The regional Datadog control plane such as `datadoghq.eu` that receives telemetry and hosts dashboards.
+> - It matters here because the agent, API key configuration, and account setup must target the correct regional site.
+>
+> > [!info] Region is part of config
+> >
+> > Pointing agents or automation at the wrong site produces silent ingestion failures even if keys are valid.
+>
+> ---
+>
+> **Service tag**
+> - A shared tag used to group metrics, logs, and traces that belong to the same application or component.
+> - It matters here because correlation across dashboards and APM depends on consistent service naming.
+>
+> > [!tip] Correlation needs stable tags
+> >
+> > Logs and traces only line up cleanly when the tagging model is consistent across the stack.
+>
+> ---
+>
+> **Host Map**
+> - Datadog's infrastructure view that shows discovered hosts and their current state.
+> - It matters here because host appearance is one of the quickest validation checks after installing agents or the GCP integration.
+>
+> > [!info] Fast validation surface
+> >
+> > If hosts are missing here, the issue is usually identity, ingestion, or integration setup rather than dashboard design.
+>
+> ---
+>
+> **Cloud Run metric namespace**
+> - The `gcp.run.job.*` metric family exposed through the Google integration for Cloud Run jobs.
+> - It matters here because those metrics cover job executions, CPU, and memory for the pipeline workload that has no persistent node.
+>
+> > [!info] Managed-service signals
+> >
+> > The namespace tells you the signal came from Google monitoring APIs, not from an agent inside the workload.
+>
+> ---
+>
+> **`dd_api_key` gate**
+> - The Terraform variable that decides whether Datadog resources and startup-script branches are enabled.
+> - It matters here because the platform uses one explicit switch to control whether the observability stack exists at all.
+>
+> > [!tip] One feature flag
+> >
+> > A single infrastructure toggle is safer than partially enabling agents and leaving the architecture in a half-configured state.
 
 ### Datadog Infrastructure Topology
 
@@ -157,9 +251,11 @@ The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engi
 1. In Datadog, go to **Integrations > Google Cloud Platform**
 2. Choose **Manual** setup method
 3. Enter the service account email:
-   ```
+
+```
    data-pipeline-datadog@data-platform-prod.iam.gserviceaccount.com
-   ```
+```
+
 4. When prompted for "Generate Principal", use the SA impersonation flow
 5. Enable **GCE Automuting** (auto-mutes monitors when VM is stopped)
 6. Enable **Resource Collection** (discovers GCP resources in Datadog)
@@ -202,9 +298,11 @@ When the trial ends or you want to remove Datadog:
 3. SSH into Airflow VM and remove the agent: `docker rm -f dd-agent`
 4. SSH into SQL VM and stop the agent: `sudo systemctl disable datadog-agent && sudo systemctl stop datadog-agent`
 5. Revert Dockerfile entrypoint:
-   ```dockerfile
+
+```dockerfile
    ENTRYPOINT ["python", "utils/run_pipeline.py"]
-   ```
+```
+
 6. Remove `ddtrace>=2.10.0` from `requirements.txt`
 7. Rebuild and push the pipeline image
 8. The logger and run_pipeline trace code no-ops automatically (`ImportError` guard)

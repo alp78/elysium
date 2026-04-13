@@ -10,9 +10,171 @@ status: complete
 
 # JSON, XML, and Semi-Structured Data
 
-SQL Server supports semi-structured data in two distinct ways: a text-based JSON family built on `nvarchar(max)` plus a library of scalar functions (`ISJSON`, `JSON_VALUE`, `JSON_QUERY`, `JSON_MODIFY`, `JSON_PATH_EXISTS`, `JSON_OBJECT`, `JSON_ARRAY`) and the `OPENJSON` / `FOR JSON` rowset bridges, and a native `xml` data type with first-class XQuery methods (`.value()`, `.query()`, `.exist()`, `.nodes()`, `.modify()`), XML schema collections for typed XML, and purpose-built primary and secondary XML indexes. SQL Server 2025 also adds a new native binary `json` data type, a dedicated `CREATE JSON INDEX`, and the aggregation helpers `JSON_OBJECTAGG` / `JSON_ARRAYAGG` — features that require the newer engine and are not available on the 2022-CU23 instance that backs this note's live examples. This note is the canonical T-SQL reference for both families: when to reach for semi-structured storage at all, how to validate and read payloads at the boundary, how to shred them into rows, how to produce JSON or XML from relational data, how to index them when they become hot, and which traps (`JSON_VALUE`'s 4000-char truncation, XQuery's literal-only paths, lax vs strict path mode, the `OPENJSON` `type` enum, untyped vs typed `xml`) the engine will let you walk into if you are not paying attention.
+> [!abstract]- Summary
+>
+> Semi-structured support in SQL Server splits into two different ecosystems: JSON built around text storage and JSON functions, and the native `xml` type built around XQuery and XML indexing. This note maps both surfaces from ingestion-boundary decisions through validation, extraction, shredding, output generation, and indexing, using live `stoxx` examples on SQL Server 2022 while marking the SQL Server 2025-only native `json` features that are not available on the local engine.
+>
+> **Decision model**
+> - covers when semi-structured storage is justified at all, when JSON is the default, when XML earns its cost, and when stable relational shape should replace both
+>
+> **JSON storage and query surface**
+> - covers `ISJSON`, `JSON_VALUE`, `JSON_QUERY`, `JSON_MODIFY`, `JSON_PATH_EXISTS`, `JSON_OBJECT`, `JSON_ARRAY`, `OPENJSON`, `FOR JSON`, and the SQL Server 2025 native `json` / `CREATE JSON INDEX` additions
+>
+> **JSON shredding and indexing**
+> - covers explicit-schema `OPENJSON`, `AS JSON`, computed-column indexing, and the computed-column rule for SARGable JSON predicates
+>
+> **XML storage and query surface**
+> - covers the `xml` type, typed versus untyped XML, XML schema collections, `.value()`, `.query()`, `.exist()`, `.nodes()`, `.modify()`, namespaces, and `FOR XML`
+>
+> **XML shredding and indexing**
+> - covers `nodes()`-based shredding, XQuery parameterization with `sql:variable()` / `sql:column()`, and primary plus secondary XML indexes
+>
+> **Comparative guidance**
+> - includes a JSON-versus-XML decision matrix plus production patterns for boundary storage, shredding strategy, and audit retention
+>
+> **Operations and safety**
+> - Warnings: `JSON_VALUE` truncates at `nvarchar(4000)`, lax versus strict JSON path mode changes failure behavior, XML paths are parse-time literals, XML indexes are expensive on write-heavy columns, dynamic XQuery construction is an injection risk, and the SQL Server 2025 native `json` features are documented but not live-tested on the local 2022 instance
+> - Recommendations: keep semi-structured payloads at the ingestion boundary, default to JSON unless XML contracts or schema validation require otherwise, use computed columns or XML indexes for hot predicates, shred once for high-read workloads, and preserve the original payload when audit demands it
 
-Every SQL cell in this note runs against the local `stoxx` database (SQL Server 2022 CU23) and shows its real output. Any example that depends on SQL Server 2025-only features is explicitly marked and documented without a live capture.
+> [!note]- Glossary
+>
+> **Semi-structured data**
+> - Data stored as documents or nested payloads whose internal shape is more flexible than a fixed relational table but still follows some recognizable structure.
+> - It matters because the note starts with the decision of whether to store a payload this way at all instead of normalizing it into columns.
+>
+> > [!warning] Flexibility always has a query tax
+> >
+> > Semi-structured storage is useful at ingestion boundaries, but every downstream query that must re-parse the document pays a cost that normalized columns would avoid.
+>
+> ---
+>
+> **JSON text storage**
+> - The SQL Server 2016-2022 pattern of storing JSON documents in `nvarchar(max)` and querying them with JSON functions at read time.
+> - It matters because this is the active implementation surface on the local SQL Server 2022 instance that backs the note’s live examples.
+>
+> > [!warning] Pre-2025 JSON is still text
+> >
+> > SQL Server understands JSON functions, but the storage is still text until the newer native `json` type arrives. That means parsing cost is paid during query execution.
+>
+> ---
+>
+> **Native `json` type**
+> - The SQL Server 2025 binary JSON storage type with dedicated JSON indexing support.
+> - It matters because the note references it as the newer engine direction while clearly separating it from the 2022-based live demonstrations.
+>
+> > [!info] Capability depends on engine version
+> >
+> > The syntax may exist in documentation, but it is not usable on the local SQL Server 2022 environment. Version-specific features need to be treated as documented guidance, not as runnable examples.
+>
+> ---
+>
+> **`ISJSON`**
+> - The validation function SQL Server uses to test whether a text value is valid JSON, optionally with mode-specific constraints.
+> - It matters because boundary validation is the first line of defense before any scalar JSON extraction function is allowed to touch the payload.
+>
+> > [!warning] Validate at insert, not at failure time
+> >
+> > If invalid JSON reaches storage unchecked, later `JSON_VALUE` or `OPENJSON` calls turn validation into a runtime failure or silent null behavior inside business queries.
+>
+> ---
+>
+> **`JSON_VALUE`**
+> - The scalar extraction function that returns a single JSON value from a path as `nvarchar(4000)`.
+> - It matters because it is the most common JSON reader in SQL Server and also the source of one of the note’s most important truncation traps.
+>
+> > [!warning] Long values can disappear into `NULL`
+> >
+> > `JSON_VALUE` is capped at 4000 characters. Longer scalar values do not come back intact and require a different extraction path such as `OPENJSON WITH (...)`.
+>
+> ---
+>
+> **`JSON_QUERY`**
+> - The JSON extraction function that returns an object or array fragment rather than a scalar.
+> - It matters because nested JSON often needs to be preserved as JSON for later shredding, not flattened immediately into a scalar string.
+>
+> > [!info] Fragment, not scalar
+> >
+> > Use `JSON_QUERY` when the output should still be valid JSON. Using `JSON_VALUE` against an object or array is the wrong semantic surface.
+>
+> ---
+>
+> **`OPENJSON`**
+> - The rowset function that turns JSON objects or arrays into tabular rows and columns, optionally using an explicit schema.
+> - It matters because it is the bridge from document storage to relational processing and the normal way to shred JSON for joins, grouping, and indexing.
+>
+> > [!warning] Explicit schema is the production form
+> >
+> > The default key-value output is useful for inspection. For stable pipelines, `WITH (...)` gives stronger typing, clearer intent, and better downstream behavior.
+>
+> ---
+>
+> **Computed-column JSON index pattern**
+> - The design where a JSON property is extracted into a computed column and then indexed with a normal b-tree.
+> - It matters because pre-2025 SQL Server has no native JSON index, so hot JSON predicates need this indirection for reliable seek behavior.
+>
+> > [!warning] Predicate shape must match the indexed expression
+> >
+> > A JSON property can be indexed indirectly, but the query must line up with the computed expression for the optimizer to use it well. Arbitrary ad hoc JSON predicates remain expensive.
+>
+> ---
+>
+> **`xml` data type**
+> - The native SQL Server document type that stores XML in parsed binary form and exposes XQuery-based methods.
+> - It matters because XML support is deeper and more schema-aware than JSON support, but it comes with a heavier conceptual and indexing model.
+>
+> > [!info] XML is not just text-with-angle-brackets
+> >
+> > Unlike pre-2025 JSON storage, the `xml` type is a first-class native type with its own methods, typing rules, and index family.
+>
+> ---
+>
+> **Typed XML**
+> - XML bound to an XML schema collection so documents are validated against an XSD-defined contract.
+> - It matters because typed XML is the main reason to choose XML over JSON when schema validation and richer query semantics are required.
+>
+> > [!warning] Validation raises the authoring bar
+> >
+> > Typed XML gives stronger guarantees, but it also makes changes more constrained. Every document must satisfy the schema or fail at insert or update time.
+>
+> ---
+>
+> **XQuery**
+> - The query language SQL Server uses inside XML methods such as `.value()`, `.query()`, `.exist()`, and `.nodes()`.
+> - It matters because XML extraction, filtering, and shredding all depend on XQuery expressions rather than on JSON-style path strings.
+>
+> > [!warning] Paths are literal code, not data
+> >
+> > SQL Server parses XQuery expressions as literals at statement compile time. Dynamic path construction is harder, riskier, and subject to injection concerns if handled carelessly.
+>
+> ---
+>
+> **`nodes()` shredding**
+> - The XML method that returns one row per selected node so the query can project relational columns from each fragment.
+> - It matters because it is the standard XML-to-rows bridge that replaces older APIs such as `OPENXML`.
+>
+> > [!info] One document can become many rows
+> >
+> > `nodes()` is how XML leaves document form and enters relational processing. Once shredded, the rest of the query can use ordinary joins and aggregates.
+>
+> ---
+>
+> **XML index**
+> - A specialized primary or secondary index structure built over an `xml` column to accelerate path, value, or property lookups.
+> - It matters because XML queries can become impractically slow without the right index support, but those indexes are expensive to maintain.
+>
+> > [!warning] Read speed trades against write cost
+> >
+> > XML indexes are often worthwhile on read-heavy payload columns and a mistake on frequently updated ones. The note treats them as workload-specific, not as defaults.
+>
+> ---
+>
+> **Boundary store and shred**
+> - The architectural pattern of storing the original semi-structured payload at system ingress, validating it, and then extracting typed relational columns for downstream use.
+> - It matters because it is the note’s recommended production pattern for high-read workloads that still need the raw payload for audit or replay.
+>
+> > [!info] Keep the original, query the relational form
+> >
+> > This pattern preserves auditability without forcing every downstream consumer to pay repeated parsing cost. It is usually the cleanest compromise between fidelity and performance.
 
 ## Overview and decision model
 

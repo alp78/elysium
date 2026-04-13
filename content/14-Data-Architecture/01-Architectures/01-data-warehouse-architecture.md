@@ -15,9 +15,125 @@ status: complete
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-A **data warehouse** (DWH, also called an enterprise data warehouse or EDW) is a subject-oriented, integrated, non-volatile, and time-variant collection of data structured to support management decision-making. Unlike an OLTP database optimized for fast individual row writes, a data warehouse is purpose-built for OLAP — scanning millions of rows, aggregating across large time ranges, and answering complex multi-dimensional analytical questions at speed.
+> [!abstract]- Summary
+>
+> This note defines the data warehouse as the analytical side of the platform, covering the OLTP versus OLAP split, dimensional modeling, enterprise integration alternatives, and the performance and cost patterns that determine when a warehouse architecture actually fits the workload.
+>
+> **Warehouse foundations**
+> - Explains why warehouses exist by contrasting OLAP workloads with OLTP systems, then anchors the architecture around Kimball-style dimensional modeling and explicit grain declaration.
+> - Treats grain, fact tables, and dimension tables as the primary modeling contract for analytical correctness and performance.
+>
+> **History and modeling patterns**
+> - Covers fact table types, dimension patterns, and slowly changing dimensions so historical behavior, descriptive context, and analytical shape are handled deliberately instead of ad hoc.
+> - Shows how star and snowflake choices affect join cost, human readability, and warehouse query behavior.
+>
+> **Enterprise alternatives and data flow**
+> - Compares Kimball with Inmon-style enterprise warehouses and Data Vault 2.0, then positions ELT versus ETL inside the warehouse architecture decision.
+> - Keeps integration strategy, history preservation, and warehouse loading model tied to the same design discussion.
+>
+> **Operations and safety**
+> - Covers materialized views, rollups, sizing, and cost patterns, then uses grain and model-shape warnings to show where analytical correctness is easy to break.
+> - Warnings: grain violations, over-normalization for analytics, and mismatched fact or dimension design cause both incorrect results and expensive queries.
 
----
+> [!note]- Glossary
+>
+> **Data warehouse**
+> - A subject-oriented analytical store designed for large-scale historical querying, aggregation, and business reporting.
+> - It matters here because the whole note treats warehouse architecture as a deliberate response to analytical workloads rather than as a generic database choice.
+>
+> > [!info] Built for analysis
+> >
+> > A warehouse is optimized for reading and summarizing history, not for serving as the row-by-row transactional system of record.
+>
+> ---
+>
+> **OLTP**
+> - Online Transaction Processing workloads centered on small row-level writes, updates, and point lookups.
+> - It matters here because the note contrasts OLTP design goals with the analytical behavior a warehouse must optimize for instead.
+>
+> > [!warning] Wrong optimization target
+> >
+> > Designing an analytical system like an OLTP database usually preserves transactional purity at the cost of slow and expensive reporting queries.
+>
+> ---
+>
+> **OLAP**
+> - Online Analytical Processing workloads centered on scanning, joining, aggregating, and slicing large historical datasets.
+> - It matters here because warehouse architecture exists to serve this access pattern efficiently.
+>
+> > [!info] Read-heavy workload
+> >
+> > OLAP is less about one query and more about repeated analytical questions over large time horizons and many dimensions.
+>
+> ---
+>
+> **Grain**
+> - The exact level of detail represented by one row in a fact table.
+> - It matters here because every later fact and dimension decision must stay consistent with the chosen grain.
+>
+> > [!danger] Grain is binding
+> >
+> > If rows of different detail levels mix in one fact table, aggregates become misleading even when the SQL itself looks correct.
+>
+> ---
+>
+> **Fact table**
+> - The warehouse table that stores measurable events or states at a declared grain.
+> - It matters here because facts carry the numeric values analysts aggregate, compare, and trend over time.
+>
+> > [!info] Measures live here
+> >
+> > If a number answers how much, how many, or how often, it probably belongs in a fact table rather than a dimension.
+>
+> ---
+>
+> **Dimension table**
+> - The descriptive table that gives business context to facts such as who, what, when, where, or how.
+> - It matters here because human-readable analytics depend on joining measures to stable descriptive context.
+>
+> > [!tip] Meaning around measures
+> >
+> > Dimensions are what make warehouse queries intelligible to analysts rather than only to engineers.
+>
+> ---
+>
+> **Slowly Changing Dimension**
+> - A pattern for handling changing descriptive attributes over time without losing required history.
+> - It matters here because warehouses often need both current values and historically accurate attributes for past events.
+>
+> > [!warning] History policy choice
+> >
+> > Choosing the wrong SCD strategy either destroys history or creates needless complexity, so it should be a deliberate business decision.
+>
+> ---
+>
+> **Conformed dimension**
+> - A shared dimension reused across multiple fact tables or business processes with consistent meaning and keys.
+> - It matters here because cross-process reporting depends on dimensions that mean the same thing everywhere they appear.
+>
+> > [!info] Integration through shared context
+> >
+> > Conformed dimensions are one of the main reasons a warehouse can support enterprise-wide analysis instead of isolated marts.
+>
+> ---
+>
+> **Enterprise Data Warehouse**
+> - A centralized integrated warehouse architecture often associated with Inmon-style normalized enterprise storage.
+> - It matters here because the note compares it with Kimball marts and Data Vault as alternative integration strategies.
+>
+> > [!tip] Integration-first alternative
+> >
+> > An EDW emphasizes central consistency and enterprise integration, sometimes before user-facing dimensional marts are built.
+>
+> ---
+>
+> **Data Vault 2.0**
+> - A warehouse modeling approach that separates business keys, relationships, and descriptive history into hubs, links, and satellites.
+> - It matters here because it provides a different trade-off between auditability, parallel loading, and query simplicity.
+>
+> > [!info] History-friendly integration layer
+> >
+> > Data Vault often works best as an integration foundation that feeds easier-to-query downstream marts rather than as the direct analytics surface.
 
 ### OLTP vs OLAP: The Fundamental Distinction
 
@@ -41,6 +157,16 @@ The core architectural implication: **OLTP → normalize to reduce write amplifi
 
 ---
 
+> [!example] Warehouse Architecture Fit
+>
+> > [!success] Analytical Workloads
+> >
+> > - Use a warehouse architecture when the workload is analytical, read-heavy, and benefits from structured historical data modeled for aggregation, consistent metrics, and business-facing querying.
+>
+> > [!failure] Transactional Mismatch
+> >
+> > - Do not force a warehouse into primary high-concurrency transactional writes, point lookups, or application state management.
+
 ## The Kimball Methodology: Dimensional Modeling
 
 Ralph Kimball's *The Data Warehouse Toolkit* (first published 1996, now in its 3rd edition) defined the dimensional modeling approach that remains the dominant paradigm for analytical data warehouses. The Kimball methodology is bottom-up: build data marts first, integrated through shared conformed dimensions.
@@ -50,6 +176,7 @@ Ralph Kimball's *The Data Warehouse Toolkit* (first published 1996, now in its 3
 Before designing any fact table, you must declare the **grain** — the lowest level of detail that a single row represents. This is not optional and not adjustable later without a rebuild.
 
 Examples of grain declarations:
+
 - "One row per sales order line item"
 - "One row per financial instrument per trading day"
 - "One row per patient admission"
@@ -88,6 +215,7 @@ flowchart LR
 ```
 
 #### Advantages of star schema
+
 - Queries need only one join level (fact → dim) — no intermediate joins
 - Optimizers handle star joins efficiently; BigQuery and Snowflake both recognize star patterns
 - Analysts understand the pattern immediately — fact table contains measures, dims contain descriptions
@@ -102,6 +230,7 @@ dim_product → dim_subcategory → dim_category
 ```
 
 #### When to use snowflake schema
+
 - Dimensions have very high cardinality attributes that would dominate table size
 - Storage is severely constrained (less relevant in cloud)
 - Strict normalization requirements from governance
@@ -176,6 +305,7 @@ CREATE TABLE fact_account_daily (
 ```
 
 #### Periodic snapshot characteristics
+
 - Rows are populated even when nothing changes (fill-forward logic required for missing periods)
 - All rows for the same snapshot date are loaded in a single batch
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
@@ -399,6 +529,7 @@ dim_customer (
 Bill Inmon's approach is top-down: build an integrated, normalized Enterprise Data Warehouse (EDW) first in Third Normal Form (3NF), then derive department-specific data marts from it.
 
 #### Inmon's 4 characteristics of a data warehouse
+
 1. **Subject-oriented** — organized around subjects (Customer, Instrument, Position), not business processes
 2. **Integrated** — single, consistent representation across all source systems
 3. **Non-volatile** — data is never updated or deleted; only loaded
@@ -542,11 +673,13 @@ Modern cloud data warehouses have largely converged on columnar storage, MPP (Ma
 Modern cloud warehouses favor **ELT** (Extract → Load → Transform) over traditional **ETL** (Extract → Transform → Load). The distinction matters because it determines where transformation compute runs and who pays for it.
 
 #### ETL paradigm (legacy)
+
 1. Extract from source
 2. Transform in a middleware engine (Informatica, SSIS, Spark, Python)
 3. Load clean data into warehouse
 
 #### ELT paradigm (modern cloud)
+
 1. Extract from source
 2. Load raw data into warehouse (cheap columnar storage)
 3. Transform inside the warehouse using SQL (leverages the warehouse's MPP engine)
@@ -567,6 +700,7 @@ When analytical queries are expensive but predictable, pre-computing results red
 A materialized view persists the result of a query as physical storage, refreshed on a schedule or incrementally.
 
 #### BigQuery materialized views
+
 ```sql
 -- BigQuery: materialized view with incremental refresh
 CREATE MATERIALIZED VIEW `project.dataset.daily_volume_mv`
@@ -582,6 +716,7 @@ GROUP BY 1, 2;
 ```
 
 #### SQL Server materialized views (indexed views)
+
 ```sql
 -- SQL Server: indexed view (must use SCHEMABINDING, WITH NOEXPAND hint)
 CREATE VIEW dbo.vw_daily_volume
@@ -700,4 +835,3 @@ Before declaring a warehouse schema production-ready, verify:
 - [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
 - [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy
-

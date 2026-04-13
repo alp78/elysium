@@ -10,7 +10,145 @@ status: complete
 
 # Deadlock Detection and Prevention
 
-SQL Server resolves deadlocks automatically by choosing a victim and rolling back that transaction with error `1205`.
+> [!abstract]- Summary
+>
+> SQL Server resolves deadlocks automatically by choosing a victim and rolling back that transaction with error `1205`, so operational deadlock work is about collecting the graph, understanding the circular wait, and then deciding whether to fix access order, access path, transaction scope, or retry behavior. This note focuses on production detection and prevention rather than abstract lock theory.
+>
+> **Deadlock fundamentals**
+> - covers the distinction between circular wait and ordinary blocking, plus the triage flow that starts from an error or stall and moves to graph capture
+>
+> **Deadlock capture**
+> - covers extraction from `system_health`, persistent Extended Events capture, and the practical queries used to count and inspect deadlock graphs
+>
+> **Reproduction and prevention**
+> - covers deterministic deadlock reproduction, access-order fixes, access-path fixes, row-versioning implications, and other design-level prevention strategies
+>
+> **Application behavior**
+> - covers deadlock priority and bounded retry logic for replay-safe workloads
+>
+> **Operations and safety**
+> - Warnings: waits alone are weaker evidence than a deadlock graph, retry logic is only safe for replayable work, row versioning does not remove writer/writer cycles, and background capture must be persistent enough to survive rollover windows
+> - Recommendations: treat the graph as the source of truth, fix access order first when multiple objects are involved, keep a dedicated XE deadlock session on important systems, lower deadlock priority only for cheap background work, and retry only small idempotent units of work
+
+> [!note]- Glossary
+>
+> **Deadlock**
+> - A circular wait where two or more sessions each hold resources the others need, so no participant can make progress.
+> - It matters because the note’s diagnostic and prevention workflow starts by recognizing that this is not ordinary queueing but a cycle that cannot resolve without intervention.
+>
+> > [!warning] Deadlock is not “slow blocking”
+> >
+> > A blocked session may eventually continue. A deadlock will not. The circular dependency is what forces SQL Server to kill one participant.
+>
+> ---
+>
+> **Deadlock victim**
+> - The session SQL Server chooses to roll back in order to break the deadlock cycle.
+> - It matters because application code sees the deadlock as error `1205` on the victim side, not as a neutral system event.
+>
+> > [!info] The victim is chosen, not random in all cases
+> >
+> > SQL Server uses deadlock priority and rollback cost when choosing the loser. Understanding that makes deadlock outcomes more predictable and tunable.
+>
+> ---
+>
+> **Error `1205`**
+> - The SQL Server error raised to the chosen victim when the engine resolves a deadlock by aborting its transaction.
+> - It matters because this is the application-visible signature that should trigger graph collection and, where safe, retry logic.
+>
+> > [!warning] Retrying the error is not always safe
+> >
+> > The presence of error `1205` tells you a deadlock happened. It does not tell you the failed operation is safe to replay without broader idempotency guarantees.
+>
+> ---
+>
+> **Deadlock graph**
+> - The XML representation of the deadlock showing processes, resources, owners, waiters, and the victim.
+> - It matters because it is the authoritative artifact for understanding what actually deadlocked.
+>
+> > [!info] This is the forensic source of truth
+> >
+> > Wait types and blocked-session snapshots are useful context, but the graph is the only artifact that shows the full cycle and the contested resources in one place.
+>
+> ---
+>
+> **`xml_deadlock_report`**
+> - The Extended Events payload type SQL Server emits when it captures a deadlock graph.
+> - It matters because both `system_health` and dedicated XE sessions expose deadlock evidence through this event.
+>
+> > [!info] One event type, two capture strategies
+> >
+> > The built-in `system_health` session often captures enough to start, but dedicated sessions are safer when retention or workload importance makes rollover risk unacceptable.
+>
+> ---
+>
+> **`system_health` session**
+> - The built-in Extended Events session that usually captures deadlock reports without extra setup.
+> - It matters because it is the fastest no-setup starting point when a deadlock is reported on a running system.
+>
+> > [!warning] Built-in capture has retention limits
+> >
+> > `system_health` is convenient, not infinite. Busy systems can roll older deadlock files away before the investigation starts.
+>
+> ---
+>
+> **Lock order inversion**
+> - A pattern where two sessions acquire the same resources in different orders, creating the classic precondition for a deadlock.
+> - It matters because enforcing a consistent access order across code paths is one of the most effective structural deadlock fixes.
+>
+> > [!warning] Same resources, different order is enough
+> >
+> > Sessions do not need exotic logic to deadlock. Two simple transactions that touch the same objects in opposite order can create a cycle reliably.
+>
+> ---
+>
+> **Access path**
+> - The index or scan route SQL Server uses to reach rows during a statement.
+> - It matters because two logically similar statements can deadlock differently if they touch rows or indexes in different physical orders.
+>
+> > [!info] Deadlock prevention is sometimes an indexing problem
+> >
+> > A broad scan can lock rows or keys in a very different pattern from a narrow seek. Changing the access path can remove the cycle even when the logical query stays the same.
+>
+> ---
+>
+> **Deadlock priority**
+> - The session-level setting that influences which participant SQL Server prefers to kill when a deadlock occurs.
+> - It matters because it can turn an unpredictable production casualty into a deliberate, retryable background casualty.
+>
+> > [!warning] Priority changes the loser, not the existence of the cycle
+> >
+> > Lowering priority does not prevent a deadlock. It only makes SQL Server more likely to pick that session as the victim when the cycle occurs.
+>
+> ---
+>
+> **Replay-safe unit of work**
+> - A transaction or operation whose effects remain correct if the application reruns it after a deadlock rollback.
+> - It matters because retry logic should only wrap work that is genuinely safe to execute more than once.
+>
+> > [!warning] Idempotency is a business property
+> >
+> > SQL retry helpers can only be correct if the underlying unit of work is replay-safe. The database error alone cannot guarantee that.
+>
+> ---
+>
+> **Row versioning**
+> - A concurrency model that lets readers access versioned row copies instead of waiting for shared locks.
+> - It matters because it can remove reader/writer deadlock edges in some patterns while leaving writer/writer deadlocks untouched.
+>
+> > [!warning] It narrows some cycles, not all cycles
+> >
+> > If both sides are writing, row versioning often does nothing for deadlock prevention. The cycle still exists unless the write pattern changes.
+>
+> ---
+>
+> **Extended Events deadlock session**
+> - A dedicated XE session created specifically to persist deadlock graphs outside the generic `system_health` rollover window.
+> - It matters because important systems need reliable deadlock retention for forensic and trend analysis.
+>
+> > [!info] Dedicated capture is an operational durability choice
+> >
+> > If deadlocks matter enough to debug repeatedly, they matter enough to capture in a durable, queryable way instead of depending only on the built-in session.
 
 ## Deadlock Fundamentals
 
@@ -497,5 +635,3 @@ public static async Task<T> ExecuteWithDeadlockRetryAsync<T>(
 - Fix access paths when the graph shows broad scans, hot keys, or unexpected objects.
 - Lower deadlock priority for background work only when retries are cheap and safe.
 - Keep a dedicated deadlock capture session on systems where rollover of `system_health` is not enough.
-
-

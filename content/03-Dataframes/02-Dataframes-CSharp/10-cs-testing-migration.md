@@ -9,33 +9,148 @@ updated: 2026-03-27
 status: complete
 ---
 
-# 10 — Real-World Project, Testing & Migration
+# Testing and Migration - C#
 
 > [!quote]
 > "Program testing can be used to show the presence of bugs, but never to show their absence."
 >
 > — **Edsger Dijkstra**, *Notes on Structured Programming*, EWD 249 (1970)
 
-This note covers end-to-end analytical pipeline construction, testing and validation patterns (schema assertions, null audits, duplicate detection, referential integrity, quarantine), debugging and profiling with `Stopwatch`, and a Python-to-C#/Polars.NET migration guide covering API differences, operator translation, and common anti-patterns.
+> [!abstract]- Summary
+>
+> Brings the C# dataframe series into one production-shaped reference by combining an end-to-end analytical pipeline, reusable validation patterns, debugging/profiling helpers, and a migration map from Python Polars into Polars.NET. The note exists to move beyond "can this transformation run?" toward "can this pipeline detect bad data, explain failures, and be translated safely into idiomatic C#?"
+>
+> **Testing & Assertions**
+> - Build reusable assertion helpers for frame equality, schema validation, null audits, duplicate detection, and referential integrity so failures appear at the exact pipeline boundary that introduced them
+> - Treat structure checks and value checks as different layers of correctness rather than interchangeable tests
+>
+> **Data Quality Pipeline**
+> - Chain validation guards directly into the pipeline, split good and bad records with a quarantine pattern, and use anti-join/date-gap-style checks to surface missing relationships or broken continuity
+> - Keep failure handling operational: preserve bad data for inspection instead of silently dropping it and calling the run successful
+>
+> **Python to C# Migration Guide**
+> - Translate Python Polars concepts into Polars.NET conventions, especially around `IfElse`, C# operator syntax, chaining style, and the places where a literal port becomes non-idiomatic
+> - Use the migration section to identify anti-patterns rather than attempting a direct one-token-for-one-token rewrite from Python
+>
+> **Debugging & Profiling**
+> - Use custom helpers such as `Peek()` to inspect intermediate state without destroying fluent chains, and use `Stopwatch` timing to find slow steps before optimizing the wrong part of the pipeline
+>
+> **Operations and safety**
+> - Warnings: the current warning/recommendation block is inherited from earlier transform notes, while the real risk areas in this body are weak assertions, ignored quarantine outputs, and non-idiomatic Python-to-C# translations
+> - Recommendations: 4 inherited recommendations remain at the tail, but the body itself supports boundary-level assertions, realistic data validation, and migration-by-rewrite rather than migration-by-translation
+> - Troubleshooting: the current tail table remains inherited, while the note’s actual failure modes are schema drift, silent data-quality regressions, stale Python mental models, and profiling that measures the wrong bottleneck
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Schema validation** | Checking that column names and types match an expected specification. | Catches upstream schema drift before it corrupts downstream logic. | Validates structure, not content — a valid schema can still contain wrong values. |
-| **Quarantine pattern** | Separating rows failing validation into a "bad" partition while processing "good" rows. | Fail-soft approach that preserves bad data for investigation. | Quarantine tables grow indefinitely if not reviewed. |
-| **Anti-join** | Returns rows from the left DataFrame whose key is absent in the right. `JoinType.Anti`. | Finds orphan records and missing references. | Null keys never match — exclude nulls before anti-join checks. |
-| **Peek helper** | A utility method that prints `Head()` + shape and returns the DataFrame for chaining. | Debugging tool — inspect intermediate pipeline state without breaking the chain. | Not built into Polars.NET — must be defined as a custom extension method. |
-| **Stopwatch profiling** | Using `System.Diagnostics.Stopwatch` to time each pipeline step. | Identifies the slowest step for targeted optimization. | Measures wall-clock time including I/O — run multiple times for stable measurements. |
-| **Migration (Python → C#)** | Converting Pandas/Polars Python code to Polars.NET C#. Key differences: `IfElse` not `when/then`, C# operators not `.Gt()`, `.Sort()` chaining. | Polars.NET provides the same engine as Python Polars but with C# API conventions. | Literal Python-to-C# translation produces non-idiomatic code — learn the C# expression API. |
-
-## What this note covers
-
-- **End-to-end pipeline** — loading, cleaning, enriching, aggregating EuroStoxx 50 data
-- **Testing** — DataFrame equality, schema validation, null audits, duplicate detection, referential integrity
-- **Data quality pipeline** — chainable assertion guards, quarantine pattern, date gap detection
-- **Debugging and profiling** — Peek helper, Stopwatch per step
-- **Python-to-C# migration** — API translation table, operator differences, anti-patterns
+> [!note]- Glossary
+>
+> **Schema validation**
+> - Checking that expected columns and data types are present before the pipeline relies on them.
+> - It matters because schema drift is one of the fastest ways for a pipeline to stay runnable while becoming semantically wrong.
+>
+> > [!warning] Structure is not content
+> >
+> > A dataframe can pass schema validation and still contain swapped, stale, truncated, or analytically impossible values.
+>
+> ---
+>
+> **Quarantine pattern**
+> - A design where records that fail quality rules are separated into a bad-data partition while valid records continue through the pipeline.
+> - It matters because the note treats data-quality handling as an operational concern, not just a boolean pass/fail test.
+>
+> > [!warning] Quarantine requires review
+> >
+> > A quarantine table that is never inspected becomes a storage sink, not a quality-control mechanism.
+>
+> ---
+>
+> **Anti-join**
+> - A join that returns left-side rows whose keys do not exist on the right.
+> - It matters because anti-joins are one of the cleanest ways to detect orphaned facts, missing references, and pipeline breakage across related tables.
+>
+> > [!warning] Null keys need separate handling
+> >
+> > Nulls do not participate in equality the way ordinary keys do, so anti-join-based integrity checks should treat missing keys deliberately.
+>
+> ---
+>
+> **Assertion helper**
+> - A reusable function that enforces a specific correctness condition and fails loudly when it is violated.
+> - It matters because the note promotes assertion helpers as the maintainable way to keep validation close to the transformation boundary.
+>
+> > [!info] Reuse improves consistency
+> >
+> > Once a quality rule matters more than once, moving it into a named helper makes failures easier to understand and harder to forget.
+>
+> ---
+>
+> **Null audit**
+> - A systematic check of where and how much missing data exists across columns.
+> - It matters because null-heavy columns can invalidate aggregations, joins, and derived metrics long before the pipeline throws an exception.
+>
+> > [!warning] Count first, explain second
+> >
+> > A null audit tells you the extent of missingness, not whether the missingness is acceptable. Business interpretation still has to follow.
+>
+> ---
+>
+> **Duplicate detection**
+> - Identifying repeated rows or repeated business keys that violate the expected grain of the dataset.
+> - It matters because duplicates silently distort counts, sums, joins, and ranking logic in analytical pipelines.
+>
+> > [!warning] Duplicate means duplicate key, not always duplicate row
+> >
+> > In pipeline work, the dangerous duplicate is often a repeated `(date, symbol)` pair or other business key, not an exact row clone.
+>
+> ---
+>
+> **Referential integrity**
+> - Verifying that keys in one dataset resolve to valid keys in the related reference dataset.
+> - It matters because end-to-end pipelines often join facts to dimensions, and broken references are a strong signal of upstream coordination failures.
+>
+> > [!info] Integrity checks validate system boundaries
+> >
+> > A referential-integrity failure often points to a problem between datasets or pipeline stages, not just inside one isolated transform.
+>
+> ---
+>
+> **`Peek()` helper**
+> - A custom debugging utility that shows a small preview plus shape information and then returns the original dataframe for continued chaining.
+> - It matters because debugging chained dataframe logic is much easier when you can inspect state without dismantling the whole pipeline into temporary variables.
+>
+> > [!warning] Helper is custom, not built-in
+> >
+> > If a team adopts `Peek()`, it becomes part of the local debugging vocabulary. New readers should know it is a deliberate extension, not a Polars.NET API method.
+>
+> ---
+>
+> **`Stopwatch` profiling**
+> - Measuring elapsed wall-clock time around pipeline steps with `System.Diagnostics.Stopwatch`.
+> - It matters because performance work in real pipelines starts with knowing which step is actually slow instead of guessing.
+>
+> > [!warning] One measurement is rarely enough
+> >
+> > Stopwatch timings include environment noise, I/O variability, and warmup effects. Repeated measurements and controlled conditions matter.
+>
+> ---
+>
+> **Migration (Python → C#)**
+> - Rewriting Python dataframe logic into idiomatic Polars.NET and C# rather than copying syntax mechanically.
+> - It matters because the note frames migration as a mental-model change, not just an API-translation exercise.
+>
+> > [!warning] Literal translation creates awkward code
+> >
+> > Python-shaped chains often compile into C# only after awkward adaptations, and even then the result is usually harder to read and maintain than a native rewrite.
+>
+> ---
+>
+> **Operator translation**
+> - The mapping from Python Polars expression idioms to the corresponding C# operators, method names, and chaining patterns in Polars.NET.
+> - It matters because small syntax differences such as `IfElse` versus `when`, or C# operators versus `.Gt()`, are exactly where migrations fail noisily or become misleading.
+>
+> > [!info] Syntax differences expose deeper model differences
+> >
+> > Translation is not just token replacement. It is also where you notice whether the original Python pipeline depended on assumptions that C# expresses differently.
+>
+> ---
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
@@ -83,7 +198,7 @@ var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+Data directory: c:\Users\aperi\DEV\LANG\data
 
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
@@ -91,9 +206,10 @@ var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "index_dim.csv"));
 display($"OHLCV: {dfP.Shape}  |  IndexDim: {dimP.Shape}");
 ```
 
-    OHLCV: (66355, 12)  |  IndexDim: (169, 26)
+OHLCV: (66355, 12)  |  IndexDim: (169, 26)
 
 ---
+
 ## Testing & Assertions
 
 Polars.NET ships no built-in testing module. The helpers below implement structural equality (shape, column names, dtypes) and business-rule validation using the expression API. All helpers return `DataFrame` so they can be chained in pipeline patterns.
@@ -165,9 +281,10 @@ var subset = dfP.Head(10);
 AssertDataFrameEqual(dfP, subset, "full vs head(10)");
 ```
 
-    PASS [self-check]: DataFrames are equal (66355 rows × 12 cols)
+PASS [self-check]: DataFrames are equal (66355 rows × 12 cols)
     FAIL [full vs head(10)]:
-      - Row count mismatch: 66355 vs 10
+
+- Row count mismatch: 66355 vs 10
 
 ### Schema Validation
 
@@ -222,7 +339,7 @@ var expectedOhlcv = new Dictionary<string, string>
 ValidateSchema(dfP, expectedOhlcv, "OHLCV schema");
 ```
 
-    PASS [OHLCV schema]: Schema matches (6 columns validated)
+PASS [OHLCV schema]: Schema matches (6 columns validated)
 
 ### Null Auditing
 
@@ -266,7 +383,7 @@ var scP = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDate
 NullAudit(scP, 0.01, "scores_daily");
 ```
 
-    Null Audit [scores_daily] — threshold: 1% of 466 rows
+Null Audit [scores_daily] — threshold: 1% of 466 rows
     -------------------------------------------------------
       id                   nulls=     0  (0.0%)
       _index               nulls=     0  (0.0%)
@@ -338,7 +455,7 @@ else
 }
 ```
 
-    Duplicate key check (date, symbol):
+Duplicate key check (date, symbol):
       Groups with duplicates: 0
       PASS: No duplicate keys found.
 
@@ -381,13 +498,14 @@ Console.WriteLine(total == 0
     : $"  WARNING: {total} total violation(s) found.");
 ```
 
-    OHLC Consistency Check (66355 rows):
+OHLC Consistency Check (66355 rows):
       high >= low  violations: 0
       close >= low violations: 0
       close <= high violations: 0
       PASS: All OHLC relationships are consistent.
 
 ---
+
 ## Data Quality Pipeline
 
 The guard functions below enforce the same quality dimensions — completeness, uniqueness, referential integrity — defined in [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework). For a declarative approach to these same checks in the dbt layer, see [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework).
@@ -469,7 +587,7 @@ catch (Exception ex)
 }
 ```
 
-    Running assertion guards on OHLCV data:
+Running assertion guards on OHLCV data:
       AssertNoNulls [keys]: PASS (2 columns clean)
       AssertUnique [pk]: PASS (keys unique)
       AssertInRange [volume]: PASS ('volume' in [0, 1.7976931348623157E+308])
@@ -514,7 +632,7 @@ else
 }
 ```
 
-    Referential integrity check:
+Referential integrity check:
       Unique symbols in OHLCV: 50
       Symbols in dim_country:  169
       Orphan symbols:          0
@@ -568,7 +686,7 @@ else
 }
 ```
 
-    Date gap analysis for ASML.AS:
+Date gap analysis for ASML.AS:
       Total trading days: 1331
       Gaps > 4 calendar days: 7
 
@@ -613,7 +731,7 @@ else
 }
 ```
 
-    Quarantine split results:
+Quarantine split results:
       Total rows:       66355
       Good rows:        65704
       Quarantined rows: 651
@@ -623,6 +741,7 @@ else
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>62326</td><td>ADS.DE</td><td>2021-12-07</td><td>255.25</td><td>255.25</td><td>255.25</td><td>255.25</td><td>246.503</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62419</td><td>ADS.DE</td><td>2022-04-21</td><td>208.05</td><td>208.05</td><td>208.05</td><td>208.05</td><td>200.9205</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62420</td><td>ADS.DE</td><td>2022-04-22</td><td>208.05</td><td>208.05</td><td>208.05</td><td>208.05</td><td>200.9205</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62423</td><td>ADS.DE</td><td>2022-04-27</td><td>188.44</td><td>188.44</td><td>188.44</td><td>188.44</td><td>181.9825</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62430</td><td>ADS.DE</td><td>2022-05-06</td><td>188.22</td><td>188.22</td><td>188.22</td><td>188.22</td><td>181.77</td><td>0</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 ---
+
 ## Python to C# Migration Guide
 
 The table below maps common **Python Polars** patterns to their **C# Polars.NET** equivalents.
@@ -702,11 +821,12 @@ Console.WriteLine("Migration demo — ASML direction summary:");
 display(pipeline);
 ```
 
-    Migration demo — ASML direction summary:
+Migration demo — ASML direction summary:
 
 <!-- Polars DataFrame: (2 rows, 3 columns) --><table><thead><tr><th>direction</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>down</td><td>667.177735</td><td>468134431</td></tr><tr><td>up</td><td>675.3182551</td><td>476936289</td></tr></tbody></table></div>
 
 ---
+
 ## Debugging & Profiling
 
 When a multi-step pipeline produces unexpected results, break it into named variables and inspect shape and head at each step. Polars.NET has no `.pipe()` method, so the equivalent pattern is intermediate variable assignment.
@@ -747,19 +867,17 @@ Console.WriteLine($"  Shape: {step3.Height} rows × {step3.Width} cols");
 display(step3.Head(5));
 ```
 
-    === Step 1: Filter to single symbol ===
+=== Step 1: Filter to single symbol ===
       Shape: 1329 rows × 12 cols
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>10578</td><td>SAN.MC</td><td>2021-01-04</td><td>2.592</td><td>2.5975</td><td>2.514</td><td>2.5665</td><td>2.1491</td><td>61027452</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10579</td><td>SAN.MC</td><td>2021-01-05</td><td>2.5335</td><td>2.5935</td><td>2.528</td><td>2.5755</td><td>2.1566</td><td>34085777</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-    
-    === Step 2: Add daily return ===
+=== Step 2: Add daily return ===
       Shape: 1329 rows × 13 cols
 
 <!-- Polars DataFrame: (3 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>10578</td><td>SAN.MC</td><td>2021-01-04</td><td>2.592</td><td>2.5975</td><td>2.514</td><td>2.5665</td><td>2.1491</td><td>61027452</td><td>0</td><td>0</td><td>false</td><td>null</td></tr><tr><td>10579</td><td>SAN.MC</td><td>2021-01-05</td><td>2.5335</td><td>2.5935</td><td>2.528</td><td>2.5755</td><td>2.1566</td><td>34085777</td><td>0</td><td>0</td><td>false</td><td>0.3506721216</td></tr><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td><td>6.872451951</td></tr></tbody></table></div>
 
-    
-    === Step 3: Filter high-volatility days ===
+=== Step 3: Filter high-volatility days ===
       Shape: 141 rows × 13 cols
 
 <!-- Polars DataFrame: (5 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td><td>6.872451951</td></tr><tr><td>10593</td><td>SAN.MC</td><td>2021-01-25</td><td>2.5985</td><td>2.6185</td><td>2.4755</td><td>2.49</td><td>2.085</td><td>50395819</td><td>0</td><td>0</td><td>false</td><td>-3.525765207</td></tr><tr><td>10595</td><td>SAN.MC</td><td>2021-01-27</td><td>2.51</td><td>2.524</td><td>2.422</td><td>2.4325</td><td>2.0369</td><td>55168498</td><td>0</td><td>0</td><td>false</td><td>-3.948667325</td></tr><tr><td>10599</td><td>SAN.MC</td><td>2021-02-02</td><td>2.438</td><td>2.5615</td><td>2.4315</td><td>2.537</td><td>2.1244</td><td>74092009</td><td>0</td><td>0</td><td>false</td><td>4.964832437</td></tr><tr><td>10601</td><td>SAN.MC</td><td>2021-02-04</td><td>2.57</td><td>2.7045</td><td>2.5385</td><td>2.69</td><td>2.2525</td><td>91259735</td><td>0</td><td>0</td><td>false</td><td>5.324980423</td></tr></tbody></table></div>
@@ -801,15 +919,15 @@ var result = Peek(
 );
 ```
 
-    --- Peek [1-filter]: 1331 rows × 12 cols ---
+--- Peek [1-filter]: 1331 rows × 12 cols ---
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>25123</td><td>BNP.PA</td><td>2021-01-04</td><td>43.86</td><td>43.915</td><td>42.64</td><td>43.01</td><td>30.4027</td><td>3025708</td><td>0</td><td>0</td><td>false</td></tr><tr><td>25124</td><td>BNP.PA</td><td>2021-01-05</td><td>42.72</td><td>43.475</td><td>42.315</td><td>42.92</td><td>30.3391</td><td>2852830</td><td>0</td><td>0</td><td>false</td></tr><tr><td>25125</td><td>BNP.PA</td><td>2021-01-06</td><td>43.97</td><td>46.01</td><td>43.78</td><td>45.29</td><td>32.0143</td><td>5959237</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-    --- Peek [2-sorted]: 1331 rows × 12 cols ---
+--- Peek [2-sorted]: 1331 rows × 12 cols ---
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>25123</td><td>BNP.PA</td><td>2021-01-04</td><td>43.86</td><td>43.915</td><td>42.64</td><td>43.01</td><td>30.4027</td><td>3025708</td><td>0</td><td>0</td><td>false</td></tr><tr><td>25124</td><td>BNP.PA</td><td>2021-01-05</td><td>42.72</td><td>43.475</td><td>42.315</td><td>42.92</td><td>30.3391</td><td>2852830</td><td>0</td><td>0</td><td>false</td></tr><tr><td>25125</td><td>BNP.PA</td><td>2021-01-06</td><td>43.97</td><td>46.01</td><td>43.78</td><td>45.29</td><td>32.0143</td><td>5959237</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-    --- Peek [3-with-range]: 1331 rows × 13 cols ---
+--- Peek [3-with-range]: 1331 rows × 13 cols ---
 
 <!-- Polars DataFrame: (3 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_range</th></tr></thead><tbody><tr><td>25123</td><td>BNP.PA</td><td>2021-01-04</td><td>43.86</td><td>43.915</td><td>42.64</td><td>43.01</td><td>30.4027</td><td>3025708</td><td>0</td><td>0</td><td>false</td><td>1.275</td></tr><tr><td>25124</td><td>BNP.PA</td><td>2021-01-05</td><td>42.72</td><td>43.475</td><td>42.315</td><td>42.92</td><td>30.3391</td><td>2852830</td><td>0</td><td>0</td><td>false</td><td>1.16</td></tr><tr><td>25125</td><td>BNP.PA</td><td>2021-01-06</td><td>43.97</td><td>46.01</td><td>43.78</td><td>45.29</td><td>32.0143</td><td>5959237</td><td>0</td><td>0</td><td>false</td><td>2.23</td></tr></tbody></table></div>
 
@@ -889,7 +1007,7 @@ Console.WriteLine(new string('-', 40));
 Console.WriteLine($"  {"TOTAL",-20} {timings.Sum(t => t.Ms),6} ms");
 ```
 
-    Pipeline timing report:
+Pipeline timing report:
     ----------------------------------------
       ReadCsv                   5 ms
       Filter                    0 ms
@@ -901,6 +1019,7 @@ Console.WriteLine($"  {"TOTAL",-20} {timings.Sum(t => t.Ms),6} ms");
       TOTAL                     5 ms
 
 ---
+
 ## Summary
 
 ### Key lessons
@@ -958,4 +1077,3 @@ Console.WriteLine($"  {"TOTAL",-20} {timings.Sum(t => t.Ms),6} ms");
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

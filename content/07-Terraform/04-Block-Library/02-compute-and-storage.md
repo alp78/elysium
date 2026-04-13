@@ -16,7 +16,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Block Library — GCP Compute & Storage
+# Compute and Storage Blocks
 
 > [!quote] Werner Vogels on invisible infrastructure
 >
@@ -24,7 +24,142 @@ status: complete
 >
 > — **Werner Vogels**, AWS re:Invent keynote
 
-Copy-paste Terraform resource blocks for provisioning GCP Compute Engine VMs, disks, snapshots, and Cloud Storage buckets. Each resource type is grouped at H3 with operational variants at H4. Every block is self-contained — copy it, rename the resource, wire your variables, and run `terraform plan`.
+> [!abstract]- Summary
+>
+> Compute and Storage Blocks is the GCP Terraform snippet library for virtual machines, disks, instance-group patterns, and Cloud Storage resources: it gathers standalone HCL blocks that can be lifted into real codebases, together with the lifecycle, security, and IAM boundaries that make those blocks safe or unsafe in production.
+>
+> **Compute blocks**
+> - covers Compute Engine instances, disks, snapshots, start/stop and scheduling patterns, exposure choices, and the operational variants that change replacement, availability, and secret-handling behavior
+>
+> **Storage blocks**
+> - covers Cloud Storage buckets, state-bucket bootstrap, lifecycle settings, IAM patterns, object handling, and the bucket options that control deletion and retention risk
+>
+> **Reference structure**
+> - covers assumed variables, variables reference, quick-reference sections, and the pattern that each resource block is self-contained even when the blocks naturally compose into a broader platform
+>
+> **Operations and safety**
+> - Warnings: several VM fields force replacement, connection strings and credentials must not live in plain config, spot versus standard VM choice affects reliability, disk size cannot be reduced, bucket location changes force replacement, `force_destroy = true` is dangerous, deleting a state bucket is catastrophic, and authoritative IAM bindings remove members Terraform does not list
+> - Recommendations: protect stateful VMs and buckets with lifecycle rules, keep secrets in Secret Manager, right-size disks from monitoring data, reserve destructive bucket settings for ephemeral environments, always use remote state with versioning, and prefer incremental bucket IAM resources when access is shared across teams
+
+> [!note]- Glossary
+>
+> **Compute Engine instance**
+> - A GCP virtual machine resource managed in Terraform with `google_compute_instance`.
+> - It matters because the compute half of this library is built around reusable VM definitions with different operational roles and risk profiles.
+>
+> > [!warning] VM snippets embed lifecycle assumptions
+> >
+> > A generic-looking VM block still implies choices about replacement tolerance, startup behavior, and exposure. Reuse is helpful only when those assumptions match the target workload.
+>
+> ---
+>
+> **Startup script**
+> - Boot-time configuration logic attached to a VM so it becomes useful immediately after provisioning.
+> - It matters because many compute snippets in the library rely on startup scripts to finish installation or service setup after Terraform has created the resource.
+>
+> > [!warning] Resource creation is not workload readiness
+> >
+> > Terraform can finish creating a VM before the startup script has succeeded. Operational verification still matters after apply if the script is doing real system initialization.
+>
+> ---
+>
+> **Persistent disk**
+> - Durable block storage attached to a VM for operating systems, data, or application state.
+> - It matters because several compute patterns in the library differ mainly in disk behavior, performance, and mutability constraints.
+>
+> > [!warning] Some disk changes are not reversible in place
+> >
+> > Disk size increases are straightforward, but shrinking a disk is not. Storage planning should assume that some sizing errors require migration rather than a simple in-place edit.
+>
+> ---
+>
+> **Snapshot**
+> - A point-in-time copy of a persistent disk used for backup, cloning, or recovery workflows.
+> - It matters because the library includes both primary disk blocks and the backup-oriented patterns that make those disks operationally survivable.
+>
+> > [!info] Snapshots are part of resilience design
+> >
+> > A VM block without a backup story is incomplete for stateful workloads. Snapshot policy and retention are part of the real resource design, not an optional later enhancement.
+>
+> ---
+>
+> **Managed instance group**
+> - A Compute Engine pattern for running multiple instances from a shared template with coordinated scaling and replacement behavior.
+> - It matters because some workloads in the library move beyond singleton VMs into more resilient group-based deployment patterns.
+>
+> > [!info] Group semantics change the unit of management
+> >
+> > Once you use an instance group, the operational unit is no longer one VM. Scaling, healing, and replacement are expressed at the group and template level.
+>
+> ---
+>
+> **Spot VM**
+> - A lower-cost GCP VM offering with weaker availability guarantees than a standard instance.
+> - It matters because the library explicitly frames spot versus standard as a workload decision rather than just a pricing toggle.
+>
+> > [!warning] Cheap compute changes failure assumptions
+> >
+> > Spot capacity is a poor fit for workloads that depend on continuous presence or predictable execution windows. Cost savings and reliability always move together here.
+>
+> ---
+>
+> **Cloud Storage bucket**
+> - GCP's object-storage container for files, state, backups, logs, and artifacts.
+> - It matters because the storage half of the note includes both ordinary application buckets and the especially sensitive Terraform state-bucket pattern.
+>
+> > [!warning] Buckets are often operational systems, not just containers
+> >
+> > Once a bucket holds state, backups, or production data, its lifecycle becomes more serious than the simplicity of the HCL block suggests. Deletion settings deserve the same care as compute lifecycle settings.
+>
+> ---
+>
+> **`force_destroy`**
+> - A bucket setting that allows Terraform to delete a bucket even when it still contains objects.
+> - It matters because this one setting determines whether a destroy operation fails safely or erases whatever data remains inside the bucket.
+>
+> > [!danger] Destructive convenience is still destruction
+> >
+> > `force_destroy = true` is acceptable for ephemeral test buckets and dangerous for durable data stores. The setting should always reflect the bucket's actual data value.
+>
+> ---
+>
+> **State bucket**
+> - The Cloud Storage bucket used as the remote backend for Terraform state.
+> - It matters because losing a state bucket affects Terraform's control plane, not only the storage layer.
+>
+> > [!danger] State buckets are special-purpose critical storage
+> >
+> > A state bucket should be treated more like a control-plane database than like a casual object bucket. Versioning, retention, and deletion protection matter disproportionately here.
+>
+> ---
+>
+> **Bucket IAM binding**
+> - A Terraform-managed association between principals and roles on a Cloud Storage bucket.
+> - It matters because storage access is often shared across systems and teams, and the IAM resource type determines whether Terraform behaves incrementally or authoritatively.
+>
+> > [!warning] Authoritative IAM can remove collaborators
+> >
+> > An authoritative binding or policy block overwrites any members it does not declare. That is safe only when one Terraform configuration truly owns the complete access picture.
+>
+> ---
+>
+> **Lifecycle rule**
+> - A retention or cleanup policy attached to a bucket or other storage resource to control object aging and deletion over time.
+> - It matters because storage cost and compliance posture often depend more on lifecycle settings than on the raw bucket block itself.
+>
+> > [!info] Lifecycle is part of cost and safety control
+> >
+> > A good lifecycle rule turns passive storage into managed storage. Without it, costs and retention behavior often drift in ways Terraform users did not explicitly intend.
+>
+> ---
+>
+> **CMEK**
+> - Customer-managed encryption keys used to encrypt supported resources under organization-controlled key material.
+> - It matters because the library surfaces CMEK as a higher-control option for buckets and disks in stricter security environments.
+>
+> > [!warning] More control means more key dependency
+> >
+> > CMEK improves governance and separation of duties, but it also means workloads now depend on key availability, key IAM, and rotation hygiene. It should be adopted with full operational ownership.
 
 > [!info] Assumed variables
 >
@@ -1168,7 +1303,6 @@ resource "google_storage_bucket_iam_member" "group_list" {
 | `bucket` | Yes | Target bucket name |
 | `role` | Yes | IAM role to grant — e.g., `roles/storage.objectViewer`, `roles/storage.objectAdmin` |
 | `member` | Yes | Identity — `serviceAccount:email`, `user:email`, `group:email`, or `domain:example.com` |
-
 | Role | Permissions |
 |---|---|
 | `roles/storage.objectViewer` | List and get objects — cannot write or delete |

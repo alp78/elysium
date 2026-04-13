@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog Agent Setup — SQL Server VM (systemd on Ubuntu)
+# Datadog Agent: SQL VM
 
 > [!quote]
 > "Without monitoring, you are just guessing. With monitoring, you are making informed decisions."
 >
 > — **Tom Wilkie**, co-creator of Grafana Loki
 
-The SQL VM runs Ubuntu 22.04, so the Datadog Agent is installed as a system package managed by systemd — not Docker. This is the standard Linux installation method and gives the agent access to OS-level metrics, SQL Server integration checks, and file tailing for the errorlog.
+> [!abstract]- Summary
+>
+> This note focuses on the SQL Server VM as a conventional Linux agent installation: Datadog runs as a systemd-managed package on Ubuntu, owns the host-level telemetry path, and pairs that with a low-privilege SQL login so database metrics and error logs can be collected without granting write access.
+>
+> **Bootstrap install path**
+> - Shows how the startup script installs Agent 7, writes the main `datadog.yaml`, enables log collection, and seeds the SQL login needed for integration checks.
+> - Uses the automated path as the baseline so the VM can come up observable on first boot instead of relying on later manual intervention.
+>
+> **Manual recovery path**
+> - Walks through the manual install sequence for cases where the agent was skipped during bootstrap or the Datadog API key was not present at first boot.
+> - Includes the SQL login creation and the handoff to the separate SQL Server integration config file.
+>
+> **Configuration layout**
+> - Calls out the key config locations on the SQL VM so it is clear which file owns host settings and which file owns the SQL Server check.
+> - Separates agent bootstrap concerns from integration concerns so troubleshooting stays targeted.
+>
+> **Operations and control**
+> - Ends with the service-management commands used to restart, inspect, and verify the agent after config changes.
+> - When to use: the goal is to make the SQL VM observable through the host package model rather than through container-specific guidance.
 
----
+> [!note]- Glossary
+>
+> **systemd service**
+> - The Linux service manager that starts, stops, and supervises the Datadog Agent on Ubuntu.
+> - It matters here because the SQL VM uses the package model, so operational control happens through `systemctl` rather than Docker commands.
+>
+> > [!info] Package-managed lifecycle
+> >
+> > If the host uses systemd, restart and status checks belong at the service layer first.
+>
+> ---
+>
+> **`datadog.yaml`**
+> - The main Datadog Agent configuration file that defines the site, API key, hostname, tags, and global features.
+> - It matters here because the SQL VM's host identity and log settings are established here before any integration-specific file is read.
+>
+> > [!info] Global agent settings
+> >
+> > Think of this file as the agent bootstrap contract; per-product integrations extend it, they do not replace it.
+>
+> ---
+>
+> **`logs_enabled`**
+> - The global switch that allows the agent to collect and forward logs.
+> - It matters here because SQL Server errorlog tailing will never work if log collection is disabled at the root config level.
+>
+> > [!tip] Logs have two gates
+> >
+> > The source config can be correct and still stay silent if the global log feature was never enabled.
+>
+> ---
+>
+> **`dd_agent` login**
+> - A dedicated SQL Server login used by Datadog to read DMVs and metadata for monitoring.
+> - It matters here because the note intentionally uses a least-privilege login instead of reusing a broader admin credential.
+>
+> > [!info] Read-only observability identity
+> >
+> > Monitoring should explain the server, not own it. Separate the collector identity from operational admin logins.
+>
+> ---
+>
+> **`VIEW SERVER STATE`**
+> - The SQL Server permission that allows reading many diagnostic DMVs and server-wide performance counters.
+> - It matters here because Datadog depends on those internal views to collect wait stats, sessions, and performance data.
+>
+> > [!tip] Minimum useful visibility
+> >
+> > Without DMV visibility, the integration can connect successfully and still report very little of diagnostic value.
+>
+> ---
+>
+> **process collection**
+> - An optional Datadog feature that inventories and reports running processes on the host.
+> - It matters here because the SQL VM config enables it to expose the server process footprint alongside system metrics.
+>
+> > [!info] Host process visibility
+> >
+> > This complements CPU and memory charts by showing which processes are actually consuming the machine.
+>
+> ---
+>
+> **integration config**
+> - A service-specific Datadog file under `conf.d` that defines how to monitor SQL Server itself.
+> - It matters here because the agent install is only the transport layer; the SQL check still needs its own config to become useful.
+>
+> > [!tip] Agent first, check second
+> >
+> > A running agent with no service integration is healthy infrastructure with missing database telemetry.
+>
+> ---
+>
+> **agent status**
+> - The Datadog diagnostic command output that lists running checks, log sources, and recent collection state.
+> - It matters here because it is the primary local proof that the SQL Server integration is active after installation or a restart.
+>
+> > [!info] Local ground truth
+> >
+> > Before blaming dashboards, inspect the local status output to confirm whether the host is collecting the signal at all.
 
 ## Automated Setup (via Startup Script)
 
@@ -58,6 +154,7 @@ GRANT VIEW ANY DEFINITION TO dd_agent;
 > `VIEW SERVER STATE` grants access to DMVs like `sys.dm_exec_sessions`, `sys.dm_os_performance_counters`, and `sys.dm_os_wait_stats`. `VIEW ANY DEFINITION` allows reading object metadata. No write permissions are granted.
 
 #### Write the SQL Server integration config to
+
 `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` — see [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) for the full config.
 
 ---
@@ -173,4 +270,3 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 - [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — Common issues including missing agent after bootstrap
 - [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) — SQL Server VM configuration reference
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — DMV queries useful for debugging SQL Server health
-

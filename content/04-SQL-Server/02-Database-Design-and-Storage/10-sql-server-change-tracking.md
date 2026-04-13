@@ -18,14 +18,108 @@ status: complete
 
 # SQL Server Change Tracking
 
-Change tracking is the discipline of recording what changed, when it changed, and, depending on the method, whether you also need the before image, after image, or a point-in-time table view. In SQL Server, the right mechanism depends on the downstream question:
+> [!abstract]- Summary
+>
+> Change tracking is the discipline of recording what changed, when it changed, and, depending on the method, whether you also need the before image, after image, or a point-in-time table view. In SQL Server, the right mechanism depends on the downstream question: full business history, engine-managed row history, every DML event for replication, or simply the list of changed primary keys since the last sync. This note grounds those decisions in the live `stoxx` database, where engine-managed features are currently off but `silver.index_dim` already follows a manual SCD2 pattern with `valid_from`, `valid_to`, `is_current`, and a filtered unique index.
+>
+> **Current feature state**
+> - starts by verifying which engine-managed change-capture features are currently enabled and what the live baseline in `stoxx` actually looks like
+>
+> **Decision surface**
+> - uses a decision matrix plus `rowversion` coverage to distinguish manual SCD2, temporal tables, CDC, Change Tracking, and external snapshot patterns
+>
+> **Method deep dives**
+> - covers manual SCD Type 2, temporal tables, Change Data Capture, Change Tracking, and external snapshot strategies with their different history and synchronization semantics
+>
+> **Anti-patterns and recommendation**
+> - closes with the anti-patterns that create false confidence and the current recommendation for `stoxx`
+>
+> **Operations and safety**
+> - Warnings: the wrong mechanism usually fails not by throwing an error, but by silently answering the wrong downstream question
+> - Recommendations: pick the feature by required history semantics, not by feature popularity; keep `rowversion` in its proper role; and verify engine state before building downstream sync logic
+> - Troubleshooting: captures the failure modes where a feature is off, misread, or answering a different question than the pipeline expects
 
-- Do you need a full business history of selected attributes
-- Do you need engine-managed row history for audit or time-travel queries
-- Do you need every insert, update, and delete event for downstream replication
-- Do you only need to know which primary keys changed since the last sync
-
-This note grounds those decisions in the live `stoxx` database. The current production state is simple: engine-managed features are not enabled, but `silver.index_dim` already follows a manual SCD2 pattern with `valid_from`, `valid_to`, `is_current`, and a filtered unique index.
+> [!note]- Glossary
+>
+> **SCD Type 2**
+> - A history pattern that keeps old versions by inserting new rows rather than overwriting the existing row.
+> - It matters because it is the current live pattern already used in `stoxx` and is the manual baseline against which engine-managed alternatives are compared.
+>
+> > [!info] Best when the business history is the product
+> >
+> > SCD2 is not just a technical change log. It is the pattern used when the modeled business history itself has value.
+>
+> ---
+>
+> **Temporal table**
+> - A system-versioned SQL Server table that automatically stores row history in a companion history table.
+> - It matters because it is the engine-managed answer when you need point-in-time row versions without hand-building the history machinery yourself.
+>
+> > [!warning] Temporal answers “what changed and when,” not every pipeline question
+> >
+> > It is excellent for row history and time travel. It is not automatically the right answer for replication feeds or selective business-history modeling.
+>
+> ---
+>
+> **Change Data Capture (CDC)**
+> - A feature that records insert, update, and delete events for downstream consumption, including before and after value context.
+> - It matters because CDC is the right class of feature when downstream systems need row-change events rather than only current-state history.
+>
+> > [!warning] CDC is an event feed, not a dimension-history pattern
+> >
+> > It captures row changes very well, but it does not automatically become a clean SCD2 design without downstream modeling work.
+>
+> ---
+>
+> **Change Tracking**
+> - A lightweight feature that records which primary keys changed since a version boundary without storing full before/after row images.
+> - It matters because it is often the most efficient option when synchronization only needs “what changed” rather than full row-change history.
+>
+> > [!warning] Lightweight means less context
+> >
+> > If the downstream system needs full before/after values, Change Tracking is the wrong feature even if it seems operationally convenient.
+>
+> ---
+>
+> **`rowversion`**
+> - A binary change token that SQL Server updates automatically when a row changes.
+> - It matters because it is often confused with broader change-tracking features even though it only solves narrow optimistic-concurrency and sync-token use cases.
+>
+> > [!warning] Not a history system
+> >
+> > `rowversion` tells you that something changed. It does not tell you what changed, what the old value was, or provide a point-in-time table view.
+>
+> ---
+>
+> **Before image / after image**
+> - The old and new row values associated with an update event.
+> - It matters because different SQL Server mechanisms preserve different amounts of this context, and the downstream use case often depends on it explicitly.
+>
+> > [!info] History questions are not all the same
+> >
+> > Some systems only need to know that a key changed. Others need the exact old and new values. The feature choice starts there.
+>
+> ---
+>
+> **Point-in-time view**
+> - The ability to ask what a table looked like at a specific past moment.
+> - It matters because temporal tables answer this cleanly, while lighter mechanisms do not.
+>
+> > [!warning] Event capture and time travel are different promises
+> >
+> > A change feed can tell you that rows changed over time without making it easy to reconstruct the full table as of one timestamp.
+>
+> ---
+>
+> **External snapshot pattern**
+> - A strategy where change history is inferred by comparing snapshots outside the core SQL Server engine-managed features.
+> - It matters because it is often the fallback or integration-friendly option when engine features are unavailable or the architecture already revolves around external storage.
+>
+> > [!warning] Simpler operationally can still mean heavier downstream logic
+> >
+> > External snapshots shift work out of SQL Server, but they also move correctness and history reconstruction into the pipeline.
+>
+> ---
 
 ---
 
@@ -66,6 +160,7 @@ Before choosing a change-capture design, inspect what the database already has e
 >
 > *This query shows whether `stoxx` currently has CDC, Change Tracking, temporal tables, or row-versioning prerequisites enabled.*
 >
+
 ```sql
 SELECT d.name AS database_name,
        d.compatibility_level,
@@ -158,6 +253,7 @@ The current `stoxx` warehouse already uses the classic SCD2 columns on `silver.i
 >
 > *This query measures whether `silver.index_dim` is currently using its SCD2 columns as a real history table or only as a current-state dimension with SCD2-compatible structure.*
 >
+
 ```sql
 SELECT total_rows = COUNT(*),
        current_rows = SUM(CASE WHEN is_current = 1 THEN 1 ELSE 0 END),
@@ -191,6 +287,7 @@ _`silver.index_dim` is structurally an SCD2 table, but operationally it is still
 >
 > *This query previews the newest live dimension rows in `silver.index_dim` and shows how the current table stores active versions.*
 >
+
 ```sql
 SELECT TOP (8)
        _index,
@@ -241,6 +338,7 @@ _These rows confirm the table is currently storing only active versions. The `va
 >
 > *This query verifies that `silver.index_dim` enforces one active version per business key with a filtered unique index.*
 >
+
 ```sql
 SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
        OBJECT_NAME(i.object_id) AS table_name,
@@ -371,6 +469,7 @@ It is the wrong fit when:
 >
 > *This query checks whether `stoxx` currently uses `rowversion` anywhere as a change token.*
 >
+
 ```sql
 SELECT COUNT(*) AS rowversion_column_count,
        COUNT(DISTINCT object_id) AS tables_with_rowversion
@@ -410,6 +509,7 @@ _`stoxx` does not currently use `rowversion` in any table, which is consistent w
 >
 > *This batch shows how a `rowversion` token changes automatically after one row update and how a consumer can compare the current token to an earlier snapshot.*
 >
+
 ```sql
 IF OBJECT_ID('dbo.demo_rowversion_delta', 'U') IS NOT NULL
     DROP TABLE dbo.demo_rowversion_delta;
@@ -519,6 +619,7 @@ Manual SCD2 is especially strong when:
 >
 > *This batch demonstrates a complete manual SCD2 rollover on a disposable table and returns the final history chain.*
 >
+
 ```sql
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
@@ -633,6 +734,7 @@ Temporal tables are strongest when:
 >
 > *This batch demonstrates a real temporal-table update and returns the combined current-plus-history view through `FOR SYSTEM_TIME ALL`.*
 >
+
 ```sql
 IF OBJECT_ID('dbo.demo_temporal_security_history', 'U') IS NOT NULL
     DROP TABLE dbo.demo_temporal_security_history;
@@ -784,6 +886,7 @@ CDC is the right fit when:
 >
 > *This batch enables CDC, creates a demo table, enrolls it, and makes changes for capture.*
 >
+
 ```sql
 EXEC sys.sp_cdc_enable_db;
 GO
@@ -846,6 +949,7 @@ EXEC sys.sp_cdc_scan;
 >
 > *This query reads all captured CDC changes for the demo capture instance.*
 >
+
 ```sql
 DECLARE @from_lsn binary(10) = sys.fn_cdc_get_min_lsn('dbo_demo_cdc_instrument');
 DECLARE @to_lsn   binary(10) = sys.fn_cdc_get_max_lsn();
@@ -879,6 +983,7 @@ _The three rows map directly to the three DML statements: `__$operation = 4` is 
 >
 > *This query reads net CDC changes for the same LSN interval, showing one row per key.*
 >
+
 ```sql
 DECLARE @from_lsn binary(10) = sys.fn_cdc_get_min_lsn('dbo_demo_cdc_instrument');
 DECLARE @to_lsn   binary(10) = sys.fn_cdc_get_max_lsn();
@@ -978,6 +1083,7 @@ CT is strongest when:
 >
 > *This batch enables CT, creates a demo table, enrolls it, and makes changes for tracking.*
 >
+
 ```sql
 ALTER DATABASE stoxx
 SET CHANGE_TRACKING = ON
@@ -1039,6 +1145,7 @@ WHERE symbol = 'TTE.PA';
 >
 > *This query reads CT changed keys since version 0 (baseline).*
 >
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
@@ -1070,6 +1177,7 @@ _CT returns one row per changed primary key with the operation code but no row d
 >
 > *This query joins CT changed keys to the base table to produce the full sync payload.*
 >
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
@@ -1129,6 +1237,7 @@ _The joined output shows the core CT consumption pattern. For the update (`U`) a
 >
 > *This query validates whether a stored CT watermark is still inside the retained change window before the consumer reads `CHANGETABLE` rows.*
 >
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
@@ -1377,4 +1486,3 @@ Common errors and failure modes across change-capture mechanisms in SQL Server.
   - `Building Medallion Architectures.pdf` — change-detection as a first-class design decision
   - `SQL Server Advanced Troubleshooting and Performance Tuning.epub` — version store monitoring, ADR/PVS for temporal coexistence
   - `Fundamentals of Data Engineering.epub`
-

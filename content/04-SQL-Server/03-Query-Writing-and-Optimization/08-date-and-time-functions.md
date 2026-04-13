@@ -10,9 +10,161 @@ status: complete
 
 # Date and Time Functions
 
-SQL Server's temporal layer is a collection of data types, conversion rules, arithmetic functions, time-zone operators, and formatting helpers — each with subtle rounding, precision, and locale behaviours that reward careful use and punish sloppy use. This note is the canonical T-SQL reference for temporal operations: how to pick the right type, how to produce current time, how to do arithmetic without crossing the boundary-counting trap, how to handle time zones and daylight saving, how to write SARGable date predicates, and how to build the period-boundary patterns (last 7 days, current month, year-to-date) that appear in every reporting query.
+> [!abstract]- Summary
+>
+> Temporal work in SQL Server is a type, arithmetic, and boundary problem before it is a formatting problem: this note maps the core date and time types, shows their behavior against the local `stoxx` database, and establishes the production patterns for current timestamps, safe arithmetic, zone conversion, and SARGable reporting windows.
+>
+> **Temporal types**
+> - covers `date`, `time`, `datetime2`, `datetimeoffset`, and the legacy `datetime` / `smalldatetime` types, with guidance on naive versus zone-aware storage
+>
+> **Current time and arithmetic**
+> - covers current-time functions, `DATEADD`, `DATEDIFF`, and `DATEDIFF_BIG`, including the difference between boundary counting and elapsed duration intuition
+>
+> **Date parts and construction**
+> - covers `DATEPART`, `DATENAME`, `DATEFROMPARTS`, and other parts-based constructors for building and decomposing timestamps without string parsing
+>
+> **Boundaries and literals**
+> - covers `EOMONTH`, period windows, ISO 8601 literals, and locale-safe parsing patterns
+>
+> **Time zones and DST**
+> - covers `AT TIME ZONE`, Windows time-zone names, daylight-saving transitions, and UTC-versus-local storage rules
+>
+> **Practical date patterns**
+> - covers last-N-day, current-month, year-to-date, point-in-time, and SCD-2-style validity-window patterns built with half-open predicates
+>
+> **Operations and safety**
+> - Warnings: legacy `datetime` rounds unexpectedly, boundary-counting functions are easy to misread, manual offset arithmetic breaks around DST, non-ISO literals are locale-sensitive, and functions on the column side of a date predicate kill seekability
+> - Recommendations: default to `datetime2` or `datetimeoffset`, write timestamps with `SYSUTCDATETIME()`, use ISO 8601 literals, construct values with `...FROMPARTS`, filter with half-open ranges, and convert time zones with `AT TIME ZONE` instead of manual math
 
-Every demo in this note runs against the local `stoxx` database and shows its real output.
+> [!note]- Glossary
+>
+> **Naive temporal type**
+> - A date or time type such as `date`, `time`, or `datetime2` that stores wall-clock values without any attached UTC offset or time-zone identity.
+> - It matters because most SQL Server timestamps are stored this way, which makes the storage compact but pushes zone interpretation onto application or query logic.
+>
+> > [!warning] Naive does not mean UTC
+> >
+> > A `datetime2` value has no built-in knowledge of timezone. If the business contract says “this column is UTC,” that meaning lives in design discipline, not in the type itself.
+>
+> ---
+>
+> **`datetimeoffset`**
+> - The SQL Server temporal type that stores a local timestamp together with an explicit UTC offset.
+> - It matters because it is the only native type in the note that preserves offset information as data rather than as a convention.
+>
+> > [!info] Offset is stored, zone identity is not
+> >
+> > `datetimeoffset` remembers `+01:00` or `-05:00`, but not the daylight-saving rules of a named zone. Zone-aware conversion still requires a time-zone table or `AT TIME ZONE`.
+>
+> ---
+>
+> **`SYSUTCDATETIME()`**
+> - The current-timestamp function that returns the server’s current UTC time as `datetime2`.
+> - It matters because it is the production-safe default for audit columns, ETL stamps, and cross-zone event capture.
+>
+> > [!warning] Local server time is not a safe baseline
+> >
+> > `GETDATE()` reflects local server time, which makes cross-region reasoning harder and daylight-saving transitions more fragile. UTC timestamps are the stable operational default.
+>
+> ---
+>
+> **`DATEADD`**
+> - The function that shifts a temporal value by a specified number of units such as days, months, or minutes.
+> - It matters because safe reporting windows and period boundaries are usually built by adding to a known anchor rather than by parsing strings.
+>
+> > [!info] Use arithmetic on anchors, not string assembly
+> >
+> > `DATEADD` pairs naturally with half-open ranges and `...FROMPARTS` constructors. Together they produce clear, index-friendly date windows.
+>
+> ---
+>
+> **`DATEDIFF` / `DATEDIFF_BIG`**
+> - Functions that count how many datepart boundaries were crossed between two timestamps, with `DATEDIFF_BIG` returning a wider integer type.
+> - It matters because readers often mistake boundary counting for true elapsed-duration measurement.
+>
+> > [!warning] Boundary count is not elapsed time
+> >
+> > Crossing midnight by one second and by twenty-three hours both count as one day boundary. That is correct for calendar logic and wrong for duration intuition unless used carefully.
+>
+> ---
+>
+> **Date part**
+> - A named calendar or clock component such as year, month, day, hour, or ISO week used by SQL Server date functions.
+> - It matters because temporal arithmetic and extraction both depend on choosing the correct unit of meaning.
+>
+> > [!info] Part choice encodes business semantics
+> >
+> > “Month” means calendar-month boundaries, not thirty days. The selected datepart often defines the real business rule more than the surrounding function call.
+>
+> ---
+>
+> **`DATEFROMPARTS`**
+> - A constructor that builds a `date` value from separate year, month, and day integers.
+> - It matters because parts-based constructors are safer and clearer than string concatenation for building temporal values.
+>
+> > [!warning] Constructors beat parsing
+> >
+> > When the components already exist as numbers, assembling a string just to parse it again adds locale risk and unnecessary conversion work.
+>
+> ---
+>
+> **ISO 8601 literal**
+> - A locale-independent text representation of a date or timestamp, such as `'2025-04-08'` or `'2025-04-08T14:30:00+02:00'`.
+> - It matters because SQL Server parses these forms consistently across language and regional settings.
+>
+> > [!warning] Ambiguous date strings are environment-dependent
+> >
+> > Formats like `04/08/2025` can mean different things under different session settings. ISO 8601 avoids that class of bug entirely.
+>
+> ---
+>
+> **Half-open date range**
+> - A time window written as `>= start AND < end` so the upper bound is exclusive.
+> - It matters because this is the canonical safe filter form for `datetime` and `datetime2` columns.
+>
+> > [!warning] Inclusive end dates are precision traps
+> >
+> > An inclusive end boundary is easy to mis-size when fractional seconds exist. Half-open ranges avoid silent exclusion of late-in-the-day rows.
+>
+> ---
+>
+> **SARGable date predicate**
+> - A temporal filter written so SQL Server can seek on the underlying index instead of computing a function on every row.
+> - It matters because reporting queries often become slow only because the column is wrapped in `YEAR()`, `CAST()`, or `DATEDIFF(...)`.
+>
+> > [!warning] Functions belong on constants, not on columns
+> >
+> > Rewriting the boundary once is cheap. Recomputing a function for every row on the indexed column side usually forces a scan.
+>
+> ---
+>
+> **`AT TIME ZONE`**
+> - The SQL Server operator that interprets or converts a timestamp using a Windows time-zone definition and returns a `datetimeoffset`.
+> - It matters because it is the built-in safe mechanism for timezone-aware conversion without hard-coding offsets.
+>
+> > [!warning] Use zone rules, not manual offsets
+> >
+> > A fixed `+01:00` or `-05:00` offset is not a full time-zone model. Daylight-saving transitions make manual offset math incorrect for real-world local time.
+>
+> ---
+>
+> **Daylight saving transition**
+> - A clock shift in a local time zone that creates repeated or skipped local times during the year.
+> - It matters because ambiguous and nonexistent local timestamps are where many timezone bugs surface.
+>
+> > [!danger] Local timestamps can be ambiguous or impossible
+> >
+> > During a DST fall-back hour, one local wall-clock time can occur twice. During a spring-forward gap, some local times never occur at all.
+>
+> ---
+>
+> **Validity window**
+> - A pair of timestamps, often `valid_from` and `valid_to`, that define when a row is considered active.
+> - It matters because SCD-2, audit, and point-in-time query patterns all depend on correct half-open temporal intervals.
+>
+> > [!info] Point-in-time logic is interval logic
+> >
+> > A row is active when the as-of timestamp falls inside its validity window. Half-open interval patterns keep that test deterministic and overlap-safe.
 
 ## Date and Time Data Types
 

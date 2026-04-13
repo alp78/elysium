@@ -14,19 +14,164 @@ status: complete
 
 # sqlcmd Connection and Usage
 
-`sqlcmd` is the primary SQL Server command-line client for automation and emergency operations. It gives you a direct, scriptable path into SQL Server without SSMS, which makes it the tool of record for backup scripts, restore drills, health checks, deployments, and last-mile diagnostics whenever you need an exact exit code and a reproducible command line. This note covers the six operational surfaces that matter most in production: identifying the installed client, authenticating safely, shaping encryption, running scripts with variables, trapping errors with correct exit codes, and reaching the server through the Dedicated Admin Connection when the normal workload endpoint is unresponsive. Every command is captured live against the local `stoxx` Developer-Edition instance running in Docker.
-
-> [!abstract] What this note covers
+> [!abstract]- Summary
 >
-> - **Client identification.** Classic ODBC `sqlcmd` vs `go-sqlcmd`, plus the PowerShell `Invoke-Sqlcmd` alternative.
-> - **Authentication.** SQL auth, `SQLCMDPASSWORD` env var, Windows integrated, Microsoft Entra ID (`-G`), and Always Encrypted (`-g`).
-> - **Encryption.** `-N s|m|o` strict/mandatory/optional modes, certificate trust (`-C`), and hostname-in-certificate override (`-F`).
-> - **Script execution.** Inline `-Q`, file `-i`, SQLCMD interactive commands (`:r`, `:setvar`, `:Listvar`, `:Connect`, `:!!`).
-> - **Error handling.** `-b` fail-fast, `-V` severity floor, `-r 0|1` stderr routing, and `$LASTEXITCODE` verification.
-> - **Output shaping.** `-s` delimiter, `-W` trim, `-h -1` headerless, `-y`/`-Y` column widths, `-o` file redirect.
-> - **Dedicated Admin Connection.** Local-only DAC listener, `remote admin connections` sp_configure, Docker-exec pattern, and `sys.dm_exec_connections.endpoint_id = 1` verification.
+> Covers production `sqlcmd` usage as the scriptable, exit-code-reliable SQL Server command-line surface for automation, incident response, and last-mile diagnostics outside SSMS. Every example is grounded on the local `stoxx` Developer Edition instance running in Docker, and the note exists to make the operational boundary explicit: know which client variant you are using, how it authenticates and encrypts, how it fails, and how it behaves when the normal workload endpoint is no longer trustworthy.
+>
+> **Current Environment**
+> - Identify the installed client variant before writing automation: classic ODBC `sqlcmd`, `go-sqlcmd`, or the PowerShell `Invoke-Sqlcmd` alternative
+> - Capture the exact binary, module source, and flag surface of the current host so later scripts target the correct semantics instead of assuming cross-host parity
+>
+> **Authentication And Connection**
+> - Use SQL authentication, `SQLCMDPASSWORD`, Windows integrated authentication, Microsoft Entra ID (`-G`), and Always Encrypted (`-g`) appropriately for the target environment
+> - Shape transport security with `-N s|m|o`, certificate trust via `-C`, and hostname-in-certificate override via `-F` so connection encryption is deliberate rather than inherited from defaults
+>
+> **Script And Variable Execution**
+> - Run inline batches with `-Q`, files with `-i`, and SQLCMD scripting commands such as `:r`, `:setvar`, `:Listvar`, `:Connect`, and `:!!` for repeatable operational scripts
+>
+> **Error Handling And Exit Codes**
+> - Use `-b`, `-V`, and `-r 0|1` correctly so severity thresholds, stderr routing, and `$LASTEXITCODE` behave predictably in automation and health-check pipelines
+>
+> **Output Shaping**
+> - Control delimiters, trailing spaces, headers, width, and file output with `-s`, `-W`, `-h -1`, `-y`, `-Y`, and `-o` so `sqlcmd` output is consumable by downstream tools instead of only by humans
+>
+> **Dedicated Admin Connection**
+> - Reach the server through DAC when the normal endpoint is unresponsive, including local-only defaults, `remote admin connections`, Docker-exec access patterns, and `endpoint_id = 1` verification
+>
+> **sqlcmd Flag Reference**
+> - Keep the final flag reference as the compact lookup surface once the connection, execution, and failure semantics are already understood
 
----
+> [!note]- Glossary
+>
+> **`sqlcmd`**
+> - The primary SQL Server command-line client used to connect, run T-SQL, shape output, and return deterministic process exit codes.
+> - It matters because it is the lowest-friction operational interface for automation, emergency diagnostics, backup/restore scripting, and connectivity verification outside GUI tooling.
+>
+> > [!warning] Name alone is ambiguous
+> >
+> > `sqlcmd` can refer to two different Microsoft clients with overlapping but non-identical flag surfaces. Always identify the actual binary before scripting against it.
+>
+> ---
+>
+> **ODBC `sqlcmd`**
+> - The classic SQL Server command-line client that uses the Microsoft ODBC driver and the long-established flag surface.
+> - It matters because many production scripts still assume ODBC `sqlcmd` behavior, including specific flag semantics around encryption, regional settings, and legacy compatibility.
+>
+> > [!info] Legacy does not mean irrelevant
+> >
+> > ODBC `sqlcmd` remains the operational baseline on many estates, especially where older automation and SQL Server tooling are still standard.
+>
+> ---
+>
+> **`go-sqlcmd`**
+> - The Go-based Microsoft SQL Server CLI that shares the `sqlcmd` name but introduces a different implementation and a partially different feature surface.
+> - It matters because flag mismatches between ODBC `sqlcmd` and `go-sqlcmd` are a common source of "works on one host, fails on another" incidents.
+>
+> > [!warning] Similar surface, different behavior
+> >
+> > Do not assume ODBC-only flags such as `-I`, `-M`, or `-R` behave the same under `go-sqlcmd`. Some are ignored or replaced by different options.
+>
+> ---
+>
+> **`Invoke-Sqlcmd`**
+> - The PowerShell cmdlet alternative to `sqlcmd.exe`, returning typed objects instead of plain-text tabular output.
+> - It matters because PowerShell-first automation often benefits more from object pipelines than from shelling out to a text-based CLI and reparsing the result.
+>
+> > [!info] Better fit for object pipelines
+> >
+> > If the consumer is already PowerShell, `Invoke-Sqlcmd` can remove an entire layer of fragile text parsing from the workflow.
+>
+> ---
+>
+> **`SQLCMDPASSWORD`**
+> - The environment variable used by `sqlcmd` to supply a SQL login password without placing it directly on the command line.
+> - It matters because it is one of the simplest ways to reduce password exposure in automation while still using SQL authentication.
+>
+> > [!warning] Better than inline, not magic
+> >
+> > An environment variable is safer than a literal `-P` in shell history, but it is still a credential boundary that must be cleared, scoped, and protected appropriately.
+>
+> ---
+>
+> **Encryption mode `-N s|m|o`**
+> - The `sqlcmd` flag that controls whether transport encryption is strict, mandatory, or optional.
+> - It matters because connection success and certificate-validation behavior depend heavily on how encryption is negotiated at the client side.
+>
+> > [!warning] Defaults changed across versions
+> >
+> > The default encryption behavior differs between client generations and SQL Server releases. Assuming the old default can create silent security drift.
+>
+> ---
+>
+> **Certificate trust / `-C`**
+> - The `sqlcmd` switch that tells the client to trust the server certificate during encrypted connections.
+> - It matters because internal or lab environments often use certificates that are not fully trusted by the client chain, and automation still has to decide how to proceed.
+>
+> > [!warning] Trust bypass is still a security decision
+> >
+> > `-C` is operationally useful, but it weakens certificate validation. Use it deliberately, not as a blind connectivity fix.
+>
+> ---
+>
+> **Hostname-in-certificate override / `-F`**
+> - The `sqlcmd` option that supplies the expected hostname when the server certificate subject does not match the connection target directly.
+> - It matters because TLS validation can fail even when the server is healthy if the certificate naming and the operational endpoint naming differ.
+>
+> > [!info] Useful in indirection-heavy estates
+> >
+> > Load balancers, aliases, and containerized hosts often expose names that do not match the certificate CN or SAN directly. `-F` exists for that gap.
+>
+> ---
+>
+> **Inline batch / `-Q` and file input / `-i`**
+> - The two primary `sqlcmd` execution modes: run a one-off batch from the command line or execute a saved script file.
+> - It matters because operational automation often pivots between quick diagnostics and repeatable deployment or maintenance scripts.
+>
+> > [!info] Choose by repeatability
+> >
+> > `-Q` is ideal for concise diagnostics and health checks. `-i` is the safer pattern once the logic deserves version control and review.
+>
+> ---
+>
+> **SQLCMD scripting commands**
+> - The interactive or file-scoped meta-commands such as `:r`, `:setvar`, `:Listvar`, `:Connect`, and `:!!` that extend `sqlcmd` beyond pure T-SQL.
+> - It matters because complex operational scripts often depend on file inclusion, variable substitution, and shell escapes in addition to the SQL itself.
+>
+> > [!warning] These are client commands, not T-SQL
+> >
+> > SQLCMD scripting commands are interpreted by the client before SQL Server sees the batch. That distinction matters when debugging unexpected behavior.
+>
+> ---
+>
+> **Fail-fast / `-b`, severity floor / `-V`, stderr routing / `-r`**
+> - The main `sqlcmd` controls that decide when errors should fail the process, which severities count, and where messages are emitted.
+> - It matters because automation reliability depends on correct process failure and log routing, not just on whether the query text executed.
+>
+> > [!warning] Exit-code handling must be verified, not assumed
+> >
+> > A script that prints an error but exits `0` is operationally broken. Always test how `-b`, `-V`, and `$LASTEXITCODE` interact on the actual client variant in use.
+>
+> ---
+>
+> **Dedicated Admin Connection (DAC)**
+> - The special SQL Server connection path intended for emergency administration when the normal workload endpoint is saturated or unresponsive.
+> - It matters because DAC is often the only reliable way to regain operational visibility when the server appears unreachable through ordinary client paths.
+>
+> > [!warning] Local-only by default
+> >
+> > DAC is usually restricted to loopback unless `remote admin connections` is enabled. Incident procedures must know which mode the instance actually allows.
+>
+> ---
+>
+> **`remote admin connections`**
+> - The instance-level setting that controls whether DAC can be reached remotely rather than only from the local host.
+> - It matters because remote DBA response during an outage may depend on this single configuration choice.
+>
+> > [!warning] Operational value versus exposure
+> >
+> > Remote DAC can save an incident, but it is still an administrative surface and should be enabled with network and permission controls in mind.
+>
+> ---
 
 ## Current Environment
 
@@ -69,6 +214,7 @@ This subsection verifies which client is installed on the current machine, decod
 >
 > *This command prints the installed sqlcmd banner and flag surface.*
 >
+
 ```powershell
 sqlcmd -?
 ```
@@ -155,6 +301,7 @@ The PowerShell `Invoke-Sqlcmd` cmdlet is the object-oriented alternative to `sql
 >
 > *This command reports whether `Invoke-Sqlcmd` is installed and which module provides it.*
 >
+
 ```powershell
 if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
     Get-Command Invoke-Sqlcmd | Select-Object Name, Source, Version
@@ -245,6 +392,7 @@ SQL authentication is the simplest path to prove connectivity. Its footgun is cr
 >
 > *This command opens a SQL-authenticated session, executes a probe query, and exits.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -Q "SELECT DB_NAME() AS current_database;"
 ```
@@ -274,6 +422,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -Q "SELECT DB_N
 >
 > *This command authenticates via `SQLCMDPASSWORD` without exposing the secret on the command line.*
 >
+
 ```powershell
 $env:SQLCMDPASSWORD = 'EsgDev2026Pass1'
 sqlcmd -S localhost,1434 -U sa -d master -C -W -Q "SELECT SUSER_SNAME() AS logged_in_as, DB_NAME() AS current_db;"
@@ -306,6 +455,7 @@ Windows integrated authentication is the right default for domain-joined hosts t
 >
 > *This command connects with the current Windows identity and proves the authenticated principal.*
 >
+
 ```powershell
 sqlcmd -S <prod-sql-server> -E -d master -C -Q "SELECT SUSER_SNAME() AS windows_principal, ORIGINAL_LOGIN() AS original_login;"
 ```
@@ -338,6 +488,7 @@ CONTOSO\svc_sqlcmd_ops                         CONTOSO\svc_sqlcmd_ops
 >
 > *This command opens an interactive Entra login against an Azure SQL Database.*
 >
+
 ```powershell
 sqlcmd -S myserver.database.windows.net -d esg_prod -G -U alice@contoso.onmicrosoft.com -l 30 -N s -Q "SELECT CURRENT_USER AS current_user, DB_NAME() AS db;"
 ```
@@ -379,6 +530,7 @@ SQL Server 2025 (17.x) changed the default encryption posture of `sqlcmd`. Previ
 >
 > *This command attempts a strict-encryption connection against the self-signed container and expects failure.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -N s -Q "SELECT 1 AS strict_encrypt_ok;"
 ```
@@ -432,6 +584,7 @@ Beyond the one-shot `-Q` query, `sqlcmd` runs on two very different models: non-
 >
 > *This command runs a versioned health-check script against the instance and captures both result sets.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\health-check.sql"
 ```
@@ -463,6 +616,7 @@ online_user_dbs
 >
 > *This command runs a main script that `:r`-includes a variables file and substitutes the resulting variables into a query.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\main.sql"
 ```
@@ -505,6 +659,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C
 >
 > *This command defines a SQLCMD variable and proves the client substitutes it before the batch reaches SQL Server.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q 'SET NOCOUNT ON; SELECT ''$(dbname)'' AS sqlcmd_variable_value;' -v dbname="stoxx"
 ```
@@ -571,6 +726,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q
 >
 > *This command runs a script that deliberately raises a severity-16 error and proves the exit code.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\deploy.sql"
 $LASTEXITCODE
@@ -648,6 +804,7 @@ Most `sqlcmd` automation either wants human-readable console output or machine-f
 >
 > *This command exports a top-5 EuroStoxx 50 slice as a pipe-delimited file with no header row.*
 >
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -Q "SET NOCOUNT ON; SELECT TOP (5) symbol, [date], [close] FROM silver.eurostoxx50_ohlcv ORDER BY [date] DESC, symbol;" -s "|" -W -h-1 -o "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\export.txt"
 Get-Content "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\export.txt"
@@ -798,6 +955,7 @@ docker exec stoxx-db bash -c 'grep -i "dedicated admin" /var/opt/mssql/log/error
 >
 > *This command opens a DAC session inside the container and queries `sys.dm_exec_connections` to prove the session is routed through the DAC endpoint.*
 >
+
 ```powershell
 docker exec stoxx-db /opt/mssql-tools18/bin/sqlcmd -S "admin:127.0.0.1" -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -Q "SELECT s.session_id, s.login_name, c.endpoint_id, CASE c.endpoint_id WHEN 1 THEN 'DAC' ELSE 'Regular' END AS endpoint_kind FROM sys.dm_exec_sessions s INNER JOIN sys.dm_exec_connections c ON s.session_id = c.session_id WHERE s.session_id = @@SPID;"
 ```

@@ -10,16 +10,276 @@ updated: 2026-04-12
 status: complete
 ---
 
-# BigQuery Dataset and Table Management
+# Dataset and Table Management
 
 > [!quote] Kurt Bollacker on Data Stewardship
 > "Data that is loved tends to survive."
 >
 > — **Kurt Bollacker**, data scientist and engineer
 
-BigQuery is Google's serverless data warehouse. It can scan petabytes in seconds and requires zero infrastructure management. Pricing is per-TB scanned on-demand — see [BigQuery pricing](https://cloud.google.com/bigquery/pricing) for current rates. The `bq` CLI (installed with the Cloud SDK) is the command-line interface for all BigQuery operations: listing resources, inspecting schemas, creating structures, and deleting objects. The most consequential configuration decisions — dataset location, partitioning strategy, and clustering columns — must be made at creation time and cannot be changed later.
-
-**Prerequisites:** `bigquery.googleapis.com` must be enabled on the project (`gcloud services enable bigquery.googleapis.com`). The `bq` CLI is bundled with the [Google Cloud SDK](https://cloud.google.com/sdk). Callers need `roles/bigquery.metadataViewer` for read operations and `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` for write operations.
+> [!abstract]- Summary
+>
+> Covers BigQuery dataset and table lifecycle with the Cloud SDK `bq` CLI and `INFORMATION_SCHEMA`, so you can inventory resources, inspect schemas and storage metadata, choose immutable physical layout settings at creation time, preview data, estimate scan cost, and delete safely.
+>
+> **Inventory and inspection**
+> - Prerequisites: enable `bigquery.googleapis.com`, use the Cloud SDK `bq` CLI, and grant `roles/bigquery.metadataViewer` for reads plus `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` or `roles/bigquery.dataOwner` / `roles/bigquery.admin` for write operations
+> - Use `bq ls` to enumerate datasets, tables, views, and materialized views, including `Time Partitioning` and `Clustered Fields` in dataset inventory output
+> - Use `bq show --schema` and `bq show --format=prettyjson` to inspect column definitions and table or dataset fields such as `numRows`, `numBytes`, `numActiveLogicalBytes`, `numTimeTravelPhysicalBytes`, `location`, `expirationTime`, `timePartitioning`, `clustering`, and `maxTimeTravelHours`
+> - Use `INFORMATION_SCHEMA.SCHEMATA`, `TABLES`, and `COLUMNS` for region-wide or dataset-wide metadata audits without scanning user data
+>
+> **Provisioning and lifecycle**
+> - Create datasets with `bq mk --dataset`, setting immutable `--location` plus optional `--default_table_expiration`, `--default_partition_expiration`, `--max_time_travel_hours`, `--storage_billing_model`, descriptions, and labels
+> - Create tables with inline schemas or JSON schema files, plus immutable `--time_partitioning_field`, `--time_partitioning_type`, and `--clustering_fields`, optional `--require_partition_filter`, and scratch-table TTLs with `--expiration`
+> - Use `bq update` for additive schema changes and metadata edits, `bq cp` for backups and same-region copies, and `bq rm` for table or dataset teardown
+>
+> **Data preview and type reference**
+> - Use `bq head` for free row previews that do not create query jobs, and `bq query --dry_run` to validate SQL and estimate bytes scanned before execution
+> - The note maps schema `mode` values (`NULLABLE`, `REQUIRED`, `REPEATED`) and core types including `INT64` / `INTEGER`, `FLOAT64` / `FLOAT`, `NUMERIC`, `BIGNUMERIC`, `JSON`, `GEOGRAPHY`, and `STRUCT` / `RECORD`
+>
+> **Operations and safety**
+> - When to use: BigQuery onboarding, schema validation, region and IAM audits, physical-layout planning, backup or recovery preparation, and cost estimation before running queries
+> - Warnings: dataset `--location` is permanent, partitioning and clustering are immutable after table creation, deletions are bounded by `maxTimeTravelHours`, and point-in-time recovery fails if the same table ID has been recreated
+> - Recommendations table: prefer explicit locations, partition time-series tables by `DATE` / `TIMESTAMP`, cluster on common filter columns, require partition filters on large partitioned tables, use TTLs for scratch objects, and dry-run expensive SQL before execution
+>
+> [!note]- Glossary
+>
+> **BigQuery**
+> - Google Cloud's serverless analytical database service for storing columnar datasets, tables, and views and running SQL or administrative operations without user-managed infrastructure.
+> - Every command, metadata field, retention rule, and cost boundary in this note is specific to BigQuery behavior.
+>
+> > [!info] Metadata calls are free
+> >
+> > `bq ls`, `bq show`, `bq head`, and `INFORMATION_SCHEMA` metadata queries do not bill for user-data scans, but storage and executed query jobs still have cost implications.
+>
+> ---
+>
+> **`bq`**
+> - The command-line client bundled with the Google Cloud SDK for BigQuery administration, metadata inspection, querying, loading, copying, and deletion.
+> - The note uses `bq` as the operational surface for every example: `ls`, `show`, `mk`, `update`, `cp`, `rm`, `head`, and `query`.
+>
+> > [!warning] Project context is implicit
+> >
+> > Unqualified resource names resolve against the active `gcloud` project unless you pass `--project_id`. Running a write command in the wrong project is a common operator mistake.
+>
+> ---
+>
+> **GCP project**
+> - A top-level Google Cloud administrative container that owns APIs, billing, IAM policy, and BigQuery datasets.
+> - Dataset and table IDs are only unique within a project, so the note repeatedly distinguishes active-project behavior from explicit `--project_id` targeting.
+>
+> > [!info] APIs are project-scoped
+> >
+> > Enabling `bigquery.googleapis.com` happens at the project level. If the API is disabled, even correctly scoped `bq` commands fail before they reach dataset or table logic.
+>
+> ---
+>
+> **Medallion architecture**
+> - A layered data-modeling pattern that separates raw ingestion, cleaned data, and serving-ready data into bronze, silver, and gold datasets.
+> - The note's example datasets (`stoxx_bronze`, `stoxx_silver`, `stoxx_gold`) use this pattern to illustrate why dataset naming and table placement matter operationally.
+>
+> > [!info] Storage boundary, not security boundary
+> >
+> > Bronze, silver, and gold names communicate data maturity, but access control still depends on IAM and dataset ACLs rather than naming alone.
+>
+> ---
+>
+> **Dataset**
+> - A BigQuery namespace that groups tables, views, routines, location settings, ACLs, default expirations, and time-travel configuration inside a project.
+> - Dataset-level decisions in this note, especially region and default retention, shape every table created underneath it.
+>
+> > [!warning] Region is inherited
+> >
+> > Every table in a dataset inherits the dataset location. You cannot place one table in `europe-west1` and another in `US` inside the same dataset.
+>
+> ---
+>
+> **Table**
+> - A physical BigQuery storage object with a schema, row data, metadata, and optional partitioning, clustering, expiration, or encryption settings.
+> - Most lifecycle commands in the note create, inspect, copy, preview, or delete tables rather than query results alone.
+>
+> > [!info] Physical object semantics
+> >
+> > BigQuery tables carry storage statistics such as `numRows` and `numBytes`, which do not exist for logical-only objects in the same way.
+>
+> ---
+>
+> **View**
+> - A saved SQL definition that returns query results without storing the result rows as a standalone physical table.
+> - `bq ls` and `INFORMATION_SCHEMA.TABLES` show views alongside tables, so the note distinguishes object type before interpreting storage fields.
+>
+> > [!warning] Metadata differs from tables
+> >
+> > Views can be listed and described like tables, but row counts and storage-byte fields are not meaningful in the same way because the data lives in referenced source tables.
+>
+> ---
+>
+> **Materialized view**
+> - A BigQuery view type that stores precomputed query results and refreshes them incrementally under BigQuery-managed rules.
+> - The note includes materialized views in inventory output because they behave like a separate resource class when auditing dataset contents.
+>
+> > [!info] Logical and physical hybrid
+> >
+> > A materialized view is defined by SQL like a view but has storage characteristics more like a table, which is why its type matters during inspection.
+>
+> ---
+>
+> **Schema**
+> - The declared column structure of a table: names, data types, nullability modes, descriptions, and nested fields for `STRUCT` columns.
+> - Schema validation is central to the note because loads, queries, updates, and downstream models all depend on exact column definitions.
+>
+> > [!warning] Inline schemas are limited
+> >
+> > Simple `name:TYPE` inline schemas are convenient, but nested fields and repeated records usually require a JSON schema file for precise declaration.
+>
+> ---
+>
+> **Metadata**
+> - Descriptive information about a BigQuery resource rather than its user rows, such as location, row count, size, creation time, partitioning, clustering, and expiration settings.
+> - The note uses metadata inspection to answer operational questions about inventory, capacity, retention, and recovery boundaries without scanning table data.
+>
+> > [!info] Different surfaces expose it
+> >
+> > `bq show` returns one resource at a time, while `INFORMATION_SCHEMA` lets you filter and aggregate metadata across many resources with SQL.
+>
+> ---
+>
+> **Dataset location / `--location`**
+> - The region or multi-region where a dataset and all of its tables physically reside, such as `europe-west1`, `EU`, or `US`.
+> - Location drives compliance, cross-region query feasibility, and where every downstream job against the dataset must execute.
+>
+> > [!danger] Permanent after creation
+> >
+> > BigQuery does not support in-place dataset relocation. Moving data to a different region requires export, transfer, and reload into a new dataset.
+>
+> ---
+>
+> **IAM role**
+> - A named Google Cloud permission bundle such as `roles/bigquery.metadataViewer`, `roles/bigquery.dataEditor`, `roles/bigquery.dataOwner`, or `roles/bigquery.jobUser`.
+> - The note maps read, write, and job-submission commands to required roles so operators know whether a failure is about authorization rather than syntax.
+>
+> > [!warning] Read and execute are separate
+> >
+> > Being able to inspect table metadata does not automatically let you run query jobs or create tables. BigQuery often splits visibility rights from mutation and job rights.
+>
+> ---
+>
+> **Partitioning**
+> - A table-layout feature that divides table storage into segments by a partition key or ingestion time so queries can prune irrelevant partitions.
+> - The note treats partitioning as one of the main cost and performance levers because bytes scanned depend heavily on whether filters hit the partition boundary.
+>
+> > [!warning] Choice is front-loaded
+> >
+> > Partition keys and granularity are immutable after table creation in the CLI workflow shown here. A bad choice usually means recreating the table and migrating data.
+>
+> ---
+>
+> **Clustering**
+> - A physical sort order inside a BigQuery table or partition based on up to four columns, used to reduce block reads for common filter patterns.
+> - The note pairs clustering with partitioning to explain why date-pruned queries can still get cheaper when rows are grouped by columns such as `symbol`.
+>
+> > [!info] Order matters
+> >
+> > Clustering fields are prioritized left to right. Put the most selective or most common filter columns first to get the best pruning behavior.
+>
+> ---
+>
+> **Table expiration / TTL**
+> - A retention timer that causes BigQuery to delete a table automatically after a configured number of seconds or at a stored expiration timestamp.
+> - The note uses TTLs for scratch and demo objects so temporary data cleans itself up instead of relying on manual teardown.
+>
+> > [!warning] Deletion is automatic
+> >
+> > Expiration is convenient for temporary objects, but production tables should not receive short TTLs accidentally. Once the timer fires, recovery depends on time-travel retention.
+>
+> ---
+>
+> **Time travel**
+> - BigQuery's retained historical storage window that lets you query or copy a table as it existed earlier, up to `maxTimeTravelHours` after modification or deletion.
+> - Recovery guidance in the note depends on time travel for restoring dropped or overwritten tables and for understanding `numTimeTravelPhysicalBytes`.
+>
+> > [!warning] Same name can block recovery
+> >
+> > If another table is created with the deleted table's original ID before recovery, point-in-time restore attempts can fail even though the historical bytes still exist.
+>
+> ---
+>
+> **Snapshot table**
+> - A point-in-time cloned table object that preserves a table state independently of the rolling time-travel window and usually stores only changed bytes incrementally.
+> - The note recommends snapshots before destructive operations when seven days of time travel is too short or too risky.
+>
+> > [!info] Longer-lived safety net
+> >
+> > Snapshots are a deliberate backup object, not an automatic retention feature. They are useful when migration or deletion work might span longer than the normal recovery window.
+>
+> ---
+>
+> **Logical bytes**
+> - BigQuery's uncompressed representation of table data used for metrics such as `numBytes`, `numActiveLogicalBytes`, and on-demand scan billing estimates.
+> - The note interprets logical-byte fields to explain storage footprint and why dry-run scan estimates map directly to cost.
+>
+> > [!info] Billing usually follows logical size
+> >
+> > Unless you deliberately choose a physical-billing storage model, most sizing and query-cost reasoning in BigQuery starts from logical bytes rather than compressed file size.
+>
+> ---
+>
+> **Physical bytes**
+> - The compressed storage bytes BigQuery actually keeps on disk, including active and time-travel data as fields such as `numActivePhysicalBytes` and `numTimeTravelPhysicalBytes`.
+> - The note uses physical bytes to explain retained snapshots, time-travel overhead, and the alternative `PHYSICAL` storage billing model.
+>
+> > [!warning] Not the same metric
+> >
+> > A table can have similar logical and physical sizes when tiny, but on larger tables the two measures diverge. Cost and retention decisions depend on which metric the field represents.
+>
+> ---
+>
+> **`INFORMATION_SCHEMA`**
+> - A family of SQL-accessible metadata views that expose dataset, table, column, partition, and job information inside a region or dataset scope.
+> - The note uses these views when one-resource-at-a-time CLI output is too narrow and you need filterable, joinable metadata inventories.
+>
+> > [!warning] Scope must be qualified
+> >
+> > Some views require a region-qualified path such as `region-europe-west1.INFORMATION_SCHEMA.SCHEMATA`, while others are dataset-scoped. Using the wrong scope returns errors or incomplete results.
+>
+> ---
+>
+> **Row preview / `bq head`**
+> - A BigQuery CLI operation that reads a sample of table rows directly for inspection without submitting a SQL query job.
+> - The note uses row preview for post-load validation and quick data sanity checks when you need to inspect values rather than metadata.
+>
+> > [!info] Fast but limited
+> >
+> > `bq head` is ideal for spot checks, but it is not a substitute for SQL when you need filtering, joins, aggregations, or reproducible analytical logic.
+>
+> ---
+>
+> **Dry run / `--dry_run`**
+> - A BigQuery query-validation mode that parses SQL and reports estimated bytes processed without actually executing the query.
+> - The note treats dry runs as the main pre-execution cost control for large tables and evolving analytical queries.
+>
+> > [!warning] Estimate, not result
+> >
+> > A dry run validates syntax and scan scope, but it does not return rows or catch every runtime condition tied to data state, permissions on referenced objects, or downstream side effects.
+>
+> ---
+>
+> **Schema mode / `NULLABLE`, `REQUIRED`, `REPEATED`**
+> - The column cardinality and nullability declaration attached to each BigQuery field: optional scalar, non-null scalar, or repeated array-like field.
+> - The note explains these modes because schema evolution, JSON schemas, and load behavior all depend on whether a column can accept missing values or multiple values.
+>
+> > [!warning] Additive updates are constrained
+> >
+> > `bq update` can add new nullable columns, but it cannot retroactively turn an existing field into a different mode or insert a new required field into already populated data safely.
+>
+> ---
+>
+> **`NUMERIC` / `BIGNUMERIC`**
+> - Exact-decimal BigQuery data types used when binary floating-point types such as `FLOAT64` are not precise enough for financial or high-precision calculations.
+> - The note calls them out because table design choices made during schema creation affect downstream analytical correctness, not just storage layout.
+>
+> > [!info] Precision has tradeoffs
+> >
+> > `BIGNUMERIC` extends precision and scale beyond `NUMERIC`, but it also increases storage and processing cost. Use it only when the ordinary exact-decimal range is insufficient.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -845,6 +1105,8 @@ BigQuery uses canonical type names; shorter aliases are accepted in `bq` CLI inl
 | `REQUIRED` | `"mode": "REQUIRED"` | `NOT NULL` | Column rejects NULL — inserts and updates with NULL values fail. Cannot be added to an existing table via `bq update` (only NULLABLE columns can be added). |
 | `REPEATED` | `"mode": "REPEATED"` | `ARRAY<type>` | Column stores an ordered array of values of the declared type. Cannot be set via inline schema (`column:TYPE`) — requires a JSON schema file. |
 
+Canonical type names and their accepted aliases are separate from schema mode and determine how BigQuery stores each value.
+
 | Type (canonical) | Alias | Description |
 |---|---|---|
 | `STRING` | — | Variable-length UTF-8 text |
@@ -873,7 +1135,7 @@ BigQuery uses canonical type names; shorter aliases are accepted in `bq` CLI inl
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — Cost impact of partitioning and clustering on query scans
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — Loading data into tables and exporting to GCS
 - [job-management](https://alp78.github.io/elysium/06-GCP/BigQuery/job-management) — Monitoring and canceling BQ jobs
-- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled before any `bq` command works
+- [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) — `bigquery.googleapis.com` must be enabled before any `bq` command works
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` required
 - [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — SQL query patterns, window functions, and cost optimization against BQ tables
 - [BigQuery Terraform provisioning](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — IaC definitions for datasets, tables, and IAM bindings via `google_bigquery_dataset` and `google_bigquery_table`

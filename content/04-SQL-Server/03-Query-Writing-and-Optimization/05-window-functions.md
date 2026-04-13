@@ -10,21 +10,171 @@ status: complete
 
 # Window Functions
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> Window functions are the T-SQL feature that lets a query return one row per input row **and** attach a value computed from a group of surrounding rows. They are the right tool for ranking, running totals, moving averages, prior-row and next-row comparisons, gaps-and-islands, sessionization, and deduplication.
+> Window functions are the T-SQL language surface for computing partition-aware analytics without collapsing the underlying rows: this note defines the `OVER` clause, the ranking, offset, aggregate, and percentile families built on top of it, and the frame semantics that make running, moving, and peer-aware calculations correct.
 >
-> This note is the authoritative reference for window-function mechanics in SQL Server. It covers:
+> **Window fundamentals**
+> - covers `OVER`, `PARTITION BY`, `ORDER BY`, the contrast with `GROUP BY`, and the rule that window functions annotate rows instead of reducing them
 >
-> - the `OVER` clause, `PARTITION BY`, and `ORDER BY` as the three axes of a window specification
-> - the contrast between `PARTITION BY` and `GROUP BY`
-> - the four families of window functions — ranking, offset/value, aggregate, and percentile
-> - the `ROWS`, `RANGE`, and `GROUPS` frame units, the default-frame trap, and the `LAST_VALUE` gotcha
-> - the named `WINDOW` clause from SQL Server 2022
-> - practical patterns used in real data pipelines: top-N per group, running drawdown, streaks, sessionization, deduplication
-> - anti-patterns that window functions replace: self joins, correlated `MAX` subqueries, and stacked `DISTINCT` + `GROUP BY`
+> **Ranking and positional functions**
+> - covers `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `NTILE`, `PERCENT_RANK`, and `CUME_DIST` for ordered row comparison and segmentation
 >
-> Physical window operators (window spool vs window aggregate) and indexing strategies for window-driven plans live in the execution-plan sibling note; this note teaches the language surface.
+> **Offset and aggregate windows**
+> - covers `LAG`, `LEAD`, `FIRST_VALUE`, `LAST_VALUE`, plus aggregate windows such as `SUM`, `AVG`, `MIN`, `MAX`, and `STDEV` over partitions and frames
+>
+> **Frame semantics**
+> - explains `ROWS`, `RANGE`, and `GROUPS`, the default-frame trap, and why explicit whole-partition or running frames matter for correctness
+>
+> **Applied patterns**
+> - covers top-N per group, running totals, moving averages, drawdown, gaps-and-islands, sessionization, and deterministic deduplication
+>
+> **SQL Server 2022 and percentile features**
+> - covers named `WINDOW` clauses and percentile functions such as `PERCENTILE_CONT`
+>
+> **Operations and safety**
+> - Warnings: missing tie-breakers make ranking nondeterministic, default frames break `LAST_VALUE`, wide sorts on unsupported indexes are expensive, and stacked `DISTINCT` / `GROUP BY` often hides a `ROW_NUMBER` problem
+> - Recommendations: prefer window functions over self joins and correlated aggregate subqueries, specify frames explicitly when order matters, use unique tie-breakers in ranking, and switch to plain `GROUP BY` when one row per group is the real target
+
+> [!note]- Glossary
+>
+> **Window function**
+> - A function evaluated over a logical set of rows related to the current row while still returning one output row per input row.
+> - It matters because the note’s core idea is preserving detail rows while attaching analytical context to each one.
+>
+> > [!info] Analytics without row collapse
+> >
+> > A window function answers questions like ranking or running totals without forcing a `GROUP BY`. That is what makes it so useful in reporting and pipeline logic.
+>
+> ---
+>
+> **`OVER` clause**
+> - The syntax block that defines the partition, ordering, and optional frame for a window function.
+> - It matters because the function name alone is not enough; the `OVER` clause defines which rows each calculation can see.
+>
+> > [!warning] Function semantics live in the window spec
+> >
+> > `SUM(col)` and `SUM(col) OVER (...)` are radically different operations. The `OVER` clause is what turns an aggregate into a row-preserving analytical computation.
+>
+> ---
+>
+> **Partition**
+> - The subset of rows identified by `PARTITION BY` that forms the logical group for a window calculation.
+> - It matters because partitions define where running totals reset, where rankings restart, and which rows count as peers for a calculation.
+>
+> > [!warning] Partitioning is not grouping
+> >
+> > `PARTITION BY` creates logical groups for a window function, but it does not reduce the result to one row per group the way `GROUP BY` does.
+>
+> ---
+>
+> **Frame**
+> - The ordered subset of a partition visible to the current row when a window function supports frame semantics.
+> - It matters because running and moving calculations depend on the frame, not just on the partition.
+>
+> > [!warning] The default frame is easy to forget
+> >
+> > If an ordered window uses the default frame, SQL Server may evaluate over a peer-aware prefix rather than the whole partition. That changes functions like `LAST_VALUE` in non-obvious ways.
+>
+> ---
+>
+> **Peer group**
+> - A set of rows within an ordered partition that tie on the `ORDER BY` values of the window specification.
+> - It matters because ranking with ties and `RANGE` / `GROUPS` frames operate on peer semantics rather than row positions alone.
+>
+> > [!info] Equal sort keys are a logical group
+> >
+> > Peer rows often behave together for ranking and framing. If the ordering is not unique, the peer group may be larger than the author expects.
+>
+> ---
+>
+> **`ROW_NUMBER`**
+> - The ranking function that assigns a unique sequential number to each row inside a partition according to the specified order.
+> - It matters because it is the standard tool for deterministic top-N-per-group queries and deduplication.
+>
+> > [!warning] Determinism needs a tie-breaker
+> >
+> > If the ordering columns are not unique, which row gets `1` can vary. Add a stable unique tie-breaker when the chosen survivor matters.
+>
+> ---
+>
+> **`RANK` / `DENSE_RANK`**
+> - Ranking functions that assign the same rank to tied rows, with `RANK` leaving gaps and `DENSE_RANK` keeping rank numbers contiguous.
+> - It matters because they are the right choice when ties are part of the meaning and should not be broken arbitrarily.
+>
+> > [!info] Same ties, different numbering
+> >
+> > Both functions preserve ties. The difference is whether later ranks skip numbers after a tie group.
+>
+> ---
+>
+> **`LAG` / `LEAD`**
+> - Offset functions that return a value from a previous or following row in the same ordered partition.
+> - It matters because they replace many self joins and make prior-row / next-row comparison patterns direct and readable.
+>
+> > [!warning] Offset logic depends on sort correctness
+> >
+> > If the partition order is wrong or incomplete, the “previous” or “next” row is wrong too. Offset functions are only as sound as the `ORDER BY` that drives them.
+>
+> ---
+>
+> **`FIRST_VALUE` / `LAST_VALUE`**
+> - Value functions that return the first or last visible value within the current frame.
+> - It matters because they look simple but are highly sensitive to frame definition, especially `LAST_VALUE`.
+>
+> > [!warning] `LAST_VALUE` is the classic frame trap
+> >
+> > Without an explicit whole-partition frame, `LAST_VALUE` often returns the last value in the current frame prefix, not the last row in the partition.
+>
+> ---
+>
+> **Running frame**
+> - A frame that starts at the partition boundary and ends at the current row, commonly written with `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
+> - It matters because running totals, cumulative maxima, and drawdown calculations rely on this exact visibility rule.
+>
+> > [!info] Running means prefix, not whole partition
+> >
+> > A running frame grows row by row through the partition. It is different from a whole-partition frame, which exposes all rows at every position.
+>
+> ---
+>
+> **`ROWS` / `RANGE` / `GROUPS`**
+> - The three frame units that define whether a frame advances by physical row count, by ordered value peers, or by peer groups.
+> - It matters because choosing the wrong unit changes which rows are included in each calculation.
+>
+> > [!warning] Frame unit changes semantics
+> >
+> > `ROWS` is usually the safest and most explicit choice. `RANGE` and `GROUPS` are valuable, but only when peer-aware behavior is genuinely intended.
+>
+> ---
+>
+> **Named `WINDOW` clause**
+> - The SQL Server 2022 feature that lets a query define a reusable window specification once and reference it from multiple window functions.
+> - It matters because repeated partition and order specifications become easier to read and maintain when factored into a named window.
+>
+> > [!info] Reuse the specification, not the result
+> >
+> > The named window does not materialize anything. It just removes duplication in the window definition so related calculations stay aligned.
+>
+> ---
+>
+> **`PERCENTILE_CONT`**
+> - A percentile window function that returns a continuous interpolated percentile value within an ordered distribution.
+> - It matters because medians and percentile cut points are common analytics that cannot be expressed cleanly with plain ranking alone.
+>
+> > [!warning] Continuous percentile can interpolate
+> >
+> > The returned value may not match any actual row value. That is expected behavior for continuous percentile calculation, not an error.
+>
+> ---
+>
+> **Deduplication by ranking**
+> - The pattern of assigning row numbers inside each key partition and keeping only the winning row.
+> - It matters because many awkward `DISTINCT` plus `GROUP BY` queries are really attempts to express this exact survivorship rule.
+>
+> > [!warning] Make the survivor rule explicit
+> >
+> > If the query keeps one row per key, the ordering must explain why that row wins. `ROW_NUMBER` makes that choice visible in a way ad hoc deduplication does not.
 
 ## Window Function Fundamentals
 

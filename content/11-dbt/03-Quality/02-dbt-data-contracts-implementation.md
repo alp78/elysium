@@ -13,9 +13,167 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 >
 > — **Hyrum Wright**
 
-Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. This is the dbt-specific implementation of the broader [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) architectural pattern. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
+> [!abstract]- Summary
+>
+> Explains how dbt turns data contracts into build-time enforcement for published models by combining schema declarations, access levels, versioning, CI checks, and deprecation rules so downstream consumers can rely on stable model interfaces.
+>
+> **Contract enforcement model**
+> - Defines what a dbt data contract is, how `contract.enforced: true` works, and why declared columns plus `data_type` move YAML from passive documentation into active build guards
+> - Explains contract enforcement as a compile-time interface check that stops unstable model shape from reaching the warehouse or downstream consumers
+>
+> **Access, ownership, and versioning**
+> - Covers access levels, groups, public versus protected models, and versioned model publication so teams can decide who may depend on a model and how breaking changes are rolled out safely
+> - Shows how access control and versioning turn marts into explicit consumer-facing APIs rather than accidental internal implementation details
+>
+> **CI detection and lifecycle management**
+> - Covers breaking-change detection in CI, source-freshness checks in the contract workflow, full annotated contract examples, and deprecation of older model versions so contract evolution stays reviewable and operationally safe
+> - Connects contract implementation to dbt Mesh-style sharing, where stability is enforced not just socially but through project metadata and CI gates
+>
+> **Operations and safety**
+> - Warnings: mismatched `data_type` declarations, overexposed public models, breaking changes without versioning, CI that checks contracts too late, and relying on naming conventions alone to enforce layer boundaries
+> - Recommendations: contract only the models that are real interfaces, combine access levels with ownership groups, version before breaking consumers, and push change detection into CI before deployment
 
----
+> [!note]- Glossary
+>
+> **Data contract**
+> - A declared promise about a model's columns, types, and interface shape that dbt can enforce during builds.
+> - It matters here because the note is about making model schemas enforceable and publishable rather than merely documented.
+>
+> > [!warning] Interface, not just documentation
+> >
+> > Once a contract is enforced, schema drift becomes a build failure instead of a downstream surprise. That is a deliberate operational boundary, not a metadata nicety.
+>
+> ---
+>
+> **`contract.enforced: true`**
+> - A dbt config that tells dbt to reject a model build when the produced schema does not match the declared contract.
+> - It matters here because this flag is what turns a model's YAML declaration into an active build-time gate.
+>
+> > [!warning] Strictness is the point
+> >
+> > Enforced contracts are supposed to fail loudly when model shape changes. If a model changes frequently, contract it later or version it before consumers depend on it.
+>
+> ---
+>
+> **`data_type`**
+> - The adapter-specific type declaration for a contracted model column.
+> - It matters here because contract enforcement compares actual output types to declared types, so type precision is part of interface stability.
+>
+> > [!warning] Adapter types still matter
+> >
+> > Even with dbt normalization, warehouses differ in type names and behavior. Type declarations should match the actual adapter semantics, not generic intuition.
+>
+> ---
+>
+> **Build-time enforcement**
+> - The practice of catching schema mismatches during dbt compilation and build execution before downstream data is published.
+> - It matters here because the note frames contracts as proactive failure boundaries rather than post-hoc debugging tools.
+>
+> > [!info] Stop drift before publish
+> >
+> > Catching shape changes at build time is much cheaper than discovering them after dashboards, APIs, or regulatory feeds have already consumed the wrong schema.
+>
+> ---
+>
+> **Access level**
+> - A dbt model config that controls which other models or projects may reference a model.
+> - It matters here because contracts are strongest when they are paired with explicit rules about who is allowed to depend on the model.
+>
+> > [!warning] Visibility is part of stability
+> >
+> > A stable interface still becomes risky if every model can depend on it freely. Access settings limit blast radius when the contract evolves.
+>
+> ---
+>
+> **`private` / `protected` / `public`**
+> - The main dbt access modes that restrict refs to a group, a project, or downstream projects respectively.
+> - It matters here because the note uses them to distinguish internal implementation models from shared, consumer-facing interfaces.
+>
+> > [!warning] Public means wider promise
+> >
+> > Making a model public is not just changing a flag. It signals that outside projects may now treat the model as a supported dependency.
+>
+> ---
+>
+> **Group**
+> - A dbt ownership and scoping construct used to organize models and enforce some access-level boundaries.
+> - It matters here because groups connect contract enforcement to accountable teams rather than leaving model interfaces ownerless.
+>
+> > [!info] Ownership metadata with teeth
+> >
+> > Groups are useful because they are more than labels: they help make access and responsibility explicit at the project level.
+>
+> ---
+>
+> **Model version**
+> - A numbered published variant of a model that lets a new breaking schema coexist with an older supported interface.
+> - It matters here because versioning is the safe path for evolving contracted marts without forcing a big-bang migration on all consumers.
+>
+> > [!warning] Breaking changes need a runway
+> >
+> > If consumers already depend on a model, replacing it in place is often operationally reckless. Versioning creates a migration window instead of a sudden outage.
+>
+> ---
+>
+> **`latest_version`**
+> - The dbt metadata field that declares which version of a model should be considered the current default.
+> - It matters here because version management only works cleanly when one version is clearly designated as the preferred interface.
+>
+> > [!info] Default interface marker
+> >
+> > `latest_version` helps new consumers land on the right interface without requiring every ref to specify a version manually.
+>
+> ---
+>
+> **Breaking change**
+> - A schema or interface modification that invalidates existing downstream assumptions, such as removing a column or changing a type incompatibly.
+> - It matters here because the note's CI workflow is explicitly about catching these changes before they land.
+>
+> > [!warning] Observable behavior is depended on
+> >
+> > Consumers often depend on more than what the model owner intended. Treat any externally visible shape change as potentially breaking until proven otherwise.
+>
+> ---
+>
+> **Breaking-change detection in CI**
+> - The automated comparison and validation workflow that checks whether a proposed model change violates current contractual expectations before merge.
+> - It matters here because contract enforcement is strongest when paired with pre-merge detection rather than left until a production run fails.
+>
+> > [!info] Earlier failure, lower blast radius
+> >
+> > CI is the right place to surface contract drift because reviewers can still stop or version the change before consumers are exposed.
+>
+> ---
+>
+> **dbt Mesh**
+> - An architectural pattern where multiple dbt projects share certified, versioned, contract-enforced models across project boundaries.
+> - It matters here because public, contract-enforced models are the building blocks for cross-project consumption without tightly coupling transformation logic.
+>
+> > [!warning] Shared interfaces need higher discipline
+> >
+> > Once models cross project boundaries, sloppy naming, weak ownership, and unversioned breaking changes stop being local problems and become platform issues.
+>
+> ---
+>
+> **Deprecation**
+> - The controlled retirement process for an older model version after consumers have had time to migrate.
+> - It matters here because versioning only solves breaking change management if old versions are eventually phased out in a planned, visible way.
+>
+> > [!info] Versioning needs an exit plan
+> >
+> > Keeping every version forever avoids immediate breakage but creates permanent complexity. Deprecation is how the interface lifecycle stays manageable.
+
+> [!example] Contract Enforcement Scope
+>
+> > [!success] Stable Interface
+> >
+> > - Use enforced contracts on marts or shared models whose columns, types, and access surface are consumed by dashboards, APIs, or downstream dbt projects.
+> > - Pair contracts with versioning and CI when breaking schema changes must be staged deliberately rather than leaking into production by accident.
+>
+> > [!failure] Internal Churn
+> >
+> > - Avoid enforcing contracts on fast-changing internal models that are still being reshaped frequently, because the friction will be high while the interface is not yet worth stabilizing.
+> > - Do not use contracts as a replacement for data-quality tests: they protect schema shape and interface guarantees, not freshness, business correctness, or value validity.
 
 ### What Is a dbt Data Contract?
 

@@ -17,11 +17,43 @@ status: complete
 
 # Dynamic Management Views — Chapter Reference
 
-> [!abstract] Scope and purpose of this reference
+> [!abstract]- Summary
 >
 > This page catalogs the **63 dynamic management views (DMVs)** and **8 system functions** used across the SQL Server chapter. Each entry documents purpose, required permissions, key columns with types and operational meaning, and cross-reference links to every vault page where the object appears. Two appendices index the **catalog views** and **system stored procedures** referenced in the chapter.
+>
+> - **Quick lookup**
+>   - starts with an index table that maps every DMV to its category, operational purpose, and source pages across the chapter
+> - **Core runtime references**
+>   - covers execution, query runtime, OS, memory, indexes, files, statistics, transactions, HADR, audit, and server-state DMVs
+> - **System functions**
+>   - includes the `sys.fn_*` helpers used alongside DMVs throughout the chapter
+> - **Appendices**
+>   - ends with quick indexes for the catalog views and stored procedures referenced across the same note set
+> - **Operational boundary**
+>   - dynamic management views and functions return live server-state information for monitoring, diagnosis, and tuning; they live in the `sys` schema, follow the `sys.dm_*` naming convention, require `VIEW SERVER STATE` or `VIEW DATABASE STATE` depending on scope, and many counter-based DMVs reset on restart unless otherwise noted
 
-Dynamic management views and functions return server state information used to monitor instance health, diagnose performance problems, and tune queries. All DMVs and DMFs live in the `sys` schema and follow the naming convention `sys.dm_*`. They require `VIEW SERVER STATE` or `VIEW DATABASE STATE` permission depending on scope. Counter-based DMVs accumulate from instance startup and reset on restart unless otherwise noted.
+> [!note]- Glossary
+>
+> - **DMV**
+>   - dynamic management view exposing live or cumulative SQL Server state
+> - **DMF**
+>   - dynamic management function that returns state information when invoked like a table-valued function
+> - **Catalog view**
+>   - metadata view in `sys` used to inspect durable object definitions rather than live engine state
+> - **`VIEW SERVER STATE`**
+>   - permission required for most server-scoped DMVs
+> - **`VIEW DATABASE STATE`**
+>   - permission required for database-scoped DMVs that expose internal state
+> - **Cumulative counter**
+>   - DMV value that accumulates since instance start and resets on restart
+> - **Cross-reference**
+>   - pointer from a DMV entry to every note in the chapter where that object is used with live queries or extended explanation
+> - **`sys.dm_exec_requests`**
+>   - real-time request-level DMV used as a foundation for live workload inspection
+> - **`sys.dm_os_wait_stats`**
+>   - aggregate wait-statistics DMV used to classify resource bottlenecks over an uptime window
+> - **`sys.fn_*` function**
+>   - system helper function used alongside DMVs to decode, inspect, or enrich runtime state
 
 > [!tip] How to use this page
 >

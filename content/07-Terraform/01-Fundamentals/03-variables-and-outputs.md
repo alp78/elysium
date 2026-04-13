@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Variables and Outputs
+# Variables and Outputs
 
 > [!quote] Thomas & Hunt on naming
 >
@@ -16,7 +16,172 @@ status: complete
 >
 > — **Dave Thomas & Andy Hunt**, *The Pragmatic Programmer* (1999)
 
-Terraform's input variables and output values are the primary mechanism for making infrastructure configurations reusable and parameterized. Variables let callers supply values at runtime; outputs surface resource attributes after apply. Locals bridge the two — derived values computed from variables and resource attributes that reduce repetition across the configuration.
+> [!abstract]- Summary
+>
+> Terraform Variables and Outputs defines the interface surface of a Terraform configuration: how callers pass values in through variables, how the configuration derives reusable locals, how values are exposed back out through outputs, and where sensitivity, precedence, and newer ephemeral features change the operational risk profile.
+>
+> **Input-variable design**
+> - covers variable declarations, types, defaults, `sensitive`, `nullable`, complex-object shapes, and validation rules for building safe module and root-module inputs
+>
+> **Supplying and transforming values**
+> - covers `terraform.tfvars`, `-var`, `-var-file`, `TF_VAR_*`, precedence order, and locals for derived or conditional values that should not become external inputs
+>
+> **Output interface design**
+> - covers standard and sensitive outputs, output references, JSON output for automation, and shell-friendly consumption of provisioned values after apply
+>
+> **Operations and safety**
+> - Warnings: sensitive values are still stored in state, cross-variable validation needs newer Terraform versions, `terraform.tfvars` with secrets must be gitignored, precedence is resolved per variable, and ephemeral values change how secrets appear in state and outputs
+> - Recommendations: secure the remote state backend, validate inputs aggressively, use locals for derived values instead of widening the input interface, prefer environment variables or Secret Manager in CI/CD, and use `terraform console` to test expressions before they drive real resources
+
+> [!note]- Glossary
+>
+> **Input variable**
+> - A named Terraform parameter declared with a `variable` block so callers can supply values at runtime.
+> - It matters because variables are the main way to make Terraform configurations reusable across projects, regions, and environments.
+>
+> > [!warning] Every variable widens the interface
+> >
+> > Adding a variable is not free abstraction. It creates another input that has to be documented, validated, and supplied consistently across automation and environments.
+>
+> ---
+>
+> **Type constraint**
+> - The declared value shape Terraform expects for a variable, such as `string`, `number`, `list(string)`, or an object type.
+> - It matters because type constraints let Terraform catch bad input before those values start driving provider operations.
+>
+> > [!info] Types are early guardrails
+> >
+> > A precise type definition turns many errors into plan-time validation failures instead of runtime surprises in provider calls or resource arguments.
+>
+> ---
+>
+> **Default value**
+> - An optional fallback value assigned to a variable when the caller does not supply one.
+> - It matters because defaults distinguish required inputs from optional ones and keep common environments concise.
+>
+> > [!warning] Defaults encode policy
+> >
+> > A default is not just convenience; it becomes the behavior teams silently inherit when they omit the variable. Poor defaults can spread weak conventions quickly.
+>
+> ---
+>
+> **Sensitive value**
+> - A Terraform value marked for redaction in CLI output so it does not appear plainly in plans, applies, or other interactive displays.
+> - It matters because many variable and output interfaces include passwords, tokens, or connection strings that should not be echoed back to operators.
+>
+> > [!warning] Redacted is not absent
+> >
+> > Sensitive values are hidden from normal CLI display, but they still exist in state unless a newer ephemeral pattern changes that behavior. Treat state security as the real control boundary.
+>
+> ---
+>
+> **`nullable`**
+> - A variable setting that controls whether `null` is an acceptable value for that input.
+> - It matters because Terraform often uses `null` to mean "unset" or "let the provider default apply," and modules need to decide when that is allowed.
+>
+> > [!info] `null` has real semantics
+> >
+> > In Terraform, `null` is not just an empty placeholder. It can suppress an argument entirely, which changes how provider defaults and conditional logic behave.
+>
+> ---
+>
+> **Validation rule**
+> - A custom condition on a variable that Terraform checks before planning or applying resources.
+> - It matters because validation keeps bad regions, empty strings, malformed identifiers, or unsupported combinations from flowing deeper into the configuration.
+>
+> > [!warning] Fail fast beats provider errors
+> >
+> > A good validation message stops a bad input near its source. Without validation, the same mistake often surfaces later as a much less clear provider or API failure.
+>
+> ---
+>
+> **Cross-variable validation**
+> - A newer Terraform capability that lets validation logic compare one input variable against another instead of checking only the current variable in isolation.
+> - It matters because some interface rules only make sense across combinations, such as paired environment settings or mutually dependent options.
+>
+> > [!warning] Version support matters
+> >
+> > Not every Terraform version supports the same validation capabilities. If the module depends on cross-variable checks, the required CLI version needs to reflect that explicitly.
+>
+> ---
+>
+> **`terraform.tfvars`**
+> - The conventional local-development file where Terraform automatically loads variable values without extra CLI flags.
+> - It matters because it is the easiest way to supply environment-specific inputs during day-to-day local work.
+>
+> > [!danger] Convenient files often hold secrets
+> >
+> > A `terraform.tfvars` file frequently accumulates passwords, API keys, or service-account material. If it is not ignored and protected, the convenience becomes a secret-management problem.
+>
+> ---
+>
+> **`TF_VAR_*`**
+> - Environment variables whose names map to Terraform input variables, allowing values to be injected from the shell or CI runtime.
+> - It matters because automation often needs to pass variables without writing plaintext values to repo-tracked files.
+>
+> > [!info] Good fit for automation
+> >
+> > `TF_VAR_*` works well in CI/CD and ephemeral execution environments where a secret store or runtime environment can inject values just-in-time.
+>
+> ---
+>
+> **Variable precedence**
+> - Terraform's rule set for deciding which source wins when the same variable is defined in multiple places.
+> - It matters because the final value of an input may depend on a combination of defaults, tfvars files, environment variables, and CLI flags.
+>
+> > [!warning] Precedence is evaluated per variable
+> >
+> > Terraform does not choose one source globally for all inputs. Each variable is resolved individually, which can produce mixed-source configurations if teams are not disciplined.
+>
+> ---
+>
+> **Local value / `locals`**
+> - A named value computed inside the configuration from variables, literals, or resource attributes to reduce repetition and centralize transformation logic.
+> - It matters because locals keep derived logic inside the configuration without forcing callers to supply values that Terraform can compute itself.
+>
+> > [!info] Derived values belong inside
+> >
+> > If a value can be calculated from existing inputs or resource attributes, it is often better modeled as a local than as another external variable. That keeps the module interface smaller and clearer.
+>
+> ---
+>
+> **Output value**
+> - A named value Terraform exposes after apply so humans, scripts, or other modules can consume important resource attributes.
+> - It matters because outputs are how a configuration publishes useful results such as URLs, IPs, or job names after infrastructure is provisioned.
+>
+> > [!warning] Outputs become part of the contract
+> >
+> > Once CI pipelines or downstream modules depend on an output name, changing it is a breaking interface change even if the infrastructure itself is still correct.
+>
+> ---
+>
+> **Sensitive output**
+> - An output explicitly marked as sensitive so Terraform redacts it from standard CLI display.
+> - It matters because outputs often bridge infrastructure details into scripts or operators, and some of those values should not be casually printed.
+>
+> > [!warning] Output secrecy still depends on state security
+> >
+> > A sensitive output is hidden from normal display, but the value still exists in state unless ephemeral patterns prevent it. Protect the backend, not just the console experience.
+>
+> ---
+>
+> **Ephemeral value**
+> - A newer Terraform concept for values that should not be persisted in state the way ordinary variables, outputs, or resources are.
+> - It matters because ephemeral features are aimed directly at the long-standing problem of secret material ending up in state files.
+>
+> > [!info] Designed to reduce state exposure
+> >
+> > Ephemeral values do not remove the need for backend security, but they do shrink how much sensitive material Terraform has to retain after execution.
+>
+> ---
+>
+> **`terraform output -json`**
+> - The CLI form that renders all outputs as JSON for programmatic consumption.
+> - It matters because shell scripts, CI jobs, and wrapper tools often need outputs in machine-readable form rather than as human-formatted console text.
+>
+> > [!info] Automation-friendly by design
+> >
+> > JSON output is the clean handoff surface between Terraform and the rest of an automation pipeline. It is usually safer than scraping human-readable output with text tools.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -463,16 +628,19 @@ terraform -chdir=infra output -json
 ## Related
 
 **Terraform Fundamentals:**
+
 - [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL type system, expressions, and syntax
 - [providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/providers-and-backend) — backend and provider configuration that consumes these variables
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — the workflow that resolves and applies variable values
 - [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — state backend security for sensitive variable values
 
 **Patterns:**
+
 - [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — using variables with `count` and `for_each` to conditionally create resources
 - [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — how variables and outputs form the module interface
 
 **GCP:**
+
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — how `db_password` flows into Secret Manager via Terraform
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager for managing sensitive values outside of Terraform state
 

@@ -27,9 +27,136 @@ status: complete
 >
 > — **Dave McCrory** (coined the term "data gravity")
 
-This page is the topology map for the entire stack. Every other page in the vault covers *how* to use a specific tool — this page answers *which* tool, *what format*, and *what pattern* for moving data from any A to any B.
+> [!abstract]- Summary
+>
+> This note defines the end-to-end data movement topology for the stack, then uses transfer matrices, format choices, flow-direction models, and cross-system integration patterns to answer which path, tool, and file shape should be used between any two systems without inventing ad hoc movement logic.
+>
+> **Topology and flow inventory**
+> - Maps the complete stack-wide movement graph across local machines, GCE, SQL Server, GCS, BigQuery, Pub/Sub, Firestore, Airflow, and GitHub Actions.
+> - Turns that graph into an explicit inventory so each recurring source-to-destination movement has a named tool, format, cadence, and reference implementation.
+>
+> **Transfer and format decisions**
+> - Compares movement methods such as `gcloud compute scp`, `rsync`, `gcloud storage cp`, `bq load`, `bcp`, and streaming paths based on volume, boundary, and operational fit.
+> - Explains when to use JSON, CSV, Parquet, and Avro so format choice stays aligned with landing fidelity, warehouse loading, archive efficiency, and contract evolution.
+>
+> **Flow models and cross-system joins**
+> - Contrasts push, pull, batch, streaming, and micro-batch patterns, then uses cross-database join options to show where data should move versus where computation should move.
+> - Treats the SQL Server, BigQuery, and Python handoff choices as architecture decisions rather than one-off scripting tricks.
+>
+> **Operations and safety**
+> - Warnings: moving large data to the wrong compute location, selecting row formats where columnar files are expected, or forcing cross-database joins in place leads to unnecessary cost and latency.
+> - Recommendations: keep the flow inventory explicit, prefer compute near the data, use Parquet for bulk analytics movement, and choose batch by default unless latency justifies streaming complexity.
 
----
+> [!note]- Glossary
+>
+> **Data flow topology**
+> - The mapped set of systems, boundaries, and recurring movement paths through which data travels across a platform.
+> - It matters here because the note serves as the central routing reference for deciding how information should move from one part of the stack to another.
+>
+> > [!info] Architecture-level map
+> >
+> > A topology is useful because it turns scattered scripts and integrations into one explicit system view that engineers can reason about consistently.
+>
+> ---
+>
+> **Data gravity**
+> - The tendency for large datasets to attract applications and compute toward the place where the data already resides.
+> - It matters here because many movement decisions are really decisions about whether it is cheaper to move bytes or to move computation.
+>
+> > [!warning] Distance becomes cost
+> >
+> > As datasets grow, network transfer time, egress charges, and duplicate storage make naive movement patterns much more expensive than they first appear.
+>
+> ---
+>
+> **Transfer method**
+> - The concrete tool or protocol used to move data between two systems, such as file copy, bulk load, export, or streaming ingestion.
+> - It matters here because the note compares transfer methods directly against source, destination, and volume constraints.
+>
+> > [!info] Path and tool are separate choices
+> >
+> > The architecture decision is not just where data goes. It also includes how it gets there and what operational guarantees that method provides.
+>
+> ---
+>
+> **Parquet**
+> - A columnar storage format optimized for analytical reads, compression, and schema-aware interchange.
+> - It matters here because the note treats Parquet as the preferred bulk-movement and warehouse-loading format for analytical data.
+>
+> > [!info] Default analytical format
+> >
+> > When the workload is scan-heavy analytics rather than raw fidelity or debugging, Parquet is usually the best starting point.
+>
+> ---
+>
+> **Push model**
+> - A flow pattern where the source initiates transfer and sends data onward when state changes or a trigger occurs.
+> - It matters here because push architectures reduce polling but require the sender to own timing and delivery behavior.
+>
+> > [!warning] Source owns the timing
+> >
+> > Push can simplify consumers, but it also means outages, retries, and burst control often become source-side responsibilities.
+>
+> ---
+>
+> **Pull model**
+> - A flow pattern where the consumer requests data from a source on demand or on a schedule.
+> - It matters here because many pipeline designs in the stack rely on scheduled extraction rather than source-driven publication.
+>
+> > [!info] Easier consumer control
+> >
+> > Pull is often simpler to govern because the receiving system decides cadence, backoff, and retry behavior instead of depending on upstream triggers.
+>
+> ---
+>
+> **Micro-batch**
+> - A movement or processing model that groups data into short repeated intervals rather than continuous event-by-event handling.
+> - It matters here because the note positions micro-batch as a common compromise between batch simplicity and streaming latency.
+>
+> > [!info] Useful middle ground
+> >
+> > Many near-real-time requirements are better satisfied by small recurring batches than by full streaming infrastructure.
+>
+> ---
+>
+> **Cross-database join**
+> - A situation where related data lives in separate engines that cannot query each other directly as one logical relational space.
+> - It matters here because the note shows that solving this usually requires deliberate export, load, or dataframe-based handoff patterns.
+>
+> > [!warning] Avoid wishful querying
+> >
+> > If two engines do not share an execution plane, trying to pretend they do usually leads to brittle manual workflows or expensive repeated exports.
+>
+> ---
+>
+> **Bulk load**
+> - A high-throughput data movement pattern that writes large datasets into a target system in efficient large batches or native import operations.
+> - It matters here because the note repeatedly prefers bulk paths such as `bcp` and `bq load` over row-by-row transport when volume is high.
+>
+> > [!info] Throughput-oriented path
+> >
+> > Bulk load is usually the right choice once reliability and volume matter more than interactive convenience or small ad hoc edits.
+>
+> ---
+>
+> **Streaming insert**
+> - A low-latency ingestion path where individual events or small batches are written continuously into a downstream service.
+> - It matters here because the topology includes CDC and Pub/Sub-driven patterns that trade cost and complexity for freshness.
+>
+> > [!warning] Latency trades for simplicity
+> >
+> > Streaming insert paths are valuable when freshness is critical, but they are rarely the cheapest or easiest default for the platform as a whole.
+>
+
+> [!example] Flow Topology Fit
+>
+> > [!success] Boundary Mapping
+> >
+> > - Use this note to choose movement patterns for a mixed local, VM, warehouse, and cloud-storage platform where data crosses multiple network and system boundaries.
+>
+> > [!failure] Tool-Level Shortcut
+> >
+> > - Do not use this note as a per-tool usage guide once the path is already chosen and a tool-specific note gives the exact command syntax.
 
 ## The Complete Data Flow Topology
 
@@ -338,4 +465,3 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — BigQuery load and export operations
 - [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — GCS file operations and transfer optimization
 - [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Orchestration patterns for all flows above
-

@@ -10,25 +10,79 @@ tags:
 
 # MOC: AI & Prompts
 
-Prompt engineering and LLM integration for data engineering — from
-foundational prompting techniques through production validation to
-AI-augmented pipeline architecture.
+This chapter is organized around the jobs engineers and analysts actually need to do with AI in production: design prompts that behave consistently, build LLM pipelines that stay observable and governable, decide where AI belongs in data engineering, and apply it safely in ESG and index workflows.
+
+```mermaid
+mindmap
+  ((Prompt Craft))
+    (Foundations)
+    (Architecture)
+    (Applied prompting)
+    (Model-specific tuning)
+    (Debugging)
+```
 
 > [!guide]+ Prompt Craft
 >
 > [[domain-prompt-craft]]
 >
-> Foundational prompting techniques, prompt architecture patterns, model-specific strategies, and systematic debugging workflows.
+> Prompt fundamentals, prompt architecture, applied prompting, model-specific tuning, and systematic prompt debugging.
+
+```mermaid
+mindmap
+  ((AI Platform Patterns))
+    (Pipeline architecture)
+    (Retrieval and tool use)
+    (Tooling landscape)
+    (Evaluation)
+    (Observability)
+    (Governance)
+```
+
+> [!guide]+ AI Platform Patterns
+>
+> [[domain-ai-platform-patterns]]
+>
+> LLM pipeline architecture, retrieval and tool use, current tooling categories, evaluation, observability, and operational guardrails.
+
+```mermaid
+mindmap
+  ((AI in Data Engineering))
+    (Ingestion and extraction)
+    (Normalization and reconciliation)
+    (Catalog and lineage support)
+    (Testing and incident support)
+    (Guarded developer productivity)
+```
 
 > [!guide]+ AI in Data Engineering
 >
 > [[domain-ai-in-data-engineering]]
 >
-> LLM integration into data pipelines — RAG architecture, production validation, financial guardrails, vector databases, and cost management.
+> Where AI helps across ingestion, extraction, reconciliation, cataloging, incident support, documentation, and developer productivity in production data platforms.
+
+```mermaid
+mindmap
+  ((AI in Financial Workflows))
+    (ESG analytics)
+    (Taxonomy mapping)
+    (Controversy triage)
+    (Index methodology support)
+    (Corporate actions QA)
+    (Approval boundaries)
+```
+
+> [!guide]+ AI in Financial Workflows
+>
+> [[domain-ai-in-financial-workflows]]
+>
+> ESG document intelligence, issuer-level enrichment, methodology interpretation, index maintenance support, and governance boundaries for regulated operations.
 
 ## Cross-References
 
-- [Functional Pipeline Architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — The architecture that produces context-enriched, self-describing data for AI consumers
-- [Data Quality Framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quarantine pattern applied to failed LLM extractions
-- [Programming Languages](https://alp78.github.io/elysium/02-Programming-Languages/moc-programming-languages) — Python foundations for LLM API integration
-- [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Contract and provenance patterns extended to LLM outputs
+- [[moc-data-architecture]] for idempotent pipelines, data contracts, retries, and validation patterns that AI layers must inherit rather than bypass.
+- [[moc-observability]] for tracing, incident response, auditability, and alerting patterns extended here to AI-specific telemetry.
+- [[moc-dataops]] for release discipline, rollback criteria, and approval workflows that constrain model changes in production.
+- [[moc-gcp]] for service boundaries, secret management, cost control, and deployment patterns relevant to hosted AI systems.
+- [[moc-github-actions]] for regression testing, CI enforcement, and review automation around prompts, eval suites, and model configurations.
+- [[moc-financial-domain]] for the benchmark, ESG, and index context that makes these AI patterns operationally meaningful rather than generic.

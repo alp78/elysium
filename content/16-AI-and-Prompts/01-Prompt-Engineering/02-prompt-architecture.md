@@ -1,342 +1,342 @@
 ---
 title: "02 - Prompt Architecture"
 tags: [ai, prompt-engineering]
-aliases: [prompt structure, 4-layer prompt, prompt layering, role goal constraints format, XML prompting, JSON schema prompting, meta-prompting, chain of thought, prompt template]
-description: "The 4-layer prompt architecture (Role, Goal, Constraints, Format) with complete worked examples, plus modular structural formats — XML tags, JSON schemas, and paragraph form — with guidance on when to use each. Covers meta-prompting and chain-of-thought structuring."
+aliases: [prompt layering, structured prompting, XML prompting, JSON schema prompting, prompt composition]
+description: "Prompt architecture for production systems: instruction layering, reusable templates, delimiters, decomposition, schema-bound outputs, and prompt versioning patterns that make prompts maintainable and testable."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
+parent: "[[domain-prompt-craft]]"
+links:
+  - "[[01-prompt-foundations]]"
+  - "[[03-applied-prompting]]"
+  - "[[05-prompt-debugging]]"
 status: complete
 ---
 
-# Prompt Architecture: Structural Layering, XML, JSON Schemas, and Chain of Thought
+# Prompt Architecture
 
-> [!quote]
-> "The hottest new programming language is English."
+> [!abstract]- Summary
 >
-> — **Andrej Karpathy**, tweet (2023)
+> This note treats prompt architecture as the design discipline that turns an ad hoc request into a reusable prompt asset, separating stable policy from volatile request material so prompts remain testable, debuggable, and maintainable as models, data, and workflows change.
+>
+> **Architectural layers and structure**
+> - Defines the layered prompt contract of role and policy, task objective, evidence block, decision rules or examples, and output contract.
+> - Explains how delimiters, labeled sections, XML-style tags, and JSON or field schemas reduce context confusion and make prompt components easier to reason about separately.
+>
+> **Controlled outputs and decomposition**
+> - Covers schema-bound outputs, prompt templates, prompt chaining, and decomposition as the main ways to make pipeline-facing prompts safer and reviewer-facing prompts clearer.
+> - Connects these patterns to ESG field extraction, index-methodology support, retrieval, tool use, and validator design instead of treating prompt structure as a purely stylistic concern.
+>
+> **Versioning and operational fit**
+> - Explains why prompt architecture must log template, model, retrieval, tool, and schema versions together so regressions can be traced and reversed.
+> - Frames architecture quality around failure isolation, portability under changing models, and the ability to tell which layer actually needs to change when outputs degrade.
+>
+> **Operations and safety**
+> - Warnings: freeform outputs are fragile in pipelines, untrusted content must not share a block with policy, prompt chains can add avoidable latency if stages are split carelessly, and production changes without versioning destroy auditability.
+> - Recommendations: keep policy stable, keep evidence narrow and labeled, use schemas for machine-facing outputs, split tasks when stages can be validated independently, and log all prompt-side versions with outputs.
 
-A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and inform the model-specific strategies in [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
+> [!note]- Glossary
+>
+> **Prompt template**
+> - A reusable prompt skeleton with placeholders or variables for request-specific data and context.
+> - It matters here because architecture depends on making prompts repeatable across many runs instead of rewriting the full contract each time.
+>
+> > [!warning] Reuse can fossilize mistakes
+> >
+> > A template scales good practice, but it also scales bad assumptions if the team never revisits it with eval results.
+>
+> ---
+>
+> **Layered prompt contract**
+> - A prompt design where policy, task, evidence, examples, and output requirements are separated into distinct sections with different roles.
+> - It matters here because layered contracts make prompt failures easier to attribute and make stable instructions easier to preserve across use cases.
+>
+> > [!info] Separate what changes
+> >
+> > Stable policy should move less often than request data, and the prompt layout should reflect that difference explicitly.
+>
+> ---
+>
+> **Delimiter**
+> - A structural marker such as headings, XML tags, or clearly labeled blocks that marks where prompt sections begin and end.
+> - It matters here because delimiters reduce ambiguity about which text is instruction, evidence, example, or output contract.
+>
+> > [!info] Boundaries improve parsing
+> >
+> > Delimiters do not make the prompt correct by themselves, but they make the intended structure visible to both models and humans.
+>
+> ---
+>
+> **Evidence block**
+> - The section of a prompt that contains the document fragment, metadata, retrieval result, or tool output the model is allowed to use.
+> - It matters here because architecture depends on keeping evidence distinct from policy and task framing.
+>
+> > [!warning] Context should not float
+> >
+> > When evidence is mixed into prose without boundaries, reviewers and models both have a harder time telling what is authoritative.
+>
+> ---
+>
+> **Schema-bound output**
+> - A response constrained to a defined structure such as JSON Schema or typed fields with known names and shapes.
+> - It matters here because pipeline-facing prompts become safer when output shape is explicit and machine-validated.
+>
+> > [!warning] Structure is not semantic truth
+> >
+> > A model can still place the wrong value into the right field, so schema validation must be paired with business-rule checks.
+>
+> ---
+>
+> **Prompt chaining**
+> - Splitting a complex task into sequential prompts or stages rather than asking one prompt to do everything at once.
+> - It matters here because chaining can isolate failures, reduce ambiguity, and allow stage-specific validators or approval gates.
+>
+> > [!warning] Chains add overhead
+> >
+> > If the stages do not create clearer validation or routing boundaries, chaining may only increase latency and operational complexity.
+>
+> ---
+>
+> **Decomposition**
+> - Breaking a workflow into smaller task units such as extraction, classification, explanation, or reviewer-note generation.
+> - It matters here because prompt architecture becomes safer when each stage has a narrower job and a clearer success condition.
+>
+> > [!info] Split by failure mode
+> >
+> > Decomposition is most useful when different stages fail differently and should not share the same prompt contract.
+>
+> ---
+>
+> **Prompt version**
+> - A named revision of a prompt contract used for testing, deployment, rollback, and regression analysis.
+> - It matters here because prompt changes are operational changes, and the team needs to know exactly which revision produced each output.
+>
+> > [!warning] No version means no forensics
+> >
+> > If outputs are not tagged with prompt version, incident analysis becomes guesswork even when the change itself looked small.
+>
+> ---
+>
+> **Reasoning budget**
+> - The amount of token, latency, and model-capacity spend the system is willing to allocate to a task.
+> - It matters here because some architectural choices should move work into the application or into smaller stages rather than blindly expanding prompt size.
+>
+> > [!info] Cost shapes architecture
+> >
+> > A prompt that works only with very high reasoning or token budgets may be functionally correct but still operationally poor.
+>
+> ---
+>
+> **Section contract**
+> - A semi-structured output requirement where the answer must follow named sections rather than a fully typed machine schema.
+> - It matters here because reviewer-facing outputs often benefit from stronger structure than freeform prose even when JSON would be unnecessarily rigid.
+>
+> > [!info] Human-readable structure still matters
+> >
+> > Section contracts are useful when humans are the next validator, but they still need explicit headings and expectations.
+>
+> ---
+>
+> **Tool interaction boundary**
+> - The architectural point where a prompt stops reasoning over text and begins asking the application to retrieve, compute, or act through tools.
+> - It matters here because architecture decisions should clarify when the model is expected to decide, when it is expected to call a tool, and how those results re-enter the prompt.
+>
+> > [!warning] Prompting is not orchestration
+> >
+> > A prompt can request structured tool use, but the application still needs to own permission control, retries, and validation around the call.
 
----
+> [!example] Template Architecture Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for reusable prompt templates, schema-driven extraction, tool-backed workflows, reviewer packets, and any system where prompts are long-lived production assets rather than one-off chat requests.
+> > - Use it when policy, task, evidence, examples, and output schema need to be separated so failures can be debugged by layer instead of by guesswork.
+> > - Use it to make prompts maintainable under model changes, retrieval changes, and evolving workflow requirements.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use prompt architecture as a substitute for application orchestration, validators, or clear task separation when the workflow itself is still monolithic or ambiguous.
+> > - Do not over-engineer layers if the prompt still lacks a clean job definition from the foundations note.
+> > - Do not store templates without version linkage to models, schemas, and traces; that creates text reuse, not architecture.
 
-## Layering: Role, Goal, Constraints, Format
+## Why this topic matters
 
-A well-architected prompt has four layers. Each layer serves a distinct purpose:
+Weak prompt architecture creates fragile systems. The prompt works in a demo, fails on new data, and no one can tell whether the breakage came from the model, the evidence, or the hidden assumptions in the prompt body.
+
+Chroma search surfaced a repeated theme across LLM-application books and framework references: structured outputs and modular prompt construction are what make model behavior consumable by software systems. Current provider guidance also reflects this shift. Anthropic's current prompt documentation groups clarity, examples, XML structuring, thinking, and prompt chaining as architecture choices, not isolated tricks.
+
+## Conceptual model / diagrams
+
+Prompt architecture should separate stable instructions from request-specific material.
 
 ```mermaid
-flowchart TB
-    R[Role] --> G[Goal]
-    G --> C[Constraints]
-    C --> F[Format]
-
-    style R fill:#1a1a2e,stroke:#7aa2f7,color:#fff
-    style G fill:#1a1a2e,stroke:#34a853,color:#fff
-    style C fill:#1a1a2e,stroke:#e8b84d,color:#fff
-    style F fill:#1a1a2e,stroke:#bb9af7,color:#fff
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Policy and role] --> B[Task contract]
+    B --> C[Evidence block]
+    C --> D[Examples or counterexamples]
+    D --> E[Output schema]
+    E --> F[Validator and router]
 ```
 
-> [!abstract] The four layers
-> - **Role** — who the model is (primes vocabulary and reasoning)
-> - **Goal** — what to accomplish (the single most important sentence)
-> - **Constraints** — boundaries and rules (what NOT to do)
-> - **Format** — how to structure the output (JSON, table, bullet list)
+## Core patterns or workflows
 
-### Layer 1: Role — Priming Vocabulary and Reasoning Patterns
+This section explains the architectural choices that matter most in production prompts.
 
-The role primes the model's vocabulary, reasoning patterns, and assumptions. A "senior tax accountant" generates different output than a "financial journalist" — even given the same question.
+### Layered prompt contracts
 
-#### Effective role definitions include
+A strong prompt template usually contains five layers:
 
-- **Expertise level:** "You are a senior data engineer with 10 years of experience in ETL pipelines"
-- **Perspective:** "You think like a security auditor — assume everything is a potential attack vector"
-- **Anti-role:** "You are NOT a salesperson. Do not pitch or upsell. Be honest about limitations."
+1. **Role and policy**: what the model is allowed to do and what it must not do.
+2. **Task objective**: the concrete business goal for the current request.
+3. **Evidence or context block**: the data, document fragment, metadata, or tool result the model may rely on.
+4. **Decision rules or examples**: how to resolve ambiguity, classify edge cases, or imitate a house style.
+5. **Output contract**: the exact response structure and uncertainty behavior.
 
-#### Example of a strong role definition
+This layered approach makes it easier to pinpoint which part needs to change when outputs degrade.
 
-```
-You are a Lead Cloud DevOps and Site Reliability Engineer (SRE).
-Your specialty is GCP serverless infrastructure, specifically
-optimizing cost-to-performance ratios for Cloud Run and Cloud SQL.
-Think like someone who has been paged at 3am and wants to prevent
-it from happening again.
-```
+### Delimiters and labeled sections
 
-> [!tip] Anti-Roles Are Underused
-> Telling the model who it is NOT can be more powerful than telling it who it is. "You are NOT a salesperson" shapes output more reliably than "be objective" — because it gives the model a concrete frame to reject.
+Delimiters are not about style. They are about reducing context confusion. When the model sees explicit boundaries such as `Instructions`, `Context`, `Rules`, and `Output Schema`, it has a better chance of respecting the intended separation between the parts.
 
-### Layer 2: Goal — The Single Most Important Sentence
+Useful delimiter patterns include:
 
-The goal is the **single most important sentence** in your prompt. If the model could only read one line, this should be it.
+- labeled markdown sections for readability
+- XML-like tags for nested blocks or tool-ready prompt construction
+- field-by-field JSON schemas for machine-validated outputs
+- negative examples that show what the model must not emit
 
-| Weak goal | Strong goal |
-|-----------|-------------|
-| "Help me with my Terraform" | "Refactor my Terraform config to use modules, extracting the VPC, IAM, and Cloud Run resources into separate reusable modules" |
-| "Write tests" | "Write unit tests for the `compute_daily_scores` function covering: normal input, empty dataframe, missing columns, and NaN values" |
-| "Analyze this data" | "Identify the top 3 anomalies in this time series data and explain what each one likely means in a financial context" |
+The right delimiter depends on the task. XML-style boundaries are often useful when several context blocks must stay distinct. JSON schemas are useful when the output must be parsed automatically.
 
-> [!warning] Buried goals produce poor output
->
-> If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [intent vs. output misalignment](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#42-intent-vs-output-misalignment) for the failure mode this prevents.
+### Schema-bound outputs
 
-> [!success] Fix: Lead Every Prompt with a Single-Sentence Goal Statement
-> Rewrite the opening of your prompt to a one-sentence imperative that states the task directly. Example: "Analyze the five biggest contributors to index underperformance in Q3" — before any context or background. The context follows; it never precedes the goal.
+Schema-bound outputs are the default choice when the model feeds a pipeline. Current provider capabilities and Chroma sources align on this point: the application should tell the model the field names, types, and allowed shapes rather than hoping the model improvises correctly.
 
-### Layer 3: Constraints — Defining the Negative Space
+Schema-bound outputs are especially strong for:
 
-Constraints prevent the model from going off track. They are **negative space** — defining what NOT to do is often more important than what to do.
+- document extraction
+- classification and routing
+- tool invocation arguments
+- ranked candidate lists
+- human-review packets with fixed sections
 
-#### Categories of constraints
+They are less useful when the deliverable is an open narrative, but even then a section contract is better than freeform prose.
 
-| Type | Example |
-|------|---------|
-| **Scope** | "Only address the authentication flow, not the entire backend" |
-| **Depth** | "Keep explanations at a senior engineer level — skip basics" |
-| **Length** | "Maximum 200 words" or "Exactly 5 bullet points" |
-| **Tone** | "Technical and direct, not conversational" |
-| **Exclusions** | "Do not suggest using a different framework" |
-| **Accuracy** | "If you're not sure, say so — do not guess" |
+### Decomposition and prompt chaining
 
-> [!tip] Positive beats negative instructions
->
-> "Maximum 3 sentences" is stronger than "don't be verbose." Specific metrics outperform adjectives. When you find yourself writing "don't be X," convert it to "do Y instead" wherever possible.
+If the task mixes interpretation, retrieval, policy, and action, the prompt is usually being asked to do too much at once. Split it when:
 
-### Layer 4: Format — Eliminating Wasted Iterations
+- the stages can be validated independently
+- one stage depends on tool or retrieval output
+- the failure modes differ materially between stages
+- the approval boundary sits between stages
 
-Explicit format instructions eliminate the most common source of wasted iterations — getting the right content in the wrong shape.
+For example, in an index-maintenance assistant, "extract methodology rules," "compare today's constituents to the prior composition," and "draft a reviewer note" should not be one opaque prompt. Each stage has different evidence and a different validation method.
 
-```
-Output format:
-- One markdown table with columns: Metric | Current | Target | Gap
-- Below the table: 3 bullet points of recommended actions
-- Each bullet: action verb + specific change + expected impact
-- No introduction or conclusion
-```
+### Prompt versioning
 
-### Complete Example: All 4 Layers Together
+Prompt architecture is incomplete until the system records which prompt revision produced which output. Versioning should capture:
 
-```
-Role: You are a senior financial analyst specializing in European
-equity indices.
+- prompt template identifier
+- model identifier
+- retrieval or tool configuration version
+- schema version
+- test-suite status before release
 
-Goal: Analyze the attached market index Q3 earnings data and identify
-the 5 stocks with the strongest momentum-value divergence.
+Without this, regression analysis is mostly anecdotal.
 
-Constraints:
-- Use only the data provided — do not reference external sources
-- Define "momentum" as 30-day RSI + 50/200 MA crossover
-- Define "value" as forward P/E z-score within sector
-- Divergence = momentum rank and value rank differ by >20 positions
-- Ignore stocks with market cap below EUR 10B
+## Production examples
 
-Format:
-- Markdown table: Rank | Symbol | Name | Momentum Score | Value Score
-  | Rank Divergence | Interpretation
-- Below: 2-sentence summary of the overall pattern
-```
+### Schema-bound ESG field extraction
 
----
+For ESG extraction, the prompt should explicitly define:
 
-## Modular Structures: XML, JSON, Schemas, Paragraphs
+- the source pages or paragraph boundaries
+- the target fields such as scope, metric, unit, reporting period, and source reference
+- the allowed null behavior
+- whether inferred values are forbidden
 
-Different structural formats serve different purposes. The choice of format affects how precisely the model interprets your intent.
+That architecture keeps the prompt aligned with the traceability needs of `[[03-sfdr-data-requirements]]` and emerging ESG-ratings governance.
 
-### XML Tags: Unambiguous Section Boundaries
+### Methodology support for index analysts
 
-XML tags create **unambiguous boundaries** between sections. Models (especially Claude) treat XML tags as strong structural delimiters. Content inside tags is parsed as a distinct unit.
+For index methodology interpretation, a strong prompt architecture separates:
 
-```xml
-<role>
-You are a Python code reviewer focused on data pipeline reliability.
-</role>
+- the methodology excerpt
+- the specific case facts
+- the rule-selection task
+- the allowed response shape
+- the escalation path when the rule is ambiguous
 
-<task>
-Review the following function for:
-1. Idempotency issues
-2. Error handling gaps
-3. Performance bottlenecks with large datasets (>1M rows)
-</task>
+This prevents the model from blending methodology text, market color, and invented assumptions into one unsupported explanation.
 
-<code>
-def load_ohlcv(conn, df, table_name):
-    ...
-</code>
+## Risks / anti-patterns
 
-<output_format>
-For each issue found:
-- Line number
-- Issue category (idempotency | error handling | performance)
-- Current behavior
-- Recommended fix (code snippet)
-</output_format>
+- Storing policy, user input, and untrusted retrieved content in the same block.
+- Overloading a prompt template with several mutually independent jobs.
+- Using freeform outputs for tasks that need typed fields.
+- Modifying prompt wording in production without a recorded version bump or regression run.
+- Treating prompt chains as a substitute for proper application orchestration.
 
-<constraints>
-- Do not suggest style changes
-- Do not add type annotations
-- Only flag issues that could cause data loss or silent failures
-</constraints>
-```
+## Recommendations / operating rules
 
-**When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [Claude-specific guidance](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting#claude-anthropic)).
+- Keep policy-level instructions stable and reusable.
+- Keep task-level instructions explicit and short enough that the real objective is obvious.
+- Keep evidence blocks narrow, labeled, and provenance-aware.
+- Use schemas for pipeline-facing outputs and section contracts for reviewer-facing outputs.
+- Log prompt version, model version, and schema version together.
 
-> [!warning] LLM JSON syntax errors
->
-> Models occasionally produce invalid JSON -- trailing commas, unescaped quotes, missing brackets, or markdown code fence wrappers around the JSON. Always wrap `json.loads()` in a try/except and implement a retry-with-repair strategy. Adding "Return ONLY valid JSON, no markdown formatting" to the prompt reduces but does not eliminate this issue. For production pipelines, use the model's structured output mode (Anthropic's tool_use, OpenAI's JSON mode) instead of parsing free-text JSON.
+## Domain-specific applications
 
-> [!success] Fix: Use Tool Use / Structured Output Mode for Production JSON
-> Replace free-text JSON prompting with the model's native structured output API: Anthropic's `tool_use` or OpenAI's `response_format: {type: "json_object"}`. These modes enforce schema-valid JSON at generation time, eliminating the parsing failure class entirely. Reserve free-text JSON only for exploratory or low-stakes use cases.
+Prompt architecture matters wherever the model output will be reviewed against rules, not just style:
 
-### JSON Schema: Machine-Readable Structured Output
+- ESG taxonomy mapping where the output must distinguish disclosure text from mapped taxonomy code.
+- Corporate-actions extraction where dates, ratios, and event types need typed outputs.
+- Data-quality review flows where the model's explanation is helpful, but the routing decision must still pass deterministic controls.
 
-JSON is ideal when you need the model to produce **machine-readable structured output** that will be parsed by code.
+## Evaluation / validation considerations
 
-```
-Extract the following information from the earnings call transcript.
-Return ONLY valid JSON matching this schema:
+Architectural quality shows up in:
 
-{
-  "company": "string",
-  "quarter": "string (e.g. Q3 2025)",
-  "revenue_growth_yoy": "number (percentage, e.g. 12.5)",
-  "guidance_direction": "raised | maintained | lowered | not_provided",
-  "key_risks": ["string", "string"],
-  "sentiment": "bullish | neutral | bearish"
-}
+- schema-validity rate
+- field completeness
+- unsupported inference rate
+- reviewer disagreement by task stage
+- rollback frequency after prompt changes
 
-If a field cannot be determined from the transcript, use null.
-Do not add fields not in the schema. Do not wrap in markdown code blocks.
-```
+If a prompt architecture change improves prose quality but increases validation failures, it is not an improvement.
 
-**When to use JSON:** API integrations, data extraction, structured outputs that feed into downstream processing.
+## Troubleshooting / failure modes
 
-### Paragraph Form: Nuanced and Conversational Tasks
+- If different inputs produce wildly different output structures, the schema contract is too weak.
+- If the model hallucinates from retrieved content, trusted and untrusted layers are not separated clearly enough.
+- If one template accumulates dozens of optional branches, the architecture should be split into specialized templates.
+- If prompt changes keep breaking outputs silently, the system is missing prompt versioning and regression gates.
 
-Free-form paragraphs work best for creative, conversational, or nuanced tasks where rigid structure would feel forced.
+## Related notes
 
-```
-I'm designing a data pipeline that processes stock market data from
-three indices (Euro market index, the data pipeline project Asia/Pacific 50, the data pipeline project USA 50).
-The pipeline runs three times daily after each market close.
-
-My concern is handling overlapping exchange hours — when the US market
-opens, Asian markets have already closed, but their pulse data might
-still be updating for Hong Kong stocks that trade on multiple exchanges.
-
-Walk me through how you'd handle the timing logic. I'm using Python
-with pyodbc and SQL Server. The pipeline is orchestrated by Airflow
-with three DAGs. I want the solution to be simple — I'd rather have
-a slightly delayed update than complex timezone-aware scheduling.
-```
-
-**When to use paragraphs:** Brainstorming, explaining a problem to get advice, creative writing, situations where the model needs to understand nuance and context rather than follow a rigid template.
-
-### Format Comparison Table
-
-| Format | Precision | Readability | Best for |
-|--------|-----------|-------------|----------|
-| XML tags | High | Medium | System prompts, agents, complex tasks |
-| JSON schema | Highest | Low | Structured extraction, API output |
-| Markdown sections | Medium-High | High | Documentation, multi-part tasks |
-| Numbered lists | Medium | High | Step-by-step procedures |
-| Plain paragraphs | Low | Highest | Creative, conversational, exploratory |
-
-> [!info] Format and Model Interaction
-> The right format also depends on the model. Claude handles XML best. GPT-4 handles markdown system/user separation well. Gemini works well with clearly-framed task statements. See [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) for per-model format guidance.
-
----
-
-## Meta-Prompting and Chain of Thought
-
-### Chain of Thought Prompting
-
-Chain of thought (CoT) prompting forces the model to externalize its reasoning before reaching a conclusion. This dramatically improves accuracy on multi-step problems.
-
-#### Basic CoT trigger phrases
-- "Think step by step"
-- "Before answering, work through the logic:"
-- "Walk me through your reasoning"
-
-#### Structured CoT (numbered stages)
-
-```
-Analyze whether Company X should enter the Japanese market.
-
-Think through this step by step:
-1. Market size and growth trajectory
-2. Competitive landscape (existing players, barriers to entry)
-3. Regulatory environment
-4. Company X's current capabilities vs. market requirements
-5. Financial projection (best case, worst case, expected)
-6. Final recommendation with confidence level
-```
-
-> [!tip] CoT for Debugging
-> Chain of thought is especially useful when debugging code or data issues. Ask the model to "trace through the execution step by step" before proposing a fix. This surfaces assumptions the model is making and often catches errors in its own reasoning.
-
-### Meta-Prompting: Using AI to Improve Prompts
-
-Meta-prompting is using the model itself to analyze and improve your prompts. It is one of the fastest ways to identify structural weaknesses.
-
-#### Key meta-prompt patterns
-
-#### Before answering, identify 3 possible interpretations of this question
-```
-Before answering, identify 3 possible interpretations of this question,
-then state which interpretation you're using and why.
-Question: [your question]
-```
-
-**What's wrong with this prompt?**
-```
-Analyze this prompt and identify its weaknesses:
-[paste your prompt]
-Focus on: ambiguity, missing constraints, format gaps, and intent misalignment.
-```
-
-#### Generate a better version
-```
-Here is a prompt I'm using: [paste prompt]
-Here is the output it produced: [paste output]
-Here is what I actually wanted: [describe ideal output]
-Rewrite the prompt to produce the desired output.
-```
-
-> [!warning] Meta-Prompting Limitations
-> The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [evaluation agent pattern](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems) for the architectural solution.
-
-> [!success] Fix: Assign a Distinct Evaluator Role in the Meta-Prompt
-> When using meta-prompting, switch the role explicitly before asking for evaluation. After generating with "You are a senior data engineer," start the evaluation turn with "You are a technical writer reviewing a prompt for clarity and constraint precision — not for technical accuracy." The role switch breaks the self-confirmation loop and surfaces structural weaknesses the generator role would miss.
-
----
-
-### Quick Reference: The 4-Layer Prompt Template
-
-```
-Role: [Who the model is — expertise, perspective, anti-role]
-
-Task: [One clear sentence — what to accomplish]
-
-Constraints:
-- [Scope boundary]
-- [Depth/length limit]
-- [What NOT to do]
-- [Uncertainty handling]
-
-Format:
-- [Output structure — table, list, JSON, paragraphs]
-- [Length — words, sentences, items]
-- [Example if complex]
-```
-
----
-
-## Related Notes
-
-- [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that underlie these architectural patterns
-- [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Claude vs. GPT-4 vs. Gemini vs. Grok format preferences
-- [applied-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — The 4-layer template applied to research, code, data extraction, and content tasks
-- [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Rebuilding broken prompts using phrasing, logic steps, and reinforcement
+- [[01-prompt-foundations]]
+- [[03-applied-prompting]]
+- [[04-model-specific-prompting]]
+- [[05-prompt-debugging]]
+- [[02-rag-retrieval-and-tool-use]]
+- [[01-ai-evaluation-and-quality-assurance]]
 
 ## References
 
-- [Anthropic Claude Prompt Engineering](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
-- [OpenAI Best Practices](https://platform.openai.com/docs/guides/prompt-engineering)
+- ChromaDB enrichment: `Designing Large Language Model Applications.epub`
+- ChromaDB enrichment: `Learning LangChain Building AI and LLM Applications with LangChain and LangGraph.epub`
+- ChromaDB enrichment: `Prompt Engineering for LLMs The Art and Science of Building Large Language Model-Based Applications.epub`
+- Anthropic | [Prompt engineering overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)
+- Model Context Protocol | [What is MCP?](https://modelcontextprotocol.io/docs/getting-started/intro)

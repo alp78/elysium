@@ -15,9 +15,105 @@ status: complete
 >
 > — **Kelsey Hightower**, tweet (2019)
 
-Three custom dashboards cover the data platform: **Pipeline Watch** (pipeline run metrics during execution), **SQL Server DBA** (database health and deadlock tracking), and **Airflow Orchestration** (scheduler health, DAG performance, task metrics).
+> [!abstract]- Summary
+>
+> This note turns raw Datadog telemetry into operator views: it organizes Cloud Run, SQL Server, and Airflow signals into dashboards that surface current health, capacity pressure, and failure indicators quickly enough for a human to triage the platform without digging through every metric namespace manually.
+>
+> **Pipeline watch design**
+> - Builds the main cross-platform dashboard from Cloud Run job metrics, SQL VM host metrics, and SQL Server engine counters so the whole pipeline can be scanned in one place.
+> - Uses sectioned widget groups to keep the runtime path readable from ingestion trigger to database state.
+>
+> **SQL Server DBA view**
+> - Adds a database-focused dashboard for deadlocks, connections, batch rate, waits, and buffer-pool signals that matter to the SQL operating surface.
+> - Separates DBA triage from broad pipeline status so deeper engine diagnosis does not clutter the cross-system board.
+>
+> **Airflow orchestration board**
+> - Collects scheduler and task metrics into an orchestration-specific board tuned for DAG health and concurrency behavior.
+> - Shows how Airflow observability becomes usable when metric families are grouped into an intentional layout rather than viewed one by one.
+>
+> **Dashboarding practice**
+> - Treats widget choice, section headers, and query scope as part of observability design rather than as cosmetic UI work.
+> - When to use: the signals already exist and the next task is to assemble them into dashboards that support real triage.
 
----
+> [!note]- Glossary
+>
+> **dashboard**
+> - A Datadog page that arranges related widgets into an operational view of a system.
+> - It matters here because the note is about turning telemetry into a scan path that humans can actually use.
+>
+> > [!info] Human triage surface
+> >
+> > A good dashboard reduces lookup time by making the investigation order obvious.
+>
+> ---
+>
+> **timeseries widget**
+> - A chart widget that shows how a metric changes over time.
+> - It matters here because trend direction often matters more than a single point for CPU, waits, or DAG duration.
+>
+> > [!tip] Shape beats snapshot
+> >
+> > Troubleshooting usually depends on slope, spikes, and persistence rather than one isolated value.
+>
+> ---
+>
+> **query value widget**
+> - A widget that highlights the current or aggregated value of one metric query.
+> - It matters here because deadlocks, cache ratio, and similar headline signals benefit from a direct current-state readout.
+>
+> > [!info] Fast state read
+> >
+> > Use this when the operator first needs the answer, not the full time history.
+>
+> ---
+>
+> **section header**
+> - A text widget or heading block used to separate related groups of dashboard widgets.
+> - It matters here because the large dashboards in this note depend on visual grouping to stay readable.
+>
+> > [!tip] Layout is part of meaning
+> >
+> > Grouping widgets by system layer gives the viewer a natural left-to-right or top-to-bottom investigation path.
+>
+> ---
+>
+> **metric namespace**
+> - The prefix family that identifies where a Datadog metric comes from, such as SQL Server or Cloud Run.
+> - It matters here because building mixed dashboards requires pulling from multiple namespaces without confusing their semantics.
+>
+> > [!info] Know the source family
+> >
+> > Cross-system dashboards only work when the author knows which provider or integration each metric belongs to.
+>
+> ---
+>
+> **tag filter**
+> - The query condition that limits a widget to a specific host, job, service, or environment.
+> - It matters here because shared metric names become useful only after the right resource tags narrow the scope.
+>
+> > [!tip] Scope before interpretation
+> >
+> > Bad filters create misleading dashboards even when the underlying metrics are accurate.
+>
+> ---
+>
+> **triage board**
+> - A dashboard designed to answer what is broken, where, and how badly in the first minutes of an incident.
+> - It matters here because the main Pipeline Watch dashboard is meant to drive the first-pass investigation sequence.
+>
+> > [!info] First-stop dashboard
+> >
+> > A triage board is not an archive of every metric; it is a fast path to the next diagnostic question.
+>
+> ---
+>
+> **capacity signal**
+> - A metric that reveals saturation or headroom, such as CPU, memory, connections, or pool usage.
+> - It matters here because many dashboard widgets in the note are there to explain slowdown before outright failure occurs.
+>
+> > [!tip] Pressure before outage
+> >
+> > Capacity signals often move first and tell you which subsystem is about to become the incident center.
 
 ## Pipeline Watch Dashboard
 
@@ -35,9 +131,11 @@ Use **Notes & Links** widgets as section headers:
 
 1. Click **+ Add Widget** → **Notes & Links**
 2. Enter markdown for the header, e.g.:
-   ```markdown
+
+```markdown
    ## Cloud Run Job
-   ```
+```
+
 3. Style: set background color to match your theme, make text bold
 4. Drag to span the full width
 
@@ -380,4 +478,3 @@ A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json
 - [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow metrics
 - [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCP Integration for Cloud Run metrics
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — Manual DMV queries for deeper investigation
-

@@ -498,17 +498,19 @@ while ($true) {
 | `-OwningProcess` | `-OwningProcess 5678` | Filter by owning process ID |
 
 
-## When to use socket inspection tools
-
-- **Port conflict diagnosis** -- "Address already in use" errors require identifying which process holds the port: `ss -tlnp | grep :<port>`.
-- **Service verification** -- confirm a service is listening on the expected port and interface after deployment.
-- **Connection monitoring** -- count ESTABLISHED connections to a database or API to detect connection exhaustion.
-- **Firewall debugging** -- verify that connections are reaching the host (ESTABLISHED state) after allowing traffic through the firewall.
-
-## When not to use socket inspection tools
-
-- **Application-level connection issues** -- socket inspection shows OS-level state. For connection pool monitoring, use application metrics or database DMVs.
-- **Network path issues** -- sockets show endpoints, not the path between them. Use `traceroute` for path diagnosis.
+> [!example] Socket Inspection Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Port conflict diagnosis** -- "Address already in use" errors require identifying which process holds the port: `ss -tlnp | grep :<port>`.
+> > - **Service verification** -- confirm a service is listening on the expected port and interface after deployment.
+> > - **Connection monitoring** -- count ESTABLISHED connections to a database or API to detect connection exhaustion.
+> > - **Firewall debugging** -- verify that connections are reaching the host (ESTABLISHED state) after allowing traffic through the firewall.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Application-level connection issues** -- socket inspection shows OS-level state. For connection pool monitoring, use application metrics or database DMVs.
+> > - **Network path issues** -- sockets show endpoints, not the path between them. Use `traceroute` for path diagnosis.
 
 ## Warnings
 

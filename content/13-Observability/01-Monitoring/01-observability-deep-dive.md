@@ -8,7 +8,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Observability Deep Dive: DataDog, Lineage, and Data Cataloging
+# Observability Deep Dive
 
 > [!quote]
 > "Observability is a property of a system that has been designed, built, tested, deployed, operated, and evolved in acknowledgment that failure needs to be embraced at every phase."
@@ -19,16 +19,156 @@ status: complete
 >
 > — **Liz Fong-Jones**, SREcon (2019)
 
-Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [DataOps philosophy](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
-
-> [!warning] Financial Data Stakes
-> In financial indexing, a monitoring gap is not just an operational inconvenience — it can result in incorrect index values published to the market, incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. Observability at this level is a compliance requirement, not an engineering nicety.
-
-> [!success] Treat observability as a pipeline deliverable
+> [!abstract]- Summary
 >
-> Instrument every pipeline stage at design time: push row counts, freshness metrics, and quality check results as custom metrics on every run. Add a pre-publication quality gate that halts the pipeline and pages on-call if any critical check fails, preventing incorrect values from reaching downstream consumers.
+> This note treats observability as the full diagnostic and governance surface of a data platform, not just as alerting, and it defines how metrics, logs, traces, freshness tracking, lineage, cataloging, quality checks, and drift detection combine to make financial-data pipelines explainable, auditable, and stoppable before bad data is published.
+>
+> **Signals and instrumentation**
+> - Explains the three pillars of observability for pipelines, then applies Datadog custom metrics, APM traces, and monitor-as-code patterns to pipeline health, latency, and failure visibility.
+> - Treats observability as a design property that must challenge mental models and expose the real execution path of each run.
+>
+> **Freshness and lineage**
+> - Covers freshness monitoring with tracking tables and metrics, then extends observability into lineage with metadata tables and column-level traceability for index calculations.
+> - Positions lineage as the bridge from runtime incidents to business-impact analysis and root-cause reconstruction.
+>
+> **Cataloging, entitlement, and quality**
+> - Defines what a catalog must store, how entitlements gate access to financial data, and how quality frameworks combine dimensions, Great Expectations, and SQL checks into enforceable standards.
+> - Treats catalog and entitlement metadata as observability inputs because access and semantics affect incident interpretation.
+>
+> **Drift detection and safety**
+> - Covers schema drift, statistical data drift, automated drift tables, shift-left quality gates, and the operational gotchas specific to data-pipeline observability.
+> - Warnings: financial observability gaps become compliance risks, metrics without baselines are noise, and drift detection must feed real pipeline gates instead of passive dashboards.
+> - Strategy surfaces: the maturity ladder, quality dimensions, and drift pipeline sections are the note's main operating-model guides.
 
----
+> [!note]- Glossary
+>
+> **Observability**
+> - The system property that makes internal state inferable from emitted signals such as metrics, logs, traces, lineage, and quality results.
+> - It matters here because the note argues that financial-data pipelines need explainability and stoppability, not just uptime checks.
+>
+> > [!warning] More than renamed monitoring
+> >
+> > Monitoring tells you that a threshold crossed. Observability is the broader design discipline that lets operators explain why, where, and with what data impact the failure occurred.
+>
+> ---
+>
+> **Three pillars**
+> - The combination of metrics, logs, and traces used as the core signal types for distributed-system diagnosis.
+> - It matters here because the note anchors the pipeline investigation workflow around those three complementary signals.
+>
+> > [!info] Signals answer different questions
+> >
+> > Metrics quantify, logs explain, and traces localize cross-service latency or failure. Using only one pillar leaves major diagnosis gaps.
+>
+> ---
+>
+> **Custom metric**
+> - An application-defined time-series signal emitted by the pipeline rather than collected automatically by infrastructure agents.
+> - It matters here because row counts, freshness, stage durations, and quality results often do not exist until the pipeline publishes them explicitly.
+>
+> > [!info] Domain visibility surface
+> >
+> > Infrastructure metrics rarely tell you whether the business data is healthy. Custom metrics are how pipeline semantics become observable.
+>
+> ---
+>
+> **Data freshness**
+> - The measure of how recently a dataset or pipeline output was produced relative to its expected update cadence.
+> - It matters here because freshness is one of the clearest business-facing observability signals in a data platform.
+>
+> > [!danger] Healthy systems can still be stale
+> >
+> > A platform can be green on CPU and memory while silently serving old data. Freshness closes the gap between technical health and business usefulness.
+>
+> ---
+>
+> **Data lineage**
+> - The traceable chain that links a published value back through transformations to its original source records and files.
+> - It matters here because the note treats lineage as a first-class diagnostic tool for explaining where a wrong number came from.
+>
+> > [!warning] Root cause needs provenance
+> >
+> > Without lineage, teams can detect bad output but struggle to prove whether the cause was source data, transformation logic, or publication flow.
+>
+> ---
+>
+> **Column-level lineage**
+> - Fine-grained lineage that tracks how a specific output column was derived from specific source columns and transformations.
+> - It matters here because financial calculations often need exact traceability for one metric, one field, or one published value rather than for a whole table only.
+>
+> > [!info] Precision for regulated numbers
+> >
+> > Table-level lineage is often too coarse for audits. Column-level lineage makes it possible to justify one published figure with exact upstream logic.
+>
+> ---
+>
+> **Data catalog**
+> - A structured inventory of datasets, owners, definitions, technical metadata, and usage context.
+> - It matters here because observability is weaker when operators do not know what a dataset means, who owns it, or which consumers depend on it.
+>
+> > [!info] Operational semantics store
+> >
+> > A good catalog is not passive documentation. It shortens incidents by telling responders what the data is, who should care, and where to escalate.
+>
+> ---
+>
+> **Entitlement**
+> - The access-control model that determines which users or systems are allowed to view or use specific datasets or fields.
+> - It matters here because access metadata changes both the compliance posture and the incident blast radius of a data product.
+>
+> > [!danger] Observability meets governance
+> >
+> > If sensitive data exposure is not visible and controlled, observability becomes incomplete. Access rules are part of operational reality, not separate from it.
+>
+> ---
+>
+> **Data quality dimension**
+> - A high-level correctness category such as completeness, validity, uniqueness, timeliness, or consistency.
+> - It matters here because the note uses quality dimensions to turn vague quality concerns into specific, testable monitoring surfaces.
+>
+> > [!info] Framework for choosing checks
+> >
+> > Quality dimensions keep teams from inventing ad hoc rules without structure. They help map real business risks to concrete validations and alerts.
+>
+> ---
+>
+> **Great Expectations**
+> - A framework for declaring and running expectation-based data validations against datasets.
+> - It matters here because the note uses it as one of the practical ways to operationalize quality checks inside financial pipelines.
+>
+> > [!warning] Framework needs ownership
+> >
+> > Expectations are only valuable when they are curated, versioned, and tied to real response behavior. A large unused expectation suite becomes a false sense of safety.
+>
+> ---
+>
+> **Schema drift**
+> - The change of data shape, field presence, or data types relative to the structure the pipeline expects.
+> - It matters here because upstream providers and internal systems can alter schemas in ways that silently break transformations or corrupt downstream assumptions.
+>
+> > [!warning] Shape changes break trust fast
+> >
+> > Schema drift is often easy to detect but expensive to ignore. Catch it before loading or publishing so failures stay localized.
+>
+> ---
+>
+> **Statistical data drift**
+> - A material change in the distribution or behavior of data values even when the schema has not changed.
+> - It matters here because many dangerous data issues in financial feeds are semantic or statistical rather than structural.
+>
+> > [!warning] Same schema different reality
+> >
+> > A table can look structurally correct while its values have become abnormal. Distribution checks are what expose those silent behavior changes.
+>
+> ---
+>
+> **Quality gate**
+> - A pipeline checkpoint that stops progression or publication when critical validation, drift, or freshness conditions fail.
+> - It matters here because the note explicitly argues that observability should prevent bad data from reaching consumers, not only report that it already did.
+>
+> > [!danger] Detection must be enforceable
+> >
+> > If critical observability signals do not block publication, the platform still allows known-bad data to leak downstream. Gates turn awareness into control.
 
 ### The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines
 
@@ -55,6 +195,20 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 > Emit every pipeline metric with tags for `stage`, `index_key`, and `run_date`. Store a 7-day rolling average in a summary table or use Cloud Monitoring's anomaly detection policies to alert on percentage deviation rather than fixed thresholds. This makes every alert self-describing and immediately actionable.
 
 ---
+
+> [!example] Platform Observability Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when the team needs an end-to-end observability model for correctness-critical data pipelines rather than a narrow metrics or dashboard tutorial.
+> > - Use it when metrics, traces, freshness, lineage, cataloging, quality checks, and drift detection all need to work together as one diagnostic surface.
+> > - Use it to design a pipeline that can explain bad data, stale data, and hidden drift before those conditions reach publication or consumers.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note if the immediate goal is only to install one agent or configure one monitoring integration already covered elsewhere.
+> > - Do not call a platform observable if it only reports infrastructure health while freshness, lineage, and data-quality signals remain blind.
+> > - Do not build drift dashboards that never feed alerts or gates; passive visibility alone is not the operating model this note assumes.
 
 ## DataDog for Data Pipeline Observability
 
@@ -850,6 +1004,7 @@ flowchart TB
 > Create a Python decorator `@log_lineage(source, target, transform_type)` that inserts a row to `pipeline.lineage` after each successful load. Apply it to all Python loaders, scheduled SQL scripts, and Cloud Functions that write to warehouse tables. Run a weekly query against `pipeline.lineage` to identify tables that have received data but have no lineage record — these are the gaps.
 
 ## Related
+
 - [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — DataDog agent setup and infrastructure monitoring
 - fastapi and polars — FastAPI services and Polars pipelines being monitored
 - [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt tests as a complementary data quality layer
@@ -857,6 +1012,7 @@ flowchart TB
 - [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg time travel as a lineage/audit capability
 
 ## References
+
 - [DataDog Python client](https://datadogpy.readthedocs.io/)
 - [Great Expectations documentation](https://docs.greatexpectations.io/)
 - [OpenMetadata documentation](https://docs.open-metadata.org/)

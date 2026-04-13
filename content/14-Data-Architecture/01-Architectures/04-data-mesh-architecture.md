@@ -15,14 +15,136 @@ status: complete
 >
 > — **Zhamak Dehghani**, *Data Mesh* (2022)
 
-Data mesh is a sociotechnical approach to data platform design introduced by Zhamak Dehghani (ThoughtWorks) in 2019 and elaborated in her book *Data Mesh: Delivering Data-Driven Value at Scale* (2022). Its core claim: the centralized data team model — where one platform team owns all pipelines, all data, and all infrastructure — does not scale as organizations grow, because it creates a bottleneck that disconnects data producers from data consumers and treats data as a technical asset rather than a business product.
+> [!abstract]- Summary
+>
+> This note defines data mesh as a sociotechnical operating model for scaling data ownership, showing how domain accountability, data-product thinking, self-serve platform capabilities, and federated governance must all align before the architecture is more than a renamed central platform.
+>
+> **The four principles**
+> - Covers domain-oriented ownership, data as a product, self-serve platform design, and federated computational governance as the four interdependent principles of a real mesh implementation.
+> - Treats data mesh primarily as an organizational redesign, not a software package, and uses that distinction to explain why many implementations fail.
+>
+> **Data products in practice**
+> - Explains the concrete operating contract of a data product through data contracts, schema registry usage, ownership boundaries, SLAs, and consumer-facing discoverability.
+> - Connects product quality to versioning, interoperability, and support expectations instead of treating data publication as a side effect of application development.
+>
+> **Technology enablers and adoption boundaries**
+> - Covers catalogs, brokers, registries, and open table formats as enabling infrastructure, then compares mesh with centralized teams and medallion-style implementations.
+> - Uses fit criteria and common pitfalls to show when decentralization helps and when it simply spreads confusion across more teams.
+>
+> **Operations and safety**
+> - Warnings: treating mesh as a tooling project, skipping governance, or decentralizing ownership without authority produces a distributed data swamp rather than a scalable platform.
+> - Recommendations: pilot with one willing domain, make ownership obligations explicit, automate governance in the platform, and judge success by whether domains can publish and operate products without filing central tickets.
 
-The solution is not a new technology stack. It is a rearchitecting of **accountability**: domain teams own their data end-to-end, a platform team provides self-serve infrastructure, and governance is federated rather than imposed.
+> [!note]- Glossary
+>
+> **Data mesh**
+> - A decentralized approach to data architecture where business domains own their data as products while a shared platform provides common infrastructure and governance guardrails.
+> - It matters here because the note explains data mesh as an operating model for scale, not as a single technology choice.
+>
+> > [!warning] Not an installable product
+> >
+> > Teams often try to buy or deploy their way into data mesh. Without changing ownership and incentives, the architecture name changes but the bottlenecks remain.
+>
+> ---
+>
+> **Domain-oriented ownership**
+> - The principle that the domain team closest to the source system owns the schema, quality, freshness, and operational support of the published data.
+> - It matters here because moving accountability to where business knowledge lives is the first structural break from the centralized model.
+>
+> > [!warning] Ownership needs authority
+> >
+> > A domain cannot be responsible for a data product if another team still controls deployments, storage, or policy exceptions. Accountability without control is theater.
+>
+> ---
+>
+> **Data product**
+> - A published dataset or interface treated as a maintained product with documented consumers, schema guarantees, SLAs, and access controls.
+> - It matters here because the mesh depends on consumers trusting domain-owned outputs the same way they would trust any other supported product.
+>
+> > [!info] Product means supportable
+> >
+> > A table becomes a product only when someone can discover it, understand it, depend on its contract, and know who owns incidents.
+>
+> ---
+>
+> **Self-serve data platform**
+> - The shared platform layer that gives domains reusable storage, compute, cataloging, deployment, and observability capabilities without central hand-holding for every request.
+> - It matters here because decentralized ownership only scales when the platform removes repeated infrastructure friction.
+>
+> > [!warning] Tickets are failure signals
+> >
+> > If every new domain product still needs bespoke platform-team intervention, the organization has not built a self-serve platform. It has kept the bottleneck and renamed it.
+>
+> ---
+>
+> **Federated computational governance**
+> - A governance model where global standards are defined centrally but enforced automatically through platform code and policy rather than manual review.
+> - It matters here because mesh needs consistency across domains without reverting to central approval queues.
+>
+> > [!info] Guardrails in code
+> >
+> > The point is not lighter governance. It is governance that executes predictably at deploy time through policy, templates, and validation.
+>
+> ---
+>
+> **Data contract**
+> - A versioned agreement that describes a data product's schema, quality assertions, access rules, ownership, and service levels.
+> - It matters here because mesh consumers depend on explicit contracts instead of tribal knowledge about how a domain publishes data.
+>
+> > [!warning] Breaks must be versioned
+> >
+> > A silent schema change is a contract failure, not a normal evolution step. Versioning and compatibility rules are what keep many consumers from breaking at once.
+>
+> ---
+>
+> **Schema registry**
+> - A managed service or repository that stores message or record schemas and enforces compatibility rules as producers evolve them.
+> - It matters here because interoperable domain-owned products need a shared mechanism for version control and consumer safety.
+>
+> > [!info] Prevent producer drift
+> >
+> > Registries are valuable because they turn schema evolution from an honor system into an enforceable publish-time check.
+>
+> ---
+>
+> **Data catalog**
+> - A discovery and metadata system that records dataset descriptions, ownership, schema details, lineage, and access context.
+> - It matters here because decentralized products are useless if consumers cannot find them or evaluate whether they are trustworthy.
+>
+> > [!warning] Discovery is part of quality
+> >
+> > A perfectly engineered dataset that no one can locate or interpret behaves like missing data from the consumer's perspective.
+>
+> ---
+>
+> **Centralized data team**
+> - A model where one shared team owns most ingestion, modeling, and platform decisions for the entire organization.
+> - It matters here because data mesh is positioned partly as a response to the scaling limits and queue dynamics of this structure.
+>
+> > [!info] Still valid sometimes
+> >
+> > Centralization is not obsolete. For smaller organizations or low-domain-complexity environments, it can remain faster and easier to govern.
+>
+> ---
+>
+> **Distributed data swamp**
+> - A failure mode where ownership has been decentralized but standards, contracts, and platform support are too weak to keep products consistent or trustworthy.
+> - It matters here because it is the most common outcome when teams adopt the language of mesh without its operational discipline.
+>
+> > [!danger] Decentralization without discipline
+> >
+> > Spreading responsibility across domains multiplies confusion if shared governance, discovery, and support expectations are missing.
+>
 
-> [!info] Data Mesh is Primarily Organizational
-> The most common mistake is treating data mesh as a technology project. It is not. You cannot "install data mesh." You can implement Kafka, open table formats, and data catalogs without having data mesh. Data mesh requires organizational change — domains must accept ownership of data quality, documentation, and SLAs. Without that shift, you just have a distributed data swamp.
-
----
+> [!example] Data Mesh Adoption Fit
+>
+> > [!success] Organizational Readiness
+> >
+> > - Use data mesh when the organization has multiple capable domains, recurring central-team bottlenecks, and enough platform maturity to support self-serve onboarding and governance at scale.
+>
+> > [!failure] Decentralization Theater
+> >
+> > - Do not adopt data mesh when the company is small, domain teams cannot own quality and support, or a centralized platform still provides faster and clearer delivery.
 
 ## The Four Principles
 

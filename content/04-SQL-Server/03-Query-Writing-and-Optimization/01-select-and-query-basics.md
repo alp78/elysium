@@ -10,22 +10,189 @@ status: complete
 
 # SELECT and Query Basics
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note owns the core shape of a T-SQL `SELECT` statement:
+> T-SQL query writing starts with clause semantics, not syntax order: SQL Server binds a `SELECT` statement in a fixed logical sequence, and that sequence determines alias visibility, filter placement, grouping behavior, row limiting, and whether predicates stay SARGable enough to use indexes.
 >
-> - how rows enter the query (`FROM`)
-> - how rows are filtered before grouping (`WHERE`)
-> - how results are collapsed and filtered by group (`GROUP BY`, `HAVING`)
-> - how columns are projected (`SELECT`, aliases, `DISTINCT`)
-> - how results are ordered (`ORDER BY`)
-> - how result size is limited or paged (`TOP`, `OFFSET`/`FETCH`)
-> - how conditional values are produced (`CASE`)
-> - how common predicates are expressed (`IN`, `NOT IN`, `BETWEEN`, `LIKE`, `IS NULL`, `EXISTS`)
+> **Logical processing order**
+> - covers the `FROM` to `TOP` binding order, alias visibility, and the operational difference between row filtering in `WHERE` and group filtering in `HAVING`
 >
-> It also defines two foundational concepts that govern every clause in a `SELECT` statement: the **logical processing order** that determines clause evaluation, and the **SARGability** rules that determine whether predicates can use indexes.
+> **SARGability**
+> - shows how wrappers like `YEAR()`, `ISNULL()`, leading-wildcard `LIKE`, and implicit conversions turn seeks into scans, and how to rewrite those predicates into index-friendly forms
 >
-> Join internals, window functions, and performance diagnostics live in sibling notes under `03-Query-Writing-and-Optimization`.
+> **Core query shape**
+> - explains `SELECT`, `FROM`, `WHERE`, `ORDER BY`, `TOP`, `WITH TIES`, `OFFSET`, and `FETCH`, including deterministic ordering and pagination boundaries
+>
+> **Aggregation and conditional projection**
+> - covers `DISTINCT`, `GROUP BY`, `HAVING`, `ROLLUP`, `CASE`, and conditional counting patterns used to collapse and reshape rowsets safely
+>
+> **Predicate operators**
+> - compares `IN`, `NOT IN`, `BETWEEN`, `LIKE`, `IS NULL`, `EXISTS`, and `NOT EXISTS`, with the null and datetime edge cases that change correctness
+>
+> **Operations and safety**
+> - Warnings: `WHERE` cannot see `SELECT` aliases, non-SARGable predicates force scans, row limiting without stable ordering is unsafe, `NOT IN` with `NULL` can empty results, `BETWEEN` on datetime ranges drops end-of-day rows, and `= NULL` never works under `ANSI_NULLS`
+> - Recommendations table: 10 operator patterns with best-use and main-caution guidance
+> - Recommendations: use explicit column lists, deterministic tie-breakers, half-open date ranges, `NOT EXISTS` for nullable exclusion, and type-aligned predicates
+
+> [!note]- Glossary
+>
+> **Logical processing order**
+> - The fixed logical sequence SQL Server uses to bind a `SELECT` statement, from row-source construction through ordering and row limiting.
+> - It matters because clause behavior only makes sense when the reader knows which objects exist at each step of query evaluation.
+>
+> > [!warning] Syntax order is misleading
+> >
+> > SQL text is written top to bottom, but SQL Server does not logically evaluate it in that order. Many alias and aggregate errors are just binding-order mistakes.
+>
+> ---
+>
+> **Alias visibility**
+> - The rule that a column alias can only be referenced by clauses that run after the alias is created.
+> - It matters because it explains why `ORDER BY` can use a `SELECT` alias while `WHERE` cannot.
+>
+> > [!warning] Aliases are not variables
+> >
+> > A `SELECT` alias is not available everywhere in the statement. Treat it as an output name produced late, not as a reusable symbol for earlier clauses.
+>
+> ---
+>
+> **SARGability**
+> - The property of a predicate that lets SQL Server use an index seek or another efficient access method instead of scanning and post-filtering.
+> - It matters because small-looking expression choices often decide whether a query reads a few pages or an entire table.
+>
+> > [!warning] Functions on indexed columns are expensive
+> >
+> > Wrapping the column side of a predicate often destroys seekability. The safe pattern is usually to transform the constant or rewrite the range instead.
+>
+> ---
+>
+> **Predicate**
+> - A boolean expression used to decide which rows qualify for a clause such as `WHERE`, `HAVING`, or `JOIN`.
+> - It matters because the note centers on writing predicates that are both semantically correct and index-friendly.
+>
+> > [!info] Filtering is an operator choice
+> >
+> > `IN`, `LIKE`, `BETWEEN`, `EXISTS`, and null tests all express different predicate semantics. Choosing the wrong one changes both correctness and performance.
+>
+> ---
+>
+> **Projection**
+> - The act of choosing and shaping the columns returned by a query.
+> - It matters because `SELECT`, aliases, expressions, and `DISTINCT` control the result shape seen by downstream consumers.
+>
+> > [!warning] Projection widens costs
+> >
+> > Returning more columns than needed increases memory, I/O, and network usage. That is why `SELECT *` is safe for ad-hoc inspection but weak in persistent code.
+>
+> ---
+>
+> **`WHERE` / `HAVING`**
+> - The two main filtering clauses in grouped queries: `WHERE` filters rows before aggregation, while `HAVING` filters groups after aggregation.
+> - It matters because moving a row predicate into `HAVING` is often legal but needlessly expensive, and aggregates cannot be tested in `WHERE`.
+>
+> > [!warning] Same verb, different stage
+> >
+> > Both clauses filter, but they do not see the same inputs. Confusing them is one of the easiest ways to write wasteful or invalid aggregate queries.
+>
+> ---
+>
+> **`ORDER BY`**
+> - The clause that defines result ordering after projection and distinct processing.
+> - It matters because deterministic ordering is required for reliable `TOP`, `WITH TIES`, and pagination patterns.
+>
+> > [!warning] Unstable order means unstable results
+> >
+> > If the sort key is not unique, tied rows can appear in different orders across executions. Add an explicit tie-breaker when row order has operational meaning.
+>
+> ---
+>
+> **`TOP` / `WITH TIES`**
+> - SQL Server row-limiting syntax that returns only the first N rows from an ordered result, optionally including tied rows at the boundary.
+> - It matters because row limiting without a clear order is nondeterministic, and `WITH TIES` only makes sense when the sort rule is explicit.
+>
+> > [!warning] Row limits are not meaningful without order
+> >
+> > `TOP (10)` answers “any ten rows” unless an `ORDER BY` defines what “top” means. `WITH TIES` extends that boundary, but it does not fix an undefined sort.
+>
+> ---
+>
+> **`OFFSET` / `FETCH`**
+> - The pagination syntax attached to `ORDER BY` that skips a number of rows and then returns the next slice.
+> - It matters because offset pagination is easy to write but becomes expensive and concurrency-fragile on deep page numbers.
+>
+> > [!warning] Deep paging degrades
+> >
+> > SQL Server still has to process the skipped rows. For large or changing datasets, keyset pagination is usually safer and cheaper than deep offsets.
+>
+> ---
+>
+> **`DISTINCT`**
+> - The operator that removes duplicate rows from the projected result set.
+> - It matters because it is a valid deduplication tool, but it is also a common band-aid for join mistakes that should be fixed earlier in the query.
+>
+> > [!warning] Do not use `DISTINCT` to hide bad joins
+> >
+> > If duplicates come from the wrong join shape, `DISTINCT` only masks the modeling error and may add unnecessary sorting or hashing cost.
+>
+> ---
+>
+> **`GROUP BY`**
+> - The clause that collapses rows into groups so aggregate functions can produce one result per grouping key.
+> - It matters because grouping changes the row grain of the result, which controls which columns and expressions remain valid in the `SELECT` list.
+>
+> > [!warning] Aggregation changes legal output
+> >
+> > Once rows are grouped, every projected column must either be part of the grouping key or be reduced by an aggregate. SQL Server rejects mixtures that break that rule.
+>
+> ---
+>
+> **`CASE`**
+> - The conditional expression used to return different values based on boolean tests inside a query.
+> - It matters because `CASE` is the standard way to build conditional labels, sort keys, buckets, and counted subsets in T-SQL.
+>
+> > [!warning] Branch types must agree
+> >
+> > SQL Server resolves a common result type across all branches. Mixed or incompatible branch outputs can force conversions or raise errors.
+>
+> ---
+>
+> **`EXISTS` / `NOT EXISTS`**
+> - Semi-join predicates that test whether matching rows are present or absent in a correlated subquery.
+> - It matters because they are often the safest way to express inclusion and exclusion logic without multiplying rows.
+>
+> > [!info] The subquery payload is irrelevant
+> >
+> > Inside `EXISTS`, SQL Server only cares whether a row exists. `SELECT 1` is a convention, not a functional requirement.
+>
+> ---
+>
+> **`NOT IN`**
+> - The exclusion operator that returns rows whose value is not found in a supplied list or subquery.
+> - It matters because its behavior changes when the right-hand side can contain `NULL`, making it riskier than many engineers expect.
+>
+> > [!danger] Nullable sets break `NOT IN`
+> >
+> > If any value on the right side is `NULL`, three-valued logic can turn the whole predicate into UNKNOWN and silently remove all rows from the result.
+>
+> ---
+>
+> **Half-open date range**
+> - A time-window pattern written as `>= start` and `< next_boundary` instead of an inclusive `BETWEEN` on both ends.
+> - It matters because it is the safest way to query `datetime` and `datetime2` data without dropping rows that fall later on the final day.
+>
+> > [!warning] Inclusive endpoints are deceptive
+> >
+> > `'2025-01-31'` means midnight at the start of the day when cast to a datetime value. Half-open ranges avoid hidden end-of-day gaps.
+>
+> ---
+>
+> **Implicit conversion**
+> - SQL Server’s automatic coercion of one operand to another type when an expression mixes different data types.
+> - It matters because conversion on the indexed side of a comparison can defeat seeks and because silent coercion can change comparison semantics.
+>
+> > [!warning] Type mismatch can move work onto the column
+> >
+> > When SQL Server converts the column instead of the literal or parameter, it often loses the efficient access path. Matching parameter and column types prevents that.
 
 ## Logical Processing Order
 
@@ -2192,5 +2359,3 @@ This section is a short checklist of habits covered in full detail elsewhere in 
 - **Use `NOT EXISTS` instead of `NOT IN` when the right-hand side can contain NULL.** See the `#### NOT IN with NULL in the subquery — silently wrong` subsection.
 - **Test for NULL with `IS NULL` / `IS NOT NULL`, never `= NULL`.** See the `#### \`= NULL\` is silently wrong` subsection.
 - **Match parameter types to column types.** Implicit conversion on the indexed side of a comparison defeats the index. See the `#### Implicit conversion on the indexed side` subsection.
-
-

@@ -18,9 +18,138 @@ status: complete
 
 # SQL Server Incremental Transforms
 
-Incremental transforms process only the slice of data that is new, late, or invalidated since the last successful run. In production SQL Server pipelines, that usually means three separate decisions: how to define the processing boundary, how to protect against late-arriving rows, and how to recompute downstream aggregates without touching the full history every time.
+> [!abstract]- Summary
+>
+> Incremental transforms process only the slice that is new, late, or invalidated since the last successful run. In production SQL Server pipelines that means making three deliberate choices: how to set the processing boundary, how to absorb late arrivals safely, and how to recompute downstream aggregates without rereading full history. This note grounds those choices in the live `stoxx` workload and makes the current production default explicit.
+>
+> **Live baseline and boundaries**
+> - covers the current source and target freshness edges in `stoxx` so incremental design starts from real table behavior rather than theory
+>
+> **Watermark-driven processing**
+> - covers target-derived watermarks, overlap windows for late arrivals, and deterministic deduplication of reread slices
+>
+> **Incremental downstream refresh**
+> - covers incremental aggregation refresh, window-function behavior on partial slices, and cadence validation for detecting missed or late periods
+>
+> **Advanced replacement strategies**
+> - covers partition-aligned replacement, indexed views versus aggregation tables, and the cases where simpler watermark logic stops being enough
+>
+> **Decision and anti-pattern guidance**
+> - covers the decision guide, anti-patterns, and the current recommendation for the `stoxx` environment
+>
+> **Operations and safety**
+> - Warnings: naive watermarks miss late arrivals, overlap windows without deterministic dedup create duplicates, incremental windows can leave downstream aggregates stale, and advanced options such as partition replacement or indexed views add operational complexity quickly
+> - Recommendations: derive watermarks from the authoritative target when possible, reread a bounded overlap window when lateness exists, deduplicate deterministically, validate cadence explicitly, and reserve partition replacement or indexed views for workloads that have outgrown the simpler pattern
 
-This note uses the live `stoxx` database, not placeholder schemas. The production default for this environment is: derive the watermark from the target when the target is authoritative, reread a small overlap window when late arrivals are possible, deduplicate deterministically, and reserve partition replacement or indexed views for cases where the simpler pattern is no longer sufficient.
+> [!note]- Glossary
+>
+> **Incremental transform**
+> - A pipeline step that recomputes only the rows or periods affected since the previous successful run instead of rebuilding the full target.
+> - It matters because the note is about choosing when partial recomputation is safe and how to keep it correct under late or corrected input.
+>
+> > [!info] Incremental means boundary plus repair strategy
+> >
+> > The core challenge is not just “do less work.” It is “do less work without missing anything that changed or arrived late.”
+>
+> ---
+>
+> **Watermark**
+> - The boundary value that separates already-processed data from data that still needs to be processed, often a timestamp or business date.
+> - It matters because most incremental designs start by asking where to resume the next run.
+>
+> > [!warning] A watermark is only as trustworthy as its source
+> >
+> > If the chosen watermark does not reflect the true published state of the target or the true arrival behavior of the source, the transform will skip needed work silently.
+>
+> ---
+>
+> **Target-derived watermark**
+> - A watermark computed from the current target table instead of from an external control table or the raw source.
+> - It matters because it is often the safest default when the target is authoritative for what has been successfully published.
+>
+> > [!info] Let the published state tell you where to resume
+> >
+> > When the target is the contract, deriving the resume point from it avoids many classes of orchestration drift and bookkeeping mismatch.
+>
+> ---
+>
+> **Overlap window**
+> - A deliberate reread of some recent already-processed slice to catch late-arriving or corrected rows.
+> - It matters because purely monotonic watermark logic fails as soon as the source can deliver valid data after the original cutoff.
+>
+> > [!warning] Overlap without dedup is self-inflicted duplication
+> >
+> > Rereading a slice is the right defense for late arrivals, but only if the downstream logic can deterministically decide which copy of a row should win.
+>
+> ---
+>
+> **Late-arriving row**
+> - A row whose business date belongs to an earlier slice than the one currently being processed, but which physically arrives only later.
+> - It matters because lateness is the main reason purely forward-only incremental logic becomes wrong.
+>
+> > [!warning] Late does not mean invalid
+> >
+> > A late row may still be the correct record and may need to revise published outputs. The pipeline must decide whether to absorb, reject, or quarantine it intentionally.
+>
+> ---
+>
+> **Deterministic deduplication**
+> - The rule-driven reduction of reread or duplicated rows to one surviving record per business key using a stable tie-breaker.
+> - It matters because overlap windows and corrected source slices are only safe when the “winner” row is chosen predictably.
+>
+> > [!warning] “Last row wins” is not a strategy
+> >
+> > If the tie-break rule is not explicit and stable, deduplication becomes dependent on processing order, which defeats the purpose of making the pipeline reproducible.
+>
+> ---
+>
+> **Incremental aggregation refresh**
+> - The pattern of recomputing only the aggregate outputs affected by new or changed source slices rather than rebuilding all history.
+> - It matters because aggregate tables are often the first place where incremental logic becomes operationally attractive and analytically risky.
+>
+> > [!warning] Aggregates inherit upstream lateness
+> >
+> > If a late fact changes yesterday’s slice, the aggregate refresh must know which downstream windows or partitions need to be recalculated too.
+>
+> ---
+>
+> **Cadence validation**
+> - A check that the expected sequence of dates, batches, or publication intervals has no missing or suspiciously delayed slices.
+> - It matters because a technically successful incremental run can still leave an analytical gap if one expected slice never arrived.
+>
+> > [!info] Freshness and completeness are separate questions
+> >
+> > A target can have a recent max date and still be missing required intermediate periods. Cadence validation catches that class of silent failure.
+>
+> ---
+>
+> **Partition-aligned replacement**
+> - A refresh strategy that replaces one whole partitioned slice atomically instead of merging individual rows into it.
+> - It matters because it is the next step up in complexity when simple watermark logic becomes too slow or too hard to reason about.
+>
+> > [!warning] Operational power comes with sharper edges
+> >
+> > Partition-aligned replacement can be elegant and fast, but it requires physical design discipline that simpler incremental patterns do not.
+>
+> ---
+>
+> **Indexed view**
+> - A materialized view maintained by SQL Server that stores precomputed query results under index structures.
+> - It matters because indexed views are one possible answer when incremental aggregation logic becomes expensive, but they impose write-time maintenance cost and design constraints.
+>
+> > [!warning] Faster reads are paid for on every write
+> >
+> > Indexed views can reduce recomputation cost for readers while increasing maintenance cost for upstream writes. They are an architecture choice, not a free optimization.
+>
+> ---
+>
+> **Invalidated slice**
+> - A previously processed range that must be recomputed because later information proved the old output incomplete or wrong.
+> - It matters because some incremental designs are really “recompute the newest plus the recently invalidated” rather than “process strictly new rows only.”
+>
+> > [!info] Incremental work can move backward in time
+> >
+> > The need to revisit a slice is normal in real pipelines. Designing for invalidation explicitly is safer than pretending every source is perfectly forward-only.
 
 ---
 
@@ -50,6 +179,7 @@ The `stoxx` pipeline already shows three distinct incremental shapes:
 >
 > *This query shows the live date coverage and row volume of the main source and target datasets used in the current `stoxx` pipeline.*
 >
+
 ```sql
 SELECT 'bronze.signals_daily' AS dataset,
        MIN(CAST([timestamp] AS date)) AS min_date,
@@ -104,6 +234,7 @@ _`bronze.signals_daily` is a one-day raw landing table as currently loaded, whil
 >
 > *This query measures how far `gold.index_performance` currently lags behind the silver signal layer and how many silver rows are waiting beyond the current gold watermark.*
 >
+
 ```sql
 SELECT s._index,
        MAX(s.signal_date) AS silver_max_signal_date,
@@ -151,6 +282,7 @@ When the target table is authoritative and small enough to query cheaply, derivi
 >
 > *This query derives a one-day overlap window from the current silver watermark and measures how many bronze rows would be reread per index.*
 >
+
 ```sql
 WITH daily AS (
     SELECT _index, MAX(signal_date) AS wm
@@ -191,6 +323,7 @@ _A one-day overlap is cheap in this environment because it rereads only one fres
 >
 > *This query collapses raw bronze duplicates to one deterministic daily row per `_index`, `symbol`, and signal date before an insert into `silver.signals_daily`.*
 >
+
 ```sql
 WITH src AS (
     SELECT _index,
@@ -263,6 +396,7 @@ Date watermarks are ideal when the source exposes a reliable event date or inges
 >
 > *This batch captures a saved rowversion watermark, changes two rows after that point, and returns only the rows whose rowversion is newer than the stored token.*
 >
+
 ```sql
 IF OBJECT_ID('dbo.demo_rowversion_incremental', 'U') IS NOT NULL
     DROP TABLE dbo.demo_rowversion_incremental;
@@ -324,6 +458,7 @@ Wide dimensions and upsert targets often have too many business attributes for a
 >
 > *This query collapses a wide bronze-to-silver comparison into one SHA2 signature per business row.*
 >
+
 ```sql
 SELECT TOP (8)
        b._index,
@@ -455,6 +590,7 @@ The current `stoxx` data gives a real example: `gold.index_performance` is one d
 >
 > *This query computes only the aggregate rows that are newer than the current `gold.index_performance` watermark instead of recomputing the full history.*
 >
+
 ```sql
 WITH perf_watermark AS (
     SELECT _index, MAX(perf_date) AS perf_watermark
@@ -500,6 +636,7 @@ A strict high-water mark assumes that all earlier dates are final. That is often
 >
 > *This query recomputes only the last five market dates from the dense OHLCV history instead of touching the full time series.*
 >
+
 ```sql
 WITH recent_dates AS (
     SELECT TOP (5) [date]
@@ -554,6 +691,7 @@ Before adding a large rolling calculation to a production transform, confirm tha
 >
 > *This query inspects the live index definition that supports rolling calculations on `silver.eurostoxx50_ohlcv`.*
 >
+
 ```sql
 SELECT i.name AS index_name,
        i.type_desc,
@@ -605,6 +743,7 @@ _The important production signal is the nonclustered index on `(symbol, date)`. 
 >
 > *This query computes live 30-trading-day and 90-trading-day moving averages on the indexed OHLCV history.*
 >
+
 ```sql
 WITH s AS (
     SELECT TOP (5) symbol
@@ -678,6 +817,7 @@ Dense time-series tables such as OHLCV should usually match the exchange trading
 >
 > *This query checks whether `ASML.AS` is missing any AMS trading days between 2026-03-01 and 2026-04-07.*
 >
+
 ```sql
 WITH calendar_days AS (
     SELECT c.[date]
@@ -716,6 +856,7 @@ A sparse snapshot table may legitimately have multi-day gaps if the upstream sou
 >
 > *This query measures the jumps between available signal dates in `silver.signals_daily` so the pipeline can distinguish sparse source cadence from dense time-series expectations.*
 >
+
 ```sql
 WITH next_dates AS (
     SELECT _index,
@@ -783,6 +924,7 @@ Partition switching is a metadata-only reassignment of pages between two aligned
 >
 > *This example replaces one monthly partition from a validated staging table using a metadata-only `SWITCH`.*
 >
+
 ```sql
 TRUNCATE TABLE staging.signals_daily;
 
@@ -825,6 +967,7 @@ The current `stoxx` design already follows the safer default: `gold.scores_daily
 >
 > *This example shows the minimum pattern for a SQL Server indexed view that materializes a grouped aggregate.*
 >
+
 ```sql
 CREATE VIEW gold.vw_daily_avg_scores
 WITH SCHEMABINDING
@@ -947,4 +1090,3 @@ The current `stoxx` environment already supports a clean production pattern:
   - `Data Pipelines Pocket Reference Moving and Processing Data for Analytics.pdf`
   - `Data Engineering Design Patterns.pdf`
   - `SQL Server Advanced Troubleshooting and Performance Tuning.epub`
-

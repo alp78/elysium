@@ -10,9 +10,158 @@ status: complete
 
 # Common Table Expressions and Temporary Objects
 
-T-SQL offers a spectrum of intermediate shapes you can build inside a query or batch — each with different scope, durability, optimizer behaviour, and cost. This note covers every shape you will actually reach for in production: derived tables and `VALUES` constructors for inline rowsets, common table expressions (non-recursive and recursive) for statement-local naming, `#temp` tables and `@table` variables for multi-statement work, inline table-valued functions for parameterized reusable shapes, and table-valued parameters for caller-to-procedure rowsets.
+> [!abstract]- Summary
+>
+> Intermediate rowsets are a scope and optimizer decision, not just a syntax preference: this note maps the production T-SQL shapes for temporary or reusable data, shows how each behaves in the local `stoxx` environment, and explains when to keep a rowset inline, materialize it in `tempdb`, or pass it across a procedure boundary.
+>
+> **Inline intermediate shapes**
+> - covers derived tables and `VALUES` constructors for one-statement rowsets that disappear as soon as the statement finishes
+>
+> **Statement-local naming**
+> - covers non-recursive and recursive CTEs for naming pipeline stages, expressing hierarchy walks, and building bounded iterative rowsets
+>
+> **Materialized temporary objects**
+> - compares `#temp` tables, `##temp` tables, and `@table` variables across scope, statistics, indexing, rollback behavior, recompilation, and row-count suitability
+>
+> **Reusable parameterized rowsets**
+> - covers inline TVFs and table-valued parameters for reusable query shapes and caller-supplied batches, with the maintenance caveats around user-defined table types
+>
+> **Decision support**
+> - includes a cross-shape decision matrix that maps scope, statistics, indexability, rollback sensitivity, and parallel DML support to the right intermediate form
+>
+> **Operations and safety**
+> - Warnings: table variables and TVPs suffer from weak cardinality estimates, recursive CTEs need a real termination condition, global temp tables widen coordination risk, multi-statement TVFs are optimizer-hostile, and evolving a UDTT behind a TVP is disruptive
+> - Recommendations: start with a CTE for one statement, switch to `#temp` when the rowset spans statements or needs indexing, use table variables only for small parameter-like sets, prefer inline TVFs over multi-statement TVFs, use TVPs for caller-supplied batches, and prefer persistent calendar tables over recursive date spines in operational code
 
-Every demo in this note runs against the local `stoxx` database and shows its real output.
+> [!note]- Glossary
+>
+> **Intermediate rowset**
+> - A temporary relational shape created inside a statement, batch, or procedure so later logic can read from it.
+> - It matters because the whole note is about choosing the right lifetime and optimizer surface for that intermediate data.
+>
+> > [!info] Rowsets are design surfaces
+> >
+> > The same logical transformation can be expressed several ways. The important difference is not readability alone, but how much scope, metadata, and optimizer visibility each shape gets.
+>
+> ---
+>
+> **Derived table**
+> - A subquery placed in the `FROM` clause, wrapped in parentheses, and given an alias so the outer query can read its projected columns.
+> - It matters because it is the basic inline pattern for “compute a rowset, then filter or join it immediately.”
+>
+> > [!warning] Scope ends with the statement
+> >
+> > A derived table has no identity outside the statement that contains it. If the same rowset must be reused later, a materialized temporary object is usually the better fit.
+>
+> ---
+>
+> **`VALUES` constructor**
+> - A literal rowset written directly in the query to supply a small set of rows without creating a table.
+> - It matters because it is the cleanest way to embed tiny fixtures, lookup maps, or row labels inline.
+>
+> > [!info] Best for tiny fixed sets
+> >
+> > `VALUES` is ideal when the rowset is small and known at authoring time. Once the data becomes dynamic or large, it stops being a good transport mechanism.
+>
+> ---
+>
+> **Common table expression**
+> - A named statement-local rowset introduced with `WITH` and consumed by the immediately following statement.
+> - It matters because CTEs improve readability for multi-stage queries without forcing physical materialization.
+>
+> > [!warning] A CTE is not a temp table
+> >
+> > Naming a CTE does not give it storage, indexes, or reuse across statements. It is a syntactic naming tool, not a durable intermediate object.
+>
+> ---
+>
+> **Recursive CTE**
+> - A CTE whose output is built iteratively from an anchor query plus a recursive member that refers back to the CTE itself.
+> - It matters because it is the built-in SQL pattern for hierarchy traversal and small generated sequences.
+>
+> > [!warning] Termination must come from the data model
+> >
+> > A recursive CTE that relies on a weak stop condition can loop until the engine-enforced maximum is hit or produce far more rows than expected.
+>
+> ---
+>
+> **`#temp` table**
+> - A session-scoped temporary table stored in `tempdb` that supports indexes, statistics, and multi-statement reuse.
+> - It matters because it is the main production choice when an intermediate result set is large enough or important enough to justify materialization.
+>
+> > [!info] This is the optimizer-friendly temporary object
+> >
+> > When a rowset spans statements or needs indexing and statistics, `#temp` is usually the right answer. It gives the optimizer far more information than a table variable.
+>
+> ---
+>
+> **`##temp` table**
+> - A global temporary table stored in `tempdb` and visible beyond the creating session until the last referencing session releases it.
+> - It matters because it enables cross-session coordination, but that wider visibility increases naming and lifecycle risk.
+>
+> > [!warning] Global scope needs operational discipline
+> >
+> > Global temp tables are easy to interfere with accidentally. They should be a deliberate orchestration tool, not a default convenience.
+>
+> ---
+>
+> **Table variable**
+> - A variable-scoped table-like object declared with `DECLARE @t TABLE (...)` for use inside a batch or procedure.
+> - It matters because it is convenient for small rowsets, but its optimizer surface is weaker than a temp table's.
+>
+> > [!warning] Small does not mean harmless
+> >
+> > Table variables are often overused because they feel lightweight. Poor cardinality estimates can make them much slower than `#temp` for realistic row counts.
+>
+> ---
+>
+> **`tempdb`**
+> - The system database SQL Server uses for temporary objects, worktables, spills, and several engine-internal transient structures.
+> - It matters because temp tables live there, and their behavior is partly shaped by `tempdb` contention, collation, and lifecycle rules.
+>
+> > [!info] Temporary objects still hit real storage
+> >
+> > “Temporary” does not mean free. Objects backed by `tempdb` still consume I/O, metadata, and allocation resources under load.
+>
+> ---
+>
+> **Statistics**
+> - Metadata describing value distribution and row counts that the optimizer uses to estimate cardinality and choose plans.
+> - It matters because one of the biggest differences between temp objects is whether SQL Server can build and trust statistics on them.
+>
+> > [!warning] Weak stats mean weak estimates
+> >
+> > Table variables and TVPs often suffer because the optimizer lacks good distribution knowledge. That limitation can dominate the plan choice more than the syntax itself.
+>
+> ---
+>
+> **Inline table-valued function**
+> - A parameterized reusable query that returns a single `SELECT` and is inlined into the caller during optimization.
+> - It matters because it is the maintainable way to package reusable rowset logic without hiding it from the optimizer.
+>
+> > [!info] Reuse without the black box
+> >
+> > Inline TVFs preserve optimizer visibility in a way multi-statement TVFs do not. That makes them the default reusable table-returning abstraction for new code.
+>
+> ---
+>
+> **Multi-statement table-valued function**
+> - A TVF that populates and returns a table variable across several statements inside the function body.
+> - It matters because it looks flexible but usually performs poorly due to weak estimates and opaque optimization behavior.
+>
+> > [!warning] Usually avoid in new code
+> >
+> > Multi-statement TVFs often behave like optimizer black boxes. They are one of the classic abstractions that read cleanly but plan badly.
+>
+> ---
+>
+> **Table-valued parameter**
+> - A procedure or function parameter whose value is a batch of rows typed by a user-defined table type.
+> - It matters because it is the safest way for callers to send structured rowsets into T-SQL in one round-trip.
+>
+> > [!warning] The type contract is hard to evolve
+> >
+> > Changing a UDTT used by a TVP requires dropping and recreating dependent objects. Versioned types are often safer than in-place change.
 
 ## Derived Tables and VALUES Constructors
 
@@ -59,6 +208,7 @@ ORDER BY x.avg_close DESC;
 | ARGX.BR | 416.04 |
 | OR.PA | 377.23 |
 | MUV2.DE | 376.55 |
+
 ... (truncated to 8 rows)
 
 > [!info]- Derived table anatomy
@@ -95,6 +245,7 @@ ORDER BY p.symbol;
 | AIR.PA | 2025-01-02 | 160.14 | 134.947438752784 |
 | ALV.DE | 2025-01-02 | 296.8 | 253.44313432835833 |
 | ARGX.BR | 2025-01-02 | 610.8 | 416.0397921306604 |
+
 ... (truncated to 8 rows)
 
 Each row pairs the closing price on 2025-01-02 with that symbol's average across its entire history. Window functions (`AVG() OVER (PARTITION BY symbol)`) are usually a cleaner way to express this, but the derived-table form remains common in older codebases and in engines without window functions.
@@ -215,6 +366,7 @@ ORDER BY p.symbol;
 | AIR.PA | 2026-04-07 | 162.62 |
 | ALV.DE | 2026-04-07 | 367.2 |
 | ARGX.BR | 2026-04-07 | 648.6 |
+
 ... (truncated to 8 rows)
 
 > [!info]- CTE anatomy
@@ -300,6 +452,7 @@ ORDER BY b.symbol;
 | AIR.PA | 2026-04-07 | 162.62 |
 | ALV.DE | 2026-04-07 | 367.2 |
 | ARGX.BR | 2026-04-07 | 648.6 |
+
 ... (truncated to 8 rows)
 
 > [!info]- Chained CTE anatomy

@@ -41,8 +41,6 @@ status: complete
 > - `sqlcmd` / `Invoke-Sqlcmd`: query-based export; `sqlcmd` produces a dashes separator line on row 2 that must be stripped; `Invoke-Sqlcmd | Export-Csv` avoids it entirely
 >
 > **Operations and safety**
-> - When to use: pipeline output upload to GCS, VM-to-workstation sync, bulk SQL import/export, Windows directory replication
-> - When not to use: API-to-API pipelines, database replication (use Always On / CDC), real-time streaming, files under 1 MB
 > - Warnings: `rsync --delete` and `Robocopy /MIR` permanently remove destination-only files — always dry-run first; `gsutil rsync -d` deletes GCS objects with no recycle bin; `bcp` silently truncates data on column length mismatch and returns exit code 0 on row rejection
 > - Recommendations: use `rsync -avP` for any file over 1 GB; prefer `gcloud storage` over `gsutil` for new scripts; always verify bcp import row counts against source
 > - Troubleshooting: 5 symptoms covered (rsync full-file transfer, nested directory creation, bcp binary output, sqlcmd dashes line, gcloud scp zone error)
@@ -181,31 +179,6 @@ flowchart TD
     style F1 fill:#24283b,stroke:#9ece6a,color:#c0caf5
     style G1 fill:#24283b,stroke:#9ece6a,color:#c0caf5
 ```
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `rsync` | A file transfer tool that copies only the differences between source and destination. Supports resumable transfers, checksum verification, bandwidth limiting, and remote copying via SSH. | The standard tool for large, reliable file transfers. Re-run after interruption and it picks up where it left off. | Trailing slash behavior: `rsync src/ dst/` copies contents; `rsync src dst/` creates `dst/src/`. Combined with `--delete`, a wrong slash can wipe the destination. |
-| `scp` | Secure copy -- transfers files between hosts over SSH. Simple syntax but no resume support, no delta transfer, and no directory sync. | Quick one-off file transfers between machines. For anything larger or repeatable, use rsync instead. | `scp` does not support resume. An interrupted 50 GB transfer must restart from zero. |
-| `gcloud compute scp` | A GCP CLI command that wraps `scp` with automatic SSH key management and IAP tunnel support for GCE VMs. | Transfers files to/from GCE VMs without manual SSH key setup. Required for VMs behind IAP firewalls. | Forgetting `--zone` when the VM is in a non-default zone. The command fails silently or connects to the wrong VM. |
-| `gsutil` / `gcloud storage` | GCP CLI tools for transferring files to and from Google Cloud Storage (GCS) buckets. `gsutil` is the legacy tool; `gcloud storage` is the modern replacement with parallel uploads by default. | The primary interface for moving data between local filesystems and GCS. Used for pipeline output, backups, and data lake operations. | `gsutil rsync` with `--delete-unmatched-destination-objects` permanently removes destination-only objects. Always dry-run first. |
-| `bcp` (Bulk Copy Program) | A SQL Server command-line tool for bulk importing and exporting data. Reads/writes native, character, or CSV format. | The fastest way to move large datasets into or out of SQL Server tables. Bypasses the query engine for raw data transfer. | Not specifying `-c` (character mode) or `-t` (field terminator) -- default format is native binary, which is not human-readable and not portable across SQL Server versions. |
-| `sqlcmd` / `Invoke-Sqlcmd` | Command-line tools for executing SQL queries against SQL Server. Output can be redirected to files for CSV or tab-delimited export. | Used for query-based data export when `bcp` is too rigid (e.g., joining tables, filtering, computed columns). | `sqlcmd` output includes column headers, separator lines, and row count footers by default. Use `-h -1 -W -s ","` flags to produce clean CSV output. |
-| `Robocopy` | Robust File Copy -- a Windows command-line tool for reliable file replication. Supports mirroring, resume, multi-threaded transfer, retry on failure, and logging. | The Windows equivalent of rsync. Handles large directory trees, network interruptions, and NTFS permissions. | `/MIR` (mirror) deletes destination files not present in the source. Always preview with `/L` (list-only) before using `/MIR`. |
-| Delta transfer | A transfer method that sends only the bytes that changed between source and destination, rather than re-sending entire files. `rsync` and `Robocopy` support this. | Dramatically reduces transfer time for incremental updates to large files or datasets. | Not all tools support delta transfer. `scp` and `gsutil cp` always transfer the full file. |
-| Bandwidth limiting | A transfer option that caps the network throughput to prevent saturating a shared connection. `rsync --bwlimit`, `Robocopy /IPG`. | Prevents data transfers from overwhelming network links used by production services. | Not applying bandwidth limits during business hours on shared networks -- a large transfer can starve production traffic. |
-
-## What this note covers
-
-- `rsync` for local and remote file transfers with resume, delta, and bandwidth control
-- `scp` and `gcloud compute scp` for quick SSH-based file copies
-- `gsutil` and `gcloud storage` for GCS bucket operations (upload, download, sync)
-- `bcp` for SQL Server bulk data import/export
-- `sqlcmd` and `Invoke-Sqlcmd` for query-based data export
-- `Robocopy` as the Windows equivalent of rsync
-- Transfer strategy matrix: which tool for which scenario
 
 ## Linux file transfer tools
 
@@ -1261,21 +1234,23 @@ For transfers over 1 GB, the ability to resume after failure is more valuable th
 > Rule: for any transfer over 1 GB, use a tool with resume support (rsync, Robocopy /Z, gcloud storage, or gsutil).
 
 
-## When to use data transfer tools
-
-- **Moving pipeline output to cloud storage** -- `gsutil cp` or `gcloud storage cp` for uploading to GCS. Use `-m` for parallel multi-file uploads.
-- **Syncing directories between VMs** -- `rsync -az --delete` for incremental, resumable directory synchronization over SSH.
-- **Quick one-off file copies** -- `scp` for single files between machines when rsync is overkill.
-- **Bulk data loading into SQL Server** -- `bcp` for large CSV imports that bypass the query engine.
-- **Query-based data export** -- `sqlcmd -Q "SELECT ..." -o output.csv -s "," -W` for exporting query results to files.
-- **Windows directory replication** -- `Robocopy /MIR /MT:8` for mirroring directories with multi-threaded transfer and automatic retry.
-
-## When not to use data transfer tools
-
-- **Structured API-to-API data movement** -- use pipeline orchestration (Airflow, Cloud Run) and SDKs instead of shell-based file transfers for production data pipelines.
-- **Database-to-database replication** -- use database replication features (Always On, Change Data Capture) instead of `bcp` export/import cycles.
-- **Real-time streaming data** -- file transfer tools are batch-oriented. Use Pub/Sub, Kafka, or streaming APIs for real-time data movement.
-- **Files smaller than 1 MB** -- the overhead of `rsync` connection setup exceeds the benefit for tiny files. Use `scp` or direct copy.
+> [!example] Transfer Tool Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Moving pipeline output to cloud storage** -- `gsutil cp` or `gcloud storage cp` for uploading to GCS. Use `-m` for parallel multi-file uploads.
+> > - **Syncing directories between VMs** -- `rsync -az --delete` for incremental, resumable directory synchronization over SSH.
+> > - **Quick one-off file copies** -- `scp` for single files between machines when rsync is overkill.
+> > - **Bulk data loading into SQL Server** -- `bcp` for large CSV imports that bypass the query engine.
+> > - **Query-based data export** -- `sqlcmd -Q "SELECT ..." -o output.csv -s "," -W` for exporting query results to files.
+> > - **Windows directory replication** -- `Robocopy /MIR /MT:8` for mirroring directories with multi-threaded transfer and automatic retry.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Structured API-to-API data movement** -- use pipeline orchestration (Airflow, Cloud Run) and SDKs instead of shell-based file transfers for production data pipelines.
+> > - **Database-to-database replication** -- use database replication features (Always On, Change Data Capture) instead of `bcp` export/import cycles.
+> > - **Real-time streaming data** -- file transfer tools are batch-oriented. Use Pub/Sub, Kafka, or streaming APIs for real-time data movement.
+> > - **Files smaller than 1 MB** -- the overhead of `rsync` connection setup exceeds the benefit for tiny files. Use `scp` or direct copy.
 
 ## Warnings
 
@@ -1331,4 +1306,3 @@ For transfers over 1 GB, the ability to resume after failure is more valuable th
 - [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) — compress data before or during transfer
 - [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/05-Networking/06-connecting-to-gcp-resources) — complete GCP connection guide including GCS
 - [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) — local file operations before transfer
-

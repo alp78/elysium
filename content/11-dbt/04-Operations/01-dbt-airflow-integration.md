@@ -13,9 +13,137 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 >
 > — **Maxime Beauchemin** (creator of Apache Airflow)
 
-Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. This builds on [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) and applies the [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) to dbt-specific workflows. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
+> [!abstract]- Summary
+>
+> Explains how to orchestrate dbt from Airflow, comparing coarse and fine-grained execution patterns, isolated container runs, variable passing, failure callbacks, and partial rerun strategies so transformation control stays observable and recoverable.
+>
+> **Operator and orchestration patterns**
+> - Compares BashOperator-wrapped dbt commands, Astronomer Cosmos model-level task generation, and isolated container execution with CloudRunJobOperator so teams can choose the right Airflow-to-dbt integration boundary
+> - Connects orchestration granularity to retry behavior, observability, blast radius, and the practical tradeoff between simple DAGs and per-model visibility
+>
+> **Runtime inputs and execution context**
+> - Covers passing values into dbt through `--vars`, environment variables, and XCom-mediated runtime context so DAG state can shape dbt runs without hard-coding operational parameters
+> - Explains how orchestration context and dbt context meet at execution time, especially when date windows, backfills, or environment-specific settings must be injected safely
+>
+> **Failure handling and reruns**
+> - Covers failure callbacks, alerting integration, partial reruns with Cosmos, and full end-to-end DAG composition from extract to dbt run to dbt test to publish
+> - Emphasizes choosing an orchestration pattern that makes failure surfaces obvious and rerun scope controllable instead of opaque and expensive
+>
+> **Operations and safety**
+> - Warnings: hiding dbt inside one opaque shell task, leaking credentials through variable passing, overusing per-model task expansion, and losing rerun precision by choosing the wrong operator pattern
+> - Recommendations: match orchestration granularity to failure-recovery needs, isolate heavy runs when possible, pass runtime values explicitly, and wire failure callbacks into the team's alerting path early
 
----
+> [!note]- Glossary
+>
+> **Airflow orchestration**
+> - The scheduling, dependency, retry, and alerting layer that determines when and how dbt runs as part of a broader pipeline.
+> - It matters here because the note is about choosing the right boundary between Airflow's control plane and dbt's internal DAG execution.
+>
+> > [!info] Orchestrate around the graph
+> >
+> > Airflow decides when a dbt run starts and how failures are handled operationally. dbt still decides the model execution order inside that run.
+>
+> ---
+>
+> **BashOperator**
+> - An Airflow operator that runs shell commands directly, often used to wrap `dbt run`, `dbt test`, or related CLI calls.
+> - It matters here because BashOperator is the simplest integration option and the baseline against which more granular dbt operators are compared.
+>
+> > [!warning] Simple but opaque
+> >
+> > BashOperator is easy to start with, but a single shell task can hide which model failed and make retries broader than they need to be.
+>
+> ---
+>
+> **Astronomer Cosmos**
+> - An Airflow integration library that maps dbt nodes into Airflow tasks for finer-grained orchestration and visibility.
+> - It matters here because Cosmos changes the operational granularity of dbt in Airflow from a few CLI steps to model-aware task orchestration.
+>
+> > [!warning] More visibility, more complexity
+> >
+> > Cosmos improves observability and retry scope, but it also expands DAG size and orchestration complexity. Use it because you need that control, not just because it exists.
+>
+> ---
+>
+> **CloudRunJobOperator**
+> - An Airflow operator that triggers an isolated Cloud Run job, often used to execute dbt in a container outside the Airflow worker environment.
+> - It matters here because container isolation can improve reproducibility and dependency control for dbt workloads.
+>
+> > [!info] Isolation as operational control
+> >
+> > Running dbt in an isolated job avoids polluting Airflow workers with dbt runtime dependencies and can make deployments cleaner across environments.
+>
+> ---
+>
+> **Task granularity**
+> - The scope of work represented by one Airflow task, ranging from a full dbt run to a single model execution.
+> - It matters here because orchestration design is largely a decision about how much visibility and retry control each task should provide.
+>
+> > [!warning] Granularity defines retry cost
+> >
+> > Coarse tasks are easier to manage but expensive to rerun; fine-grained tasks are observable but can bloat the DAG. Pick based on operational recovery needs.
+>
+> ---
+>
+> **`--vars`**
+> - A dbt CLI mechanism for passing runtime YAML variables into a dbt invocation.
+> - It matters here because Airflow often needs to inject schedule-derived or manually supplied values into dbt runs safely.
+>
+> > [!warning] Runtime input is part of reproducibility
+> >
+> > If vars are passed inconsistently or implicitly, reruns become hard to reproduce. Treat them as part of the run contract, not as ad hoc shell text.
+>
+> ---
+>
+> **Environment variable**
+> - A process-level variable supplied to the dbt runtime for credentials, targets, or other execution context.
+> - It matters here because Airflow and containerized dbt runs frequently rely on environment variables for secure configuration handoff.
+>
+> > [!danger] Secrets can leak here
+> >
+> > Environment variables are a practical secret-delivery channel, but they must still be handled carefully in logs, task definitions, and debugging output.
+>
+> ---
+>
+> **XCom**
+> - Airflow's cross-task messaging mechanism for passing small pieces of runtime data between tasks.
+> - It matters here because some dbt runs are parameterized from upstream Airflow outputs rather than static schedule context.
+>
+> > [!warning] Small control data only
+> >
+> > XCom is useful for runtime parameters, not for large payloads or hidden business state. Keep what flows into dbt explicit and minimal.
+>
+> ---
+>
+> **Failure callback**
+> - An Airflow hook such as `on_failure_callback` that executes custom logic when a task fails.
+> - It matters here because dbt orchestration is only operationally complete when failures trigger the right alerting and response path.
+>
+> > [!info] Failure handling is part of orchestration
+> >
+> > A failed task without a useful callback is just a red box in the UI. Callbacks are what turn failures into actionable operational signals.
+>
+> ---
+>
+> **Partial rerun**
+> - A recovery pattern that retries only the affected portion of a dbt workflow rather than rerunning every upstream and downstream task.
+> - It matters here because orchestration choices directly affect how expensive or precise recovery becomes after a failure.
+>
+> > [!warning] Recovery scope is a design decision
+> >
+> > If the orchestration layer cannot isolate reruns, teams often pay for broader reruns and slower recovery than the underlying dbt failure actually required.
+
+> [!example] Orchestration Fit
+>
+> > [!success] Central Control
+> >
+> > - Use Airflow to run dbt when schedules, retries, alerts, upstream ingestion, downstream publication, and cross-system dependencies all need to be coordinated in one control plane.
+> > - Choose model-aware or isolated execution patterns only when finer reruns, clearer failure isolation, or runtime encapsulation materially improve recovery.
+>
+> > [!failure] Lightweight Execution
+> >
+> > - Avoid this pattern for a small dbt project that only needs a simple CI, cron, or dbt Cloud-style execution path, because Airflow adds operational surface area you may not need.
+> > - Do not explode every dbt node into Airflow tasks unless that granularity changes how you debug or rerun failures; otherwise the DAG becomes noisy without giving real leverage.
 
 ### Airflow BashOperator Wrapping dbt run
 
@@ -39,10 +167,12 @@ dbt_run = BashOperator(
 ```
 
 **Pros**
+
 - Zero extra dependencies beyond the dbt CLI on the worker.
 - Fast to implement; works with any dbt adapter.
 
 **Cons**
+
 - One monolithic task: a single model failure fails the entire block.
 - No per-model retry, duration metrics, or partial re-run from Airflow.
 - Log output is a single stream; hard to isolate failures.
@@ -103,11 +233,13 @@ esg_dbt_dag = DbtDag(
 ```
 
 **Pros**
+
 - Full per-model task observability in the Airflow UI.
 - Retry individual failed models without re-running the whole project.
 - Test nodes appear as separate tasks immediately downstream of their model.
 
 **Cons**
+
 - DAG parse time increases with project size (mitigate with `dbt ls` caching).
 - Requires the manifest to be present at parse time; coordinate with CI/CD.
 - Additional dependency (`astronomer-cosmos`) must be pinned and managed.
@@ -146,11 +278,13 @@ dbt_cloud_run = CloudRunExecuteJobOperator(
 ```
 
 **Pros**
+
 - Complete isolation: no dbt installation on Airflow workers.
 - Independently scalable compute; Cloud Run handles cold start automatically.
 - Container image version is pinned, enabling atomic rollbacks.
 
 **Cons**
+
 - Cold start latency (10–30 s per invocation) adds to total pipeline duration.
 - Observability is limited to Airflow task-level (pass/fail), not per-model.
 - Cloud Run Job logs must be viewed separately in Cloud Logging.

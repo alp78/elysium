@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog GCP Integration Setup
+# Datadog GCP Integration
 
 > [!quote]
 > "When Netflix instrumented their services, they instrumented service patterns — so when you built a new service, the monitoring would already be there once you got it running."
 >
 > — **Adrian Cockcroft**
 
-The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engine, and other GCP services via the Cloud Monitoring API. This is how Cloud Run job metrics (CPU, memory, execution count) appear in Datadog — since Cloud Run jobs are ephemeral, no Datadog agent can run inside them.
+> [!abstract]- Summary
+>
+> This note explains the API-based half of the Datadog architecture: the GCP integration lets Datadog pull Cloud Run, Compute Engine, and other managed-service metrics from Google Cloud Monitoring, which is essential for ephemeral workloads that never host a resident agent.
+>
+> **Why the integration exists**
+> - Explains the observability gap left by host agents alone and why Cloud Run job metrics have to come through Google's monitoring APIs.
+> - Frames the integration as a complement to the VM agents rather than a competing path.
+>
+> **Setup and IAM**
+> - Walks through the Datadog setup steps, the service-account identity, and the least-privilege GCP roles that support read-only collection.
+> - Keeps the trust boundary explicit so the integration remains an observability identity, not an administrative one.
+>
+> **Metric use in dashboards**
+> - Shows how Cloud Run metrics appear in Datadog, which namespaces and filters matter, and how those signals can feed dashboards alongside VM telemetry.
+> - Helps the reader treat managed-service metrics as first-class inputs to the same operational view.
+>
+> **Verification and troubleshooting**
+> - Ends with the checks used to confirm the integration is alive and the troubleshooting path when hosts or Cloud Run metrics do not show up.
+> - When to use: the target workload lives in GCP-managed services and Datadog needs visibility without an in-guest agent.
 
----
+> [!note]- Glossary
+>
+> **Cloud Monitoring API**
+> - Google's metrics and monitoring interface that external systems can query for resource telemetry.
+> - It matters here because Datadog relies on this API to ingest Cloud Run and other managed-service signals.
+>
+> > [!info] Managed metrics source
+> >
+> > No host agent exists for many GCP services, so the API becomes the telemetry source of record.
+>
+> ---
+>
+> **service account**
+> - A GCP identity used by software to authenticate to Google APIs.
+> - It matters here because Datadog authenticates as a dedicated service account with read-only permissions.
+>
+> > [!tip] Separate collector identity
+> >
+> > Observability integrations should have scoped machine identities, not borrowed human or admin credentials.
+>
+> ---
+>
+> **Resource Collection**
+> - The Datadog option that imports GCP resource metadata so assets appear correctly in Datadog.
+> - It matters here because metric ingestion is more useful when hosts and services are also discoverable as named resources.
+>
+> > [!info] Metrics plus inventory
+> >
+> > Resource metadata is what makes dashboards and infrastructure views navigable instead of anonymous.
+>
+> ---
+>
+> **GCE automuting**
+> - The Datadog feature that suppresses host alerts automatically when a VM is intentionally stopped.
+> - It matters here because it reduces false noise from planned infrastructure lifecycle events.
+>
+> > [!tip] Planned silence
+> >
+> > Alert quality improves when the platform can distinguish expected downtime from genuine incidents.
+>
+> ---
+>
+> **`gcp.run.job.*`**
+> - The Cloud Run job metric namespace exposed through the Datadog GCP integration.
+> - It matters here because these are the signals used to monitor the pipeline job's executions, CPU, and memory in Datadog.
+>
+> > [!info] Cloud Run signal family
+> >
+> > Using the right namespace and tags is the difference between an empty widget and a valid managed-workload chart.
+>
+> ---
+>
+> **`job_name` filter**
+> - The Datadog tag key used to isolate a specific Cloud Run job's metrics.
+> - It matters here because Cloud Run metrics are not filtered with the same service tags used by the traced pipeline code.
+>
+> > [!tip] Filter with the resource model
+> >
+> > Managed-service metrics often need provider-specific tags rather than application-level ones.
+>
+> ---
+>
+> **least privilege**
+> - The principle of granting only the minimal permissions required for a task.
+> - It matters here because the Datadog integration needs to read metrics and inventory, not mutate project resources.
+>
+> > [!info] Monitoring is not admin
+> >
+> > Keeping the integration read-only limits blast radius if the credentials are misused or leaked.
+>
+> ---
+>
+> **ephemeral workload**
+> - A workload that starts for a run and then exits instead of living on a persistent host.
+> - It matters here because ephemeral jobs break host-agent assumptions and force API-level observability patterns.
+>
+> > [!tip] No host to attach to
+> >
+> > Short-lived runtimes demand collection strategies that survive beyond the container's lifetime.
 
 ### Why the Datadog GCP Integration Is Needed
 
@@ -30,9 +126,11 @@ The [Airflow VM agent](https://alp78.github.io/elysium/13-Observability/Datadog/
 1. In Datadog, go to **Integrations > Google Cloud Platform**
 2. Choose **Manual** setup method
 3. Enter the service account email:
-   ```
+
+```
    data-pipeline-datadog@data-platform-prod.iam.gserviceaccount.com
-   ```
+```
+
 4. When prompted for "Generate Principal", use the SA impersonation flow
 5. Enable **GCE Automuting** (auto-mutes monitors when VM is stopped)
 6. Enable **Resource Collection** (discovers GCP resources in Datadog)
@@ -96,6 +194,7 @@ sum:gcp.run.job.completed_execution_count{job_name:data-pipeline-pipeline}.as_co
 4. Use `job_name:data-pipeline-pipeline` as the filter (not `service:data-pipeline-pipeline`)
 
 #### Pipeline logs not in Datadog
+
 Cloud Run job logs go to **GCP Cloud Logging**, not through dd-agent. They are not available in Datadog's Log Explorer. View them via:
 
 ```powershell

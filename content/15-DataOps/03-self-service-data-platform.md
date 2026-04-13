@@ -23,14 +23,169 @@ status: complete
 >
 > — **Zhamak Dehghani**, *Data Mesh* (2022)
 
-A self-service data platform is the infrastructure, tooling, and governance framework that allows analysts, scientists, and business users to access, query, and build on trusted data — **without filing a ticket to the data engineering team for every new request**.
+> [!abstract]- Summary
+>
+> This note defines the self-service data platform as the governed layer that lets analysts, scientists, engineers, and business users explore trusted data without turning the data engineering team into a perpetual ticket queue, while making the freedom-versus-governance trade-off explicit instead of pretending one side can be ignored.
+>
+> **Self-service operating model and trust foundations**
+> - Maps the self-service spectrum by persona, then explains why democratization fails when trust, literacy, governance, or discovery are weak.
+> - Establishes the platform prerequisites for safe self-service: semantic consistency, documented ownership, catalog visibility, policy-driven access, and baseline data-literacy support.
+>
+> **Platform layers and discovery**
+> - Breaks the platform into storage, transformation, discovery, quality, semantic, and consumption layers, with tool comparisons for catalogs, quality systems, semantic layers, and query interfaces.
+> - Treats quality scores, catalog search, lineage, freshness, and SLA visibility as the infrastructure that makes self-service discoverable and trustworthy rather than merely accessible.
+>
+> **Data products, contracts, and governed access**
+> - Defines data products, data contracts, governed self-service, access-request automation, cost governance, and the controls that let teams expose data widely without losing security, correctness, or budget discipline.
+> - Connects these controls to literacy programs, adoption metrics, a multi-quarter implementation roadmap, and the platform role that underpins data-mesh-style domain ownership.
+>
+> **Operations and safety**
+> - Warnings: premature democratization creates distrust, query freedom without cost controls creates runaway spend, and access without literacy or contracts creates conflicting metrics and unsafe reuse.
+> - Recommendations: build trust and discoverability first, publish quality and ownership metadata with every promoted dataset, automate access and cost controls through the platform, and expand self-service in deliberate capability tiers.
 
-The goal is not to eliminate data engineers. It is to eliminate the bottleneck where data engineers become request processors for work that capable users could do themselves, given the right platform.
+> [!note]- Glossary
+>
+> **Self-service data platform**
+> - The shared infrastructure and governance layer that allows users to discover, query, and build on trusted data without requiring direct engineering intervention for every request.
+> - It matters here because the note treats self-service as a platform capability that must balance access, trust, cost, and policy rather than as a single BI tool purchase.
+>
+> > [!info] Enable, do not abandon
+> >
+> > Good self-service removes repetitive request handling while still preserving clear standards, ownership, and support boundaries.
+>
+> ---
+>
+> **Self-service spectrum**
+> - The range of access models from highly constrained dashboard consumption to open-ended notebook, SQL, or natural-language exploration.
+> - It matters here because the note argues that different personas need different levels of freedom, tooling, and governance rather than one universal self-service model.
+>
+> > [!info] One platform, different trust tiers
+> >
+> > Executives, analysts, scientists, and engineers can all be self-service users while requiring very different interfaces and controls.
+>
+> ---
+>
+> **Data democratization**
+> - The organizational goal of making data-driven decision-making broadly accessible beyond the specialist data team.
+> - It matters here because the note distinguishes real democratization from naive access expansion that ignores trust, literacy, and governance prerequisites.
+>
+> > [!warning] Access alone is not democratization
+> >
+> > Giving users raw data without context or controls often creates more confusion and distrust than keeping access narrow for longer.
+>
+> ---
+>
+> **Data catalog**
+> - A discovery system that helps users find datasets, understand ownership and lineage, and assess whether a dataset is trustworthy and appropriate for use.
+> - It matters here because self-service fails quickly when users cannot find the right tables or judge their freshness, purpose, and consumers.
+>
+> > [!info] Discovery is part of the product
+> >
+> > A dataset that exists but cannot be found, understood, or trusted is effectively not self-service at all.
+>
+> ---
+>
+> **Quality score**
+> - A summarized signal that combines measures such as freshness, completeness, uniqueness, validity, and consistency into a visible trust indicator.
+> - It matters here because the note uses quality scores as a way to expose trust state directly in the catalog rather than hiding it in engineering-only dashboards.
+>
+> > [!warning] Invisible quality is guessed quality
+> >
+> > If users cannot see a dataset’s current health, they fill the gap with assumption or anecdote instead of evidence.
+>
+> ---
+>
+> **Semantic layer**
+> - A shared business-logic layer that defines metrics, dimensions, and access rules consistently across downstream tools.
+> - It matters here because the note treats semantic consistency as the control point that prevents each dashboard, notebook, and report from redefining core business concepts independently.
+>
+> > [!warning] One metric should mean one thing
+> >
+> > Without a semantic layer, teams often discover metric disagreement only after conflicting reports reach leadership.
+>
+> ---
+>
+> **Data product**
+> - A curated dataset that is owned, documented, discoverable, SLA-backed, and managed with explicit consumer expectations.
+> - It matters here because the note positions data products as the trustable unit of self-service publication, not just arbitrary warehouse tables.
+>
+> > [!info] Product implies accountability
+> >
+> > Once a dataset is treated as a product, the owning team is accountable for usability and reliability, not just for producing rows.
+>
+> ---
+>
+> **Data contract**
+> - A machine-readable agreement that defines schema, semantics, quality expectations, and delivery terms between producers and consumers.
+> - It matters here because governed self-service depends on stable interfaces that can be validated automatically before breaking changes reach users.
+>
+> > [!warning] Keep contracts lightweight
+> >
+> > Contracts become shelfware if updating them requires heavy approval bureaucracy instead of versioned automation and CI checks.
+>
+> ---
+>
+> **Row-level security / RLS**
+> - A policy mechanism that filters visible rows based on the querying user’s role, region, or other authorization context.
+> - It matters here because the note uses warehouse-level RLS as a core technique for widening data access without exposing every record to every user.
+>
+> > [!info] Govern once at the platform layer
+> >
+> > Security rules are more reliable when they apply regardless of whether the user arrives through BI, notebooks, or direct SQL.
+>
+> ---
+>
+> **Column masking**
+> - A protection technique that obscures or tokenizes sensitive fields for users who are not authorized to view full values.
+> - It matters here because self-service often needs broad analytical access while still preserving privacy and regulatory controls around PII or confidential data.
+>
+> > [!warning] Same table, different visibility
+> >
+> > Effective masking lets one dataset serve multiple audiences safely instead of forcing duplicate secured and unsecured copies.
+>
+> ---
+>
+> **Query budget controls**
+> - Automated limits, estimates, alerts, or quotas that prevent self-service queries from creating uncontrolled cloud-warehouse spend.
+> - It matters here because the note treats cost governance as part of the platform contract, not as an afterthought once usage scales.
+>
+> > [!warning] Freedom can be expensive
+> >
+> > A single unbounded query against a large warehouse can erase weeks of careful platform cost planning if no controls exist.
+>
+> ---
+>
+> **Data literacy**
+> - The skill level required for a user to interpret data, choose the right tool, and ask or answer questions without misreading the results.
+> - It matters here because the note argues that self-service only succeeds when the platform investment is matched by education and usage guidance.
+>
+> > [!info] Train the users you enable
+> >
+> > The platform becomes much more valuable when example queries, glossaries, office hours, and structured learning paths are part of the rollout.
+>
+> ---
+>
+> **Ticket deflection rate**
+> - A measure of how many ad hoc requests no longer need direct data-engineering intervention because users can solve them through self-service tools.
+> - It matters here because the note uses ticket deflection as one of the clearest indicators that the platform is actually reducing operational bottlenecks.
+>
+> > [!info] Use with trust metrics
+> >
+> > Deflecting tickets is only a success if users are also getting correct answers quickly instead of silently working around a broken experience.
 
-> [!info] The Core Tension
-> Every self-service decision involves a trade-off between **freedom** (users can do anything) and **governance** (data is trustworthy, costs are controlled, access is appropriate). The best platforms manage this tension deliberately — they don't eliminate it by choosing one extreme.
-
----
+> [!example] Governed Access Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for platform roadmap work, self-service strategy, catalog and semantic-layer design, access-governance planning, and scaling analyst capability without linear headcount growth.
+> > - Use it when the real problem is how to widen access while preserving trust, discoverability, policy control, and cost discipline.
+> > - Use it to stage self-service by persona and capability instead of pretending every user needs the same tools or the same freedom.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use self-service language as an excuse to expose raw, undocumented, or poorly governed data before the trust foundation exists.
+> > - Do not widen query freedom without ownership metadata, quality signals, contracts, and cost controls.
+> > - Do not assume one catalog or BI tool alone creates self-service if literacy, support boundaries, and access workflows are still weak.
 
 ## The Self-Service Spectrum
 
@@ -218,12 +373,14 @@ The semantic layer (also called the metrics layer or headless BI) sits between t
 ### Why the Semantic Layer Matters
 
 Without a semantic layer:
+
 - "Revenue" means something different in Looker, in the Python notebook, and in the finance team's SQL query
 - Business logic is duplicated across dozens of dashboards and reports
 - Changing a metric definition requires touching every report that uses it
 - Access policies are applied inconsistently across tools
 
 With a semantic layer:
+
 - One definition of "revenue" is served to all consumers consistently
 - Metric changes propagate automatically to all downstream reports
 - Access policies are enforced at the semantic layer, not per-tool
@@ -241,6 +398,7 @@ With a semantic layer:
 ### Core Semantic Layer Concepts
 
 **Metrics:** Named, versioned calculations with clear business definitions.
+
 ```yaml
 # Example metric definition (MetricFlow / dbt Semantic Layer style)
 metric:
@@ -402,6 +560,7 @@ terms:
 ### Data Contract Enforcement
 
 [Data contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) should be:
+
 - **Versioned in Git** alongside the transformation code
 - **Validated in CI** — a PR that breaks a contract schema fails CI
 - **Checked at runtime** — the pipeline validates the contract before serving data
@@ -470,6 +629,7 @@ Self-service without cost governance leads to runaway query costs. Cloud data wa
 ### Cost Visibility Dashboard
 
 Every self-service platform needs a cost visibility dashboard showing:
+
 - Total spend by team per week/month
 - Top 10 most expensive queries and their owners
 - Cost per query type (exploration vs. scheduled reports)
@@ -498,16 +658,19 @@ Self-service only succeeds if users have the skills to use it well. A platform i
 ### Training Programs
 
 #### Self-paced resources
+
 - Internal data wiki: How our data platform works, what tables exist, how to get access
 - SQL learning path: Recommended external resources (Mode SQL Tutorial, Codecademy) + internal practice datasets
 - Recorded walkthroughs: 15–30 minute videos of "How to analyze X" using the platform
 
 #### Live programs
+
 - Monthly "Data Office Hours" — any employee can ask questions of the data team
 - Quarterly SQL workshop for analysts new to SQL
 - Onboarding buddy: New analysts are paired with an analytics engineer for 2 weeks
 
 #### Documentation standards
+
 - Every data product in the catalog has a "How to use this dataset" section with example queries
 - Common analysis patterns are documented as templates in Hex / Jupyter
 - Glossary of business terms with their metric definitions
@@ -569,6 +732,7 @@ In a data mesh, the **platform team** (not the domain teams) owns and operates t
 Building a self-service platform is a multi-quarter investment. A pragmatic sequence:
 
 ### Quarter 1: Foundation
+
 - [ ] Implement semantic layer (dbt metrics or Looker LookML)
 - [ ] Stand up a data catalog (dbt docs as a starting point)
 - [ ] Define quality standards and add tests to top 10 most-used datasets
@@ -576,6 +740,7 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 - [ ] Create a data glossary with 30–50 key business terms
 
 ### Quarter 2: Discovery and Trust
+
 - [ ] Deploy a full data catalog with search and lineage
 - [ ] Expose quality scores in catalog
 - [ ] Automate access request workflow
@@ -583,6 +748,7 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 - [ ] Run first SQL workshop for business analysts
 
 ### Quarter 3: Self-Service Enablement
+
 - [ ] Deploy query tool accessible to analysts (Hex, Mode, or BigQuery console)
 - [ ] Implement row-level security and column masking for PII
 - [ ] Stand up cost visibility dashboard
@@ -590,6 +756,7 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 - [ ] Launch data office hours program
 
 ### Quarter 4: Maturity and Scale
+
 - [ ] Implement data contracts for most-consumed datasets
 - [ ] Add ML-based anomaly detection layer
 - [ ] User-level query budget controls

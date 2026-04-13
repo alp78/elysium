@@ -173,26 +173,6 @@ flowchart LR
     style H fill:#292e42,stroke:#9ece6a
 ```
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| PowerShell script (`.ps1`) | A text file containing PowerShell commands. Uses `.ps1` extension. | The standard automation language for Windows data engineering: file processing, SQL Server, Windows services, scheduled jobs. | Running scripts requires execution policy. `Set-ExecutionPolicy RemoteSigned` must be set first. |
-| `$ErrorActionPreference` | Controls how PowerShell handles non-terminating errors. Default is `Continue` (print and keep going). | Must be set to `Stop` for fail-fast behavior equivalent to bash `set -e`. | Does not affect native executable exit codes. `$LASTEXITCODE` must be checked manually. |
-| `Set-StrictMode` | Enforces detection of uninitialized variables and invalid property references. | The PowerShell equivalent of bash `set -u`. `-Version Latest` enables all checks. | Only affects the current scope. Must be set in each script. |
-| `try/catch/finally` | Structured error handling. `try` wraps code, `catch` handles errors, `finally` runs cleanup unconditionally. | The PowerShell equivalent of bash `trap EXIT`. `finally` is the guaranteed cleanup. | Non-terminating errors bypass `catch` unless `$ErrorActionPreference = "Stop"`. |
-| Task Scheduler | Windows built-in scheduler for running scripts at defined times or triggers. | The Windows equivalent of cron for scheduling pipeline scripts. | Uses the environment at task creation time. Variable changes require updating the task. |
-| `Invoke-Sqlcmd` | PowerShell cmdlet for executing T-SQL against SQL Server. Returns objects, not text. | The PowerShell equivalent of `sqlcmd` with structured output. | Requires the `SqlServer` module (`Install-Module SqlServer`). |
-
-## What this note covers
-
-- File intake, validation, and processing automation patterns in PowerShell
-- Database interaction scripts (SQL Server via Invoke-Sqlcmd and bcp)
-- API polling and data fetch automation with Invoke-RestMethod
-- Pipeline orchestration wrapper scripts
-- Production script template with error handling, logging, and cleanup
-
 ## File intake and validation
 
 Incoming data is the single largest source of pipeline failures. A file that arrives with missing columns, null values in mandatory fields, or duplicate keys will propagate errors silently through every downstream transformation. These scripts catch problems at the gate, before any processing begins.
@@ -1325,19 +1305,21 @@ SUCCESS — daily_etl exited with code 0
 ```
 
 
-## When to use PowerShell automation
-
-- **Windows-native operations** -- Task Scheduler, Windows services, registry, AD, NTFS permissions.
-- **SQL Server administration** -- Invoke-Sqlcmd, dbatools module, SQL Server Agent job management.
-- **Structured data processing** -- Import-Csv, ConvertFrom-Json, and the object pipeline for CSV/JSON transformation.
-- **Cross-platform scripts (PS 7+)** -- PowerShell 7 runs on Linux and macOS.
-- **API integrations** -- Invoke-RestMethod returns parsed objects directly.
-
-## When not to use PowerShell automation
-
-- **Pure Linux environments** -- bash is more natural with better ecosystem support on Linux.
-- **Performance-critical text processing** -- PowerShell object pipeline is slower than awk/sed for millions of text lines.
-- **Scripts needing pip/conda packages** -- Python has a richer data engineering ecosystem (Polars, pandas, dbt, Airflow).
+> [!example] PowerShell Automation Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Windows-native operations** -- Task Scheduler, Windows services, registry, AD, NTFS permissions.
+> > - **SQL Server administration** -- Invoke-Sqlcmd, dbatools module, SQL Server Agent job management.
+> > - **Structured data processing** -- Import-Csv, ConvertFrom-Json, and the object pipeline for CSV/JSON transformation.
+> > - **Cross-platform scripts (PS 7+)** -- PowerShell 7 runs on Linux and macOS.
+> > - **API integrations** -- Invoke-RestMethod returns parsed objects directly.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Pure Linux environments** -- bash is more natural with better ecosystem support on Linux.
+> > - **Performance-critical text processing** -- PowerShell object pipeline is slower than awk/sed for millions of text lines.
+> > - **Scripts needing pip/conda packages** -- Python has a richer data engineering ecosystem (Polars, pandas, dbt, Airflow).
 
 ## Warnings
 

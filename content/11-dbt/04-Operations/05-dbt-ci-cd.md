@@ -13,9 +13,157 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 >
 > — **Mary Poppendieck**, *Lean Software Development* (2003)
 
-A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. The workflows here build on [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) patterns to dbt-specific concerns. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
+> [!abstract]- Summary
+>
+> Explains how to build a safe dbt CI/CD path using state-aware selection, manifest management, keyless cloud auth, pre-commit enforcement, GitHub Actions workflows, and deployment patterns that keep transformation changes reviewable before they reach production orchestration.
+>
+> **CI goals and state-aware selection**
+> - Defines the goals of dbt CI, covers slim builds, `state:modified+`, deferred state, and manifest management so pull requests validate only what changed without losing DAG awareness
+> - Explains how production artifacts are saved and then reused in CI to keep feedback fast while still preserving realistic dependency context
+>
+> **Identity, preflight, and workflow automation**
+> - Covers Workload Identity Federation, GCP setup, GitHub Actions auth steps, and dbt pre-commit hooks so CI can run with short-lived credentials and catch simple errors before expensive warehouse execution begins
+> - Connects local developer hygiene with hosted CI so the pipeline enforces the same transformation quality expectations across both environments
+>
+> **Deployment and orchestration patterns**
+> - Covers full dbt CI and CD workflow files plus Airflow deployment patterns such as git-pull-based and Docker-rebuild-based release models so teams can choose how transformed code reaches the orchestrator safely
+> - Emphasizes deployment as a controlled promotion path, not just a post-merge shell script, especially when warehouse credentials and scheduler runtimes differ from local development
+>
+> **Operations and safety**
+> - Warnings: stale manifest state, over-broad cloud credentials, CI that rebuilds too much or too little, pre-commit checks that diverge from hosted CI, and Airflow deployment patterns that make rollback or reproducibility unclear
+> - Recommendations: keep artifacts versioned and explicit, prefer keyless auth, validate only the affected subgraph where possible, align local hooks with hosted CI, and choose a deployment path that makes runtime state observable and repeatable
 
----
+> [!note]- Glossary
+>
+> **CI/CD**
+> - The automation path that validates dbt changes before merge and promotes approved code into production execution environments.
+> - It matters here because the note is about making dbt delivery repeatable, reviewable, and safe rather than manual and ad hoc.
+>
+> > [!warning] Automation scales current habits
+> >
+> > CI/CD is only as safe as the assumptions already encoded in the project. It amplifies good layering and testing, but it also amplifies sloppy operational patterns.
+>
+> ---
+>
+> **Slim build**
+> - A dbt CI strategy that executes only changed nodes and the necessary dependent graph instead of rebuilding the entire project.
+> - It matters here because fast, selective validation is one of the main reasons dbt CI remains practical in larger projects.
+>
+> > [!info] Speed through graph-aware selectivity
+> >
+> > Slim builds work because dbt understands dependencies. They are an optimization of scope, not a reduction in model rigor.
+>
+> ---
+>
+> **State selection**
+> - A selector mode that compares the current branch to saved dbt artifacts and targets only modified resources and their graph neighborhood.
+> - It matters here because most scalable dbt CI depends on comparing current code to a trusted prior state.
+>
+> > [!warning] CI trust depends on artifact quality
+> >
+> > If the saved state does not truly represent production or the intended baseline, slim CI can validate the wrong set of models and create false confidence.
+>
+> ---
+>
+> **Manifest**
+> - The dbt artifact that records project graph metadata, configs, and node definitions for a given state.
+> - It matters here because manifests are the backbone of deferred execution and state-aware CI selection.
+>
+> > [!warning] Treat manifests as versioned runtime inputs
+> >
+> > A manifest used in CI is part of the execution contract, not just an incidental file. Save and retrieve it deliberately so comparisons are meaningful.
+>
+> ---
+>
+> **Deferred state**
+> - A dbt execution mode where unchanged upstream refs can resolve against another environment's artifacts instead of being rebuilt locally.
+> - It matters here because defer is what makes slim CI realistic when only a subset of the graph should be validated in a PR.
+>
+> > [!warning] Environment substitution must be explicit
+> >
+> > Deferred refs are powerful, but they also change what relation a model points at. Teams should know exactly which environment is being trusted as the comparison baseline.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A keyless cloud authentication mechanism that exchanges GitHub-issued identity for short-lived warehouse or cloud credentials.
+> - It matters here because secure dbt CI/CD should avoid long-lived service-account keys wherever possible.
+>
+> > [!danger] Identity scope is deployment risk
+> >
+> > Keyless auth is safer than static secrets only when the trust mapping is narrow and intentional. Broad federation rules simply move the blast radius to a different control plane.
+>
+> ---
+>
+> **Pre-commit hook**
+> - A local repository automation step that runs before commit to catch formatting, linting, or simple validation issues early.
+> - It matters here because fast local checks reduce noisy CI failures and make warehouse-backed validation more focused.
+>
+> > [!info] Cheap failures first
+> >
+> > The best pre-commit checks catch problems before the code even reaches CI. They should complement, not replace, the deeper hosted pipeline.
+>
+> ---
+>
+> **GitHub Actions workflow**
+> - A version-controlled automation definition that runs dbt CI or CD logic in response to repository events.
+> - It matters here because the note's reference pipeline uses GitHub Actions as the hosted control plane for validation and promotion.
+>
+> > [!warning] Workflow code is production logic
+> >
+> > dbt CI/CD behavior is defined in YAML just as much as in SQL. Workflow changes deserve the same review rigor as transformation code changes.
+>
+> ---
+>
+> **Artifact persistence**
+> - The practice of saving build outputs such as manifests so later runs can compare against or defer to prior state.
+> - It matters here because dbt CI/CD depends on carrying trustworthy execution context across runs, not just rerunning commands blindly.
+>
+> > [!warning] Missing artifacts degrade selectivity
+> >
+> > If artifacts are not saved predictably, teams fall back to broad rebuilds or inconsistent state assumptions, both of which weaken CI quality.
+>
+> ---
+>
+> **Airflow deployment pattern**
+> - The mechanism by which updated dbt code is made available to the Airflow runtime, such as pulling git state or rebuilding a container image.
+> - It matters here because shipping validated dbt code into the orchestrator is the final step that makes CI/CD operationally complete.
+>
+> > [!warning] Deploy path defines rollback story
+> >
+> > A deployment method is not just a delivery convenience. It determines how reproducible runtime state is and how easy it will be to roll back after a bad release.
+>
+> ---
+>
+> **Keyless auth**
+> - An authentication approach that avoids storing long-lived static credentials in CI systems by exchanging short-lived identity tokens instead.
+> - It matters here because dbt CI/CD often needs warehouse access, and reducing secret sprawl is a major operational safety improvement.
+>
+> > [!danger] Safer by design, not by default
+> >
+> > Keyless auth is a strong pattern, but it still needs careful trust boundaries, branch restrictions, and provider-side policy so the right runs get the right access.
+>
+> ---
+>
+> **Rollback path**
+> - The documented method for returning production execution to a known-good dbt version after a bad deployment.
+> - It matters here because CI/CD design is incomplete unless teams know how to back out a broken change cleanly in the orchestrated runtime.
+>
+> > [!warning] Deploy confidence needs reversal capability
+> >
+> > Fast promotion without a clear rollback story is just accelerated risk. Delivery pipelines should make the reverse move understandable as well as the forward one.
+
+> [!example] Delivery Pipeline Readiness
+>
+> > [!success] Controlled Promotion
+> >
+> > - Use this pattern when dbt changes must move from pull request to production through repeatable validation, short-lived cloud auth, and an explicit promotion path into Airflow or another execution surface.
+> > - Lean on slim builds, saved manifests, and aligned local hooks when you need fast feedback without losing graph awareness or reproducibility.
+>
+> > [!failure] Automated Chaos
+> >
+> > - Avoid formal CI/CD if the project still lacks basic testing, layering, or artifact discipline, because the pipeline will only automate unstable behavior faster.
+> > - Do not treat deployment automation as complete just because code reaches production; rollback, state provenance, and credential scope still need to be visible and controlled.
 
 ### dbt CI Goals
 

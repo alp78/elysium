@@ -16,13 +16,45 @@ status: complete
 
 # FinOps Cost Optimization
 
-> [!abstract] FinOps for SQL Server in one paragraph
+> [!abstract]- Summary
 >
-> FinOps is the operating discipline that connects engineering decisions to cloud spend. For SQL Server on Google Cloud specifically, it means tying database behavior — allocation, log growth, backup compression ratios, data compression choices, snapshot cadence, licensing edition, and VM shape — to concrete line items on the GCP bill. This note catalogues the cost signals already visible inside SQL Server, then walks through the GCP cost levers that act on those signals, then closes with monitoring, chargeback, and governance patterns.
+> FinOps is the operating discipline that connects engineering decisions to cloud spend. For SQL Server on Google Cloud specifically, it means tying database behavior such as allocation, log growth, backup compression ratios, data compression choices, snapshot cadence, licensing edition, and VM shape to concrete line items on the GCP bill. This note traces every cost decision back to either a SQL Server signal you can query live or a GCP pricing mechanic that multiplies that signal into spend.
+>
+> - **FinOps fundamentals**
+>   - defines the Inform, Optimize, and Operate loop, the six FinOps principles, and why SQL Server cost decisions differ from stateless-service cost decisions
+> - **Current SQL Server cost signals**
+>   - starts at the database and works outward through data and log allocation, usage, backup history, compression state, and other telemetry that already exposes cost drivers inside SQL Server
+> - **GCP infrastructure levers**
+>   - maps those in-engine signals to persistent disk type, snapshot cadence, GCS storage class, committed use discounts, licensing model, and VM-shape choices
+> - **Monitoring and governance**
+>   - closes the loop with monitoring, chargeback, and governance so the same signals stay visible instead of being rediscovered during the next cost review
+> - **Practical recommendations**
+>   - prioritizes reversible levers first so cost reductions do not silently damage recovery objectives or operational safety
 
-FinOps for SQL Server is not "make the cloud bill smaller" in the abstract. It is the discipline of connecting SQL Server behavior to infrastructure spend: how much storage the instance allocates, how large the log grows, how efficiently backups compress, whether retention is overbuilt, whether the VM shape matches real use, whether the licensing edition is pulling more weight than needed, and which backup and snapshot layers are worth paying for. Every cost decision in this note is traceable to either a SQL Server signal you can query live or a GCP pricing mechanic that multiplies that signal by a dollar figure.
-
-The note starts at the database and works outward. First, it surfaces the SQL Server telemetry that most directly drives spend — data and log allocation, log space usage, backup compression ratios, data-file fragmentation, and data compression coverage. Then it maps each of those signals to a GCP cost lever: persistent disk type, snapshot cadence, GCS storage class, committed use discounts, and licensing model. Finally, it closes the loop with monitoring and chargeback so the signals stay visible over time rather than being re-discovered in the next cost review.
+> [!note]- Glossary
+>
+> - **FinOps**
+>   - operating discipline that connects engineering usage decisions to cloud cost and business value
+> - **Inform / Optimize / Operate**
+>   - repeating FinOps loop of building visibility, taking cost action, and enforcing the cheaper path over time
+> - **Right-sizing**
+>   - adjusting VM shape or storage allocation to observed workload needs rather than defaults or guesswork
+> - **Committed Use Discount (CUD)**
+>   - GCP rate-reduction commitment that lowers compute cost in exchange for a time-bound usage commitment
+> - **BYOL**
+>   - bring-your-own-license model where SQL Server licensing is managed separately from the cloud VM price
+> - **Persistent disk**
+>   - block storage attached to the VM, whose size and tier directly affect SQL Server cost
+> - **Snapshot cadence**
+>   - frequency and retention pattern of storage snapshots, which influences both recoverability and spend
+> - **Backup compression ratio**
+>   - degree to which SQL Server backup output shrinks relative to source data size
+> - **Lifecycle rule**
+>   - automated GCS policy that changes storage class or deletes objects as they age
+> - **Chargeback**
+>   - attribution model that maps cloud cost to workload owners, teams, or business units
+> - **Standard vs Enterprise edition**
+>   - SQL Server licensing choice that changes both feature surface and long-term cost structure
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

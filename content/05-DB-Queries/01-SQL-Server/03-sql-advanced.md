@@ -8,43 +8,163 @@ updated: 2026-03-22
 status: complete
 ---
 
-# SQL for Data Engineering — Advanced Patterns
+# SQL Advanced
 
 > [!quote]
 > "Thinking in sets, rather than row by row, is perhaps the most important skill a SQL programmer can develop."
 >
 > — **Joe Celko**, *SQL for Smarties* (1995)
 
-This note covers advanced T-SQL patterns for data engineering pipelines — window function deep dives (percentile ranking, FIRST_VALUE/LAST_VALUE, running totals, frame semantics), recursive CTEs for date-series generation, CROSS APPLY / OUTER APPLY for lateral joins, PIVOT/UNPIVOT for reshaping, MERGE for upsert loads, EXISTS/NOT EXISTS for semi- and anti-joins, GROUPING SETS/ROLLUP/CUBE for multi-level aggregation, string functions, NULL handling patterns, set operations, date/calendar arithmetic, and the CTE vs temp table vs table variable decision framework.
+> [!abstract]- Summary
+>
+> SQL Advanced is the third notebook in this SQL Server query series for data engineering: it collects the higher-leverage T-SQL patterns that solve ranking, recursion, reshaping, anti-joins, multi-level aggregation, and calendar-aware pipeline logic once the foundational query shapes are already in place.
+>
+> **Advanced window semantics**
+> - covers ranking functions, `PERCENT_RANK`, `CUME_DIST`, `FIRST_VALUE`, `LAST_VALUE`, running totals, and the `ROWS` vs `RANGE` frame rules that control correctness
+>
+> **Recursion, lateral logic, and reshaping**
+> - covers recursive CTEs for date-series generation, `CROSS APPLY` / `OUTER APPLY` for lateral evaluation, and `PIVOT` / `UNPIVOT` versus CASE-based reshaping
+>
+> **Set-based merge and exclusion patterns**
+> - covers `MERGE` upserts, `EXISTS` / `NOT EXISTS`, the `NOT IN` null trap, and multi-level aggregation with `GROUPING SETS`, `ROLLUP`, and `CUBE`
+>
+> **Data shaping utilities**
+> - covers string aggregation and parsing, null handling with `COALESCE`, `ISNULL`, and `NULLIF`, set operations such as `UNION ALL`, `INTERSECT`, and `EXCEPT`, calendar-table arithmetic, and the CTE vs `#temp` vs `@table` decision framework
+>
+> **Operations and safety**
+> - Warnings: lab-only credentials, `LAST_VALUE` default frames, `RANGE` vs `ROWS`, recursion limits, `NOT IN` with nulls, `MERGE` concurrency bugs, Cartesian explosion from `CROSS JOIN`, and `UNION` deduplication cost
+> - Recommendations table: 8 defaults covering anti-joins, lateral joins, date-series generation, portable pivoting, grouping semantics, null-safe arithmetic, temp-table materialization, and calendar-aware business-day logic
+> - Troubleshooting: 7 failure modes covering recursion limit errors, incorrect `LAST_VALUE`, null-poisoned `NOT IN`, sparse pivot output, subtotal nulls in grouping sets, unexpected row loss with `CROSS APPLY`, and moving-average warm-up windows
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Recursive CTE** | A CTE where the recursive member references the CTE itself. Consists of an anchor (starting rows) and a recursive member (adds rows each iteration) until a termination condition is met or `MAXRECURSION` is hit. | Used for generating continuous date sequences and traversing hierarchies. SQL Server defaults to 100 iterations. | Forgetting `OPTION (MAXRECURSION N)` — a 365-day date series exceeds the default 100 and fails with error 530. |
-| **CROSS APPLY** | A lateral join operator: evaluates a correlated subquery for each row of the outer table, returning zero or more inner rows per outer row. Equivalent to `LATERAL JOIN` in PostgreSQL. | Enables "top N per group" patterns that standard JOINs cannot express (e.g., top 3 highest-volume days per stock). | Confusing with `CROSS JOIN` — `CROSS JOIN` produces a full Cartesian product; `CROSS APPLY` runs a correlated subquery per row. |
-| **OUTER APPLY** | Like `CROSS APPLY` but preserves outer rows even when the inner query returns nothing — equivalent to `LEFT JOIN LATERAL`. | Used when some outer rows may not have a matching inner row (e.g., stocks without scores yet). | Assuming it works like `LEFT JOIN` on a static subquery — `OUTER APPLY` re-executes the inner query for each outer row. |
-| **PIVOT / UNPIVOT** | `PIVOT` transforms row values into column headers (long → wide). `UNPIVOT` does the reverse (wide → long). SQL Server's `PIVOT` requires a static column list known at compile time. | Converts monthly close prices into columns, or score components into rows for charting. | Expecting dynamic column lists — SQL Server `PIVOT` requires hardcoded values. Dynamic pivots need `sp_executesql` with dynamic SQL. |
-| **GROUPING SETS / ROLLUP / CUBE** | Extensions to `GROUP BY` that generate multiple aggregation levels in one pass. `GROUPING SETS` specifies exact combinations. `ROLLUP(a,b)` generates `(a,b)`, `(a)`, `()`. `CUBE(a,b)` generates all 4 combinations. | More efficient than UNION ALL of separate aggregations — one table scan instead of N. | Not using `GROUPING()` or `GROUPING_ID()` to distinguish subtotal rows (NULLs from grouping) from actual NULL data values. |
-| **`NOT EXISTS` vs `NOT IN`** | `NOT EXISTS` is a correlated anti-join that is immune to NULLs. `NOT IN` returns zero rows if any NULL is present in the subquery result — a silent data bug. | `NOT EXISTS` is the safe, reliable anti-join pattern. `NOT IN` is dangerous when the subquery column is nullable. | Using `NOT IN` on a nullable column — the query runs successfully, returns zero rows, and produces no error or warning. |
-| **`FIRST_VALUE` / `LAST_VALUE`** | Window functions that return the first or last value in the window frame. `LAST_VALUE` has a critical default frame trap — without an explicit frame, it only sees up to the current row. | `FIRST_VALUE` anchors YTD return calculations to the January opening price. `LAST_VALUE` requires an explicit `ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING` frame. | Using `LAST_VALUE` without an explicit frame — it returns the current row's value instead of the actual last value in the partition. |
-| **Frame clause (`ROWS` vs `RANGE`)** | Controls which rows a window function sees. `ROWS` counts physical rows. `RANGE` groups by logical values (treats ties as one position). Default (no frame) is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. | `ROWS` is required for correct moving averages. `RANGE` groups ties, producing incorrect SMA values when ORDER BY has duplicates. | Omitting the frame clause — the implicit `RANGE` default groups tied ORDER BY values, silently inflating or deflating moving averages. |
-| **`SAFE_DIVIDE` / `NULLIF`** | `NULLIF(expr, 0)` returns NULL when the denominator is zero, preventing divide-by-zero errors. BigQuery has `SAFE_DIVIDE(a, b)` for the same purpose. | Every division in this note uses the `x / NULLIF(y, 0)` pattern to avoid runtime errors on zero denominators. | Dividing without protection — SQL Server returns an error on integer division by zero, or NULL on float division by zero (depending on `ANSI_WARNINGS`). |
-
-## What this note covers
-
-- **Advanced window functions** — ROW_NUMBER dedup, PERCENT_RANK, CUME_DIST, FIRST_VALUE, LAST_VALUE, running totals, frame deep dive (ROWS vs RANGE)
-- **Recursive CTEs** — date-series generation, MAXRECURSION limits, gap detection via LEFT JOIN
-- **CROSS APPLY / OUTER APPLY** — complete grid generation, top-N per group, optional lateral joins
-- **PIVOT / UNPIVOT** — native PIVOT, portable CASE-based pivot, score component unpivot
-- **MERGE (upsert)** — syntax, concurrency warnings, staging-to-target pattern
-- **EXISTS / NOT EXISTS** — semi-joins, anti-joins, NOT IN NULL trap
-- **GROUPING SETS / ROLLUP / CUBE** — multi-level aggregation in one pass, hierarchical subtotals
-- **String functions** — STRING_AGG, CHARINDEX, SUBSTRING, string parsing
-- **NULL handling** — three-valued logic rules, COALESCE, ISNULL, NULLIF safe division
-- **Set operations** — UNION ALL, UNION, INTERSECT, EXCEPT
-- **Date & calendar patterns** — trading calendar, business day arithmetic
-- **Temp tables vs CTEs vs table variables** — decision guide, materialization trade-offs
+> [!note]- Glossary
+>
+> **Recursive CTE**
+> - A common table expression whose recursive member references the CTE itself so the query can iterate from an anchor set until a stop condition is reached.
+> - It matters because the note uses recursive CTEs for date-series generation and other bounded iterative logic without dropping into cursors or loops.
+>
+> > [!warning] Recursion has a ceiling
+> >
+> > SQL Server defaults recursive CTE execution to 100 iterations. Anything longer, such as a yearly date series, needs an explicit `MAXRECURSION` override.
+>
+> ---
+>
+> **`CROSS APPLY`**
+> - A lateral operator that runs a correlated inner query for each outer row and returns only rows where that inner query produced results.
+> - It matters because the note uses it for top-N-per-group and other row-wise subquery patterns that ordinary joins express poorly.
+>
+> > [!warning] Not the same as `CROSS JOIN`
+> >
+> > `CROSS APPLY` evaluates a correlated subquery per outer row. `CROSS JOIN` blindly multiplies two sets and can explode cardinality even when no lateral logic is required.
+>
+> ---
+>
+> **`OUTER APPLY`**
+> - A lateral operator like `CROSS APPLY` that preserves the outer row even when the correlated inner query returns nothing.
+> - It matters because optional enrichments in the note need left-join behavior while still benefiting from lateral evaluation.
+>
+> > [!info] Left join for correlated logic
+> >
+> > `OUTER APPLY` is useful when the inner logic depends on each outer row but missing matches should still remain visible. That makes it the lateral equivalent of `LEFT JOIN`.
+>
+> ---
+>
+> **`PIVOT` / `UNPIVOT`**
+> - SQL Server reshaping operators that turn row values into columns or columns back into rows.
+> - It matters because the note compares native pivot syntax with more portable CASE-based aggregation for reporting and export-oriented transformations.
+>
+> > [!warning] Native pivot wants fixed columns
+> >
+> > SQL Server `PIVOT` requires the output column list at compile time. If categories are dynamic, the solution usually becomes dynamic SQL or a different reshape strategy.
+>
+> ---
+>
+> **`GROUPING SETS` / `ROLLUP` / `CUBE`**
+> - Extensions to `GROUP BY` that produce multiple subtotal levels from a single scan instead of separate aggregate queries unioned together.
+> - It matters because the note uses them to generate detailed rows, subtotals, and grand totals in one set-oriented pass.
+>
+> > [!warning] Subtotal nulls need labels
+> >
+> > Grouping operators often emit `NULL` in subtotal rows. Without `GROUPING()` or `GROUPING_ID()`, those subtotal markers are easy to confuse with genuine null data values.
+>
+> ---
+>
+> **`NOT EXISTS` vs `NOT IN`**
+> - Two exclusion patterns where `NOT EXISTS` performs a null-safe correlated anti-join and `NOT IN` fails closed if the subquery output contains any null.
+> - It matters because the note treats null-safe anti-joins as a correctness boundary, not just a style preference.
+>
+> > [!danger] Nullable `NOT IN` lies silently
+> >
+> > A nullable subquery column can make `NOT IN` return zero rows without any error. `NOT EXISTS` is the safer default whenever nullability is possible.
+>
+> ---
+>
+> **`FIRST_VALUE()` / `LAST_VALUE()`**
+> - Window functions that expose the first or last value visible inside the current window frame.
+> - It matters because the note uses them for anchored calculations and explicitly shows why `LAST_VALUE()` needs a different frame from most running-window patterns.
+>
+> > [!warning] Default frame breaks `LAST_VALUE()`
+> >
+> > Without an explicit frame that reaches forward, `LAST_VALUE()` often returns the current row rather than the actual partition tail. The function is correct; the frame is wrong.
+>
+> ---
+>
+> **Window frame / `ROWS` vs `RANGE`**
+> - The window-frame clause defines which ordered rows a window function can see, with `ROWS` counting physical row positions and `RANGE` grouping peers that share the same sort value.
+> - It matters because moving averages, running totals, and peer-sensitive calculations in the note change meaning depending on the chosen frame semantics.
+>
+> > [!warning] Defaults are rarely what you mean
+> >
+> > SQL Server's default frame is value-based, not always row-based. If duplicate sort keys exist, omitting the frame clause can produce subtly wrong analytical results.
+>
+> ---
+>
+> **`NULLIF()` safe division**
+> - A defensive arithmetic pattern that converts a zero denominator to `NULL` before division so a query avoids divide-by-zero failures.
+> - It matters because ratio-based analytics in the note run against real data that can contain zeros and nulls.
+>
+> > [!info] BigQuery names it differently
+> >
+> > BigQuery exposes the same idea as `SAFE_DIVIDE()`. The note calls out the translation so the protective intent survives across engines even when the syntax changes.
+>
+> ---
+>
+> **Trading calendar**
+> - A reference table or logical calendar that marks valid business dates and lets queries reason about trading days instead of plain civil dates.
+> - It matters because the note's business-day arithmetic and date-series examples need holiday-aware logic that `DATEADD()` alone cannot provide.
+>
+> > [!warning] Calendar math is not business math
+> >
+> > Adding one day with `DATEADD(DAY, 1, ...)` ignores weekends and holidays. Finance pipelines need an explicit trading calendar to stay operationally correct.
+>
+> ---
+>
+> **Set operation**
+> - A relational operator that combines or compares complete result sets, such as `UNION ALL`, `UNION`, `INTERSECT`, or `EXCEPT`.
+> - It matters because the note uses set operations both for correctness patterns and for choosing between deduplicating and non-deduplicating combination strategies.
+>
+> > [!warning] Deduplication is work
+> >
+> > `UNION` performs duplicate elimination, which usually means sorting or hashing. When duplicates are acceptable or impossible by design, `UNION ALL` is the cheaper and more explicit choice.
+>
+> ---
+>
+> **Temporary-object strategy**
+> - The decision about whether intermediate logic should stay inline as a CTE, materialize into `#temp`, or live in a table variable.
+> - It matters because the note closes by comparing those options as a performance and maintainability trade-off rather than treating them as interchangeable syntax.
+>
+> > [!info] Materialize when reuse is real
+> >
+> > If an intermediate result is referenced multiple times or needs its own index, a temp table usually beats a repeatedly inlined CTE. The strategy choice is about workload shape, not personal style.
+>
+> ---
+>
+> **Semi-join / anti-join**
+> - Logical join patterns that answer "does a match exist?" or "does no match exist?" without multiplying rows the way a regular join can.
+> - It matters because the note's `EXISTS` and `NOT EXISTS` sections depend on understanding that these operators test relationship existence rather than projecting matched rows.
+>
+> > [!info] Presence, not projection
+> >
+> > A semi-join asks whether at least one related row exists; it does not return all matching child rows. That mental model helps explain why `EXISTS` often reads cleaner than a join-plus-dedup workaround.
 
 *Load the jupysql extension and configure display settings for notebook SQL execution.*
 
@@ -96,48 +216,46 @@ ORDER BY [close] DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>RMS.PA</td>
-            <td>2026-03-12</td>
-            <td>1906.0</td>
-            <td>18681</td>
-        </tr>
-        <tr>
-            <td>RHM.DE</td>
-            <td>2026-03-12</td>
-            <td>1551.5</td>
-            <td>158741</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>2026-03-12</td>
-            <td>925.7</td>
-            <td>27887</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>2026-03-12</td>
-            <td>626.6</td>
-            <td>14083</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMS.PA</td>
+<td>2026-03-12</td>
+<td>1906.0</td>
+<td>18681</td>
+</tr>
+<tr>
+<td>RHM.DE</td>
+<td>2026-03-12</td>
+<td>1551.5</td>
+<td>158741</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>2026-03-12</td>
+<td>925.7</td>
+<td>27887</td>
+</tr>
+<tr>
+<td>ARGX.BR</td>
+<td>2026-03-12</td>
+<td>626.6</td>
+<td>14083</td>
+</tr>
 </table>
-
-
 
 ### Window Functions — PERCENT_RANK and CUME_DIST
 
@@ -164,54 +282,52 @@ ORDER BY composite_rank
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>score</th>
-            <th>composite_rank</th>
-            <th>pct_rank</th>
-            <th>cume_dist</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>BNP.PA</td>
-            <td>0.6796</td>
-            <td>1</td>
-            <td>0.0</td>
-            <td>0.02</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>0.5756</td>
-            <td>2</td>
-            <td>0.02</td>
-            <td>0.04</td>
-        </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>0.487</td>
-            <td>3</td>
-            <td>0.041</td>
-            <td>0.06</td>
-        </tr>
-        <tr>
-            <td>TTE.PA</td>
-            <td>0.3913</td>
-            <td>4</td>
-            <td>0.061</td>
-            <td>0.08</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>0.3852</td>
-            <td>5</td>
-            <td>0.082</td>
-            <td>0.1</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>score</th>
+<th>composite_rank</th>
+<th>pct_rank</th>
+<th>cume_dist</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNP.PA</td>
+<td>0.6796</td>
+<td>1</td>
+<td>0.0</td>
+<td>0.02</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>0.5756</td>
+<td>2</td>
+<td>0.02</td>
+<td>0.04</td>
+</tr>
+<tr>
+<td>DTE.DE</td>
+<td>0.487</td>
+<td>3</td>
+<td>0.041</td>
+<td>0.06</td>
+</tr>
+<tr>
+<td>TTE.PA</td>
+<td>0.3913</td>
+<td>4</td>
+<td>0.061</td>
+<td>0.08</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>0.3852</td>
+<td>5</td>
+<td>0.082</td>
+<td>0.1</td>
+</tr>
 </table>
-
-
 
 ### Window Functions — FIRST_VALUE and LAST_VALUE
 
@@ -253,54 +369,52 @@ ORDER BY date DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>first_close_ytd</th>
-            <th>ytd_return_pct</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>986.3</td>
-            <td>20.73</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1198.8</td>
-            <td>986.3</td>
-            <td>21.55</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1200.0</td>
-            <td>986.3</td>
-            <td>21.67</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1147.6</td>
-            <td>986.3</td>
-            <td>16.35</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1147.0</td>
-            <td>986.3</td>
-            <td>16.29</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>first_close_ytd</th>
+<th>ytd_return_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>986.3</td>
+<td>20.73</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>986.3</td>
+<td>21.55</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>986.3</td>
+<td>21.67</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>986.3</td>
+<td>16.35</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>986.3</td>
+<td>16.29</td>
+</tr>
 </table>
-
-
 
 ### Window Functions — Running Totals and Cumulative Sums
 
@@ -324,48 +438,46 @@ ORDER BY date DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>volume</th>
-            <th>cumulative_volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-31</td>
-            <td>156048</td>
-            <td>182666418</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-30</td>
-            <td>402093</td>
-            <td>182510370</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-29</td>
-            <td>380628</td>
-            <td>182108277</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-24</td>
-            <td>59585</td>
-            <td>181727649</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-23</td>
-            <td>258272</td>
-            <td>181668064</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>volume</th>
+<th>cumulative_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2025-12-31</td>
+<td>156048</td>
+<td>182666418</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2025-12-30</td>
+<td>402093</td>
+<td>182510370</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2025-12-29</td>
+<td>380628</td>
+<td>182108277</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2025-12-24</td>
+<td>59585</td>
+<td>181727649</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2025-12-23</td>
+<td>258272</td>
+<td>181668064</td>
+</tr>
 </table>
-
-
 
 ### Window Functions — Frame Deep Dive (ROWS BETWEEN, RANGE)
 
@@ -412,60 +524,58 @@ ORDER BY date DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>sma_5_rows</th>
-            <th>avg_all</th>
-            <th>vol_30d</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>1176.84</td>
-            <td>671.35</td>
-            <td>35.97</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1198.8</td>
-            <td>1175.88</td>
-            <td>671.35</td>
-            <td>35.95</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1200.0</td>
-            <td>1176.08</td>
-            <td>671.35</td>
-            <td>35.98</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1147.6</td>
-            <td>1168.44</td>
-            <td>671.35</td>
-            <td>36.06</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1147.0</td>
-            <td>1181.0</td>
-            <td>671.35</td>
-            <td>34.79</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>sma_5_rows</th>
+<th>avg_all</th>
+<th>vol_30d</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1176.84</td>
+<td>671.35</td>
+<td>35.97</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1175.88</td>
+<td>671.35</td>
+<td>35.95</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1176.08</td>
+<td>671.35</td>
+<td>35.98</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1168.44</td>
+<td>671.35</td>
+<td>36.06</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1181.0</td>
+<td>671.35</td>
+<td>34.79</td>
+</tr>
 </table>
-
-
 
 ## Recursive CTEs
 
@@ -508,48 +618,46 @@ ORDER BY d.dt
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>calendar_date</th>
-            <th>symbol</th>
-            <th>close</th>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>2026-03-01</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>2026-03-02</td>
-            <td>ASML.AS</td>
-            <td>1210.4</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-03</td>
-            <td>ASML.AS</td>
-            <td>1161.8</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-04</td>
-            <td>ASML.AS</td>
-            <td>1199.8</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-05</td>
-            <td>ASML.AS</td>
-            <td>1186.0</td>
-            <td>OK</td>
-        </tr>
+<thead>
+<tr>
+<th>calendar_date</th>
+<th>symbol</th>
+<th>close</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-03-01</td>
+<td>None</td>
+<td>None</td>
+<td>MISSING</td>
+</tr>
+<tr>
+<td>2026-03-02</td>
+<td>ASML.AS</td>
+<td>1210.4</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>2026-03-03</td>
+<td>ASML.AS</td>
+<td>1161.8</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>2026-03-04</td>
+<td>ASML.AS</td>
+<td>1199.8</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>2026-03-05</td>
+<td>ASML.AS</td>
+<td>1186.0</td>
+<td>OK</td>
+</tr>
 </table>
-
-
 
 ## CROSS JOIN / CROSS APPLY / OUTER APPLY
 
@@ -587,42 +695,40 @@ ORDER BY s.symbol, c.date
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-02</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-03</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-04</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-05</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-06</td>
-            <td>OK</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>2026-03-02</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>2026-03-03</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>2026-03-04</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>2026-03-05</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>2026-03-06</td>
+<td>OK</td>
+</tr>
 </table>
-
-
 
 ### CROSS APPLY / OUTER APPLY — Top-N Per Group
 
@@ -649,54 +755,52 @@ ORDER BY d.symbol, t.volume DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>date</th>
-            <th>volume</th>
-            <th>close</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>2022-02-28</td>
-            <td>12441786</td>
-            <td>55.14</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>2024-06-21</td>
-            <td>9762601</td>
-            <td>55.06</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>2025-05-30</td>
-            <td>9526994</td>
-            <td>62.04</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>2021-05-27</td>
-            <td>11080485</td>
-            <td>24.0</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>2021-03-19</td>
-            <td>10565045</td>
-            <td>23.5</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>date</th>
+<th>volume</th>
+<th>close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2022-02-28</td>
+<td>12441786</td>
+<td>55.14</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2024-06-21</td>
+<td>9762601</td>
+<td>55.06</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>2025-05-30</td>
+<td>9526994</td>
+<td>62.04</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>2021-05-27</td>
+<td>11080485</td>
+<td>24.0</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>2021-03-19</td>
+<td>10565045</td>
+<td>23.5</td>
+</tr>
 </table>
-
-
 
 ### OUTER APPLY — Optional Lateral Join
 
@@ -723,60 +827,58 @@ ORDER BY s.composite_rank
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>composite_score</th>
-            <th>composite_rank</th>
-            <th>score_date</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-            <td>0.6795985859619491</td>
-            <td>1</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>VOLKSWAGEN AG</td>
-            <td>Consumer Cyclical</td>
-            <td>0.5756100520413311</td>
-            <td>2</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>DEUTSCHE TELEKOM AG</td>
-            <td>Communication Services</td>
-            <td>0.4870486370039222</td>
-            <td>3</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>TTE.PA</td>
-            <td>TOTALENERGIES</td>
-            <td>Energy</td>
-            <td>0.3912872052761238</td>
-            <td>4</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>0.38521031359211527</td>
-            <td>5</td>
-            <td>2026-03-12</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>composite_score</th>
+<th>composite_rank</th>
+<th>score_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNP.PA</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>Financial Services</td>
+<td>0.6795985859619491</td>
+<td>1</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>Consumer Cyclical</td>
+<td>0.5756100520413311</td>
+<td>2</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Communication Services</td>
+<td>0.4870486370039222</td>
+<td>3</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>TTE.PA</td>
+<td>TOTALENERGIES</td>
+<td>Energy</td>
+<td>0.3912872052761238</td>
+<td>4</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>0.38521031359211527</td>
+<td>5</td>
+<td>2026-03-12</td>
+</tr>
 </table>
-
-
 
 ## PIVOT / UNPIVOT
 
@@ -807,28 +909,26 @@ PIVOT (
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>1</th>
-            <th>2</th>
-            <th>3</th>
-            <th>4</th>
-            <th>5</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>714.7136363636364</td>
-            <td>713.04</td>
-            <td>656.5809523809525</td>
-            <td>581.0000000000001</td>
-            <td>650.1809523809522</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>714.7136363636364</td>
+<td>713.04</td>
+<td>656.5809523809525</td>
+<td>581.0000000000001</td>
+<td>650.1809523809522</td>
+</tr>
 </table>
-
-
 
 ### PIVOT — Manual Pivot with CASE (Portable)
 
@@ -854,30 +954,28 @@ GROUP BY symbol
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>Jan</th>
-            <th>Feb</th>
-            <th>Mar</th>
-            <th>Jun</th>
-            <th>Sep</th>
-            <th>Dec</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>714.71</td>
-            <td>713.04</td>
-            <td>656.58</td>
-            <td>670.05</td>
-            <td>732.09</td>
-            <td>924.72</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>Jan</th>
+<th>Feb</th>
+<th>Mar</th>
+<th>Jun</th>
+<th>Sep</th>
+<th>Dec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>714.71</td>
+<td>713.04</td>
+<td>656.58</td>
+<td>670.05</td>
+<td>732.09</td>
+<td>924.72</td>
+</tr>
 </table>
-
-
 
 ### UNPIVOT — Columns to Rows
 
@@ -902,42 +1000,40 @@ ORDER BY symbol, score_type
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>score_type</th>
-            <th>score_value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>momentum_score</td>
-            <td>0.5375</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>relative_value_score</td>
-            <td>0.2506</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>sentiment_score</td>
-            <td>0.3676</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>momentum_score</td>
-            <td>1.1629</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>relative_value_score</td>
-            <td>0.6959</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>score_type</th>
+<th>score_value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>momentum_score</td>
+<td>0.5375</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>relative_value_score</td>
+<td>0.2506</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>sentiment_score</td>
+<td>0.3676</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>momentum_score</td>
+<td>1.1629</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>relative_value_score</td>
+<td>0.6959</td>
+</tr>
 </table>
-
-
 
 ## MERGE (Upsert)
 
@@ -1001,30 +1097,28 @@ DROP TABLE #target
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>DEMO.XX</td>
-            <td>2026-03-20</td>
-            <td>100.0</td>
-            <td>1000000</td>
-        </tr>
-        <tr>
-            <td>DEMO.XX</td>
-            <td>2026-03-21</td>
-            <td>102.5</td>
-            <td>1200000</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DEMO.XX</td>
+<td>2026-03-20</td>
+<td>100.0</td>
+<td>1000000</td>
+</tr>
+<tr>
+<td>DEMO.XX</td>
+<td>2026-03-21</td>
+<td>102.5</td>
+<td>1200000</td>
+</tr>
 </table>
-
-
 
 ## EXISTS vs IN vs JOIN
 
@@ -1067,42 +1161,40 @@ ORDER BY d.symbol
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>Consumer Cyclical</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>Basic Materials</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AIR LIQUIDE</td>
+<td>Basic Materials</td>
+</tr>
 </table>
-
-
 
 ### EXISTS vs IN vs JOIN — Anti-Join with NOT EXISTS
 
@@ -1124,42 +1216,40 @@ ORDER BY d.symbol
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>Consumer Cyclical</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>Basic Materials</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>Consumer Defensive</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AIR LIQUIDE</td>
+<td>Basic Materials</td>
+</tr>
 </table>
-
-
 
 ## Grouping Sets, ROLLUP, CUBE
 
@@ -1197,48 +1287,46 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>sector</th>
-            <th>country</th>
-            <th>stocks</th>
-            <th>avg_score</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Communication Services</td>
-            <td>(all countries)</td>
-            <td>1</td>
-            <td>0.487</td>
-        </tr>
-        <tr>
-            <td>Energy</td>
-            <td>(all countries)</td>
-            <td>2</td>
-            <td>0.3286</td>
-        </tr>
-        <tr>
-            <td>Healthcare</td>
-            <td>(all countries)</td>
-            <td>4</td>
-            <td>0.0812</td>
-        </tr>
-        <tr>
-            <td>Technology</td>
-            <td>(all countries)</td>
-            <td>5</td>
-            <td>0.0522</td>
-        </tr>
-        <tr>
-            <td>Industrials</td>
-            <td>(all countries)</td>
-            <td>10</td>
-            <td>0.0504</td>
-        </tr>
+<thead>
+<tr>
+<th>sector</th>
+<th>country</th>
+<th>stocks</th>
+<th>avg_score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Communication Services</td>
+<td>(all countries)</td>
+<td>1</td>
+<td>0.487</td>
+</tr>
+<tr>
+<td>Energy</td>
+<td>(all countries)</td>
+<td>2</td>
+<td>0.3286</td>
+</tr>
+<tr>
+<td>Healthcare</td>
+<td>(all countries)</td>
+<td>4</td>
+<td>0.0812</td>
+</tr>
+<tr>
+<td>Technology</td>
+<td>(all countries)</td>
+<td>5</td>
+<td>0.0522</td>
+</tr>
+<tr>
+<td>Industrials</td>
+<td>(all countries)</td>
+<td>10</td>
+<td>0.0504</td>
+</tr>
 </table>
-
-
 
 ### Grouping Sets, ROLLUP, CUBE — ROLLUP Hierarchical Subtotals
 
@@ -1264,48 +1352,46 @@ ORDER BY GROUPING(d.sector), total_volume DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>sector</th>
-            <th>stocks</th>
-            <th>total_volume</th>
-            <th>avg_daily_volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Financial Services</td>
-            <td>11</td>
-            <td>1494164521</td>
-            <td>15092571.0</td>
-        </tr>
-        <tr>
-            <td>Utilities</td>
-            <td>2</td>
-            <td>377718499</td>
-            <td>20984361.0</td>
-        </tr>
-        <tr>
-            <td>Energy</td>
-            <td>2</td>
-            <td>207171058</td>
-            <td>11509503.0</td>
-        </tr>
-        <tr>
-            <td>Industrials</td>
-            <td>10</td>
-            <td>125186950</td>
-            <td>1390966.0</td>
-        </tr>
-        <tr>
-            <td>Consumer Cyclical</td>
-            <td>9</td>
-            <td>112568697</td>
-            <td>1389737.0</td>
-        </tr>
+<thead>
+<tr>
+<th>sector</th>
+<th>stocks</th>
+<th>total_volume</th>
+<th>avg_daily_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Financial Services</td>
+<td>11</td>
+<td>1494164521</td>
+<td>15092571.0</td>
+</tr>
+<tr>
+<td>Utilities</td>
+<td>2</td>
+<td>377718499</td>
+<td>20984361.0</td>
+</tr>
+<tr>
+<td>Energy</td>
+<td>2</td>
+<td>207171058</td>
+<td>11509503.0</td>
+</tr>
+<tr>
+<td>Industrials</td>
+<td>10</td>
+<td>125186950</td>
+<td>1390966.0</td>
+</tr>
+<tr>
+<td>Consumer Cyclical</td>
+<td>9</td>
+<td>112568697</td>
+<td>1389737.0</td>
+</tr>
 </table>
-
-
 
 ## String Aggregation & Functions
 
@@ -1332,42 +1418,40 @@ ORDER BY stocks DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>sector</th>
-            <th>stocks</th>
-            <th>symbols</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Financial Services</td>
-            <td>11</td>
-            <td>ALV.DE, BBVA.MC, BNP.PA, CS.PA, DB1.DE, INGA.AS, ISP.MI, MUV2.DE, NDA-FI.HE, SAN.MC, UCG.MI</td>
-        </tr>
-        <tr>
-            <td>Industrials</td>
-            <td>10</td>
-            <td>AIR.PA, DG.PA, DHL.DE, ENR.DE, RHM.DE, SAF.PA, SGO.PA, SIE.DE, SU.PA, WKL.AS</td>
-        </tr>
-        <tr>
-            <td>Consumer Cyclical</td>
-            <td>9</td>
-            <td>ADS.DE, BMW.DE, ITX.MC, MBG.DE, MC.PA, PRX.AS, RACE.MI, RMS.PA, VOW.DE</td>
-        </tr>
-        <tr>
-            <td>Technology</td>
-            <td>5</td>
-            <td>ADYEN.AS, ASML.AS, DSY.PA, IFX.DE, SAP.DE</td>
-        </tr>
-        <tr>
-            <td>Consumer Defensive</td>
-            <td>4</td>
-            <td>ABI.BR, AD.AS, BN.PA, OR.PA</td>
-        </tr>
+<thead>
+<tr>
+<th>sector</th>
+<th>stocks</th>
+<th>symbols</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Financial Services</td>
+<td>11</td>
+<td>ALV.DE, BBVA.MC, BNP.PA, CS.PA, DB1.DE, INGA.AS, ISP.MI, MUV2.DE, NDA-FI.HE, SAN.MC, UCG.MI</td>
+</tr>
+<tr>
+<td>Industrials</td>
+<td>10</td>
+<td>AIR.PA, DG.PA, DHL.DE, ENR.DE, RHM.DE, SAF.PA, SGO.PA, SIE.DE, SU.PA, WKL.AS</td>
+</tr>
+<tr>
+<td>Consumer Cyclical</td>
+<td>9</td>
+<td>ADS.DE, BMW.DE, ITX.MC, MBG.DE, MC.PA, PRX.AS, RACE.MI, RMS.PA, VOW.DE</td>
+</tr>
+<tr>
+<td>Technology</td>
+<td>5</td>
+<td>ADYEN.AS, ASML.AS, DSY.PA, IFX.DE, SAP.DE</td>
+</tr>
+<tr>
+<td>Consumer Defensive</td>
+<td>4</td>
+<td>ABI.BR, AD.AS, BN.PA, OR.PA</td>
+</tr>
 </table>
-
-
 
 ### String Functions — Parsing with SPLIT, CHARINDEX, SUBSTRING
 
@@ -1389,48 +1473,46 @@ ORDER BY symbol
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>ticker_only</th>
-            <th>exchange</th>
-            <th>name_proper</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>ABI</td>
-            <td>BR</td>
-            <td>Ab inbev</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>AD</td>
-            <td>AS</td>
-            <td>Koninklijke ahold delhaize n.v.</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>ADS</td>
-            <td>DE</td>
-            <td>Adidas ag</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>AS</td>
-            <td>Adyen</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AI</td>
-            <td>PA</td>
-            <td>Air liquide</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>ticker_only</th>
+<th>exchange</th>
+<th>name_proper</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>BR</td>
+<td>Ab inbev</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>AD</td>
+<td>AS</td>
+<td>Koninklijke ahold delhaize n.v.</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>ADS</td>
+<td>DE</td>
+<td>Adidas ag</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>AS</td>
+<td>Adyen</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AI</td>
+<td>PA</td>
+<td>Air liquide</td>
+</tr>
 </table>
-
-
 
 ## NULL Handling Patterns
 
@@ -1449,7 +1531,6 @@ The table below summarizes how `NULL` propagates through common SQL expressions 
 | `COALESCE(a, b, c)` | First non-NULL | ANSI standard, N arguments |
 | `ISNULL(a, b)` | a if not null, else b | T-SQL only, 2 args, type of first arg |
 | `NULLIF(a, b)` | NULL if a = b | Prevents divide-by-zero: `x / NULLIF(y, 0)` |
-
 
 The query demonstrates three NULL-handling patterns: `COALESCE` formats `forward_pe` as `'N/A'` when the value is `NULL`; `NULLIF` prevents divide-by-zero when computing earnings per share; `COUNT(*)` counts all rows while `COUNT(forward_pe)` counts only rows where PE is not `NULL` — showing the difference between the two in the same result set.
 
@@ -1471,60 +1552,58 @@ ORDER BY forward_pe
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>forward_pe</th>
-            <th>pe_display</th>
-            <th>earnings_per_share</th>
-            <th>total_rows</th>
-            <th>rows_with_pe</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>VOW.DE</td>
-            <td>2.6177435</td>
-            <td>2.6</td>
-            <td>35.47</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>3.4232497</td>
-            <td>3.4</td>
-            <td>27.93</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>3.5628338</td>
-            <td>3.6</td>
-            <td>25.63</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>6.7327175</td>
-            <td>6.7</td>
-            <td>12.83</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>6.8096137</td>
-            <td>6.8</td>
-            <td>12.84</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>forward_pe</th>
+<th>pe_display</th>
+<th>earnings_per_share</th>
+<th>total_rows</th>
+<th>rows_with_pe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VOW.DE</td>
+<td>2.6177435</td>
+<td>2.6</td>
+<td>35.47</td>
+<td>149</td>
+<td>149</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>3.4232497</td>
+<td>3.4</td>
+<td>27.93</td>
+<td>149</td>
+<td>149</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>3.5628338</td>
+<td>3.6</td>
+<td>25.63</td>
+<td>149</td>
+<td>149</td>
+</tr>
+<tr>
+<td>BNP.PA</td>
+<td>6.7327175</td>
+<td>6.7</td>
+<td>12.83</td>
+<td>149</td>
+<td>149</td>
+</tr>
+<tr>
+<td>BNP.PA</td>
+<td>6.8096137</td>
+<td>6.8</td>
+<td>12.84</td>
+<td>149</td>
+<td>149</td>
+</tr>
 </table>
-
-
 
 ## Set Operations
 
@@ -1555,30 +1634,28 @@ ORDER BY symbol
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+</tr>
 </table>
-
-
 
 ## Date & Calendar Table Patterns
 
@@ -1606,48 +1683,46 @@ ORDER BY trading_days DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>exchange_code</th>
-            <th>trading_days</th>
-            <th>calendar_days</th>
-            <th>pct_trading</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>MCE</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.000000000000</td>
-        </tr>
-        <tr>
-            <td>GER</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.000000000000</td>
-        </tr>
-        <tr>
-            <td>AMS</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.000000000000</td>
-        </tr>
-        <tr>
-            <td>PAR</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.000000000000</td>
-        </tr>
-        <tr>
-            <td>BRU</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.000000000000</td>
-        </tr>
+<thead>
+<tr>
+<th>exchange_code</th>
+<th>trading_days</th>
+<th>calendar_days</th>
+<th>pct_trading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MCE</td>
+<td>63</td>
+<td>90</td>
+<td>70.000000000000</td>
+</tr>
+<tr>
+<td>GER</td>
+<td>63</td>
+<td>90</td>
+<td>70.000000000000</td>
+</tr>
+<tr>
+<td>AMS</td>
+<td>63</td>
+<td>90</td>
+<td>70.000000000000</td>
+</tr>
+<tr>
+<td>PAR</td>
+<td>63</td>
+<td>90</td>
+<td>70.000000000000</td>
+</tr>
+<tr>
+<td>BRU</td>
+<td>63</td>
+<td>90</td>
+<td>70.000000000000</td>
+</tr>
 </table>
-
-
 
 ## Temp Tables vs Table Variables vs CTEs
 
@@ -1703,26 +1778,26 @@ flowchart TD
 >
 > If a CTE is referenced more than once in a query, materialize it into a `#temp` table first: `SELECT ... INTO #my_cte FROM ...`, then reference `#my_cte` wherever needed. Add an index on the join or filter key with `CREATE INDEX ix ON #my_cte (key_col)` for queries over ~10,000 rows. Use CTEs only for readability when they are referenced exactly once.
 
-## When to Use These Advanced Patterns
-
-Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler construct from `01-sql-fundamentals` or `02-sql-engineering` when the problem does not actually require advanced syntax.
-
-- **Recursive CTEs** — when you need a continuous date series, a hierarchical traversal, or any iterative computation that stops on a condition. Preferred over cursors and WHILE loops.
-- **CROSS APPLY** — when you need top-N per group or a correlated subquery that returns multiple rows. More readable and often more efficient than self-joins with ROW_NUMBER.
-- **PIVOT** — when downstream consumers (dashboards, Excel exports) need data in wide format with fixed, known column names.
-- **MERGE** — for idempotent incremental loads where a single statement must handle both new and updated rows atomically.
-- **GROUPING SETS / ROLLUP** — when you need multiple aggregation levels (detail + subtotals + grand total) from a single table scan instead of UNION ALL.
-- **NOT EXISTS** — always prefer over `NOT IN` for anti-joins when the subquery column is nullable.
-
-## When Not to Use These Advanced Patterns
-
-These patterns are either SQL Server-specific, have known bugs, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
-
-- **Recursive CTEs for date series in BigQuery** — use `GENERATE_DATE_ARRAY` / `UNNEST` instead; no recursion limit, single-pass, and more idiomatic.
-- **CROSS APPLY in BigQuery / PostgreSQL** — use `ROW_NUMBER` + subquery pattern instead; `APPLY` is SQL Server-specific syntax.
-- **MERGE for high-concurrency tables** — use explicit INSERT/UPDATE in a transaction due to known SQL Server MERGE concurrency bugs.
-- **PIVOT with dynamic columns** — if column values are not known at compile time, the complexity of dynamic SQL often exceeds the benefit. Use CASE-based conditional aggregation or reshape client-side.
-- **CUBE** — generates all possible column combinations, which grows exponentially. For 4 columns, CUBE produces 16 grouping levels. Use GROUPING SETS to specify only the combinations you need.
+> [!example] Advanced Pattern Justification
+>
+> > [!success] High Leverage
+> >
+> > - Each advanced pattern below earns its place when the workload characteristics match its strengths. Prefer the simpler construct from `01-sql-fundamentals` or `02-sql-engineering` when the problem does not actually require advanced syntax.
+> > - **Recursive CTEs** — when you need a continuous date series, a hierarchical traversal, or any iterative computation that stops on a condition. Preferred over cursors and WHILE loops.
+> > - **CROSS APPLY** — when you need top-N per group or a correlated subquery that returns multiple rows. More readable and often more efficient than self-joins with ROW_NUMBER.
+> > - **PIVOT** — when downstream consumers (dashboards, Excel exports) need data in wide format with fixed, known column names.
+> > - **MERGE** — for idempotent incremental loads where a single statement must handle both new and updated rows atomically.
+> > - **GROUPING SETS / ROLLUP** — when you need multiple aggregation levels (detail + subtotals + grand total) from a single table scan instead of UNION ALL.
+> > - **NOT EXISTS** — always prefer over `NOT IN` for anti-joins when the subquery column is nullable.
+>
+> > [!failure] Overengineering Trap
+> >
+> > - These patterns are either SQL Server-specific, have known bugs, or scale badly outside their intended use case. The scenarios below are the most common misuses seen in code reviews.
+> > - **Recursive CTEs for date series in BigQuery** — use `GENERATE_DATE_ARRAY` / `UNNEST` instead; no recursion limit, single-pass, and more idiomatic.
+> > - **CROSS APPLY in BigQuery / PostgreSQL** — use `ROW_NUMBER` + subquery pattern instead; `APPLY` is SQL Server-specific syntax.
+> > - **MERGE for high-concurrency tables** — use explicit INSERT/UPDATE in a transaction due to known SQL Server MERGE concurrency bugs.
+> > - **PIVOT with dynamic columns** — if column values are not known at compile time, the complexity of dynamic SQL often exceeds the benefit. Use CASE-based conditional aggregation or reshape client-side.
+> > - **CUBE** — generates all possible column combinations, which grows exponentially. For 4 columns, CUBE produces 16 grouping levels. Use GROUPING SETS to specify only the combinations you need.
 
 ## Warnings
 

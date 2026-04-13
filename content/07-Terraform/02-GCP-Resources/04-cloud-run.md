@@ -8,7 +8,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Terraform Cloud Run — Services and Jobs
+# Cloud Run
 
 > [!quote] Tim Wagner on serverless computing
 >
@@ -16,7 +16,142 @@ status: complete
 >
 > — **Tim Wagner**, creator of AWS Lambda
 
-This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
+> [!abstract]- Summary
+>
+> Cloud Run is the Terraform note for the serverless application layer: it defines the shared locals, Cloud Run service, Cloud Run jobs, VPC and secret wiring, and post-deployment verification steps that turn the Terraform-managed GCP foundation into runnable HTTP endpoints and batch workloads.
+>
+> **Shared runtime foundation**
+> - covers locals for registry paths and database connection data, usage-based billing context, required APIs, and the region and project assumptions that all Cloud Run resources depend on
+>
+> **Service configuration**
+> - covers `google_cloud_run_v2_service`, deletion protection, image selection, scaling, session affinity, public access boundaries, secret injection, and Direct VPC Egress for the dashboard service
+>
+> **Job configuration**
+> - covers `google_cloud_run_v2_job`, nested job templates, pipeline and setup jobs, timeouts, retries, lifecycle meta-arguments, import paths, and force-replacement boundaries
+>
+> **Operations and safety**
+> - Warnings: disabling deletion protection weakens production safety, mutable image tags make deployments non-deterministic, broad public access is risky, and several Cloud Run changes still force replacement or require careful region migration
+> - Recommendations: size runtime limits for workload behavior rather than headline cost, deploy immutable image references, restrict ingress intentionally, use direct private connectivity for SQL access, and verify services, jobs, executions, and logs with `gcloud` after apply
+
+> [!note]- Glossary
+>
+> **Cloud Run service**
+> - A long-running HTTP-serving Cloud Run resource that scales in response to incoming requests.
+> - It matters because the dashboard workload in this note is modeled as a service rather than as a batch-oriented job.
+>
+> > [!info] Services are request-driven
+> >
+> > A Cloud Run service is meant to stay available for inbound traffic, even if it scales to zero between bursts. That is a different execution model from a run-to-completion batch job.
+>
+> ---
+>
+> **Cloud Run job**
+> - A run-to-completion Cloud Run resource designed for batch or scheduled execution instead of for long-lived HTTP traffic.
+> - It matters because the pipeline and setup workloads in this note are better expressed as jobs than as always-on services.
+>
+> > [!info] Jobs and services share platform pieces, not purpose
+> >
+> > Cloud Run jobs and services use related infrastructure, but they differ in lifecycle, triggering model, and configuration shape. Picking the wrong one usually makes the workload harder to operate.
+>
+> ---
+>
+> **Direct VPC Egress**
+> - A Cloud Run networking mode that lets a service or job send traffic directly into a VPC without using a connector proxy layer.
+> - It matters because the workloads in this note need private-path access to the SQL VM inside the Terraform-managed network.
+>
+> > [!warning] Private connectivity still needs design
+> >
+> > Direct egress solves network reachability, but firewall rules, subnet planning, and backend service exposure still determine whether the end-to-end connection is actually safe.
+>
+> ---
+>
+> **`google_cloud_run_v2_service`**
+> - The Terraform resource for managing a Cloud Run v2 service configuration.
+> - It matters because the dashboard deployment is expressed through this resource, including its image, environment, scaling, ingress, and IAM-adjacent runtime configuration.
+>
+> > [!warning] Some fields are operationally sensitive
+> >
+> > A service resource looks compact in HCL, but changes to certain fields can cause new revisions, access changes, or replacement-like effects. The semantics of each field matter beyond basic syntax.
+>
+> ---
+>
+> **`google_cloud_run_v2_job`**
+> - The Terraform resource for defining a Cloud Run v2 job, including its nested execution template.
+> - It matters because the job resource structure is deeper and less intuitive than a service resource, especially when you need retries, timeouts, or multiple containers.
+>
+> > [!warning] Template nesting is easy to misread
+> >
+> > Cloud Run jobs use a double-nested template structure in Terraform. If you lose track of which `template` block you are in, arguments end up on the wrong object surprisingly easily.
+>
+> ---
+>
+> **Deletion protection**
+> - A safeguard that prevents accidental deletion of a Cloud Run resource while enabled.
+> - It matters because serverless resources can still be mission-critical, and a mistaken destroy should not be trivial in production.
+>
+> > [!danger] Disabled protection lowers the floor
+> >
+> > Setting deletion protection off may be fine in a lab, but it removes an important safety net for real workloads. Production defaults should usually bias toward protection.
+>
+> ---
+>
+> **Image digest / immutable image reference**
+> - A content-addressed image identifier that points to one exact container image build, unlike a mutable tag such as `latest`.
+> - It matters because reproducible Cloud Run deployment depends on Terraform referencing a deterministic image artifact.
+>
+> > [!warning] Mutable tags hide drift
+> >
+> > If `latest` points to a different image tomorrow, Terraform may appear unchanged while the runtime behavior has drifted. Immutable references make deployments auditable.
+>
+> ---
+>
+> **Secret injection**
+> - The Cloud Run pattern of exposing Secret Manager values to containers through environment variables or mounted references instead of hardcoding secrets in the image.
+> - It matters because the application layer in this note depends on runtime secrets without baking them into the container artifact.
+>
+> > [!info] Better than baking secrets into images
+> >
+> > Keeping secrets external lets you rotate them without rebuilding application images and avoids leaving sensitive material in the registry layer history.
+>
+> ---
+>
+> **Session affinity**
+> - A service configuration option that biases subsequent requests from the same client toward the same serving instance.
+> - It matters because some web workloads behave better when repeated requests stay near the same in-memory session state.
+>
+> > [!warning] It is not a substitute for state design
+> >
+> > Session affinity can reduce churn, but it does not turn Cloud Run into a stateful platform. Any truly durable session state still needs an external backing system.
+>
+> ---
+>
+> **Service account user / `roles/iam.serviceAccountUser`**
+> - The permission needed to attach a service account identity to a Cloud Run service or job.
+> - It matters because Terraform deployments of serverless resources often fail unless the deployer can act as the runtime identity.
+>
+> > [!warning] Deployment rights and runtime rights are separate
+> >
+> > Being allowed to deploy a Cloud Run resource does not automatically mean you can attach any service account to it. That boundary is intentional and should stay explicit.
+>
+> ---
+>
+> **Revision**
+> - A versioned Cloud Run deployment snapshot created when certain service or job configuration changes are applied.
+> - It matters because operational behavior, rollout history, and troubleshooting often depend on knowing which revision is actually serving traffic or executing jobs.
+>
+> > [!info] Many changes are revision-creating changes
+> >
+> > Image updates, environment changes, and several runtime settings produce new revisions rather than mutating the old one in place. That makes Cloud Run feel more like deployment history than like direct resource mutation.
+>
+> ---
+>
+> **Import path**
+> - The fully qualified identifier Terraform needs to adopt an existing Cloud Run resource into state.
+> - It matters because services and jobs are often created before Terraform takes ownership, and adoption needs the correct resource path shape.
+>
+> > [!info] Adoption is part of operations too
+> >
+> > Terraform management does not always start on day one. Import paths let an already-running service or job become part of the reviewed infrastructure workflow later.
 
 > [!info] Billing is usage-based
 >
@@ -489,6 +624,7 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 ## Related
 
 **Terraform (this chapter):**
+
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — service accounts and Secret Manager resources used by these Cloud Run services
 - [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking) — VPC and subnet for Direct VPC Egress
 - [registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/registry-and-ci) — Artifact Registry where Docker images are stored
@@ -496,11 +632,13 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 - [iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/iam-secrets-serverless) — reusable HCL blocks for Cloud Run, IAM, and Secret Manager
 
 **GCP services (Folder 06):**
+
 - [Cloud Run jobs vs services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — architectural comparison and gcloud management
 - [Service accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account concepts
 - [Secrets management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager via gcloud CLI
 
 **CI/CD:**
+
 - [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — workflow that builds and pushes container images
 
 ## References

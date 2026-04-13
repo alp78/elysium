@@ -12,29 +12,210 @@ tags:
 >
 > -- **Linus Torvalds**, Git mailing list
 
-This note is a diagnostic reference for common Git and GitHub error messages encountered in day-to-day data engineering work. Each entry follows a consistent format: exact error message, root cause, diagnostic steps, safe fix, and prevention. Related recovery techniques are in [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/11-git-recovery-and-undo); branch and merge mechanics are in [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/03-git-branching-and-merging). To practice diagnosing these errors in realistic scenarios, work through [git-problems](https://alp78.github.io/elysium/08-Git/13-git-problems).
+> [!abstract]- Summary
+>
+> Catalogs common Git and GitHub errors as diagnostic patterns, pairing each message with root cause, verification steps, safe remediation, and prevention guidance for daily collaborative development.
+>
+> **Repository and synchronization errors**
+> - Covers push rejection, missing remotes, bad tracking relationships, shallow-clone limits, and other remote-state mismatches that show up when local and server history no longer align
+> - Explains branch and `HEAD` state errors separately so detached work, missing refs, and checkout confusion are diagnosed as pointer problems rather than as file corruption
+>
+> **Integration, file, and auth failures**
+> - Walks through merge and conflict errors, file and commit mistakes, configuration drift, authentication issues, and CI/CD failures with a repeatable fix-first-then-prevent pattern
+> - Connects each message to the Git object or workflow state that actually caused it, which is the key to avoiding random trial-and-error commands
+>
+> **Operational prevention**
+> - Adds data-engineering-specific failures, preventive practices, and troubleshooting heuristics that reduce repeat incidents in repositories containing pipelines, migrations, notebooks, and automation
+> - Turns the note into a fast lookup reference when an error blocks progress and the user needs the safe fix without scanning multiple other Git notes first
+>
+> **Operations and safety**
+> - Warnings: forceful commands offered as shortcuts, auth fixes that leak secrets, and CI or shallow-clone problems that look similar but require different remediation paths
+> - Recommendations: diagnose state before editing history, fetch and inspect refs before forceful operations, and use the paired prevention guidance after every fix
+> - Troubleshooting: push/remote, branch/HEAD, merge/conflict, file/commit, config/auth, shallow-clone, CI/CD, and data-engineering-specific error classes
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **fast-forward**
+> - A merge where the target branch tip is a direct ancestor of the source branch tip. Git moves the pointer forward without creating a merge commit.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **non-fast-forward**
+> - A push or merge where the target has diverged — its tip is not an ancestor of the source. Git rejects the operation to prevent overwriting commits.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **remote-tracking ref**
+> - A read-only local pointer (e.g., `origin/main`) that mirrors the last-known state of a remote branch. Updated by `git fetch`.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **detached HEAD**
+> - A state where HEAD points directly at a commit SHA instead of a branch name. Commits made in this state are not on any branch and risk becoming orphaned.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **orphaned commit**
+> - A commit reachable only through the reflog, not through any branch or tag. Git garbage-collects orphaned commits after approximately 90 days.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **reflog**
+> - A local log of every position HEAD and branch tips have occupied. The safety net for recovering lost commits, aborted rebases, and accidental resets.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **lock file**
+> - A `.lock` file Git creates in `.git/` to prevent concurrent writes to refs or the index. Left behind if a Git process crashes.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **force-push**
+> - Overwrites the remote branch tip unconditionally (`--force`) or conditionally (`--force-with-lease`). Rewrites shared history if others have pulled the original commits.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **rebase**
+> - Replays commits onto a new base, creating new SHAs. The original commits become orphaned. Produces a linear history but rewrites commit identity.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **conflict marker**
+> - Text delimiters (`<<<<<<<`, `=======`, `>>>>>>>`) Git inserts into a file when it cannot automatically merge two changes to the same lines.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **stash**
+> - A stack of saved working-tree and index snapshots. Used to temporarily shelve uncommitted changes without committing them.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **index (staging area)**
+> - The intermediate layer between the working tree and the repository. `git add` writes to the index; `git commit` records the index as a new commit.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **pathspec**
+> - A pattern Git uses to match files or refs. An invalid pathspec means Git found no matching file, branch, or tag for the argument provided.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **shallow clone**
+> - A clone with truncated history (`--depth N`). Saves bandwidth but limits blame, log, bisect, and merge-base operations.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **unrelated histories**
+> - Two branches that share no common ancestor commit. Git refuses to merge them by default because there is no common base to compare against.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **autocrlf**
+> - A Git configuration that controls automatic conversion between Windows line endings (CRLF) and Unix line endings (LF) during checkout and commit.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Policy layer
+> >
+> > This term usually belongs to shared repository policy or machine defaults. Fixing it locally can hide the real team-wide setting if you do not check the whole policy chain.
+>
+> ---
+>
+> **filter-repo**
+> - A third-party tool (`git-filter-repo`) for rewriting Git history. Used to purge large files or secrets from all commits. Replaces the deprecated `git filter-branch`.
+> - It matters in this note because the workflows for error diagnosis, safe remediation, and repeat prevention read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
 
-| Term | Definition |
-|---|---|
-| **fast-forward** | A merge where the target branch tip is a direct ancestor of the source branch tip. Git moves the pointer forward without creating a merge commit. |
-| **non-fast-forward** | A push or merge where the target has diverged — its tip is not an ancestor of the source. Git rejects the operation to prevent overwriting commits. |
-| **remote-tracking ref** | A read-only local pointer (e.g., `origin/main`) that mirrors the last-known state of a remote branch. Updated by `git fetch`. |
-| **detached HEAD** | A state where HEAD points directly at a commit SHA instead of a branch name. Commits made in this state are not on any branch and risk becoming orphaned. |
-| **orphaned commit** | A commit reachable only through the reflog, not through any branch or tag. Git garbage-collects orphaned commits after approximately 90 days. |
-| **reflog** | A local log of every position HEAD and branch tips have occupied. The safety net for recovering lost commits, aborted rebases, and accidental resets. |
-| **lock file** | A `.lock` file Git creates in `.git/` to prevent concurrent writes to refs or the index. Left behind if a Git process crashes. |
-| **force-push** | Overwrites the remote branch tip unconditionally (`--force`) or conditionally (`--force-with-lease`). Rewrites shared history if others have pulled the original commits. |
-| **rebase** | Replays commits onto a new base, creating new SHAs. The original commits become orphaned. Produces a linear history but rewrites commit identity. |
-| **conflict marker** | Text delimiters (`<<<<<<<`, `=======`, `>>>>>>>`) Git inserts into a file when it cannot automatically merge two changes to the same lines. |
-| **stash** | A stack of saved working-tree and index snapshots. Used to temporarily shelve uncommitted changes without committing them. |
-| **index (staging area)** | The intermediate layer between the working tree and the repository. `git add` writes to the index; `git commit` records the index as a new commit. |
-| **pathspec** | A pattern Git uses to match files or refs. An invalid pathspec means Git found no matching file, branch, or tag for the argument provided. |
-| **shallow clone** | A clone with truncated history (`--depth N`). Saves bandwidth but limits blame, log, bisect, and merge-base operations. |
-| **unrelated histories** | Two branches that share no common ancestor commit. Git refuses to merge them by default because there is no common base to compare against. |
-| **autocrlf** | A Git configuration that controls automatic conversion between Windows line endings (CRLF) and Unix line endings (LF) during checkout and commit. |
-| **filter-repo** | A third-party tool (`git-filter-repo`) for rewriting Git history. Used to purge large files or secrets from all commits. Replaces the deprecated `git filter-branch`. |
+> [!example] Error Triage Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when triaging a real Git or GitHub error message, training on common failure classes, or verifying the least-destructive fix before running a command.
+> > - Use it when the safe path depends on matching the exact message to the underlying pointer, remote, auth, merge, or CI state that caused it.
+> > - Use it as the fast lookup reference when progress is blocked and the team needs a state-based diagnosis rather than guesswork.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not guess from a vague symptom without matching the actual message or repository state first.
+> > - Do not copy destructive fixes from superficially similar errors; many Git failures look alike but require opposite remediations.
+> > - Do not stop at the quick fix if the same error class is recurring; the prevention guidance matters too.
 
 ## Conceptual Model
 

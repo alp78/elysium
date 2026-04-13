@@ -14,26 +14,119 @@ status: complete
 
 # Table Compression
 
-SQL Server table and index compression reduce page count by storing rows more efficiently. The benefit is not only disk savings. Fewer pages usually means:
-
-- fewer logical reads per query
-- smaller buffer-pool footprint
-- less I/O for scans, range reads, and backup operations
-
-The tradeoff is CPU. Compression is a storage-engine trade: more CPU work during access and maintenance in exchange for fewer pages on disk and in memory. The production decision is always object-by-object — estimate first, validate on a disposable copy, then apply in a controlled maintenance window.
-
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> - Physical mechanics of row, page, Unicode, and columnstore archive compression
-> - How to audit the current compression posture of a database
-> - Estimation with `sp_estimate_data_compression_savings` before any rebuild
-> - Three-way validation (NONE → ROW → PAGE) on a disposable copy
-> - Online rebuild syntax, `WAIT_AT_LOW_PRIORITY`, and edition requirements
-> - Partition-level mixed compression strategies
-> - Post-compression monitoring via `sys.dm_db_index_operational_stats`
-> - Decision flowchart and operational recommendations
+> SQL Server table and index compression reduce page count by storing rows more efficiently. The benefit is not only disk savings: fewer pages usually means fewer logical reads, a smaller buffer-pool footprint, and less I/O for scans, range reads, and backup operations. The tradeoff is CPU, so the production decision is always object-by-object — estimate first, validate on a disposable copy, then apply in a controlled maintenance window.
+>
+> **Compression mechanics**
+> - covers row, page, Unicode, and columnstore archive compression and the physical tradeoffs each one makes
+>
+> **Current posture and estimation**
+> - audits the current compression state of the database and uses `sp_estimate_data_compression_savings` before any rebuild decision
+>
+> **Validation and deployment**
+> - walks through three-way validation (`NONE -> ROW -> PAGE`), online rebuild syntax, `WAIT_AT_LOW_PRIORITY`, edition requirements, and partition-level mixed strategies
+>
+> **Monitoring and guidance**
+> - closes with post-compression monitoring via `sys.dm_db_index_operational_stats`, decision flow, recommendations, and troubleshooting
+>
+> **Operations and safety**
+> - Warnings: compression saves pages, not complexity; the wrong object, wrong mode, or wrong rollout window can turn a storage win into CPU or maintenance pain
+> - Recommendations: estimate first, validate on a disposable copy, and let workload shape decide between `ROW`, `PAGE`, or no compression
 
-## Key Terms Used In This Note
+> [!note]- Glossary
+>
+> **Row compression**
+> - A compression mode that stores fixed-length data more efficiently without changing the logical schema.
+> - It matters because it is often the lower-risk entry point when the goal is moderate storage reduction with lighter CPU cost than page compression.
+>
+> > [!info] Usually the gentler option
+> >
+> > Row compression often captures meaningful savings with less CPU overhead than page compression. It is a common first candidate, not an automatic winner.
+>
+> ---
+>
+> **Page compression**
+> - A compression mode that adds dictionary and prefix techniques on top of row compression to shrink repeated values within a page.
+> - It matters because it can save more space than row compression, but only when the page actually contains enough repeated structure to justify the CPU cost.
+>
+> > [!warning] Bigger savings can mean bigger CPU tradeoffs
+> >
+> > Page compression is not “row compression but better.” It is a more aggressive storage trade that must be validated on the real object.
+>
+> ---
+>
+> **Unicode compression**
+> - A storage optimization for Unicode data that can reduce the space used by `nchar` and `nvarchar` values under supported conditions.
+> - It matters because it changes the savings profile for text-heavy objects and is part of the note’s physical-compression coverage.
+>
+> > [!info] Text-heavy objects can behave differently
+> >
+> > Compression outcomes are strongly shaped by data type mix. Unicode-heavy tables need their own validation rather than generic expectations.
+>
+> ---
+>
+> **Columnstore archive compression**
+> - The highest-compression columnstore mode, optimized for colder data where storage reduction matters more than query speed.
+> - It matters because it is a distinct choice for cold analytic partitions, not a universal default for active reporting data.
+>
+> > [!warning] Archive means colder and slower
+> >
+> > Archive compression is a storage play. If the data is still hot, the extra compression can hurt the wrong part of the workload.
+>
+> ---
+>
+> **`sp_estimate_data_compression_savings`**
+> - The stored procedure SQL Server provides to estimate potential size savings before applying row or page compression.
+> - It matters because compression decisions should start with measurement rather than intuition.
+>
+> > [!warning] Estimate is the starting point, not the verdict
+> >
+> > Estimated savings do not tell you the runtime CPU impact or the maintenance cost. Validation on a disposable copy is still required.
+>
+> ---
+>
+> **Online rebuild**
+> - An index or table rebuild path that keeps the object more available to concurrent workloads during the operation.
+> - It matters because compression changes are usually delivered through rebuild operations, so availability requirements shape which rollout strategies are viable.
+>
+> > [!warning] “Online” still needs operational planning
+> >
+> > Online operations reduce blocking, but they do not eliminate resource consumption, locks, or edition-specific constraints.
+>
+> ---
+>
+> **`WAIT_AT_LOW_PRIORITY`**
+> - A rebuild option that lets an operation wait for locks at lower priority before escalating or aborting based on policy.
+> - It matters because compression rollouts often need a way to coexist with live workloads instead of winning every blocking contest immediately.
+>
+> > [!info] Useful when availability matters more than maintenance impatience
+> >
+> > Low-priority waiting is an operational compromise. It is valuable when the workload should keep winning while maintenance waits its turn.
+>
+> ---
+>
+> **Partition-level compression**
+> - The ability to apply different compression settings to different partitions of the same table or index.
+> - It matters because many production tables need hot partitions optimized for writes and cold partitions optimized for storage.
+>
+> > [!info] Mixed strategy is often the production answer
+> >
+> > Real workloads are rarely uniformly hot or cold. Partition-level compression is how you avoid one compression choice for every age of data.
+>
+> ---
+>
+> **`sys.dm_db_index_operational_stats`**
+> - A DMV that surfaces runtime index behavior such as locking, latching, scans, and other operational counters.
+> - It matters because post-compression monitoring has to confirm that the storage win did not create a worse operational profile somewhere else.
+>
+> > [!warning] Savings should be verified in workload terms
+> >
+> > Smaller objects are good only if the workload also behaves acceptably afterward. Operational counters are part of proving that.
+>
+> ---
+
+## Key Concepts
 
 | Term | Plain-English definition | Why it matters here | Common confusion |
 |---|---|---|---|

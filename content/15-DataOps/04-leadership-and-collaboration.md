@@ -8,14 +8,170 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Leadership and Collaboration at Scale
+# Leadership and Collaboration
 
 > [!quote]
 > "No pull request should ever be accepted unless the engineer can answer the question, 'How will I know if this breaks?'"
 >
 > — **Charity Majors**, charity.wtf (2019)
 
-A senior data engineer at a large financial data company operates at the "Individual Contributor Lead" or "Director" level. The role demands more than technical excellence — it requires the ability to influence architecture decisions, mentor engineers, manage stakeholder expectations, and navigate complex organizational dynamics. This note covers the non-technical skills that determine whether a senior engineer advances or plateaus.
+> [!abstract]- Summary
+>
+> This note defines the non-coding side of senior data-engineering leverage: using reviews, design artifacts, decision records, stakeholder management, mentoring, and incident leadership to improve systems and teams rather than only shipping individual changes faster.
+>
+> **Engineering judgment and design practice**
+> - Covers code review as a teaching and safety mechanism, including the review pyramid, result-diff expectations for high-risk data changes, and the standards senior reviewers should enforce around idempotency, validation, rollback, and operational safety.
+> - Includes templates and guidance for technical design documents so substantial work is shaped through explicit context, goals, trade-offs, operational plans, and reviewer input before implementation begins.
+>
+> **Stakeholder leadership and team growth**
+> - Explains expectation management, status communication, mentoring progression, and the practical behaviors needed to operate in matrixed organizations where influence depends on written clarity, relationship building, and explicit ownership boundaries.
+> - Uses RACI and related coordination patterns to turn ambiguous cross-functional work into decisions with named owners and visible escalation paths.
+>
+> **Decision records and technical debt management**
+> - Introduces ADRs as the durable record for contested technical choices, then pairs them with a practical framework for naming, prioritizing, documenting, and pushing back on technical debt.
+> - Treats “saying no” as a risk-management skill: frame the business impact, offer alternatives, document the decision, and keep a visible debt register instead of letting shortcuts disappear into memory.
+>
+> **Incident leadership and postmortems**
+> - Covers war-room roles, severity handling, communication separation, a financial-data incident example, and the blameless postmortem process used to convert incidents into concrete systemic improvements.
+> - Includes templates for RCA structure, action-item discipline, and the leadership behaviors that keep teams learning instead of hiding mistakes after production failures.
+>
+> **Operations and safety**
+> - Warnings: approving data changes without representative validation, shipping without rollback plans, informal ownership inside matrixed orgs, undocumented debt trade-offs, and incident reviews that stop at blaming an engineer.
+> - Recommendations: require evidence for risky changes, write design docs and ADRs for consequential work, keep debt visible with owners and follow-up dates, and separate debugging, coordination, and communications during incidents.
+
+> [!note]- Glossary
+>
+> **Review pyramid**
+> - A prioritization model for code review that moves attention from style and readability up through correctness, data correctness, architecture, and operational safety.
+> - It matters here because the note uses the pyramid to show that senior reviewers should spend their attention where the risk is highest, not where linters already do the job.
+>
+> > [!info] Review risk before style
+> >
+> > Style defects are cheap and automatable; unsafe data behavior and weak rollback paths are not.
+>
+> ---
+>
+> **Representative result diff**
+> - Evidence comparing before-and-after outputs on realistic data to prove that a change preserved or intentionally altered behavior.
+> - It matters here because the note treats result diffs as a required review artifact for gold-layer and calculation changes where tests alone may miss bad outcomes at scale.
+>
+> > [!warning] Passing tests can still hide wrong numbers
+> >
+> > For analytical and financial pipelines, correctness often has to be demonstrated on meaningful output samples, not inferred from code structure alone.
+>
+> ---
+>
+> **Design doc**
+> - A structured proposal that captures the problem, goals, solution, alternatives, risks, and rollout plan for a significant piece of work.
+> - It matters here because the note treats design docs as the mechanism that surfaces disagreement and operational consequences before implementation cost compounds.
+>
+> > [!info] Write before building
+> >
+> > The most valuable design docs are not polished essays; they are concise artifacts that make trade-offs reviewable early.
+>
+> ---
+>
+> **Architecture Decision Record / ADR**
+> - A short record of a consequential technical decision, the context behind it, the alternatives considered, and the consequences accepted.
+> - It matters here because ADRs preserve the rationale for choices that future engineers will otherwise revisit without the original constraints in view.
+>
+> > [!warning] Keep the trail intact
+> >
+> > Superseded ADRs still matter because they explain what changed in the environment or priorities that made a different decision correct later.
+>
+> ---
+>
+> **Matrixed organization**
+> - An organizational model where engineers report through one management line while coordinating daily with several product, platform, compliance, or operations stakeholders.
+> - It matters here because the note assumes senior engineers often need influence, clarity, and escalation discipline more than formal authority to get work unstuck.
+>
+> > [!warning] Ambiguity compounds quickly
+> >
+> > Matrixed teams slow down when ownership, approval rights, and communication paths are assumed instead of written down.
+>
+> ---
+>
+> **RACI matrix**
+> - A responsibility framework that distinguishes who is Responsible, Accountable, Consulted, and Informed for a given activity.
+> - It matters here because the note uses RACI to resolve the recurring ambiguity around who designs, approves, deploys, monitors, or responds during data-platform work.
+>
+> > [!info] Accountability must be singular
+> >
+> > The matrix only clarifies ownership when one person or role can actually make the final call and carry the outcome.
+>
+> ---
+>
+> **Technical debt register**
+> - A visible inventory of known shortcuts, their impact, owners, effort, priority, and links to the design choices that created them.
+> - It matters here because the note argues that debt becomes manageable only once it is documented, prioritized, and revisited intentionally.
+>
+> > [!warning] Invisible debt still accrues interest
+> >
+> > Teams often think they are moving fast when they are really borrowing against future incident load, rewrite cost, and engineering attention.
+>
+> ---
+>
+> **Rollback plan**
+> - A concrete procedure for undoing a deployment or restoring a known-good state when a change causes harm.
+> - It matters here because the note treats rollback readiness as part of the definition of safe delivery, especially for stateful data systems.
+>
+> > [!danger] Shipping without reversal is gambling
+> >
+> > If the team cannot explain how to undo the change, it has not finished the operational design of the change.
+>
+> ---
+>
+> **War room**
+> - A focused incident-response channel or meeting where the active responders coordinate roles, decisions, status, and mitigation steps in real time.
+> - It matters here because the note uses the war room as the operating context where leadership discipline matters most under pressure.
+>
+> > [!warning] Coordination is its own task
+> >
+> > Incidents become noisier and slower when nobody is explicitly managing roles, timeline, and decision flow while others debug.
+>
+> ---
+>
+> **Incident commander**
+> - The person responsible for directing the incident response, assigning roles, controlling communication cadence, and making procedural decisions during an outage.
+> - It matters here because the note separates incident command from hands-on debugging to preserve focus and keep stakeholders informed.
+>
+> > [!info] Command is not debugging
+> >
+> > A strong incident commander reduces confusion by owning coordination rather than trying to solve every technical detail personally.
+>
+> ---
+>
+> **Blameless postmortem**
+> - A post-incident review method that focuses on systemic causes, timeline accuracy, and preventative action items instead of personal fault.
+> - It matters here because the note treats blameless review as the mechanism that turns outages into process and platform improvements rather than fear-driven silence.
+>
+> > [!warning] Blameless is not consequence-free
+> >
+> > A blameless culture still expects rigorous follow-through; the absence of blame is only useful if the systemic fixes actually get implemented.
+>
+> ---
+>
+> **Stakeholder expectation management**
+> - The practice of communicating impact, options, timing, and risk in a way that helps non-technical partners make informed decisions.
+> - It matters here because the note frames expectation management as a core leadership skill for senior engineers who need to align business urgency with technical reality.
+>
+> > [!info] Lead with impact
+> >
+> > Stakeholders usually need the effect on time, money, accuracy, or customer commitments before they need the implementation detail.
+
+> [!example] Leadership Leverage Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for senior and staff engineer development, review standards, design-review practice, project leadership, debt prioritization, and production-incident response design.
+> > - Use it when the leverage point is better decisions, clearer ownership, stronger review discipline, and better incident learning rather than more individual coding throughput.
+> > - Use it to formalize where written artifacts, mentoring, escalation paths, and postmortems actually improve engineering quality and team behavior.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a substitute for technical depth; leadership artifacts do not compensate for weak engineering judgment.
+> > - Do not add ceremony where the work is still small, reversible, and low risk.
+> > - Do not turn design docs, ADRs, or postmortems into paperwork detached from real operational decisions and follow-through.
 
 ## The Code Review as a Teaching Tool
 
@@ -72,6 +228,7 @@ See our silver layer pattern in dags/common/sql_helpers.py:42 for an example."
 ```
 
 #### Principles
+
 - Comment on the *code*, never the *person*
 - Suggest alternatives, don't just point out problems
 - Use "we" language: "We prefer MERGE here because..." not "You should use MERGE"

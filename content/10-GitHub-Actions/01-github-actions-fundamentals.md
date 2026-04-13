@@ -12,39 +12,314 @@ tags:
 >
 > — **David Farley**, *Continuous Delivery* (2010)
 
-This file is the syntax and concept reference for GitHub Actions. It covers every building block — workflow files, triggers, runners, jobs, steps, expressions, contexts, secrets, caching, artifacts, environments, concurrency, security, debugging, and data-engineering patterns — with annotated YAML from real workflow runs in the [git-lab](https://github.com/alp78/git-lab) sandbox repository and captured outputs from `gh run view`.
+> [!abstract]- Summary
+>
+> Explains the execution model, syntax surfaces, and security boundaries of GitHub Actions so you can read, author, and debug workflow YAML without confusing workflow-processing time, runner runtime, or deployment-time controls.
+>
+> **Execution model and workflow anatomy**
+> - Defines events, workflows, jobs, steps, runners, expressions, contexts, and the event-to-workflow-to-job-to-step execution chain before breaking down the top-level workflow keys
+> - Explains evaluation order, shell defaults, and how data moves across `GITHUB_OUTPUT`, `GITHUB_ENV`, static `env:`, artifacts, caches, and job summaries
+>
+> **Triggers, runners, and job orchestration**
+> - Covers `push`, `pull_request`, `pull_request_target`, `schedule`, `workflow_dispatch`, `repository_dispatch`, `workflow_call`, `workflow_run`, `merge_group`, and `issue_comment` triggers plus the trust and routing differences between them
+> - Compares GitHub-hosted, self-hosted, larger, and ephemeral runners; then layers in `needs`, matrix jobs, job outputs, containers, and service containers for multi-job orchestration
+>
+> **Expressions, variables, and workflow state**
+> - Uses expressions, status functions, contexts, variables, step outputs, default environment variables, and environment-scoped settings to control job behavior and pass values safely
+> - Distinguishes configuration variables from secrets and shows where Actions evaluates YAML expressions versus where shells evaluate runtime environment variables
+>
+> **Security, reuse, and observability**
+> - Covers secret scoping, `GITHUB_TOKEN`, explicit `permissions:`, concurrency, environments, OIDC, action pinning, reusable workflows, composite actions, artifacts, caching, and debugging via `gh run`, workflow commands, annotations, and local testing with `act`
+> - Extends the fundamentals to data-engineering patterns so the core model still holds when workflows start touching warehouses, cloud auth, and deployment gates
+>
+> **Operations and safety**
+> - Warnings: `pull_request_target` trust issues, expression-versus-shell confusion, over-broad `GITHUB_TOKEN` permissions, stale caches, unsafe secret handling, and unpinned third-party actions
+> - Recommendations: scope `permissions:` explicitly, prefer OIDC over long-lived cloud secrets, pin actions to SHAs, separate data channels deliberately, and choose runner type and trigger type based on trust boundaries
+> - Troubleshooting: debugging and observability guidance for broken expressions, missing outputs, trigger surprises, runner drift, auth failures, and runtime inspection
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Workflow**
+> - A YAML file in `.github/workflows/` that defines an automated process. One repo can have unlimited workflows.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Event**
+> - A repository activity (push, PR, cron, manual dispatch) that triggers one or more workflows.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Trigger**
+> - The `on:` key in a workflow that maps events to workflow runs.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Workflow run**
+> - A single execution of a workflow, identified by a unique `run_id`.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Job**
+> - A unit of work within a workflow. Each job runs on a separate runner VM. Jobs run in parallel by default.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Step**
+> - A single task within a job. Steps run sequentially, sharing the runner's filesystem.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Action**
+> - A reusable unit of code referenced with `uses:`. Can be JavaScript, Docker, or composite.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **Runner**
+> - A server that executes jobs. Can be GitHub-hosted (ephemeral VM) or self-hosted (your infrastructure).
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Context**
+> - A dictionary of data available in expressions (`github`, `runner`, `env`, `steps`, `needs`, `matrix`, `inputs`, `vars`, `secrets`).
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
 
-| Term | Definition |
-|------|-----------|
-| **Workflow** | A YAML file in `.github/workflows/` that defines an automated process. One repo can have unlimited workflows. |
-| **Event** | A repository activity (push, PR, cron, manual dispatch) that triggers one or more workflows. |
-| **Trigger** | The `on:` key in a workflow that maps events to workflow runs. |
-| **Workflow run** | A single execution of a workflow, identified by a unique `run_id`. |
-| **Job** | A unit of work within a workflow. Each job runs on a separate runner VM. Jobs run in parallel by default. |
-| **Step** | A single task within a job. Steps run sequentially, sharing the runner's filesystem. |
-| **Action** | A reusable unit of code referenced with `uses:`. Can be JavaScript, Docker, or composite. |
-| **Runner** | A server that executes jobs. Can be GitHub-hosted (ephemeral VM) or self-hosted (your infrastructure). |
-| **Context** | A dictionary of data available in expressions (`github`, `runner`, `env`, `steps`, `needs`, `matrix`, `inputs`, `vars`, `secrets`). |
-| **Expression** | A `${{ }}` template evaluated by GitHub at workflow-processing time, before any shell runs. |
-| **GITHUB_TOKEN** | An auto-generated, scoped token that authenticates a workflow run to the GitHub API. Expires when the run ends. |
-| **Secret** | An encrypted variable stored at repo, environment, or org level. Masked in logs. |
-| **Configuration variable** | A plaintext variable (`vars` context) for non-sensitive config. Not masked. |
-| **Environment** | A named deployment target (e.g., `staging`, `production`) with optional protection rules and scoped secrets. |
-| **Artifact** | A file or directory uploaded from a workflow run, downloadable by other jobs or users. Default retention: 90 days. |
-| **Cache** | A stored dependency tree (e.g., pip, npm) keyed by a hash of a lockfile. Evicted after 7 days of no access. Max 10 GB per repo. |
-| **Concurrency group** | A named lock that serializes or cancels overlapping runs. |
-| **Permissions** | The `permissions:` key that scopes the `GITHUB_TOKEN` to specific API capabilities. |
-| **OIDC** | OpenID Connect — a protocol for exchanging short-lived GitHub JWTs for cloud provider credentials without storing long-lived secrets. |
-| **Reusable workflow** | A workflow that accepts `workflow_call` and can be invoked by other workflows via `uses:`. |
-| **Composite action** | An action defined in `action.yml` that groups multiple steps into a single `uses:` reference. |
-| **Matrix strategy** | A build matrix that generates multiple job instances from combinations of values. |
-| **Service container** | A Docker container (e.g., PostgreSQL) attached to a job for integration testing. |
-| **Workflow command** | A `::command::` string written to stdout that instructs the runner to set outputs, mask values, create annotations, or group log lines. |
-| **Job summary** | Markdown written to `$GITHUB_STEP_SUMMARY` that renders on the workflow run page in GitHub. |
-| **GITHUB_OUTPUT** | A file that steps write to for setting step outputs (replacing the deprecated `::set-output` command). |
-| **GITHUB_ENV** | A file that steps write to for dynamically setting environment variables available to subsequent steps in the same job. |
+> ---
+>
+> **Expression**
+> - A `${{ }}` template evaluated by GitHub at workflow-processing time, before any shell runs.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **GITHUB_TOKEN**
+> - An auto-generated, scoped token that authenticates a workflow run to the GitHub API. Expires when the run ends.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Secret**
+> - An encrypted variable stored at repo, environment, or org level. Masked in logs.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Configuration variable**
+> - A plaintext variable (`vars` context) for non-sensitive config. Not masked.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Environment**
+> - A named deployment target (e.g., `staging`, `production`) with optional protection rules and scoped secrets.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Artifact**
+> - A file or directory uploaded from a workflow run, downloadable by other jobs or users. Default retention: 90 days.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Cache**
+> - A stored dependency tree (e.g., pip, npm) keyed by a hash of a lockfile. Evicted after 7 days of no access. Max 10 GB per repo.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Concurrency group**
+> - A named lock that serializes or cancels overlapping runs.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Permissions**
+> - The `permissions:` key that scopes the `GITHUB_TOKEN` to specific API capabilities.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **OIDC**
+> - OpenID Connect — a protocol for exchanging short-lived GitHub JWTs for cloud provider credentials without storing long-lived secrets.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Reusable workflow**
+> - A workflow that accepts `workflow_call` and can be invoked by other workflows via `uses:`.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Composite action**
+> - An action defined in `action.yml` that groups multiple steps into a single `uses:` reference.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Matrix strategy**
+> - A build matrix that generates multiple job instances from combinations of values.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Service container**
+> - A Docker container (e.g., PostgreSQL) attached to a job for integration testing.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Workflow command**
+> - A `::command::` string written to stdout that instructs the runner to set outputs, mask values, create annotations, or group log lines.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Job summary**
+> - Markdown written to `$GITHUB_STEP_SUMMARY` that renders on the workflow run page in GitHub.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **GITHUB_OUTPUT**
+> - A file that steps write to for setting step outputs (replacing the deprecated `::set-output` command).
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **GITHUB_ENV**
+> - A file that steps write to for dynamically setting environment variables available to subsequent steps in the same job.
+> - It matters in this note because the workflows for workflow structure, trigger semantics, runner behavior, expression evaluation, and GitHub Actions security boundaries read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+
+> [!example] Workflow Model Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note before writing or reviewing any GitHub Actions workflow when you still need the core execution model: triggers, jobs, steps, runners, expressions, outputs, and token scope.
+> > - Use it when a workflow bug may come from evaluation timing, data flow between jobs, runner choice, or trust boundaries rather than from one specific delivery pattern.
+> > - Use it as the baseline reference for security-sensitive automation so later CI/CD, pattern, and data-platform designs inherit the correct mental model.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not stop here if the real task is reusable workflow composition, artifact promotion, or warehouse-specific automation; those concerns belong in the specialized follow-on notes.
+> > - Do not use this page as a substitute for environment-specific deployment design once the core runner and trigger model is already understood.
+> > - Do not treat the fundamentals as purely syntactic YAML guidance; if the team needs opinionated production patterns, this note is only the prerequisite layer.
 
 ## Conceptual Model
 
@@ -1810,6 +2085,7 @@ gh variable set DEMO_REGION -R alp78/git-lab --env staging --body "europe-west1"
 **What problem OIDC solves:** Traditional cloud authentication requires storing long-lived service account keys as GitHub secrets. If a secret leaks (in logs, to a fork, via a compromised action), the attacker has permanent access until the key is rotated.
 
 **How OIDC works:**
+
 1. The workflow requests an OIDC token from GitHub (`id-token: write` permission).
 2. GitHub mints a short-lived JWT containing claims about the workflow (repo, branch, actor, environment).
 3. The cloud provider (GCP, AWS, Azure) validates the JWT against its trust policy and issues a short-lived access token.

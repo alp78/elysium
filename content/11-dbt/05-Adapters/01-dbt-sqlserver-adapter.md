@@ -13,9 +13,202 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 >
 > — **Tristan Handy** (creator of dbt)
 
-The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration).
+> [!abstract]- Summary
+>
+> `dbt-sqlserver` connects dbt Core to Microsoft SQL Server and Azure SQL through ODBC, and this note defines the adapter-specific install, connection, incremental, T-SQL, and operational rules needed to run SQL Server targets reliably from Linux-based orchestration.
+>
+> **Adapter setup and connectivity**
+> - Installs `dbt-core` and `dbt-sqlserver` as pinned version pairs, validates the Microsoft ODBC driver on Linux, and notes that driver mismatches cause runtime failures.
+> - Frames the adapter as community-maintained rather than dbt Labs-maintained, which changes how cautiously versions and deployment assumptions should be handled.
+>
+> **Profiles and authentication**
+> - Configures `profiles.yml` for SQL authentication on Linux and GCE, with Azure service principal auth only for Azure SQL targets.
+> - Documents the core connection parameters: `driver`, `server`, `port`, `authentication`, `TrustServerCertificate`, `encrypt`, `connect_timeout`, and `threads`.
+>
+> **Incremental behavior and SQL differences**
+> - Recommends `incremental_strategy = 'delete+insert'` with overlap windows and source deduplication instead of SQL Server `MERGE` for most incremental models.
+> - Notes that `insert_overwrite` is unsupported and maps the recurring T-SQL differences for date arithmetic, date truncation, NULL handling, row limiting, and string functions.
+>
+> **Physical tuning and platform limits**
+> - Uses `post_hook` DDL for nonclustered indexes, `UPDATE STATISTICS` after large incremental loads, and TempDB monitoring for sort, hash, and spool pressure during threaded dbt runs.
+> - Requires explicit casting and exact T-SQL type names for contracts, and explains that each dbt thread holds its own ODBC connection for the duration of a run.
+>
+> **Operations and safety**
+> - Warnings: pin adapter and driver versions, keep `encrypt: true`, avoid `MERGE` for duplicate-prone feeds, and size `threads` against TempDB and connection limits.
+> - Recommendations table: connection parameter defaults and the known-limitations summary define the safe baseline.
+> - Limitations: 7 unsupported or partial features are called out explicitly in the final summary table.
 
----
+> [!note]- Glossary
+>
+> **`dbt-sqlserver`**
+> - The community adapter package that lets dbt Core compile and run models against Microsoft SQL Server or Azure SQL.
+> - It matters here because every installation, auth, incremental, and SQL behavior in the note depends on the adapter's T-SQL and ODBC implementation rather than on dbt Core alone.
+>
+> > [!warning] Community maintenance boundary
+> >
+> > The adapter is not maintained by dbt Labs. Treat version pinning and upgrade testing as mandatory because compatibility gaps tend to surface only at runtime.
+>
+> ---
+>
+> **Community adapter**
+> - An adapter maintained outside the first-party dbt Labs adapter set.
+> - It matters here because support expectations, release cadence, and feature completeness differ from adapters such as BigQuery or Snowflake.
+>
+> > [!warning] Support model differs
+> >
+> > Assume slower issue resolution and narrower feature coverage than first-party adapters. Operationally, that means pinning versions and avoiding optimistic upgrade plans.
+>
+> ---
+>
+> **`ODBC Driver 18 for SQL Server`**
+> - Microsoft's ODBC driver used by Linux dbt processes to open SQL Server connections.
+> - It matters here because the adapter depends on the exact installed driver string, and driver version mismatches are a common cause of failed runs.
+>
+> > [!warning] Exact driver string
+> >
+> > `profiles.yml` must match the installed driver name exactly. Mixing Driver 17 and Driver 18 settings across environments creates hard-to-diagnose deployment drift.
+>
+> ---
+>
+> **`profiles.yml`**
+> - The dbt profile file that defines named targets and their adapter-specific connection settings.
+> - It matters here because SQL Server authentication mode, TLS behavior, thread count, and timeout defaults are all selected there.
+>
+> > [!info] Runtime control surface
+> >
+> > Treat the profile as an operational contract, not just a credential file. Subtle changes there alter concurrency, encryption, and connection startup behavior.
+>
+> ---
+>
+> **SQL authentication**
+> - Username-and-password authentication handled directly by SQL Server rather than by a Windows-integrated domain identity.
+> - It matters here because it is the practical baseline for Linux, GCE, Cloud Run, and WSL deployments where Kerberos and domain join are usually unavailable.
+>
+> > [!warning] Default Linux path
+> >
+> > For Linux-hosted dbt, this is the simplest reliable option. Trying to force Windows-integrated auth into non-domain infrastructure usually adds more fragility than security value.
+>
+> ---
+>
+> **Service principal**
+> - An Azure AD application identity that can authenticate to Azure SQL without using a human user account.
+> - It matters here because the note distinguishes Azure SQL auth patterns from ordinary SQL Server auth patterns.
+>
+> > [!danger] Secret-backed identity
+> >
+> > Client secret handling becomes part of the data-platform security boundary. Scope the principal narrowly and store its secret outside the repo and local profile text.
+>
+> ---
+>
+> **`TrustServerCertificate`**
+> - An ODBC connection property that decides whether the server certificate is validated during TLS negotiation.
+> - It matters here because dev and staging often use self-signed certificates, while production should validate the certificate chain.
+>
+> > [!warning] Encryption is separate
+> >
+> > This setting does not turn TLS on or off. It only controls certificate verification, so `encrypt: true` still needs to stay enabled.
+>
+> ---
+>
+> **`encrypt`**
+> - The connection setting that enables TLS for traffic between the dbt process and SQL Server.
+> - It matters here because ODBC Driver 18 expects encrypted connections and the safe production baseline is to keep encryption enabled everywhere.
+>
+> > [!danger] Do not disable TLS
+> >
+> > Turning this off weakens transport security and can also diverge from modern driver defaults. The correct adjustment for self-signed certs is certificate trust policy, not disabling encryption.
+>
+> ---
+>
+> **Incremental model**
+> - A dbt model that reprocesses only new or changed slices of data instead of rebuilding the full table every run.
+> - It matters here because the adapter's locking, deduplication, and strategy choices directly affect correctness and runtime cost for SQL Server targets.
+>
+> > [!info] Adapter-specific semantics
+> >
+> > Incremental materialization names look portable across dbt adapters, but their generated SQL and operational behavior are not. Always check the target adapter's implementation details.
+>
+> ---
+>
+> **`delete+insert`**
+> - The SQL Server incremental strategy that removes target rows matching the incremental batch keys and then inserts the replacement rows.
+> - It matters here because the note treats it as the safer default for duplicate-prone source feeds and more predictable locking behavior.
+>
+> > [!warning] Deduplicate first
+> >
+> > This strategy is safer than `MERGE`, but it still assumes the incoming batch is logically clean. Use a `ROW_NUMBER()` deduplication CTE when the feed can repeat keys.
+>
+> ---
+>
+> **`MERGE`**
+> - The T-SQL statement behind the adapter's merge-based incremental strategy.
+> - It matters here because its duplicate-key behavior, lock escalation, and TempDB overhead make it risky for many warehouse-style dbt workloads.
+>
+> > [!warning] Not the safe default
+> >
+> > `MERGE` looks convenient, but SQL Server's edge cases are real enough that the note explicitly recommends avoiding it unless true upsert semantics are required.
+>
+> ---
+>
+> **`post_hook`**
+> - A dbt configuration hook that runs SQL after a model finishes building.
+> - It matters here because SQL Server indexing and statistics maintenance are attached to dbt models through post-run DDL and maintenance statements.
+>
+> > [!warning] Idempotence matters
+> >
+> > Incremental models keep the target table between runs. Any `CREATE INDEX` logic in a hook must guard against reruns or the second execution will fail.
+>
+> ---
+>
+> **TempDB**
+> - SQL Server's shared system database for spills, spools, sorts, hashes, and other transient worktables.
+> - It matters here because threaded dbt runs can create concurrent TempDB pressure even when the user models themselves are simple.
+>
+> > [!warning] Shared-instance pressure point
+> >
+> > TempDB becomes the first bottleneck before CPU in many warehouse runs. Raise dbt thread counts only after confirming file layout, free space, and spill behavior.
+>
+> ---
+>
+> **`UPDATE STATISTICS`**
+> - A T-SQL maintenance command that refreshes optimizer statistics on a table or index.
+> - It matters here because stale statistics after large incremental loads can degrade query plans for downstream analytical reads.
+>
+> > [!info] Accuracy versus runtime
+> >
+> > `FULLSCAN` improves cardinality estimates but costs more to run. Choose sampling deliberately on large tables instead of treating stats refresh as free.
+>
+> ---
+>
+> **Contracts**
+> - dbt schema declarations that enforce column names and data types at build time.
+> - It matters here because SQL Server contract enforcement only works cleanly when the model SQL casts explicitly and the YAML uses exact T-SQL type names.
+>
+> > [!warning] Type names must match
+> >
+> > Adapter portability stops here. A logical type name that is acceptable elsewhere can still fail on SQL Server if the schema YAML does not use the T-SQL spelling the adapter expects.
+>
+> ---
+>
+> **`threads`**
+> - The dbt profile setting that controls how many models or queries dbt can execute concurrently.
+> - It matters here because each SQL Server thread maps to a separate ODBC connection and increases TempDB, lock, and connection pressure on the instance.
+>
+> > [!warning] Concurrency is physical
+> >
+> > On SQL Server, thread count is not an abstract performance knob. It changes live connection load and spill pressure, so start conservatively and tune from observed behavior.
+
+> [!example] Adapter Suitability
+>
+> > [!success] SQL Server Target
+> >
+> > - Use `dbt-sqlserver` when Microsoft SQL Server or Azure SQL is the actual warehouse target and the team needs dbt Core to run from Linux, GCE, Cloud Run, containers, or WSL with ODBC-based connectivity.
+> > - Adopt the adapter with explicit version pinning, conservative thread counts, and SQL Server-native incremental and indexing patterns, because those are part of the operational contract rather than optional refinements.
+>
+> > [!failure] Feature Mismatch
+> >
+> > - Avoid this adapter if the project depends on capabilities it does not support well, such as `insert_overwrite`, Python models, `dbt clone`, first-party feature parity, or warehouse-native nested-type workflows.
+> > - Do not port BigQuery or Snowflake assumptions directly into SQL Server dbt projects; T-SQL semantics, connection behavior, and incremental tradeoffs need their own design choices.
 
 ### SQL Server Adapter Installation
 
@@ -318,6 +511,7 @@ For very large tables, `WITH SAMPLE 30 PERCENT` is faster at the cost of some ac
 SQL Server uses TempDB for intermediate spools, sort operations, and hash joins. Multi-threaded dbt runs generate concurrent TempDB activity.
 
 Key points:
+
 - **Threads setting**: each thread runs queries concurrently. On a shared instance, `threads: 4` is a safe default. Increase only after confirming TempDB has adequate space and the instance is not shared with OLTP workloads.
 - **Spill monitoring**: query `sys.dm_exec_query_stats` or use Extended Events to detect sort/hash spills during dbt runs.
 - **TempDB file count**: pre-create TempDB data files equal to the number of logical CPU cores (up to 8) to reduce allocation contention.
@@ -388,4 +582,3 @@ connect_timeout: 60
 - [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning)
 - [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage)
 - [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns)
-

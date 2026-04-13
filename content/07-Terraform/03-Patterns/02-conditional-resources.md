@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Conditional Resources
+# Conditional Resources
 
 > [!quote] John Ousterhout on flexibility and complexity
 >
@@ -16,7 +16,135 @@ status: complete
 >
 > — **John Ousterhout**, *A Philosophy of Software Design* (2018)
 
-Terraform uses `count` for conditional resource creation and `for_each` for creating multiple instances from a collection. These are the primary mechanisms for parameterized, reusable infrastructure configurations.
+> [!abstract]- Summary
+>
+> Conditional Resources is the Terraform pattern note for optional and repeated infrastructure: it shows how `count`, `for_each`, dynamic blocks, and ternary expressions let one configuration flex across features and environments while still preserving stable addresses, readable logic, and safe migration paths.
+>
+> **Conditional creation with `count`**
+> - covers boolean toggles, optional integrations, list-style addressing, `one()` for zero-or-one patterns, and the reference rules required when a resource may not exist
+>
+> **Collection-driven creation with `for_each`**
+> - covers keyed multiple instances, map and set iteration, `for_each` limitations, dynamic blocks, and why distinct stable keys are safer than index-based identities
+>
+> **Expression and migration patterns**
+> - covers ternary operator usage, replacing nested ternaries with cleaner lookup strategies, migrating from `count` to `for_each`, and the role of `moved` blocks during address changes
+>
+> **Decision guidance**
+> - covers when to choose `count` versus `for_each`, how plan-time known-value requirements shape design, and the cases where conditional logic is adding more complexity than reuse benefit
+>
+> **Operations and safety**
+> - Warnings: direct references to `count`-controlled resources fail when the resource is absent, `count` index shifting recreates infrastructure, dynamic blocks have readability limits, and migrating from `count` to `for_each` without `moved` blocks destroys and recreates resources
+> - Recommendations: use `one()` for optional outputs, prefer `for_each` with stable distinct keys for long-lived objects, replace nested ternaries with clearer maps or locals, and declare `moved` blocks before any identity-changing migration
+
+> [!note]- Glossary
+>
+> **`count`**
+> - A Terraform meta-argument that creates zero or more instances of a resource based on a numeric value.
+> - It matters because `count` is the simplest way to make a resource optional, but it also changes addressing and state identity in ways that can become fragile.
+>
+> > [!warning] Numeric identity is brittle
+> >
+> > When instance identity depends on list position, reordering or inserting items can recreate infrastructure unexpectedly. That is the core trade-off behind most `count` warnings.
+>
+> ---
+>
+> **Conditional creation**
+> - The Terraform pattern of deciding at plan time whether a resource should exist at all.
+> - It matters because optional integrations, feature flags, and environment-specific infrastructure all depend on this pattern.
+>
+> > [!info] Optional still needs deterministic design
+> >
+> > A resource that may not exist is still part of the module interface and dependency graph. Optional infrastructure should be modeled deliberately, not as an afterthought.
+>
+> ---
+>
+> **`one()`**
+> - A Terraform function that accepts a list of zero or one elements and returns either the single element or `null`.
+> - It matters because it provides a cleaner way to consume outputs from optional `count`-based resources without hardcoding `[0]`.
+>
+> > [!info] Better for zero-or-one patterns
+> >
+> > `one()` removes the sharp edge where `resource[0]` explodes when the resource does not exist. It makes optional output wiring much easier to read and safer to evaluate.
+>
+> ---
+>
+> **`for_each`**
+> - A Terraform meta-argument that creates instances from a map or set and keys them by stable identifiers instead of by indexes.
+> - It matters because long-lived repeated infrastructure is usually safer when each instance is tied to a meaningful key.
+>
+> > [!warning] Keys must be stable and known
+> >
+> > If the keys change or depend on values not known at plan time, Terraform loses the stable identity advantage that makes `for_each` attractive in the first place.
+>
+> ---
+>
+> **Plan-time known value**
+> - A value Terraform can determine during planning before any new resources are created.
+> - It matters because both `count` and `for_each` require their instance counts or keys to be known before apply can proceed.
+>
+> > [!warning] Unknown instance counts block planning
+> >
+> > Terraform cannot decide how many resources to manage if the controlling expression depends on apply-time attributes. Conditional design must stay anchored to values available during plan.
+>
+> ---
+>
+> **Stable key**
+> - A durable identifier used in `for_each` so Terraform can recognize the same logical resource across plans.
+> - It matters because stable keys preserve resource identity when collections grow, shrink, or reorder.
+>
+> > [!info] Meaningful keys reduce churn
+> >
+> > Names, IDs, or other business-stable identifiers usually age better than numeric positions. Good keys make refactors and diffs much less destructive.
+>
+> ---
+>
+> **Dynamic block**
+> - A Terraform construct that generates repeated nested blocks from input collections instead of generating whole resource instances.
+> - It matters because some provider schemas need repeated child blocks, and conditional or repeated nested configuration often lands here.
+>
+> > [!warning] Dynamic nesting can hide intent
+> >
+> > Dynamic blocks are powerful, but they make configuration harder to scan when overused. If the generated structure becomes deeply nested, locals or separate modules may read better.
+>
+> ---
+>
+> **Ternary operator**
+> - An HCL expression of the form `condition ? true_value : false_value` used to choose between two outcomes.
+> - It matters because conditional-resource patterns often start by turning a boolean or string test into a numeric `count` or a selected configuration value.
+>
+> > [!warning] Nested ternaries degrade readability quickly
+> >
+> > A single ternary is often clear; several nested ternaries usually are not. Once the logic branches heavily, a map lookup or local expression is normally easier to maintain.
+>
+> ---
+>
+> **`moved` block**
+> - A Terraform language construct that tells Terraform an existing object has changed address rather than become a different object.
+> - It matters because migrating from `count` to `for_each` usually changes instance addresses and would otherwise look destructive to Terraform.
+>
+> > [!warning] Migrations are destructive without address mapping
+> >
+> > If Terraform sees only new keys and old indexes disappearing, it will plan destroys and creates. `moved` blocks are the bridge that preserves identity during that change.
+>
+> ---
+>
+> **Index shift**
+> - The state and address churn that happens when a `count`-based collection changes order or gains a new earlier element.
+> - It matters because index shift is the canonical reason repeated long-lived infrastructure should not default to `count`.
+>
+> > [!warning] Reordering can look like replacement
+> >
+> > Terraform does not know your list item merely moved conceptually. If its numeric position changes, the tool often interprets that as a different instance.
+>
+> ---
+>
+> **Decision guide**
+> - A design heuristic for choosing whether conditional behavior should use `count`, `for_each`, dynamic blocks, or a simpler structural refactor.
+> - It matters because the right conditional mechanism depends on identity stability, multiplicity, readability, and future migration cost.
+>
+> > [!info] Not every conditional belongs in meta-arguments
+> >
+> > Sometimes the cleanest solution is not another `count` or `for_each`, but a different module boundary or a simpler interface. Conditional power should serve clarity, not replace it.
 
 ## count — Conditional Creation
 

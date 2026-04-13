@@ -9,40 +9,212 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 03 — Transformations, Expressions & Chaining
+# Transforms, Expressions & Chaining - Python
 
 > [!quote]
 > "If you torture the data long enough, it will confess to anything."
 >
 > — **Ronald Coase**, attributed remark (c. 1960s)
 
-This note covers how to create, modify, and derive columns in both Pandas and Polars. It explains expression-based transforms in Polars (`with_columns`, `when/then/otherwise`, `map_elements`), their Pandas counterparts (`assign`, `apply`, conditional logic), and method chaining patterns that keep transformation pipelines readable and debuggable.
+> [!abstract]- Summary
+>
+> Covers column creation, conditional derivation, expression composition, and fluent pipeline construction in Pandas and Polars, using EuroStoxx market, dimension, and scoring data to show how transforms stay readable, debuggable, and fast when expressed with native column operations instead of row-wise Python callbacks.
+>
+> **Setup & Data Loading**
+> - Load and verify the three working datasets (`eurostoxx50_ohlcv`, `index_dim`, `scores_daily`) and confirm shape plus schema before transforming anything
+> - Establish the baseline preview and dataset contract that the later examples mutate, enrich, and aggregate
+>
+> **Practical Transform Examples — scores_daily dataset**
+> - Create and replace columns with direct Pandas assignment, `.assign()`, and Polars `.with_columns()`
+> - Build real metrics such as return percentages, Z-scores, percentile ranks, conditional flags, and binned categories on live financial columns
+> - Contrast `np.where` / `np.select` and Pandas boolean logic with Polars `when().then().otherwise()`
+>
+> **Comparison Table — Creating & Transforming Columns**
+> - Compare Pandas and Polars APIs for in-place mutation versus returned DataFrames, conditional transforms, custom-function escape hatches, and column naming behavior
+> - Surface the semantics that matter operationally: mutation safety, readability, and how each library names derived outputs
+>
+> **Part 2: Polars Expressions Deep Dive**
+> - Use `pl.col()`, `pl.lit()`, `.alias()`, `pl.struct()`, casts, expression composition, and multi-column transforms as the core Polars transformation model
+> - Show why expressions outperform `.map_elements()` and how `return_dtype=` plus explicit aliases prevent schema surprises
+>
+> **Part 3: Method Chaining & Pipes**
+> - Compose fluent pipelines with `.filter()`, `.assign()`, `.with_columns()`, `.sort()`, and Pandas `.pipe()` for reusable DataFrame functions
+> - Demonstrate when to keep a chain compact and when to break it into named intermediate variables for debugging and maintenance
+>
+> **Operations and safety**
+> - Warnings: `.apply()` / `.map_elements()` are much slower than native expressions, missing `.alias()` can overwrite source columns, `SettingWithCopyWarning` signals a real Pandas bug, missing `.otherwise()` introduces nulls, arithmetic changes dtypes, and long chains can hide the failing step
+> - Recommendations: 7 practices covering expression-first transforms, explicit naming, breaking long chains, sample-first validation, null handling, `pl.struct()` for multi-column custom functions, and post-transform schema assertions
+> - Troubleshooting: 9 failure modes covering chained-indexing warnings, schema/type mismatches, alias collisions, cast failures, missing `return_dtype`, empty chains, all-null conditional outputs, unexpected float promotion, and unexpectedly slow transforms
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **with_columns** | Polars method that adds new columns or replaces existing ones. All original columns are preserved. | The primary mechanism for column creation and transformation in Polars. | Does not modify in place — returns a new DataFrame. Forgetting to assign the result discards the work. |
-| **assign** | Pandas method that adds or overwrites columns. Returns a new DataFrame (does not mutate in place by default). | The Pandas equivalent of `with_columns`. | Using `df["col"] = ...` mutates in place and triggers `SettingWithCopyWarning` on views. Prefer `assign()` for safe, chainable column creation. |
-| **Expression** | In Polars, a composable description of a column operation built from `pl.col()`, `pl.lit()`, `pl.when()`, etc. Expressions are evaluated lazily and optimized before execution. | The core abstraction for all Polars transforms — faster and more composable than Pandas `apply()`. | Expressions are not Python functions — they describe operations on columns, not row-by-row logic. |
-| **pl.col()** | Polars function that references a column by name, returning an expression that can be chained with methods like `.cast()`, `.alias()`, `.over()`. | Entry point for all column-based operations in Polars expressions. | `pl.col("x")` is lazy — it produces an expression object, not a Series. Call `.alias()` to name the output column. |
-| **alias** | Polars method that names the output column of an expression. | Prevents column name collisions and makes output schemas explicit. | Forgetting `.alias()` uses the first column referenced in the expression as the output name, which overwrites the original. |
-| **when / then / otherwise** | Polars conditional expression: `pl.when(cond).then(val).otherwise(alt)`. Equivalent to SQL `CASE WHEN`. | Applies different logic to different subsets of rows in a single expression — no loop, no splitting. | Must end with `.otherwise()` — omitting it returns `null` for non-matching rows, which may silently corrupt downstream aggregations. |
-| **apply / map_elements** | Row-by-row Python function execution. Pandas: `.apply()`. Polars: `.map_elements()`. Both fall back to Python-level iteration. | Last-resort escape hatch for logic that cannot be expressed as vectorized operations. | 10–1000x slower than native expressions. Use only when no vectorized alternative exists. |
-| **method chaining** | A coding pattern where multiple operations are called sequentially on the result of the previous one: `df.filter(...).with_columns(...).sort(...)`. | Produces readable, pipeline-style code without intermediate variables. | Long chains become unreadable. Break into named intermediate steps when a chain exceeds 4–5 operations. |
-| **pipe** | Pandas method that passes the DataFrame to an arbitrary function: `df.pipe(func)`. | Integrates custom functions into a method chain without breaking the fluent syntax. | Polars has no `.pipe()` — use regular function calls instead (functions that take and return a DataFrame). |
-| **vectorization** | Applying an operation to an entire column at once using optimized low-level routines, instead of looping row by row in Python. | The reason DataFrame transforms are fast — vectorized operations run 10–1000x faster than `.apply()` with a Python lambda. | Using `.apply(lambda x: ...)` is not vectorized — it drops to Python-level speed. Prefer built-in column expressions. |
-| **SettingWithCopyWarning** | A Pandas warning triggered when modifying a slice of a DataFrame that may or may not be a view. | Signals that the mutation may not propagate to the original DataFrame, producing silent data loss. | Suppressing the warning does not fix the bug. Use `.copy()` to get an explicit copy, or use `assign()` / `with_columns()`. |
-| **lit** | Polars function `pl.lit(value)` that creates a constant expression — a scalar broadcast across all rows. | Adds fixed-value columns or constants in conditional expressions. | Passing a raw Python value where Polars expects an expression causes a `TypeError`. Wrap it in `pl.lit()`. |
-| **struct** | A Polars expression that packs multiple columns into a single struct column (similar to a JSON object per row). | Groups related fields for compact storage or `map_elements()` that needs multiple inputs. | Accessing struct fields requires `.struct.field("name")` — not regular column selection. |
-
-## What this note covers
-
-- **Column creation and replacement** — `assign()`, `with_columns()`, and direct column assignment
-- **Conditional logic** — `np.where`, `np.select`, `pl.when/then/otherwise`
-- **Practical transform examples** — return calculation, Z-score, percentile rank, binning on real financial data
-- **Polars expressions deep dive** — `pl.col()`, `pl.lit()`, `pl.struct()`, expression composition, multi-column operations
-- **Method chaining and pipes** — fluent pipelines, `.pipe()`, debugging with intermediate steps
+> [!note]- Glossary
+>
+> **`with_columns()`**
+> - A Polars method that adds derived columns or replaces existing ones while returning a new DataFrame instead of mutating the current object in place.
+> - It is the main transformation entry point in this note because almost every Polars column derivation, recode, and conditional expression is expressed through it.
+>
+> > [!warning] Result must be captured
+> >
+> > `with_columns()` does not mutate the original DataFrame. If you do not assign the result or continue chaining from it, the transform is discarded.
+>
+> ---
+>
+> **`assign()`**
+> - A Pandas method that adds or overwrites columns and returns a new DataFrame with the updated schema.
+> - It matters here because it is the cleanest Pandas counterpart to Polars `with_columns()` for chainable, side-effect-controlled transforms.
+>
+> > [!warning] Direct assignment behaves differently
+> >
+> > `df["col"] = ...` mutates the object in place, while `.assign()` returns a new one. Mixing the two styles carelessly makes pipelines harder to reason about.
+>
+> ---
+>
+> **Expression**
+> - In Polars, a declarative column operation built from expression constructors such as `pl.col()`, `pl.lit()`, and `pl.when()`.
+> - It is the core abstraction of the note because native Polars transforms are composed from expressions rather than Python row callbacks.
+>
+> > [!info] Expressions describe work
+> >
+> > An expression is not a Series and not a Python function. It is a plan for how Polars should compute a result column.
+>
+> ---
+>
+> **`pl.col()`**
+> - The Polars expression constructor used to reference one or more existing columns by name.
+> - It matters because nearly every Polars transform in the note starts by selecting an input column through `pl.col()`.
+>
+> > [!warning] It does not read data immediately
+> >
+> > `pl.col("x")` builds an expression object, not a concrete Series. You still need `with_columns()`, `select()`, or another expression-consuming context to evaluate it.
+>
+> ---
+>
+> **`.alias()`**
+> - A Polars expression method that gives an explicit output name to a derived column.
+> - It matters because the note repeatedly derives new columns, and explicit aliases prevent accidental overwrites and ambiguous schemas.
+>
+> > [!warning] Omitted alias can overwrite source
+> >
+> > If a derived expression inherits the name of an input column, you may replace the original column unintentionally. Name every important derived output explicitly.
+>
+> ---
+>
+> **`pl.lit()`**
+> - A Polars helper that turns a Python scalar into a broadcastable expression value.
+> - It matters whenever the note adds fixed constants, default branches, or comparison values inside a larger expression tree.
+>
+> > [!warning] Python scalars are not always enough
+> >
+> > Some expression contexts require an explicit expression on both sides. Wrapping constants in `pl.lit()` avoids confusing type and expression-construction errors.
+>
+> ---
+>
+> **`when().then().otherwise()`**
+> - Polars' conditional expression builder, analogous to SQL `CASE WHEN`, for choosing outputs based on one or more boolean conditions.
+> - It matters because conditional transforms are a major theme in the note, from recoding and flags to bucketed financial logic.
+>
+> > [!warning] Missing `otherwise()` yields nulls
+> >
+> > If unmatched rows have no explicit fallback branch, Polars fills them with `null`. That can silently corrupt later aggregates or comparisons.
+>
+> ---
+>
+> **`np.where()` / `np.select()`**
+> - NumPy conditional helpers commonly used in Pandas pipelines to build one-branch or multi-branch derived columns.
+> - They matter because the note compares Pandas' conditional-transform idioms directly against Polars conditional expressions.
+>
+> > [!info] Good for vectorized Pandas branching
+> >
+> > These functions are vectorized and usually preferable to `.apply()` when the condition can be expressed with array logic.
+>
+> ---
+>
+> **`apply()` / `map_elements()`**
+> - Row-wise Python callback mechanisms in Pandas and Polars used when native vectorized operations cannot express the logic directly.
+> - They matter as the note's explicit last-resort escape hatch for complex custom transforms.
+>
+> > [!warning] Performance cliff
+> >
+> > A Python function executed per row is dramatically slower than native expressions. Reach for these methods only after ruling out built-in arithmetic, string, datetime, and conditional operations.
+>
+> ---
+>
+> **Method chaining**
+> - A style where each DataFrame operation is called directly on the result of the previous one, producing a linear transform pipeline.
+> - It matters because the note treats chainable transforms as the clearest way to express multi-step data preparation when the steps remain readable.
+>
+> > [!warning] Long chains hide failure points
+> >
+> > Once a chain becomes too long, debugging gets harder because the stack trace often points at the chain as a whole rather than the exact failing idea. Break long sequences into named steps.
+>
+> ---
+>
+> **`pipe()`**
+> - A Pandas method that passes the DataFrame into a custom function while staying inside a fluent method chain.
+> - It matters because the note uses it to keep reusable business logic composable without abandoning chaining style.
+>
+> > [!info] Polars uses plain functions instead
+> >
+> > Polars does not rely on a direct `pipe()` equivalent in the same way. Functions that take and return a DataFrame can simply be called around a chain.
+>
+> ---
+>
+> **Vectorization**
+> - Column-wise execution using optimized native routines instead of Python loops over individual rows.
+> - It matters because the entire performance argument in the note depends on using vectorized DataFrame operations whenever possible.
+>
+> > [!warning] Lambda syntax is not vectorization
+> >
+> > Code that looks compact can still be slow if it executes a Python function per element. Prefer library-native expressions and methods over lambdas by default.
+>
+> ---
+>
+> **SettingWithCopyWarning**
+> - A Pandas warning raised when an assignment may be targeting a temporary slice rather than the original DataFrame.
+> - It matters because transformation pipelines that modify views can appear to work while silently discarding the change.
+>
+> > [!danger] Warning points at a real correctness bug
+> >
+> > Suppressing the warning does not make the assignment safe. Fix the underlying ambiguity with `.copy()`, `.loc[...] = ...`, or a returned transform such as `.assign()`.
+>
+> ---
+>
+> **`pl.struct()`**
+> - A Polars expression that packs multiple columns into a single struct value, similar to a lightweight row object.
+> - It matters because it is the cleanest way in the note to feed multiple input columns into one custom expression or callback.
+>
+> > [!info] Best for multi-column custom logic
+> >
+> > When a custom function needs several fields at once, a struct keeps the inputs grouped without forcing multiple separate row-wise lookups.
+>
+> ---
+>
+> **Direct column assignment**
+> - The Pandas pattern `df["new_col"] = expression`, which mutates the DataFrame by inserting or replacing a column directly.
+> - It matters because the note contrasts this imperative style with safer returned-transform patterns such as `.assign()`.
+>
+> > [!warning] Mutation propagates outward
+> >
+> > If multiple parts of a notebook share the same DataFrame reference, direct assignment changes all downstream consumers of that object unless you copied it first.
+>
+> ---
+>
+> **`.copy()`**
+> - A Pandas method that creates an explicit independent copy of a DataFrame rather than another reference to the same underlying object.
+> - It matters because safe transformation stages in the note often begin by copying before mutating to avoid shared-reference bugs.
+>
+> > [!warning] Copy is a correctness boundary
+> >
+> > When you intend to mutate a DataFrame for one branch of work only, `.copy()` is not optional hygiene. It is what separates an isolated transform from silent shared-state mutation.
+>
+> ---
+>
+> **`return_dtype=`**
+> - A Polars `map_elements()` parameter used to declare the output type of a custom Python callback.
+> - It matters because custom functions in the note can otherwise produce ambiguous or inconsistent inferred schemas.
+>
+> > [!warning] Inference may be unstable
+> >
+> > If Polars cannot infer a single consistent result type from your callback, the transform can fail or produce an unexpected schema. Declare `return_dtype=` when the output type matters.
 
 ---
 
@@ -75,7 +247,7 @@ scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}")
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Setup & Data Loading
 
@@ -88,16 +260,16 @@ print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
 print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
 ```
 
-    ohlcv  :
-     (66355, 12) 
+ohlcv  :
+     (66355, 12)
      ['id', 'symbol', 'date', 'open', 'high', 'low', 'close', 'adj_close', 'volume', 'dividends', 'stock_splits', 'is_filled']
-    
-    dim    :
-     (169, 26) 
+
+dim    :
+     (169, 26)
      ['id', '_index', 'symbol', 'long_name', 'short_name', 'sector', 'sector_key', 'industry', 'industry_key', 'country', 'city', 'website', 'long_business_summary', 'exchange', 'full_exchange_name', 'exchange_timezone_name', 'exchange_timezone_short', 'currency', 'financial_currency', 'quote_type', 'market', 'range_start', 'price_data_start', 'valid_from', 'valid_to', 'is_current']
-    
-    scores :
-     (466, 36) 
+
+scores :
+     (466, 36)
      ['id', '_index', 'symbol', 'score_date', 'sector', 'pe_zscore', 'pb_zscore', 'ev_ebitda_zscore', 'yield_zscore', 'relative_value_score', 'relative_value_rank', 'relative_strength', 'sma_50_ratio', 'sma_200_ratio', 'dist_from_52w_high', 'momentum_score', 'momentum_rank', 'implied_upside', 'recommendation_mean', 'price_falling_analysts_bullish', 'sentiment_score', 'sentiment_rank', 'composite_score', 'composite_rank', '_scored_at', 'sma_30_close', 'sma_90_close', 'market_cap', 'index_weight', 'short_name', 'country', 'current_price', 'day_change_pct', 'five_day_change_pct', 'ytd_change_pct', 'currency']
 
 ### Data Preview
@@ -108,70 +280,70 @@ ohlcv_pd.head(3)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>21160</td>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>58.85</td>
-      <td>56.78</td>
-      <td>57.21</td>
-      <td>53.5761</td>
-      <td>1513937</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>21161</td>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.98</td>
-      <td>56.75</td>
-      <td>57.18</td>
-      <td>53.5480</td>
-      <td>1382722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>21162</td>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.94</td>
-      <td>57.39</td>
-      <td>58.77</td>
-      <td>55.0370</td>
-      <td>1370204</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>21160</td>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>58.85</td>
+<td>56.78</td>
+<td>57.21</td>
+<td>53.5761</td>
+<td>1513937</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>21161</td>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.98</td>
+<td>56.75</td>
+<td>57.18</td>
+<td>53.5480</td>
+<td>1382722</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>21162</td>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.94</td>
+<td>57.39</td>
+<td>58.77</td>
+<td>55.0370</td>
+<td>1370204</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -182,6 +354,7 @@ ohlcv_pl.head(3)
 <div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
+
 ### Pandas — Direct Column Assignment with df["col"] = expression
 
 > [!info] Direct column assignment
@@ -203,58 +376,58 @@ df[["symbol", "date", "high", "low", "range"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>high</th>
-      <th>low</th>
-      <th>range</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.85</td>
-      <td>56.78</td>
-      <td>2.07</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.98</td>
-      <td>56.75</td>
-      <td>1.23</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>58.94</td>
-      <td>57.39</td>
-      <td>1.55</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.86</td>
-      <td>57.88</td>
-      <td>0.98</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>58.40</td>
-      <td>57.43</td>
-      <td>0.97</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>high</th>
+<th>low</th>
+<th>range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.85</td>
+<td>56.78</td>
+<td>2.07</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.98</td>
+<td>56.75</td>
+<td>1.23</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>58.94</td>
+<td>57.39</td>
+<td>1.55</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.86</td>
+<td>57.88</td>
+<td>0.98</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>58.40</td>
+<td>57.43</td>
+<td>0.97</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -265,49 +438,50 @@ df[["symbol", "date", "volume"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>1.513937</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>1.382722</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>1.370204</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>1.469911</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>1.428681</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>1.513937</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>1.382722</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>1.370204</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>1.469911</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>1.428681</td>
+</tr>
+</tbody>
 </table>
 
 ---
+
 ### Pandas assign() — create columns in a chainable pipeline
 
 > [!info] Pandas assign() immutable columns
@@ -327,67 +501,68 @@ df[["symbol", "date", "volume"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>range</th>
-      <th>mid</th>
-      <th>pct_range</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>2.07</td>
-      <td>57.815</td>
-      <td>3.618249</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-      <td>1.23</td>
-      <td>57.365</td>
-      <td>2.151102</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>58.77</td>
-      <td>1.55</td>
-      <td>58.165</td>
-      <td>2.637400</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.40</td>
-      <td>0.98</td>
-      <td>58.370</td>
-      <td>1.678082</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>57.86</td>
-      <td>0.97</td>
-      <td>57.915</td>
-      <td>1.676460</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>range</th>
+<th>mid</th>
+<th>pct_range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>2.07</td>
+<td>57.815</td>
+<td>3.618249</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+<td>1.23</td>
+<td>57.365</td>
+<td>2.151102</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>58.77</td>
+<td>1.55</td>
+<td>58.165</td>
+<td>2.637400</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.40</td>
+<td>0.98</td>
+<td>58.370</td>
+<td>1.678082</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>57.86</td>
+<td>0.97</td>
+<td>57.915</td>
+<td>1.676460</td>
+</tr>
+</tbody>
 </table>
 
 ---
+
 ### Polars with_columns() — add computed columns with expressions
 
 > [!info] .with_columns() adds new columns using
@@ -417,6 +592,7 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (5, 16) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>vol_m</th><th>intraday_ret_pct</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>1.513937</td><td>-1.616509</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>1.382722</td><td>0.492091</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>1.370204</td><td>1.397516</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>1.469911</td><td>-0.477164</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>1.428681</td><td>-0.515818</td></tr></tbody></table></div>
 
 ---
+
 ### Polars select() + alias() — return only computed columns
 
 > [!info] Polars select() returns subset columns
@@ -436,6 +612,7 @@ ohlcv_pl.select(
 <div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
 ---
+
 ### Pandas apply() and map() — row-level and element-level transforms
 
 > [!info] map() vs apply() behavior
@@ -456,34 +633,34 @@ ohlcv_pd["symbol"].map(lambda t: t.split(".")[0]).head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -499,54 +676,54 @@ ohlcv_pd.head(10).apply(label_row, axis=1)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>up</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>up</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>up</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>flat</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>down</td>
+</tr>
+<tr>
+<th>1</th>
+<td>up</td>
+</tr>
+<tr>
+<th>2</th>
+<td>up</td>
+</tr>
+<tr>
+<th>3</th>
+<td>down</td>
+</tr>
+<tr>
+<th>4</th>
+<td>down</td>
+</tr>
+<tr>
+<th>5</th>
+<td>down</td>
+</tr>
+<tr>
+<th>6</th>
+<td>down</td>
+</tr>
+<tr>
+<th>7</th>
+<td>down</td>
+</tr>
+<tr>
+<th>8</th>
+<td>up</td>
+</tr>
+<tr>
+<th>9</th>
+<td>flat</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -555,37 +732,38 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>57.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>57.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>59.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>58.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>58.0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>57.0</td>
+</tr>
+<tr>
+<th>1</th>
+<td>57.0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>59.0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>58.0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>58.0</td>
+</tr>
+</tbody>
 </table>
 
 ---
+
 ### Polars map_elements() / map_batches() — custom Python functions on columns
 
 > [!info] map_elements runs a Python function
@@ -619,6 +797,7 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sqrt_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>7.563729</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>7.561746</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>7.666159</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>7.641989</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>7.606576</td></tr></tbody></table></div>
 
 ---
+
 ### Pandas np.where() / np.select() — conditional column creation
 
 > [!info] np.where() and np.select() conditionals
@@ -633,58 +812,58 @@ df[["symbol", "date", "open", "close", "direction"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>close</th>
-      <th>direction</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>57.21</td>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.18</td>
-      <td>up</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.77</td>
-      <td>up</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.68</td>
-      <td>58.40</td>
-      <td>down</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>58.16</td>
-      <td>57.86</td>
-      <td>down</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>close</th>
+<th>direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>57.21</td>
+<td>down</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.18</td>
+<td>up</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.77</td>
+<td>up</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.68</td>
+<td>58.40</td>
+<td>down</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>58.16</td>
+<td>57.86</td>
+<td>down</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -700,101 +879,102 @@ df[["symbol", "date", "open", "close", "move"]].head(10)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>close</th>
-      <th>move</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>57.21</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.18</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.77</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.68</td>
-      <td>58.40</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>58.16</td>
-      <td>57.86</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ABI.BR</td>
-      <td>2021-01-11</td>
-      <td>57.73</td>
-      <td>56.61</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ABI.BR</td>
-      <td>2021-01-12</td>
-      <td>56.70</td>
-      <td>56.51</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>ABI.BR</td>
-      <td>2021-01-13</td>
-      <td>56.50</td>
-      <td>56.48</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ABI.BR</td>
-      <td>2021-01-14</td>
-      <td>56.88</td>
-      <td>56.96</td>
-      <td>flat</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ABI.BR</td>
-      <td>2021-01-15</td>
-      <td>56.74</td>
-      <td>56.74</td>
-      <td>flat</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>close</th>
+<th>move</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>57.21</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.18</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.77</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.68</td>
+<td>58.40</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>58.16</td>
+<td>57.86</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ABI.BR</td>
+<td>2021-01-11</td>
+<td>57.73</td>
+<td>56.61</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ABI.BR</td>
+<td>2021-01-12</td>
+<td>56.70</td>
+<td>56.51</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>7</th>
+<td>ABI.BR</td>
+<td>2021-01-13</td>
+<td>56.50</td>
+<td>56.48</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ABI.BR</td>
+<td>2021-01-14</td>
+<td>56.88</td>
+<td>56.96</td>
+<td>flat</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ABI.BR</td>
+<td>2021-01-15</td>
+<td>56.74</td>
+<td>56.74</td>
+<td>flat</td>
+</tr>
+</tbody>
 </table>
 
 ---
+
 ### Polars when() / then() / otherwise() — conditional expressions
 
 > [!info] pl.when(cond).then(val).otherwise(val) is Polars' native CASE WHEN
@@ -828,6 +1008,7 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (10, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>move</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>57.73</td><td>56.61</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.7</td><td>56.51</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.5</td><td>56.48</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>56.88</td><td>56.96</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>56.74</td><td>56.74</td><td>flat</td></tr></tbody></table></div>
 
 ---
+
 ### Type Casting
 
 #### Pandas astype() — cast column types
@@ -846,7 +1027,7 @@ df["volume"] = df["volume"].astype("float64")
 print("After :", df["volume"].dtype)
 ```
 
-    Before: int64
+Before: int64
     After : float64
 
 ```python
@@ -856,7 +1037,7 @@ df["date"] = pd.to_datetime(df["date"])
 print(df["date"].dtype)
 ```
 
-    datetime64[ns]
+datetime64[ns]
 
 ```python
 # Category type for low-cardinality strings
@@ -866,7 +1047,7 @@ print(df["symbol"].dtype)
 print(df["symbol"].cat.categories[:5].tolist())
 ```
 
-    category
+category
     ['ABI.BR', 'AD.AS', 'ADS.DE', 'ADYEN.AS', 'AI.PA']
 
 #### Polars cast() — cast column types
@@ -901,7 +1082,7 @@ ohlcv_pl.with_columns(
 ).dtypes
 ```
 
-    [Float32,
+[Float32,
      String,
      Date,
      Float32,
@@ -921,7 +1102,7 @@ ohlcv_pl.with_columns(
 ).schema
 ```
 
-    Schema([('id', Int64),
+Schema([('id', Int64),
             ('symbol', Categorical),
             ('date', Date),
             ('open', Float64),
@@ -935,6 +1116,7 @@ ohlcv_pl.with_columns(
             ('is_filled', Boolean)])
 
 ---
+
 ### .str Accessor — String Operations on DataFrame Columns
 
 #### Pandas .str Accessor — string transforms
@@ -955,52 +1137,52 @@ df[["symbol", "symbol_upper", "symbol_short", "has_de"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>symbol_upper</th>
-      <th>symbol_short</th>
-      <th>has_de</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-      <td>ABI</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-      <td>ABI</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-      <td>ABI</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-      <td>ABI</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-      <td>ABI</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>symbol_upper</th>
+<th>symbol_short</th>
+<th>has_de</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>False</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+<td>ABI</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1011,40 +1193,40 @@ df[["symbol", "clean"]].drop_duplicates().head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>clean</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>ABI.BR</td>
-    </tr>
-    <tr>
-      <th>1331</th>
-      <td>AD.AS</td>
-      <td>AD.AS</td>
-    </tr>
-    <tr>
-      <th>2662</th>
-      <td>ADS.DE</td>
-      <td>ADS</td>
-    </tr>
-    <tr>
-      <th>3986</th>
-      <td>ADYEN.AS</td>
-      <td>ADYEN.AS</td>
-    </tr>
-    <tr>
-      <th>5317</th>
-      <td>AI.PA</td>
-      <td>AI.PA</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>clean</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>ABI.BR</td>
+</tr>
+<tr>
+<th>1331</th>
+<td>AD.AS</td>
+<td>AD.AS</td>
+</tr>
+<tr>
+<th>2662</th>
+<td>ADS.DE</td>
+<td>ADS</td>
+</tr>
+<tr>
+<th>3986</th>
+<td>ADYEN.AS</td>
+<td>ADYEN.AS</td>
+</tr>
+<tr>
+<th>5317</th>
+<td>AI.PA</td>
+<td>AI.PA</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars .str Accessor — string transforms
@@ -1076,10 +1258,10 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>NDA-FI.HE</td><td>NDA-FI.HE</td></tr><tr><td>INGA.AS</td><td>INGA.AS</td></tr><tr><td>SAP.DE</td><td>SAP</td></tr><tr><td>MBG.DE</td><td>MBG</td></tr><tr><td>PRX.AS</td><td>PRX.AS</td></tr></tbody></table></div>
 
 ---
+
 ### .dt Accessor — DateTime Operations on DataFrame Columns
 
 #### Pandas .dt Accessor — datetime transforms
-
 
 > [!info] .dt gives access to datetime
 >
@@ -1099,62 +1281,61 @@ df[["date", "year", "month", "weekday", "quarter"]].head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>year</th>
-      <th>month</th>
-      <th>weekday</th>
-      <th>quarter</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2021-01-04</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Monday</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2021-01-05</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Tuesday</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2021-01-06</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Wednesday</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2021-01-07</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Thursday</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2021-01-08</td>
-      <td>2021</td>
-      <td>1</td>
-      <td>Friday</td>
-      <td>1</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>year</th>
+<th>month</th>
+<th>weekday</th>
+<th>quarter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2021-01-04</td>
+<td>2021</td>
+<td>1</td>
+<td>Monday</td>
+<td>1</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2021-01-05</td>
+<td>2021</td>
+<td>1</td>
+<td>Tuesday</td>
+<td>1</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2021-01-06</td>
+<td>2021</td>
+<td>1</td>
+<td>Wednesday</td>
+<td>1</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2021-01-07</td>
+<td>2021</td>
+<td>1</td>
+<td>Thursday</td>
+<td>1</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2021-01-08</td>
+<td>2021</td>
+<td>1</td>
+<td>Friday</td>
+<td>1</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars .dt Accessor — datetime transforms
-
 
 > [!info] Polars .dt namespace: .dt.year(), .dt.month(),
 >
@@ -1185,6 +1366,7 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (5, 3) --><table><thead><tr><th>date</th><th>date_plus_7d</th><th>month_start</th></tr><tr><td>date</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021-01-11</td><td>2021-01-01</td></tr><tr><td>2021-01-05</td><td>2021-01-12</td><td>2021-01-01</td></tr><tr><td>2021-01-06</td><td>2021-01-13</td><td>2021-01-01</td></tr><tr><td>2021-01-07</td><td>2021-01-14</td><td>2021-01-01</td></tr><tr><td>2021-01-08</td><td>2021-01-15</td><td>2021-01-01</td></tr></tbody></table></div>
 
 ---
+
 ### Arithmetic & Math Operations
 
 > [!info] Both Pandas and Polars support
@@ -1201,109 +1383,109 @@ df[["symbol", "date", "close", "log_close", "pct_change", "cum_volume"]].head(10
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>log_close</th>
-      <th>pct_change</th>
-      <th>cum_volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-      <td>4.046729</td>
-      <td>NaN</td>
-      <td>1513937</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-      <td>4.046204</td>
-      <td>-0.000524</td>
-      <td>2896659</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>58.77</td>
-      <td>4.073632</td>
-      <td>0.027807</td>
-      <td>4266863</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.40</td>
-      <td>4.067316</td>
-      <td>-0.006296</td>
-      <td>5736774</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>57.86</td>
-      <td>4.058026</td>
-      <td>-0.009247</td>
-      <td>7165455</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ABI.BR</td>
-      <td>2021-01-11</td>
-      <td>56.61</td>
-      <td>4.036186</td>
-      <td>-0.021604</td>
-      <td>8683534</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ABI.BR</td>
-      <td>2021-01-12</td>
-      <td>56.51</td>
-      <td>4.034418</td>
-      <td>-0.001766</td>
-      <td>10333525</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>ABI.BR</td>
-      <td>2021-01-13</td>
-      <td>56.48</td>
-      <td>4.033887</td>
-      <td>-0.000531</td>
-      <td>11424331</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ABI.BR</td>
-      <td>2021-01-14</td>
-      <td>56.96</td>
-      <td>4.042349</td>
-      <td>0.008499</td>
-      <td>12947376</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ABI.BR</td>
-      <td>2021-01-15</td>
-      <td>56.74</td>
-      <td>4.038479</td>
-      <td>-0.003862</td>
-      <td>14717364</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>log_close</th>
+<th>pct_change</th>
+<th>cum_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+<td>4.046729</td>
+<td>NaN</td>
+<td>1513937</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+<td>4.046204</td>
+<td>-0.000524</td>
+<td>2896659</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>58.77</td>
+<td>4.073632</td>
+<td>0.027807</td>
+<td>4266863</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.40</td>
+<td>4.067316</td>
+<td>-0.006296</td>
+<td>5736774</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>57.86</td>
+<td>4.058026</td>
+<td>-0.009247</td>
+<td>7165455</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ABI.BR</td>
+<td>2021-01-11</td>
+<td>56.61</td>
+<td>4.036186</td>
+<td>-0.021604</td>
+<td>8683534</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ABI.BR</td>
+<td>2021-01-12</td>
+<td>56.51</td>
+<td>4.034418</td>
+<td>-0.001766</td>
+<td>10333525</td>
+</tr>
+<tr>
+<th>7</th>
+<td>ABI.BR</td>
+<td>2021-01-13</td>
+<td>56.48</td>
+<td>4.033887</td>
+<td>-0.000531</td>
+<td>11424331</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ABI.BR</td>
+<td>2021-01-14</td>
+<td>56.96</td>
+<td>4.042349</td>
+<td>0.008499</td>
+<td>12947376</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ABI.BR</td>
+<td>2021-01-15</td>
+<td>56.74</td>
+<td>4.038479</td>
+<td>-0.003862</td>
+<td>14717364</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1329,6 +1511,7 @@ ohlcv_pl.with_columns(
 <div><!-- shape: (5, 6) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rounded</th><th>close_clipped</th><th>abs_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>57.0</td><td>57.21</td><td>0.94</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>57.0</td><td>57.18</td><td>0.28</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>59.0</td><td>58.77</td><td>0.81</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>58.0</td><td>58.4</td><td>0.28</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>58.0</td><td>57.86</td><td>0.3</td></tr></tbody></table></div>
 
 ---
+
 ### The "Tweak Function" Pattern
 
 Encapsulate all data-prep transformations in a single function that takes a raw DataFrame and returns a clean one.
@@ -1362,134 +1545,133 @@ tweak_ohlcv_pd(ohlcv_pd).head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-      <th>range</th>
-      <th>mid</th>
-      <th>intraday_ret</th>
-      <th>volume_m</th>
-      <th>symbol_short</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>21160</td>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>58.85</td>
-      <td>56.78</td>
-      <td>57.21</td>
-      <td>53.5761</td>
-      <td>1513937</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-      <td>2.07</td>
-      <td>57.815</td>
-      <td>-0.016165</td>
-      <td>1.513937</td>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>21161</td>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.98</td>
-      <td>56.75</td>
-      <td>57.18</td>
-      <td>53.5480</td>
-      <td>1382722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-      <td>1.23</td>
-      <td>57.365</td>
-      <td>0.004921</td>
-      <td>1.382722</td>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>21162</td>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.94</td>
-      <td>57.39</td>
-      <td>58.77</td>
-      <td>55.0370</td>
-      <td>1370204</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-      <td>1.55</td>
-      <td>58.165</td>
-      <td>0.013975</td>
-      <td>1.370204</td>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>21163</td>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.68</td>
-      <td>58.86</td>
-      <td>57.88</td>
-      <td>58.40</td>
-      <td>54.6905</td>
-      <td>1469911</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-      <td>0.98</td>
-      <td>58.370</td>
-      <td>-0.004772</td>
-      <td>1.469911</td>
-      <td>ABI</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>21164</td>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>58.16</td>
-      <td>58.40</td>
-      <td>57.43</td>
-      <td>57.86</td>
-      <td>54.1848</td>
-      <td>1428681</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-      <td>0.97</td>
-      <td>57.915</td>
-      <td>-0.005158</td>
-      <td>1.428681</td>
-      <td>ABI</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+<th>range</th>
+<th>mid</th>
+<th>intraday_ret</th>
+<th>volume_m</th>
+<th>symbol_short</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>21160</td>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>58.85</td>
+<td>56.78</td>
+<td>57.21</td>
+<td>53.5761</td>
+<td>1513937</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+<td>2.07</td>
+<td>57.815</td>
+<td>-0.016165</td>
+<td>1.513937</td>
+<td>ABI</td>
+</tr>
+<tr>
+<th>1</th>
+<td>21161</td>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.98</td>
+<td>56.75</td>
+<td>57.18</td>
+<td>53.5480</td>
+<td>1382722</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+<td>1.23</td>
+<td>57.365</td>
+<td>0.004921</td>
+<td>1.382722</td>
+<td>ABI</td>
+</tr>
+<tr>
+<th>2</th>
+<td>21162</td>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.94</td>
+<td>57.39</td>
+<td>58.77</td>
+<td>55.0370</td>
+<td>1370204</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+<td>1.55</td>
+<td>58.165</td>
+<td>0.013975</td>
+<td>1.370204</td>
+<td>ABI</td>
+</tr>
+<tr>
+<th>3</th>
+<td>21163</td>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.68</td>
+<td>58.86</td>
+<td>57.88</td>
+<td>58.40</td>
+<td>54.6905</td>
+<td>1469911</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+<td>0.98</td>
+<td>58.370</td>
+<td>-0.004772</td>
+<td>1.469911</td>
+<td>ABI</td>
+</tr>
+<tr>
+<th>4</th>
+<td>21164</td>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>58.16</td>
+<td>58.40</td>
+<td>57.43</td>
+<td>57.86</td>
+<td>54.1848</td>
+<td>1428681</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+<td>0.97</td>
+<td>57.915</td>
+<td>-0.005158</td>
+<td>1.428681</td>
+<td>ABI</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars — Tweak Function Pattern (chainable transform)
-
 
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 - **List Ops**: Access elements inside list columns: .list.len(), .list.first(), .list.contains().
@@ -1522,6 +1704,7 @@ tweak_ohlcv_pl(ohlcv_pl).head()
 <div><!-- shape: (5, 17) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>intraday_ret</th><th>volume_m</th><th>symbol_short</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>-0.016165</td><td>1.513937</td><td>ABI</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>0.004921</td><td>1.382722</td><td>ABI</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>0.013975</td><td>1.370204</td><td>ABI</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>-0.004772</td><td>1.469911</td><td>ABI</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>-0.005158</td><td>1.428681</td><td>ABI</td></tr></tbody></table></div>
 
 ---
+
 ## Practical Transform Examples — scores_daily dataset
 
 ```python
@@ -1530,166 +1713,166 @@ scores_pd.head(3)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>_index</th>
-      <th>symbol</th>
-      <th>score_date</th>
-      <th>sector</th>
-      <th>pe_zscore</th>
-      <th>pb_zscore</th>
-      <th>ev_ebitda_zscore</th>
-      <th>yield_zscore</th>
-      <th>relative_value_score</th>
-      <th>relative_value_rank</th>
-      <th>relative_strength</th>
-      <th>sma_50_ratio</th>
-      <th>sma_200_ratio</th>
-      <th>dist_from_52w_high</th>
-      <th>momentum_score</th>
-      <th>momentum_rank</th>
-      <th>implied_upside</th>
-      <th>recommendation_mean</th>
-      <th>price_falling_analysts_bullish</th>
-      <th>sentiment_score</th>
-      <th>sentiment_rank</th>
-      <th>composite_score</th>
-      <th>composite_rank</th>
-      <th>_scored_at</th>
-      <th>sma_30_close</th>
-      <th>sma_90_close</th>
-      <th>market_cap</th>
-      <th>index_weight</th>
-      <th>short_name</th>
-      <th>country</th>
-      <th>current_price</th>
-      <th>day_change_pct</th>
-      <th>five_day_change_pct</th>
-      <th>ytd_change_pct</th>
-      <th>currency</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>163</td>
-      <td>euro_stoxx_50</td>
-      <td>BNP.PA</td>
-      <td>2026-03-04</td>
-      <td>Financial Services</td>
-      <td>0.913389</td>
-      <td>1.261140</td>
-      <td>NaN</td>
-      <td>2.388962</td>
-      <td>1.521163</td>
-      <td>1</td>
-      <td>0.016123</td>
-      <td>1.009090</td>
-      <td>1.130264</td>
-      <td>0.082486</td>
-      <td>0.477966</td>
-      <td>16</td>
-      <td>0.153157</td>
-      <td>1.84211</td>
-      <td>False</td>
-      <td>0.052711</td>
-      <td>25</td>
-      <td>0.683947</td>
-      <td>1</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>92.085000</td>
-      <td>81.181889</td>
-      <td>99751215104</td>
-      <td>0.019525</td>
-      <td>BNP PARIBAS ACT.A</td>
-      <td>France</td>
-      <td>89.320</td>
-      <td>0.011437</td>
-      <td>-0.073156</td>
-      <td>0.105582</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>168</td>
-      <td>euro_stoxx_50</td>
-      <td>DTE.DE</td>
-      <td>2026-03-04</td>
-      <td>Communication Services</td>
-      <td>0.326587</td>
-      <td>0.387463</td>
-      <td>0.379532</td>
-      <td>-0.127867</td>
-      <td>0.241429</td>
-      <td>24</td>
-      <td>-0.205598</td>
-      <td>1.120650</td>
-      <td>1.112416</td>
-      <td>0.055524</td>
-      <td>0.685752</td>
-      <td>8</td>
-      <td>0.121212</td>
-      <td>1.33333</td>
-      <td>False</td>
-      <td>0.617835</td>
-      <td>10</td>
-      <td>0.515005</td>
-      <td>2</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>30.838000</td>
-      <td>28.554556</td>
-      <td>164294311936</td>
-      <td>0.032159</td>
-      <td>DEUTSCHE TELEKOM AG</td>
-      <td>Germany</td>
-      <td>33.000</td>
-      <td>0.011649</td>
-      <td>-0.019608</td>
-      <td>0.193059</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>174</td>
-      <td>euro_stoxx_50</td>
-      <td>IFX.DE</td>
-      <td>2026-03-04</td>
-      <td>Technology</td>
-      <td>0.509398</td>
-      <td>0.637215</td>
-      <td>0.677068</td>
-      <td>-0.696662</td>
-      <td>0.281755</td>
-      <td>22</td>
-      <td>0.000965</td>
-      <td>1.048244</td>
-      <td>1.198626</td>
-      <td>0.088845</td>
-      <td>0.675764</td>
-      <td>9</td>
-      <td>0.126408</td>
-      <td>1.37500</td>
-      <td>False</td>
-      <td>0.579187</td>
-      <td>11</td>
-      <td>0.512235</td>
-      <td>3</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>43.480333</td>
-      <td>38.855556</td>
-      <td>57222533120</td>
-      <td>0.011201</td>
-      <td>INFINEON TECHNOLOGIES AG</td>
-      <td>Germany</td>
-      <td>43.945</td>
-      <td>0.054343</td>
-      <td>-0.066490</td>
-      <td>0.164723</td>
-      <td>EUR</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>_index</th>
+<th>symbol</th>
+<th>score_date</th>
+<th>sector</th>
+<th>pe_zscore</th>
+<th>pb_zscore</th>
+<th>ev_ebitda_zscore</th>
+<th>yield_zscore</th>
+<th>relative_value_score</th>
+<th>relative_value_rank</th>
+<th>relative_strength</th>
+<th>sma_50_ratio</th>
+<th>sma_200_ratio</th>
+<th>dist_from_52w_high</th>
+<th>momentum_score</th>
+<th>momentum_rank</th>
+<th>implied_upside</th>
+<th>recommendation_mean</th>
+<th>price_falling_analysts_bullish</th>
+<th>sentiment_score</th>
+<th>sentiment_rank</th>
+<th>composite_score</th>
+<th>composite_rank</th>
+<th>_scored_at</th>
+<th>sma_30_close</th>
+<th>sma_90_close</th>
+<th>market_cap</th>
+<th>index_weight</th>
+<th>short_name</th>
+<th>country</th>
+<th>current_price</th>
+<th>day_change_pct</th>
+<th>five_day_change_pct</th>
+<th>ytd_change_pct</th>
+<th>currency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>163</td>
+<td>euro_stoxx_50</td>
+<td>BNP.PA</td>
+<td>2026-03-04</td>
+<td>Financial Services</td>
+<td>0.913389</td>
+<td>1.261140</td>
+<td>NaN</td>
+<td>2.388962</td>
+<td>1.521163</td>
+<td>1</td>
+<td>0.016123</td>
+<td>1.009090</td>
+<td>1.130264</td>
+<td>0.082486</td>
+<td>0.477966</td>
+<td>16</td>
+<td>0.153157</td>
+<td>1.84211</td>
+<td>False</td>
+<td>0.052711</td>
+<td>25</td>
+<td>0.683947</td>
+<td>1</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>92.085000</td>
+<td>81.181889</td>
+<td>99751215104</td>
+<td>0.019525</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>France</td>
+<td>89.320</td>
+<td>0.011437</td>
+<td>-0.073156</td>
+<td>0.105582</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>1</th>
+<td>168</td>
+<td>euro_stoxx_50</td>
+<td>DTE.DE</td>
+<td>2026-03-04</td>
+<td>Communication Services</td>
+<td>0.326587</td>
+<td>0.387463</td>
+<td>0.379532</td>
+<td>-0.127867</td>
+<td>0.241429</td>
+<td>24</td>
+<td>-0.205598</td>
+<td>1.120650</td>
+<td>1.112416</td>
+<td>0.055524</td>
+<td>0.685752</td>
+<td>8</td>
+<td>0.121212</td>
+<td>1.33333</td>
+<td>False</td>
+<td>0.617835</td>
+<td>10</td>
+<td>0.515005</td>
+<td>2</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>30.838000</td>
+<td>28.554556</td>
+<td>164294311936</td>
+<td>0.032159</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Germany</td>
+<td>33.000</td>
+<td>0.011649</td>
+<td>-0.019608</td>
+<td>0.193059</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>2</th>
+<td>174</td>
+<td>euro_stoxx_50</td>
+<td>IFX.DE</td>
+<td>2026-03-04</td>
+<td>Technology</td>
+<td>0.509398</td>
+<td>0.637215</td>
+<td>0.677068</td>
+<td>-0.696662</td>
+<td>0.281755</td>
+<td>22</td>
+<td>0.000965</td>
+<td>1.048244</td>
+<td>1.198626</td>
+<td>0.088845</td>
+<td>0.675764</td>
+<td>9</td>
+<td>0.126408</td>
+<td>1.37500</td>
+<td>False</td>
+<td>0.579187</td>
+<td>11</td>
+<td>0.512235</td>
+<td>3</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>43.480333</td>
+<td>38.855556</td>
+<td>57222533120</td>
+<td>0.011201</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Germany</td>
+<td>43.945</td>
+<td>0.054343</td>
+<td>-0.066490</td>
+<td>0.164723</td>
+<td>EUR</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1701,250 +1884,250 @@ df.head()
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>_index</th>
-      <th>symbol</th>
-      <th>score_date</th>
-      <th>sector</th>
-      <th>pe_zscore</th>
-      <th>pb_zscore</th>
-      <th>ev_ebitda_zscore</th>
-      <th>yield_zscore</th>
-      <th>relative_value_score</th>
-      <th>relative_value_rank</th>
-      <th>relative_strength</th>
-      <th>sma_50_ratio</th>
-      <th>sma_200_ratio</th>
-      <th>dist_from_52w_high</th>
-      <th>momentum_score</th>
-      <th>momentum_rank</th>
-      <th>implied_upside</th>
-      <th>recommendation_mean</th>
-      <th>price_falling_analysts_bullish</th>
-      <th>sentiment_score</th>
-      <th>sentiment_rank</th>
-      <th>composite_score</th>
-      <th>composite_rank</th>
-      <th>_scored_at</th>
-      <th>sma_30_close</th>
-      <th>sma_90_close</th>
-      <th>market_cap</th>
-      <th>index_weight</th>
-      <th>short_name</th>
-      <th>country</th>
-      <th>current_price</th>
-      <th>day_change_pct</th>
-      <th>five_day_change_pct</th>
-      <th>ytd_change_pct</th>
-      <th>currency</th>
-      <th>score_bin</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>163</td>
-      <td>euro_stoxx_50</td>
-      <td>BNP.PA</td>
-      <td>2026-03-04</td>
-      <td>Financial Services</td>
-      <td>0.913389</td>
-      <td>1.261140</td>
-      <td>NaN</td>
-      <td>2.388962</td>
-      <td>1.521163</td>
-      <td>1</td>
-      <td>0.016123</td>
-      <td>1.009090</td>
-      <td>1.130264</td>
-      <td>0.082486</td>
-      <td>0.477966</td>
-      <td>16</td>
-      <td>0.153157</td>
-      <td>1.84211</td>
-      <td>False</td>
-      <td>0.052711</td>
-      <td>25</td>
-      <td>0.683947</td>
-      <td>1</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>92.085000</td>
-      <td>81.181889</td>
-      <td>99751215104</td>
-      <td>0.019525</td>
-      <td>BNP PARIBAS ACT.A</td>
-      <td>France</td>
-      <td>89.320</td>
-      <td>0.011437</td>
-      <td>-0.073156</td>
-      <td>0.105582</td>
-      <td>EUR</td>
-      <td>Q4</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>168</td>
-      <td>euro_stoxx_50</td>
-      <td>DTE.DE</td>
-      <td>2026-03-04</td>
-      <td>Communication Services</td>
-      <td>0.326587</td>
-      <td>0.387463</td>
-      <td>0.379532</td>
-      <td>-0.127867</td>
-      <td>0.241429</td>
-      <td>24</td>
-      <td>-0.205598</td>
-      <td>1.120650</td>
-      <td>1.112416</td>
-      <td>0.055524</td>
-      <td>0.685752</td>
-      <td>8</td>
-      <td>0.121212</td>
-      <td>1.33333</td>
-      <td>False</td>
-      <td>0.617835</td>
-      <td>10</td>
-      <td>0.515005</td>
-      <td>2</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>30.838000</td>
-      <td>28.554556</td>
-      <td>164294311936</td>
-      <td>0.032159</td>
-      <td>DEUTSCHE TELEKOM AG</td>
-      <td>Germany</td>
-      <td>33.000</td>
-      <td>0.011649</td>
-      <td>-0.019608</td>
-      <td>0.193059</td>
-      <td>EUR</td>
-      <td>Q2</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>174</td>
-      <td>euro_stoxx_50</td>
-      <td>IFX.DE</td>
-      <td>2026-03-04</td>
-      <td>Technology</td>
-      <td>0.509398</td>
-      <td>0.637215</td>
-      <td>0.677068</td>
-      <td>-0.696662</td>
-      <td>0.281755</td>
-      <td>22</td>
-      <td>0.000965</td>
-      <td>1.048244</td>
-      <td>1.198626</td>
-      <td>0.088845</td>
-      <td>0.675764</td>
-      <td>9</td>
-      <td>0.126408</td>
-      <td>1.37500</td>
-      <td>False</td>
-      <td>0.579187</td>
-      <td>11</td>
-      <td>0.512235</td>
-      <td>3</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>43.480333</td>
-      <td>38.855556</td>
-      <td>57222533120</td>
-      <td>0.011201</td>
-      <td>INFINEON TECHNOLOGIES AG</td>
-      <td>Germany</td>
-      <td>43.945</td>
-      <td>0.054343</td>
-      <td>-0.066490</td>
-      <td>0.164723</td>
-      <td>EUR</td>
-      <td>Q3</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>172</td>
-      <td>euro_stoxx_50</td>
-      <td>ENR.DE</td>
-      <td>2026-03-04</td>
-      <td>Industrials</td>
-      <td>-0.902738</td>
-      <td>-0.743338</td>
-      <td>-1.693212</td>
-      <td>-1.326075</td>
-      <td>-1.166341</td>
-      <td>46</td>
-      <td>1.645455</td>
-      <td>1.137007</td>
-      <td>1.474095</td>
-      <td>0.051850</td>
-      <td>2.541889</td>
-      <td>1</td>
-      <td>0.075269</td>
-      <td>1.80000</td>
-      <td>False</td>
-      <td>-0.123264</td>
-      <td>29</td>
-      <td>0.417428</td>
-      <td>4</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>155.675000</td>
-      <td>129.122000</td>
-      <td>139207262208</td>
-      <td>0.027249</td>
-      <td>Siemens Energy AG</td>
-      <td>Germany</td>
-      <td>162.750</td>
-      <td>0.047297</td>
-      <td>-0.039256</td>
-      <td>0.351744</td>
-      <td>EUR</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>149</td>
-      <td>euro_stoxx_50</td>
-      <td>ABI.BR</td>
-      <td>2026-03-04</td>
-      <td>Consumer Defensive</td>
-      <td>0.474084</td>
-      <td>0.844075</td>
-      <td>0.552739</td>
-      <td>-0.975005</td>
-      <td>0.223973</td>
-      <td>25</td>
-      <td>-0.029791</td>
-      <td>1.058542</td>
-      <td>1.142783</td>
-      <td>0.063063</td>
-      <td>0.651891</td>
-      <td>10</td>
-      <td>0.186198</td>
-      <td>1.69231</td>
-      <td>False</td>
-      <td>0.344755</td>
-      <td>17</td>
-      <td>0.406873</td>
-      <td>5</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>64.342000</td>
-      <td>57.869333</td>
-      <td>125566156800</td>
-      <td>0.024579</td>
-      <td>AB INBEV</td>
-      <td>Belgium</td>
-      <td>64.480</td>
-      <td>-0.017073</td>
-      <td>-0.040762</td>
-      <td>0.174499</td>
-      <td>EUR</td>
-      <td>Q2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>_index</th>
+<th>symbol</th>
+<th>score_date</th>
+<th>sector</th>
+<th>pe_zscore</th>
+<th>pb_zscore</th>
+<th>ev_ebitda_zscore</th>
+<th>yield_zscore</th>
+<th>relative_value_score</th>
+<th>relative_value_rank</th>
+<th>relative_strength</th>
+<th>sma_50_ratio</th>
+<th>sma_200_ratio</th>
+<th>dist_from_52w_high</th>
+<th>momentum_score</th>
+<th>momentum_rank</th>
+<th>implied_upside</th>
+<th>recommendation_mean</th>
+<th>price_falling_analysts_bullish</th>
+<th>sentiment_score</th>
+<th>sentiment_rank</th>
+<th>composite_score</th>
+<th>composite_rank</th>
+<th>_scored_at</th>
+<th>sma_30_close</th>
+<th>sma_90_close</th>
+<th>market_cap</th>
+<th>index_weight</th>
+<th>short_name</th>
+<th>country</th>
+<th>current_price</th>
+<th>day_change_pct</th>
+<th>five_day_change_pct</th>
+<th>ytd_change_pct</th>
+<th>currency</th>
+<th>score_bin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>163</td>
+<td>euro_stoxx_50</td>
+<td>BNP.PA</td>
+<td>2026-03-04</td>
+<td>Financial Services</td>
+<td>0.913389</td>
+<td>1.261140</td>
+<td>NaN</td>
+<td>2.388962</td>
+<td>1.521163</td>
+<td>1</td>
+<td>0.016123</td>
+<td>1.009090</td>
+<td>1.130264</td>
+<td>0.082486</td>
+<td>0.477966</td>
+<td>16</td>
+<td>0.153157</td>
+<td>1.84211</td>
+<td>False</td>
+<td>0.052711</td>
+<td>25</td>
+<td>0.683947</td>
+<td>1</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>92.085000</td>
+<td>81.181889</td>
+<td>99751215104</td>
+<td>0.019525</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>France</td>
+<td>89.320</td>
+<td>0.011437</td>
+<td>-0.073156</td>
+<td>0.105582</td>
+<td>EUR</td>
+<td>Q4</td>
+</tr>
+<tr>
+<th>1</th>
+<td>168</td>
+<td>euro_stoxx_50</td>
+<td>DTE.DE</td>
+<td>2026-03-04</td>
+<td>Communication Services</td>
+<td>0.326587</td>
+<td>0.387463</td>
+<td>0.379532</td>
+<td>-0.127867</td>
+<td>0.241429</td>
+<td>24</td>
+<td>-0.205598</td>
+<td>1.120650</td>
+<td>1.112416</td>
+<td>0.055524</td>
+<td>0.685752</td>
+<td>8</td>
+<td>0.121212</td>
+<td>1.33333</td>
+<td>False</td>
+<td>0.617835</td>
+<td>10</td>
+<td>0.515005</td>
+<td>2</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>30.838000</td>
+<td>28.554556</td>
+<td>164294311936</td>
+<td>0.032159</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Germany</td>
+<td>33.000</td>
+<td>0.011649</td>
+<td>-0.019608</td>
+<td>0.193059</td>
+<td>EUR</td>
+<td>Q2</td>
+</tr>
+<tr>
+<th>2</th>
+<td>174</td>
+<td>euro_stoxx_50</td>
+<td>IFX.DE</td>
+<td>2026-03-04</td>
+<td>Technology</td>
+<td>0.509398</td>
+<td>0.637215</td>
+<td>0.677068</td>
+<td>-0.696662</td>
+<td>0.281755</td>
+<td>22</td>
+<td>0.000965</td>
+<td>1.048244</td>
+<td>1.198626</td>
+<td>0.088845</td>
+<td>0.675764</td>
+<td>9</td>
+<td>0.126408</td>
+<td>1.37500</td>
+<td>False</td>
+<td>0.579187</td>
+<td>11</td>
+<td>0.512235</td>
+<td>3</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>43.480333</td>
+<td>38.855556</td>
+<td>57222533120</td>
+<td>0.011201</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Germany</td>
+<td>43.945</td>
+<td>0.054343</td>
+<td>-0.066490</td>
+<td>0.164723</td>
+<td>EUR</td>
+<td>Q3</td>
+</tr>
+<tr>
+<th>3</th>
+<td>172</td>
+<td>euro_stoxx_50</td>
+<td>ENR.DE</td>
+<td>2026-03-04</td>
+<td>Industrials</td>
+<td>-0.902738</td>
+<td>-0.743338</td>
+<td>-1.693212</td>
+<td>-1.326075</td>
+<td>-1.166341</td>
+<td>46</td>
+<td>1.645455</td>
+<td>1.137007</td>
+<td>1.474095</td>
+<td>0.051850</td>
+<td>2.541889</td>
+<td>1</td>
+<td>0.075269</td>
+<td>1.80000</td>
+<td>False</td>
+<td>-0.123264</td>
+<td>29</td>
+<td>0.417428</td>
+<td>4</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>155.675000</td>
+<td>129.122000</td>
+<td>139207262208</td>
+<td>0.027249</td>
+<td>Siemens Energy AG</td>
+<td>Germany</td>
+<td>162.750</td>
+<td>0.047297</td>
+<td>-0.039256</td>
+<td>0.351744</td>
+<td>EUR</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>4</th>
+<td>149</td>
+<td>euro_stoxx_50</td>
+<td>ABI.BR</td>
+<td>2026-03-04</td>
+<td>Consumer Defensive</td>
+<td>0.474084</td>
+<td>0.844075</td>
+<td>0.552739</td>
+<td>-0.975005</td>
+<td>0.223973</td>
+<td>25</td>
+<td>-0.029791</td>
+<td>1.058542</td>
+<td>1.142783</td>
+<td>0.063063</td>
+<td>0.651891</td>
+<td>10</td>
+<td>0.186198</td>
+<td>1.69231</td>
+<td>False</td>
+<td>0.344755</td>
+<td>17</td>
+<td>0.406873</td>
+<td>5</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>64.342000</td>
+<td>57.869333</td>
+<td>125566156800</td>
+<td>0.024579</td>
+<td>AB INBEV</td>
+<td>Belgium</td>
+<td>64.480</td>
+<td>-0.017073</td>
+<td>-0.040762</td>
+<td>0.174499</td>
+<td>EUR</td>
+<td>Q2</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1971,6 +2154,7 @@ scores_pl.with_columns(
 <div><!-- shape: (10, 37) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th><th>score_z</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>date</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>datetime[ns]</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>163</td><td>euro_stoxx_50</td><td>BNP.PA</td><td>2026-03-04</td><td>Financial Services</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>1</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>16</td><td>0.153157</td><td>1.84211</td><td>false</td><td>0.052711</td><td>25</td><td>0.683947</td><td>1</td><td>2026-03-04 22:40:25.489180</td><td>92.085</td><td>81.181889</td><td>99751215104</td><td>0.019525</td><td>BNP PARIBAS ACT.A</td><td>France</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td><td>EUR</td><td>1.151369</td></tr><tr><td>168</td><td>euro_stoxx_50</td><td>DTE.DE</td><td>2026-03-04</td><td>Communication Services</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>false</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>2026-03-04 22:40:25.489180</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td><td>EUR</td><td>1.146083</td></tr><tr><td>174</td><td>euro_stoxx_50</td><td>IFX.DE</td><td>2026-03-04</td><td>Technology</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>false</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>2026-03-04 22:40:25.489180</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>INFINEON TECHNOLOGIES AG</td><td>Germany</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td><td>EUR</td><td>1.017897</td></tr><tr><td>172</td><td>euro_stoxx_50</td><td>ENR.DE</td><td>2026-03-04</td><td>Industrials</td><td>-0.902738</td><td>-0.743338</td><td>-1.693212</td><td>-1.326075</td><td>-1.166341</td><td>46</td><td>1.645455</td><td>1.137007</td><td>1.474095</td><td>0.05185</td><td>2.541889</td><td>1</td><td>0.075269</td><td>1.8</td><td>false</td><td>-0.123264</td><td>29</td><td>0.417428</td><td>4</td><td>2026-03-04 22:40:25.489180</td><td>155.675</td><td>129.122</td><td>139207262208</td><td>0.027249</td><td>Siemens Energy AG</td><td>Germany</td><td>162.75</td><td>0.047297</td><td>-0.039256</td><td>0.351744</td><td>EUR</td><td>0.340213</td></tr><tr><td>149</td><td>euro_stoxx_50</td><td>ABI.BR</td><td>2026-03-04</td><td>Consumer Defensive</td><td>0.474084</td><td>0.844075</td><td>0.552739</td><td>-0.975005</td><td>0.223973</td><td>25</td><td>-0.029791</td><td>1.058542</td><td>1.142783</td><td>0.063063</td><td>0.651891</td><td>10</td><td>0.186198</td><td>1.69231</td><td>false</td><td>0.344755</td><td>17</td><td>0.406873</td><td>5</td><td>2026-03-04 22:40:25.489180</td><td>64.342</td><td>57.869333</td><td>125566156800</td><td>0.024579</td><td>AB INBEV</td><td>Belgium</td><td>64.48</td><td>-0.017073</td><td>-0.040762</td><td>0.174499</td><td>EUR</td><td>-1.152299</td></tr><tr><td>196</td><td>euro_stoxx_50</td><td>VOW.DE</td><td>2026-03-04</td><td>Consumer Cyclical</td><td>1.166221</td><td>0.940273</td><td>0.37983</td><td>1.528891</td><td>1.003804</td><td>2</td><td>-0.292748</td><td>0.929392</td><td>0.969628</td><td>0.180805</td><td>-0.411969</td><td>37</td><td>0.297071</td><td>null</td><td>false</td><td>0.555357</td><td>12</td><td>0.382397</td><td>6</td><td>2026-03-04 22:40:25.489180</td><td>102.286667</td><td>101.225556</td><td>47923826688</td><td>0.009381</td><td>VOLKSWAGEN AG</td><td>Germany</td><td>95.6</td><td>0.013786</td><td>-0.048756</td><td>-0.09039</td><td>EUR</td><td>-0.590923</td></tr><tr><td>194</td><td>euro_stoxx_50</td><td>TTE.PA</td><td>2026-03-04</td><td>Energy</td><td>0.691106</td><td>0.609377</td><td>0.44961</td><td>0.731948</td><td>0.62051</td><td>12</td><td>0.0498</td><td>1.109161</td><td>1.212503</td><td>0.08411</td><td>0.919444</td><td>5</td><td>0.041131</td><td>2.04545</td><td>false</td><td>-0.542576</td><td>35</td><td>0.332459</td><td>7</td><td>2026-03-04 22:40:25.489180</td><td>63.603</td><td>58.231667</td><td>142003961856</td><td>0.027796</td><td>TOTALENERGIES</td><td>France</td><td>66.86</td><td>-0.018209</td><td>-0.00757</td><td>0.202734</td><td>EUR</td><td>1.114951</td></tr><tr><td>166</td><td>euro_stoxx_50</td><td>DG.PA</td><td>2026-03-04</td><td>Industrials</td><td>0.778573</td><td>0.850985</td><td>0.928797</td><td>1.146268</td><td>0.926156</td><td>3</td><td>-0.031697</td><td>1.064353</td><td>1.095809</td><td>0.062871</td><td>0.59582</td><td>11</td><td>0.043608</td><td>2.04762</td><td>false</td><td>-0.538059</td><td>34</td><td>0.327972</td><td>8</td><td>2026-03-04 22:40:25.489180</td><td>131.013333</td><td>123.067778</td><td>74446422016</td><td>0.014572</td><td>VINCI</td><td>France</td><td>134.15</td><td>0.006754</td><td>-0.054283</td><td>0.117451</td><td>EUR</td><td>-0.51532</td></tr><tr><td>188</td><td>euro_stoxx_50</td><td>SAN.MC</td><td>2026-03-04</td><td>Financial Services</td><td>0.458599</td><td>0.499398</td><td>null</td><td>-1.10759</td><td>-0.049864</td><td>33</td><td>0.393197</td><td>0.953824</td><td>1.139519</td><td>0.113499</td><td>0.519307</td><td>14</td><td>0.224704</td><td>1.7</td><td>false</td><td>0.448776</td><td>15</td><td>0.306073</td><td>9</td><td>2026-03-04 22:40:25.489180</td><td>10.6049</td><td>9.9195</td><td>145955749888</td><td>0.02857</td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>9.982</td><td>0.038818</td><td>-0.105876</td><td>-0.008739</td><td>EUR</td><td>-0.927419</td></tr><tr><td>193</td><td>euro_stoxx_50</td><td>SU.PA</td><td>2026-03-04</td><td>Industrials</td><td>-0.175048</td><td>0.278256</td><td>-0.060732</td><td>-0.419549</td><td>-0.094268</td><td>34</td><td>-0.045547</td><td>1.049116</td><td>1.102466</td><td>0.078557</td><td>0.519908</td><td>13</td><td>0.141252</td><td>1.47826</td><td>false</td><td>0.48924</td><td>14</td><td>0.30496</td><td>10</td><td>2026-03-04 22:40:25.489180</td><td>253.745</td><td>241.719444</td><td>145081614336</td><td>0.028399</td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>258.05</td><td>0.017748</td><td>-0.026043</td><td>0.098553</td><td>EUR</td><td>0.608136</td></tr></tbody></table></div>
 
 ---
+
 ## Comparison Table — Creating & Transforming Columns
 
 ```python
@@ -2026,6 +2210,7 @@ display(Markdown(comparison))
 | Tweak function                | `def tweak(df): return df.assign(…)`              | `def tweak(df): return df.with_columns(…)`        |
 
 ---
+
 ## Part 2: Polars Expressions Deep Dive
 
 ### What Is an Expression?
@@ -2041,11 +2226,10 @@ print(f"Type: {type(expr)}")
 print(f"Repr: {expr}")
 ```
 
-    Type: <class 'polars.expr.expr.Expr'>
+Type: <class 'polars.expr.expr.Expr'>
     Repr: [(col("close")) * (dyn int: 2)]
 
 ### Expression Contexts
-
 
 ```python
 # select context — return only named columns (drop the rest)
@@ -2084,7 +2268,6 @@ ohlcv_pl.with_columns(
 
 #### Polars Expression Context — filter
 
-
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
 _Filters the OHLCV dataset to ASML.AS rows where `close > 900` using a compound boolean expression with `&`, returning the first 5 matching dates and prices._
@@ -2099,7 +2282,6 @@ ohlcv_pl.filter(
 <div><!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2024-03-04</td><td>913.2</td></tr><tr><td>ASML.AS</td><td>2024-03-06</td><td>912.2</td></tr><tr><td>ASML.AS</td><td>2024-03-07</td><td>949.2</td></tr><tr><td>ASML.AS</td><td>2024-03-08</td><td>923.4</td></tr><tr><td>ASML.AS</td><td>2024-03-21</td><td>923.3</td></tr></tbody></table></div>
 
 #### Polars Expression Context — group_by.agg
-
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
@@ -2117,7 +2299,6 @@ ohlcv_pl.group_by("symbol").agg(
 <div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>last_date</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>date</td></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>81633862</td><td>2026-03-12</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>110400463</td><td>2026-03-12</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>945070720</td><td>2026-03-12</td></tr><tr><td>MC.PA</td><td>662.4</td><td>557855567</td><td>2026-03-12</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>308359744</td><td>2026-03-12</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>94592244</td><td>2026-03-12</td></tr><tr><td>OR.PA</td><td>377.54</td><td>484115375</td><td>2026-03-12</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>398802950</td><td>2026-03-12</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>476686026</td><td>2026-03-12</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>1101960308</td><td>2026-03-12</td></tr></tbody></table></div>
 
 ### Column Expressions
-
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
@@ -2148,7 +2329,6 @@ ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head
 
 #### Polars Column Expressions — pl.lit
 
-
 - **pl.lit**: Create a constant/literal value as an expression.
 - **Alias**: Give an expression result a column name (Polars).
 
@@ -2163,7 +2343,6 @@ ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).a
 
 #### Polars Column Expressions — pl.first, pl.last
 
-
 - **Alias**: Give an expression result a column name (Polars).
 
 _Extracts the first symbol in the dataset and the date range boundaries (`first_date` and `last_date`) using `pl.first()` and `pl.last()`, confirming that the OHLCV data spans from 2021-01-04 to 2026-03-12._
@@ -2176,7 +2355,6 @@ ohlcv_pl.select(pl.first("symbol"), pl.first("date").alias("first_date"), pl.las
 <div><!-- shape: (1, 3) --><table><thead><tr><th>symbol</th><th>first_date</th><th>last_date</th></tr><tr><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table></div>
 
 ### Continuing Expressions
-
 
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
@@ -2192,7 +2370,6 @@ ohlcv_pl.select(
 <div><!-- shape: (5, 2) --><table><thead><tr><th>rounded_close</th><th>clean_symbol</th></tr><tr><td>f64</td><td>str</td></tr></thead><tbody><tr><td>57.21</td><td>abi.br</td></tr><tr><td>57.18</td><td>abi.br</td></tr><tr><td>58.77</td><td>abi.br</td></tr><tr><td>58.4</td><td>abi.br</td></tr><tr><td>57.86</td><td>abi.br</td></tr></tbody></table></div>
 
 ### Horizontal Expressions
-
 
 - **Sum Horizontal**: Sum values across columns (row-wise), not down a column.
 - **Alias**: Give an expression result a column name (Polars).
@@ -2228,8 +2405,8 @@ dim_pl.select(
 
 ### Polars Window Expressions — .over() for group-level computation
 
-
 - **Window (.over)**: Compute a value per row based on its group, without collapsing rows. Like SQL OVER(PARTITION BY).
+
 > [!info] .over("col") is the Polars equivalent
 >
 > `.over("col")` is the Polars equivalent of SQL `PARTITION BY` — it computes an expression **within each group** without collapsing rows. Equivalent to Pandas `groupby("col").transform()`. Chain any expression before `.over()`: `.mean().over()`, `.rank().over()`, `.cum_sum().over()`, `.shift().over()`.
@@ -2255,7 +2432,6 @@ ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").with_columns(
 
 ### Expression Arithmetic
 
-
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Alias**: Give an expression result a column name (Polars).
 
@@ -2272,7 +2448,6 @@ ohlcv_pl.select(
 <div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>mid_price</th><th>range</th><th>green_candle</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.68</td><td>2.07</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.04</td><td>1.23</td><td>true</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.365</td><td>1.55</td><td>true</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.54</td><td>0.98</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.01</td><td>0.97</td><td>false</td></tr></tbody></table></div>
 
 ### Folds
-
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **pl.lit**: Create a constant/literal value as an expression.
@@ -2293,7 +2468,6 @@ scores_pl.select(
 <div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>sum_zscores</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>2.174528</td></tr><tr><td>DTE.DE</td><td>0.71405</td></tr><tr><td>IFX.DE</td><td>1.146613</td></tr><tr><td>ENR.DE</td><td>-1.646076</td></tr><tr><td>ABI.BR</td><td>1.318159</td></tr></tbody></table></div>
 
 ### Polars Selectors (cs module) — select columns by dtype
-
 
 > [!info] import polars.selectors as cs
 >
@@ -2335,6 +2509,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Selectors | cs.numeric() | df.select_dtypes() |
 
 ---
+
 ## Part 3: Method Chaining & Pipes
 
 ### Imperative vs Chained Style
@@ -2362,87 +2537,87 @@ display(df[["symbol", "date", "close", "daily_return"]].head(10))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>daily_return</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11964</th>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>-0.334784</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>0.875126</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>0.976102</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>7.052239</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>-3.288364</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>ASML.AS</td>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>-1.051226</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>ASML.AS</td>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>2.459436</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>ASML.AS</td>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>-2.090005</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>ASML.AS</td>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1.475520</td>
-    </tr>
-    <tr>
-      <th>11955</th>
-      <td>ASML.AS</td>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>-0.113379</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>daily_return</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11964</th>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>-0.334784</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>0.875126</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>0.976102</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>7.052239</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>-3.288364</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>-1.051226</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>2.459436</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>-2.090005</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1.475520</td>
+</tr>
+<tr>
+<th>11955</th>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>-0.113379</td>
+</tr>
+</tbody>
 </table>
 
 #### Pandas — chained declarative style with .pipe()
@@ -2466,87 +2641,87 @@ display(result_pd)
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>daily_return</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11964</th>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>-0.33</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>0.88</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>0.98</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>7.05</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>-3.29</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>ASML.AS</td>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>-1.05</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>ASML.AS</td>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>2.46</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>ASML.AS</td>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>-2.09</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>ASML.AS</td>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1.48</td>
-    </tr>
-    <tr>
-      <th>11955</th>
-      <td>ASML.AS</td>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>-0.11</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>daily_return</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11964</th>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>-0.33</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>0.88</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>0.98</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>7.05</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>-3.29</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>-1.05</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>2.46</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>-2.09</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1.48</td>
+</tr>
+<tr>
+<th>11955</th>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>-0.11</td>
+</tr>
+</tbody>
 </table>
 </div>
 
@@ -2575,6 +2750,7 @@ display(result_pl)
 <div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr></tbody></table></div>
 
 ---
+
 ### Reusable Functions & Expressions
 
 #### Pandas .pipe() — compose reusable transform functions
@@ -2610,109 +2786,109 @@ display(result_pd)
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>sma_7</th>
-      <th>sma_30</th>
-      <th>high_volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>11955</th>
-      <td>ASML.AS</td>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1251.514286</td>
-      <td>1201.400000</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11956</th>
-      <td>ASML.AS</td>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1247.542857</td>
-      <td>1204.400000</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11957</th>
-      <td>ASML.AS</td>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1234.142857</td>
-      <td>1205.126667</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11958</th>
-      <td>ASML.AS</td>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1227.085714</td>
-      <td>1206.626667</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11959</th>
-      <td>ASML.AS</td>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1216.028571</td>
-      <td>1206.946667</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11960</th>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1195.828571</td>
-      <td>1205.906667</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11961</th>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1183.714286</td>
-      <td>1204.893333</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11962</th>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1178.942857</td>
-      <td>1204.306667</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11963</th>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1177.285714</td>
-      <td>1204.453333</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>11964</th>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1181.428571</td>
-      <td>1204.413333</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>sma_7</th>
+<th>sma_30</th>
+<th>high_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>11955</th>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1251.514286</td>
+<td>1201.400000</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11956</th>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1247.542857</td>
+<td>1204.400000</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11957</th>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1234.142857</td>
+<td>1205.126667</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11958</th>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1227.085714</td>
+<td>1206.626667</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11959</th>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1216.028571</td>
+<td>1206.946667</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11960</th>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1195.828571</td>
+<td>1205.906667</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11961</th>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1183.714286</td>
+<td>1204.893333</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11962</th>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1178.942857</td>
+<td>1204.306667</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11963</th>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1177.285714</td>
+<td>1204.453333</td>
+<td>False</td>
+</tr>
+<tr>
+<th>11964</th>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1181.428571</td>
+<td>1204.413333</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 </div>
 
@@ -2745,8 +2921,6 @@ display(result_pl)
 
 ### Recipe Pipeline: Full Example
 
-
-
 ```python
 # Pandas
 result_pd = (
@@ -2767,180 +2941,180 @@ display(result_pd)
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>short_name</th>
-      <th>sector</th>
-      <th>avg_return</th>
-      <th>positive_days</th>
-      <th>total_days</th>
-      <th>win_rate</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>13</th>
-      <td>SAP.DE</td>
-      <td>SAP SE</td>
-      <td>Technology</td>
-      <td>0.089682</td>
-      <td>702</td>
-      <td>1324</td>
-      <td>53.0</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ENR.DE</td>
-      <td>Siemens Energy AG</td>
-      <td>Industrials</td>
-      <td>0.050090</td>
-      <td>641</td>
-      <td>1324</td>
-      <td>48.4</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>SIE.DE</td>
-      <td>SIEMENS AG</td>
-      <td>Industrials</td>
-      <td>0.041032</td>
-      <td>687</td>
-      <td>1324</td>
-      <td>51.9</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>DB1.DE</td>
-      <td>DEUTSCHE BOERSE AG</td>
-      <td>Financial Services</td>
-      <td>0.036636</td>
-      <td>658</td>
-      <td>1324</td>
-      <td>49.7</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>RHM.DE</td>
-      <td>RHEINMETALL AG</td>
-      <td>Industrials</td>
-      <td>0.033806</td>
-      <td>640</td>
-      <td>1324</td>
-      <td>48.3</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>MUV2.DE</td>
-      <td>MUENCHENER RUECKVERS.-GES. AG N</td>
-      <td>Financial Services</td>
-      <td>0.029580</td>
-      <td>670</td>
-      <td>1324</td>
-      <td>50.6</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>DTE.DE</td>
-      <td>DEUTSCHE TELEKOM AG</td>
-      <td>Communication Services</td>
-      <td>0.026986</td>
-      <td>683</td>
-      <td>1324</td>
-      <td>51.6</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>DHL.DE</td>
-      <td>DEUTSCHE POST AG</td>
-      <td>Industrials</td>
-      <td>0.019929</td>
-      <td>688</td>
-      <td>1324</td>
-      <td>52.0</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>MBG.DE</td>
-      <td>Mercedes-Benz Group AG</td>
-      <td>Consumer Cyclical</td>
-      <td>0.009697</td>
-      <td>648</td>
-      <td>1324</td>
-      <td>48.9</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>BMW.DE</td>
-      <td>BAYERISCHE MOTOREN WERKE AG</td>
-      <td>Consumer Cyclical</td>
-      <td>0.009107</td>
-      <td>657</td>
-      <td>1324</td>
-      <td>49.6</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ALV.DE</td>
-      <td>Allianz SE</td>
-      <td>Financial Services</td>
-      <td>0.007040</td>
-      <td>661</td>
-      <td>1324</td>
-      <td>49.9</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>BAS.DE</td>
-      <td>BASF SE</td>
-      <td>Basic Materials</td>
-      <td>-0.017599</td>
-      <td>635</td>
-      <td>1324</td>
-      <td>48.0</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td>ADS.DE</td>
-      <td>adidas AG</td>
-      <td>Consumer Cyclical</td>
-      <td>-0.018576</td>
-      <td>609</td>
-      <td>1324</td>
-      <td>46.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>BAYN.DE</td>
-      <td>Bayer AG</td>
-      <td>Healthcare</td>
-      <td>-0.027584</td>
-      <td>636</td>
-      <td>1324</td>
-      <td>48.0</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>IFX.DE</td>
-      <td>INFINEON TECHNOLOGIES AG</td>
-      <td>Technology</td>
-      <td>-0.054771</td>
-      <td>622</td>
-      <td>1324</td>
-      <td>47.0</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>VOW.DE</td>
-      <td>VOLKSWAGEN AG</td>
-      <td>Consumer Cyclical</td>
-      <td>-0.063948</td>
-      <td>599</td>
-      <td>1324</td>
-      <td>45.2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>avg_return</th>
+<th>positive_days</th>
+<th>total_days</th>
+<th>win_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>13</th>
+<td>SAP.DE</td>
+<td>SAP SE</td>
+<td>Technology</td>
+<td>0.089682</td>
+<td>702</td>
+<td>1324</td>
+<td>53.0</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ENR.DE</td>
+<td>Siemens Energy AG</td>
+<td>Industrials</td>
+<td>0.050090</td>
+<td>641</td>
+<td>1324</td>
+<td>48.4</td>
+</tr>
+<tr>
+<th>14</th>
+<td>SIE.DE</td>
+<td>SIEMENS AG</td>
+<td>Industrials</td>
+<td>0.041032</td>
+<td>687</td>
+<td>1324</td>
+<td>51.9</td>
+</tr>
+<tr>
+<th>5</th>
+<td>DB1.DE</td>
+<td>DEUTSCHE BOERSE AG</td>
+<td>Financial Services</td>
+<td>0.036636</td>
+<td>658</td>
+<td>1324</td>
+<td>49.7</td>
+</tr>
+<tr>
+<th>12</th>
+<td>RHM.DE</td>
+<td>RHEINMETALL AG</td>
+<td>Industrials</td>
+<td>0.033806</td>
+<td>640</td>
+<td>1324</td>
+<td>48.3</td>
+</tr>
+<tr>
+<th>11</th>
+<td>MUV2.DE</td>
+<td>MUENCHENER RUECKVERS.-GES. AG N</td>
+<td>Financial Services</td>
+<td>0.029580</td>
+<td>670</td>
+<td>1324</td>
+<td>50.6</td>
+</tr>
+<tr>
+<th>7</th>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Communication Services</td>
+<td>0.026986</td>
+<td>683</td>
+<td>1324</td>
+<td>51.6</td>
+</tr>
+<tr>
+<th>6</th>
+<td>DHL.DE</td>
+<td>DEUTSCHE POST AG</td>
+<td>Industrials</td>
+<td>0.019929</td>
+<td>688</td>
+<td>1324</td>
+<td>52.0</td>
+</tr>
+<tr>
+<th>10</th>
+<td>MBG.DE</td>
+<td>Mercedes-Benz Group AG</td>
+<td>Consumer Cyclical</td>
+<td>0.009697</td>
+<td>648</td>
+<td>1324</td>
+<td>48.9</td>
+</tr>
+<tr>
+<th>4</th>
+<td>BMW.DE</td>
+<td>BAYERISCHE MOTOREN WERKE AG</td>
+<td>Consumer Cyclical</td>
+<td>0.009107</td>
+<td>657</td>
+<td>1324</td>
+<td>49.6</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ALV.DE</td>
+<td>Allianz SE</td>
+<td>Financial Services</td>
+<td>0.007040</td>
+<td>661</td>
+<td>1324</td>
+<td>49.9</td>
+</tr>
+<tr>
+<th>2</th>
+<td>BAS.DE</td>
+<td>BASF SE</td>
+<td>Basic Materials</td>
+<td>-0.017599</td>
+<td>635</td>
+<td>1324</td>
+<td>48.0</td>
+</tr>
+<tr>
+<th>0</th>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+<td>-0.018576</td>
+<td>609</td>
+<td>1324</td>
+<td>46.0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>BAYN.DE</td>
+<td>Bayer AG</td>
+<td>Healthcare</td>
+<td>-0.027584</td>
+<td>636</td>
+<td>1324</td>
+<td>48.0</td>
+</tr>
+<tr>
+<th>9</th>
+<td>IFX.DE</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Technology</td>
+<td>-0.054771</td>
+<td>622</td>
+<td>1324</td>
+<td>47.0</td>
+</tr>
+<tr>
+<th>15</th>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>Consumer Cyclical</td>
+<td>-0.063948</td>
+<td>599</td>
+<td>1324</td>
+<td>45.2</td>
+</tr>
+</tbody>
 </table>
 </div>
 
@@ -2970,7 +3144,6 @@ display(result_pl)
 
 ### Clean Code: Breaking Long Chains
 
-
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 
 ```python
@@ -2997,22 +3170,22 @@ display(final)
 
 ---
 
-## When to use transforms and expressions
-
-- **Deriving new columns from existing data** — return percentages, Z-scores, percentile ranks, binned categories, normalized values, or any computed metric.
-- **Conditional logic** — applying different formulas to different subsets of rows (e.g., fee tiers by asset class, cap size classification by market cap).
-- **Data cleaning** — recoding values, standardizing string formats, filling defaults, and correcting known data errors.
-- **Feature engineering for ML or index construction** — creating model inputs, lag features, ratio columns, or composite scores from raw data.
-- **Pipeline readability** — method chaining and expression composition produce clear, auditable transformation logic.
-
-## When not to use (Limits)
-
-| Scenario | Why transforms are wrong | Better approach |
-|---|---|---|
-| Transformations that depend on external API calls per row | `.map_elements()` calls Python row by row — extremely slow and blocks the GIL | Batch the API calls outside the DataFrame, then join results back |
-| Complex stateful logic across rows | Expressions are stateless — they cannot carry state from one row to the next | Use `.shift()`, `.cum_sum()`, or write an explicit loop with `.iter_rows()` |
-| Transforms on data that exceeds memory | In-memory transforms fail or thrash swap on datasets larger than RAM | Use Polars lazy + streaming, DuckDB, or push the transform to the database |
-| Multi-table transformations with referential integrity | Column-level transforms cannot enforce cross-table constraints | Use SQL with foreign keys, or apply joins + assertions before transforming |
+> [!example] Expression Pipeline Fit
+>
+> > [!success] Applicability
+> >
+> > - **Deriving new columns from existing data** — return percentages, Z-scores, percentile ranks, binned categories, normalized values, or any computed metric.
+> > - **Conditional logic** — applying different formulas to different subsets of rows (e.g., fee tiers by asset class, cap size classification by market cap).
+> > - **Data cleaning** — recoding values, standardizing string formats, filling defaults, and correcting known data errors.
+> > - **Feature engineering for ML or index construction** — creating model inputs, lag features, ratio columns, or composite scores from raw data.
+> > - **Pipeline readability** — method chaining and expression composition produce clear, auditable transformation logic.
+>
+> > [!failure] Limitations
+> >
+> > - **Transformations that depend on external API calls per row** — Why transforms are wrong: `.map_elements()` calls Python row by row — extremely slow and blocks the GIL. Better approach: Batch the API calls outside the DataFrame, then join results back
+> > - **Complex stateful logic across rows** — Why transforms are wrong: Expressions are stateless — they cannot carry state from one row to the next. Better approach: Use `.shift()`, `.cum_sum()`, or write an explicit loop with `.iter_rows()`
+> > - **Transforms on data that exceeds memory** — Why transforms are wrong: In-memory transforms fail or thrash swap on datasets larger than RAM. Better approach: Use Polars lazy + streaming, DuckDB, or push the transform to the database
+> > - **Multi-table transformations with referential integrity** — Why transforms are wrong: Column-level transforms cannot enforce cross-table constraints. Better approach: Use SQL with foreign keys, or apply joins + assertions before transforming
 
 ## Warnings
 
@@ -3057,4 +3230,3 @@ display(final)
 | `when/then` produces all nulls | No condition matched and `.otherwise()` was omitted | Add `.otherwise(default_value)` at the end of the chain |
 | Unexpected `float64` column after integer arithmetic | Division produces float; nulls promote integers to float | Use `//` for integer division; use nullable integer dtypes |
 | Transform is unexpectedly slow | Using `.apply()` or `.map_elements()` instead of native expressions | Rewrite as vectorized expression; profile with `%%timeit` |
-

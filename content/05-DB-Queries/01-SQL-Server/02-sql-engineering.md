@@ -8,44 +8,173 @@ updated: 2026-03-22
 status: complete
 ---
 
-# SQL for Data Engineering — Database Objects & Performance
+# SQL Engineering
 
 > [!quote]
 > "A database is only as good as the integrity constraints that protect it."
 >
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
-This note covers SQL Server database objects and performance patterns for data engineering pipelines. It demonstrates views, stored procedures, user-defined functions, index design, SCD patterns, gap detection, deduplication, execution plan analysis, isolation levels, bulk loading, audit columns, and partitioning — all using a dedicated `demo` schema with full cleanup.
+> [!abstract]- Summary
+>
+> SQL Engineering is the second notebook in this SQL Server query series for data engineering: it shifts from ad-hoc querying into reusable database objects, physical design choices, and operational pipeline patterns, all demonstrated in a disposable `demo` schema with explicit cleanup.
+>
+> **Reusable database objects**
+> - covers views, stored procedures, inline table-valued functions, `TRY/CATCH` error handling, dynamic SQL boundaries, and the trade-offs between reusable query surfaces
+>
+> **Performance and physical design**
+> - covers index strategy, covering indexes, execution plan reading, parameter sniffing, partitioning, and why scalar UDFs and non-SARGable access patterns degrade throughput
+>
+> **Pipeline state and intermediate data**
+> - covers SCD Type 1 vs Type 2 dimensions, `LAG`-based gap detection, `ROW_NUMBER()` deduplication, temp-table materialization, and audit-column lineage patterns
+>
+> **Load and concurrency operations**
+> - covers transaction isolation levels, reader-writer blocking behavior, bulk loading patterns, and safe object-lifecycle cleanup for notebook reruns
+>
+> **Operations and safety**
+> - Warnings: object-creating sections, lab-only credentials, parameter sniffing, scalar UDF row-by-row execution, `MERGE` concurrency bugs, `NOLOCK` / `READ UNCOMMITTED`, Type 1 history loss, repeated CTE execution, and over-indexing
+> - Recommendations table: 7 defaults covering object selection, guarded `TRY/CATCH`, sniffing mitigation, staging-load flow, RCSI for analytics, demo schema isolation, and audit columns
+> - Troubleshooting: 6 failure modes covering unstable stored procedure performance, slow views, `MERGE` duplicate-key races, unindexed `#temp` tables, scalar-UDF timeouts, and missing partition elimination
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **View** | A named, saved query that acts like a virtual table. SQL Server expands it inline at query time — no data is stored separately unless it is an indexed (materialized) view. | Wraps complex logic (e.g., ROW_NUMBER dedup) behind a simple `SELECT * FROM view_name` interface for dashboards and downstream consumers. | Assuming views cache data — regular views re-execute the full query on every read. Only indexed views with `SCHEMABINDING` persist results. |
-| **Stored procedure (SP)** | A named, compiled T-SQL program stored in the database. SQL Server caches its execution plan after first execution, avoiding repeated parse and optimization overhead. | Encapsulates pipeline steps with parameters, error handling, and transaction control. | **Parameter sniffing** — the cached plan is optimized for the first parameter values seen. A plan compiled for `@top_n = 5` can be catastrophically slow when called with `@top_n = 10000`. |
-| **Inline table-valued function (iTVF)** | A function that returns a table via a single `SELECT` statement (`RETURNS TABLE AS RETURN (SELECT ...)`). The optimizer can inline and parallelize it — unlike scalar UDFs or multi-statement TVFs. | The preferred way to create parameterized, reusable queries in SQL Server. Acts like a parameterized view. | Using scalar UDFs instead — scalar UDFs force row-by-row execution and disable parallelism, turning 2-second queries into 2-minute queries on large tables. |
-| **Execution plan** | The physical operator tree SQL Server builds to execute a query — specifying seeks, scans, joins, sorts, and their estimated costs. Plans are cached and reused for subsequent identical queries. | Understanding plans is the first step in diagnosing slow queries: "Index Scan" vs "Index Seek" reveals whether an index is being used. | Reading only the estimated plan — the *actual* plan (with `SET STATISTICS IO, TIME ON`) shows real row counts and memory grants, which often differ from estimates. |
-| **SCD Type 1 / Type 2** | Slowly Changing Dimension patterns. **Type 1** overwrites the old value (history lost). **Type 2** expires the old row (`is_current = 0, valid_to = NOW`) and inserts a new row (`is_current = 1, valid_from = NOW`). | The `silver.index_dim` table uses SCD Type 2 with `valid_from`, `valid_to`, and `is_current` columns. Queries must filter `is_current = 1` for current state. | Using Type 1 for attributes that affect calculations (sector, index membership) — a sector change applied retroactively via Type 1 silently alters historical returns. |
-| **MERGE** | A single T-SQL statement that performs INSERT, UPDATE, and DELETE against a target table based on a source dataset. The core tool for incremental "upsert" pipeline loads. | Used for bronze-to-silver and silver-to-gold incremental loads. Each MERGE is atomic — no partial loads. | Known concurrency bugs in SQL Server's MERGE — always add `WITH (HOLDLOCK)` on the target to prevent race conditions between the MATCHED check and the DML. |
-| **Transaction isolation level** | Controls how reads interact with concurrent writes. Higher levels prevent more anomalies (dirty reads, phantoms) but increase blocking. SQL Server default is `READ COMMITTED`. | Analytics reads should use `SNAPSHOT` isolation to avoid blocking pipeline writes. | Using `NOLOCK` / `READ UNCOMMITTED` for "approximate" reads — it can return rows twice or skip rows entirely during page splits, producing silently incorrect aggregates. |
-| **Temp table (`#temp`)** | A session-scoped table materialized in `tempdb`. Supports full index creation, statistics, and reuse across multiple queries in the same session. | Use when a CTE is referenced multiple times or needs indexes. One-time compute cost vs repeated CTE re-execution. | Confusing with table variables (`@table`) — table variables have no statistics (optimizer assumes 1 row), causing poor plans for more than ~100 rows. |
-| **Partition elimination** | The optimizer's ability to skip entire partitions that cannot satisfy the `WHERE` clause predicate. Requires the filter column to match the partition function's column. | On partitioned tables, queries that filter on the partition key scan only relevant partitions — equivalent to a physical shard filter. | Wrapping the partition column in a function (`WHERE YEAR(date) = 2025`) — this prevents partition elimination, just like it prevents index seeks. |
-| **Parameter sniffing** | SQL Server compiles an SP's plan using the first parameter values it sees and caches that plan for all subsequent calls. If the first values are atypical, the cached plan performs poorly for typical values. | Every SP in this note is susceptible. The `sp_top_stocks` procedure cached with `@top_n = 5` may use nested loops — catastrophic for `@top_n = 10000`. | Assuming `OPTION (RECOMPILE)` is free — it forces a full recompile on every call. Use it only for plans that genuinely vary by input, not as a blanket fix. |
-
-## What this note covers
-
-- **Views** — regular views, cross-layer dashboard views, and when to use indexed views
-- **Stored procedures** — parameterized SPs, TRY/CATCH error handling, parameter sniffing mitigations
-- **User-defined functions** — inline table-valued functions vs scalar UDFs, performance implications
-- **Indexes** — types, design principles, covering indexes for pipeline queries
-- **Slowly changing dimensions** — SCD Type 1 (overwrite) and Type 2 (history tracking) patterns
-- **Gap detection** — LAG-based gap detection for time-series data
-- **Deduplication** — ROW_NUMBER pattern for identifying and removing duplicate rows
-- **Execution plans & optimization** — common anti-patterns, SARGable predicates, plan reading
-- **Transaction isolation levels** — comparison table, SNAPSHOT recommendation for analytics
-- **Bulk loading** — insert strategies from medium to fastest, pipeline staging pattern
-- **Data lineage & audit columns** — standard audit columns, freshness checks across medallion layers
-- **Partitioning** — when to partition, partition functions and schemes
+> [!note]- Glossary
+>
+> **View**
+> - A named query stored in the database that exposes a virtual table-shaped interface without persisting separate data by default.
+> - It matters because views are the lightest reusable abstraction in this note for sharing query logic across dashboards, notebooks, and downstream SQL objects.
+>
+> > [!warning] Views are not caches
+> >
+> > A regular view reruns its underlying query whenever it is referenced. Only indexed views persist results, and they carry strict design rules plus write-time maintenance cost.
+>
+> ---
+>
+> **Stored procedure**
+> - A named T-SQL program stored in the database, usually parameterized and capable of control flow, transactions, and error handling.
+> - It matters because the note uses stored procedures for multi-step pipeline behavior that needs encapsulation, plan reuse, and a stable execution surface.
+>
+> > [!warning] Cached plans can mislead
+> >
+> > The first parameter values seen by a procedure can shape its cached plan. That makes stored procedures operationally convenient but performance-sensitive when input sizes vary wildly.
+>
+> ---
+>
+> **Inline table-valued function**
+> - A function that returns a table from a single `SELECT` expression and can usually be inlined by the optimizer into the calling query.
+> - It matters because iTVFs give the note a parameterized, reusable alternative to views without the row-by-row penalty of scalar functions.
+>
+> > [!info] Parameterized view mental model
+> >
+> > An iTVF behaves much closer to a reusable query template than to a procedural routine. That is why it often optimizes well and stays composable in larger statements.
+>
+> ---
+>
+> **Execution plan**
+> - The physical operator tree SQL Server chooses to execute a statement, including scans, seeks, joins, sorts, memory grants, and row estimates.
+> - It matters because plan reading is the note's main diagnostic lens for explaining why one version of a query is fast and another is not.
+>
+> > [!warning] Estimated is not actual
+> >
+> > Estimated plans show what the optimizer predicted. Real troubleshooting often depends on the actual plan and runtime counters such as `STATISTICS IO` and `STATISTICS TIME`.
+>
+> ---
+>
+> **SCD Type 1 / Type 2**
+> - Two slowly changing dimension strategies: Type 1 overwrites prior values, while Type 2 closes the old row and inserts a new version with validity metadata.
+> - It matters because the note shows how dimensional corrections change analytical history depending on whether the pipeline preserves or destroys prior states.
+>
+> > [!danger] Type 1 rewrites history
+> >
+> > If an attribute affects calculations, a Type 1 update can silently change historical outputs. Type 2 exists precisely to avoid that loss of analytical truth.
+>
+> ---
+>
+> **`MERGE`**
+> - A T-SQL statement that combines match detection and data modification so one command can insert, update, or delete against a target table from a source dataset.
+> - It matters because the note positions `MERGE` as a compact upsert pattern for incremental pipeline loads.
+>
+> > [!warning] Concurrency needs locking
+> >
+> > SQL Server `MERGE` has known race and correctness issues under concurrent access. If it is used at all, the target should be protected with `WITH (HOLDLOCK)` and tested carefully.
+>
+> ---
+>
+> **Transaction isolation level**
+> - The rule set that governs how one transaction can see data modified by other concurrent transactions.
+> - It matters because the note compares isolation levels to decide when analytics should block writers, read row versions, or avoid unsafe dirty-read shortcuts.
+>
+> > [!warning] `NOLOCK` is not harmless
+> >
+> > `READ UNCOMMITTED` can read rows twice, miss rows, or return rolled-back data. It is a correctness trade-off, not a free speed boost.
+>
+> ---
+>
+> **Temp table / `#temp`**
+> - A session-scoped table stored in `tempdb` that supports indexes, statistics, and reuse across multiple statements in the same session.
+> - It matters because the note recommends temp tables when intermediate results must be referenced repeatedly or tuned with their own indexes.
+>
+> > [!info] Materialization is sometimes the optimization
+> >
+> > Recomputing a complex CTE several times can be more expensive than writing it once to `#temp`. Materialization is not just a convenience; it can be the performance fix.
+>
+> ---
+>
+> **Table variable / `@table`**
+> - A table-shaped variable scoped to the batch, procedure, or function that stores rows without behaving like a fully statistics-driven temp table.
+> - It matters because the note contrasts table variables with temp tables to show why the simpler syntax often loses on anything but tiny rowsets.
+>
+> > [!warning] Cardinality guesses stay tiny
+> >
+> > SQL Server often optimizes table variables as if they contain about one row. That guess can wreck join choices and memory grants once the real row count grows.
+>
+> ---
+>
+> **Covering index**
+> - An index whose key and included columns satisfy a query without forcing additional lookups to the base table.
+> - It matters because many of the note's dashboard and pipeline reads become cheaper when the access path already contains the projected and filtered columns.
+>
+> > [!warning] Read wins become write tax
+> >
+> > Covering an important query can help latency dramatically, but every extra index still has to be maintained during data modification. The right answer depends on workload frequency, not on elegance.
+>
+> ---
+>
+> **Partition elimination**
+> - The optimizer's ability to skip whole physical partitions when a predicate proves they cannot contain qualifying rows.
+> - It matters because partitioning only pays off when queries filter on the partition key in a form the optimizer can actually exploit.
+>
+> > [!warning] Functions defeat pruning
+> >
+> > If the filter wraps the partition column in `YEAR()` or another function, SQL Server usually cannot eliminate partitions efficiently. The same anti-pattern also harms ordinary index seeks.
+>
+> ---
+>
+> **Parameter sniffing**
+> - SQL Server's plan-caching behavior where the first parameter values used during compilation influence the shape of the cached plan reused later.
+> - It matters because stored procedure performance in this note can swing sharply depending on whether the compiled-for inputs resemble typical runtime inputs.
+>
+> > [!warning] Recompile is not free
+> >
+> > `OPTION (RECOMPILE)` can fix a bad cached plan, but it also forces new optimization work on every execution. Use it deliberately on the statements that actually vary by input shape.
+>
+> ---
+>
+> **Demo schema**
+> - A non-production SQL Server schema used to isolate experimental tables, views, and procedures from the main application objects.
+> - It matters because the note intentionally creates objects during examples and needs those objects to stay safe to rerun and easy to clean up.
+>
+> > [!info] Isolation helps idempotence
+> >
+> > Putting notebook objects under `demo` makes cleanup straightforward and reduces the risk of colliding with real pipeline assets. It is an operational pattern, not just a naming choice.
+>
+> ---
+>
+> **RCSI / `READ_COMMITTED_SNAPSHOT`**
+> - A database setting that changes `READ COMMITTED` behavior to use row versions so readers stop blocking writers and vice versa.
+> - It matters because the recommendations section presents RCSI as the lowest-friction way to improve analytical read concurrency across an entire database.
+>
+> > [!warning] It is a database-level choice
+> >
+> > RCSI is not a per-query hint. Enabling it changes read semantics for the database and should be treated as an operational decision that needs environment-level review.
 
 > [!warning] Some Sections CREATE Database Objects
 >
@@ -91,15 +220,13 @@ IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'demo')
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
 
 ## Views
 
@@ -129,16 +256,13 @@ WHERE rn = 1;
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
-
 
 Once the view is created, the `ROW_NUMBER` deduplication logic is hidden — consumers write a simple `SELECT` against the view.
 
@@ -151,112 +275,110 @@ SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>RMS.PA</td>
-            <td>2026-03-12</td>
-            <td>1900.0</td>
-            <td>1918.5</td>
-            <td>1894.0</td>
-            <td>1906.0</td>
-            <td>18681</td>
-        </tr>
-        <tr>
-            <td>RHM.DE</td>
-            <td>2026-03-12</td>
-            <td>1536.0</td>
-            <td>1588.0</td>
-            <td>1535.0</td>
-            <td>1551.5</td>
-            <td>158741</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1194.8</td>
-            <td>1202.2</td>
-            <td>1187.8</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>2026-03-12</td>
-            <td>920.7</td>
-            <td>933.4</td>
-            <td>917.3</td>
-            <td>925.7</td>
-            <td>27887</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>2026-03-12</td>
-            <td>629.0</td>
-            <td>631.6</td>
-            <td>625.6</td>
-            <td>626.6</td>
-            <td>14083</td>
-        </tr>
-        <tr>
-            <td>MUV2.DE</td>
-            <td>2026-03-12</td>
-            <td>524.4</td>
-            <td>528.8</td>
-            <td>523.6</td>
-            <td>526.2</td>
-            <td>86783</td>
-        </tr>
-        <tr>
-            <td>MC.PA</td>
-            <td>2026-03-12</td>
-            <td>495.3</td>
-            <td>497.4</td>
-            <td>491.6</td>
-            <td>494.35</td>
-            <td>171997</td>
-        </tr>
-        <tr>
-            <td>OR.PA</td>
-            <td>2026-03-12</td>
-            <td>361.1</td>
-            <td>362.3</td>
-            <td>357.8</td>
-            <td>360.8</td>
-            <td>82621</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>2026-03-12</td>
-            <td>349.6</td>
-            <td>351.6</td>
-            <td>347.9</td>
-            <td>348.7</td>
-            <td>182426</td>
-        </tr>
-        <tr>
-            <td>SAF.PA</td>
-            <td>2026-03-12</td>
-            <td>319.3</td>
-            <td>320.2</td>
-            <td>314.9</td>
-            <td>315.4</td>
-            <td>160065</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMS.PA</td>
+<td>2026-03-12</td>
+<td>1900.0</td>
+<td>1918.5</td>
+<td>1894.0</td>
+<td>1906.0</td>
+<td>18681</td>
+</tr>
+<tr>
+<td>RHM.DE</td>
+<td>2026-03-12</td>
+<td>1536.0</td>
+<td>1588.0</td>
+<td>1535.0</td>
+<td>1551.5</td>
+<td>158741</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>2026-03-12</td>
+<td>920.7</td>
+<td>933.4</td>
+<td>917.3</td>
+<td>925.7</td>
+<td>27887</td>
+</tr>
+<tr>
+<td>ARGX.BR</td>
+<td>2026-03-12</td>
+<td>629.0</td>
+<td>631.6</td>
+<td>625.6</td>
+<td>626.6</td>
+<td>14083</td>
+</tr>
+<tr>
+<td>MUV2.DE</td>
+<td>2026-03-12</td>
+<td>524.4</td>
+<td>528.8</td>
+<td>523.6</td>
+<td>526.2</td>
+<td>86783</td>
+</tr>
+<tr>
+<td>MC.PA</td>
+<td>2026-03-12</td>
+<td>495.3</td>
+<td>497.4</td>
+<td>491.6</td>
+<td>494.35</td>
+<td>171997</td>
+</tr>
+<tr>
+<td>OR.PA</td>
+<td>2026-03-12</td>
+<td>361.1</td>
+<td>362.3</td>
+<td>357.8</td>
+<td>360.8</td>
+<td>82621</td>
+</tr>
+<tr>
+<td>ALV.DE</td>
+<td>2026-03-12</td>
+<td>349.6</td>
+<td>351.6</td>
+<td>347.9</td>
+<td>348.7</td>
+<td>182426</td>
+</tr>
+<tr>
+<td>SAF.PA</td>
+<td>2026-03-12</td>
+<td>319.3</td>
+<td>320.2</td>
+<td>314.9</td>
+<td>315.4</td>
+<td>160065</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ### Views — Cross-Layer Dashboard View
 
@@ -286,16 +408,13 @@ JOIN silver.index_dim d ON s.symbol = d.symbol AND d._index = s._index AND d.is_
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
-
 
 #### Query the dashboard view for the latest rankings
 
@@ -309,167 +428,165 @@ ORDER BY [rank]
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>rank</th>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>country</th>
-            <th>current_price</th>
-            <th>composite_score</th>
-            <th>value_score</th>
-            <th>momentum_score</th>
-            <th>weight_pct</th>
-            <th>_index</th>
-            <th>score_date</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>1</td>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-            <td>France</td>
-            <td>87.44</td>
-            <td>0.6796</td>
-            <td>1.497</td>
-            <td>0.46</td>
-            <td>1.94</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>VOW.DE</td>
-            <td>VOLKSWAGEN AG</td>
-            <td>Consumer Cyclical</td>
-            <td>Germany</td>
-            <td>92.85</td>
-            <td>0.5756</td>
-            <td>1.028</td>
-            <td>-0.382</td>
-            <td>0.93</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td>DTE.DE</td>
-            <td>DEUTSCHE TELEKOM AG</td>
-            <td>Communication Services</td>
-            <td>Germany</td>
-            <td>32.55</td>
-            <td>0.487</td>
-            <td>0.226</td>
-            <td>0.706</td>
-            <td>3.13</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>TTE.PA</td>
-            <td>TOTALENERGIES</td>
-            <td>Energy</td>
-            <td>France</td>
-            <td>69.8</td>
-            <td>0.3913</td>
-            <td>0.585</td>
-            <td>1.307</td>
-            <td>2.95</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>5</td>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>Belgium</td>
-            <td>62.76</td>
-            <td>0.3852</td>
-            <td>0.251</td>
-            <td>0.537</td>
-            <td>2.43</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>6</td>
-            <td>IFX.DE</td>
-            <td>INFINEON TECHNOLOGIES AG</td>
-            <td>Technology</td>
-            <td>Germany</td>
-            <td>40.735</td>
-            <td>0.3487</td>
-            <td>0.084</td>
-            <td>0.302</td>
-            <td>1.06</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>7</td>
-            <td>SAN.MC</td>
-            <td>BANCO SANTANDER S.A.</td>
-            <td>Financial Services</td>
-            <td>Spain</td>
-            <td>9.617</td>
-            <td>0.3106</td>
-            <td>-0.037</td>
-            <td>0.45</td>
-            <td>2.78</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>8</td>
-            <td>DG.PA</td>
-            <td>VINCI</td>
-            <td>Industrials</td>
-            <td>France</td>
-            <td>129.9</td>
-            <td>0.2928</td>
-            <td>0.957</td>
-            <td>0.489</td>
-            <td>1.43</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>9</td>
-            <td>ISP.MI</td>
-            <td>INTESA SANPAOLO</td>
-            <td>Financial Services</td>
-            <td>Italy</td>
-            <td>5.204</td>
-            <td>0.2852</td>
-            <td>0.553</td>
-            <td>-0.208</td>
-            <td>1.8</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>10</td>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-            <td>Germany</td>
-            <td>39.475</td>
-            <td>0.2724</td>
-            <td>0.349</td>
-            <td>0.642</td>
-            <td>0.77</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>rank</th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>current_price</th>
+<th>composite_score</th>
+<th>value_score</th>
+<th>momentum_score</th>
+<th>weight_pct</th>
+<th>_index</th>
+<th>score_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BNP.PA</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>Financial Services</td>
+<td>France</td>
+<td>87.44</td>
+<td>0.6796</td>
+<td>1.497</td>
+<td>0.46</td>
+<td>1.94</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>2</td>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>Consumer Cyclical</td>
+<td>Germany</td>
+<td>92.85</td>
+<td>0.5756</td>
+<td>1.028</td>
+<td>-0.382</td>
+<td>0.93</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Communication Services</td>
+<td>Germany</td>
+<td>32.55</td>
+<td>0.487</td>
+<td>0.226</td>
+<td>0.706</td>
+<td>3.13</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>4</td>
+<td>TTE.PA</td>
+<td>TOTALENERGIES</td>
+<td>Energy</td>
+<td>France</td>
+<td>69.8</td>
+<td>0.3913</td>
+<td>0.585</td>
+<td>1.307</td>
+<td>2.95</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>Belgium</td>
+<td>62.76</td>
+<td>0.3852</td>
+<td>0.251</td>
+<td>0.537</td>
+<td>2.43</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>6</td>
+<td>IFX.DE</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Technology</td>
+<td>Germany</td>
+<td>40.735</td>
+<td>0.3487</td>
+<td>0.084</td>
+<td>0.302</td>
+<td>1.06</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>7</td>
+<td>SAN.MC</td>
+<td>BANCO SANTANDER S.A.</td>
+<td>Financial Services</td>
+<td>Spain</td>
+<td>9.617</td>
+<td>0.3106</td>
+<td>-0.037</td>
+<td>0.45</td>
+<td>2.78</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>8</td>
+<td>DG.PA</td>
+<td>VINCI</td>
+<td>Industrials</td>
+<td>France</td>
+<td>129.9</td>
+<td>0.2928</td>
+<td>0.957</td>
+<td>0.489</td>
+<td>1.43</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ISP.MI</td>
+<td>INTESA SANPAOLO</td>
+<td>Financial Services</td>
+<td>Italy</td>
+<td>5.204</td>
+<td>0.2852</td>
+<td>0.553</td>
+<td>-0.208</td>
+<td>1.8</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>10</td>
+<td>BAYN.DE</td>
+<td>Bayer AG</td>
+<td>Healthcare</td>
+<td>Germany</td>
+<td>39.475</td>
+<td>0.2724</td>
+<td>0.349</td>
+<td>0.642</td>
+<td>0.77</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Stored Procedures
 
@@ -507,7 +624,7 @@ CREATE OR ALTER PROCEDURE demo.sp_top_stocks
 AS
 BEGIN
     SET NOCOUNT ON;
-    
+
     SELECT TOP (@top_n)
         [rank], symbol, short_name,
         composite_score AS score,
@@ -522,16 +639,13 @@ END;
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
-
 
 #### Execute the stored procedure for Euro Stoxx 50
 
@@ -542,55 +656,53 @@ EXEC demo.sp_top_stocks @index_key = 'euro_stoxx_50', @top_n = 5
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>rank</th>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>score</th>
-            <th>current_price</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>1</td>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>0.6796</td>
-            <td>87.44</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>VOW.DE</td>
-            <td>VOLKSWAGEN AG</td>
-            <td>0.5756</td>
-            <td>92.85</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td>DTE.DE</td>
-            <td>DEUTSCHE TELEKOM AG</td>
-            <td>0.487</td>
-            <td>32.55</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>TTE.PA</td>
-            <td>TOTALENERGIES</td>
-            <td>0.3913</td>
-            <td>69.8</td>
-        </tr>
-        <tr>
-            <td>5</td>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>0.3852</td>
-            <td>62.76</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>rank</th>
+<th>symbol</th>
+<th>short_name</th>
+<th>score</th>
+<th>current_price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BNP.PA</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>0.6796</td>
+<td>87.44</td>
+</tr>
+<tr>
+<td>2</td>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>0.5756</td>
+<td>92.85</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>0.487</td>
+<td>32.55</td>
+</tr>
+<tr>
+<td>4</td>
+<td>TTE.PA</td>
+<td>TOTALENERGIES</td>
+<td>0.3913</td>
+<td>69.8</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>0.3852</td>
+<td>62.76</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ### Stored Procedures — Error Handling with TRY/CATCH
 
@@ -616,20 +728,20 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET @rows_loaded = 0;
-    
+
     BEGIN TRY
         BEGIN TRANSACTION;
-        
+
         SELECT @rows_loaded = COUNT(*)
         FROM gold.scores_daily
         WHERE _index = @index_key;
-        
+
         COMMIT TRANSACTION;
         PRINT 'Load completed: ' + CAST(@rows_loaded AS VARCHAR) + ' rows';
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        
+
         DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
         DECLARE @sev INT = ERROR_SEVERITY();
         RAISERROR(@msg, @sev, 1);
@@ -638,15 +750,13 @@ END;
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
 
 ## User-Defined Functions
 
@@ -685,16 +795,13 @@ AS RETURN (
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
+</tbody>
 </table>
-
-
-
 
 The iTVF is called in the `FROM` clause exactly like a table — the optimizer inlines it into the outer query plan.
 
@@ -708,103 +815,101 @@ ORDER BY date DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1194.8</td>
-            <td>1202.2</td>
-            <td>1187.8</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1188.4</td>
-            <td>1210.8</td>
-            <td>1174.0</td>
-            <td>1198.8</td>
-            <td>562904</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1188.4</td>
-            <td>1208.4</td>
-            <td>1172.2</td>
-            <td>1200.0</td>
-            <td>800815</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1072.0</td>
-            <td>1147.6</td>
-            <td>1060.2</td>
-            <td>1147.6</td>
-            <td>689086</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1186.0</td>
-            <td>1192.6</td>
-            <td>1112.8</td>
-            <td>1147.0</td>
-            <td>857271</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1198.6</td>
-            <td>1220.0</td>
-            <td>1183.0</td>
-            <td>1186.0</td>
-            <td>778081</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1171.0</td>
-            <td>1210.8</td>
-            <td>1167.6</td>
-            <td>1199.8</td>
-            <td>714587</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1186.6</td>
-            <td>1187.4</td>
-            <td>1144.0</td>
-            <td>1161.8</td>
-            <td>941945</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1192.8</td>
-            <td>1231.4</td>
-            <td>1180.0</td>
-            <td>1210.4</td>
-            <td>871267</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1188.4</td>
+<td>1210.8</td>
+<td>1174.0</td>
+<td>1198.8</td>
+<td>562904</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1188.4</td>
+<td>1208.4</td>
+<td>1172.2</td>
+<td>1200.0</td>
+<td>800815</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1072.0</td>
+<td>1147.6</td>
+<td>1060.2</td>
+<td>1147.6</td>
+<td>689086</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1186.0</td>
+<td>1192.6</td>
+<td>1112.8</td>
+<td>1147.0</td>
+<td>857271</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1198.6</td>
+<td>1220.0</td>
+<td>1183.0</td>
+<td>1186.0</td>
+<td>778081</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1171.0</td>
+<td>1210.8</td>
+<td>1167.6</td>
+<td>1199.8</td>
+<td>714587</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1186.6</td>
+<td>1187.4</td>
+<td>1144.0</td>
+<td>1161.8</td>
+<td>941945</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1192.8</td>
+<td>1231.4</td>
+<td>1180.0</td>
+<td>1210.4</td>
+<td>871267</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Indexes
 
@@ -847,31 +952,29 @@ ORDER BY i.type_desc
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>index_name</th>
-            <th>type_desc</th>
-            <th>is_unique</th>
-            <th>columns</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>PK__eurostox__3213E83FDF67D274</td>
-            <td>CLUSTERED</td>
-            <td>True</td>
-            <td>id</td>
-        </tr>
-        <tr>
-            <td>IX_silver_eurostoxx50_ohlcv_symbol_date</td>
-            <td>NONCLUSTERED</td>
-            <td>True</td>
-            <td>symbol, date</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>index_name</th>
+<th>type_desc</th>
+<th>is_unique</th>
+<th>columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PK__eurostox__3213E83FDF67D274</td>
+<td>CLUSTERED</td>
+<td>True</td>
+<td>id</td>
+</tr>
+<tr>
+<td>IX_silver_eurostoxx50_ohlcv_symbol_date</td>
+<td>NONCLUSTERED</td>
+<td>True</td>
+<td>symbol, date</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ### Indexes — Design Principles for Data Pipelines
 
@@ -918,49 +1021,47 @@ SELECT * FROM #scd_demo
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>is_current</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Information Technology</td>
-            <td>True</td>
-        </tr>
-        <tr>
-            <td>MC.PA</td>
-            <td>LVMH</td>
-            <td>Consumer Cyclical</td>
-            <td>True</td>
-        </tr>
-        <tr>
-            <td>RMS.PA</td>
-            <td>HERMES INTL</td>
-            <td>Consumer Cyclical</td>
-            <td>True</td>
-        </tr>
-        <tr>
-            <td>OR.PA</td>
-            <td>L'OREAL</td>
-            <td>Consumer Defensive</td>
-            <td>True</td>
-        </tr>
-        <tr>
-            <td>SAP.DE</td>
-            <td>SAP SE</td>
-            <td>Technology</td>
-            <td>True</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>is_current</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Information Technology</td>
+<td>True</td>
+</tr>
+<tr>
+<td>MC.PA</td>
+<td>LVMH</td>
+<td>Consumer Cyclical</td>
+<td>True</td>
+</tr>
+<tr>
+<td>RMS.PA</td>
+<td>HERMES INTL</td>
+<td>Consumer Cyclical</td>
+<td>True</td>
+</tr>
+<tr>
+<td>OR.PA</td>
+<td>L'OREAL</td>
+<td>Consumer Defensive</td>
+<td>True</td>
+</tr>
+<tr>
+<td>SAP.DE</td>
+<td>SAP SE</td>
+<td>Technology</td>
+<td>True</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ### Slowly Changing Dimensions — SCD Type 2 History Tracking
 
@@ -983,101 +1084,99 @@ ORDER BY symbol, valid_from
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>is_current</th>
-            <th>valid_from</th>
-            <th>valid_to</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>Consumer Cyclical</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>Basic Materials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIRBUS SE</td>
-            <td>Industrials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BASF SE</td>
-            <td>Basic Materials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>is_current</th>
+<th>valid_from</th>
+<th>valid_to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>Consumer Defensive</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AIR LIQUIDE</td>
+<td>Basic Materials</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>AIR.PA</td>
+<td>AIRBUS SE</td>
+<td>Industrials</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ALV.DE</td>
+<td>Allianz SE</td>
+<td>Financial Services</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ARGX.BR</td>
+<td>ARGENX SE</td>
+<td>Healthcare</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>BAS.DE</td>
+<td>BASF SE</td>
+<td>Basic Materials</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Gap Detection & Gap Filling
 
@@ -1104,90 +1203,88 @@ ORDER BY date DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>prev_date</th>
-            <th>gap_days</th>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>2026-03-11</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>2026-03-10</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>2026-03-09</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>2026-03-06</td>
-            <td>3</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>2026-03-05</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>2026-03-04</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>2026-03-03</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>2026-03-02</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>2026-02-27</td>
-            <td>3</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>2026-02-26</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>prev_date</th>
+<th>gap_days</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>2026-03-11</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>2026-03-10</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>2026-03-09</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>2026-03-06</td>
+<td>3</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>2026-03-05</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>2026-03-04</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>2026-03-03</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>2026-03-02</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>2026-02-27</td>
+<td>3</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>2026-02-26</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Deduplication Strategies
 
@@ -1196,7 +1293,6 @@ Duplicate rows in source data are one of the most common data quality issues in 
 ### Deduplication Strategies — ROW_NUMBER Pattern
 
 Assigns `ROW_NUMBER()` within each `(symbol, date)` group ordered by descending volume. Rows with `rn = 1` are the canonical records; rows with `rn > 1` are duplicates to remove. The `COUNT(*) OVER` window simultaneously flags which keys have multiple rows, so you can isolate only the affected dates for inspection.
-
 
 The CTE simulates a duplicate by `UNION ALL`-ing the same latest-date row with a slightly modified close and volume. `ROW_NUMBER()` partitioned by `(symbol, date)` and ordered by descending volume assigns `rn = 1` to the row with the highest volume (the tie-breaking rule). `COUNT(*) OVER` counts how many copies exist per key — the outer `WHERE copies > 1` isolates only the duplicated dates for inspection.
 
@@ -1227,40 +1323,38 @@ ORDER BY date DESC, rn
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>volume</th>
-            <th>source</th>
-            <th>rn</th>
-            <th>copies</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1191.3</td>
-            <td>129222</td>
-            <td>duplicate</td>
-            <td>1</td>
-            <td>2</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>128223</td>
-            <td>original</td>
-            <td>2</td>
-            <td>2</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+<th>source</th>
+<th>rn</th>
+<th>copies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1191.3</td>
+<td>129222</td>
+<td>duplicate</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>128223</td>
+<td>original</td>
+<td>2</td>
+<td>2</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Execution Plans & Query Optimization
 
@@ -1314,7 +1408,6 @@ The following patterns prevent SQL Server from using indexes efficiently. Each f
 | Implicit conversion | VARCHAR compared to NVARCHAR causes scan | Match data types in predicates |
 | Missing index | Table scan on large table | Add non-clustered index on filter columns |
 
-
 Both queries return the same count, but the non-sargable version (`YEAR(date) = 2025`) wraps the column in a function, preventing the index seek — SQL Server must evaluate `YEAR()` for every row. The sargable version (`date >= '2025-01-01' AND date < '2026-01-01'`) expresses the same filter as a range predicate the index can seek directly.
 
 #### Compare non-SARGable vs SARGable predicates
@@ -1330,21 +1423,19 @@ SELECT
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>bad_function_on_column</th>
-            <th>good_sargable</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>12698</td>
-            <td>12698</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>bad_function_on_column</th>
+<th>good_sargable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12698</td>
+<td>12698</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Transaction Isolation Levels
 
@@ -1411,7 +1502,6 @@ Every table in the stoxx database has audit columns:
 | `is_filled` | BIT | Whether the row was gap-filled (silver) |
 | `is_current` | BIT | SCD Type 2 current flag (dimension) |
 
-
 #### Check data freshness across all medallion layers
 
 *Check data freshness across all four medallion layers — the latest timestamp per layer.*
@@ -1432,33 +1522,31 @@ ORDER BY last_update DESC
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>table</th>
-            <th>last_update</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>bronze.eurostoxx50_ohlcv</td>
-            <td>2026-03-12 12:45:00.021478</td>
-        </tr>
-        <tr>
-            <td>gold.index_performance</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
-        <tr>
-            <td>gold.scores_daily</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
-        <tr>
-            <td>silver.signals_daily</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>table</th>
+<th>last_update</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bronze.eurostoxx50_ohlcv</td>
+<td>2026-03-12 12:45:00.021478</td>
+</tr>
+<tr>
+<td>gold.index_performance</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
+<tr>
+<td>gold.scores_daily</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
+<tr>
+<td>silver.signals_daily</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
+</tbody>
 </table>
-
-
 
 ## Partitioning Strategies
 
@@ -1467,6 +1555,7 @@ Table partitioning divides a large table's data into physically separate segment
 ### Partitioning Strategies — When to Partition
 
 Partition large tables (millions of rows) by a date column for:
+
 - **Faster queries**: partition elimination skips irrelevant months/years
 - **Easier maintenance**: rebuild one partition, not the whole table
 - **Instant archival**: SWITCH old partitions to archive table
@@ -1514,40 +1603,38 @@ SELECT 'Demo objects cleaned up' AS status
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Demo objects cleaned up</td>
-        </tr>
-    </tbody>
+<thead>
+<tr>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Demo objects cleaned up</td>
+</tr>
+</tbody>
 </table>
 
-
-
-## When to Use These Patterns
-
-Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, iTVFs over scalar UDFs, and `#temp` tables over table variables.
-
-- **Views** — when multiple consumers (dashboards, stored procedures, ad-hoc analysts) need the same query logic. One view definition, one place to update.
-- **Stored procedures** — when pipeline steps need parameterized execution with error handling and transaction control. SPs compile once and reuse cached plans.
-- **iTVFs over scalar UDFs** — always prefer iTVFs for any function that returns data. Scalar UDFs disable parallelism and force row-by-row execution.
-- **SCD Type 2** — for any dimension attribute that affects historical calculations (sector, index membership, weighting). Type 1 only for non-analytical corrections (typo in display name).
-- **`#temp` tables** — when a CTE is referenced multiple times in the same query, or when you need an index on an intermediate result set.
-- **Partitioning** — for tables with 100M+ rows where queries consistently filter on a date column. Below that threshold, indexes alone are sufficient.
-
-## When Not to Use These Patterns
-
-The same patterns become liabilities when applied in the wrong context. The scenarios below are the most common misuse cases seen in pipeline code reviews.
-
-- **Indexed views** — avoid on tables with frequent writes (OHLCV with daily loads). Indexed views must be maintained on every INSERT/UPDATE/DELETE, adding write overhead.
-- **Stored procedures for simple reads** — if the query has no parameters, no error handling, and no transaction, a view or iTVF is simpler and equally fast.
-- **MERGE for high-concurrency pipelines** — due to known SQL Server MERGE bugs, use explicit INSERT/UPDATE in a transaction for tables with concurrent access.
-- **Table variables (`@var`) for large sets** — the optimizer assumes 1 row regardless of actual cardinality. Use `#temp` tables for anything above ~100 rows.
-- **Partitioning on small tables** — the 65K-row OHLCV tables in this lab gain nothing from partitioning. Partition overhead (metadata, plan complexity) outweighs the benefit below ~10M rows.
+> [!example] Engineering Pattern Fit
+>
+> > [!success] Operational Leverage
+> >
+> > - Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, iTVFs over scalar UDFs, and `#temp` tables over table variables.
+> > - **Views** — when multiple consumers (dashboards, stored procedures, ad-hoc analysts) need the same query logic. One view definition, one place to update.
+> > - **Stored procedures** — when pipeline steps need parameterized execution with error handling and transaction control. SPs compile once and reuse cached plans.
+> > - **iTVFs over scalar UDFs** — always prefer iTVFs for any function that returns data. Scalar UDFs disable parallelism and force row-by-row execution.
+> > - **SCD Type 2** — for any dimension attribute that affects historical calculations (sector, index membership, weighting). Type 1 only for non-analytical corrections (typo in display name).
+> > - **`#temp` tables** — when a CTE is referenced multiple times in the same query, or when you need an index on an intermediate result set.
+> > - **Partitioning** — for tables with 100M+ rows where queries consistently filter on a date column. Below that threshold, indexes alone are sufficient.
+>
+> > [!failure] Structural Drag
+> >
+> > - The same patterns become liabilities when applied in the wrong context. The scenarios below are the most common misuse cases seen in pipeline code reviews.
+> > - **Indexed views** — avoid on tables with frequent writes (OHLCV with daily loads). Indexed views must be maintained on every INSERT/UPDATE/DELETE, adding write overhead.
+> > - **Stored procedures for simple reads** — if the query has no parameters, no error handling, and no transaction, a view or iTVF is simpler and equally fast.
+> > - **MERGE for high-concurrency pipelines** — due to known SQL Server MERGE bugs, use explicit INSERT/UPDATE in a transaction for tables with concurrent access.
+> > - **Table variables (`@var`) for large sets** — the optimizer assumes 1 row regardless of actual cardinality. Use `#temp` tables for anything above ~100 rows.
+> > - **Partitioning on small tables** — the 65K-row OHLCV tables in this lab gain nothing from partitioning. Partition overhead (metadata, plan complexity) outweighs the benefit below ~10M rows.
 
 ## Warnings
 

@@ -8,6 +8,138 @@ updated: 2026-03-22
 status: complete
 ---
 
+# Data Modeling Patterns
+
+> [!quote]
+> "The model is not the territory, but you'd better have a good map if you want to navigate the territory."
+>
+> — **Bill Inmon**, *Building the Data Warehouse* (2005)
+>
+> "The grain must be declared before choosing dimensions or facts because every candidate dimension or fact must be consistent with the grain."
+>
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
+
+> [!abstract]- Summary
+>
+> This note defines the major data modeling patterns that sit beside or beyond classic star schemas, showing how each model optimizes for a different mix of integrity, auditability, query shape, schema flexibility, and operational cost across a modern platform.
+>
+> **Model selection and decision framework**
+> - Starts with a decision matrix and flowchart so the choice of model is tied to workload, consumer type, and operational maturity rather than habit.
+> - Positions dimensional modeling as the default analytical baseline, while making this note the broader comparison guide for the patterns dimensional modeling does not cover alone.
+>
+> **Relational and vault-oriented models**
+> - Explains normalized 3NF and Data Vault 2.0, including normal forms, join trade-offs, hub-link-satellite structure, and the load-versus-query consequences of each model.
+> - Uses the financial index-provider domain to show where strict integrity, historical traceability, and multi-source integration each justify different structures.
+>
+> **Wide, event, document, graph, and time-series models**
+> - Covers one-big-table designs, activity schemas, time-series modeling, document stores, and graph models as specialized answers for dashboards, event analytics, flexible config data, relationship traversal, and time-based scan workloads.
+> - Connects each pattern to its best and worst fit so denormalization or schemaless storage is used deliberately rather than accidentally.
+>
+> **Operations and safety**
+> - Warnings: 3NF fails for heavy analytics, OBT should not become the source of truth, grain still matters outside star schemas, and schemaless or nested storage without discipline quickly becomes opaque.
+> - Recommendations: choose models per layer and consumer, declare grain early, keep naming and time standards explicit, and use the anti-pattern section as a design review checklist.
+
+> [!note]- Glossary
+>
+> **Data model**
+> - The structural pattern used to organize entities, relationships, and measures so a system can store and query data for a specific kind of workload.
+> - It matters here because the note compares multiple models as workload-specific design tools rather than as mutually exclusive ideologies.
+>
+> > [!info] Model follows the question
+> >
+> > A strong model is one that makes the important questions cheap and correct, even if it is not the best possible structure for every other query pattern.
+>
+> ---
+>
+> **Dimensional modeling**
+> - An analytical modeling style built around fact and dimension tables for reporting, slicing, and aggregation.
+> - It matters here because the note treats dimensional modeling as the standard analytical reference point while focusing on patterns that complement or replace it in other contexts.
+>
+> > [!info] Baseline, not universal answer
+> >
+> > Dimensional models remain the right default for many BI workloads, but they are not the only rational choice once auditability, flexible hierarchy, or event replay become dominant needs.
+>
+> ---
+>
+> **Normalized / 3NF model**
+> - A relational design that removes redundancy by splitting data into tightly related tables with explicit keys and dependencies.
+> - It matters here because normalized models are excellent for OLTP integrity and staging but often expensive to query analytically.
+>
+> > [!warning] Join-heavy analytics cost
+> >
+> > A normalized model can be logically clean and still be the wrong answer for analytical workloads that need wide scans, repeated joins, and easy self-service querying.
+>
+> ---
+>
+> **Data Vault 2.0**
+> - A modeling approach that separates business keys, relationships, and descriptive history into hubs, links, and satellites for traceable multi-source integration.
+> - It matters here because the note uses Data Vault as the audit-friendly and load-parallel alternative to both 3NF and direct dimensional publishing.
+>
+> > [!info] Load first, model later
+> >
+> > Data Vault is often attractive when preserving lineage and ingesting new sources quickly matter more than direct query simplicity for analysts.
+>
+> ---
+>
+> **Hub-link-satellite pattern**
+> - The core Data Vault structure in which hubs store business keys, links store relationships, and satellites store descriptive historical attributes.
+> - It matters here because understanding this split is necessary to see why Data Vault loading is often easier while querying is often harder.
+>
+> > [!warning] Query path is indirect
+> >
+> > The pattern improves auditability and parallel loads, but consumers usually need marts or other presentation layers because raw vault queries are cumbersome.
+>
+> ---
+>
+> **One Big Table / OBT**
+> - A wide denormalized table that packs many attributes into one structure to minimize joins for downstream queries.
+> - It matters here because OBT is a common performance-driven answer for dashboards and warehouse queries that favor scan speed over normalization purity.
+>
+> > [!warning] Do not make it canonical
+> >
+> > OBTs are excellent serving layers and poor sources of truth. Once teams start editing or governing history directly in them, duplication and drift multiply fast.
+>
+> ---
+>
+> **Activity schema**
+> - An event-oriented model that records actions or occurrences over time, often with flexible payloads and append-only behavior.
+> - It matters here because the note uses activity schemas for audit trails, product analytics, and sequence analysis where state changes matter more than current snapshot shape.
+>
+> > [!info] Good for "what happened?"
+> >
+> > Activity models are strongest when consumers care about event history, funnels, or sequences rather than only the latest state of an entity.
+>
+> ---
+>
+> **Document model**
+> - A schemaless or schema-flexible model that stores nested records as self-contained documents, often keyed by an application identifier.
+> - It matters here because document stores suit operational config, hierarchical data, and real-time app behavior that do not map cleanly to rigid relational joins.
+>
+> > [!warning] Flexibility shifts discipline elsewhere
+> >
+> > Schemaless does not remove modeling work. It moves that work into application rules, indexing decisions, and conventions that teams still need to enforce.
+>
+> ---
+>
+> **Graph model**
+> - A model that represents entities as nodes and relationships as edges for traversal-heavy questions.
+> - It matters here because some platform questions are primarily about connectivity, influence, or paths rather than about flat tabular aggregation.
+>
+> > [!info] Relationships become first-class
+> >
+> > Graph models are useful when the relationship itself carries important meaning that would be awkward or expensive to explore through repeated relational self-joins.
+>
+> ---
+>
+> **Time-series model**
+> - A model optimized for data indexed by time, usually favoring append-heavy writes, time-window scans, and retention-aware storage patterns.
+> - It matters here because time-ordered metrics, prices, and monitoring data have query and storage behaviors that justify specialized layout choices.
+>
+> > [!warning] Time needs physical design
+> >
+> > Time-series data grows relentlessly. Partitioning, retention, and scan patterns are part of the model, not just later storage tuning decisions.
+>
+
 > [!info] ER Diagram Legend — Relationship Connectors
 
 ```mermaid
@@ -22,25 +154,15 @@ erDiagram
     }
 ```
 
-# Data Modeling Patterns
-
-> [!quote]
-> "The model is not the territory, but you'd better have a good map if you want to navigate the territory."
+> [!example] Model Selection Scope
 >
-> — **Bill Inmon**, *Building the Data Warehouse* (2005)
+> > [!success] Layered Choice
+> >
+> > - Use this note when you need to compare modeling strategies across different platform layers and accept that one physical model will not satisfy every consumer, latency profile, and history requirement equally well.
 >
-> "The grain must be declared before choosing dimensions or facts because every candidate dimension or fact must be consistent with the grain."
->
-> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
-
-Data modeling is the discipline of deciding how to structure data for storage, retrieval, and analysis. The choice of model determines query performance, schema flexibility, load complexity, and the kinds of questions you can answer efficiently. Most practitioners default to dimensional modeling (star/snowflake) for analytics — and that is often correct — but it is only one pattern among many. Each model exists because it solves a specific class of problem better than the alternatives.
-
-This note covers the broader landscape: **normalized (3NF)**, **Data Vault 2.0**, **wide/flat (OBT)**, **activity schema**, **document**, **graph**, and **time-series** models. All examples draw from a financial index provider domain — an organization that calculates and publishes market indices, maintains constituent lists, tracks daily valuations, and serves this data to institutional clients.
-
-> [!info] Companion Note: Dimensional Modeling
-> Star schemas, snowflake schemas, fact table types (transactional, periodic snapshot, accumulating snapshot), slowly changing dimensions (SCD Types 1–6), conformed dimensions, and the Kimball methodology are covered in detail in [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture). This note assumes familiarity with those concepts and focuses on the models that complement or replace dimensional modeling in specific contexts.
-
----
+> > [!failure] Single-Model Dogma
+> >
+> > - Do not use this note to justify forcing one model everywhere, especially when analytical, operational, historical, and event-driven needs clearly diverge.
 
 ## Choosing a Data Model — Decision Framework
 

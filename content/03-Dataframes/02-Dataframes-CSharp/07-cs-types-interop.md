@@ -9,34 +9,149 @@ updated: 2026-03-27
 status: complete
 ---
 
-# 07 — Advanced Types & Interoperability
+# Advanced Types and Interop - C#
 
 > [!quote]
 > "The nice thing about standards is that you have so many to choose from."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
 
-This note covers advanced data types (Categorical, List, Struct), cross-library conversion (Polars.NET ↔ Deedle via .NET arrays), and comprehensive file I/O for CSV, JSON, and Parquet including encoding, compression, and round-trip fidelity in C#.
+> [!abstract]- Summary
+>
+> Covers the advanced type surface and interchange boundaries around Polars.NET in C#, with Deedle as the comparison library for interoperability and time-series-oriented .NET workflows. The note exists to show where rich dataframe types, file formats, and cross-library conversions preserve fidelity cleanly, and where the boundary forces copies, schema compromises, or manual reconstruction.
+>
+> **Setup**
+> - Configure the notebook runtime, load Polars.NET plus Deedle and its F# dependencies, and register the formatters needed to inspect advanced types and interop outputs safely
+>
+> **Advanced Data Types**
+> - Examine categorical encoding and the practical availability limits of advanced types such as `Categorical`, `List`, `Struct`, and other Arrow-level concepts in the current C# bindings
+> - Distinguish what the Rust/Arrow engine supports in principle from what Polars.NET 0.4.0 actually exposes in C#
+>
+> **Interoperability**
+> - Move data between Polars.NET and Deedle through .NET arrays and frame-building patterns, making the copy boundary explicit rather than assuming zero-copy interop
+> - Treat Deedle as the time-series-oriented managed counterpart, not as a direct Arrow-native peer to Polars.NET
+>
+> **I/O Deep Dive**
+> - Compare CSV, JSON, NDJSON, and Parquet read/write behavior, including schema overrides, delimiters, nested-data handling, compression, metadata, and round-trip fidelity
+> - Make character-encoding behavior explicit so text I/O does not silently degrade at the file boundary
+>
+> **Operations and safety**
+> - Warnings: the current warning/recommendation sections are inherited from a different transform-oriented note, so the Summary keeps the true operational focus on unsupported advanced types, copy-based interop, and file-format fidelity boundaries
+> - Recommendations: 4 practices in the current note-level table, while the body itself argues operationally for Parquet-first persistence, explicit schema control, and careful interop boundaries
+> - Troubleshooting: 3 inherited failure modes remain in the current tail section, but the body’s real risk areas are unsupported bindings, encoding mismatches, and false zero-copy assumptions
 
-## Key terms used in this note
+> [!note]- Glossary
+>
+> **Categorical**
+> - A dictionary-encoded column type where repeated string values are represented through compact integer codes plus a lookup dictionary.
+> - It matters because categoricals are one of the clearest examples of how advanced dtypes can improve memory use and comparison performance when the data has low cardinality.
+>
+> > [!warning] High cardinality weakens the benefit
+> >
+> > If almost every value is unique, categorical encoding can add management overhead without delivering meaningful compression or speed wins.
+>
+> ---
+>
+> **Deedle**
+> - A .NET dataframe and series library oriented toward time-series analysis, labeled data, and managed in-process workflows.
+> - It matters because the note uses Deedle as the main interoperability target when Polars.NET data needs to move into another .NET analytical shape.
+>
+> > [!info] Different strengths, different center of gravity
+> >
+> > Deedle is useful for time-series-oriented .NET work, but it is not designed as an Arrow-native analytical engine in the same mold as Polars.
+>
+> ---
+>
+> **Cross-library conversion**
+> - Moving data from one dataframe implementation to another by extracting values into an intermediate representation and rebuilding the target frame.
+> - It matters because interop in this note is a practical engineering boundary, not a theoretical feature list.
+>
+> > [!warning] Conversion usually means copying
+> >
+> > If the two libraries do not share a memory model, the bridge is almost always a materialization boundary even when the resulting code looks simple.
+>
+> ---
+>
+> **Zero-copy**
+> - Data interchange where two systems can view the same underlying memory without duplicating it.
+> - It matters because Arrow-based tooling often promises zero-copy workflows, and the note needs to show where that promise does and does not survive in C# interop.
+>
+> > [!warning] Do not assume it across arbitrary .NET libraries
+> >
+> > The presence of Arrow in Polars does not automatically make a Deedle conversion or a custom .NET bridge zero-copy.
+>
+> ---
+>
+> **Parquet**
+> - A columnar binary file format with embedded schema information and compression support.
+> - It matters because the note treats Parquet as the preferred persistence boundary when fidelity, compression, and analytical read performance matter.
+>
+> > [!info] Best default for analytical persistence
+> >
+> > Compared with CSV or generic JSON, Parquet preserves types more reliably and usually reduces both file size and read cost.
+>
+> ---
+>
+> **CSV**
+> - A plain-text delimited table format that is widely interoperable but weak at preserving schema and type detail.
+> - It matters because CSV remains the lowest-friction interchange format, even when it is not the safest one for analytical round trips.
+>
+> > [!warning] Delimiters and types are conventions, not guarantees
+> >
+> > CSV readers infer too much by default. Encoding, delimiter choice, decimal format, and schema overrides all affect whether the round trip stays correct.
+>
+> ---
+>
+> **JSON / NDJSON**
+> - JSON stores structured records in hierarchical text form, while NDJSON writes one JSON object per line for stream-friendly processing.
+> - It matters because the note distinguishes ordinary JSON from newline-delimited JSON when dealing with nested records and ingestion behavior.
+>
+> > [!warning] Tabular shape is not automatic
+> >
+> > JSON-based formats can represent irregular structures naturally, which means flattening them into a dataframe often requires explicit normalization logic.
+>
+> ---
+>
+> **Compression codec**
+> - The algorithm used to compress a file format such as Parquet, affecting size, CPU cost, and interoperability.
+> - It matters because Parquet performance is not only about columnar layout; the chosen codec changes how expensive reads and writes become.
+>
+> > [!info] Size-versus-speed is a real tradeoff
+> >
+> > A smaller file is not always the faster operational choice if decompression cost dominates the workload profile.
+>
+> ---
+>
+> **Character encoding**
+> - The mapping between stored bytes and textual characters, such as UTF-8 or Latin-1.
+> - It matters because file I/O fidelity depends on reading and writing text with the correct encoding assumptions.
+>
+> > [!warning] Mojibake is usually an encoding mismatch
+> >
+> > If text looks corrupted after a round trip, the bug is often not in the dataframe library at all but in the encoding assumption at the file boundary.
+>
+> ---
+>
+> **Round-trip fidelity**
+> - The degree to which data written out and then read back preserves the same schema, values, and semantics.
+> - It matters because interop and file-format choices should be judged not just by "can it load?" but by what is preserved or degraded in the process.
+>
+> > [!warning] Successful read does not imply faithful read
+> >
+> > A file can deserialize cleanly while still losing categorical meaning, null representation, precision, or column metadata.
+>
+> ---
+>
+> **`List` / `Struct`**
+> - Nested or composite column types that represent repeated values or grouped named fields inside a single cell.
+> - It matters because the note explicitly distinguishes advanced type concepts supported at the engine level from what the current C# bindings actually expose ergonomically.
+>
+> > [!warning] Engine support and binding support are not the same
+> >
+> > A type can exist in Arrow or Rust Polars conceptually while still being awkward, partial, or unavailable in Polars.NET 0.4.0.
+>
+> ---
 
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Categorical** | A Polars.NET dtype that maps string values to integer codes with a dictionary. | Memory reduction (5–20x) for low-cardinality columns. | High-cardinality columns (>10K unique values) negate the benefit. |
-| **Deedle** | A .NET data frame library for time-series analysis. Provides `Frame<TRow, TCol>` with typed keys. | Time-series alignment, missing-value handling, and statistical operations. | Deedle I/O is limited to CSV — no Parquet or JSON support. |
-| **Cross-library conversion** | Moving data between Polars.NET and Deedle via .NET arrays. | Combines Polars.NET's performance with Deedle's time-series features. | No zero-copy — conversion always copies data through .NET arrays. |
-| **Parquet** | Columnar binary format with schema and compression. Polars.NET: `ReadParquet()`, `WriteParquet()`. | Preferred I/O format — type preservation, compression, and fast reads. | Deedle cannot read Parquet — read with Polars.NET and convert. |
-
-## What this note covers
-
-- **Advanced types** — Categorical, List, Struct in Polars.NET
-- **Library interop** — Polars.NET ↔ Deedle conversion via .NET arrays
-- **CSV deep dive** — reading/writing, schema overrides, delimiter handling
-- **JSON** — JSON vs NDJSON, nested data handling
-- **Parquet** — compression codecs, column projection, metadata
-- **Character encodings** — UTF-8, Latin-1, detection
-
----
 ## Setup
 
 ### Setup | Suppress assembly version warnings
@@ -114,9 +229,10 @@ var dfD = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 display($"Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
 ```
 
-    Polars: (66355, 12)  |  Deedle: 66355 x 12
+Polars: (66355, 12)  |  Deedle: 66355 x 12
 
 ---
+
 ## Advanced Data Types
 
 Polars supports a rich type system beyond numeric and string columns. The most useful advanced type in Polars.NET 0.4.0 is **Categorical** — a dictionary-encoded string column that saves memory and speeds up group-by operations.
@@ -156,14 +272,14 @@ Console.WriteLine("\nCategorical stores each unique string once, then uses integ
 Console.WriteLine("With 50 symbols repeated over 66K rows, this significantly reduces memory.");
 ```
 
-    Original type: str
+Original type: str
     Unique symbols: 50
     Total rows: (66355, 12)
-    
-    After cast: cat
+
+After cast: cat
     Unique symbols: 50
-    
-    Categorical stores each unique string once, then uses integer indices.
+
+Categorical stores each unique string once, then uses integer indices.
     With 50 symbols repeated over 66K rows, this significantly reduces memory.
 
 #### Polars.NET | Schema after Categorical cast
@@ -185,7 +301,7 @@ foreach (var name in colNames)
 }
 ```
 
-    Column schema after categorical cast:
+Column schema after categorical cast:
     ----------------------------------------
       id                   i64
       symbol               cat
@@ -222,7 +338,7 @@ Console.WriteLine($"Aggregation on categorical column: {aggCat.Shape}");
 aggCat.Head(10)
 ```
 
-    Aggregation on categorical column: (50, 3)
+Aggregation on categorical column: (50, 3)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr></tbody></table></div>
 
@@ -259,10 +375,10 @@ Console.WriteLine($"First 5 encoded values: {string.Join(", ", encodedSeries.Val
 Console.WriteLine("This is purely manual — no Deedle API support for categoricals.");
 ```
 
-    Deedle symbol column: 66355 values, 50 unique
+Deedle symbol column: 66355 values, 50 unique
     Deedle stores every string value individually — no dictionary encoding.
-    
-    Manual encoding: mapped 50 symbols to int 0..49
+
+Manual encoding: mapped 50 symbols to int 0..49
     First 5 encoded values: 0, 0, 0, 0, 0
     This is purely manual — no Deedle API support for categoricals.
 
@@ -290,7 +406,7 @@ foreach (var name in dtProps)
     Console.WriteLine($"  {name}");
 ```
 
-    Available DataType static properties:
+Available DataType static properties:
     --------------------------------------------------
       Boolean
       Categorical
@@ -315,6 +431,7 @@ foreach (var name in dtProps)
       Unknown
 
 ---
+
 ## Interoperability
 
 Real projects often need to move data between libraries. This section covers extracting data from Polars and Deedle into .NET collections, and converting between the two libraries.
@@ -345,11 +462,11 @@ var maxVol = volumes.Max();
 Console.WriteLine($"\nLINQ on extracted arrays: avg close = {avgClose:F2}, max volume = {maxVol:N0}");
 ```
 
-    symbols:  String[]  length=66355  first 3: ABI.BR, ABI.BR, ABI.BR
+symbols:  String[]  length=66355  first 3: ABI.BR, ABI.BR, ABI.BR
     closes:   Double[]  length=66355  first 3: 57.21, 57.18, 58.77
     volumes:  Int64[]  length=66355  first 3: 1513937, 1382722, 1370204
-    
-    LINQ on extracted arrays: avg close = 197.03, max volume = 376'391'539
+
+LINQ on extracted arrays: avg close = 197.03, max volume = 376'391'539
 
 ### Polars.NET | Convert to DataTable
 
@@ -429,10 +546,10 @@ Console.WriteLine($"Columns: {string.Join(", ", dataTable.Columns.Cast<DataColum
 Console.WriteLine($"\nFirst row: {string.Join(", ", dataTable.Rows[0].ItemArray.Take(6))}");
 ```
 
-    DataTable: 100 rows x 12 columns
+DataTable: 100 rows x 12 columns
     Columns: id(String), symbol(String), date(String), open(String), high(String), low(String), close(String), adj_close(String), volume(String), dividends(String), stock_splits(String), is_filled(String)
-    
-    First row: , ABI.BR, , , ,
+
+First row: , ABI.BR, , , ,
 
 ### Polars.NET / Deedle | Cross-library conversion
 
@@ -469,7 +586,7 @@ Console.WriteLine($"Deedle -> Polars conversion: {dfFromDeedle.Shape}");
 dfFromDeedle.Head(5)
 ```
 
-    Deedle -> Polars conversion: (100, 4)
+Deedle -> Polars conversion: (100, 4)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>open</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
@@ -502,11 +619,10 @@ Console.WriteLine($"Columns: {string.Join(", ", dfFromPolars.ColumnKeys)}");
 dfFromPolars.Rows[Enumerable.Range(0, 5)]
 ```
 
-    Polars -> Deedle conversion: 100 x 4
+Polars -> Deedle conversion: 100 x 4
     Columns: symbol, open, close, volume
 
 <div>
-
 <table><thead><tr><th>0</th><th>-&gt;</th><th>ABI.BR</th><th>58.15</th><th>57.21</th><th>1513937</th></tr></thead><tbody><tr><td>1</td><td>-&gt;</td><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>2</td><td>-&gt;</td><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>3</td><td>-&gt;</td><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>4</td><td>-&gt;</td><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table>
 
 <p><b>5</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
@@ -538,10 +654,11 @@ Console.WriteLine($"Round-trip shape: {rtDf.Shape}");
 Console.WriteLine($"Close values match after round-trip: {match}");
 ```
 
-    Round-trip shape: (100, 2)
+Round-trip shape: (100, 2)
     Close values match after round-trip: True
 
 ---
+
 ## I/O Deep Dive
 
 Polars.NET and Deedle both support CSV I/O. Polars also supports Parquet and JSON natively. This section explores format options, separators, and round-trip integrity.
@@ -586,10 +703,10 @@ Console.WriteLine($"SSV (semicolon-separated): {dfSsv.Shape}");
 dfTsv.Head(5)
 ```
 
-    CSV with nRows=500 and tryParseDates: (500, 12)
+CSV with nRows=500 and tryParseDates: (500, 12)
     Date column type: date
-    
-    TSV (tab-separated): (212, 2)
+
+TSV (tab-separated): (212, 2)
     SSV (semicolon-separated): (212, 2)
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
@@ -616,12 +733,11 @@ Console.WriteLine($"Deedle SSV: {dfDSsv.RowCount} x {dfDSsv.ColumnCount}");
 dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 ```
 
-    Deedle CSV: 212 x 2
+Deedle CSV: 212 x 2
     Deedle TSV: 212 x 2
     Deedle SSV: 212 x 2
 
 <div>
-
 <table><thead><tr><th>0</th><th>-&gt;</th><th>Afghanistan</th><th>AF</th></tr></thead><tbody><tr><td>1</td><td>-&gt;</td><td>Albania</td><td>AL</td></tr><tr><td>2</td><td>-&gt;</td><td>Algeria</td><td>DZ</td></tr><tr><td>3</td><td>-&gt;</td><td>American Samoa</td><td>AS</td></tr><tr><td>4</td><td>-&gt;</td><td>Andorra</td><td>AD</td></tr></tbody></table>
 
 <p><b>5</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
@@ -654,13 +770,13 @@ var dfReadBack = DataFrame.ReadCsv(csvOutPath);
 Console.WriteLine($"\nPolars read-back: {dfReadBack.Shape}");
 ```
 
-    Polars CSV written: ..\data\_temp_polars_write.csv
+Polars CSV written: ..\data\_temp_polars_write.csv
     File size: 5'164 bytes
-    
-    Deedle CSV written: ..\data\_temp_deedle_write.csv
+
+Deedle CSV written: ..\data\_temp_deedle_write.csv
     File size: 3'991 bytes
-    
-    Polars read-back: (50, 12)
+
+Polars read-back: (50, 12)
 
 ### Polars.NET | Parquet
 
@@ -693,9 +809,9 @@ Console.WriteLine($"Parquet size: {parquetSize:N0} bytes ({parquetSize / 1024.0 
 Console.WriteLine($"Compression:  {(1.0 - (double)parquetSize / csvSize) * 100:F0}% smaller");
 ```
 
-    Parquet read: (66355, 12)
-    
-    Parquet column types:
+Parquet read: (66355, 12)
+
+Parquet column types:
       id                   i64
       symbol               str
       date                 date
@@ -708,8 +824,8 @@ Console.WriteLine($"Compression:  {(1.0 - (double)parquetSize / csvSize) * 100:F
       dividends            f64
       stock_splits         f64
       is_filled            bool
-    
-    CSV size:     5'285'917 bytes (5.0 MB)
+
+CSV size:     5'285'917 bytes (5.0 MB)
     Parquet size: 2'484'896 bytes (2.4 MB)
     Compression:  53% smaller
 
@@ -735,11 +851,11 @@ Console.WriteLine("\nDeedle has no native Parquet I/O.");
 Console.WriteLine("Workaround: use Polars to read Parquet, convert to arrays, build Deedle Frame.");
 ```
 
-    Parquet written: ..\data\_temp_polars_write.parquet
+Parquet written: ..\data\_temp_polars_write.parquet
     File size: 4'931 bytes
     Read back: (50, 12)
-    
-    Deedle has no native Parquet I/O.
+
+Deedle has no native Parquet I/O.
     Workaround: use Polars to read Parquet, convert to arrays, build Deedle Frame.
 
 ### Polars.NET | JSON
@@ -776,12 +892,11 @@ catch (Exception ex)
 }
 ```
 
-    JSON read: (212, 2)
+JSON read: (212, 2)
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
-    
-    JSON written: ..\data\_temp_polars_write.json
+JSON written: ..\data\_temp_polars_write.json
     File size: 9'868 bytes
 
 ### Polars.NET | Round-trip
@@ -828,13 +943,13 @@ var allMatch = origNames.Zip(rtNames, (a, b) => a == b).All(x => x);
 Console.WriteLine($"Content match: {allMatch}");
 ```
 
-    1. CSV read:     (212, 2)
+1. CSV read:     (212, 2)
     2. Parquet write: 3'520 bytes
     3. Parquet read:  (212, 2)
     4. CSV write:     3'535 bytes
     5. CSV re-read:   (212, 2)
-    
-    Shapes match: True
+
+Shapes match: True
     Content match: True
 
 #### Polars.NET | Cleanup temp files
@@ -867,16 +982,17 @@ foreach (var f in tempFiles)
 Console.WriteLine("\nCleanup complete.");
 ```
 
-    Deleted: _temp_polars_write.csv
+Deleted: _temp_polars_write.csv
     Deleted: _temp_deedle_write.csv
     Deleted: _temp_polars_write.parquet
     Deleted: _temp_polars_write.json
     Deleted: _temp_roundtrip.parquet
     Deleted: _temp_roundtrip.csv
-    
-    Cleanup complete.
+
+Cleanup complete.
 
 ---
+
 ## Summary
 
 ### Polars.NET / Deedle | Feature comparison
@@ -934,4 +1050,3 @@ Side-by-side reference for type support and I/O capabilities across the two libr
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

@@ -12,32 +12,219 @@ tags:
 >
 > — **Linus Torvalds**, Git mailing list
 
-Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch. Together they form the core collaboration mechanism in Git — every team workflow, from trunk-based development to Gitflow, is built on top of branching and merging primitives.
+> [!abstract]- Summary
+>
+> Explains how Git uses lightweight branch pointers and merge operations to isolate parallel work, integrate it safely, and recover when branch history goes wrong in collaborative repositories.
+>
+> **Branch model and local operations**
+> - Defines how branches, `HEAD`, the working tree, the index, and the commit DAG fit together before covering branch creation, switching, listing, stashing, deletion, and `git worktree`
+> - Shows why branch operations move pointers instead of copying files, which is what makes branching cheap and also easy to misunderstand
+>
+> **Integration strategies**
+> - Compares fast-forward merges, three-way merges, `--no-ff`, rebase, interactive rebase, autosquash, and cherry-pick as different ways to combine or reshape history
+> - Connects each strategy to traceability, commit cleanliness, review ergonomics, and the recovery steps required when history is rewritten
+>
+> **Repository patterns and recovery**
+> - Applies branching rules to migrations, Airflow DAG changes, generated artifacts, and hotfix or release branches where merge shape affects operational safety
+> - Uses `git reset` and `git reflog` to undo bad commits, recover lost branches, and repair branch pointers after cleanup mistakes
+>
+> **Operations and safety**
+> - Warnings: detached HEAD commits, dropped work during branch cleanup, rebase on already-shared history, and merge strategy choices that hide traceability
+> - Recommendations: pick merge strategy intentionally, keep branch scope narrow, use the decision matrix before integrating, and rely on reflog for recovery instead of panic resets
 
-This page covers the full lifecycle: creating branches, switching between them, stashing uncommitted work, merging with different strategies, rebasing for linear history, cherry-picking individual commits, using worktrees for parallel checkouts, and recovering from mistakes. Every command is demonstrated with real outputs from the [git-lab](https://github.com/alp78/git-lab) repository.
+> [!note]- Glossary
+>
+> **Branch**
+> - A lightweight movable pointer (41-byte file) that points to a commit SHA. Creating a branch does not copy files — it only creates a new pointer.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **HEAD**
+> - A special pointer that tracks which branch (or commit) you are currently working on. Normally HEAD points to a branch name; in detached HEAD state it points directly to a commit SHA.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Working tree**
+> - The set of files on disk that you edit directly. Also called the working directory.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Staging area (index)**
+> - A buffer between the working tree and the next commit. Only staged changes are included when you run `git commit`.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Commit SHA**
+> - The unique 40-character hexadecimal hash that identifies each commit. A commit points to its parent(s), forming a directed acyclic graph (DAG).
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **DAG (Directed Acyclic Graph)**
+> - The commit history structure. Each commit points to one or more parents, forming a graph that never loops back on itself. Branches and merges create forks and joins in this graph.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Merge base**
+> - The most recent common ancestor commit shared by two branches. Git uses it as the reference point when performing a three-way merge.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Merge commit**
+> - A commit with two parents — one from each branch being joined. Created by three-way merges and `--no-ff` merges.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Fast-forward**
+> - A merge where the target branch has no new commits since the branch point. Git simply moves the branch pointer forward — no merge commit is created.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Remote-tracking branch**
+> - A local read-only reference (e.g., `origin/main`) that mirrors the state of a branch on the remote server at the time of the last `fetch` or `pull`.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Upstream tracking branch**
+> - The remote-tracking branch that a local branch is configured to push to and pull from. Set with `git push -u` or `git branch --set-upstream-to`.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Detached HEAD**
+> - A state where HEAD points directly at a commit SHA instead of a branch name. New commits made in this state are not on any branch and become unreachable once you switch away.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Reflog**
+> - A local log of every HEAD movement (commits, checkouts, resets, rebases). Entries expire after approximately 90 days. The reflog is the primary recovery mechanism for lost commits.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Stash**
+> - A temporary storage stack for uncommitted changes. Stashing saves modified tracked files and staged changes, then resets the working tree to a clean state.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Worktree**
+> - A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share the same commit history and reflog.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Interactive rebase**
+> - A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch. The primary tool for cleaning up branch history before PR review.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Fixup commit**
+> - A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Cherry-pick**
+> - Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch.
+> - It matters in this note because the workflows for branch creation, integration, cleanup, and branch recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
 
-## Key Terms
-
-| Term | Definition |
-|---|---|
-| **Branch** | A lightweight movable pointer (41-byte file) that points to a commit SHA. Creating a branch does not copy files — it only creates a new pointer. |
-| **HEAD** | A special pointer that tracks which branch (or commit) you are currently working on. Normally HEAD points to a branch name; in detached HEAD state it points directly to a commit SHA. |
-| **Working tree** | The set of files on disk that you edit directly. Also called the working directory. |
-| **Staging area (index)** | A buffer between the working tree and the next commit. Only staged changes are included when you run `git commit`. |
-| **Commit SHA** | The unique 40-character hexadecimal hash that identifies each commit. A commit points to its parent(s), forming a directed acyclic graph (DAG). |
-| **DAG (Directed Acyclic Graph)** | The commit history structure. Each commit points to one or more parents, forming a graph that never loops back on itself. Branches and merges create forks and joins in this graph. |
-| **Merge base** | The most recent common ancestor commit shared by two branches. Git uses it as the reference point when performing a three-way merge. |
-| **Merge commit** | A commit with two parents — one from each branch being joined. Created by three-way merges and `--no-ff` merges. |
-| **Fast-forward** | A merge where the target branch has no new commits since the branch point. Git simply moves the branch pointer forward — no merge commit is created. |
-| **Remote-tracking branch** | A local read-only reference (e.g., `origin/main`) that mirrors the state of a branch on the remote server at the time of the last `fetch` or `pull`. |
-| **Upstream tracking branch** | The remote-tracking branch that a local branch is configured to push to and pull from. Set with `git push -u` or `git branch --set-upstream-to`. |
-| **Detached HEAD** | A state where HEAD points directly at a commit SHA instead of a branch name. New commits made in this state are not on any branch and become unreachable once you switch away. |
-| **Reflog** | A local log of every HEAD movement (commits, checkouts, resets, rebases). Entries expire after approximately 90 days. The reflog is the primary recovery mechanism for lost commits. |
-| **Stash** | A temporary storage stack for uncommitted changes. Stashing saves modified tracked files and staged changes, then resets the working tree to a clean state. |
-| **Worktree** | A separate working directory linked to the same Git repository. Each worktree has its own checked-out branch and index, but all worktrees share the same commit history and reflog. |
-| **Interactive rebase** | A mode of `git rebase -i` that lets you edit, reorder, squash, fixup, or drop individual commits on a branch. The primary tool for cleaning up branch history before PR review. |
-| **Fixup commit** | A commit created with `git commit --fixup=<SHA>` that is intended to be folded into an earlier commit during interactive rebase with `--autosquash`. Named `fixup! <original message>` automatically. |
-| **Cherry-pick** | Copy a single commit from one branch to another as a new commit with a different SHA but identical diff. Used for backporting hotfixes to release branches without merging the entire source branch. |
+> [!example] Branch Integration Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for feature isolation, controlled integration, backports, hotfixes, and structured branch cleanup before review or merge.
+> > - Use it when the real question is how branches, `HEAD`, merge shape, and recovery tools interact, not just which single Git command to type next.
+> > - Use it to choose an integration path deliberately and to recover dropped or mispointed work without panic resets.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not rebase, force-delete, or otherwise rewrite shared branches without coordination and clear ownership.
+> > - Do not treat stash entries as durable storage for active work that really belongs on a branch or worktree.
+> > - Do not reduce branch strategy to aesthetics; merge shape affects traceability, recovery, and review ergonomics.
 
 ## Conceptual Model
 
@@ -656,10 +843,10 @@ git log --oneline --graph -6
 
 ```text
 *   6de68b1 Merge branch 'feature/data-validator'
-|\  
+|\
 | * fced9c9 feat: add data validation module
 * | baeaf6a chore: update pipeline configuration with rate limits
-|/  
+|/
 * 0cab331 test: add ESG scoring unit tests
 * 02a138c feat: add ESG scoring module skeleton
 * 07a7f46 Reapply "feat: add source field and dynamic currency"
@@ -724,9 +911,9 @@ git log --oneline --graph -4
 
 ```text
 *   72edabc merge: integrate centralized logging module
-|\  
+|\
 | * b948ccd feat: add centralized logging module
-|/  
+|/
 * 7dd85e2 feat: add volatility calculation
 * f280460 chore: update requirements with pandas and ruff
 ```
@@ -864,7 +1051,7 @@ git log --oneline --graph -5
 * 3b1c373 feat: add volatility calculation
 * f280460 chore: update requirements with pandas and ruff
 *   6de68b1 Merge branch 'feature/data-validator'
-|\  
+|\
 | * fced9c9 feat: add data validation module
 ```
 

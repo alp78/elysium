@@ -10,24 +10,191 @@ status: complete
 
 # Data Types, Conversion, and Null Handling
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> Many T-SQL bugs are not syntax bugs. They come from:
+> Type correctness in T-SQL is a runtime behavior problem as much as a schema design problem: data type choice, explicit and implicit conversion, NULL semantics, conditional expressions, and collation rules all determine whether a query returns the right value, uses the right index, and fails visibly when bad input arrives.
 >
-> - the wrong data type choice at schema-design time
-> - silent implicit conversions at query time
-> - misunderstood NULL semantics in three-valued logic
-> - presentation formatting mixed into business logic
+> **Core data type families**
+> - catalogs the exact numeric, approximate numeric, character, temporal, binary, and specialty types with their storage sizes, ranges, and intended use boundaries
 >
-> This note is the authoritative reference for type-correctness in T-SQL. It covers:
+> **Explicit conversion functions**
+> - covers `CAST`, `CONVERT`, `TRY_CAST`, `TRY_CONVERT`, `PARSE`, and `FORMAT`, including where formatting belongs and where tolerant conversion is appropriate
 >
-> - the full SQL Server data type catalog with storage sizes and value ranges
-> - `CAST`/`CONVERT`/`TRY_CAST`/`TRY_CONVERT`/`PARSE`/`FORMAT` explicit conversion functions
-> - implicit conversion and data type precedence rules
-> - `NULL`, three-valued logic, and safe null-handling
-> - `ISNULL`, `COALESCE`, `NULLIF` fallback functions with their subtle differences
-> - `CASE`, `IIF`, and `CHOOSE` conditional expressions
-> - collation, case/accent sensitivity, and UTF-8 encoding
+> **Type precedence and implicit conversion**
+> - explains how SQL Server picks a common type, when silent coercion changes semantics, and how column-side conversion can defeat index seeks
+>
+> **Null and fallback semantics**
+> - covers `NULL`, three-valued logic, safe null predicates, concatenation behavior, and the distinct roles of `ISNULL`, `COALESCE`, and `NULLIF`
+>
+> **Conditional expressions**
+> - compares `CASE`, `IIF`, and `CHOOSE`, including branch typing rules, aggregate evaluation traps, and practical defaults
+>
+> **Collation and comparison semantics**
+> - covers case and accent sensitivity, tempdb collation conflicts, and `_UTF8` collations for `varchar` storage
+>
+> **Operations and safety**
+> - Warnings: `SUM(int)` overflows at `int_max`, integer division truncates, `= NULL` is never correct, `ISNULL` can truncate to the first argument's type, implicit conversion can move work onto the indexed column, and collation mismatches raise error 468
+> - Recommendations: prefer `datetime2(n)` over `datetime`, `decimal(p,s)` over `float` for deterministic arithmetic, explicit conversion over silent coercion, `TRY_` conversion at ingestion boundaries, `COLLATE DATABASE_DEFAULT` for mixed-collation comparisons, `N'...'` for Unicode literals, and `bigint` aggregation for large totals
+
+> [!note]- Glossary
+>
+> **Data type family**
+> - A category of SQL Server types that share storage and behavioral characteristics, such as exact numeric, temporal, or character data.
+> - It matters because choosing the correct family is the first constraint on precision, range, comparison behavior, and storage cost.
+>
+> > [!info] Families are design-level choices
+> >
+> > Most conversion and null-handling bugs start with the wrong family selection, not the wrong syntax. The type family defines the space of safe operations later in the query.
+>
+> ---
+>
+> **Exact vs approximate numeric type**
+> - Exact numeric types preserve stored values precisely, while approximate types use floating-point representation and allow rounding error.
+> - It matters because counts, keys, and money usually need reproducible exactness, while `float` and `real` belong to scientific or statistical workloads.
+>
+> > [!warning] Approximation leaks into equality
+> >
+> > Floating-point values can compare unexpectedly because the stored binary value is only an approximation. That makes them poor defaults for finance and key-like logic.
+>
+> ---
+>
+> **`decimal(p,s)`**
+> - The fixed-precision, fixed-scale numeric type where `p` defines total digits and `s` defines digits after the decimal point.
+> - It matters because it is the standard SQL Server choice for deterministic arithmetic and financial values that must not drift.
+>
+> > [!warning] Precision and scale are contract terms
+> >
+> > Choosing `decimal` is not enough by itself. Poor `p` and `s` choices still cause rounding, overflow, or needless storage bloat.
+>
+> ---
+>
+> **`datetime2(n)`**
+> - The modern SQL Server timestamp type with configurable fractional-second precision and a wider, cleaner range than legacy `datetime`.
+> - It matters because it is the recommended default temporal type for new schema and avoids the rounding quirks of `datetime`.
+>
+> > [!info] Legacy compatibility is not a quality signal
+> >
+> > `datetime` exists for backward compatibility. New design should start from `datetime2` unless an integration contract forces the older type.
+>
+> ---
+>
+> **Explicit conversion**
+> - A deliberate type change written in the query, usually through `CAST` or `CONVERT`.
+> - It matters because explicit conversion makes type intent visible and prevents SQL Server from choosing a coercion path you did not mean.
+>
+> > [!warning] Conversion location affects performance
+> >
+> > Converting the literal or parameter side is often safe. Converting the indexed column side frequently destroys SARGability and changes the access path.
+>
+> ---
+>
+> **`TRY_CAST` / `TRY_CONVERT`**
+> - Tolerant conversion functions that return `NULL` instead of raising an error when a cast fails.
+> - It matters because they are useful at ingestion edges where malformed data is expected but dangerous when silent failure would hide a true data-quality problem.
+>
+> > [!warning] Null-on-failure can mask bad data
+> >
+> > These functions are for controlled boundaries, not for core logic that should fail loudly. A quiet `NULL` can propagate farther than an exception.
+>
+> ---
+>
+> **Type precedence**
+> - The SQL Server ranking that decides which type wins when an expression mixes different data types.
+> - It matters because precedence controls the implicit conversion direction, which in turn affects both correctness and seekability.
+>
+> > [!warning] SQL Server chooses, not the author
+> >
+> > If mixed types appear in an expression, SQL Server resolves them using precedence rules whether you planned for it or not. Explicit casts remove that ambiguity.
+>
+> ---
+>
+> **Implicit conversion**
+> - An automatic type change SQL Server applies when operands do not already share a common type.
+> - It matters because silent conversion can raise runtime errors, alter comparison semantics, or move function work onto the indexed column.
+>
+> > [!warning] Hidden conversion is still real work
+> >
+> > Implicit conversion is invisible in the text, but not in the plan. It is one of the classic reasons a simple predicate stops seeking.
+>
+> ---
+>
+> **`NULL`**
+> - The marker for missing, unknown, or inapplicable data rather than a concrete value.
+> - It matters because SQL Server treats `NULL` with distinct logical and arithmetic semantics that affect filters, expressions, and aggregates.
+>
+> > [!warning] `NULL` is not zero or empty string
+> >
+> > Treating `NULL` like an ordinary value leads to wrong predicates and accidental data masking. It means the value is absent, not merely blank.
+>
+> ---
+>
+> **Three-valued logic**
+> - The boolean model where expressions can evaluate to TRUE, FALSE, or UNKNOWN when `NULL` participates.
+> - It matters because predicates involving `NULL` do not behave like ordinary two-valued comparisons, especially in `WHERE` and `JOIN` conditions.
+>
+> > [!warning] UNKNOWN filters out rows
+> >
+> > In `WHERE`, only TRUE keeps a row. FALSE and UNKNOWN both discard it, which is why `= NULL` and nullable `NOT IN` patterns produce surprising results.
+>
+> ---
+>
+> **`ISNULL`**
+> - A two-argument SQL Server function that replaces a `NULL` expression with a fallback value and reports the first argument's data type.
+> - It matters because it is concise for single fallback logic but has different typing and nullability behavior from `COALESCE`.
+>
+> > [!warning] First-argument typing can truncate
+> >
+> > If the first argument is a short string type, SQL Server converts the fallback to that same width. The replacement value can be silently shortened.
+>
+> ---
+>
+> **`COALESCE`**
+> - The standard SQL expression that returns the first non-null value from a list of candidates.
+> - It matters because it is the most flexible cascading fallback construct and follows standard type-precedence rules rather than `ISNULL`'s narrower behavior.
+>
+> > [!info] Best when fallback is a sequence
+> >
+> > `COALESCE` expresses “try these sources in order.” It is often clearer than nested `CASE` when the logic is just a fallback chain.
+>
+> ---
+>
+> **`NULLIF`**
+> - A function that returns `NULL` when its two arguments are equal and otherwise returns the first argument.
+> - It matters because it is the cleanest guard for patterns like divide-by-zero protection and sentinel-to-null normalization.
+>
+> > [!info] Small function, large safety value
+> >
+> > `NULLIF(x, 0)` is one of the simplest ways to convert a runtime error boundary into a controlled null result that later logic can handle explicitly.
+>
+> ---
+>
+> **`CASE`**
+> - The primary T-SQL conditional expression for returning different values based on ordered boolean tests or discrete matches.
+> - It matters because it is the default tool for conditional projection, bucketing, labeling, and safe query-side branching.
+>
+> > [!warning] Branches still share one result type
+> >
+> > SQL Server resolves a common output type across every branch. Mixed branch types can force coercion or fail before the reader notices the mismatch.
+>
+> ---
+>
+> **Collation**
+> - The rule set that defines how SQL Server compares and sorts character data, including case, accent, kana, and width sensitivity.
+> - It matters because string equality, ordering, indexing behavior, and cross-database joins all depend on the chosen collation.
+>
+> > [!warning] Comparison semantics are configuration, not intuition
+> >
+> > Whether `'A'` equals `'a'` or accented characters sort together is not universal. The collation decides, and mixed sources can disagree.
+>
+> ---
+>
+> **`_UTF8` collation**
+> - A Windows collation variant that allows `char` and `varchar` columns to store Unicode text using UTF-8 encoding.
+> - It matters because it changes the old “use `nvarchar` for all Unicode” decision and introduces real storage tradeoffs by language mix.
+>
+> > [!warning] UTF-8 is not automatically smaller
+> >
+> > ASCII-heavy text often benefits, but CJK-heavy text can consume more space than UTF-16 `nvarchar`. Encoding choice should follow the actual character distribution.
 
 ## Core SQL Server Data Type Families
 
@@ -1841,5 +2008,3 @@ A short checklist of habits derived from the traps and rules covered above. Each
 - **Use `CASE` by default** for conditional expressions; fall back to `IIF` only for two-branch logic and to `CHOOSE` only for small fixed indexed lookups.
 - **Avoid aggregates inside CASE `WHEN` clauses** unless the aggregate expression is safe on every row. Aggregates are evaluated before the `CASE` short-circuits.
 - **Resolve collation conflicts with `COLLATE DATABASE_DEFAULT`** when comparing strings from different sources (user database vs `tempdb`, server A vs server B).
-
-

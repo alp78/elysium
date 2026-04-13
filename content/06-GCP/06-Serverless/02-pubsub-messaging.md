@@ -8,25 +8,214 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Pub/Sub Publishing and Consuming Messages
+# Pub/Sub Messaging
 
 > [!quote]
 > "The basic problem of communication is that of reproducing at one point either exactly or approximately a message selected at another point."
 >
 > — **Claude Shannon**, *A Mathematical Theory of Communication* (1948)
 
-Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` — see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime), or C# — see [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime)) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
-
-> [!todo] Prerequisites
+> [!abstract]- Summary
 >
-> 1. Enable the Pub/Sub API: `gcloud services enable pubsub.googleapis.com`
-> 2. Ensure the publishing identity has `roles/pubsub.publisher` on the target topic
-> 3. Ensure the consuming identity has `roles/pubsub.subscriber` on the target subscription
-> 4. Create a topic and subscription first — see [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions)
-
-> [!info] Pricing Model
+> Covers operational Pub/Sub message flow with `gcloud`, including publishing payloads and attributes, pulling and acknowledging deliveries, monitoring subscription backlog, and designing for idempotent consumers under at-least-once delivery semantics.
 >
-> Pub/Sub charges per message operation (publish + pull/push delivery), with a 1 KB minimum per operation. Retained messages beyond the default 7-day retention window incur storage fees at the GCS Nearline rate. Seek operations on retained messages are billed separately. For high-throughput pipelines, the per-message cost is negligible — the storage cost of large backlogs is where budgets drift.
+> **Prerequisites and pricing**
+> - Enable `pubsub.googleapis.com`, grant `roles/pubsub.publisher` to the publishing identity, grant `roles/pubsub.subscriber` to the consuming identity, and create the topic and subscription before testing message flow
+> - Price Pub/Sub per publish and delivery operation with a 1 KB minimum, and treat retained backlog storage rather than raw throughput as the main budget drift risk in most pipelines
+>
+> **Publishing messages**
+> - Publish message bodies with `gcloud pubsub topics publish --message=...`, attach metadata with `--attribute=...`, and use `--ordering-key` or `--message-file` when ordering or file-backed payloads are needed
+> - Treat message bodies as opaque bytes and attributes as filterable metadata that subscriptions can use without parsing the payload
+>
+> **Consuming messages**
+> - Pull messages with `gcloud pubsub subscriptions pull`, use `--limit`, `--wait`, and output formatting for inspection, and treat `--auto-ack` as a testing shortcut rather than a production pattern
+> - Compare pull and push subscription behavior so the consumer model matches either batch backpressure control or event-driven HTTP delivery
+>
+> **Backlog and delivery semantics**
+> - Monitor `numUndeliveredMessages` to detect lagging consumers and use retention settings to balance replay windows against silent storage growth
+> - Understand ordering keys, exactly-once delivery, dead letter routing, and why idempotent consumer logic remains the safest default even when stronger guarantees are enabled
+>
+> **Message design**
+> - Keep messages small, structured, and consistent, prefer JSON with a predictable schema, and publish a GCS pointer instead of a huge payload when data volume is large
+> - Use schema validation on topics to reject malformed events before they enter the pipeline
+>
+> **Operations and safety**
+> - Warnings: Pub/Sub delivers at least once by default, duplicates are expected, ordering is not guaranteed without ordering keys, and backlog storage can become a hidden cost center
+> - Recommendations table: the push-versus-pull comparison and idempotency guidance map workload shape, backpressure, retry model, and endpoint type to the correct consumer design
+
+> [!note]- Glossary
+>
+> **message body**
+> - The actual payload bytes published into a Pub/Sub message, often encoded as JSON for human-readable event structure.
+> - It matters because the body carries the business event content that consumers ultimately process, transform, or load downstream.
+>
+> > [!info] Pub/Sub treats bytes generically
+> >
+> > Pub/Sub does not care whether the payload is JSON, CSV, or binary. Structure is a producer-and-consumer contract, not a messaging-service guarantee.
+>
+> ---
+>
+> **message attribute**
+> - A string key-value pair attached to a Pub/Sub message alongside the payload body.
+> - It matters because attributes can drive routing, filtering, and operational classification without forcing consumers to parse the message body first.
+>
+> > [!info] Metadata is operational leverage
+> >
+> > Attributes are ideal for routing keys such as stage, run ID, or pipeline type. They keep selective delivery logic out of the payload parser.
+>
+> ---
+>
+> **`gcloud pubsub topics publish`**
+> - The Google Cloud CLI command that publishes a single message to a Pub/Sub topic.
+> - It matters because the note uses it as the fastest way to test event production, attributes, ordering keys, and payload shape from the terminal.
+>
+> > [!warning] CLI is not the throughput path
+> >
+> > The CLI is excellent for verification, but it is not the normal production path for sustained message publishing. Real publishers usually use client libraries with batching and flow control.
+>
+> ---
+>
+> **Pull consumption**
+> - A message-consumption model in which the consumer explicitly asks Pub/Sub for messages when it is ready.
+> - It matters because the note's `gcloud` examples use pull semantics and because data pipelines often need that explicit control over rate and concurrency.
+>
+> > [!info] Backpressure is natural
+> >
+> > Pull gives the consumer a built-in way to slow intake by simply requesting fewer messages. That makes it a strong default for batch and variable-rate workloads.
+>
+> ---
+>
+> **Push consumption**
+> - A message-consumption model in which Pub/Sub sends each message to an HTTPS endpoint as an HTTP request.
+> - It matters because push is the natural fit when the consumer is a stateless HTTP service rather than a long-running worker or batch job.
+>
+> > [!warning] Endpoint availability is part of the design
+> >
+> > Push assumes the receiver is reachable and healthy. A weak or misconfigured endpoint turns delivery into repeated retries instead of useful processing.
+>
+> ---
+>
+> **acknowledgement**
+> - The signal a consumer sends to Pub/Sub to confirm that a delivered message was processed successfully.
+> - It matters because acknowledgement is what removes the message from the subscription backlog under normal processing flow.
+>
+> > [!warning] Ack means done
+> >
+> > Once a message is acknowledged, Pub/Sub treats it as successfully handled. Acknowledging before successful processing converts transient failures into silent loss.
+>
+> ---
+>
+> **`--auto-ack`**
+> - A CLI option that acknowledges pulled messages immediately when they are delivered to the client.
+> - It matters because it is convenient for testing but unsafe for real processing logic that can still fail after receipt.
+>
+> > [!danger] Test shortcut only
+> >
+> > `--auto-ack` removes the safety net of redelivery. If downstream work fails after the message is received, Pub/Sub has already been told that the message succeeded.
+>
+> ---
+>
+> **backlog**
+> - The set or count of messages delivered to a subscription but not yet acknowledged.
+> - It matters because backlog growth is the clearest sign that the consumer is slower than the producer or that processing is failing repeatedly.
+>
+> > [!warning] Growing matters more than nonzero
+> >
+> > A backlog during active work is normal. A backlog that keeps increasing over time is the operational signal that capacity or reliability is off.
+>
+> ---
+>
+> **`messageId`**
+> - The Pub/Sub-assigned identifier attached to each published message.
+> - It matters because it is a practical ingredient in deduplication and idempotency keys when consumers must tolerate redelivery.
+>
+> > [!info] Useful for deduplication
+> >
+> > `messageId` is not the whole business key, but it is often a strong component in tracking whether a specific event delivery was already processed.
+>
+> ---
+>
+> **At-least-once delivery**
+> - A delivery guarantee under which Pub/Sub may send the same message more than once but should not drop it silently before delivery.
+> - It matters because it is the default contract that shapes how every robust consumer in the note must behave.
+>
+> > [!warning] Duplicate processing is expected
+> >
+> > At-least-once is not an edge case. If consumer code assumes one delivery only, it will eventually produce duplicate side effects.
+>
+> ---
+>
+> **idempotency**
+> - A processing property in which handling the same message multiple times produces the same final state as handling it once.
+> - It matters because it is the main safety pattern that keeps Pub/Sub consumers correct under redelivery, replay, and retry scenarios.
+>
+> > [!info] Design for repeats
+> >
+> > Idempotency is often achieved with staging tables, upserts, or deduplication keys. It is an application design choice, not something Pub/Sub can enforce for you.
+>
+> ---
+>
+> **Ordering key**
+> - A message field that groups related messages so Pub/Sub preserves delivery order within that key.
+> - It matters because ordered delivery is optional and should be used only when the consumer truly depends on per-key sequencing.
+>
+> > [!warning] Ordering narrows throughput
+> >
+> > Preserving order constrains how publication and processing can parallelize for a given key. Ordering is a coordination feature, not a free performance win.
+>
+> ---
+>
+> **Exactly-once delivery**
+> - An optional Pub/Sub subscription mode that adds stronger deduplication guarantees than the default delivery contract.
+> - It matters because it can reduce duplicate-consumption risk for selected workloads, but it does not remove the value of idempotent design.
+>
+> > [!info] Safer still needs design discipline
+> >
+> > Even with exactly-once enabled, downstream writes can still fail or be retried. Good consumer design remains valuable because messaging guarantees are not the whole system.
+>
+> ---
+>
+> **schema validation**
+> - A topic-level rule that checks published messages against an Avro or Protocol Buffers schema before accepting them.
+> - It matters because rejecting malformed events early prevents corrupt or incomplete payloads from reaching downstream consumers.
+>
+> > [!info] Fail fast at ingress
+> >
+> > Schema validation moves one class of data-quality failure to publish time. That is usually cheaper and clearer than discovering malformed events deep in the pipeline.
+>
+> ---
+>
+> **`MERGE` / upsert**
+> - A write pattern that updates an existing row if it already exists or inserts it if it does not.
+> - It matters because upsert-style writes are a standard way to make consumers idempotent when the same message can be processed more than once.
+>
+> > [!info] Better than blind insert
+> >
+> > Repeated INSERT-only logic turns duplicate delivery into duplicate data. Upsert logic makes repeated processing converge on one correct state instead.
+>
+> ---
+>
+> **GCS pointer**
+> - A message payload pattern in which the event contains a Cloud Storage URI rather than the full large data object itself.
+> - It matters because Pub/Sub is best used for event metadata and coordination, not for carrying oversized payloads that are better stored elsewhere.
+>
+> > [!warning] Events should stay lightweight
+> >
+> > Very large messages increase latency, cost, and operational fragility. Publishing a pointer keeps message flow fast while still linking consumers to the underlying data.
+
+> [!example] Consumer Workflow Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use these publish and pull workflows to validate topic wiring, inspect payload shape, test attributes and ordering keys, and smoke-test consumer behavior from the CLI.
+> > - Use them when you need to observe backlog growth, acknowledgement behavior, or message visibility directly before handing the workload to application code.
+> > - Use the note as the operational reference for designing idempotent consumers, lightweight message contracts, and alertable backlog patterns.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not copy `--auto-ack` from CLI testing into real consumers, because it acknowledges work before the business side effect is actually durable.
+> > - Do not build consumers that assume single delivery under default Pub/Sub semantics; duplicate delivery, retry, and replay are normal operating conditions.
+> > - Do not let retention and backlog accumulate without limits or alerts, because the failure surface then shifts from message flow to hidden storage and lag cost.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

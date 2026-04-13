@@ -16,16 +16,163 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Compliance and Auditability — Financial Index Calculation
+# Compliance and Auditability
 
 > [!quote]
 > "An audit log is not a feature — it is the difference between 'we think this happened' and 'we can prove this happened.'"
 >
 > — **Kelsey Hightower**, tweet (2019)
 
-This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
+> [!abstract]- Summary
+>
+> This note defines the compliance surface of a production index-calculation platform: how to prove where published numbers came from, how to process and audit corporate actions, how to satisfy EU Benchmarks Regulation obligations, how to execute controlled restatements, and how to instrument those controls so compliance drift is visible before it becomes a regulatory event.
+>
+> **Lineage and reproducibility**
+> - Covers the end-to-end lineage chain from raw vendor files through landing, bronze, silver, gold, BigQuery, and published index levels, plus BigQuery job tracing, APM trace linking, and lineage metadata tables.
+> - Treats reproducibility as the ability to reconstruct the exact data, code path, and processing context behind any published figure.
+>
+> **Corporate actions and adjustment logic**
+> - Defines corporate action handling with price-adjustment factors, divisor changes, audit tables, and end-to-end worked examples for splits and related adjustments.
+> - Uses Python, C#, and T-SQL examples to connect financial-event logic to actual operational control points.
+>
+> **Regulatory obligations and restatements**
+> - Covers EU BMR input-data governance, record retention, oversight, complaint handling, annual review, materiality thresholds, and formal restatement workflows.
+> - Positions restatements as governed business procedures rather than ad hoc data corrections.
+>
+> **Operations and safety**
+> - Covers Datadog metrics, monitors, dashboards, and alert routing for continuous compliance visibility.
+> - Warnings: write-once source capture, complete audit trails, clear materiality rules, and controlled restatement paths are mandatory; without them the platform cannot prove what happened.
+> - Governance surfaces: the lineage chain, EU BMR sections, and restatement framework are the note's core control model.
 
----
+> [!note]- Glossary
+>
+> **Audit trail**
+> - The durable record of what data entered the system, what transformations and approvals occurred, and what outputs were published.
+> - It matters here because the note treats proof of what happened as a first-class compliance requirement rather than as a convenience for debugging.
+>
+> > [!danger] Proof not memory
+> >
+> > In regulated publishing, "we think this happened" is operationally weak. The platform needs durable evidence that survives staff changes, incidents, and external scrutiny.
+>
+> ---
+>
+> **Data lineage chain**
+> - The end-to-end path that links a published result back through datasets, jobs, and transforms to its original source input.
+> - It matters here because compliance depends on demonstrating provenance across every hop, not only inside one database.
+>
+> > [!warning] Every hop must be reconstructible
+> >
+> > A lineage story with one missing link is not trustworthy under audit. Source hashes, run IDs, and destination references must connect cleanly across systems.
+>
+> ---
+>
+> **Reproducibility**
+> - The ability to rerun or reconstruct a historical calculation and obtain the same result using the same source state and business logic.
+> - It matters here because published index values must be defendable after the fact, not only correct in the moment they were emitted.
+>
+> > [!warning] Requires frozen context
+> >
+> > Reproducibility is impossible if inputs, code, or metadata can be overwritten silently. Immutable landing data and durable run metadata are what make it real.
+>
+> ---
+>
+> **Corporate action**
+> - A market event such as a split, dividend, merger, or spin-off that changes how securities and index calculations must be interpreted.
+> - It matters here because corporate actions are one of the most sensitive sources of historical restatement and calculation drift in index platforms.
+>
+> > [!warning] Business event with calculation impact
+> >
+> > Corporate actions are not just source-data updates. They often require explicit adjustment logic to preserve continuity and fairness in published index levels.
+>
+> ---
+>
+> **Adjustment factor**
+> - A multiplier or transformation used to restate historical prices, shares, or related values after a corporate action.
+> - It matters here because the note's worked examples rely on these factors to keep historical and current values comparable.
+>
+> > [!info] Continuity mechanism
+> >
+> > Adjustment factors are what let historical time series remain analytically meaningful after structural market events such as splits or mergers.
+>
+> ---
+>
+> **Divisor adjustment**
+> - A controlled change to the index divisor used to preserve index continuity when the underlying basket changes for non-market-movement reasons.
+> - It matters here because index methodology often depends on correct divisor maintenance to prevent artificial jumps in published levels.
+>
+> > [!danger] Small math large impact
+> >
+> > Divisor errors can distort every downstream published value. They deserve the same auditability and approval rigor as source-data corrections.
+>
+> ---
+>
+> **EU BMR**
+> - The EU Benchmarks Regulation governing benchmark input data, governance, record retention, oversight, and complaint handling.
+> - It matters here because the note frames observability and auditability as part of legal and regulatory obligations, not only engineering practice.
+>
+> > [!danger] Regulatory control surface
+> >
+> > These controls are not optional best practices when the benchmark falls under the regulation. The platform design has to support evidentiary compliance directly.
+>
+> ---
+>
+> **Record retention**
+> - The policy and mechanism for preserving source data, lineage, approvals, and operational evidence for a mandated period.
+> - It matters here because auditability collapses if evidence expires before investigations or regulatory reviews occur.
+>
+> > [!warning] Storage is part of compliance
+> >
+> > Retention is not just about keeping backups. It is about keeping the right evidence in a form that can still be searched, correlated, and explained later.
+>
+> ---
+>
+> **Oversight function**
+> - The governance role or control process responsible for reviewing benchmark methodology, inputs, incidents, and changes independently of daily pipeline execution.
+> - It matters here because the note links engineering controls to formal governance review rather than leaving compliance entirely inside the delivery team.
+>
+> > [!info] Separation of duties
+> >
+> > Compliance gets stronger when oversight can review evidence independently instead of relying on the same operators who made the changes.
+>
+> ---
+>
+> **Restatement**
+> - A governed correction process that republishes or revises previously issued benchmark data after a material issue is discovered.
+> - It matters here because the note treats restatements as structured operational events with thresholds, workflows, and audit evidence.
+>
+> > [!danger] Controlled correction path
+> >
+> > A restatement is not a casual rerun. It changes published history and therefore needs explicit decision records, approvals, and evidence of what changed.
+>
+> ---
+>
+> **Materiality threshold**
+> - The rule that determines whether an identified discrepancy is significant enough to require escalation, restatement, or formal review.
+> - It matters here because not every deviation should trigger the same response, but the threshold logic itself must be transparent and defensible.
+>
+> > [!warning] Must be explicit beforehand
+> >
+> > Materiality cannot be decided ad hoc during pressure without inviting inconsistency. The threshold needs to be encoded and reviewable before incidents happen.
+>
+> ---
+>
+> **Shadow divergence**
+> - A mismatch between a production result and a shadow or independently recomputed result used for compliance or validation monitoring.
+> - It matters here because divergence alerts are one of the practical ways the note turns abstract compliance controls into active monitoring signals.
+>
+> > [!warning] Early warning of silent correctness drift
+> >
+> > A platform can look operationally healthy while producing a subtly wrong number. Shadow divergence is how those hidden correctness failures surface before publication spreads them.
+>
+> ---
+>
+> **Complaint handling**
+> - The formal process for receiving, investigating, and resolving external or internal disputes about benchmark methodology or published values.
+> - It matters here because governance is incomplete if the platform cannot support evidence-backed investigation after a challenge is raised.
+>
+> > [!info] Operational evidence supports governance
+> >
+> > Complaint handling is not separate from observability. It depends on the same audit records, lineage, and reproducibility evidence used during incident response.
 
 ### Table of Contents
 
@@ -36,6 +183,20 @@ This reference covers the full compliance and auditability surface for a product
 5. [5. Datadog Integration for Compliance Monitoring](#5-datadog-integration-for-compliance-monitoring)
 
 ---
+
+> [!example] Compliance Control Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when published financial data must be explainable, reproducible, reviewable, and recoverable under audit or regulatory challenge.
+> > - Use it when lineage, corporate actions, restatement controls, and benchmark-governance obligations all need to be tied into one compliance model.
+> > - Use it to define the evidence chain required to prove not only what was published, but why it was published and how it can be reconstructed later.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note if the need is only low-level database auditing or generic logging without end-to-end business lineage and governance requirements.
+> > - Do not treat reproducibility as optional in a regulated publication flow; missing context makes later defense impossible.
+> > - Do not assume logging alone satisfies compliance if audit evidence, materiality rules, and controlled restatement paths are undefined.
 
 ## End-to-End Data Lineage
 
@@ -66,6 +227,7 @@ Published Index Level  (index_levels table + downstream distribution)
 ```
 
 Key invariants:
+
 - GCS objects are **write-once**. No pipeline stage overwrites a landing file; all corrections produce a new versioned object.
 - Every Bronze row carries the `source_file_path` and `source_file_hash` columns inherited from the landing record.
 - Every Gold row carries the `pipeline_run_id` that produced it, enabling a single JOIN back to the lineage metadata table.
@@ -2269,4 +2431,3 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 - [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic) — Point-in-time correctness for historical constituent data
 - [dataops-for-indices](https://alp78.github.io/elysium/15-DataOps/dataops-for-indices) — Pipeline orchestration, testing, and deployment
 - [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/17-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) — Operational runbooks for specific action types
-

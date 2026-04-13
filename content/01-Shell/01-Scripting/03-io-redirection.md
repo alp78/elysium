@@ -48,8 +48,6 @@ status: complete
 > - Pattern for separating stdout and stderr into timestamped log files using process substitution
 >
 > **Operations and safety**
-> - When to use: pipeline logging with `tee -a`, silencing commands for exit-code checks, separating structured stdout from stderr, non-interactive database operations with `<`, embedding SQL/JSON with here-documents
-> - When not to use: complex output processing (use a scripting language), structured JSON logging for production services, large binary data redirection
 > - Warnings: 5 — redirect-before-write silent data loss, wrong `2>&1` ordering loses stderr, `>` overwrites without confirmation, pipe does not capture stderr by default, PowerShell 5.1 UTF-16LE default encoding
 > - Recommendations table: 7 scenarios covering production logging, error separation, tool-availability checks, noclobber, here-doc quoting, PowerShell encoding, discarding all output
 > - Troubleshooting: 7 failure modes covering empty output file, stderr on terminal despite redirect, garbled characters, unexpected here-doc expansion, noclobber false positive, pipe missing warnings (PowerShell), tee showing nothing
@@ -600,19 +598,21 @@ Invoke-Sqlcmd -Query $sql -ServerInstance "srv01"
 | Literal | `@'...'@` | No | SQL, JSON, regex, raw templates |
 
 
-## When to use I/O redirection
-
-- **Logging pipeline runs** — redirect stdout and stderr to timestamped log files for post-mortem analysis. Use `tee -a` for simultaneous live monitoring and persistent logging.
-- **Silencing noisy commands** — discard output with `> /dev/null 2>&1` when you only care about the exit code (e.g., `command -v tool > /dev/null 2>&1` to test if a tool is installed).
-- **Separating errors from data** — redirect stderr to a separate file when stdout carries structured data (CSV, JSON) that must not be contaminated with error messages.
-- **Non-interactive database operations** — feed SQL scripts to `sqlcmd` or `psql` via `< query.sql` instead of typing queries interactively.
-- **Embedding configuration in scripts** — use here-documents to include multi-line SQL, JSON, or YAML directly in a bash script without managing separate template files.
-
-## When not to use I/O redirection
-
-- **Complex output processing** — if you need to transform, filter, or conditionally route output, use a proper scripting language (Python, PowerShell) rather than chaining increasingly complex redirections.
-- **Structured logging** — for production services, use a logging framework that writes structured JSON logs. Shell redirection does not add timestamps, log levels, or correlation IDs.
-- **Large binary data** — redirecting binary output (images, compressed files) through text-processing pipelines can corrupt data due to locale-dependent encoding conversions. Use direct file operations instead.
+> [!example] Stream Redirection Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Logging pipeline runs** — redirect stdout and stderr to timestamped log files for post-mortem analysis. Use `tee -a` for simultaneous live monitoring and persistent logging.
+> > - **Silencing noisy commands** — discard output with `> /dev/null 2>&1` when you only care about the exit code (e.g., `command -v tool > /dev/null 2>&1` to test if a tool is installed).
+> > - **Separating errors from data** — redirect stderr to a separate file when stdout carries structured data (CSV, JSON) that must not be contaminated with error messages.
+> > - **Non-interactive database operations** — feed SQL scripts to `sqlcmd` or `psql` via `< query.sql` instead of typing queries interactively.
+> > - **Embedding configuration in scripts** — use here-documents to include multi-line SQL, JSON, or YAML directly in a bash script without managing separate template files.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Complex output processing** — if you need to transform, filter, or conditionally route output, use a proper scripting language (Python, PowerShell) rather than chaining increasingly complex redirections.
+> > - **Structured logging** — for production services, use a logging framework that writes structured JSON logs. Shell redirection does not add timestamps, log levels, or correlation IDs.
+> > - **Large binary data** — redirecting binary output (images, compressed files) through text-processing pipelines can corrupt data due to locale-dependent encoding conversions. Use direct file operations instead.
 
 ## Warnings
 

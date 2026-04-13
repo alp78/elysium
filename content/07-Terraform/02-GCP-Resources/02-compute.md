@@ -8,7 +8,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Terraform Compute — Virtual Machine Instances
+# Compute
 
 > [!quote] Mitchell Hashimoto on infrastructure operations
 >
@@ -16,7 +16,142 @@ status: complete
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
-This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestrator VM and the SQL Server database VM. These are the two compute instances in the example infrastructure.
+> [!abstract]- Summary
+>
+> Compute is the Terraform note for the chapter's two GCE workloads: an Airflow orchestration VM and a SQL Server VM, each with different OS, disk, exposure, and lifecycle requirements, plus the verification and import steps needed once those instances already exist in or outside Terraform state.
+>
+> **Instance architecture**
+> - covers the shared subnet context, the contrasting roles of the Airflow and SQL VMs, and the assumptions around variables, service accounts, and network resources used by both instances
+>
+> **Airflow VM design**
+> - covers `google_compute_instance` for the Airflow host, Container-Optimized OS, startup-script behavior, ephemeral public IPs, shielded-instance settings, and replacement or downtime triggers
+>
+> **SQL VM design**
+> - covers the database VM, Ubuntu-based package installation, private-only networking, lifecycle protection, secret-handling boundaries, and stateful-disk considerations
+>
+> **Operations and safety**
+> - Warnings: several instance arguments force replacement, in-place updates can still create downtime, stateful VMs need `prevent_destroy`, and credentials passed through instance metadata are unsafe
+> - Recommendations: choose COS only for container-native workloads, keep the SQL VM private, route secrets through Secret Manager instead of metadata, protect long-lived instances with lifecycle rules, and use import blocks or post-apply verification commands to reconcile Terraform with existing compute state
+
+> [!note]- Glossary
+>
+> **`google_compute_instance`**
+> - The Terraform resource used to provision and manage a Compute Engine virtual machine instance.
+> - It matters because both workloads in this note are modeled through the same resource type even though their operating-system and lifecycle needs are very different.
+>
+> > [!warning] Same resource, different risk profile
+> >
+> > Two instances can share the same Terraform resource type while carrying very different operational consequences. A disposable orchestrator VM and a stateful database VM should not be treated as equally replaceable.
+>
+> ---
+>
+> **Container-Optimized OS**
+> - Google's minimal hardened VM image designed primarily to run container workloads rather than full package-managed server setups.
+> - It matters because the Airflow VM uses COS to run Docker-based services with a smaller operational footprint.
+>
+> > [!warning] COS is not a general-purpose Linux box
+> >
+> > There is no normal `apt`-driven package-management workflow on COS. If your workload depends on installing arbitrary system packages, a standard Linux distribution is usually the better fit.
+>
+> ---
+>
+> **Ubuntu LTS**
+> - A long-term-support Ubuntu image used when a VM needs full package management and a conventional Linux environment.
+> - It matters because the SQL Server VM requires a host OS that supports package installation and traditional system configuration.
+>
+> > [!info] Better for package-installed workloads
+> >
+> > Ubuntu trades a larger surface area for flexibility. That is often the right trade when the workload is not fully containerized or depends on vendor packages.
+>
+> ---
+>
+> **Startup script**
+> - Metadata-driven shell logic that runs when a VM boots to configure software or system state automatically.
+> - It matters because both VMs rely on startup automation to become usable immediately after Terraform provisions them.
+>
+> > [!warning] Boot-time automation can fail invisibly
+> >
+> > A successful Terraform apply does not guarantee a successful startup script. Post-provision verification is necessary because bootstrapping happens after the instance resource itself is created.
+>
+> ---
+>
+> **Ephemeral public IP**
+> - A temporary external IP assigned to a VM instance that can change when the instance is recreated or its network interface is rebuilt.
+> - It matters because the Airflow VM uses a public address pattern that is convenient for access but less stable than a fixed reserved IP.
+>
+> > [!warning] Ephemeral means non-contractual
+> >
+> > If automation, firewall allowlists, or user bookmarks depend on a stable address, an ephemeral IP is the wrong assumption. Instance replacement can silently change it.
+>
+> ---
+>
+> **Static private IP**
+> - A fixed internal address assigned within the VPC subnet rather than an internet-routable public address.
+> - It matters because the SQL VM is designed to stay reachable only inside the private network and from approved internal or tunneled paths.
+>
+> > [!info] Private-only reduces exposure
+> >
+> > Keeping the database off the public internet narrows the attack surface considerably. It also means the rest of the environment must provide the right private connectivity and admin-access paths.
+>
+> ---
+>
+> **Shielded VM**
+> - A Compute Engine feature set that adds integrity-focused protections such as secure boot and measured boot verification.
+> - It matters because production-grade VM definitions often include shielded-instance configuration as part of a hardened baseline.
+>
+> > [!info] Hardening starts below the workload
+> >
+> > Application security alone is not enough for infrastructure notes like this one. Shielded configuration is part of the VM platform posture Terraform should express explicitly.
+>
+> ---
+>
+> **OS Login**
+> - Google's IAM-integrated SSH access model for Compute Engine, replacing broad use of static SSH keys in project or instance metadata.
+> - It matters because the safer administrative pattern for Terraform-managed VMs is identity-based access rather than long-lived unmanaged keys.
+>
+> > [!warning] Metadata-based SSH scales poorly
+> >
+> > Static key injection through metadata is easy to start with but harder to audit and rotate cleanly. Identity-backed access is usually the stronger production pattern.
+>
+> ---
+>
+> **Service account attachment**
+> - The act of binding a GCP service account identity to a VM so the workload can call Google APIs under that identity.
+> - It matters because both the Airflow and SQL hosts rely on attached service accounts for access to other GCP services.
+>
+> > [!warning] Identity scope becomes runtime capability
+> >
+> > A VM service account is not passive metadata. Any excessive permissions granted to it become directly usable from the workload running on that machine.
+>
+> ---
+>
+> **`prevent_destroy`**
+> - A Terraform lifecycle setting that blocks planned destruction of a resource while the block remains in configuration.
+> - It matters because stateful instances, especially database hosts, should not be easy to destroy accidentally.
+>
+> > [!warning] Protection should match data gravity
+> >
+> > The more state a VM accumulates, the higher the value of lifecycle protection. Stateless and stateful compute should not inherit the same destroy posture by default.
+>
+> ---
+>
+> **Instance metadata**
+> - Key-value metadata attached to a Compute Engine VM, often used for startup scripts, configuration, or runtime hints.
+> - It matters because Terraform can inject configuration through metadata, but using it for secrets creates an avoidable exposure path.
+>
+> > [!danger] Metadata is a poor secret store
+> >
+> > Values in instance metadata are much easier to expose operationally than secrets kept in Secret Manager. Sensitive material should not hitch a ride in bootstrapping metadata just because it is convenient.
+>
+> ---
+>
+> **Import block**
+> - A declarative Terraform language feature for adopting an existing resource into state without relying solely on an interactive CLI import command.
+> - It matters because existing VM instances often need to be brought under Terraform management after the fact.
+>
+> > [!info] Better for repeatable adoption
+> >
+> > Import blocks make VM adoption reviewable and reproducible, which is especially useful when infrastructure already exists before Terraform takes over.
 
 > [!info] Assumed variables
 >
@@ -466,12 +601,14 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 ## Related
 
 **Terraform configuration:**
+
 - [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking) — the VPC, subnet, and firewall rules these VMs attach to
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — the service accounts assigned to these VMs
 - [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run resources that connect to the SQL VM's private IP
 - [compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/compute-and-storage) — reusable HCL blocks for compute and storage resources
 
 **GCP services:**
+
 - [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — starting, stopping, resizing, and live migration of GCE instances
 - [disks-and-snapshots](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots) — disk types, snapshots, and backup strategies
 - [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer) — SSH patterns and file transfer to GCE instances
@@ -479,6 +616,7 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager as an alternative to instance metadata for credentials
 
 **Application layer:**
+
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — the Docker containers running on the Airflow VM
 - [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) — post-provisioning SQL Server configuration
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — IAP tunnel SSH access patterns
@@ -492,4 +630,3 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 - [OS Login](https://cloud.google.com/compute/docs/oslogin)
 - [Shielded VMs](https://cloud.google.com/compute/shielded-vm/docs/shielded-vm)
 - [Instance Metadata](https://cloud.google.com/compute/docs/metadata/overview)
-

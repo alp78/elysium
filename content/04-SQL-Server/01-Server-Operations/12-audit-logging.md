@@ -10,15 +10,49 @@ status: complete
 
 # Audit Logging
 
-SQL Server Audit is the built-in event capture system for security-relevant activity: logins, permission changes, DDL, and optionally DML. It is built on Extended Events, runs inside the engine, and writes to one of three targets: the Windows Security log, the Windows Application log, or a binary file. On Linux the only production-grade target is the file target, which writes append-only `.sqlaudit` files under a directory owned by the `mssql` service account. Those files are queried from T-SQL with `sys.fn_get_audit_file`, parsed by a log shipper, or archived off the host.
+> [!abstract]- Summary
+>
+> SQL Server Audit is the built-in event-capture system for security-relevant activity such as logins, permission changes, DDL, and optionally DML. It is built on Extended Events and can write to Windows logs or a binary file target; on Linux the only production-grade target is the append-only `.sqlaudit` file stream owned by the `mssql` service account. Production audit design is a control-plane decision, not just a logging feature, so the note centers on capture scope, target durability, read access, alerting speed, and operational response when the target fails.
+>
+> - **Audit architecture**
+>   - defines the three-object model, action groups versus direct object actions, and the catalogs that translate raw audit codes into human-readable meaning
+> - **Build and verify**
+>   - walks through Linux file-target preparation, audit object creation, specification attachment, and live verification of runtime state
+> - **Read and triage**
+>   - shows how to query `.sqlaudit` files with `sys.fn_get_audit_file`, interpret records, and extract operationally useful signals
+> - **Detection and access control**
+>   - covers failed-login burst detection, audit permissions, and the boundary between the people who generate security-relevant activity and the people allowed to read it
+> - **Break-glass and integration**
+>   - explains cleanup order, teardown safety, and forwarding patterns into external logging, SIEM, or GCP-native analysis paths
+> - **Recommendations**
+>   - closes with the production rules for target placement, failure mode, retention, and audit-reader governance
 
-For production use, treat audit design as a control-plane decision, not just a logging feature. The important questions are:
-
-- which events must be captured
-- where the files live
-- what SQL Server should do if the target becomes unavailable
-- how quickly security staff can query and alert on the data
-- who is allowed to read the audit stream, and what is done when they do
+> [!note]- Glossary
+>
+> - **SQL Server Audit**
+>   - built-in engine feature for capturing security-relevant events to a durable target
+> - **Server audit**
+>   - top-level audit object that defines the target, rollover policy, and failure behavior
+> - **Server audit specification**
+>   - object that attaches server-scope action groups to a server audit
+> - **Database audit specification**
+>   - object that attaches database-scope actions or groups to a server audit
+> - **Action group**
+>   - predefined set of audit events such as failed logins or schema changes
+> - **`.sqlaudit` file**
+>   - binary audit output file written by the SQL Server file target
+> - **`sys.fn_get_audit_file`**
+>   - table-valued function used to read `.sqlaudit` files from T-SQL
+> - **`sys.dm_audit_actions`**
+>   - DMV that resolves audit action identifiers into descriptive names and classes
+> - **`ON_FAILURE`**
+>   - audit setting that determines whether SQL Server continues, fails the operation, or shuts down when the target is unavailable
+> - **Audit target**
+>   - destination for audit records, limited to file output on Linux in production practice
+> - **Failed-login burst**
+>   - cluster of repeated login failures that may indicate password spraying, brute force, or broken automation
+> - **Break-glass teardown**
+>   - controlled sequence for disabling and removing audit objects without leaving orphaned dependencies or gaps in logging
 
 ## Audit Architecture
 
@@ -1176,4 +1210,3 @@ _The GCS object path encodes the source hostname and date so archived files can 
 - [[04-users-logins-roles-permissions]] — role-layering patterns for the `audit_admins` and `audit_readers` roles referenced above.
 - [[05-sql-server-agent-jobs]] — scheduling the burst-detection and structured-export queries as SQL Agent jobs.
 - [[06-essential-dba-queries]] — baseline health checks that should run alongside the audit review.
-

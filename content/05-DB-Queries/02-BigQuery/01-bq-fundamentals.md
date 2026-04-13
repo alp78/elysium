@@ -8,38 +8,153 @@ updated: 2026-03-22
 status: complete
 ---
 
-# BigQuery for Data Engineering - Fundamentals
+# BigQuery Fundamentals
 
 > [!quote]
 > "Big data is like teenage sex: everyone talks about it, nobody really knows how to do it, everyone thinks everyone else is doing it, so everyone claims they are doing it."
 >
 > — **Dan Ariely**, Facebook post (2013)
 
-This note is an executable GoogleSQL reference for data engineers working with BigQuery. It covers the same core query patterns as the SQL Server fundamentals note — schema exploration, filtering, aggregation, JOINs, window functions, CTEs, quality checks, and medallion transforms — but with BigQuery-specific syntax, cost model awareness, and performance characteristics, all demonstrated against the same Euro Stoxx 50 OHLCV dataset.
+> [!abstract]- Summary
+>
+> BigQuery Fundamentals is the BigQuery counterpart to the SQL Server query basics note: it uses the same Euro Stoxx 50 medallion dataset to teach GoogleSQL query patterns, but frames every example through BigQuery's columnar scan model, bytes-scanned billing, and serverless execution behavior.
+>
+> **Schema and dataset foundations**
+> - covers dataset inventory through the Python client and `INFORMATION_SCHEMA`, medallion-layer layout, and the OHLCV tables that anchor the examples
+>
+> **Core query shaping**
+> - covers `SELECT`, filtering, sorting, BigQuery versus SQL Server syntax differences, bytes-scanned implications, and `GROUP BY` / date-type handling for summary queries
+>
+> **Relational and analytical patterns**
+> - covers joins across `silver` and `gold`, shuffle-aware join design, window functions such as `LAG`, `LEAD`, `RANK`, and `NTILE`, plus CTE and subquery composition
+>
+> **Quality and medallion transforms**
+> - covers `UNION ALL` quality gates, daily-return calculations, z-score normalization, and bronze-to-silver-to-gold query anatomy in GoogleSQL
+>
+> **Operations and safety**
+> - Warnings: ADC-only connection behavior, `SELECT *`, `LIMIT` without cost savings, missing partition filters, `EXTRACT()` on partition columns, division-by-zero handling, join shuffles, and mixed `DATE` / `TIMESTAMP` comparisons
+> - Recommendations table: 7 defaults covering dry runs, partition design, clustering, explicit column selection, safe division, post-load quality gates, and materialized views for repeated expensive aggregates
+> - Troubleshooting: 5 failure modes covering unexpectedly expensive queries, `SAFE_DIVIDE()` nulls, cross-engine result differences, stale freshness checks, and moving-average mismatches
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **GoogleSQL** | BigQuery's SQL dialect (formerly called Standard SQL). ANSI-compliant with extensions like `QUALIFY`, `SAFE_DIVIDE`, `GENERATE_DATE_ARRAY`, and `STRUCT`/`ARRAY` types. | Every query in this note uses GoogleSQL syntax. Key differences from T-SQL: `LIMIT` instead of `TOP`, backticks instead of brackets, `IFNULL` instead of `ISNULL`. | Assuming T-SQL syntax works — `TOP N`, `[brackets]`, `GETDATE()`, and `IDENTITY` are all invalid in BigQuery. |
-| **Bytes scanned** | The amount of column data BigQuery reads to execute a query. BigQuery is columnar — it reads only the columns referenced in the query, not entire rows. Billing is based on bytes scanned ($6.25/TB on-demand). | Every `SELECT *` and every missing partition filter directly increases cost. Cost awareness is central to BigQuery query design. | Assuming `LIMIT N` reduces cost — BigQuery scans the full dataset matching the WHERE clause regardless of LIMIT. LIMIT only truncates the output. |
-| **Partition pruning** | The optimizer's ability to skip entire partitions that don't match the WHERE clause. Requires filtering on the partition column (typically a date). | Partitioned tables can cut scan cost by 90%+ if queries always filter on the partition column. Without a partition filter, BigQuery scans every partition. | Wrapping the partition column in a function (`WHERE EXTRACT(YEAR FROM date) = 2025`) — this prevents pruning, just like non-SARGable predicates in SQL Server. |
-| **Clustering** | Sorting data within each partition by up to 4 columns. BigQuery reads only the blocks where the clustering key's min/max range overlaps the filter. | Clustering on `symbol` after partitioning on `date` means a query for one stock on one date reads only relevant blocks, not the entire partition. | Confusing clustering with indexing — clustering is a storage-level sort, not a B-tree. It improves scan efficiency but does not enable seeks. |
-| **Dataset** | BigQuery's namespace for tables, views, and routines — equivalent to a SQL Server schema. Controls storage location (region) and access permissions. | The medallion layers are implemented as separate datasets: `stoxx_bronze`, `stoxx_silver`, `stoxx_gold`. | Confusing datasets with databases — BigQuery has no database-level concept. A project contains datasets directly. |
-| **ADC (Application Default Credentials)** | Google Cloud's credential resolution chain: environment variable → user credentials → metadata server. No password in the connection string. | BigQuery connections use ADC automatically. No credentials appear in notebook connection strings (unlike SQL Server's explicit password). | Setting `GOOGLE_APPLICATION_CREDENTIALS` on production VMs — use the metadata server instead. The env var is for local development only. |
-| **`SAFE_DIVIDE(a, b)`** | BigQuery-only function that returns `NULL` instead of an error when dividing by zero. Cleaner alternative to `a / NULLIF(b, 0)`. | Used in financial calculations where zero denominators (e.g., zero opening price for a delisted stock) would otherwise cause query failure. | Not available in SQL Server or PostgreSQL — use `NULLIF(denominator, 0)` for cross-engine portability. |
-| **`QUALIFY`** | BigQuery-exclusive clause that filters on window function results without requiring a subquery. `SELECT ... QUALIFY ROW_NUMBER() OVER (...) = 1` replaces the common subquery+WHERE pattern. | Simplifies deduplication and top-N-per-group queries. Not ANSI SQL — does not exist in SQL Server. | Using QUALIFY in cross-engine SQL or dbt models that target multiple engines — it will fail on SQL Server. |
-
-## What this note covers
-
-- **Schema exploration** — listing tables via Python client, inspecting column types via INFORMATION_SCHEMA
-- **SELECT, filtering, sorting** — basic queries, BigQuery vs SQL Server syntax differences, cost model
-- **Aggregation (GROUP BY)** — per-stock and per-period summaries, date/time type differences
-- **JOINs across medallion layers** — silver-to-silver and silver-to-gold cross-layer joins, shuffle cost
-- **Window functions** — moving averages (SMA), LAG/LEAD for daily returns, RANK/NTILE for ranking
-- **CTEs and subqueries** — sector heatmaps, chained CTEs for cross-index comparison
-- **Data quality checks** — structural and operational validation gates using UNION ALL
-- **Bronze → silver → gold transforms** — daily return computation, z-score normalization, composite ranking
+> [!note]- Glossary
+>
+> **GoogleSQL**
+> - BigQuery's SQL dialect, including standard relational syntax plus BigQuery-specific functions and clauses such as `QUALIFY`, `SAFE_DIVIDE()`, and nested-data types.
+> - It matters because every executable query in the note is written in GoogleSQL, and several syntax choices differ directly from SQL Server's T-SQL.
+>
+> > [!warning] T-SQL does not copy over
+> >
+> > `TOP`, bracketed identifiers, `GETDATE()`, and `IDENTITY` are not valid BigQuery syntax. Even when the relational idea is the same, the tokens often need to change.
+>
+> ---
+>
+> **Bytes scanned**
+> - The amount of column data BigQuery reads to answer a query, which directly determines on-demand query cost.
+> - It matters because the note's filtering, projection, partitioning, and join patterns are all evaluated partly in terms of how much data they force BigQuery to scan.
+>
+> > [!warning] `LIMIT` is not cost control
+> >
+> > `LIMIT` trims output rows after the scan work is already done. Cost changes only when the query reads fewer columns, fewer partitions, or fewer clustered blocks.
+>
+> ---
+>
+> **Partition pruning**
+> - BigQuery's ability to skip whole partitions when a predicate proves they cannot contain qualifying rows.
+> - It matters because partitioned medallion tables become affordable only when queries consistently filter on the partition column in a pruning-friendly form.
+>
+> > [!warning] Functions hide partitions
+> >
+> > Wrapping the partition column in `EXTRACT()` or another transformation can stop pruning just as effectively as a non-SARGable predicate hurts SQL Server. Filter on the raw partition key or a direct range instead.
+>
+> ---
+>
+> **Clustering**
+> - BigQuery's within-partition data organization by up to four columns so scans can skip blocks whose clustered value ranges do not match the predicate.
+> - It matters because clustering on keys such as `symbol` reduces the amount of data read after partition pruning has already narrowed the table.
+>
+> > [!info] Useful, but not an index
+> >
+> > Clustering improves scan efficiency by storage layout; it does not create a seekable B-tree. The engine still scans columnar blocks, just fewer of them.
+>
+> ---
+>
+> **Dataset**
+> - BigQuery's namespace for tables, views, and routines, with its own region placement and access controls.
+> - It matters because the note's medallion layers are implemented as separate datasets rather than as SQL Server-style schemas inside one database.
+>
+> > [!warning] Project, not database
+> >
+> > BigQuery organizes objects as project → dataset → table or routine. Looking for a separate database layer the way SQL Server provides one will only cause confusion.
+>
+> ---
+>
+> **Application Default Credentials**
+> - Google's standard credential resolution chain, which chooses local user credentials, environment-provided identities, or metadata-server identities without embedding passwords in SQL connection strings.
+> - It matters because notebook connections in this note rely on ADC instead of explicit usernames and passwords.
+>
+> > [!warning] Local and runtime identities differ
+> >
+> > `gcloud auth application-default login` is a development convenience. In deployed services, the intended source is usually the metadata server or a workload identity, not a checked-in credential path.
+>
+> ---
+>
+> **`SAFE_DIVIDE()`**
+> - A BigQuery arithmetic helper that returns `NULL` instead of raising an error when the denominator is zero.
+> - It matters because financial ratios and return calculations in the note need defensive arithmetic over imperfect market data.
+>
+> > [!info] Portability needs a rewrite
+> >
+> > `SAFE_DIVIDE()` is convenient but BigQuery-specific. Cross-engine SQL usually falls back to `x / NULLIF(y, 0)` to preserve the same behavior.
+>
+> ---
+>
+> **`QUALIFY`**
+> - A BigQuery clause that filters on window-function outputs after those functions are computed, without forcing an extra subquery wrapper.
+> - It matters because the note uses window-heavy ranking and deduplication patterns where `QUALIFY` keeps GoogleSQL concise.
+>
+> > [!warning] Great locally, bad for portability
+> >
+> > `QUALIFY` is efficient and expressive in BigQuery, but it fails on SQL Server and many other engines. Shared SQL artifacts often need the subquery-plus-`WHERE` alternative instead.
+>
+> ---
+>
+> **Medallion architecture**
+> - A layered pipeline design that separates raw ingestion, cleaned and typed transformation, and business-ready aggregated outputs into progressively more curated zones.
+> - It matters because the note repeatedly joins and promotes data across `bronze`, `silver`, and `gold` datasets, and those layers carry different trust and cost characteristics.
+>
+> > [!info] Layering helps cost control too
+> >
+> > The medallion split is not only about data quality. In BigQuery it also helps isolate expensive wide raw scans from smaller curated tables used repeatedly downstream.
+>
+> ---
+>
+> **OHLCV**
+> - The standard financial bar shape of Open, High, Low, Close, and Volume for one symbol on one trading day.
+> - It matters because the note's joins, aggregations, and window functions all assume this row grain when computing returns and rankings.
+>
+> > [!warning] Grain drives correctness
+> >
+> > If a query accidentally duplicates OHLCV rows through a bad join, every later aggregate or window result becomes suspect. Financial row grain is small enough that join mistakes propagate quickly.
+>
+> ---
+>
+> **Shuffle**
+> - The distributed exchange step where BigQuery moves data across execution workers so rows with the same join or aggregation key land together.
+> - It matters because large joins and grouped operations in the note can become expensive or slow when they trigger broad shuffles across big tables.
+>
+> > [!warning] Shuffles are hidden cost centers
+> >
+> > A query can look simple in SQL and still become expensive because the engine has to repartition huge intermediate results. Partitioning, clustering, and pre-aggregation help reduce that burden.
+>
+> ---
+>
+> **`UNION ALL` quality gate**
+> - A validation pattern that stacks multiple checks into one result set so a pipeline can report all failing conditions from a single query.
+> - It matters because the note uses this shape to validate medallion-layer loads before promoting results downstream.
+>
+> > [!info] Easy to automate
+> >
+> > One `UNION ALL` result with one row per failed check is easier to inspect and easier to wire into a stop-the-pipeline rule than scattered one-off validation statements.
 
 *Load the jupysql extension and configure display settings for notebook SQL execution.*
 
@@ -102,55 +217,53 @@ pd.DataFrame(rows).sort_values(['dataset', 'table']).reset_index(drop=True)
 
 <div>
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>dataset</th>
-      <th>table</th>
-      <th>rows</th>
-      <th>size_mb</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>stoxx_bronze</td>
-      <td>dim_country</td>
-      <td>212</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>stoxx_bronze</td>
-      <td>dim_index</td>
-      <td>4</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>stoxx_bronze</td>
-      <td>eurostoxx50_ohlcv</td>
-      <td>50</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>stoxx_bronze</td>
-      <td>index_dim</td>
-      <td>169</td>
-      <td>0.27</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>stoxx_bronze</td>
-      <td>oil20_ohlcv</td>
-      <td>19</td>
-      <td>0.00</td>
-    </tr>
+<thead>
+<tr>
+<th></th>
+<th>dataset</th>
+<th>table</th>
+<th>rows</th>
+<th>size_mb</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>stoxx_bronze</td>
+<td>dim_country</td>
+<td>212</td>
+<td>0.00</td>
+</tr>
+<tr>
+<th>1</th>
+<td>stoxx_bronze</td>
+<td>dim_index</td>
+<td>4</td>
+<td>0.00</td>
+</tr>
+<tr>
+<th>2</th>
+<td>stoxx_bronze</td>
+<td>eurostoxx50_ohlcv</td>
+<td>50</td>
+<td>0.00</td>
+</tr>
+<tr>
+<th>3</th>
+<td>stoxx_bronze</td>
+<td>index_dim</td>
+<td>169</td>
+<td>0.27</td>
+</tr>
+<tr>
+<th>4</th>
+<td>stoxx_bronze</td>
+<td>oil20_ohlcv</td>
+<td>19</td>
+<td>0.00</td>
+</tr>
 </table>
 </div>
-
-
 
 ### Schema Exploration | Inspect Column Types
 
@@ -179,48 +292,45 @@ SELECT
 FROM `bq-wh-nb.stoxx_silver`.INFORMATION_SCHEMA.COLUMNS
 WHERE table_name = 'eurostoxx50_ohlcv'
 ORDER BY ordinal_position
-
 ```
 
 12 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>column_name</th>
-            <th>data_type</th>
-            <th>is_nullable</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>id</td>
-            <td>INT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>symbol</td>
-            <td>STRING</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>date</td>
-            <td>DATE</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>open</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>high</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
+<thead>
+<tr>
+<th>column_name</th>
+<th>data_type</th>
+<th>is_nullable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>INT64</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>symbol</td>
+<td>STRING</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>date</td>
+<td>DATE</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>open</td>
+<td>FLOAT64</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>high</td>
+<td>FLOAT64</td>
+<td>YES</td>
+</tr>
 </table>
-
-
 
 ## SELECT, Filtering & Sorting
 
@@ -291,66 +401,64 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1194.8</td>
-            <td>1202.2</td>
-            <td>1187.8</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1188.4</td>
-            <td>1210.8</td>
-            <td>1174.0</td>
-            <td>1198.8</td>
-            <td>562904</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1188.4</td>
-            <td>1208.4</td>
-            <td>1172.2</td>
-            <td>1200.0</td>
-            <td>800815</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1072.0</td>
-            <td>1147.6</td>
-            <td>1060.2</td>
-            <td>1147.6</td>
-            <td>689086</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1186.0</td>
-            <td>1192.6</td>
-            <td>1112.8</td>
-            <td>1147.0</td>
-            <td>857271</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1188.4</td>
+<td>1210.8</td>
+<td>1174.0</td>
+<td>1198.8</td>
+<td>562904</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1188.4</td>
+<td>1208.4</td>
+<td>1172.2</td>
+<td>1200.0</td>
+<td>800815</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1072.0</td>
+<td>1147.6</td>
+<td>1060.2</td>
+<td>1147.6</td>
+<td>689086</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1186.0</td>
+<td>1192.6</td>
+<td>1112.8</td>
+<td>1147.0</td>
+<td>857271</td>
+</tr>
 </table>
-
-
 
 ### SELECT, Filtering & Sorting | Multi-Condition WHERE
 
@@ -391,54 +499,52 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>volume</th>
-            <th>daily_move_pct</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>IFX.DE</td>
-            <td>2025-04-10</td>
-            <td>25.78</td>
-            <td>11549391</td>
-            <td>-13.78</td>
-        </tr>
-        <tr>
-            <td>ENR.DE</td>
-            <td>2025-04-07</td>
-            <td>48.56</td>
-            <td>8552960</td>
-            <td>13.59</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>2025-04-07</td>
-            <td>5.243</td>
-            <td>120129181</td>
-            <td>12.87</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>2025-04-10</td>
-            <td>5.662</td>
-            <td>63808362</td>
-            <td>-11.14</td>
-        </tr>
-        <tr>
-            <td>DSY.PA</td>
-            <td>2026-02-16</td>
-            <td>15.96</td>
-            <td>7671987</td>
-            <td>-10.81</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+<th>daily_move_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IFX.DE</td>
+<td>2025-04-10</td>
+<td>25.78</td>
+<td>11549391</td>
+<td>-13.78</td>
+</tr>
+<tr>
+<td>ENR.DE</td>
+<td>2025-04-07</td>
+<td>48.56</td>
+<td>8552960</td>
+<td>13.59</td>
+</tr>
+<tr>
+<td>SAN.MC</td>
+<td>2025-04-07</td>
+<td>5.243</td>
+<td>120129181</td>
+<td>12.87</td>
+</tr>
+<tr>
+<td>SAN.MC</td>
+<td>2025-04-10</td>
+<td>5.662</td>
+<td>63808362</td>
+<td>-11.14</td>
+</tr>
+<tr>
+<td>DSY.PA</td>
+<td>2026-02-16</td>
+<td>15.96</td>
+<td>7671987</td>
+<td>-10.81</td>
+</tr>
 </table>
-
-
 
 ## Aggregation (GROUP BY)
 
@@ -494,60 +600,58 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>trading_days</th>
-            <th>avg_volume</th>
-            <th>avg_close</th>
-            <th>first_date</th>
-            <th>last_date</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ISP.MI</td>
-            <td>1321</td>
-            <td>87588601.0</td>
-            <td>3.15</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>1329</td>
-            <td>41770987.0</td>
-            <td>4.43</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>ENEL.MI</td>
-            <td>1321</td>
-            <td>24678699.0</td>
-            <td>6.82</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>BBVA.MC</td>
-            <td>1329</td>
-            <td>16654457.0</td>
-            <td>8.65</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>UCG.MI</td>
-            <td>1321</td>
-            <td>13903710.0</td>
-            <td>28.46</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>trading_days</th>
+<th>avg_volume</th>
+<th>avg_close</th>
+<th>first_date</th>
+<th>last_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ISP.MI</td>
+<td>1321</td>
+<td>87588601.0</td>
+<td>3.15</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>SAN.MC</td>
+<td>1329</td>
+<td>41770987.0</td>
+<td>4.43</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>ENEL.MI</td>
+<td>1321</td>
+<td>24678699.0</td>
+<td>6.82</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>BBVA.MC</td>
+<td>1329</td>
+<td>16654457.0</td>
+<td>8.65</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>UCG.MI</td>
+<td>1321</td>
+<td>13903710.0</td>
+<td>28.46</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
 </table>
-
-
 
 ### Aggregation GROUP BY | Aggregate by Time Period
 
@@ -609,66 +713,64 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>yr</th>
-            <th>mo</th>
-            <th>days</th>
-            <th>month_low</th>
-            <th>month_high</th>
-            <th>avg_close</th>
-            <th>total_volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>2025</td>
-            <td>1</td>
-            <td>22</td>
-            <td>646.6</td>
-            <td>748.1</td>
-            <td>714.71</td>
-            <td>19121187</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>2</td>
-            <td>20</td>
-            <td>678.6</td>
-            <td>737.9</td>
-            <td>713.04</td>
-            <td>15276962</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>3</td>
-            <td>21</td>
-            <td>606.0</td>
-            <td>690.3</td>
-            <td>656.58</td>
-            <td>17508550</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>4</td>
-            <td>20</td>
-            <td>550.0</td>
-            <td>619.7</td>
-            <td>581.0</td>
-            <td>22544929</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>5</td>
-            <td>21</td>
-            <td>601.5</td>
-            <td>686.6</td>
-            <td>650.18</td>
-            <td>13112045</td>
-        </tr>
+<thead>
+<tr>
+<th>yr</th>
+<th>mo</th>
+<th>days</th>
+<th>month_low</th>
+<th>month_high</th>
+<th>avg_close</th>
+<th>total_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2025</td>
+<td>1</td>
+<td>22</td>
+<td>646.6</td>
+<td>748.1</td>
+<td>714.71</td>
+<td>19121187</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>2</td>
+<td>20</td>
+<td>678.6</td>
+<td>737.9</td>
+<td>713.04</td>
+<td>15276962</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>3</td>
+<td>21</td>
+<td>606.0</td>
+<td>690.3</td>
+<td>656.58</td>
+<td>17508550</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>4</td>
+<td>20</td>
+<td>550.0</td>
+<td>619.7</td>
+<td>581.0</td>
+<td>22544929</td>
+</tr>
+<tr>
+<td>2025</td>
+<td>5</td>
+<td>21</td>
+<td>601.5</td>
+<td>686.6</td>
+<td>650.18</td>
+<td>13112045</td>
+</tr>
 </table>
-
-
 
 ## JOINs Across Medallion Layers
 
@@ -744,66 +846,64 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>country</th>
-            <th>last_close</th>
-            <th>last_date</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>RMS.PA</td>
-            <td>HERMES INTL</td>
-            <td>Consumer Cyclical</td>
-            <td>France</td>
-            <td>1906.0</td>
-            <td>2026-03-12</td>
-            <td>18681</td>
-        </tr>
-        <tr>
-            <td>RHM.DE</td>
-            <td>RHEINMETALL AG</td>
-            <td>Industrials</td>
-            <td>Germany</td>
-            <td>1551.5</td>
-            <td>2026-03-12</td>
-            <td>158741</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-            <td>Netherlands</td>
-            <td>1190.8</td>
-            <td>2026-03-12</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-            <td>Netherlands</td>
-            <td>925.7</td>
-            <td>2026-03-12</td>
-            <td>27887</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-            <td>Netherlands</td>
-            <td>626.6</td>
-            <td>2026-03-12</td>
-            <td>14083</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>last_close</th>
+<th>last_date</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMS.PA</td>
+<td>HERMES INTL</td>
+<td>Consumer Cyclical</td>
+<td>France</td>
+<td>1906.0</td>
+<td>2026-03-12</td>
+<td>18681</td>
+</tr>
+<tr>
+<td>RHM.DE</td>
+<td>RHEINMETALL AG</td>
+<td>Industrials</td>
+<td>Germany</td>
+<td>1551.5</td>
+<td>2026-03-12</td>
+<td>158741</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>1190.8</td>
+<td>2026-03-12</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>925.7</td>
+<td>2026-03-12</td>
+<td>27887</td>
+</tr>
+<tr>
+<td>ARGX.BR</td>
+<td>ARGENX SE</td>
+<td>Healthcare</td>
+<td>Netherlands</td>
+<td>626.6</td>
+<td>2026-03-12</td>
+<td>14083</td>
+</tr>
 </table>
-
-
 
 ### JOIN Across Medallion Layers | Gold Scores + Dimension (Cross-Layer)
 
@@ -861,84 +961,82 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>rank</th>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>score</th>
-            <th>value</th>
-            <th>momentum</th>
-            <th>sentiment</th>
-            <th>current_price</th>
-            <th>weight_pct</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>1</td>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-            <td>0.6796</td>
-            <td>1.497</td>
-            <td>0.46</td>
-            <td>0.081</td>
-            <td>87.44</td>
-            <td>1.94</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>VOW.DE</td>
-            <td>VOLKSWAGEN AG</td>
-            <td>Consumer Cyclical</td>
-            <td>0.5756</td>
-            <td>1.028</td>
-            <td>-0.382</td>
-            <td>1.081</td>
-            <td>92.85</td>
-            <td>0.93</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td>DTE.DE</td>
-            <td>DEUTSCHE TELEKOM AG</td>
-            <td>Communication Services</td>
-            <td>0.487</td>
-            <td>0.226</td>
-            <td>0.706</td>
-            <td>0.529</td>
-            <td>32.55</td>
-            <td>3.13</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>TTE.PA</td>
-            <td>TOTALENERGIES</td>
-            <td>Energy</td>
-            <td>0.3913</td>
-            <td>0.585</td>
-            <td>1.307</td>
-            <td>-0.719</td>
-            <td>69.8</td>
-            <td>2.95</td>
-        </tr>
-        <tr>
-            <td>5</td>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>0.3852</td>
-            <td>0.251</td>
-            <td>0.537</td>
-            <td>0.368</td>
-            <td>62.76</td>
-            <td>2.43</td>
-        </tr>
+<thead>
+<tr>
+<th>rank</th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>score</th>
+<th>value</th>
+<th>momentum</th>
+<th>sentiment</th>
+<th>current_price</th>
+<th>weight_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BNP.PA</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>Financial Services</td>
+<td>0.6796</td>
+<td>1.497</td>
+<td>0.46</td>
+<td>0.081</td>
+<td>87.44</td>
+<td>1.94</td>
+</tr>
+<tr>
+<td>2</td>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>Consumer Cyclical</td>
+<td>0.5756</td>
+<td>1.028</td>
+<td>-0.382</td>
+<td>1.081</td>
+<td>92.85</td>
+<td>0.93</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Communication Services</td>
+<td>0.487</td>
+<td>0.226</td>
+<td>0.706</td>
+<td>0.529</td>
+<td>32.55</td>
+<td>3.13</td>
+</tr>
+<tr>
+<td>4</td>
+<td>TTE.PA</td>
+<td>TOTALENERGIES</td>
+<td>Energy</td>
+<td>0.3913</td>
+<td>0.585</td>
+<td>1.307</td>
+<td>-0.719</td>
+<td>69.8</td>
+<td>2.95</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>0.3852</td>
+<td>0.251</td>
+<td>0.537</td>
+<td>0.368</td>
+<td>62.76</td>
+<td>2.43</td>
+</tr>
 </table>
-
-
 
 ## Window Functions
 
@@ -951,6 +1049,7 @@ Window functions compute a value for each row based on a "window" of related row
 ### Window Functions | Moving Averages (SMA)
 
 A **moving average** smooths price data over N days. Used for trend detection:
+
 - **SMA 30** (short-term): responsive to recent price action
 - **SMA 90** (long-term): filters out noise
 - Price above SMA = bullish momentum. Below = bearish.
@@ -996,54 +1095,52 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>sma_30</th>
-            <th>sma_90</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>1204.41</td>
-            <td>1052.59</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1198.8</td>
-            <td>1204.45</td>
-            <td>1049.65</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1200.0</td>
-            <td>1204.31</td>
-            <td>1046.53</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1147.6</td>
-            <td>1204.89</td>
-            <td>1043.62</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1147.0</td>
-            <td>1205.91</td>
-            <td>1041.08</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>sma_30</th>
+<th>sma_90</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1204.41</td>
+<td>1052.59</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1204.45</td>
+<td>1049.65</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1204.31</td>
+<td>1046.53</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1204.89</td>
+<td>1043.62</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1205.91</td>
+<td>1041.08</td>
+</tr>
 </table>
-
-
 
 ### Window Functions | LAG / LEAD Compare Rows
 
@@ -1051,6 +1148,7 @@ LIMIT 15
 **LEAD(col, N)** returns the value from N rows **after**.
 
 Use cases:
+
 - **Daily returns**: `(close - LAG(close)) / LAG(close)`
 - **Gap detection**: `DATE_DIFF(date, LAG(date), DAY)` — a `days_gap` value >1 indicates a weekend (normal: 3 for Fri→Mon) or holiday (>3 is unusual and worth investigating)
 - **Trend direction**: compare today vs yesterday
@@ -1094,60 +1192,58 @@ LIMIT 15
 15 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>prev_close</th>
-            <th>daily_return_pct</th>
-            <th>days_gap</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>1198.8</td>
-            <td>-0.67</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1198.8</td>
-            <td>1200.0</td>
-            <td>-0.1</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1200.0</td>
-            <td>1147.6</td>
-            <td>4.57</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1147.6</td>
-            <td>1147.0</td>
-            <td>0.05</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1147.0</td>
-            <td>1186.0</td>
-            <td>-3.29</td>
-            <td>1</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>prev_close</th>
+<th>daily_return_pct</th>
+<th>days_gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1198.8</td>
+<td>-0.67</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1200.0</td>
+<td>-0.1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1147.6</td>
+<td>4.57</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1147.0</td>
+<td>0.05</td>
+<td>3</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1186.0</td>
+<td>-3.29</td>
+<td>1</td>
+</tr>
 </table>
-
-
 
 ### Window Functions | RANK / DENSE_RANK / NTILE Ranking
 
@@ -1211,54 +1307,52 @@ ORDER BY rank_best LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>ytd_return</th>
-            <th>rank_best</th>
-            <th>rank_worst</th>
-            <th>quartile</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ENI.MI</td>
-            <td>0.3042</td>
-            <td>1</td>
-            <td>50</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ENR.DE</td>
-            <td>0.2508</td>
-            <td>2</td>
-            <td>49</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>TTE.PA</td>
-            <td>0.2437</td>
-            <td>3</td>
-            <td>48</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>0.2073</td>
-            <td>4</td>
-            <td>47</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>0.1772</td>
-            <td>5</td>
-            <td>46</td>
-            <td>1</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>ytd_return</th>
+<th>rank_best</th>
+<th>rank_worst</th>
+<th>quartile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ENI.MI</td>
+<td>0.3042</td>
+<td>1</td>
+<td>50</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ENR.DE</td>
+<td>0.2508</td>
+<td>2</td>
+<td>49</td>
+<td>1</td>
+</tr>
+<tr>
+<td>TTE.PA</td>
+<td>0.2437</td>
+<td>3</td>
+<td>48</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>0.2073</td>
+<td>4</td>
+<td>47</td>
+<td>1</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>0.1772</td>
+<td>5</td>
+<td>46</td>
+<td>1</td>
+</tr>
 </table>
-
-
 
 ## CTEs & Subqueries
 
@@ -1310,7 +1404,7 @@ WITH latest_scores AS (
       AND s.score_date = (SELECT MAX(score_date) FROM `bq-wh-nb.stoxx_gold.scores_daily` WHERE _index = 'euro_stoxx_50')
 ),
 sector_stats AS (
-    SELECT 
+    SELECT
         sector,
         COUNT(*) AS stocks,
         ROUND(AVG(composite_score), 4) AS avg_score,
@@ -1328,66 +1422,64 @@ ORDER BY avg_score DESC
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>sector</th>
-            <th>stocks</th>
-            <th>avg_score</th>
-            <th>avg_value</th>
-            <th>avg_momentum</th>
-            <th>best_rank</th>
-            <th>worst_rank</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Communication Services</td>
-            <td>1</td>
-            <td>0.487</td>
-            <td>0.226</td>
-            <td>0.7064</td>
-            <td>3</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>Energy</td>
-            <td>2</td>
-            <td>0.3286</td>
-            <td>0.5744</td>
-            <td>1.6426</td>
-            <td>4</td>
-            <td>11</td>
-        </tr>
-        <tr>
-            <td>Healthcare</td>
-            <td>4</td>
-            <td>0.0812</td>
-            <td>-0.07</td>
-            <td>-0.3722</td>
-            <td>10</td>
-            <td>32</td>
-        </tr>
-        <tr>
-            <td>Technology</td>
-            <td>5</td>
-            <td>0.0522</td>
-            <td>0.0128</td>
-            <td>-0.6536</td>
-            <td>6</td>
-            <td>47</td>
-        </tr>
-        <tr>
-            <td>Industrials</td>
-            <td>10</td>
-            <td>0.0504</td>
-            <td>0.0</td>
-            <td>-0.0204</td>
-            <td>8</td>
-            <td>43</td>
-        </tr>
+<thead>
+<tr>
+<th>sector</th>
+<th>stocks</th>
+<th>avg_score</th>
+<th>avg_value</th>
+<th>avg_momentum</th>
+<th>best_rank</th>
+<th>worst_rank</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Communication Services</td>
+<td>1</td>
+<td>0.487</td>
+<td>0.226</td>
+<td>0.7064</td>
+<td>3</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Energy</td>
+<td>2</td>
+<td>0.3286</td>
+<td>0.5744</td>
+<td>1.6426</td>
+<td>4</td>
+<td>11</td>
+</tr>
+<tr>
+<td>Healthcare</td>
+<td>4</td>
+<td>0.0812</td>
+<td>-0.07</td>
+<td>-0.3722</td>
+<td>10</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Technology</td>
+<td>5</td>
+<td>0.0522</td>
+<td>0.0128</td>
+<td>-0.6536</td>
+<td>6</td>
+<td>47</td>
+</tr>
+<tr>
+<td>Industrials</td>
+<td>10</td>
+<td>0.0504</td>
+<td>0.0</td>
+<td>-0.0204</td>
+<td>8</td>
+<td>43</td>
+</tr>
 </table>
-
-
 
 ### CTEs & Subqueries | Chained CTEs Cross-Index Comparison
 
@@ -1427,7 +1519,7 @@ WITH latest_perf AS (
            ROW_NUMBER() OVER (PARTITION BY _index ORDER BY perf_date DESC) AS rn
     FROM `bq-wh-nb.stoxx_gold.index_performance`
 )
-SELECT 
+SELECT
     p._index,
     d.display_name,
     p.perf_date,
@@ -1446,67 +1538,65 @@ ORDER BY ytd_pct DESC
 4 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>_index</th>
-            <th>display_name</th>
-            <th>perf_date</th>
-            <th>ytd_pct</th>
-            <th>ret_30d_pct</th>
-            <th>vol_30d_pct</th>
-            <th>stocks_count</th>
-            <th>avg_pe</th>
-            <th>div_yield_pct</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>oil_20</td>
-            <td>Oil & Gas 20</td>
-            <td>2026-03-11</td>
-            <td>27.7</td>
-            <td>15.33</td>
-            <td>21.93</td>
-            <td>19</td>
-            <td>16.1</td>
-            <td>3.28</td>
-        </tr>
-        <tr>
-            <td>stoxx_asia_50</td>
-            <td>STOXX Asia/Pacific 50</td>
-            <td>2026-03-12</td>
-            <td>5.45</td>
-            <td>2.68</td>
-            <td>23.3</td>
-            <td>50</td>
-            <td>15.8</td>
-            <td>1.96</td>
-        </tr>
-        <tr>
-            <td>stoxx_usa_50</td>
-            <td>STOXX USA 50</td>
-            <td>2026-03-11</td>
-            <td>3.71</td>
-            <td>0.6</td>
-            <td>13.32</td>
-            <td>50</td>
-            <td>20.8</td>
-            <td>1.42</td>
-        </tr>
-        <tr>
-            <td>euro_stoxx_50</td>
-            <td>Euro Stoxx 50</td>
-            <td>2026-03-12</td>
-            <td>-2.39</td>
-            <td>-2.08</td>
-            <td>18.06</td>
-            <td>50</td>
-            <td>14.0</td>
-            <td>2.9</td>
-        </tr>
+<thead>
+<tr>
+<th>_index</th>
+<th>display_name</th>
+<th>perf_date</th>
+<th>ytd_pct</th>
+<th>ret_30d_pct</th>
+<th>vol_30d_pct</th>
+<th>stocks_count</th>
+<th>avg_pe</th>
+<th>div_yield_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>oil_20</td>
+<td>Oil & Gas 20</td>
+<td>2026-03-11</td>
+<td>27.7</td>
+<td>15.33</td>
+<td>21.93</td>
+<td>19</td>
+<td>16.1</td>
+<td>3.28</td>
+</tr>
+<tr>
+<td>stoxx_asia_50</td>
+<td>STOXX Asia/Pacific 50</td>
+<td>2026-03-12</td>
+<td>5.45</td>
+<td>2.68</td>
+<td>23.3</td>
+<td>50</td>
+<td>15.8</td>
+<td>1.96</td>
+</tr>
+<tr>
+<td>stoxx_usa_50</td>
+<td>STOXX USA 50</td>
+<td>2026-03-11</td>
+<td>3.71</td>
+<td>0.6</td>
+<td>13.32</td>
+<td>50</td>
+<td>20.8</td>
+<td>1.42</td>
+</tr>
+<tr>
+<td>euro_stoxx_50</td>
+<td>Euro Stoxx 50</td>
+<td>2026-03-12</td>
+<td>-2.39</td>
+<td>-2.08</td>
+<td>18.06</td>
+<td>50</td>
+<td>14.0</td>
+<td>2.9</td>
+</tr>
 </table>
-
-
 
 ## Data Quality Checks
 
@@ -1515,7 +1605,6 @@ Quality gates validate data integrity at each medallion layer boundary. Run thes
 ### Data Quality Checks | UNION ALL Quality Gate
 
 Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
-
 
 > [!tip] UNION ALL Quality Gate Pattern
 >
@@ -1578,33 +1667,33 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 5 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>check_name</th>
-            <th>issues</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>null_prices</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>negative_prices</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>high_lt_low</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>gap_filled_rows</td>
-            <td>6</td>
-        </tr>
-        <tr>
-            <td>days_since_update</td>
-            <td>10</td>
-        </tr>
+<thead>
+<tr>
+<th>check_name</th>
+<th>issues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>null_prices</td>
+<td>0</td>
+</tr>
+<tr>
+<td>negative_prices</td>
+<td>0</td>
+</tr>
+<tr>
+<td>high_lt_low</td>
+<td>0</td>
+</tr>
+<tr>
+<td>gap_filled_rows</td>
+<td>6</td>
+</tr>
+<tr>
+<td>days_since_update</td>
+<td>10</td>
+</tr>
 </table>
 
 | Check | Value | Watch | Meaning | Action |
@@ -1681,54 +1770,52 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>daily_return</th>
-            <th>is_filled</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>-0.0067</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1198.8</td>
-            <td>-0.001</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1200.0</td>
-            <td>0.0457</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1147.6</td>
-            <td>0.0005</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1147.0</td>
-            <td>-0.0329</td>
-            <td>False</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>daily_return</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>-0.0067</td>
+<td>False</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>-0.001</td>
+<td>False</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>0.0457</td>
+<td>False</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>0.0005</td>
+<td>False</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>-0.0329</td>
+<td>False</td>
+</tr>
 </table>
-
-
 
 ### Bronze → Silver → Gold Transforms | Z-Score Normalization
 
@@ -1777,67 +1864,65 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>raw_score</th>
-            <th>z_score</th>
-            <th>rank</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>BNP.PA</td>
-            <td>0.6796</td>
-            <td>2.08</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>0.5756</td>
-            <td>1.76</td>
-            <td>2</td>
-        </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>0.487</td>
-            <td>1.48</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>TTE.PA</td>
-            <td>0.3913</td>
-            <td>1.18</td>
-            <td>4</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>0.3852</td>
-            <td>1.16</td>
-            <td>5</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>raw_score</th>
+<th>z_score</th>
+<th>rank</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNP.PA</td>
+<td>0.6796</td>
+<td>2.08</td>
+<td>1</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>0.5756</td>
+<td>1.76</td>
+<td>2</td>
+</tr>
+<tr>
+<td>DTE.DE</td>
+<td>0.487</td>
+<td>1.48</td>
+<td>3</td>
+</tr>
+<tr>
+<td>TTE.PA</td>
+<td>0.3913</td>
+<td>1.18</td>
+<td>4</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>0.3852</td>
+<td>1.16</td>
+<td>5</td>
+</tr>
 </table>
 
-
-
-## When to Use BigQuery for Queries
-
-BigQuery is the right tool when the workload matches its serverless, scan-based cost model: large-scale scans, flexible schemas, bursty ad-hoc analytics, and multi-layer medallion pipelines where storage and compute scale independently.
-
-- **Large-scale analytics** — BigQuery's distributed architecture handles petabyte-scale tables without index planning. Queries parallelize automatically across slots.
-- **Ad-hoc exploration** — serverless, no infrastructure to manage. Run a query immediately without provisioning a server or creating indexes first.
-- **Cost-per-query billing** — pay only for bytes scanned. For infrequent queries on large datasets, this is dramatically cheaper than maintaining a dedicated SQL Server VM.
-- **Cross-dataset joins** — BigQuery can join tables across datasets and even across projects in a single query, enabling organization-wide analytics.
-- **Scheduled queries and materialized views** — built-in scheduling and auto-refreshing materialized views for recurring dashboard queries.
-
-## When Not to Use BigQuery for Queries
-
-BigQuery is the wrong tool when the workload needs point lookups, low-latency OLTP access, or frequent small writes. The scenarios below usually belong on Cloud SQL, Firestore, or another engine optimized for the workload shape.
-
-- **Sub-second transactional queries** — BigQuery has a minimum query overhead of ~0.5-2 seconds regardless of data size. SQL Server with indexed seeks delivers single-digit millisecond response times.
-- **High-frequency DML** — the 1,500 DML statements/day/table quota makes BigQuery unsuitable for high-frequency upsert patterns. Use the Storage Write API for streaming.
-- **Complex procedural logic** — BigQuery scripting supports `IF`/`LOOP`/`BEGIN...EXCEPTION`, but there is no plan caching, and variable scoping across cells is limited in notebooks.
-- **Small, frequently-updated tables** — for tables under 1GB with frequent writes, SQL Server or PostgreSQL with proper indexes is simpler and cheaper.
+> [!example] BigQuery Workload Fit
+>
+> > [!success] Serverless Advantage
+> >
+> > - BigQuery is the right tool when the workload matches its serverless, scan-based cost model: large-scale scans, flexible schemas, bursty ad-hoc analytics, and multi-layer medallion pipelines where storage and compute scale independently.
+> > - **Large-scale analytics** — BigQuery's distributed architecture handles petabyte-scale tables without index planning. Queries parallelize automatically across slots.
+> > - **Ad-hoc exploration** — serverless, no infrastructure to manage. Run a query immediately without provisioning a server or creating indexes first.
+> > - **Cost-per-query billing** — pay only for bytes scanned. For infrequent queries on large datasets, this is dramatically cheaper than maintaining a dedicated SQL Server VM.
+> > - **Cross-dataset joins** — BigQuery can join tables across datasets and even across projects in a single query, enabling organization-wide analytics.
+> > - **Scheduled queries and materialized views** — built-in scheduling and auto-refreshing materialized views for recurring dashboard queries.
+>
+> > [!failure] Latency Mismatch
+> >
+> > - BigQuery is the wrong tool when the workload needs point lookups, low-latency OLTP access, or frequent small writes. The scenarios below usually belong on Cloud SQL, Firestore, or another engine optimized for the workload shape.
+> > - **Sub-second transactional queries** — BigQuery has a minimum query overhead of ~0.5-2 seconds regardless of data size. SQL Server with indexed seeks delivers single-digit millisecond response times.
+> > - **High-frequency DML** — the 1,500 DML statements/day/table quota makes BigQuery unsuitable for high-frequency upsert patterns. Use the Storage Write API for streaming.
+> > - **Complex procedural logic** — BigQuery scripting supports `IF`/`LOOP`/`BEGIN...EXCEPTION`, but there is no plan caching, and variable scoping across cells is limited in notebooks.
+> > - **Small, frequently-updated tables** — for tables under 1GB with frequent writes, SQL Server or PostgreSQL with proper indexes is simpler and cheaper.
 
 ## Warnings
 

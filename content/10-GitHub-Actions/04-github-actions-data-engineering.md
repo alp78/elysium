@@ -12,46 +12,380 @@ tags:
 >
 > — **Gene Kim**, *The Phoenix Project* (2013)
 
-This page covers production-ready GitHub Actions workflows for data-engineering teams. Each workflow is a complete, runnable YAML file backed by real execution outputs from the `alp78/git-lab` sandbox repository. The patterns span the full data-platform lifecycle: validating SQL against warehouse engines, running dbt CI with ephemeral schemas, checking Airflow DAG imports, planning and applying Terraform infrastructure, enforcing data quality gates, stripping notebook outputs, building pipeline images, controlling backfills with approval gates, monitoring warehouse costs, and validating event schemas for streaming pipelines.
+> [!abstract]- Summary
+>
+> Explains production GitHub Actions patterns for data-engineering teams, covering read-only validation, warehouse-scoped CI, infrastructure automation, controlled backfills, artifact hygiene, cost limits, and cloud identity boundaries across the full data-platform lifecycle.
+>
+> **Workflow taxonomy and read-only validation**
+> - Maps data-engineering workflow categories by trigger, credentials, and blast radius, then covers SQL validation across BigQuery, SQL Server, and other warehouses plus schema-contract and notebook-hygiene checks
+> - Uses dry-run, parse-only, and import-based validation patterns so PR workflows stay fast, low-cost, and free of unreviewed production writes
+>
+> **Transformation, orchestration, and infrastructure CI**
+> - Covers dbt parse, lint, build, slim CI, ephemeral schemas, Airflow DAG import checks, Dagster and Prefect validation, PySpark tests, Terraform plan and apply, and pipeline image publishing to GHCR
+> - Connects each workflow type to the right credential scope, runner shape, and environment gate so CI and CD do not share the same blast radius accidentally
+>
+> **Operational workflows and platform controls**
+> - Handles data quality assertions, report artifacts, controlled backfills with typed inputs and dry-run modes, cost monitoring, concurrency groups, timeouts, and warehouse spend guardrails
+> - Adds Workload Identity Federation and branch-restricted OIDC patterns so scheduled, manual, and production workflows can authenticate without long-lived cloud secrets
+>
+> **Operations and safety**
+> - Warnings: production writes from `pull_request`, unsafe backfills, over-broad warehouse credentials, sensitive artifacts, uncontrolled Terraform apply, and expensive validation queries without byte or concurrency limits
+> - Recommendations: keep CI read-only by default, isolate dbt schemas per run, gate writes with environments and typed confirmations, prefer OIDC/WIF for cloud auth, and treat artifact retention and query cost limits as part of workflow design
+> - Troubleshooting: warehouse-auth failures, orchestration import errors, dbt state mismatches, backfill rerun hazards, Terraform concurrency issues, and data-quality workflow drift
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **BigQuery dry-run**
+> - A query validation mode (`--dry_run`) that parses and validates SQL without executing it, returning the estimated bytes processed. No data is read or billed.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
 
-| Term | Definition |
-|------|-----------|
-| **BigQuery dry-run** | A query validation mode (`--dry_run`) that parses and validates SQL without executing it, returning the estimated bytes processed. No data is read or billed. |
-| **PARSEONLY** | A SQL Server session option (`SET PARSEONLY ON`) that checks SQL syntax without compiling or executing the statement. |
-| **dbt** | An open-source transformation framework that compiles SQL models with Jinja templating and runs them against a warehouse. |
-| **dbt parse** | A dbt command that compiles the project and generates a `manifest.json` without connecting to the warehouse — used for CI syntax validation. |
-| **dbt manifest** | A JSON file (`target/manifest.json`) containing the compiled representation of all models, tests, sources, and exposures in a dbt project. |
-| **ephemeral schema** | A temporary warehouse schema or dataset created per CI run (e.g., `ci_pr_42`) and destroyed after tests complete, preventing CI from polluting production data. |
-| **slim CI** | A dbt CI strategy that runs only models modified in the current PR (`--select state:modified+`) rather than rebuilding the entire project. |
-| **SQLFluff** | A SQL linter and formatter that supports multiple dialects (BigQuery, Snowflake, Redshift, T-SQL) and integrates with dbt templating. |
-| **Airflow DAG** | A Directed Acyclic Graph defined in Python that describes task dependencies and scheduling in Apache Airflow. |
-| **DAG import check** | A CI validation that imports DAG files into an Airflow environment to verify syntax, dependency resolution, and absence of import errors. |
-| **Dagster asset** | A software-defined asset in Dagster that represents a data artifact with explicit dependencies, types, and metadata. |
-| **Prefect flow** | A Python function decorated with `@flow` in Prefect, representing an orchestrated pipeline with automatic retries, logging, and state management. |
-| **PySpark** | The Python API for Apache Spark, used for distributed data processing. CI runs PySpark tests with a local `SparkSession` to validate transformation logic. |
-| **Terraform plan** | A Terraform command that compares the desired state (HCL files) with the current state and outputs a changeset without applying it. |
-| **Terraform apply** | A Terraform command that executes the planned changeset, creating, modifying, or destroying infrastructure resources. |
-| **environment protection rule** | A GitHub Actions setting that gates deployments to a named environment behind required reviewers, wait timers, or branch restrictions. |
-| **Great Expectations** | A Python framework for defining, running, and documenting data quality assertions (expectations) against DataFrames or database tables. |
-| **data quality assertion** | A boolean check on data properties (e.g., no NULL dates, row counts above threshold, no negative volumes) that fails the pipeline if violated. |
-| **JSON Schema** | A vocabulary for annotating and validating JSON documents, used to enforce contracts on event payloads in streaming pipelines. |
-| **schema contract** | A formal definition of the structure, types, and constraints of data exchanged between systems — breaking changes fail CI. |
-| **breaking change** | A schema modification that removes properties, adds required fields, or narrows types, breaking consumers who depend on the previous contract. |
-| **nbstripout** | A tool that strips output cells from Jupyter notebooks before committing, preventing large binary blobs and accidental data leaks in version control. |
-| **notebook hygiene** | CI checks that verify notebooks have no committed outputs, valid structure, and no embedded credentials or sensitive data. |
-| **workflow_dispatch** | A GitHub Actions trigger that allows manual execution of a workflow with typed input parameters (string, boolean, choice, number). |
-| **backfill** | A controlled re-execution of a pipeline for historical date ranges, typically to repair missing or incorrect data. |
-| **dry-run mode** | A workflow execution mode that validates inputs and queries without writing to production, used to preview backfill scope and cost. |
-| **idempotency** | The property that re-executing a pipeline with the same inputs produces the same result — critical for safe backfills and reruns. |
-| **partition** | A subdivision of a table by date, key, or range that allows targeted reads and writes — backfills operate on specific partitions. |
-| **Workload Identity Federation** | A GCP mechanism for granting external identities (e.g., GitHub Actions OIDC tokens) access to GCP resources without service account keys. |
-| **OIDC** | OpenID Connect — a token-based authentication protocol used by GitHub Actions to prove workflow identity to cloud providers. |
-| **GHCR** | GitHub Container Registry (`ghcr.io`) — a container image registry integrated with GitHub, used for storing pipeline Docker images. |
-| **image digest** | An immutable SHA-256 hash identifying a specific container image build, used for reproducible deployments regardless of mutable tags. |
-| **concurrency group** | A GitHub Actions setting that serializes or cancels workflow runs sharing the same group key, preventing parallel writes to shared resources. |
-| **artifact** | A file or set of files (manifests, reports, test results) uploaded during a workflow run and downloadable for inspection or use by downstream jobs. |
+> ---
+>
+> **PARSEONLY**
+> - A SQL Server session option (`SET PARSEONLY ON`) that checks SQL syntax without compiling or executing the statement.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **dbt**
+> - An open-source transformation framework that compiles SQL models with Jinja templating and runs them against a warehouse.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **dbt parse**
+> - A dbt command that compiles the project and generates a `manifest.json` without connecting to the warehouse — used for CI syntax validation.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **dbt manifest**
+> - A JSON file (`target/manifest.json`) containing the compiled representation of all models, tests, sources, and exposures in a dbt project.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **ephemeral schema**
+> - A temporary warehouse schema or dataset created per CI run (e.g., `ci_pr_42`) and destroyed after tests complete, preventing CI from polluting production data.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **slim CI**
+> - A dbt CI strategy that runs only models modified in the current PR (`--select state:modified+`) rather than rebuilding the entire project.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **SQLFluff**
+> - A SQL linter and formatter that supports multiple dialects (BigQuery, Snowflake, Redshift, T-SQL) and integrates with dbt templating.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **Airflow DAG**
+> - A Directed Acyclic Graph defined in Python that describes task dependencies and scheduling in Apache Airflow.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **DAG import check**
+> - A CI validation that imports DAG files into an Airflow environment to verify syntax, dependency resolution, and absence of import errors.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Dagster asset**
+> - A software-defined asset in Dagster that represents a data artifact with explicit dependencies, types, and metadata.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Prefect flow**
+> - A Python function decorated with `@flow` in Prefect, representing an orchestrated pipeline with automatic retries, logging, and state management.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **PySpark**
+> - The Python API for Apache Spark, used for distributed data processing. CI runs PySpark tests with a local `SparkSession` to validate transformation logic.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **Terraform plan**
+> - A Terraform command that compares the desired state (HCL files) with the current state and outputs a changeset without applying it.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Terraform apply**
+> - A Terraform command that executes the planned changeset, creating, modifying, or destroying infrastructure resources.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **environment protection rule**
+> - A GitHub Actions setting that gates deployments to a named environment behind required reviewers, wait timers, or branch restrictions.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Great Expectations**
+> - A Python framework for defining, running, and documenting data quality assertions (expectations) against DataFrames or database tables.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **data quality assertion**
+> - A boolean check on data properties (e.g., no NULL dates, row counts above threshold, no negative volumes) that fails the pipeline if violated.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **JSON Schema**
+> - A vocabulary for annotating and validating JSON documents, used to enforce contracts on event payloads in streaming pipelines.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **schema contract**
+> - A formal definition of the structure, types, and constraints of data exchanged between systems — breaking changes fail CI.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **breaking change**
+> - A schema modification that removes properties, adds required fields, or narrows types, breaking consumers who depend on the previous contract.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **nbstripout**
+> - A tool that strips output cells from Jupyter notebooks before committing, preventing large binary blobs and accidental data leaks in version control.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **notebook hygiene**
+> - CI checks that verify notebooks have no committed outputs, valid structure, and no embedded credentials or sensitive data.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **workflow_dispatch**
+> - A GitHub Actions trigger that allows manual execution of a workflow with typed input parameters (string, boolean, choice, number).
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **backfill**
+> - A controlled re-execution of a pipeline for historical date ranges, typically to repair missing or incorrect data.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **dry-run mode**
+> - A workflow execution mode that validates inputs and queries without writing to production, used to preview backfill scope and cost.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **idempotency**
+> - The property that re-executing a pipeline with the same inputs produces the same result — critical for safe backfills and reruns.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **partition**
+> - A subdivision of a table by date, key, or range that allows targeted reads and writes — backfills operate on specific partitions.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A GCP mechanism for granting external identities (e.g., GitHub Actions OIDC tokens) access to GCP resources without service account keys.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **OIDC**
+> - OpenID Connect — a token-based authentication protocol used by GitHub Actions to prove workflow identity to cloud providers.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **GHCR**
+> - GitHub Container Registry (`ghcr.io`) — a container image registry integrated with GitHub, used for storing pipeline Docker images.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **image digest**
+> - An immutable SHA-256 hash identifying a specific container image build, used for reproducible deployments regardless of mutable tags.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **concurrency group**
+> - A GitHub Actions setting that serializes or cancels workflow runs sharing the same group key, preventing parallel writes to shared resources.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **artifact**
+> - A file or set of files (manifests, reports, test results) uploaded during a workflow run and downloadable for inspection or use by downstream jobs.
+> - It matters in this note because the workflows for data-platform validation, warehouse-safe CI, controlled backfills, infrastructure automation, and GitHub Actions cloud identity depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+
+> [!example] Data Platform Automation Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when GitHub Actions must validate or operate warehouses, dbt projects, orchestrators, infrastructure, notebooks, or controlled backfills.
+> > - Use it when workflow design has to account for data cost, partition safety, idempotency, read-only CI, and short-lived cloud identity rather than generic app deployment alone.
+> > - Use it to separate harmless PR validation from gated write paths so production data systems are not mutated by low-trust workflows.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not let `pull_request` or other low-trust triggers perform production writes, schema mutations, or backfills.
+> > - Do not copy generic application CI/CD patterns into data-platform automation without adapting them for warehouse spend, replay safety, and environment-scoped credentials.
+> > - Do not use this note as the first stop if the team still needs the GitHub Actions fundamentals or reusable-pattern baseline.
 
 ## Data-Engineering Workflow Taxonomy
 

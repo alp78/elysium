@@ -10,7 +10,138 @@ status: complete
 
 # Query Store Regressions and Plan Forcing
 
-Query Store is SQL Server's persistent history of query execution plans and their runtime statistics. It records every distinct plan the optimizer compiles for a given query, every runtime the engine observes for each of those plans, and (optionally) the waits each execution experienced. This history unlocks a class of operational controls that the plan cache alone cannot offer: regression triage across plan variants, temporary plan forcing when a previously-good plan becomes reachable again, and Query Store Hints (SQL Server 2022+) for injecting query hints without editing source code. This note is the reference for that end-to-end workflow, with every query run live against the local `stoxx` database.
+> [!abstract]- Summary
+>
+> Query Store is SQL Server’s persistent plan-and-runtime history for one database, which makes it the operational bridge between “the query is slow now” and “which plan variant used to be better.” This note walks the live `stoxx` workflow from verifying that Query Store is enabled and writable, through regression detection and safe plan forcing, to Query Store Hints and the rules for treating both as temporary mitigation rather than permanent design.
+>
+> **Query Store foundations**
+> - covers what Query Store is, where it stores data, its catalog views, capture modes, retention behavior, and version-specific features
+>
+> **Baseline and health checks**
+> - covers verifying that Query Store is enabled, writable, and collecting trustworthy data before using it for triage
+>
+> **Regression detection**
+> - covers finding queries with materially different plan variants, comparing best and worst runtime behavior, and identifying plausible regression candidates
+>
+> **Force-plan workflow**
+> - covers controlled plan forcing with `sp_query_store_force_plan`, verification of forced state, and the signals that show whether forcing is holding or failing
+>
+> **Query Store Hints and operational choices**
+> - covers Query Store Hints, when to observe, when to force, when to hint, and when to fix the real root cause instead
+>
+> **Operations and safety**
+> - Warnings: Query Store must be writable to be trustworthy, forced plans are attempted not guaranteed, hints can fail to apply, storage and cleanup settings affect retention, and long-lived forcing or hints become technical debt
+> - Recommendations: verify writability before triage, compare plan variants before forcing, record every force or hint in change control, prefer forcing over hinting when a known-good historical plan exists, and remove both once stats, indexing, parameterization, or query design have been fixed
+
+> [!note]- Glossary
+>
+> **Query Store**
+> - The per-database SQL Server feature that persists query texts, plans, runtime statistics, and optionally wait data across restarts.
+> - It matters because this note’s entire workflow depends on having durable historical plan evidence instead of relying only on the transient plan cache.
+>
+> > [!info] Persistence is the key differentiator
+> >
+> > The plan cache forgets. Query Store remembers long enough to compare today’s bad plan to yesterday’s better one, which is why it is so valuable in regression work.
+>
+> ---
+>
+> **Query Store baseline**
+> - The verified state where Query Store is enabled, writable, retaining enough history, and capturing the workload you actually need to analyze.
+> - It matters because regression analysis built on disabled, read-only, or incomplete Query Store data is false confidence.
+>
+> > [!warning] “Enabled” is not the same as “usable”
+> >
+> > A database can have Query Store turned on and still be read-only, full, or capturing too little. Operational trust starts only after those states are checked.
+>
+> ---
+>
+> **Plan variant**
+> - One distinct compiled execution plan for the same logical query inside Query Store.
+> - It matters because regressions are fundamentally comparisons between plan variants, not between different query texts.
+>
+> > [!info] Same query, different plan story
+> >
+> > A query does not need new text to get slower. The same logical statement can compile to several plans, and one of them can be much worse than the others.
+>
+> ---
+>
+> **Regression candidate**
+> - A query whose historical plan variants show a material spread in runtime, reads, or waits that suggests one plan is significantly worse than another.
+> - It matters because this is the filtering step that keeps operators from forcing plans blindly on every slow query.
+>
+> > [!warning] Candidate is not proof
+> >
+> > A runtime spread means “inspect this query.” It does not prove that a plan regression is the current root cause until time window, workload, and plan details line up.
+>
+> ---
+>
+> **Forced plan**
+> - A historical Query Store plan that SQL Server is instructed to attempt to reuse for future executions of the same query.
+> - It matters because forcing is the main temporary mitigation when one historical plan is clearly safer than the currently chosen one.
+>
+> > [!warning] Force is an attempt, not a guarantee
+> >
+> > Schema changes, missing indexes, or other incompatibilities can prevent the engine from honoring the forced plan fully. Monitoring force-failure signals is part of the workflow.
+>
+> ---
+>
+> **`sp_query_store_force_plan`**
+> - The system stored procedure used to mark a specific Query Store plan as forced for a given query.
+> - It matters because it is the supported operational entry point for plan forcing in this note’s workflow.
+>
+> > [!info] Use the supported control surface
+> >
+> > Plan forcing should be explicit and auditable. The stored procedure gives that change a defined mechanism instead of relying on undocumented shortcuts.
+>
+> ---
+>
+> **Force failure**
+> - A condition where Query Store cannot successfully apply or keep applying the requested forced plan.
+> - It matters because a “forced” state is only useful if it is actually being honored during execution.
+>
+> > [!warning] Forced-state metadata needs validation
+> >
+> > Seeing a force request recorded is not enough. Failure counters and last-failure reasons must also stay healthy, or the mitigation is ineffective.
+>
+> ---
+>
+> **Query Store Hint**
+> - A persisted hint attached through Query Store that modifies optimizer behavior for a query without editing its source text.
+> - It matters because hints are a powerful mitigation when code cannot be changed quickly, but they also create governance and aging risks.
+>
+> > [!warning] Hints are easy to keep too long
+> >
+> > A hint that solves an incident today can become invisible technical debt tomorrow. Every hint needs ownership, review, and a removal plan.
+>
+> ---
+>
+> **Writable mode**
+> - The Query Store operational state where the database can continue recording new plans and runtime observations.
+> - It matters because read-only or failing write states make later regression analysis incomplete or stale.
+>
+> > [!warning] Stale history can look deceptively authoritative
+> >
+> > If Query Store stopped writing earlier, the data may still query cleanly while silently omitting the incident period you care about most.
+>
+> ---
+>
+> **Retention window**
+> - The period over which Query Store keeps history before time-based or size-based cleanup removes older data.
+> - It matters because regression analysis only works if the historical “good plan” still exists when the regression happens.
+>
+> > [!warning] Cleanup policy shapes forensic reach
+> >
+> > A short retention window can be fine for hot triage and useless for monthly regressions. The storage policy is therefore part of the operational design, not an afterthought.
+>
+> ---
+>
+> **Observe / force / hint / fix ladder**
+> - The operational decision sequence where observation is least invasive, forcing is temporary stabilization, hinting is targeted optimizer influence, and root-cause repair is the durable solution.
+> - It matters because the note’s core recommendation is not just how to use Query Store, but how to use it with disciplined escalation.
+>
+> > [!info] Intervention strength should match certainty
+> >
+> > Stronger actions are justified only when the evidence is stronger. The ladder keeps operators from jumping straight to hints or forcing without enough diagnostic confidence.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

@@ -8,14 +8,6 @@ updated: 2026-04-04
 status: complete
 ---
 
-> [!abstract] Medallion Project — Financial Index Pipeline
->
-> This page documents the implementation of a specific financial data pipeline
-> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
-> section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
-
 # Gold Transforms
 
 > [!quote]
@@ -23,13 +15,148 @@ status: complete
 >
 > — **Maxime Beauchemin**, creator of Apache Airflow and Superset
 
-The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) and write to gold tables. In dbt, the equivalent role is served by [mart models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
-
-**Pipeline flow:** [Silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) → Python + pandas → Gold tables → Blazor dashboard
-
-> [!info] Gold Layer Role
+> [!abstract]- Summary
 >
-> Gold is the presentation layer. Data in gold is denormalized, scored, ranked, and ready to display. No joins required for the dashboard — every query returns display-ready values. Gold tables are refreshed on every pipeline run; stale rows are deleted and replaced.
+> This note documents the gold-layer implementation of the STOXX/yfinance medallion pipeline on SQL Server. Gold is the consumer contract: no raw data lives here, only pre-computed metrics, scores, ranks, and performance outputs that dashboards or APIs can read directly without rebuilding business logic from silver.
+>
+> **Gold table design**
+> - covers the denormalized gold DDL and the rule that dashboard-facing tables should be ready to consume with minimal or no joining
+>
+> **Scoring logic**
+> - covers daily and quarterly factor-score computation, z-score normalization, financial health flags, and composite ranking logic built from silver inputs
+>
+> **Performance analytics**
+> - covers cap-weighted index performance, moving-average and lag-based calculations, and the derived metrics used for downstream reporting
+>
+> **Consumption layer**
+> - covers dashboard-oriented queries and the pipeline flow from [silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) through Python plus pandas into gold tables and finally into the Blazor dashboard
+>
+> **Freshness and refresh behavior**
+> - covers the delete-and-replace refresh pattern, targeted refresh windows, and the checks used to verify that gold stays current after a pipeline run
+>
+> **Operations and safety**
+> - Warnings: gold is no longer normalization-friendly source data, consumer-facing schemas are fragile contracts, stale rows can survive if refresh boundaries are wrong, and future-dated or partially refreshed rows can mislead dashboards immediately
+> - Recommendations: keep gold denormalized and display-ready, refresh scoped slices idempotently, compute expensive analytics once upstream rather than in the dashboard, treat schema changes as contract changes, and verify freshness after every pipeline run
+
+> [!note]- Glossary
+>
+> **Gold layer**
+> - The consumer-facing layer in a medallion pipeline where curated metrics and aggregates are stored in presentation-ready form.
+> - It matters because every design choice in the note is driven by downstream consumption needs rather than by source fidelity or normalization purity.
+>
+> > [!warning] Gold is a contract, not just another table set
+> >
+> > Once dashboards and APIs depend on gold, column names, types, and semantics become external promises. Breaking them has immediate downstream impact.
+>
+> ---
+>
+> **Presentation layer**
+> - The part of the data pipeline optimized for fast, direct consumption by applications, dashboards, or reports.
+> - It matters because gold tables are intentionally shaped to minimize joins and computation at read time.
+>
+> > [!info] Precompute what readers should not rebuild
+> >
+> > Presentation layers trade some storage and refresh cost for simpler, faster reads. That trade is the point, not an accident.
+>
+> ---
+>
+> **Denormalized dataset**
+> - A table or query output that repeats contextual attributes so consumers can answer business questions without assembling many joins.
+> - It matters because gold deliberately favors consumer simplicity over relational elegance.
+>
+> > [!warning] Denormalization raises refresh discipline requirements
+> >
+> > Repeated attributes must be refreshed consistently, or the layer drifts into contradictory values that are hard for consumers to diagnose.
+>
+> ---
+>
+> **Factor score**
+> - A derived metric that ranks or grades an entity according to one analytical theme such as value, momentum, or sentiment.
+> - It matters because the gold layer in this project is built around reusable scoring outputs for downstream comparison and display.
+>
+> > [!info] Scores are compressed business judgment
+> >
+> > A factor score is not raw data. It is a designed summary that embeds domain assumptions about what should count as attractive, risky, or improving.
+>
+> ---
+>
+> **Z-score**
+> - A normalization measure expressing how far a value is from the peer-group mean in standard deviations.
+> - It matters because the gold scoring logic uses z-scores to compare unlike raw metrics on a common relative scale.
+>
+> > [!warning] Relative scale depends on the peer group
+> >
+> > A z-score is only meaningful relative to the population it was computed from. Change the comparison cohort and the score meaning changes too.
+>
+> ---
+>
+> **Composite score**
+> - A higher-level score built by combining several underlying factor scores into one summary ranking signal.
+> - It matters because gold is where multiple analytical dimensions are intentionally collapsed into dashboard-friendly outputs.
+>
+> > [!warning] Composite metrics hide weighting choices
+> >
+> > A composite score looks simple to consumers, but it always reflects design decisions about which components matter and how strongly they should count.
+>
+> ---
+>
+> **Consumption-ready query**
+> - A query whose result shape is designed to be returned directly to a UI or API consumer with minimal additional transformation.
+> - It matters because the note’s dashboard queries are examples of the contract gold should satisfy efficiently.
+>
+> > [!info] Read complexity belongs upstream
+> >
+> > If the dashboard has to re-derive core metrics or perform heavy joining, the gold layer has not fully done its job.
+>
+> ---
+>
+> **Moving average window**
+> - A rolling calculation over the latest N rows or periods, often used for smoothing price series and trend signals.
+> - It matters because gold performance and score logic uses SQL window functions to compute these analytics directly in the database.
+>
+> > [!warning] Window size is part of business meaning
+> >
+> > A 30-day average and a 90-day average answer different questions. The window length is not an implementation detail; it is part of the metric definition.
+>
+> ---
+>
+> **Refresh window**
+> - The bounded slice of data a gold transform deletes and recomputes on each run, such as one scoring date or a recent rolling horizon.
+> - It matters because idempotent gold refresh depends on making the replace boundary explicit.
+>
+> > [!warning] Wrong refresh boundaries create silent staleness
+> >
+> > If the recompute window is too narrow, late-arriving corrections never get incorporated. If it is too broad, runtime grows without adding value.
+>
+> ---
+>
+> **Freshness check**
+> - A validation query that confirms the latest expected dates or scoring slices are present after the pipeline runs.
+> - It matters because a technically successful job can still leave gold stale from a consumer’s point of view.
+>
+> > [!info] Operational success needs data recency proof
+> >
+> > Process logs tell you the pipeline ran. Freshness checks tell you the resulting business tables are actually current enough to trust.
+>
+> ---
+>
+> **Dashboard contract**
+> - The implicit or explicit agreement that a gold table will keep providing the columns, semantics, and data quality a dashboard expects.
+> - It matters because gold schema changes break consumers much faster than changes in bronze or silver.
+>
+> > [!warning] Contract drift becomes user-visible immediately
+> >
+> > A missing column, renamed metric, or changed refresh rule in gold usually surfaces as a broken dashboard, not as a quiet internal refactor.
+>
+> ---
+>
+> **Idempotent refresh**
+> - A refresh pattern where rerunning the transform for the same slice produces the same final gold state without duplication or drift.
+> - It matters because gold tables are refreshed repeatedly and must remain stable under retries or reruns.
+>
+> > [!info] Rerun safety is essential for consumer layers
+> >
+> > Consumers should never need to care whether the pipeline ran once or three times. Idempotent refresh keeps the visible result stable despite operational retries.
 
 ---
 
@@ -405,7 +532,6 @@ WHERE r.rn = 1
 | ASML.AS | 685.20 | 702.15 | -0.012 | 0.034 | 0.087 |
 | MC.PA | 835.40 | 812.90 | 0.005 | -0.008 | 0.045 |
 
-
 ### Step 4: Write to gold.scores_daily
 
 #### DELETE + INSERT by date — refresh daily factor scores
@@ -475,7 +601,6 @@ WHERE q.as_of_date = (
       AND q2.symbol = q.symbol
 )
 ```
-
 
 ### Step 2: Get Latest Market Cap and Beta from Daily Signals
 
@@ -585,7 +710,6 @@ INSERT INTO gold.index_performance (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-
 ---
 
 ## Dashboard Consumption Queries
@@ -622,7 +746,6 @@ INNER JOIN (
    AND p.perf_date = latest.max_date
 ORDER BY p._index
 ```
-
 
 ### Historical Performance Time Series (Line Charts)
 
@@ -696,7 +819,6 @@ INNER JOIN max_dates md
 ORDER BY sd._index, sd.index_weight DESC
 ```
 
-
 ### Latest Quarterly Scores (Quality & Governance)
 
 #### ROW_NUMBER() PARTITION BY symbol — deduplicate to one row per stock
@@ -734,7 +856,6 @@ FROM latest
 WHERE rn = 1
 ORDER BY _index, quality_rank
 ```
-
 
 ### OHLCV Chart with Server-Side Moving Averages (Stock Explorer)
 
@@ -783,7 +904,6 @@ WHERE (@From IS NULL OR date >= @From)
   AND (@To IS NULL OR date <= @To)
 ORDER BY date
 ```
-
 
 ---
 
@@ -835,4 +955,3 @@ DELETE FROM gold.index_performance WHERE perf_date > CAST(GETDATE() AS DATE);
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
 - [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) — pandas groupby, rolling, and rank equivalents of the SQL window functions used here
 - [dbt-mart-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models) — dbt's declarative approach to the same gold-layer role
-

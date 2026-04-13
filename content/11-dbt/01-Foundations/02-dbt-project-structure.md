@@ -13,9 +13,179 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-A well-organised dbt project is the foundation for maintainability at scale. This note covers the full directory layout, naming conventions, config inheritance, source declarations, and multi-adapter dispatch patterns for a financial data platform handling index constituents, OHLCV prices, ESG scores, and corporate actions.
+> [!abstract]- Summary
+>
+> Explains how to structure a dbt project so model layout, naming, config inheritance, source declarations, adapter dispatch, and environment-specific connection settings stay predictable as the warehouse and team scale.
+>
+> **Project layout and resource boundaries**
+> - Maps the full dbt repository tree across `models`, `seeds`, `snapshots`, `tests`, `macros`, `analyses`, and docs so each resource type has a clear home and operational purpose
+> - Connects directory structure to warehouse layer boundaries, especially how staging, intermediate, and mart folders mirror auditability and consumption patterns in a medallion-style platform
+>
+> **Configuration and naming strategy**
+> - Breaks down `dbt_project.yml`, naming conventions, `_sources.yml`, and config inheritance from project to folder to model so defaults stay intentional instead of implicit drift
+> - Explains how prefixes, schemas, tags, tests, and metadata communicate grain, ownership, and execution policy before a single model is run
+>
+> **Adapter and environment patterns**
+> - Covers multi-adapter dispatch, medallion mapping, and `profiles.yml` targets so one project can serve SQL Server, BigQuery, and other environments without hiding warehouse-specific behavior
+> - Shows where environment-specific settings belong and where they must not be committed, especially around connection details and target switching
+>
+> **Operations and safety**
+> - Warnings: unstructured folder growth, hidden config inheritance, inconsistent prefixes, adapter logic leaking into the wrong layer, and committing environment-specific secrets or local profile files into the repo
+> - Recommendations: make layer boundaries explicit, keep naming conventions machine-readable, centralize safe defaults in `dbt_project.yml`, and isolate target-specific connection data outside version control
 
----
+> [!note]- Glossary
+>
+> **dbt project**
+> - The full repository structure and configuration that dbt reads when compiling and running models, tests, macros, seeds, and other resources.
+> - It matters here because every naming, layout, and config decision in the note is about making that project operable as it grows.
+>
+> > [!info] Structure becomes operating model
+> >
+> > In dbt, directory layout is not just cosmetic. It shapes discovery, defaults, ownership, and how quickly a team can reason about what a model is allowed to do.
+>
+> ---
+>
+> **`models/`**
+> - The primary directory containing SQL models and their adjacent YAML metadata files.
+> - It matters here because the staging, intermediate, and mart folder strategy lives under `models/`, and most downstream conventions depend on that hierarchy.
+>
+> > [!warning] Folder placement implies intent
+> >
+> > Putting a model in the wrong layer makes its business role ambiguous even if the SQL is technically correct. Layout is a control against hidden logic creep.
+>
+> ---
+>
+> **Staging layer**
+> - The first modeled layer above raw sources, usually focused on renaming, casting, and basic structural cleanup with minimal business logic.
+> - It matters here because the project structure is designed to keep source-aligned cleanup separate from enrichment and consumption-ready modeling.
+>
+> > [!warning] Do not smuggle business rules in here
+> >
+> > Once staging starts accumulating joins and domain logic, downstream layers lose their meaning and source changes become harder to audit.
+>
+> ---
+>
+> **Intermediate layer**
+> - The middle dbt layer that joins, enriches, and reshapes staging models into reusable business-logic building blocks.
+> - It matters here because the directory tree and config defaults are meant to keep reusable transformation logic separate from final published marts.
+>
+> > [!info] Reuse lives here
+> >
+> > Intermediate models are where shared business transformations belong. Keeping them separate prevents marts from duplicating logic across multiple consumption surfaces.
+>
+> ---
+>
+> **Mart layer**
+> - The consumption-ready layer of fact and dimension models intended for BI tools, APIs, or direct analytical use.
+> - It matters here because naming, schemas, and materialization defaults in the project structure should make mart outputs obviously stable and consumer-facing.
+>
+> > [!warning] Published surface area
+> >
+> > Changes in mart structure have the highest downstream impact. Folder placement and naming conventions should make that blast radius obvious during review.
+>
+> ---
+>
+> **Seed**
+> - A CSV file in `seeds/` that dbt loads into the warehouse as a reference table.
+> - It matters here because seeds belong to the project structure and often carry schema, typing, and naming rules that should not be hidden inside model SQL.
+>
+> > [!info] Small static reference data only
+> >
+> > Seeds work well for compact, version-controlled reference data. They are a poor fit for large or frequently changing operational datasets.
+>
+> ---
+>
+> **Snapshot**
+> - A dbt resource that captures slowly changing history for records over time, typically using timestamp or check-based change detection.
+> - It matters here because snapshots have their own directory and schema strategy, separate from ordinary models and tests.
+>
+> > [!warning] Historical state is expensive to redesign
+> >
+> > Snapshot structure choices persist over time. Bad naming or schema placement becomes painful once history has accumulated and consumers rely on it.
+>
+> ---
+>
+> **Macro**
+> - A reusable Jinja function defined in `macros/` that can generate SQL or encapsulate repeated logic.
+> - It matters here because macros, especially dispatched ones, are part of the project layout strategy for adapter-aware reuse.
+>
+> > [!warning] Reuse can hide complexity
+> >
+> > Macros make projects cleaner when they remove duplication, but they also make behavior less obvious at a glance. Keep them discoverable and intentionally named.
+>
+> ---
+>
+> **`dbt_project.yml`**
+> - The root project configuration file that defines paths, vars, default configs, and resource-level settings.
+> - It matters here because config inheritance, naming defaults, schemas, tags, and materialization policies all start from this file.
+>
+> > [!warning] Small defaults propagate widely
+> >
+> > A single root-level config can change behavior across hundreds of models. Review defaults as architecture, not as local convenience settings.
+>
+> ---
+>
+> **Config inheritance**
+> - The way dbt applies settings from project level to folder level to individual resources, with more specific scopes overriding broader ones.
+> - It matters here because much of project structure discipline is really about making inherited behavior legible and safe.
+>
+> > [!warning] Implicit behavior is easy to miss
+> >
+> > When a model behaves differently because of inherited config rather than local code, reviewers often miss the real cause unless the directory strategy is clear.
+>
+> ---
+>
+> **`_sources.yml`**
+> - A YAML file that declares external source tables, freshness rules, tests, and documentation metadata.
+> - It matters here because sources are part of project structure, and they define the explicit handoff from raw ingestion into dbt modeling.
+>
+> > [!info] Raw boundary contract
+> >
+> > Source declarations are where freshness, raw table naming, and basic metadata should live. That keeps raw-system assumptions out of the model SQL itself.
+>
+> ---
+>
+> **Dispatch**
+> - dbt's adapter-aware macro resolution mechanism that chooses the correct implementation for the active warehouse backend.
+> - It matters here because multi-adapter layouts only stay maintainable when warehouse-specific differences are isolated through dispatch instead of scattered inline in model SQL.
+>
+> > [!warning] Portability needs a boundary
+> >
+> > Without dispatch, cross-database support turns into repeated `if target.type` branching and duplicated SQL patterns across the project.
+>
+> ---
+>
+> **Medallion architecture**
+> - A layered data-architecture pattern that organizes transformations into raw, cleaned, and consumption-ready stages, often described as bronze, silver, and gold.
+> - It matters here because the note maps dbt folder structure directly onto that architectural progression for readability and governance.
+>
+> > [!info] Useful mapping, not a magic rule
+> >
+> > The medallion model gives teams a shared language for layer boundaries, but the project still needs explicit conventions for naming, ownership, and publication level.
+>
+> ---
+>
+> **`profiles.yml`**
+> - The local dbt connection file that defines profiles, outputs, credentials, and targets outside the repository.
+> - It matters here because project structure is incomplete without understanding where environment-specific connection state belongs and why it is usually not committed.
+>
+> > [!danger] Keep connection state out of git
+> >
+> > `profiles.yml` often contains credential references and environment-specific endpoints. Treat it as local or managed runtime state, not as repository content.
+
+> [!example] Project Layout Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when defining a new dbt repository, refactoring a growing project, or reviewing whether naming, foldering, and config defaults still match the platform's operating model.
+> > - Use it when structure, inheritance, adapter boundaries, and environment separation are the main design questions rather than model SQL itself.
+> > - Use it to make repository layout, naming, and config defaults communicate ownership, layer purpose, and execution policy clearly.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a replacement for the separate modeling, adapter, or CLI notes once the question is about SQL logic, command behavior, or warehouse-specific runtime tuning.
+> > - Do not let folder structure become arbitrary; in dbt it directly shapes how defaults, ownership, and reviewability work.
+> > - Do not commit environment-specific connection state into the project just because the repository feels like the obvious home for it.
 
 ### dbt Directory Tree
 
@@ -385,6 +555,7 @@ financial_platform:
 ---
 
 ## Related
+
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-cli-reference](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-cli-reference)
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)

@@ -10,25 +10,158 @@ status: complete
 
 # SARGable Queries
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> SARGability is a query-writing property, not an index-maintenance feature and not an execution-plan workflow. A predicate is **SARGable** when SQL Server can use the sorted key values of an index to navigate directly to the relevant rows — an index **seek** — instead of walking every row and evaluating an expression per row — an index **scan**. Writing SARGable predicates is the single highest-leverage optimization a query author can apply without touching schema or indexes.
+> SARGability is the query-writer’s main leverage over index access: this note defines the search-argument rule, shows its behavior empirically on a 671,550-row test table via seek and scan counter deltas, and maps the predicate rewrites that turn scans into seeks without changing schema.
 >
-> This note owns the predicate-writing rules. It covers:
+> **Core SARGability rules**
+> - covers the search-argument definition, seek versus scan evidence, and why predicate shape matters independently of index maintenance
 >
-> - the optimizer's "Search ARGument" definition and seek vs scan evidence
-> - the composite-index left-prefix rule and why a predicate on a non-leftmost key still scans
-> - function-on-column anti-patterns for strings, dates, numbers, and null-handling
-> - the `ISNULL` vs `COALESCE` optimizer-rewrite asymmetry on SQL Server 2022
-> - arithmetic and expression predicates, with the move-math-to-the-literal rewrite
-> - implicit-conversion traps and the `nvarchar → varchar` column-side cast that kills seeks
-> - `OR`, `IN`, `EXISTS`, `NOT IN`, and the catch-all `@p IS NULL OR col = @p` pattern
-> - `BETWEEN` vs half-open date ranges and the end-of-day trap
-> - the escape hatches: **computed columns** and **filtered indexes**
+> **Index-key alignment**
+> - covers the composite-index left-prefix rule and the cases where a bare predicate still scans because it starts on a non-leftmost key
 >
-> Every claim in this note is backed by an empirical measurement against `dbo.demo_idxmaint_rowstore` (671,550 rows, nonclustered index on `(symbol, date, batch_no)`). Each test query captures `user_seeks` and `user_scans` deltas from `sys.dm_db_index_usage_stats` so the reader can see unambiguously whether the predicate used an index seek or a full scan.
+> **Predicate anti-patterns**
+> - covers functions on indexed columns, arithmetic predicates, date-boundary rewrites, `ISNULL` versus `COALESCE`, and implicit conversion traps
 >
-> **Out of scope** (covered in sibling notes): execution-plan capture, plan-cache mining, and parameter-sniffing remediation live in [[13-execution-plans]]. Wait-stats analysis lives in [[14-wait-stats-analysis]]. Cross-references to [[02-data-types-conversion-and-null-handling]] for implicit-conversion rules and [[07-string-functions-and-pattern-matching]] for string-function SARGability appear throughout.
+> **Boolean and parameter patterns**
+> - covers `OR`, `IN`, `EXISTS`, `NOT IN`, and the catch-all `@p IS NULL OR col = @p` shape with its parameterization consequences
+>
+> **Escape hatches**
+> - covers computed columns and filtered indexes when a direct predicate rewrite is impossible or no longer clear enough
+>
+> **Operations and safety**
+> - Warnings: a seek operator can still read most of an index, non-leftmost key predicates still scan, cross-type comparisons can force column-side conversion, `BETWEEN` is unsafe for datetime boundaries, `COALESCE` and catch-all predicates can defeat seeks, and filtered indexes require compile-time proof
+> - Recommendations: keep the indexed column bare, move math and casts to the literal side, use half-open date ranges, align parameter types with column types, rewrite cross-column `OR` into `UNION ALL` when appropriate, and treat computed columns or filtered indexes as deliberate workload-specific exceptions
+
+> [!note]- Glossary
+>
+> **SARGability**
+> - The property of a predicate that allows SQL Server to use index key order to navigate directly to qualifying rows.
+> - It matters because this note is about changing predicate shape so the optimizer can seek instead of scanning and post-filtering.
+>
+> > [!warning] This is a query-shape property
+> >
+> > SARGability is not something the index “has” by itself. The same index can seek or scan depending entirely on how the predicate is written.
+>
+> ---
+>
+> **Search argument**
+> - The optimizer-friendly predicate shape where an indexed column is compared directly to a constant, parameter, or compile-time expression that does not reference the column.
+> - It matters because this is the formal rule underneath the everyday advice to keep the indexed column bare.
+>
+> > [!info] The rule is structural, not stylistic
+> >
+> > SQL Server cares about whether the predicate can be transformed into an index navigation range. Small syntactic changes can break that transformation completely.
+>
+> ---
+>
+> **Index seek**
+> - An access pattern where SQL Server uses index key order to jump to a relevant key range instead of reading every row in sequence.
+> - It matters because seeks are the visible payoff of SARGable predicate writing.
+>
+> > [!warning] A seek is not automatically cheap
+> >
+> > A range seek with a weak predicate can still read most of the index. The operator name is evidence of plan shape, not proof of low cost.
+>
+> ---
+>
+> **Index scan**
+> - An access pattern where SQL Server reads an entire index or a large part of it and evaluates filters row by row.
+> - It matters because non-SARGable predicates most often force scans even when a seemingly relevant index exists.
+>
+> > [!warning] A scan can be logically correct and operationally expensive
+> >
+> > The engine is not failing when it scans; it is choosing the best plan available for the predicate shape it was given. Fixing the predicate is often what changes the choice.
+>
+> ---
+>
+> **Left-prefix rule**
+> - The rule that a composite index can only seek efficiently starting from its leftmost key columns in order.
+> - It matters because many authors assume a predicate on any indexed column should seek, even when that column is not the leading key.
+>
+> > [!warning] Bare is necessary, not sufficient
+> >
+> > A predicate can be perfectly bare and still scan if it starts at the wrong place in the composite key order. Index design and predicate shape have to line up.
+>
+> ---
+>
+> **Function-on-column predicate**
+> - A filter that wraps the indexed column in a function such as `YEAR`, `LEFT`, `TRIM`, or `CAST`.
+> - It matters because this is the most common way developers accidentally destroy seekability.
+>
+> > [!warning] The engine loses the raw key order
+> >
+> > Once the column is transformed row by row, the original index ordering no longer maps directly to the filtered value. SQL Server usually has to scan and evaluate the function for every row.
+>
+> ---
+>
+> **Implicit conversion**
+> - An automatic type coercion SQL Server applies when a comparison mixes incompatible data types.
+> - It matters because if the conversion lands on the column side, a seemingly simple predicate stops being SARGable.
+>
+> > [!warning] Parameter types can silently ruin a good predicate
+> >
+> > An `nvarchar` parameter compared to a `varchar` column is a classic example. The text looks harmless, but the hidden conversion can push work onto the indexed column.
+>
+> ---
+>
+> **Half-open date range**
+> - A datetime filter written as `>= start AND < end` so the upper bound is exclusive.
+> - It matters because it is both the safest correctness pattern for temporal filters and the SARGable alternative to many `YEAR`, `CAST`, or `BETWEEN` anti-patterns.
+>
+> > [!warning] Inclusive end points are two problems at once
+> >
+> > `BETWEEN` on datetime data is both precision-fragile and often harder to reason about. Half-open ranges solve the correctness issue and preserve seekability.
+>
+> ---
+>
+> **Catch-all predicate**
+> - A parameterized filter pattern such as `(@p IS NULL OR col = @p)` that tries to support optional filtering in one static statement.
+> - It matters because it is convenient in application code and notoriously bad for index usage without recompilation or dynamic SQL.
+>
+> > [!warning] Optionality defeats proof
+> >
+> > The optimizer cannot commit to one narrow access path when the predicate can mean “filter by this value” or “return everything.” That ambiguity is why catch-all forms usually scan.
+>
+> ---
+>
+> **Residual predicate**
+> - A filter condition evaluated after an index access path has already located a broader row range.
+> - It matters because some plan shapes look like seeks but still read too much data because the real filtering happens residually.
+>
+> > [!info] Seek plus residual can behave like a scan
+> >
+> > If the seek range is broad and the residual filter does the real elimination, the logical operator label can be misleadingly optimistic.
+>
+> ---
+>
+> **Computed column escape hatch**
+> - The design pattern of materializing or defining the troublesome expression as a computed column and then indexing that expression result.
+> - It matters because some business predicates cannot be rewritten cleanly to keep the base column bare.
+>
+> > [!warning] This is a schema trade-off
+> >
+> > A computed column index can recover seekability, but it adds storage, maintenance cost, and design complexity. It should solve an important repeated workload, not a one-off query.
+>
+> ---
+>
+> **Filtered index**
+> - An index that stores only rows matching a fixed predicate defined at index-creation time.
+> - It matters because it can make hot subsets extremely efficient, but only when the query shape proves the same filter at compile time.
+>
+> > [!warning] Matching the filter is a compile-time proof problem
+> >
+> > A parameter that happens to equal the filter literal at runtime is not enough. If the optimizer cannot prove the filter predicate during compilation, it may ignore the filtered index entirely.
+>
+> ---
+>
+> **Seek/scan counter delta**
+> - The before-and-after change in `user_seeks` and `user_scans` from `sys.dm_db_index_usage_stats` used to show which access pattern a test query chose.
+> - It matters because this note uses empirical DMV evidence instead of only verbal claims about what the optimizer “should” do.
+>
+> > [!info] Evidence of choice, not evidence of full cost
+> >
+> > Counter deltas show which operator family SQL Server used. They do not replace `STATISTICS IO`, timing, or full plan inspection when deeper cost analysis is required.
 
 ## What SARGable Means
 
@@ -1151,4 +1284,3 @@ Before calling a predicate "done", run through this checklist:
 | `(@p IS NULL OR col = @p)` | Dynamic SQL, or stored proc with `OPTION (RECOMPILE)` |
 | `RIGHT(col, n) = 'x'` | Computed column on `RIGHT(col, n)` + index |
 | `MONTH(col) = M` | Computed column on `MONTH(col)` + index |
-

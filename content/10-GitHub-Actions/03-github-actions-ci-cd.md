@@ -12,44 +12,340 @@ tags:
 >
 > — **Jez Humble**, *Continuous Delivery* (2010)
 
-GitHub Actions is a CI/CD platform built into GitHub that automates the path from source change to production deployment. A **workflow** is a YAML file in `.github/workflows/` that defines one or more **jobs**, each running on a **runner** (a GitHub-hosted or self-hosted virtual machine). Each job contains a sequence of **steps** — shell commands (`run:`) or reusable **actions** (`uses:`). GitHub evaluates **expressions** (`${{ }}`) at runtime to inject context values like secrets, event payloads, and matrix variables.
+> [!abstract]- Summary
+>
+> Explains how GitHub Actions implements the full CI/CD path from source change to production by validating code, producing immutable artifacts, promoting them through environments, deploying with explicit safety gates, and recovering when rollouts fail.
+>
+> **Lifecycle model and integration stages**
+> - Defines CI, continuous delivery, continuous deployment, artifacts, immutable digests, promotion, rollback, roll-forward, and deployment strategies before walking the source-to-build-to-staging-to-production flow
+> - Connects the CI/CD lifecycle model to actual GitHub Actions triggers, workflow structure, and required status checks so the pipeline stages map cleanly to repository events
+>
+> **Build, deploy, and verify**
+> - Covers continuous integration, building and packaging, blue/green, canary, and rolling deployment patterns, environment approvals, smoke tests, and post-deploy verification
+> - Emphasizes build-once-deploy-many, environment-scoped configuration, and artifact immutability so the exact tested artifact is the one that reaches production
+>
+> **Governance, recovery, and identity**
+> - Explains deployment safety controls, rollback and recovery paths, supply-chain integrity, SHA pinning, attestations, provenance, merge queues, and the role of `workflow_dispatch` and `workflow_run` in production release flows
+> - Covers OIDC, Workload Identity Federation, and permission boundaries so deployment credentials stay short-lived and scoped to the correct stage
+>
+> **Operations and safety**
+> - Warnings: rebuilding per environment, mutable tags, missing `merge_group` coverage, under-scoped rollback plans, unsafe deployment concurrency, and over-trusting long-lived credentials
+> - Recommendations: build once and promote unchanged artifacts, gate production with environments, pin actions and artifact identities, scope deployment credentials with OIDC, and make rollback a first-class workflow path
+> - Troubleshooting: deployment verification failures, stuck merge queues, promotion drift, identity problems, post-deploy regressions, and rollback decision paths
 
-This page covers the full CI/CD lifecycle: validating code, building immutable artifacts, promoting them through environments, deploying safely, verifying the result, and recovering when things go wrong. Every workflow YAML shown here is committed to the `alp78/git-lab` repository and has been triggered and run on GitHub. Every output cell contains captured run output.
+> [!note]- Glossary
+>
+> **Continuous Integration (CI)**
+> - The practice of automatically validating every code change — running lint, tests, and build — so defects are caught before merge.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **Continuous Delivery (CD)**
+> - Extending CI so that every validated change is deployable to production at the push of a button (manual approval gate).
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
-## Key Definitions
+> ---
+>
+> **Continuous Deployment**
+> - Extending CD so that every validated change is deployed to production automatically, with no human gate.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Artifact**
+> - A file or set of files produced by a build job and consumed by deploy jobs — Docker images, compiled binaries, static site bundles.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Image digest**
+> - A content-addressable SHA-256 hash (`sha256:abc123...`) that uniquely identifies a container image. Unlike tags, digests are immutable.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **Immutable artifact**
+> - An artifact identified by digest or commit SHA rather than a mutable label like `latest`. Ensures every environment deploys the exact same binary.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Build once, deploy many**
+> - The principle that a single build produces one artifact, which is then promoted unchanged through staging and production — no rebuilding per environment.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Promotion**
+> - Moving a validated artifact from one environment to the next (e.g., staging → production) without rebuilding it.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Rollback**
+> - Redeploying a previously known-good artifact to replace a broken deployment.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Roll-forward**
+> - Fixing the problem with a new commit and deploying it, rather than reverting to an older version. Preferred when the fix is faster than the rollback.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Blue/green deployment**
+> - Running two identical production environments; traffic is switched atomically from the old (blue) to the new (green). Rollback is an instant switch back.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Canary deployment**
+> - Routing a small percentage of traffic to the new version and gradually increasing it. If metrics degrade, traffic is shifted back.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Rolling deployment**
+> - Replacing instances one at a time. Simpler than canary but offers no traffic control — partially deployed state exists during the rollout.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Smoke test**
+> - A minimal set of health checks run immediately after deployment to verify the service is alive and functional.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Concurrency group**
+> - A GitHub Actions mechanism that ensures only one workflow run per named group executes at a time, preventing parallel deployments.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Environment**
+> - A GitHub deployment target (`staging`, `production`) with optional protection rules: required reviewers, wait timers, branch restrictions.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Protection rule**
+> - A gate on a GitHub environment — required reviewer approval, wait timer, or deployment branch policy — that must pass before a job executes.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **OIDC (OpenID Connect)**
+> - A protocol that lets GitHub Actions authenticate to cloud providers (GCP, AWS, Azure) using short-lived tokens instead of stored credentials.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - The GCP mechanism that accepts GitHub OIDC tokens and exchanges them for short-lived GCP access tokens — no service account keys needed.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Supply chain attack**
+> - Compromising a dependency (action, library, base image) to inject malicious code into downstream builds.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **SHA pinning**
+> - Referencing a GitHub Action by its full commit SHA (`uses: actions/checkout@11bd719...`) instead of a mutable tag (`@v4`), preventing tag-mutation attacks.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Attestation**
+> - A signed statement binding an artifact to its source commit, build environment, and build parameters — enabling provenance verification.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Provenance**
+> - The verifiable chain of evidence from source code to deployed artifact: who built it, from which commit, on which runner, with which inputs.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **SLSA (Supply-chain Levels for Software Artifacts)**
+> - A framework defining levels of supply-chain security maturity, from Level 1 (documented build) to Level 4 (hermetic, reproducible build).
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Merge queue**
+> - A GitHub feature that serializes PR merges through temporary merge branches, requiring the `merge_group` trigger in CI workflows.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`merge_group` trigger**
+> - The `on: merge_group` event that fires when a PR enters the merge queue — required for CI checks to run against the queued merge commit.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`workflow_dispatch`**
+> - A trigger that enables manual workflow execution via the GitHub UI or CLI, with typed input parameters for runtime configuration.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`workflow_run`**
+> - A trigger that fires when another workflow completes, enabling workflow chaining (e.g., deploy after CI passes).
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Required status check**
+> - A branch protection rule that blocks merges until a specific workflow or job reports success on the PR.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **Deployment branch policy**
+> - An environment protection rule that restricts which branches can trigger deployments to that environment.
+> - It matters in this note because the workflows for CI validation, artifact promotion, deployment safety, rollback, and GitHub Actions delivery pipelines depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
-| Term | Definition |
-|---|---|
-| **Continuous Integration (CI)** | The practice of automatically validating every code change — running lint, tests, and build — so defects are caught before merge. |
-| **Continuous Delivery (CD)** | Extending CI so that every validated change is deployable to production at the push of a button (manual approval gate). |
-| **Continuous Deployment** | Extending CD so that every validated change is deployed to production automatically, with no human gate. |
-| **Artifact** | A file or set of files produced by a build job and consumed by deploy jobs — Docker images, compiled binaries, static site bundles. |
-| **Image digest** | A content-addressable SHA-256 hash (`sha256:abc123...`) that uniquely identifies a container image. Unlike tags, digests are immutable. |
-| **Immutable artifact** | An artifact identified by digest or commit SHA rather than a mutable label like `latest`. Ensures every environment deploys the exact same binary. |
-| **Build once, deploy many** | The principle that a single build produces one artifact, which is then promoted unchanged through staging and production — no rebuilding per environment. |
-| **Promotion** | Moving a validated artifact from one environment to the next (e.g., staging → production) without rebuilding it. |
-| **Rollback** | Redeploying a previously known-good artifact to replace a broken deployment. |
-| **Roll-forward** | Fixing the problem with a new commit and deploying it, rather than reverting to an older version. Preferred when the fix is faster than the rollback. |
-| **Blue/green deployment** | Running two identical production environments; traffic is switched atomically from the old (blue) to the new (green). Rollback is an instant switch back. |
-| **Canary deployment** | Routing a small percentage of traffic to the new version and gradually increasing it. If metrics degrade, traffic is shifted back. |
-| **Rolling deployment** | Replacing instances one at a time. Simpler than canary but offers no traffic control — partially deployed state exists during the rollout. |
-| **Smoke test** | A minimal set of health checks run immediately after deployment to verify the service is alive and functional. |
-| **Concurrency group** | A GitHub Actions mechanism that ensures only one workflow run per named group executes at a time, preventing parallel deployments. |
-| **Environment** | A GitHub deployment target (`staging`, `production`) with optional protection rules: required reviewers, wait timers, branch restrictions. |
-| **Protection rule** | A gate on a GitHub environment — required reviewer approval, wait timer, or deployment branch policy — that must pass before a job executes. |
-| **OIDC (OpenID Connect)** | A protocol that lets GitHub Actions authenticate to cloud providers (GCP, AWS, Azure) using short-lived tokens instead of stored credentials. |
-| **Workload Identity Federation** | The GCP mechanism that accepts GitHub OIDC tokens and exchanges them for short-lived GCP access tokens — no service account keys needed. |
-| **Supply chain attack** | Compromising a dependency (action, library, base image) to inject malicious code into downstream builds. |
-| **SHA pinning** | Referencing a GitHub Action by its full commit SHA (`uses: actions/checkout@11bd719...`) instead of a mutable tag (`@v4`), preventing tag-mutation attacks. |
-| **Attestation** | A signed statement binding an artifact to its source commit, build environment, and build parameters — enabling provenance verification. |
-| **Provenance** | The verifiable chain of evidence from source code to deployed artifact: who built it, from which commit, on which runner, with which inputs. |
-| **SLSA (Supply-chain Levels for Software Artifacts)** | A framework defining levels of supply-chain security maturity, from Level 1 (documented build) to Level 4 (hermetic, reproducible build). |
-| **Merge queue** | A GitHub feature that serializes PR merges through temporary merge branches, requiring the `merge_group` trigger in CI workflows. |
-| **`merge_group` trigger** | The `on: merge_group` event that fires when a PR enters the merge queue — required for CI checks to run against the queued merge commit. |
-| **`workflow_dispatch`** | A trigger that enables manual workflow execution via the GitHub UI or CLI, with typed input parameters for runtime configuration. |
-| **`workflow_run`** | A trigger that fires when another workflow completes, enabling workflow chaining (e.g., deploy after CI passes). |
-| **Required status check** | A branch protection rule that blocks merges until a specific workflow or job reports success on the PR. |
-| **Deployment branch policy** | An environment protection rule that restricts which branches can trigger deployments to that environment. |
+> [!example] Delivery Pipeline Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when designing or reviewing GitHub Actions pipelines that must build immutable artifacts once, promote them across environments, deploy safely, and verify production health.
+> > - Use it when environment approvals, rollback paths, deployment identity, merge queues, or release concurrency are the real design constraints.
+> > - Use it to check that CI and CD stages preserve artifact immutability and that the tested artifact is the one reaching production.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not start here if the team still lacks the core runner, trigger, and expression model; promotion pipelines depend on those fundamentals.
+> > - Do not use this note for generic workflow reuse questions that are not about artifact promotion and deployment safety.
+> > - Do not treat it as sufficient if the workload is specifically warehouse automation or data backfill control; those patterns need the data-engineering note.
 
 ## CI/CD Lifecycle Model
 
@@ -270,6 +566,7 @@ GitHub-hosted runners start with a clean environment on every job. Without cachi
 | Docker layer caching | `docker/build-push-action` with `cache-from: type=gha` | Docker builds |
 
 Cache key design:
+
 - Base keys on `hashFiles('requirements.txt')` — changes to dependencies automatically bust the cache.
 - Include `${{ runner.os }}` and `${{ matrix.python-version }}` for matrix builds so each cell has its own cache.
 - Use `restore-keys` prefixes for partial cache hits when the exact key misses.
@@ -1522,21 +1819,26 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 ## Related
 
 **GCP (Chapter 06):**
+
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM fundamentals and Workload Identity Federation
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager for application secrets
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Compute/cloud-run-jobs-vs-services) — Cloud Run deployment targets
 
 **Terraform (Chapter 07):**
+
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — Terraform plan/apply steps orchestrated by workflows
 
 **Git (Chapter 08):**
+
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — PR events that trigger workflows
 - [gitignore-patterns](https://alp78.github.io/elysium/08-Git/gitignore-patterns) — preventing secret files from reaching Git
 
 **Docker (Chapter 09):**
+
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker build/push commands used in deploy workflows
 
 **dbt (Chapter 11):**
+
 - [dbt-ci-cd](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd) — dbt-specific CI checks in GitHub Actions
 
 ## References

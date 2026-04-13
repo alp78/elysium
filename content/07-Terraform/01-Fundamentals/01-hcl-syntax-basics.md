@@ -16,7 +16,195 @@ status: complete
 >
 > — **Alan Perlis**, *Epigrams on Programming* (1982)
 
-HashiCorp Configuration Language (HCL) is a declarative language designed by HashiCorp specifically for infrastructure-as-code. Unlike imperative scripts (bash, Python), you describe _what_ you want and Terraform figures out _how_ to create it. HCL files use the `.tf` extension.
+> [!abstract]- Summary
+>
+> HCL Syntax Basics is the language primer for the Terraform chapter: it defines how `.tf` files describe infrastructure declaratively, how Terraform interprets blocks, expressions, and meta-arguments, and where the sharp edges are when that syntax starts driving real GCP resources.
+>
+> **Core language model**
+> - covers declarative HCL structure, blocks versus arguments, nested block composition, file naming, and the difference between Terraform-internal names and real GCP resource names
+>
+> **Types, expressions, and functions**
+> - covers the HCL type system, literals, references, operators, conditionals, `for` expressions, splats, heredocs, and the built-in function families you validate in `terraform console`
+>
+> **Resource shaping primitives**
+> - covers meta-arguments such as `count`, `for_each`, `depends_on`, and `lifecycle`, plus validation, `terraform_data`, and dynamic blocks for repeated nested configuration
+>
+> **File layout and authoring workflow**
+> - covers practical file organization, common Terraform file roles, secret handling around `*.tfvars`, lockfile usage, and formatting expectations for day-to-day authoring
+>
+> **Operations and safety**
+> - Warnings: duplicate map keys silently overwrite earlier entries, `bcrypt()` hashes change every plan, `count` index shifting recreates resources, overusing `depends_on` fights Terraform's graph, `prevent_destroy` does not protect removed blocks, deep dynamic nesting reduces readability, and secret-bearing `*.tfvars` files must never be committed
+> - Recommendations: prefer `for_each` over `count` for stable identities, test expressions in `terraform console`, flatten complex inputs into locals before dynamic blocks, keep secrets outside version control, and commit `.terraform.lock.hcl`
+
+> [!note]- Glossary
+>
+> **HCL**
+> - HashiCorp Configuration Language, the declarative syntax Terraform uses to describe desired infrastructure state in `.tf` files.
+> - It matters because everything else in the note depends on understanding HCL as a configuration language rather than as an imperative scripting language.
+>
+> > [!warning] Declarative does not mean sequential
+> >
+> > HCL describes intent, not execution order. Terraform builds its own dependency graph from the configuration instead of running blocks top to bottom like a script.
+>
+> ---
+>
+> **Block**
+> - A structured container with a type, optional labels, and a body, such as `resource`, `variable`, `provider`, or nested configuration blocks.
+> - It matters because block structure is the backbone of Terraform configuration and determines how resources, providers, and nested settings are modeled.
+>
+> > [!info] Blocks can nest deeply
+> >
+> > A top-level resource block can contain nested blocks such as `template`, `containers`, `env`, or `lifecycle`. Reading Terraform fluently means recognizing those nesting boundaries quickly.
+>
+> ---
+>
+> **Argument**
+> - A key-value assignment inside a block that sets one specific property.
+> - It matters because Terraform behavior comes from the combination of block shape and argument values inside each block.
+>
+> > [!warning] Arguments are not blocks
+> >
+> > `name = "..."` and `lifecycle { ... }` look equally indented in code, but they are different language constructs with different semantics. Mixing them conceptually makes provider schemas harder to read.
+>
+> ---
+>
+> **Label**
+> - An identifier attached to a block after its type, commonly used to specify resource type and local name.
+> - It matters because labels are how Terraform distinguishes one block instance from another and builds internal addresses such as `google_compute_network.main`.
+>
+> > [!info] Labels help form addresses
+> >
+> > In a resource block, one label usually identifies the provider resource type and another identifies the local Terraform name. Those labels never become arbitrary decoration; they drive references.
+>
+> ---
+>
+> **Terraform-internal name**
+> - The local identifier Terraform uses inside configuration to reference a resource instance.
+> - It matters because it is separate from the cloud-provider `name` argument, and confusing the two leads to bad references or bad naming expectations.
+>
+> > [!warning] Internal and cloud names differ
+> >
+> > `google_compute_firewall.allow_sql` is a Terraform address, while `allow-sql-from-airflow` might be the actual GCP resource name. Changing one does not automatically imply the same change in the other.
+>
+> ---
+>
+> **HCL type system**
+> - The set of primitive and collection types HCL supports, including strings, numbers, booleans, lists, maps, sets, objects, and tuples.
+> - It matters because variable declarations, expressions, and function behavior all depend on Terraform knowing the exact value shape.
+>
+> > [!warning] Type shape affects plan-time behavior
+> >
+> > A `set(string)` behaves differently from a `list(string)` because order and uniqueness semantics change. Seemingly small type choices can change resource identity, diffs, and iteration behavior.
+>
+> ---
+>
+> **Expression**
+> - Any HCL fragment that evaluates to a value, including literals, references, operators, function calls, conditionals, and comprehensions.
+> - It matters because Terraform configurations are largely composed by wiring expressions into arguments rather than by writing procedural code.
+>
+> > [!info] Expressions are where logic lives
+> >
+> > Terraform keeps control flow narrow, so most configuration intelligence is expressed through value construction. That is why expression fluency matters more than memorizing lots of commands.
+>
+> ---
+>
+> **`for` expression**
+> - An HCL construct that transforms one collection into another by iterating over its elements.
+> - It matters because the note uses `for` expressions to reshape inputs into the exact collections that resources, locals, and outputs need.
+>
+> > [!warning] Key stability matters
+> >
+> > When a `for` expression produces keys that later feed `for_each`, those keys need to stay stable across plans. Unstable keys can cause Terraform to replace resources unnecessarily.
+>
+> ---
+>
+> **Splat expression**
+> - A shorthand expression for projecting one attribute from every element in a collection of similar objects.
+> - It matters because splats are a compact way to extract lists of IDs, names, or other repeated attributes without manual indexing.
+>
+> > [!info] Readability still matters
+> >
+> > Splat syntax is terse, but explicit `for` expressions are sometimes easier to read when the transformation is doing more than a simple projection.
+>
+> ---
+>
+> **Meta-argument**
+> - A Terraform language feature attached to resource-like blocks that changes how Terraform manages those blocks rather than changing a provider-side API field.
+> - It matters because `count`, `for_each`, `depends_on`, and `lifecycle` directly affect graph shape, addressing, and destroy behavior.
+>
+> > [!warning] Meta-arguments reshape state
+> >
+> > Switching from `count` to `for_each`, changing keys, or misusing `depends_on` is not just syntactic churn. It can change resource addresses and trigger replacements.
+>
+> ---
+>
+> **`count`**
+> - A meta-argument that creates zero or more copies of a block by numeric index.
+> - It matters because it is the simplest repetition tool, but it also creates fragile index-based addressing.
+>
+> > [!warning] Index shifts are destructive
+> >
+> > If the underlying list order changes, Terraform can destroy and recreate resources because instance identity is tied to numeric position. That is why `count` is risky for heterogeneous or re-orderable collections.
+>
+> ---
+>
+> **`for_each`**
+> - A meta-argument that creates instances from a map or set and keys them by stable identifiers rather than by integer position.
+> - It matters because it is usually the safer repetition primitive for real infrastructure where identity should survive ordering changes.
+>
+> > [!info] Stable keys preserve identity
+> >
+> > When instance identity is based on meaningful keys such as names or IDs, Terraform can update the right object without cascading replacements caused by list reordering.
+>
+> ---
+>
+> **`lifecycle`**
+> - A nested block that changes how Terraform handles create, update, replace, or destroy operations for a resource.
+> - It matters because settings such as `prevent_destroy` influence safety boundaries during plan and apply.
+>
+> > [!warning] Protection has limits
+> >
+> > `prevent_destroy` only protects a resource while the block still exists in configuration. If the block is removed entirely, Terraform no longer sees that lifecycle rule.
+>
+> ---
+>
+> **Dynamic block**
+> - An HCL construct that generates repeated nested blocks from a collection at plan time.
+> - It matters because some provider schemas require many repeated sub-blocks, and dynamic blocks keep those definitions data-driven.
+>
+> > [!warning] Nested generation gets unreadable fast
+> >
+> > Dynamic blocks are powerful, but deep nesting makes configurations harder to review and reason about. When the structure gets complex, flattening inputs into locals is usually clearer.
+>
+> ---
+>
+> **`terraform console`**
+> - An interactive REPL for evaluating HCL expressions, function calls, and references outside a full plan or apply.
+> - It matters because it is the safest way to test expression logic, collection transforms, and function output before those values start driving resources.
+>
+> > [!info] Best place to debug expressions
+> >
+> > Console evaluation is fast and low-risk. It is often the quickest way to verify map shapes, list transforms, or validation expressions before they become plan-time errors.
+>
+> ---
+>
+> **`.terraform.lock.hcl`**
+> - Terraform's dependency lockfile, pinning the exact provider selections used by the configuration.
+> - It matters because reproducible provider versions are part of safe team and CI/CD workflows, especially when provider schemas evolve.
+>
+> > [!warning] Do not treat it as disposable
+> >
+> > Ignoring the lockfile means each machine can resolve slightly different provider builds. That weakens reproducibility and can introduce drift between local runs and CI.
+>
+> ---
+>
+> **`*.tfvars`**
+> - Variable-value files used to supply input variables outside the main configuration.
+> - It matters because they are convenient for environment-specific values but dangerous when they contain secrets.
+>
+> > [!danger] Secrets do not belong in git
+> >
+> > A `.tfvars` file with passwords, API keys, or service-account material is plaintext configuration. If it is committed, the exposure is immediate and difficult to unwind fully.
 
 ## Blocks and Arguments
 

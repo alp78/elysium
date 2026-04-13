@@ -15,9 +15,105 @@ status: complete
 >
 > — **Charity Majors**, CTO of Honeycomb
 
-The the data pipeline project Datadog setup runs two agents (Airflow VM and SQL VM) plus a GCP Integration. The agent software itself is free — costs are incurred from Datadog's SaaS based on host count and log/trace volume.
+> [!abstract]- Summary
+>
+> This note treats observability as a costed design choice rather than a free default: it breaks down where Datadog spend comes from in this platform, how much footprint the agents add to small VMs, when disabling the stack is sensible, and how to compare Datadog's benefits against GCP-native monitoring for the same workloads.
+>
+> **Cost model**
+> - Breaks Datadog usage into its main cost drivers, including hosts, logs, custom metrics, and tracing volume.
+> - Helps the reader understand which parts of the observability design actually move the bill.
+>
+> **Runtime overhead**
+> - Covers the agent memory footprint on the small VMs and the option to disable Datadog entirely when the platform does not need it.
+> - Keeps infrastructure resource pressure tied to the same economic discussion as SaaS spend.
+>
+> **Reduction strategies**
+> - Lists practical ways to shrink cost, such as narrowing signal scope, using the trial period intentionally, and avoiding unnecessary collection volume.
+> - Frames optimization as keeping the highest-value signals rather than blindly cutting telemetry.
+>
+> **Platform tradeoff**
+> - Compares Datadog cost against the surrounding GCP infrastructure and against what GCP-native observability already provides.
+> - When to use: the team needs to justify, trim, or temporarily disable Datadog based on actual operational value.
 
----
+> [!note]- Glossary
+>
+> **billable host**
+> - A machine or runtime Datadog counts toward host-based pricing.
+> - It matters here because VM count is one of the clearest recurring cost inputs in the platform.
+>
+> > [!info] Infrastructure pricing unit
+> >
+> > If host visibility is not needed, removing or consolidating agents can reduce spend immediately.
+>
+> ---
+>
+> **custom metric**
+> - A metric outside the default product set, often billed differently because it increases indexed cardinality and volume.
+> - It matters here because Datadog custom SQL metrics are powerful but not free.
+>
+> > [!tip] High-value only
+> >
+> > Custom metrics should answer a question important enough to justify both config and recurring cost.
+>
+> ---
+>
+> **ingested log volume**
+> - The amount of log data shipped into Datadog for indexing and retention.
+> - It matters here because verbose or low-value log streams can dominate cost quickly.
+>
+> > [!info] Volume becomes bill
+> >
+> > Logging every line is easy; paying for and searching it later is the real constraint.
+>
+> ---
+>
+> **APM volume**
+> - The amount of trace data collected and retained by Datadog APM.
+> - It matters here because broad tracing can create meaningful spend even when the tracing model is technically correct.
+>
+> > [!tip] Trace what matters
+> >
+> > Sampling and scope control are cost tools as much as performance tools.
+>
+> ---
+>
+> **agent overhead**
+> - The CPU and memory consumed by the Datadog agent itself on a host.
+> - It matters here because small VMs feel the monitoring footprint more sharply than large ones.
+>
+> > [!info] SaaS cost plus runtime cost
+> >
+> > The hosted bill is only part of the price; the collector also consumes local capacity.
+>
+> ---
+>
+> **feature gate**
+> - A configuration switch that enables or disables a subsystem as a unit.
+> - It matters here because `dd_api_key` acts as a clean infrastructure-wide gate for Datadog in this project.
+>
+> > [!tip] All-or-nothing control
+> >
+> > A strong feature gate makes evaluation and rollback cheaper than hand-editing several partial configs.
+>
+> ---
+>
+> **trial period**
+> - A time-boxed vendor evaluation window used to test value before committing to ongoing spend.
+> - It matters here because observability should prove its operating benefit before it becomes a permanent bill line.
+>
+> > [!info] Evaluate deliberately
+> >
+> > Use the trial to validate dashboards, monitors, and incident workflows, not just raw signal arrival.
+>
+> ---
+>
+> **total cost of observability**
+> - The combined SaaS, infrastructure, and human tradeoffs involved in a monitoring design.
+> - It matters here because the real decision is not Datadog price alone, but whether the gained visibility offsets its full cost.
+>
+> > [!tip] Cost is multidimensional
+> >
+> > An observability platform is worth its price only if it shortens incidents or prevents bad outcomes materially.
 
 ### Datadog Cost Breakdown per Component
 
@@ -65,17 +161,23 @@ Everything is conditional on `var.dd_api_key != ""`. To disable:
 1. Set `dd_api_key = ""` in `infra/terraform.tfvars`
 2. Run `terraform apply` — all conditional Datadog resources are destroyed (service account, firewall rule, VM metadata)
 3. SSH into Airflow VM and remove the agent:
-   ```bash
+
+```bash
    docker rm -f dd-agent
-   ```
+```
+
 4. SSH into SQL VM and stop the agent:
-   ```bash
+
+```bash
    sudo systemctl disable datadog-agent && sudo systemctl stop datadog-agent
-   ```
+```
+
 5. Revert Dockerfile entrypoint:
-   ```dockerfile
+
+```dockerfile
    ENTRYPOINT ["python", "utils/run_pipeline.py"]
-   ```
+```
+
 6. Remove `ddtrace>=2.10.0` from `requirements.txt`
 7. Rebuild and push the pipeline image
 8. The logger and `run_pipeline.py` trace code no-ops automatically (`ImportError` guard) — no code changes needed
@@ -104,6 +206,7 @@ If cost is a concern after the trial:
 ### Datadog Trial and Evaluation Period
 
 The Datadog EU 14-day trial is sufficient to:
+
 - Set up both agents
 - Configure the GCP Integration
 - Build the Pipeline Watch and SQL Server DBA dashboards
@@ -131,4 +234,3 @@ The Datadog subscription would roughly double the total infrastructure cost. Eva
 - [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Memory budget on Airflow VM
 - [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent management
 - [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — Disabling Datadog section
-

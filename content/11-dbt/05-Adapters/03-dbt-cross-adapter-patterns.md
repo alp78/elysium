@@ -13,9 +13,188 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 >
 > — **Tristan Handy** (creator of dbt)
 
-When a dbt project targets more than one database — or when the same codebase must run against dev (SQL Server) and prod (BigQuery) — adapter-specific SQL divergence becomes a maintenance problem. dbt provides two mechanisms to manage this: the **dispatch macro pattern** and **`target.type` conditional logic**. This note explains both, when to use each, and how to test across adapters.
+> [!abstract]- Summary
+>
+> Cross-adapter dbt work becomes maintainable only when adapter-specific SQL is isolated behind explicit abstractions, and this note defines the dispatch, conditional, testing, and migration patterns needed to run the same project across SQL Server and BigQuery without letting target-specific syntax leak through the model layer.
+>
+> **Abstraction patterns**
+> - Defines the cross-adapter problem, then uses `adapter.dispatch()` with default and adapter-specific macro implementations to hide function differences such as date truncation, safe division, and date arithmetic.
+> - Shows when reusable logic belongs in dispatch macros and when small one-off differences can stay inline behind `target.type` branches.
+>
+> **Model structure and execution choices**
+> - Compares dispatch macros, inline adapter conditionals, and adapter-specific model folders based on how far the SQL structure diverges.
+> - Keeps model files adapter-agnostic where possible, while allowing adapter-only models for features such as BigQuery nested types.
+>
+> **Testing and delivery**
+> - Uses CI matrix builds, adapter-aware generic tests, and `dbt compile` to validate Jinja, macro dispatch, and target-specific SQL across multiple adapters.
+> - Treats compile-time checks as a cheap way to catch adapter errors before provisioning or executing against every warehouse.
+>
+> **Migration guidance and safety**
+> - Maps SQL Server functions, data types, incremental strategies, and post-hooks to BigQuery equivalents as a staged migration guide.
+> - Warnings: inline `target.type` branching does not scale, BigQuery-only nested types require isolation, and migration should proceed layer by layer rather than by rewriting marts first.
+> - Recommendations table: the adapter-folder-versus-dispatch decision matrix is the note's main design rule.
 
----
+> [!note]- Glossary
+>
+> **Cross-adapter pattern**
+> - A design approach that keeps one dbt project running across multiple database adapters by isolating differences in controlled extension points.
+> - It matters here because the entire note is about preventing adapter-specific SQL from spreading unpredictably through shared models.
+>
+> > [!info] Architecture choice, not syntax trick
+> >
+> > This is a maintainability strategy. The value comes from controlling where divergence is allowed, not from making every line of SQL look uniform.
+>
+> ---
+>
+> **Dispatch macro**
+> - A dbt macro wrapper that chooses an adapter-specific implementation behind a stable abstract macro name.
+> - It matters here because it is the primary mechanism the note recommends for reusable SQL differences across BigQuery and SQL Server.
+>
+> > [!warning] Abstraction boundary
+> >
+> > Dispatch works well only when the caller defines a stable contract. If each override does conceptually different work, the abstraction becomes misleading rather than helpful.
+>
+> ---
+>
+> **`adapter.dispatch()`**
+> - The dbt macro helper that resolves the correct implementation for the active adapter at compile time.
+> - It matters here because it is the function that turns generic macro calls into adapter-specific SQL without polluting model files.
+>
+> > [!info] Compile-time selection
+> >
+> > This happens during dbt compilation, not at warehouse runtime. That makes it ideal for portability, but it also means broken dispatch setups fail before queries execute.
+>
+> ---
+>
+> **Default macro implementation**
+> - The fallback macro body used when no adapter-specific override exists for the active target.
+> - It matters here because it defines the baseline behavior and prevents the abstraction from breaking on unsupported or newly added adapters.
+>
+> > [!warning] Fallback must be real
+> >
+> > A weak default implementation turns portability into wishful thinking. The fallback needs to be valid SQL for at least one meaningful family of adapters.
+>
+> ---
+>
+> **Adapter override**
+> - A macro implementation named for a specific adapter, such as `bigquery__date_trunc` or `sqlserver__safe_divide`.
+> - It matters here because overrides are where target-specific SQL is supposed to live when behavior diverges.
+>
+> > [!warning] Keep divergence localized
+> >
+> > Once overrides start carrying business logic instead of adapter logic, the abstraction is doing two jobs badly. Restrict them to syntax and capability differences.
+>
+> ---
+>
+> **`target.type`**
+> - The dbt runtime target identifier that exposes which adapter is active for the current compile or run.
+> - It matters here because the note allows small inline branches on `target.type` when a full dispatch macro would be overkill.
+>
+> > [!warning] Inline branches scale poorly
+> >
+> > A couple of branches are manageable, but repeated inline conditionals quickly make model SQL unreadable. That is the point where logic should move into dispatch macros.
+>
+> ---
+>
+> **Adapter-specific model folder**
+> - A project directory pattern where separate model files are enabled per adapter when the full SQL shape differs too much for shared abstraction.
+> - It matters here because some warehouse features, such as BigQuery nested types, cannot be expressed cleanly through small expression-level overrides.
+>
+> > [!info] Structural escape hatch
+> >
+> > Use adapter folders when the entire query shape changes, not just one function call. They are a deliberate alternative to over-abstracted macros.
+>
+> ---
+>
+> **`dbt_utils`**
+> - A common dbt package that already provides many reusable cross-database macros.
+> - It matters here because the note explicitly recommends checking existing utilities before writing custom dispatch infrastructure.
+>
+> > [!info] Prefer proven primitives
+> >
+> > Reinventing standard cross-database helpers adds maintenance cost for no gain. Use custom dispatch only when the shared package does not cover the required behavior.
+>
+> ---
+>
+> **Compile-time validation**
+> - The use of `dbt compile` to render Jinja, resolve refs, and validate adapter-specific SQL generation without executing warehouse queries.
+> - It matters here because it provides a cheap multi-adapter safety net in CI and during migrations.
+>
+> > [!warning] Syntax safety, not data safety
+> >
+> > Successful compilation proves the SQL can be rendered, not that it is semantically correct or performant on real data. It should complement, not replace, run and test stages.
+>
+> ---
+>
+> **CI matrix**
+> - A CI workflow pattern that runs the same pipeline against multiple target values, such as `sqlserver` and `bigquery`.
+> - It matters here because it operationalizes cross-adapter support instead of relying on one environment to catch all compatibility issues.
+>
+> > [!warning] Drift shows up in CI first
+> >
+> > If only one adapter runs in automation, the other adapter effectively becomes untested code. Matrix execution is what keeps multi-adapter support real.
+>
+> ---
+>
+> **Adapter-aware generic test**
+> - A reusable dbt test whose SQL changes slightly depending on the active adapter's functions or types.
+> - It matters here because the note extends cross-adapter logic into the testing layer, not just into model definitions.
+>
+> > [!info] Test portability counts too
+> >
+> > Shared models with adapter-specific tests still produce maintenance drag. Portable testing patterns are part of the same abstraction problem.
+>
+> ---
+>
+> **Migration checklist**
+> - A concrete inventory of adapter-specific SQL, types, configs, and operational hooks that must be converted during a warehouse migration.
+> - It matters here because the SQL Server to BigQuery section turns migration into an auditable sequence instead of an ad hoc rewrite.
+>
+> > [!warning] Inventory before rewrite
+> >
+> > Teams often start converting syntax before they know the full scope of adapter coupling. The grep-based audit step exists to prevent that blind spot.
+>
+> ---
+>
+> **`partition_by` and `cluster_by`**
+> - BigQuery model configuration options that define table partitioning and clustering for performance and cost control.
+> - It matters here because the migration guide treats them as required replacements for SQL Server physical tuning patterns rather than as optional polish.
+>
+> > [!warning] Different physical model
+> >
+> > BigQuery performance tuning is declarative and storage-oriented, not index-driven. Porting SQL without adding these configs leaves migrated tables operationally incomplete.
+>
+> ---
+>
+> **Post-hook migration**
+> - The process of removing SQL Server-specific `post_hook` DDL such as `CREATE INDEX` or `UPDATE STATISTICS` when moving models to another adapter.
+> - It matters here because the note makes clear that some operational behaviors do not translate directly and must be redesigned, not copied.
+>
+> > [!warning] Do not transliterate ops
+> >
+> > Warehouse migrations fail when teams map syntax but forget that physical maintenance patterns also change. BigQuery does not want SQL Server's DDL maintenance habits pasted into it.
+>
+> ---
+>
+> **Layer-first migration**
+> - A migration strategy that validates staging models first, then intermediate models, then marts.
+> - It matters here because the note recommends minimizing debugging scope by proving source parsing and type mapping before tackling complex downstream transformations.
+>
+> > [!info] Reduce diagnosis scope
+> >
+> > This ordering narrows failures to the current layer. It is much easier to debug broken marts when the staging and intermediate contracts are already known-good.
+
+> [!example] Portability Strategy Fit
+>
+> > [!success] Shared Codebase
+> >
+> > - Use these patterns when one dbt codebase must compile across multiple warehouses, or when a migration needs a staged boundary between shared business logic and adapter-specific SQL.
+> > - Prefer dispatch macros and adapter-aware CI when portability matters enough that you need to stop `target.type` branches from spreading through core models.
+>
+> > [!failure] Single-Target Simplicity
+> >
+> > - Keep the project simpler if it is permanently single-adapter, because dispatch layers and matrix testing add abstraction cost without buying real portability.
+> > - Do not hide fundamentally different model behavior behind cross-adapter abstractions; if the SQL shape diverges materially by platform, isolate that logic in adapter-specific folders instead.
 
 ### The Cross-Adapter Problem
 

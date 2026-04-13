@@ -17,48 +17,67 @@ status: complete
 
 # Users, Logins, Roles, and Permissions
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note is the definitive working reference for **SQL Server 2022** principals and permissions in a data engineering environment. It covers:
+> SQL Server security is an operational design problem across identity, scope, authorization, and auditability. This note establishes how server logins, database users, roles, and permissions interact so access models stay least-privilege, attributable, and debuggable under production pressure.
 >
-> - the distinction between a login (server-level) and a user (database-level)
-> - server roles (legacy fixed, SQL Server 2022 `##MS_*##`, user-defined) and database roles (fixed, user-defined, application)
-> - `GRANT`, `DENY`, `REVOKE` semantics and ownership chaining
-> - schema-level security and the medallion (`bronze` / `silver` / `gold`) role pattern
-> - contained users and their tradeoffs versus login-mapped users
-> - row-level security, dynamic data masking, and application roles
-> - operator-grade inventory and audit queries against `sys.*` catalog views and DMVs
-> - scenario-specific access design for platform admins, data engineers, ETL runtimes, GCP-hosted pipelines, BI consumers, analysts, vendors, and deployment identities
+> - **Identity boundaries**
+>   - clarifies the cloud, host, SQL Server, and database-object trust boundaries so GCP-hosted workloads do not confuse infrastructure access with database access
+> - **Principal and role model**
+>   - explains logins vs users, special principals, server roles, database roles, and the path from authentication to authorization
+> - **Permission design**
+>   - covers the securable hierarchy, `GRANT` / `DENY` / `REVOKE`, schema-level patterns, ownership chaining, SQL Server Agent roles, and when fixed roles should give way to custom roles
+> - **Operational patterns**
+>   - maps least-privilege designs for admins, engineers, pipelines, vendors, analysts, BI consumers, deployment identities, and application runtimes, backed by inventory and audit queries against `sys.*` catalogs and DMVs
+> - **Operations and safety**
+>   - Warnings: shared service logins, `db_owner` on app runtimes, and `CHECK_POLICY = OFF` all widen blast radius or weaken accountability
+>   - Recommendations: default to custom roles, grant at schema scope, isolate identities per pipeline, prefer `##MS_LoginManager##`, separate deployment from runtime, audit `sysadmin`, avoid casual `public` grants, and use contained users deliberately
+>   - Troubleshooting: login-to-user mapping gaps, missing role membership, `DENY` conflicts, contained-user connection targeting, password-policy failures, orphaned users after restore, ineffective grants, and GCP Windows-group limitations
 >
-> Every DDL example and every inventory query in this note runs against the local `stoxx` SQL Server 2022 instance. Output tables under code cells are captured from live execution, not fabricated.
+> Every DDL example and inventory query in this note runs against the local `stoxx` SQL Server 2022 instance, and the output tables under code cells are captured from live execution rather than fabricated examples.
 
-SQL Server security is not one feature. It is the combination of:
-
-- **identity**: who or what is connecting
-- **scope**: server, database, schema, object, or column
-- **authorization**: what actions are permitted
-- **operational design**: whether the access model remains understandable and auditable under real production pressure
-
-This note is the complete working reference for **SQL Server 2022** principals and permissions in a data engineering environment. It covers:
-
-- logins vs users
-- server roles vs database roles
-- fixed roles vs custom roles
-- `GRANT`, `DENY`, and `REVOKE`
-- schema-level security
-- least-privilege patterns
-- contained users
-- service identities
-- practical access models for:
-  - platform admins
-  - security admins
-  - data engineers
-  - ETL and ELT runtimes
-  - GCP-hosted pipeline services
-  - BI consumers
-  - analysts
-  - application end users
-  - vendors and break-glass identities
+> [!note]- Glossary
+>
+> - **Principal**
+>   - security subject in SQL Server, including logins, users, and roles
+> - **Securable**
+>   - resource that can carry permissions, such as a server, database, schema, object, or column
+> - **Login**
+>   - server-scoped identity that authenticates to the SQL Server instance
+> - **User**
+>   - database-scoped identity that authorizes work inside one database
+> - **Server role**
+>   - server-level permission bundle, including legacy fixed roles and SQL Server 2022 `##MS_*##` roles
+> - **Database role**
+>   - database-level permission bundle used to group grants within one database
+> - **Fixed role**
+>   - built-in role with predefined permissions and broad default coverage
+> - **Custom role**
+>   - user-defined role built around workload-specific least-privilege access
+> - **Schema**
+>   - namespace and security boundary used to grant access to groups of related objects
+> - **Schema-scoped grant**
+>   - permission granted on `SCHEMA::name`, usually the cleanest authorization pattern for layered data platforms
+> - **Contained user**
+>   - database user that authenticates directly to a database without a corresponding server login
+> - **Application role**
+>   - database principal activated by an application to assume a controlled permission set
+> - **Ownership chaining**
+>   - behavior where SQL Server can skip rechecking access between objects that share the same owner
+> - **`GRANT`**
+>   - permission statement that allows an action on a securable
+> - **`DENY`**
+>   - explicit block that overrides inherited grants
+> - **`REVOKE`**
+>   - removal of a previous explicit grant or deny without creating a new block
+> - **`public`**
+>   - baseline database role whose permissions apply to every database user
+> - **Least privilege**
+>   - design principle of granting only the minimum access needed for a clear operational purpose
+> - **Orphaned user**
+>   - database user whose login mapping no longer matches after restore or migration
+> - **`sysadmin`**
+>   - fixed server role with effectively unrestricted instance control
 
 > [!important] Least-privilege defaults
 >
@@ -110,15 +129,12 @@ The diagram collapses four separate authorization systems into one picture. Each
 - **Cloud boundary**
   - Controls who can administer the VM, fetch secrets, call cloud APIs, or reach the network path.
   - On GCP this often means a **GCP service account**, IAM bindings, firewall rules, and sometimes Secret Manager access.
-
 - **Host boundary**
   - Controls which process can read TLS files, environment variables, credential files, or mounted secrets.
   - This is the Linux or Windows process boundary.
-
 - **SQL Server boundary**
   - Controls who can connect to the SQL Server instance and what they can do there.
   - This is where **logins, users, roles, and permissions** live.
-
 - **Database object boundary**
   - Controls what can be read, executed, altered, or denied inside actual databases.
   - This is where **schemas, views, procedures, tables, and object-level permissions** matter.
@@ -156,6 +172,7 @@ Brief dictionary definitions are not enough for security work. Each term must be
 A **principal** is any entity that can request SQL Server resources.
 
 Examples:
+
 - a SQL login
 - a Windows login
 - a Windows group
@@ -166,11 +183,13 @@ Examples:
 - a certificate-mapped principal in specialized designs
 
 Why it matters:
+
 - Permissions are not assigned to “connections” in the abstract.
 - Permissions are assigned to principals.
 - If you cannot identify the principal, you cannot reason about the permission model.
 
 Example:
+
 - `etl_loader` as a SQL login is a **server principal**
 - `etl_loader` as a user inside `warehouse` is a **database principal**
 - `etl_loader_rw` as a custom database role is also a **principal**, because it can hold permissions and memberships
@@ -184,6 +203,7 @@ Example:
 A **securable** is any SQL Server resource that can have permissions applied to it.
 
 Examples by scope:
+
 - **server scope**
   - the server itself
   - endpoints
@@ -207,11 +227,13 @@ Examples by scope:
   - a specific column in a table or view
 
 Why it matters:
+
 - Permissions are always evaluated against a securable.
 - If you grant too low in the hierarchy, management becomes noisy.
 - If you grant too high in the hierarchy, blast radius grows.
 
 Example:
+
 - `GRANT SELECT ON SCHEMA::gold TO reporting_reader`
   - principal: `reporting_reader`
   - permission: `SELECT`
@@ -222,6 +244,7 @@ Example:
 A **permission** is the right to perform a specific action on a securable.
 
 Examples:
+
 - `CONNECT`
 - `SELECT`
 - `INSERT`
@@ -235,10 +258,12 @@ Examples:
 - `CREATE USER`
 
 Why it matters:
+
 - Permissions are the actual capability surface.
 - Roles are just bundles; permissions are what ultimately allow actions.
 
 Example:
+
 - A reporting user might need:
   - `CONNECT`
   - `SELECT` on a schema
@@ -250,12 +275,14 @@ Example:
 A **login** is a server-level identity. It allows authentication to the **SQL Server instance**.
 
 Common login types in SQL Server:
+
 - SQL login
 - Windows login
 - Windows group login
 - in supported environments, certain Microsoft Entra-based identities
 
 What it implies:
+
 - A login does **not** automatically imply access inside every database.
 - A login is usually authenticated at the `master` boundary unless you are using a contained user model.
 
@@ -267,6 +294,7 @@ WITH PASSWORD = 'StrongPasswordHere';
 ```
 
 What this does **not** do:
+
 - It does not create a database user.
 - It does not grant table access.
 - It does not grant `SELECT`, `INSERT`, or `EXECUTE`.
@@ -296,6 +324,7 @@ GO
 ```
 
 Implication:
+
 - The login authenticates at the instance.
 - The user defines the identity inside this database.
 
@@ -313,6 +342,7 @@ GO
 ```
 
 Implication:
+
 - Authentication occurs at the database level.
 - The connection string must target the database explicitly.
 - This is often useful for portability and one-database access designs.
@@ -359,11 +389,13 @@ Why roles matter — they separate **identity** from **capability**, users come 
 A **schema** is both a namespace and a security boundary.
 
 Example:
+
 - `bronze.ticks_raw`
 - `silver.orders_enriched`
 - `gold.pnl_daily`
 
 Why it matters:
+
 - Schema-level grants are usually the best balance between precision and manageability
 - They let you grant access to entire layers without table-by-table sprawl
 
@@ -403,6 +435,7 @@ REVOKE SELECT ON OBJECT::gold.salaries FROM analyst_readers;
 ```
 
 Operational implications:
+
 - `DENY` is stronger than inherited `GRANT`
 - `REVOKE` is not the same as `DENY`
 - `DENY` does **not** apply to `sysadmin` members or object owners
@@ -459,6 +492,7 @@ flowchart TD
 5. **Does ownership chaining or execution context modify the final result?**
 
 This is why a user may:
+
 - connect to the instance but not to a database
 - connect to a database but not read a table
 - read a view but not the underlying table directly
@@ -479,6 +513,7 @@ This is why a user may:
 ### SQL Server | authentication | SQL logins
 
 Use when:
+
 - the application is not domain-integrated
 - the environment is Linux-hosted and Windows auth is not available or not used
 - a pipeline runtime needs deterministic credentials
@@ -520,6 +555,7 @@ SQL logins support two password-governance options set at creation time:
 ### SQL Server | authentication | Windows logins and Windows groups
 
 Use when:
+
 - SQL Server is integrated with Windows identity
 - human access is managed through domain groups
 - you want centralized onboarding and offboarding
@@ -545,6 +581,7 @@ GO
 ### SQL Server | authentication | contained users
 
 Use when:
+
 - access is limited to one database
 - database portability matters
 - you want to decouple from instance-level logins
@@ -573,6 +610,7 @@ GO
 ### SQL Server | authentication | certificate and asymmetric-key principals
 
 Use when:
+
 - signing modules
 - highly specialized security patterns
 - controlled privilege elevation through signed code
@@ -698,6 +736,7 @@ SQL Server ships nine fixed database roles in every user database. Their permiss
 This should be your default authorization tool.
 
 Examples:
+
 - `bronze_loader`
 - `silver_transformer`
 - `gold_reader`
@@ -706,6 +745,7 @@ Examples:
 - `job_operator_limited`
 
 Why custom roles win:
+
 - they match your workload
 - they can be audited clearly
 - they avoid “all tables in all schemas” grants
@@ -753,6 +793,7 @@ flowchart TD
 ```
 
 Typical hierarchy:
+
 - server
 - database
 - schema
@@ -762,11 +803,13 @@ Typical hierarchy:
 ### SQL Server | permissions | why scope matters
 
 If you grant too low:
+
 - administration becomes noisy
 - onboarding requires repetitive grants
 - permissions drift becomes likely
 
 If you grant too high:
+
 - blast radius expands
 - unauthorized data becomes visible
 - audits become harder to defend
@@ -802,11 +845,13 @@ GRANT SELECT ON SCHEMA::gold TO analyst_anna;
 ```
 
 Good for:
+
 - temporary investigation
 - one-off exceptions
 - emergencies followed by cleanup
 
 Bad as a default because:
+
 - they do not scale
 - they create hidden snowflakes
 - audits become principal-by-principal archaeology
@@ -822,6 +867,7 @@ ALTER ROLE gold_reader ADD MEMBER analyst_anna;
 ```
 
 Good because:
+
 - capability is separated from identity
 - onboarding and offboarding are easier
 - intent is visible in role names
@@ -1546,10 +1592,12 @@ Error 229 (SELECT permission denied) fires when the user queries the table direc
 A module can run under a different execution context than the caller. The four forms are `EXECUTE AS CALLER` (the default — runs as the invoking principal), `EXECUTE AS SELF` (runs as the user who created the module), `EXECUTE AS OWNER` (runs as the current module owner), and `EXECUTE AS '<user>'` (runs as a named user).
 
 Why this matters:
+
 - it can simplify secure API patterns
 - it can also hide privilege escalation if poorly designed
 
 Recommendation:
+
 - prefer explicit, well-documented procedure surfaces
 - use `EXECUTE AS` deliberately, not casually
 - review ownership context during security audits
@@ -1698,6 +1746,7 @@ The live output shows three important facts. First, `USER_NAME()` returns `demo_
 SQL Server supports **row-level security (RLS)** through security predicates defined as inline table-valued functions. RLS filters rows transparently — users see only the rows they are authorized to access.
 
 RLS is relevant when:
+
 - multi-tenant data shares a single table and tenants must be isolated
 - regulatory requirements mandate row-level access control beyond schema or view boundaries
 - the access boundary cannot be achieved by schema separation alone
@@ -1800,6 +1849,7 @@ Each tenant sees only the two rows where `tenant_name = USER_NAME()`. The table 
 **Dynamic data masking (DDM)** obscures sensitive column data from non-privileged users without changing the stored values. Masked columns return obfuscated results to users without `UNMASK` permission.
 
 DDM is relevant when:
+
 - analysts need access to a table but should not see PII columns (email, SSN, salary)
 - the masking requirement is presentation-level, not storage-level
 - column-level `DENY` is too restrictive because the user needs to query the table
@@ -2515,21 +2565,6 @@ GO
 
 ---
 
-## Key Terms
-
-| Term | Definition | Purpose | Common Mistake |
-|---|---|---|---|
-| **Principal** | Any entity that can request SQL Server resources (login, user, role) | The "who" in authorization — permissions attach to principals | Confusing a login (server) with a user (database) — they are separate principals |
-| **Securable** | Any SQL Server resource that can have permissions applied (server, database, schema, object, column) | The "what" in authorization — defines the target of a permission | Granting at object scope when schema scope would be cleaner and more maintainable |
-| **Login** | Server-level identity that allows authentication to the SQL Server instance | Gets a connection through the front door | Assuming a login automatically grants database access — it does not |
-| **User** | Database-level identity mapped to a login or self-contained | Defines what a principal can do inside a specific database | Creating a login but forgetting to create the corresponding database user |
-| **Role** | Principal that groups permissions, separating identity from capability | Stable permission bundles that survive personnel churn | Granting permissions directly to users instead of through roles |
-| **Schema** | Both a namespace and a security boundary for database objects | Allows granting access to entire layers without table-by-table sprawl | Putting all objects in `dbo` and losing schema-level security |
-| **Contained user** | Database user with no corresponding server login, authenticating at the database level | Portability and single-database isolation | Forgetting that the connection string must explicitly name the database |
-| **`DENY`** | Explicitly blocks a permission, overriding inherited grants | Exception handling for sensitive objects | Overusing `DENY` as the primary design mechanism instead of clean role scoping |
-
----
-
 ## Warnings
 
 > [!warning] Shared service logins
@@ -2586,49 +2621,60 @@ GO
 
 ---
 
-
----
-
 ## References
 
-- Microsoft Learn — Create a login  
-  https://learn.microsoft.com/en-us/sql/t-sql/statements/create-login-transact-sql?view=sql-server-ver17
+- Microsoft Learn — Create a login
 
-- Microsoft Learn — Create a user  
-  https://learn.microsoft.com/en-us/sql/t-sql/statements/create-user-transact-sql?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/t-sql/statements/create-login-transact-sql?view=sql-server-ver17
 
-- Microsoft Learn — Principals (Database Engine)  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/principals-database-engine?view=sql-server-ver17
+- Microsoft Learn — Create a user
 
-- Microsoft Learn — Permissions (Database Engine)  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/permissions-database-engine?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/t-sql/statements/create-user-transact-sql?view=sql-server-ver17
 
-- Microsoft Learn — Permissions hierarchy  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/permissions-hierarchy-database-engine?view=sql-server-ver17
+- Microsoft Learn — Principals (Database Engine)
 
-- Microsoft Learn — Server-level roles  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/server-level-roles?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/principals-database-engine?view=sql-server-ver17
 
-- Microsoft Learn — Database-level roles  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver17
+- Microsoft Learn — Permissions (Database Engine)
 
-- Microsoft Learn — Get started with Database Engine permissions  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/getting-started-with-database-engine-permissions?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/relational-databases/security/permissions-database-engine?view=sql-server-ver17
 
-- Microsoft Learn — Contained database users  
-  https://learn.microsoft.com/en-us/sql/relational-databases/security/contained-database-users-making-your-database-portable?view=sql-server-ver17
+- Microsoft Learn — Permissions hierarchy
 
-- Microsoft Learn — Contained database authentication server option  
-  https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/contained-database-authentication-server-configuration-option?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/relational-databases/security/permissions-hierarchy-database-engine?view=sql-server-ver17
 
-- Microsoft Learn — GRANT  
-  https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-transact-sql?view=sql-server-ver17
+- Microsoft Learn — Server-level roles
 
-- Microsoft Learn — DENY  
-  https://learn.microsoft.com/en-us/sql/t-sql/statements/deny-transact-sql?view=sql-server-ver17
+https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/server-level-roles?view=sql-server-ver17
 
-- Microsoft Learn — REVOKE  
-  https://learn.microsoft.com/en-us/sql/t-sql/statements/revoke-transact-sql?view=sql-server-ver17
+- Microsoft Learn — Database-level roles
 
-- Microsoft Learn — SQL Server Agent fixed database roles  
-  https://learn.microsoft.com/en-us/ssms/agent/sql-server-agent-fixed-database-roles
+https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/database-level-roles?view=sql-server-ver17
+
+- Microsoft Learn — Get started with Database Engine permissions
+
+https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/getting-started-with-database-engine-permissions?view=sql-server-ver17
+
+- Microsoft Learn — Contained database users
+
+https://learn.microsoft.com/en-us/sql/relational-databases/security/contained-database-users-making-your-database-portable?view=sql-server-ver17
+
+- Microsoft Learn — Contained database authentication server option
+
+https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/contained-database-authentication-server-configuration-option?view=sql-server-ver17
+
+- Microsoft Learn — GRANT
+
+https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-transact-sql?view=sql-server-ver17
+
+- Microsoft Learn — DENY
+
+https://learn.microsoft.com/en-us/sql/t-sql/statements/deny-transact-sql?view=sql-server-ver17
+
+- Microsoft Learn — REVOKE
+
+https://learn.microsoft.com/en-us/sql/t-sql/statements/revoke-transact-sql?view=sql-server-ver17
+
+- Microsoft Learn — SQL Server Agent fixed database roles
+
+https://learn.microsoft.com/en-us/ssms/agent/sql-server-agent-fixed-database-roles

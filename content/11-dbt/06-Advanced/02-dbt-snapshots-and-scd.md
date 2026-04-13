@@ -13,9 +13,188 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms).
+> [!abstract]- Summary
+>
+> dbt snapshots implement SCD Type 2 history by closing changed rows and opening new versions over time, and this note defines the snapshot strategies, metadata columns, point-in-time query patterns, ESG and index-history use cases, and destructive edge cases required to preserve reproducible historical state in financial pipelines.
+>
+> **Snapshot mechanics and strategy choice**
+> - Explains how dbt snapshots compare the source against a `unique_key`, generate `dbt_scd_id`, `dbt_valid_from`, `dbt_valid_to`, and `dbt_updated_at`, and store files in the `snapshots/` directory.
+> - Compares `timestamp` and `check` strategies, including reliable `updated_at` usage, explicit `check_cols`, and a decision matrix for high-volume or append-style sources.
+>
+> **Production snapshot patterns**
+> - Builds full snapshots for index constituents and ESG ratings, with source keys, tracked business columns, metadata fields, tags, post-hooks, and hard-delete behavior configured for the data domain.
+> - Emphasizes that membership, weights, and provider scores must remain historically reconstructible for audit, regulatory, and portfolio-analysis use cases.
+>
+> **Point-in-time reconstruction**
+> - Uses PIT filters and PIT joins to rebuild historical constituent sets, sector weights, and portfolio or index performance as of a specific date.
+> - Distinguishes pipeline metadata timestamps from business-effective dates and shows when source `effective_date` or `provider_updated_at` must drive business logic.
+>
+> **Operations and safety**
+> - Warnings: deduplicate `unique_key` in the source, never treat `dbt_valid_from` as business time, avoid `check_cols = 'all'` on wide sources, and do not run `dbt snapshot --full-refresh` casually.
+> - Preventive checklist: the gotchas section defines 6 major failure modes and the concrete mitigations for each.
+> - Runtime sequence: snapshots belong in a dedicated pipeline step between freshness checks and downstream model builds.
 
----
+> [!note]- Glossary
+>
+> **Snapshot**
+> - A dbt construct that stores changing source records as a historical table instead of overwriting each entity with only its latest state.
+> - It matters here because the entire note is about preserving auditable temporal history for financial entities that change over time.
+>
+> > [!info] Historical state capture
+> >
+> > A snapshot is not just another model materialization. It is a long-lived history table whose operational semantics differ from ordinary tables and incrementals.
+>
+> ---
+>
+> **SCD Type 2**
+> - A slowly changing dimension pattern that keeps prior row versions by closing old records and inserting new active ones when attributes change.
+> - It matters here because dbt snapshots implement this pattern directly for index membership, weights, ESG ratings, and similar changing dimensions.
+>
+> > [!warning] History, not overwrite
+> >
+> > The point of SCD2 is to preserve what was true at a given time. If downstream logic still queries only the latest row, the extra complexity buys nothing.
+>
+> ---
+>
+> **`unique_key`**
+> - The snapshot configuration field that identifies which source rows represent the same logical entity across time.
+> - It matters here because every change-detection and history boundary in the snapshot depends on choosing the right entity grain.
+>
+> > [!warning] Grain defines history
+> >
+> > A bad `unique_key` creates the wrong history forever. Choose the business entity carefully before the snapshot table becomes operationally important.
+>
+> ---
+>
+> **`dbt_scd_id`**
+> - The surrogate identifier dbt assigns to each stored snapshot row version.
+> - It matters here because it uniquely distinguishes historical versions of the same logical entity inside the snapshot table.
+>
+> > [!info] Version row identity
+> >
+> > This is not the business key. Use it to distinguish stored versions, not to replace the entity identity represented by `unique_key`.
+>
+> ---
+>
+> **`dbt_valid_from` / `dbt_valid_to`**
+> - The snapshot metadata columns that mark when a stored row version became active and when it stopped being active in snapshot history.
+> - It matters here because every PIT filter in the note uses these boundaries to decide which version was active at a given point.
+>
+> > [!danger] Pipeline time boundary
+> >
+> > These timestamps record when dbt processed change, not necessarily when the business change became effective. Treat them as snapshot-system validity unless the pipeline timing matches business timing exactly.
+>
+> ---
+>
+> **`dbt_updated_at`**
+> - A snapshot metadata column recording when dbt last touched a given snapshot row.
+> - It matters here because it supports operational auditing and helps distinguish snapshot processing activity from business-effective change columns.
+>
+> > [!info] Operational metadata only
+> >
+> > This field is useful for pipeline diagnosis, not for business-date analytics. Keep that separation clear in downstream logic.
+>
+> ---
+>
+> **`timestamp` strategy**
+> - A snapshot mode where dbt uses a reliable source `updated_at` column to decide when a row has changed.
+> - It matters here because it is the preferred option for high-volume sources with trustworthy upstream change timestamps.
+>
+> > [!warning] Source clock quality matters
+> >
+> > This strategy is only as good as the upstream timestamp discipline. If the source fails to update the timestamp consistently, history gaps become invisible.
+>
+> ---
+>
+> **`check` strategy**
+> - A snapshot mode where dbt hashes selected columns and treats hash differences as row changes.
+> - It matters here because it is the fallback when no trustworthy source change timestamp exists.
+>
+> > [!warning] More expensive and noisier
+> >
+> > `check` is flexible, but careless column selection can create unnecessary compute and spurious version churn. Use it deliberately rather than as the default.
+>
+> ---
+>
+> **`check_cols`**
+> - The explicit list of columns dbt should compare when using the `check` strategy.
+> - It matters here because it determines which source changes are treated as meaningful enough to create new historical versions.
+>
+> > [!warning] Avoid `all` on wide tables
+> >
+> > Hashing every column in a wide source is expensive and often semantically wrong. Exclude noisy metadata and retain only business-significant fields.
+>
+> ---
+>
+> **`invalidate_hard_deletes`**
+> - A snapshot option that closes currently open records when their `unique_key` disappears from the latest source extract.
+> - It matters here because membership tables such as index constituents need removals to appear as ended history, not as still-open records.
+>
+> > [!warning] Correctness versus cost
+> >
+> > This improves history correctness for disappearing rows, but it adds extra warehouse work. Large snapshot tables need conscious performance planning when it is enabled.
+>
+> ---
+>
+> **Point-in-time query**
+> - A query that reconstructs which snapshot rows were active at a chosen timestamp or business date.
+> - It matters here because historical portfolio and benchmark reconstruction depends on this filtering pattern.
+>
+> > [!info] Standard pattern worth centralizing
+> >
+> > PIT logic is easy to get subtly wrong. Standardize the predicate or macro so every downstream consumer applies the same active-row rules.
+>
+> ---
+>
+> **Business effective date**
+> - The source-system date or timestamp indicating when a change is considered true in the business domain, independent of when the pipeline processed it.
+> - It matters here because financial analytics often need to answer what was true on the market or provider date, not merely when dbt ingested the change.
+>
+> > [!danger] Do not substitute pipeline metadata
+> >
+> > Weekend delays, outages, and backfills make pipeline timestamps diverge from business truth. Preserve source effective dates explicitly when history needs to be analytically correct.
+>
+> ---
+>
+> **`dbt snapshot --full-refresh`**
+> - The dbt command option that drops and recreates snapshot tables instead of preserving existing history.
+> - It matters here because, unlike ordinary model full refreshes, it destroys accumulated SCD history.
+>
+> > [!danger] Destructive history reset
+> >
+> > Treat this as a last-resort rebuild operation with backup and review, not as normal maintenance. On snapshots, convenience and safety are in direct conflict.
+>
+> ---
+>
+> **`on_schema_change = 'append_new_columns'`**
+> - A configuration setting that lets new columns be added to a snapshot table without forcing a destructive rebuild.
+> - It matters here because additive schema evolution is common in provider feeds and snapshots otherwise break on shape drift.
+>
+> > [!warning] Only solves additive change
+> >
+> > This helps with new columns, not with arbitrary schema redesign. Dropped columns or changed business grain still need planned migration work.
+>
+> ---
+>
+> **Snapshot pipeline step**
+> - The dedicated pipeline stage where `dbt snapshot` runs before downstream models and tests consume historical state.
+> - It matters here because the note positions snapshots as a specific DAG phase rather than as an incidental side task inside general model builds.
+>
+> > [!info] Ordering is part of correctness
+> >
+> > If snapshots run too late or inconsistently, downstream models consume the wrong history state. Placement in the DAG is an operational requirement, not a stylistic preference.
+
+> [!example] Historical State Fit
+>
+> > [!success] Auditable Change History
+> >
+> > - Use snapshots when the same business entity changes over time and you must reconstruct what was true on earlier dates for audit, regulation, portfolio analysis, or historically correct downstream models.
+> > - Run snapshots as their own pipeline step when later models depend on a stable point-in-time history rather than only the latest version of each row.
+>
+> > [!failure] Overwrite-Friendly Data
+> >
+> > - Avoid snapshots for append-only feeds or transient staging data where nobody needs restated history and ordinary models or incrementals are simpler to operate.
+> > - Do not snapshot casually if the entity grain, hard-delete behavior, or business-effective date logic is still unclear, because those mistakes become expensive once history starts accumulating.
 
 ## Snapshot Mechanics
 
@@ -625,4 +804,3 @@ Ingest raw data
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
-

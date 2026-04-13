@@ -8,41 +8,193 @@ updated: 2026-03-22
 status: complete
 ---
 
-# SQL for Data Engineering
+# SQL Fundamentals
 
 > [!quote]
 > "At the heart of every large or small database is the relational model, quietly making sense of chaos."
 >
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
-This note is an executable T-SQL reference for data engineers working with SQL Server. It covers the core query patterns used in a medallion-architecture pipeline — from schema exploration and filtering through JOINs, window functions, CTEs, data quality gates, and bronze-to-gold transforms — all demonstrated against a live Euro Stoxx 50 OHLCV dataset.
+> [!abstract]- Summary
+>
+> SQL Fundamentals is the first notebook in this SQL Server query series for data engineering: it uses a live Euro Stoxx 50 medallion dataset to establish how T-SQL explores schemas, shapes rowsets, joins layers, computes analytics, and turns raw market facts into checked silver and gold outputs.
+>
+> **Schema and dataset foundations**
+> - covers schema exploration across `bronze`, `silver`, and `gold`, plus the OHLCV tables and dimensional context used throughout the note
+>
+> **Core query shaping**
+> - covers `SELECT`, filtering, sorting, SQL Server vs BigQuery syntax differences, and `GROUP BY` / `HAVING` placement for per-stock and per-period summaries
+>
+> **Relational and analytical patterns**
+> - covers cross-layer `JOIN` design, duplicate-safe join patterns, window functions such as `LAG`, `LEAD`, `ROW_NUMBER`, `RANK`, and `NTILE`, and chained CTE / subquery composition
+>
+> **Quality and medallion transforms**
+> - covers `UNION ALL` quality gates, daily return calculations, gap-fill handling, z-score normalization, and bronze-to-silver-to-gold query anatomy
+>
+> **Operations and safety**
+> - Warnings: lab-only credentials, `SELECT *`, `TOP` without `ORDER BY`, functions on indexed columns, `FLOAT` equality, non-unique or null join keys, row-preserving window functions, synthetic gap-filled rows, and repeated CTE execution
+> - Recommendations table: 8 defaults covering covering indexes, SARGable predicates, safe division, `ROW_NUMBER` tie-breaking, quality gates, data types, isolation level, and `HAVING` vs `WHERE`
+> - Troubleshooting: 7 failure modes covering unexpected empty results, slow indexed queries, duplicate-expanding joins, incorrect moving averages, first-row `LAG()` nulls, stale quality checks, and uneven `NTILE()` buckets
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **T-SQL** | Transact-SQL — Microsoft's SQL dialect for SQL Server, extending ANSI SQL with procedural constructs (`DECLARE`, `IF`, `WHILE`), error handling (`TRY/CATCH`), and proprietary functions (`GETDATE`, `ISNULL`). | Every query in this note uses T-SQL syntax. BigQuery uses GoogleSQL with different keywords (`LIMIT` vs `TOP`, `IFNULL` vs `ISNULL`). | Assuming T-SQL is portable — `TOP N`, `[brackets]`, `GETDATE()`, and `IDENTITY` do not exist in BigQuery or PostgreSQL. |
-| **Medallion architecture** | A data pipeline pattern with three layers: **bronze** (raw ingested data), **silver** (cleaned, enriched, typed), and **gold** (aggregated, scored, dashboard-ready). Each layer is implemented as a SQL Server schema in this database. | Queries in this note cross all three layers. Understanding which schema a table belongs to tells you how much you can trust its data. | Treating bronze data as production-ready — bronze may contain NULLs, duplicates, and type mismatches that silver transforms are designed to fix. |
-| **OHLCV** | Open, High, Low, Close, Volume — the five standard fields in a financial price bar. Each row represents one trading day for one stock. | The primary fact table (`silver.eurostoxx50_ohlcv`) uses this schema. All aggregation, window function, and quality check examples query it. | Confusing `close` (last traded price of the day) with `adjusted close` (retroactively corrected for splits and dividends). This dataset uses unadjusted close. |
-| **Schema (SQL Server)** | A namespace within a database that groups related tables, views, and procedures. In this database, schemas implement medallion layers (`bronze`, `silver`, `gold`). | Every table reference is schema-qualified (`silver.eurostoxx50_ohlcv`). Unqualified names default to `dbo`, which is not used here. | Confusing SQL Server schemas with BigQuery datasets — both are namespaces, but BigQuery datasets also control storage location and billing. |
-| **Window function** | A function that computes a value for each row based on a set of related rows (the "window") defined by `PARTITION BY` and `ORDER BY`, without collapsing the result set. Examples: `ROW_NUMBER`, `LAG`, `AVG() OVER`. | Used for moving averages, daily returns, ranking, and deduplication throughout this note. | Expecting window functions to reduce row count like `GROUP BY` — they do not. Every input row produces exactly one output row. |
-| **CTE (Common Table Expression)** | A named temporary result set defined with `WITH name AS (SELECT ...)` that exists only for the duration of the enclosing statement. CTEs are not materialized in SQL Server — the optimizer inlines them. | Used for chaining multi-step analytical queries (sector heatmaps, cross-index comparisons). | Assuming a CTE is computed once — SQL Server may re-execute the CTE logic for each reference in the outer query, multiplying cost. |
-| **SARGable** | Search ARGument ABLE — a predicate written so the query optimizer can use an index seek instead of a full table scan. `WHERE date >= '2025-01-01'` is SARGable; `WHERE YEAR(date) = 2025` is not. | Directly affects query speed on indexed columns. Non-SARGable predicates force full scans even when a perfect index exists. | Wrapping an indexed column in a function (`YEAR()`, `CAST()`, `UPPER()`) — this silently disables the index without any error or warning. |
-| **Covering index** | An index that includes all columns referenced by a query in its key or `INCLUDE` columns, allowing the query to be satisfied entirely from the index without accessing the base table (no key lookup). | Several queries in this note benefit from covering indexes on `(symbol, date) INCLUDE (close, volume)`. | Over-indexing — each additional index slows `INSERT`/`UPDATE`/`DELETE` operations. Only create covering indexes for the highest-frequency query patterns. |
-| **Z-score** | A statistical measure: `(value - mean) / standard_deviation`. Indicates how many standard deviations a value is from the group mean. Positive = above average, negative = below. | The gold-layer scoring engine normalizes composite scores into z-scores for cross-stock comparison. | Interpreting z-scores as absolute quality — a z-score of +2 means "2 standard deviations above this group's mean," not "objectively good." The baseline depends entirely on the group. |
-| **`ROW_NUMBER()`** | A window function that assigns a unique sequential integer (1, 2, 3, ...) to each row within a partition, ordered by the specified column. No ties — every row gets a different number. | The primary deduplication tool in this note: `WHERE rn = 1` keeps only the most recent or highest-priority row per key. | Confusing with `RANK()` (allows ties and gaps: 1, 2, 2, 4) or `DENSE_RANK()` (allows ties, no gaps: 1, 2, 2, 3). |
-| **Gap-fill / `is_filled`** | A silver-layer transform that inserts synthetic rows for missing trading days (weekends, holidays) by forward-filling the previous day's close price. The `is_filled` flag marks these synthetic rows. | Quality checks and return calculations must account for gap-filled rows — including them in volume aggregates would be incorrect. | Treating gap-filled rows as real trading data — they have zero actual volume and a carried-forward price, not a market-determined price. |
-
-## What this note covers
-
-- **Schema exploration** — listing tables, inspecting column types across medallion layers
-- **SELECT, filtering, sorting** — basic queries, multi-condition WHERE, SQL Server vs BigQuery syntax differences
-- **Aggregation (GROUP BY)** — per-stock and per-period summaries, WHERE vs HAVING placement
-- **JOINs across medallion layers** — silver-to-silver and silver-to-gold cross-layer joins, duplicate-safe join patterns
-- **Window functions** — moving averages (SMA), LAG/LEAD for daily returns, RANK/NTILE for stock ranking
-- **CTEs and subqueries** — sector heatmaps, chained CTEs for cross-index comparison
-- **Data quality checks** — structural and operational validation gates using UNION ALL
-- **Bronze → silver → gold transforms** — daily return computation, z-score normalization, composite ranking
+> [!note]- Glossary
+>
+> **T-SQL**
+> - Microsoft SQL Server's dialect of SQL, adding server-specific syntax, built-in functions, and procedural constructs on top of ANSI SQL.
+> - It matters because every executable example in this note is written in T-SQL, and several patterns differ from GoogleSQL or PostgreSQL equivalents.
+>
+> > [!warning] Dialect portability trap
+> >
+> > `TOP`, bracketed identifiers, `GETDATE()`, and `IDENTITY` are not portable defaults. Queries that run in SQL Server often need explicit rewrites before they work in BigQuery or PostgreSQL.
+>
+> ---
+>
+> **Medallion architecture**
+> - A layered pipeline design that separates raw ingestion (`bronze`), cleaned and typed records (`silver`), and business-ready aggregates or scores (`gold`).
+> - It matters because the note's queries move across those layers, and the schema a table lives in signals how trustworthy and transformed its data already is.
+>
+> > [!warning] Bronze is not curated
+> >
+> > Raw-layer data can still contain duplicates, nulls, and type issues. Reading bronze tables as if they were analysis-ready bypasses the exact validation and enrichment work the later sections demonstrate.
+>
+> ---
+>
+> **OHLCV**
+> - The standard market-bar fields Open, High, Low, Close, and Volume, stored as one row per symbol per trading day.
+> - It matters because the core fact tables in the note use this shape, and every aggregate, window, and transform example assumes that row model.
+>
+> > [!info] Close is unadjusted
+> >
+> > The dataset uses raw close prices rather than adjusted closes. That means splits or dividends are not retroactively baked into the `close` column.
+>
+> ---
+>
+> **Schema**
+> - A namespace inside a SQL Server database that groups tables, views, procedures, and other objects under a shared qualifier.
+> - It matters because every query in the note is schema-qualified, and `bronze`, `silver`, and `gold` are implemented as schemas rather than separate databases.
+>
+> > [!warning] Namespace does not equal dataset
+> >
+> > SQL Server schemas resemble BigQuery datasets conceptually, but they do not carry the same storage-location and billing semantics. Treat them as object namespaces, not as a full platform equivalent.
+>
+> ---
+>
+> **Window function**
+> - A function evaluated over a related set of rows defined by `PARTITION BY` and `ORDER BY` while still returning one output row per input row.
+> - It matters because the note relies on window functions for moving averages, daily returns, ranking, and deduplication without collapsing the underlying detail rows.
+>
+> > [!warning] Windows do not aggregate away rows
+> >
+> > A window calculation annotates each row; it does not shrink the result to one row per group. If you expect row collapse, you need `GROUP BY` or a post-filter such as `WHERE rn = 1`.
+>
+> ---
+>
+> **CTE**
+> - A common table expression defined with `WITH name AS (...)` that names an intermediate query result for the duration of a single statement.
+> - It matters because the note uses CTEs to stage multi-step logic such as sector heatmaps and cross-index comparisons without creating permanent objects.
+>
+> > [!warning] CTEs are not cached tables
+> >
+> > SQL Server usually inlines a CTE into the outer query. If the outer query references that logic multiple times, the engine may repeat the work instead of materializing it once.
+>
+> ---
+>
+> **SARGable**
+> - A predicate shape that lets the optimizer match a filter to an index seek or another efficient access path instead of scanning and post-filtering rows.
+> - It matters because the performance of date, symbol, and quality filters in this note depends on keeping predicates index-friendly.
+>
+> > [!warning] Functions hide indexes
+> >
+> > Wrapping the indexed column side of a predicate with `YEAR()`, `CAST()`, `UPPER()`, or similar functions often disables seeks. Rewrite the constant or the range instead.
+>
+> ---
+>
+> **Covering index**
+> - An index whose key and included columns together satisfy a query without forcing an extra lookup to the base table.
+> - It matters because many of the note's analytical reads can be served efficiently from an index on `(symbol, date)` plus included price and volume columns.
+>
+> > [!warning] Coverage has write cost
+> >
+> > Every additional included or keyed column makes the index heavier to maintain on `INSERT`, `UPDATE`, and `DELETE`. A covering index is useful only when the read pattern is frequent enough to justify that cost.
+>
+> ---
+>
+> **Z-score**
+> - A normalized value computed as `(value - mean) / standard_deviation`, showing how far a result sits above or below its peer-group average.
+> - It matters because the gold-layer scoring examples convert raw metrics into comparable standardized scores before ranking stocks.
+>
+> > [!info] Relative, not absolute
+> >
+> > A high z-score only means the row is high relative to its comparison group. Change the group and the same raw value can produce a different z-score.
+>
+> ---
+>
+> **`ROW_NUMBER()`**
+> - A window ranking function that assigns a unique sequential integer to each row inside a partition according to the specified ordering.
+> - It matters because the note uses it as the deterministic row-picker for deduplication and latest-row selection patterns.
+>
+> > [!warning] Ties need a rule
+> >
+> > If the `ORDER BY` inside `ROW_NUMBER()` is not fully deterministic, repeated executions can choose different rows as `rn = 1`. Add a stable tie-breaker when correctness depends on a single winner.
+>
+> ---
+>
+> **Gap fill / `is_filled`**
+> - A transform that inserts synthetic rows for missing trading days by carrying forward the prior close and marking the generated record with `is_filled = 1`.
+> - It matters because return logic and quality checks must distinguish real market observations from continuity rows added for calendar completeness.
+>
+> > [!danger] Synthetic rows skew metrics
+> >
+> > Gap-filled records are not trades. If they are counted as real observations in volume sums or return logic, downstream analytics become silently wrong.
+>
+> ---
+>
+> **`UNION ALL` quality gate**
+> - A validation pattern that stacks multiple checks into one result set so a pipeline step can report all failures in a single query execution.
+> - It matters because the note uses this shape to verify freshness, nulls, duplicates, and transform invariants after bronze-to-silver and silver-to-gold loads.
+>
+> > [!info] Pipeline-friendly output
+> >
+> > `UNION ALL` preserves every failing check as its own row. That makes it easy to drive notebook inspection or automated "fail the load if any row returns" logic.
+>
+> ---
+>
+> **SNAPSHOT isolation**
+> - A row-versioning isolation mode that lets readers see a transactionally consistent snapshot without blocking concurrent writers.
+> - It matters because the note's recommendations position snapshot-style reads as the safer default for analytical queries against actively loaded tables.
+>
+> > [!warning] Default reads still block
+> >
+> > SQL Server defaults to `READ COMMITTED`, which can block readers behind writers. Snapshot behavior only appears when the database is configured to support it and the workload opts into that model.
+>
+> ---
+>
+> **`NTILE()`**
+> - A window function that distributes ordered rows into a fixed number of buckets as evenly as possible.
+> - It matters because the note uses it for ranking and segmentation patterns where approximate quantile buckets are more useful than exact percentile math.
+>
+> > [!info] Buckets are rarely equal
+> >
+> > `NTILE()` balances row counts as evenly as it can, but remainders still have to go somewhere. Uneven bucket sizes are expected behavior, not a bug.
+>
+> ---
+>
+> **`NULLIF()` safe division**
+> - A defensive expression pattern that converts a zero denominator to `NULL` before division so the statement does not raise a divide-by-zero error.
+> - It matters because ratio and return calculations in the note depend on safe arithmetic over imperfect financial data.
+>
+> > [!warning] Ratios need guardrails
+> >
+> > Zero and null denominators are common in real datasets. If division is not protected, a single bad row can fail the query or silently distort results depending on expression type and settings.
+>
+> ---
+>
+> **Cross-layer join**
+> - A join that combines tables from different medallion layers, such as enriching a silver fact table with gold scores or dimensional metadata.
+> - It matters because many examples in the note are not simple same-layer lookups; they assemble analytical context by joining differently curated objects.
+>
+> > [!warning] Join cardinality matters
+> >
+> > Cross-layer joins are only safe when the dimensional side is genuinely one-to-one for the key and time grain in use. If not, row counts inflate and downstream aggregates become unreliable.
 
 *Load the jupysql extension and configure display settings for notebook SQL execution.*
 
@@ -149,8 +301,6 @@ ORDER BY s.name, t.name
 
 The output confirms the three-layer medallion structure. The bronze layer contains raw ingested tables: `dim_country` (212 country reference rows), `dim_index` (4 index definitions), `eurostoxx50_ohlcv` (50 rows — this is the raw daily batch, not the full history), `index_dim` (169 current and historical index membership rows), and `oil20_ohlcv` (19 raw Oil & Gas 20 rows). Silver and gold tables (not shown in this truncated view) contain the cleaned and analytical outputs respectively.
 
-
-
 ### Schema Exploration | Inspect Column Types
 
 The `INFORMATION_SCHEMA.COLUMNS` view is the ANSI-standard metadata interface — portable across SQL Server, PostgreSQL, and MySQL. It exposes column names, data types, maximum lengths, and nullability. Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join. The alternative `sys.columns` view is SQL Server-specific but exposes additional details like computed column definitions and default constraints.
@@ -196,8 +346,6 @@ The `silver.eurostoxx50_ohlcv` table uses `int` for the surrogate key (`id`), `v
 |---|---|---|---|
 | `IS_NULLABLE` | `NO` | Column has a `NOT NULL` constraint — every row must have a value. | Safe to use in `JOIN` keys and `WHERE` predicates without NULL guards. |
 | `IS_NULLABLE` | `YES` | Column allows NULL values. | Must use `IS NULL` / `IS NOT NULL` for comparisons. Aggregates (`AVG`, `SUM`) silently skip NULLs. `JOIN` on this column may lose rows. |
-
-
 
 ## SELECT, Filtering & Sorting
 
@@ -271,8 +419,6 @@ ORDER BY date DESC
 
 ASML's most recent trading days show prices in the 1,147–1,200 range. The March 9 session opened at 1,072 and closed at 1,147.6 — a significant intraday rally of ~7%. Volume on that day (689K) was elevated compared to the quiet March 12 session (128K), suggesting the rally was driven by active institutional participation.
 
-
-
 ### SELECT, Filtering & Sorting | Multi-Condition WHERE
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This query finds high-volume days (over 5 million shares) with price swings exceeding 3% — potential breakout or crash days.
@@ -334,8 +480,6 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
 | DSY.PA | 2026-02-16 | 15.96 | 7671987 | -10.81 |
 
 The results reveal extreme single-day events: Infineon (IFX.DE) dropped 13.78% on April 10, 2025 with 11.5M shares traded, while Siemens Energy (ENR.DE) rallied 13.59% three days earlier on April 7 with 8.5M shares. Banco Santander (SAN.MC) appears twice — a +12.87% rally on April 7 followed by a -11.14% reversal on April 10, with volume exceeding 120M and 63M respectively, characteristic of a volatile cluster around a macro event.
-
-
 
 ## Aggregation (GROUP BY)
 
@@ -446,8 +590,6 @@ ORDER BY yr, mo
 
 ASML's monthly profile shows a sharp drawdown from January (avg 714.71) through April (avg 581.0) — a ~19% decline. April also saw the highest total volume (22.5M) despite having only 20 trading days, indicating heavy selling pressure. The monthly high-low spread widened from ~101 in January to ~85 in April, but the range was shifted downward, confirming a sell-off rather than sideways volatility.
 
-
-
 ## JOINs Across Medallion Layers
 
 A `JOIN` combines rows from two or more tables based on a related column. In the medallion architecture, joins connect fact tables (OHLCV prices in silver) with dimension tables (company metadata) and pre-computed analytics (gold scores). SQL Server's optimizer evaluates three physical join operators — **nested loop** (best for small outer inputs with an indexed inner table), **hash match** (best for large unsorted inputs), and **merge join** (best when both inputs are pre-sorted on the join key). The operator choice depends on table sizes, available indexes, and estimated cardinalities.
@@ -532,8 +674,6 @@ ORDER BY p.[close] DESC
 
 The top 5 by price are dominated by luxury (Hermès at EUR 1,906), defense (Rheinmetall at EUR 1,551.5), and technology (ASML at EUR 1,190.8). All rows show `last_date = 2026-03-12`, confirming a complete data load for the most recent trading session. Volume varies dramatically — Hermès at 18.7K shares vs Rheinmetall at 158.7K — reflecting the price-volume inverse relationship typical of high-priced European equities.
 
-
-
 ### JOIN Across Medallion Layers | Gold Scores + Dimension (Cross-Layer)
 
 The gold layer has pre-computed composite scores. This join adds human-readable names and sector labels from the dimension table — the typical shape of a dashboard query. The `WHERE` clause uses a correlated scalar subquery (`SELECT MAX(score_date) ...`) to restrict results to the most recent scoring date without hardcoding a value. The optimizer evaluates this subquery once and caches the result.
@@ -594,8 +734,6 @@ ORDER BY s.composite_rank
 
 BNP Paribas leads the ranking (score 0.6796) driven by an exceptionally strong value sub-score (1.497) — indicating deep undervaluation relative to peers. Volkswagen ranks #2 with the highest sentiment score (1.081) but negative momentum (-0.382), suggesting analysts are bullish despite a declining price trend. TotalEnergies (#4) shows the strongest momentum (1.307) but the worst sentiment (-0.719) — a classic divergence where price action and analyst consensus disagree. Deutsche Telekom (#3) carries the largest index weight (3.13%), making it the most impactful position in any index-tracking portfolio.
 
-
-
 ## Window Functions
 
 Window functions compute a value for each row based on a related set of rows (the "window") without collapsing the result set like `GROUP BY`. SQL Server implements them using sort and segment operators in the execution plan — data is sorted by the `PARTITION BY` / `ORDER BY` columns, then streamed through computing each function. Large partitions may spill the sort to tempdb. For optimal performance, create a covering index matching the partition and order columns (e.g., `(symbol, date) INCLUDE (close, volume)` for per-stock time-series windows).
@@ -619,6 +757,7 @@ Window functions compute a value for each row based on a related set of rows (th
 ### Window Functions | Moving Averages (SMA)
 
 A **moving average** smooths price data over N days. Used for trend detection:
+
 - **SMA 30** (short-term): responsive to recent price action
 - **SMA 90** (long-term): filters out noise
 - Price above SMA = bullish momentum. Below = bearish.
@@ -660,14 +799,13 @@ ORDER BY date DESC
 | ASML.AS | 2026-03-09 | 1147.6 | 1204.89 | 1043.62 |
 | ASML.AS | 2026-03-06 | 1147.0 | 1205.91 | 1041.08 |
 
-
-
 ### Window Functions | LAG / LEAD Compare Rows
 
 **LAG(col, N)** returns the value from N rows **before** the current row.
 **LEAD(col, N)** returns the value from N rows **after**.
 
 Use cases:
+
 - **Daily returns**: `(close - LAG(close)) / LAG(close)`
 - **Gap detection**: `DATEDIFF(DAY, LAG(date), date)` — if >1, there was a holiday/weekend
 - **Trend direction**: compare today vs yesterday
@@ -707,8 +845,6 @@ ORDER BY date DESC
 | ASML.AS | 2026-03-10 | 1200.0 | 1147.6 | 4.57 | 1 |
 | ASML.AS | 2026-03-09 | 1147.6 | 1147.0 | 0.05 | 3 |
 | ASML.AS | 2026-03-06 | 1147.0 | 1186.0 | -3.29 | 1 |
-
-
 
 ### Window Functions | RANK / DENSE_RANK / NTILE Ranking
 
@@ -769,8 +905,6 @@ ORDER BY rank_best
 | ASML.AS | 0.2073 | 4 | 47 | 1 |
 | AD.AS | 0.1772 | 5 | 46 | 1 |
 
-
-
 ## CTEs & Subqueries
 
 A **Common Table Expression** (CTE) is a named temporary result set defined with `WITH name AS (SELECT ...)` that exists only for the duration of the enclosing statement. CTEs improve readability by breaking complex queries into named logical steps. Unlike temp tables, CTEs are not materialized in SQL Server — the optimizer inlines them into the outer query plan and may re-execute the CTE logic for each reference. For multi-step analytical queries like sector heatmaps or cross-index comparisons, chaining multiple CTEs reads top-to-bottom like a data pipeline.
@@ -805,7 +939,7 @@ WITH latest_scores AS (
       AND s.score_date = (SELECT MAX(score_date) FROM gold.scores_daily WHERE _index = 'euro_stoxx_50')
 ),
 sector_stats AS (
-    SELECT 
+    SELECT
         sector,
         COUNT(*) AS stocks,
         ROUND(AVG(composite_score), 4) AS avg_score,
@@ -827,8 +961,6 @@ ORDER BY avg_score DESC
 | Healthcare | 4 | 0.0812 | -0.07 | -0.3722 | 10 | 32 |
 | Technology | 5 | 0.0522 | 0.0128 | -0.6536 | 6 | 47 |
 | Industrials | 10 | 0.0504 | 0.0 | -0.0204 | 8 | 43 |
-
-
 
 ### CTEs & Subqueries | Chained CTEs Cross-Index Comparison
 
@@ -858,7 +990,7 @@ WITH latest_perf AS (
            ROW_NUMBER() OVER (PARTITION BY _index ORDER BY perf_date DESC) AS rn
     FROM gold.index_performance
 )
-SELECT 
+SELECT
     p._index,
     d.display_name,
     p.perf_date,
@@ -881,8 +1013,6 @@ ORDER BY ytd_pct DESC
 | stoxx_usa_50 | STOXX USA 50 | 2026-03-11 | 3.71 | 0.6 | 13.32 | 50 | 20.8 | 1.42 |
 | euro_stoxx_50 | Euro Stoxx 50 | 2026-03-12 | -2.39 | -2.08 | 18.06 | 50 | 14.0 | 2.9 |
 
-
-
 ## Data Quality Checks
 
 Quality gates validate data integrity at each pipeline stage — catching NULLs, invalid values, and freshness delays before data is promoted downstream. Stacking multiple checks into a single `UNION ALL` result set gives a compact pass/fail summary that can be evaluated programmatically after every load.
@@ -890,7 +1020,6 @@ Quality gates validate data integrity at each pipeline stage — catching NULLs,
 ### Data Quality Checks | Structural & Operational Validation
 
 Every pipeline needs quality gates. The checks below are split into two categories: **structural** (NULLs, negative prices, impossible high/low values) and **operational** (gap-fill count, data freshness). `UNION ALL` stacks them into a single result set. Run this after every load — any non-zero value needs investigation before promoting to gold.
-
 
 > [!tip] UNION ALL Quality Gate Pattern
 >
@@ -954,8 +1083,6 @@ FROM silver.eurostoxx50_ohlcv
 | gap_filled_rows | 6 |
 | days_since_update | 10 |
 
-
-
 ## Bronze → Silver → Gold Transforms
 
 The medallion architecture (bronze → silver → gold) is a progressive refinement pipeline. Bronze stores raw ingested data, silver adds computed columns and data cleansing (daily returns, gap-fill flags), and gold produces business-ready analytical outputs (z-score normalization, composite rankings). Each layer's transforms are idempotent — safe to re-run without duplicating data.
@@ -999,8 +1126,6 @@ ORDER BY date DESC
 | ASML.AS | 2026-03-10 | 1200.0 | 0.0457 | False |
 | ASML.AS | 2026-03-09 | 1147.6 | 0.0005 | False |
 | ASML.AS | 2026-03-06 | 1147.0 | -0.0329 | False |
-
-
 
 ### Bronze → Silver → Gold Transforms | Z-Score Normalization
 
@@ -1050,25 +1175,23 @@ ORDER BY [rank]
 | TTE.PA | 0.3913 | 1.18 | 4 |
 | ABI.BR | 0.3852 | 1.16 | 5 |
 
-
-
-## When to Use SQL Server for Queries
-
-SQL Server is the right tool when the workload matches its strengths: transactional concurrency, low-latency reads on well-indexed tables, and procedural logic that cannot be expressed as a single declarative query.
-
-- **Transactional workloads** — SQL Server excels when queries run alongside concurrent writes that require row-level locking, ACID transactions, and immediate consistency. Pipelines that read-and-write in the same step (e.g., MERGE-based incremental loads) benefit from SQL Server's lock-based concurrency.
-- **Sub-second latency** — indexed seeks on clustered and covering indexes deliver single-digit millisecond response times. Dashboard queries hitting the gold layer via a view or stored procedure can serve interactive UIs directly.
-- **Complex procedural logic** — T-SQL stored procedures, cursors, and control flow (`IF`, `WHILE`, `TRY/CATCH`) support multi-step business logic that cannot be expressed in a single declarative query.
-- **Existing SQL Server infrastructure** — when the organization already runs SQL Server for OLTP or reporting, adding analytical tables avoids introducing a new engine and its operational overhead.
-
-## When Not to Use SQL Server for Queries
-
-SQL Server is the wrong tool when the workload shape does not match its cost model or scaling limits. The scenarios below usually belong on BigQuery, Firestore, or another engine.
-
-- **Petabyte-scale analytics** — SQL Server scales vertically (add CPU/RAM to one server). Once tables exceed hundreds of millions of rows and queries require full-table scans, BigQuery's distributed architecture is more cost-effective.
-- **Ad-hoc exploration of unfamiliar data** — BigQuery's serverless model requires no index planning. SQL Server queries on un-indexed columns degrade to full table scans with no automatic parallelism beyond the server's CPU count.
-- **Schema-less or hierarchical data** — document structures with nested objects, variable fields, and subcollections are a better fit for Firestore or a document database. Forcing them into relational tables adds complexity.
-- **Cost-per-query billing** — SQL Server charges for infrastructure (VM/license), not per query. If you run only a few queries per day on a large dataset, the idle infrastructure cost is wasted; BigQuery's per-bytes-scanned model would be cheaper.
+> [!example] SQL Server Workload Fit
+>
+> > [!success] Strong Match
+> >
+> > - SQL Server is the right tool when the workload matches its strengths: transactional concurrency, low-latency reads on well-indexed tables, and procedural logic that cannot be expressed as a single declarative query.
+> > - **Transactional workloads** — SQL Server excels when queries run alongside concurrent writes that require row-level locking, ACID transactions, and immediate consistency. Pipelines that read-and-write in the same step (e.g., MERGE-based incremental loads) benefit from SQL Server's lock-based concurrency.
+> > - **Sub-second latency** — indexed seeks on clustered and covering indexes deliver single-digit millisecond response times. Dashboard queries hitting the gold layer via a view or stored procedure can serve interactive UIs directly.
+> > - **Complex procedural logic** — T-SQL stored procedures, cursors, and control flow (`IF`, `WHILE`, `TRY/CATCH`) support multi-step business logic that cannot be expressed in a single declarative query.
+> > - **Existing SQL Server infrastructure** — when the organization already runs SQL Server for OLTP or reporting, adding analytical tables avoids introducing a new engine and its operational overhead.
+>
+> > [!failure] Wrong Shape
+> >
+> > - SQL Server is the wrong tool when the workload shape does not match its cost model or scaling limits. The scenarios below usually belong on BigQuery, Firestore, or another engine.
+> > - **Petabyte-scale analytics** — SQL Server scales vertically (add CPU/RAM to one server). Once tables exceed hundreds of millions of rows and queries require full-table scans, BigQuery's distributed architecture is more cost-effective.
+> > - **Ad-hoc exploration of unfamiliar data** — BigQuery's serverless model requires no index planning. SQL Server queries on un-indexed columns degrade to full table scans with no automatic parallelism beyond the server's CPU count.
+> > - **Schema-less or hierarchical data** — document structures with nested objects, variable fields, and subcollections are a better fit for Firestore or a document database. Forcing them into relational tables adds complexity.
+> > - **Cost-per-query billing** — SQL Server charges for infrastructure (VM/license), not per query. If you run only a few queries per day on a large dataset, the idle infrastructure cost is wasted; BigQuery's per-bytes-scanned model would be cheaper.
 
 ## Warnings
 

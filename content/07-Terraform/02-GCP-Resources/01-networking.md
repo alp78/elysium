@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Networking — VPC, Subnet, NAT, and Firewall Rules
+# Networking
 
 > [!quote] John Gage on networked computing
 >
@@ -16,7 +16,142 @@ status: complete
 >
 > — **John Gage**, Sun Microsystems (1984)
 
-This note covers the complete GCP network topology for a production data engineering project defined in `network.tf`. Every resource communicates through this VPC.
+> [!abstract]- Summary
+>
+> Networking is the Terraform note for the project's GCP network perimeter: it defines the VPC, subnet, router, NAT, and firewall posture that every VM and serverless workload depends on, then closes with concrete verification commands for checking what Terraform actually provisioned.
+>
+> **Core network model**
+> - covers VPC, subnet, NAT, IAP, ingress versus egress, firewall priority, and the single-subnet topology used by the example data platform
+>
+> **Network resources**
+> - covers `google_compute_network`, `google_compute_subnetwork`, Cloud Router, Cloud NAT, private Google access, and the assumptions and prerequisites around variables and APIs
+>
+> **Traffic control**
+> - covers allow and deny firewall rules, network-tag versus service-account targeting, SQL, Airflow, APM, and IAP SSH access patterns, plus replacement and priority behavior
+>
+> **Operations and safety**
+> - Warnings: Cloud NAT can exhaust ports under concurrency, broad source ranges on allow rules are risky, firewall rule changes can trigger replacement, and firewall design has to respect evaluation order and the deny-all fallback
+> - Recommendations: enable private Google access on private subnets, use dynamic NAT port allocation, keep ingress source ranges narrow, use create-before-destroy for firewall replacement safety, and verify the final network state with `gcloud` after apply
+
+> [!note]- Glossary
+>
+> **VPC**
+> - A Virtual Private Cloud network in GCP that provides the private routing boundary where resources communicate over internal addresses.
+> - It matters because every resource in this note is attached to the same VPC, making it the foundational network container for the Terraform-managed environment.
+>
+> > [!info] VPCs are logical network boundaries
+> >
+> > A VPC gives you the private routing domain, but it does not allocate addresses to workloads by itself. Subnets are what actually provide region-scoped IP ranges to instances and services.
+>
+> ---
+>
+> **Subnet**
+> - A region-scoped IP range inside a VPC from which resources receive private addresses.
+> - It matters because VMs, Cloud NAT, and several firewall assumptions in the note all depend on the subnet's address space and regional placement.
+>
+> > [!warning] Subnets are regional, not global
+> >
+> > The VPC is global, but a subnet belongs to one region. That matters when Terraform configurations later expand across multiple regions or connect serverless resources back into the network.
+>
+> ---
+>
+> **Cloud NAT**
+> - GCP's managed outbound NAT service that lets private instances reach the internet without exposing inbound public IPs on those instances.
+> - It matters because the SQL VM and other private-only workloads still need outbound package downloads, API calls, and registry access.
+>
+> > [!warning] Outbound success can hide capacity issues
+> >
+> > NAT is often quiet until concurrency climbs. Port exhaustion under load is a real operational problem, so sizing and dynamic allocation matter in busy environments.
+>
+> ---
+>
+> **Cloud Router**
+> - The control-plane router resource that Cloud NAT attaches to for managing egress behavior inside the VPC.
+> - It matters because Terraform provisions NAT through a router, so understanding that dependency explains why the resources are separate.
+>
+> > [!info] Router first, NAT second
+> >
+> > Cloud NAT does not exist on its own. In Terraform terms, the router is the parent resource and NAT is layered on top of it.
+>
+> ---
+>
+> **Private Google Access**
+> - A subnet feature that allows resources with only private IPs to reach Google APIs and services without needing public addresses.
+> - It matters because private workloads in this design still need to call services such as Secret Manager, Cloud Logging, or Artifact Registry.
+>
+> > [!warning] Private-only does not mean API-isolated
+> >
+> > A VM can have no public IP and still need access to Google-managed services. Private Google Access is one of the mechanisms that keeps that pattern workable without widening ingress exposure.
+>
+> ---
+>
+> **IAP**
+> - Identity-Aware Proxy, Google's authenticated tunneling path for administrative access such as SSH without directly exposing those management ports to the public internet.
+> - It matters because the SSH access pattern in this note assumes IAP-based administration rather than open ingress from arbitrary source IPs.
+>
+> > [!info] IAP is a separate path from NAT
+> >
+> > NAT handles outbound traffic from private resources; IAP handles authenticated inbound administrative access. They solve different networking problems and should not be conflated.
+>
+> ---
+>
+> **Ingress / Egress**
+> - The two directions of traffic flow evaluated by GCP firewall policy: ingress comes into a VM and egress leaves it.
+> - It matters because firewall defaults and rule design depend on understanding which direction a connection uses.
+>
+> > [!warning] The defaults are asymmetric
+> >
+> > GCP denies ingress by default but generally allows egress. If you assume the same default posture in both directions, firewall behavior becomes confusing very quickly.
+>
+> ---
+>
+> **Firewall priority**
+> - The numeric ordering GCP uses to evaluate firewall rules, where lower numbers are evaluated before higher numbers.
+> - It matters because the allow rules and the deny-all fallback only behave safely when their priorities are chosen intentionally.
+>
+> > [!warning] Priority mistakes invert intent
+> >
+> > A deny rule with a stronger priority than your intended allow rules can block everything while still looking syntactically correct. Priority is part of the rule's logic, not a cosmetic field.
+>
+> ---
+>
+> **Network tag**
+> - A label attached to a VM and referenced by firewall rules to target traffic policy at selected instances.
+> - It matters because several rules in the note scope access by workload role, and tags are one way to express that targeting.
+>
+> > [!info] Tags target instances, not identities
+> >
+> > Network tags are flexible, but they are attached to compute instances rather than to service-account identity. That makes them useful for topology grouping, but not always ideal for identity-centric policy.
+>
+> ---
+>
+> **Service-account targeting**
+> - A firewall targeting pattern that scopes rules to workloads attached to a specific service account instead of to a network tag.
+> - It matters because the note compares it with tag-based targeting as a more identity-aware alternative in some designs.
+>
+> > [!info] Identity-aware targeting can be cleaner
+> >
+> > If workload identity is already well-designed, service-account targeting can reduce ambiguity compared with free-form tags. The trade-off is that it ties policy more tightly to IAM choices.
+>
+> ---
+>
+> **Source range**
+> - The CIDR block or address range a firewall rule uses to decide which incoming traffic sources are allowed or denied.
+> - It matters because overly broad source ranges are one of the clearest ways to undermine an otherwise sensible network design.
+>
+> > [!danger] Broad ranges widen exposure fast
+> >
+> > An allow rule with an expansive source range can silently turn a private administrative surface into a much broader attack target. Tight source scoping is one of the highest-value firewall controls.
+>
+> ---
+>
+> **Create-before-destroy**
+> - A lifecycle strategy that tells Terraform to provision the replacement object before removing the old one when a change forces replacement.
+> - It matters because firewall rule replacement can create unwanted access gaps if Terraform destroys first and creates later.
+>
+> > [!warning] Replacement order affects availability
+> >
+> > Networking changes are not only about final state. The transient order of destroy and create operations can briefly remove critical access paths unless the lifecycle is managed deliberately.
 
 ## Networking Concepts
 
@@ -473,6 +608,7 @@ gcloud compute routers nats list --router=data-pipeline-router --region=europe-w
 ## Related
 
 **Terraform configuration:**
+
 - [compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/compute) — the VMs that attach to this network
 - [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run direct VPC egress using this subnet
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — service accounts and secrets used by the VMs
@@ -481,12 +617,14 @@ gcloud compute routers nats list --router=data-pipeline-router --region=europe-w
 - [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) — `var.region` and `var.admin_ip` definitions
 
 **GCP services:**
+
 - [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) — VPC Service Controls for additional perimeter security
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles required by the Terraform service account
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — IAP connection workflow and troubleshooting
 - [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — OS-level firewall configuration inside VMs
 
 **CI/CD integration:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — automated `terraform plan` and `apply` in GitHub Actions
 
 ## References

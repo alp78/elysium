@@ -10,19 +10,236 @@ updated: 2026-04-12
 status: complete
 ---
 
-# BigQuery Job Management
+# Job Management
 
 > [!quote] John Gall on System Complexity
 > "A complex system that works is invariably found to have evolved from a simple system that worked."
 >
 > — **John Gall**, *Systemantics* (1975)
 
-Every BigQuery operation — query, load, export, copy — creates a job. Jobs are the unit of work in BigQuery. Understanding how to list jobs, inspect their details (including errors and bytes processed), and cancel runaway jobs is essential for incident response and cost governance. The job history is your primary audit trail for understanding what ran, who ran it, and how much it cost.
-
-Job history is retained in `INFORMATION_SCHEMA.JOBS` for 180 days (the view is partitioned by `creation_time`). The `bq ls -j` command surfaces the same history but defaults to the last 100 jobs. IAM requirements for job management:
-
-- **`roles/bigquery.jobUser`** — grants `bigquery.jobs.create` and `bigquery.jobs.get` on the caller's own jobs. Sufficient for listing, inspecting, and canceling your own jobs.
-- **`roles/bigquery.admin`** — grants `bigquery.jobs.listAll` (see all users' jobs) and `bigquery.jobs.cancel` (cancel any user's job). Required for project-wide job triage and cost governance.
+> [!abstract]- Summary
+>
+> Covers the BigQuery job lifecycle with `bq ls -j`, `bq show -j`, `bq cancel`, and `INFORMATION_SCHEMA.JOBS`, so you can identify recent work, inspect failures and billing signals, stop runaway execution, and recover cost history by user or day.
+>
+> **CLI job triage**
+> - Every `QUERY`, `LOAD`, `EXTRACT`, and `COPY` operation creates a job; `INFORMATION_SCHEMA.JOBS` retains 180 days of history, while `bq ls -j` surfaces recent jobs and defaults to the last 100
+> - IAM: `roles/bigquery.jobUser` is sufficient for your own jobs, while `roles/bigquery.admin` adds `bigquery.jobs.listAll` and `bigquery.jobs.cancel` for project-wide triage and intervention
+> - `bq ls -j` lists recent jobs, `bq show -j` returns full job JSON including SQL, timing, bytes, billing, slot usage, and errors, and `bq cancel` sends a best-effort cancellation request for `RUNNING` or `PENDING` work
+> - Job IDs can be collected from `bq query` output, `bq ls -j`, the BigQuery console, or Cloud Logging, and can be passed as short IDs or fully qualified `project:location.job_id` references
+>
+> **Job states and failure analysis**
+> - State handling covers `PENDING`, `RUNNING`, and `DONE`, with success, failure, and cancellation all represented by `DONE` plus or minus `status.errorResult`
+> - Failure inspection focuses on `status.errorResult.reason`, `status.errors`, empty `statistics.query` for pre-execution failures, and common reasons such as `accessDenied`, `invalidQuery`, `notFound`, `quotaExceeded`, `resourcesExceeded`, and `rateLimitExceeded`
+> - Regional lookups require `--location=<region>` outside the US/EU defaults; otherwise `bq` returns misleading "job not found" errors even when the ID is correct
+>
+> **Cost recovery**
+> - `bq show -j` exposes `totalBytesProcessed`, `totalBytesBilled`, `cacheHit`, `statementType`, `totalSlotMs`, priority, and start/end timing so you can distinguish actual scan volume from billed volume and cache hits from real execution
+> - `INFORMATION_SCHEMA.JOBS` is region-scoped, partitioned by `creation_time`, and suitable for per-user cost attribution, failure rates, cache-hit ratios, slot-use review, and daily cost trends when you exclude parent `SCRIPT` jobs
+>
+> **Operations and safety**
+> - When to use: incident response, failed-query diagnosis, mid-query cost containment, slot-usage review, and monthly spend attribution
+> - Warnings: omitting `--location` breaks non-default-region lookups, `DONE` does not mean success, cancellation charges continue until termination takes effect, and `INFORMATION_SCHEMA` queries are never served from cache
+> - Recommendations: inspect `status.errorResult` instead of display labels alone, filter metadata queries on `creation_time`, dry-run expensive SQL before execution, and prefer fully qualified job IDs for cross-region clarity
+>
+> [!note]- Glossary
+>
+> **BigQuery job**
+> - The BigQuery unit of work created for a query, load, extract, or copy operation, with its own identifiers, status, timing, billing, and error metadata.
+> - The entire note treats jobs as the operational object you inspect, cancel, and aggregate when you need to understand what BigQuery actually did.
+>
+> > [!info] Jobs are the audit trail
+> >
+> > If a table changed, cost increased, or a query failed, the answer lives in job metadata before it lives anywhere else in the platform.
+>
+> ---
+>
+> **Job ID / `project:location.job_id`**
+> - The unique identifier BigQuery assigns to a job, available in short form or fully qualified with project and region.
+> - The note relies on job IDs because every inspection and cancellation workflow starts by passing the correct ID to `bq show -j` or `bq cancel`.
+>
+> > [!warning] Qualification removes ambiguity
+> >
+> > Short job IDs are convenient, but fully qualified IDs are safer when you work across projects or regions. A missing location is a common reason for failed lookups.
+>
+> ---
+>
+> **Job type / `QUERY`, `LOAD`, `EXTRACT`, `COPY`**
+> - The category of operation a BigQuery job performed, which determines whether it scanned query data, imported files, exported tables, or copied tables.
+> - The note distinguishes job types because not all of them have the same billing or failure profile even though they share the same job-management surfaces.
+>
+> > [!info] Same control plane, different cost profile
+> >
+> > A `LOAD` or `COPY` job still matters operationally even when it is free. You may still need to inspect it for timing, errors, or ownership during triage.
+>
+> ---
+>
+> **`bq ls -j`**
+> - The BigQuery CLI command that lists recent jobs, optionally filtered by user, time window, region, or job type.
+> - The note uses it as the first triage step because it surfaces the job IDs and high-level state needed before deeper inspection.
+>
+> > [!info] Fastest first pass
+> >
+> > `bq ls -j` is the quickest way to answer "what just ran?" without writing SQL. Use it to find candidate jobs, then switch to `bq show -j` for detail.
+>
+> ---
+>
+> **`bq show -j`**
+> - The BigQuery CLI command that returns the full JSON resource for a specific job, including configuration, statistics, status, and user identity.
+> - The note depends on it for reading executed SQL, scan volume, cache hits, slot time, and failure reasons.
+>
+> > [!warning] Display labels are not enough
+> >
+> > A one-line listing can tell you that something failed, but not why. Real diagnosis starts only when you inspect the full job resource.
+>
+> ---
+>
+> **`bq cancel`**
+> - The BigQuery CLI command that sends a cancellation request to a running or pending job.
+> - The note uses it as the operational stop mechanism when a query is consuming unexpected time or scan cost.
+>
+> > [!warning] Cancellation is not retroactive
+> >
+> > Canceling a job does not erase work already done. The final bill still reflects bytes scanned before the cancel request actually took effect.
+>
+> ---
+>
+> **IAM role / `roles/bigquery.jobUser`, `roles/bigquery.admin`**
+> - A Google Cloud permission bundle that determines whether you can view only your own jobs or list and cancel jobs submitted by other principals.
+> - The note maps job-management workflows to these roles so you can recognize when a missing permission, not a bad command, is blocking triage.
+>
+> > [!warning] Own-job access is narrower
+> >
+> > `roles/bigquery.jobUser` is enough for self-service inspection, but it does not provide the project-wide visibility required for shared cost governance or emergency cancellation of another principal's work.
+>
+> ---
+>
+> **`--location`**
+> - The region qualifier passed to `bq` job commands so BigQuery can resolve a job in the correct regional control plane.
+> - The note emphasizes it because job lookups outside the default US/EU regions fail deceptively when the flag is omitted.
+>
+> > [!warning] Missing location looks like absence
+> >
+> > A wrong or omitted location often produces a "job not found" response even though the job exists. Treat region mismatches as a lookup problem first, not as evidence the job disappeared.
+>
+> ---
+>
+> **Job state / `PENDING`, `RUNNING`, `DONE`**
+> - The lifecycle stage BigQuery reports for a job as it waits for resources, executes, or reaches a terminal state.
+> - The note uses state transitions to decide whether you should wait, inspect, or cancel.
+>
+> > [!warning] `DONE` is only terminal
+> >
+> > `DONE` tells you the job stopped changing state, not that it succeeded. Success, failure, and cancellation all converge on the same terminal state.
+>
+> ---
+>
+> **`status.errorResult`**
+> - The single top-level error object BigQuery attaches to a completed job when that job ended unsuccessfully.
+> - The note treats this field as the authoritative signal that a `DONE` job actually failed.
+>
+> > [!info] Reason plus message
+> >
+> > `status.errorResult` usually gives you both a machine-oriented reason code and a human-readable message. Use the reason for pattern recognition and the message for immediate debugging context.
+>
+> ---
+>
+> **`status.errors`**
+> - The array of one or more error objects BigQuery records for a failed job, often supplementing the top-level `status.errorResult`.
+> - The note references it because compound or cascading failures can include more detail there than in the single summary error.
+>
+> > [!warning] Do not stop at one line
+> >
+> > Operators often read only the top error message and miss secondary details in the array. When a failure is unclear, inspect every entry rather than assuming the first one tells the whole story.
+>
+> ---
+>
+> **`cacheHit`**
+> - A query-job statistic that reports whether BigQuery served the result from the 24-hour query cache instead of re-executing the query.
+> - The note uses it to separate real scan cost from cached repeat reads during job inspection and cost recovery.
+>
+> > [!info] Cache hits imply zero on-demand scan charge
+> >
+> > A cached query still has a job record, but it does not bill like a fresh execution. That is why cache-hit ratios matter in cost analysis.
+>
+> ---
+>
+> **`totalBytesProcessed` / `totalBytesBilled`**
+> - Query-job statistics that distinguish logical bytes scanned from the bytes BigQuery actually billed after minimums and rounding rules.
+> - The note uses both fields to explain why a tiny successful query can still show a billable floor larger than the raw scan volume.
+>
+> > [!warning] Processed is not always billed
+> >
+> > Small scans often hit the minimum billing floor, so `totalBytesBilled` can be much larger than `totalBytesProcessed`. Always compute cost from billed bytes when the field is available.
+>
+> ---
+>
+> **`totalSlotMs`**
+> - The total slot-milliseconds consumed by a job, representing how much BigQuery compute time the operation used.
+> - The note uses slot time as the compute-intensity signal for performance analysis and for migration planning toward Editions pricing.
+>
+> > [!info] Compute signal beyond scan size
+> >
+> > Two jobs can scan similar bytes yet consume very different slot time. That difference matters when diagnosing heavy joins, skew, or future slot-based pricing.
+>
+> ---
+>
+> **`INFORMATION_SCHEMA.JOBS`**
+> - A regional BigQuery system view that exposes job metadata for SQL analysis over a 180-day retention window.
+> - The note uses it when CLI listings are too shallow and you need per-user attribution, daily trends, failure counts, or cache-hit analysis.
+>
+> > [!warning] Metadata queries still run
+> >
+> > `INFORMATION_SCHEMA` is not a free look-up table that magically returns from cache. It is still queried through BigQuery's execution engine, so scope the time window deliberately.
+>
+> ---
+>
+> **Parent `SCRIPT` job**
+> - The top-level BigQuery job created for a multi-statement script, which aggregates metadata for its child statements.
+> - The note excludes parent script jobs from cost queries to avoid double-counting bytes that are also recorded on the child jobs.
+>
+> > [!warning] Script jobs can inflate totals
+> >
+> > If you sum all query jobs without filtering out parent `SCRIPT` rows, scripted workloads appear more expensive than they really are because the same work is counted twice.
+>
+> ---
+>
+> **`creation_time`**
+> - The timestamp column BigQuery uses to partition `INFORMATION_SCHEMA.JOBS`, representing when the job was created.
+> - The note recommends filtering on this field because it is the main lever for keeping job-history queries focused and efficient.
+>
+> > [!info] Partition filter first
+> >
+> > Adding a recent `creation_time` window is the easiest way to prune metadata partitions. Without it, you scan the full retention horizon whether you need it or not.
+>
+> ---
+>
+> **Best-effort cancellation**
+> - BigQuery's cancellation behavior where the service tries to stop a job quickly but does not guarantee that execution halts the instant you send the request.
+> - The note includes this nuance because late cancellation still allows some extra scan and billing to accrue after the operator intervenes.
+>
+> > [!warning] Running work may continue briefly
+> >
+> > A cancellation request is not an immediate kill switch at every layer of execution. Expect a small tail of continued work while the system unwinds the job.
+>
+> ---
+>
+> **Billing floor / 10 MB minimum**
+> - BigQuery's minimum on-demand query billing behavior where very small successful queries are charged as at least a small fixed amount rather than exactly the raw scan volume.
+> - The note uses the billing floor to explain why cost recovery from job metadata must look at billed bytes, not just processed bytes.
+>
+> > [!info] Tiny queries still round up
+> >
+> > The billing floor is usually operationally trivial on small workloads, but it matters when you are reconciling why a query that scanned only a few kilobytes was billed for more than that raw amount.
+>
+> ---
+>
+> **Cloud Logging**
+> - Google Cloud's centralized log platform, which also stores BigQuery audit-log events containing job identifiers and execution context.
+> - The note references Cloud Logging as another path to recover job IDs when the CLI output or console view is no longer in front of you.
+>
+> > [!info] Useful after the fact
+> >
+> > If you missed the original terminal output or are reconstructing an incident later, audit logs can bridge the gap between observed symptoms and the specific job that caused them.
 
 > [!info] All Four Operation Types Create Trackable Jobs
 >
@@ -246,6 +463,8 @@ The `status.state` is `DONE` — BigQuery does not have a `FAILED` state. Failur
 > | `quotaExceeded` | Project-level quota (concurrent queries, bytes per day) exceeded | Wait and retry, or request a quota increase |
 > | `resourcesExceeded` | Query exceeded memory limits (too many `GROUP BY` keys, too-wide `JOIN`) | Restructure the query to reduce memory |
 > | `rateLimitExceeded` | Too many API calls per second | Implement exponential backoff |
+
+The core CLI flags for direct job inspection are:
 
 | Flag | Syntax | Description |
 |---|---|---|

@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Artifact Registry and CI Service Account
+# Registry and CI
 
 > [!quote] Mitchell Hashimoto on earning developer trust
 >
@@ -16,7 +16,132 @@ status: complete
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
-This note covers `registry.tf` and `ci.tf` — the Docker image registry and the GitHub Actions CI/CD service account that pushes images to it.
+> [!abstract]- Summary
+>
+> Registry and CI is the Terraform note for the chapter's build-and-deploy boundary: it provisions Artifact Registry as the Docker image source for Cloud Run, defines cleanup and import strategy for that registry, and builds the CI/CD service-account path that GitHub Actions uses to push images and deploy workloads without overbroad credentials.
+>
+> **Artifact storage design**
+> - covers `google_artifact_registry_repository`, regional placement, immutable repository fields, cleanup policies, dry-run validation, and import strategy for pre-existing registries
+>
+> **CI identity design**
+> - covers the dedicated CI/CD service account, least-privilege role grants, the impersonation chain into runtime identities, and the access boundaries needed for image push and deployment
+>
+> **Workflow and architecture**
+> - covers verification commands, GitHub Actions integration, the shift from long-lived credentials to Workload Identity Federation, and the overall CI/CD pipeline architecture linking build, registry, and deployment
+>
+> **Operations and safety**
+> - Warnings: changing repository location, ID, or format forces permanent replacement; cleanup policies should be validated before enforcement; and long-lived CI credentials create unnecessary secret-management risk
+> - Recommendations: protect production registries with lifecycle rules, dry-run cleanup before deletion is live, keep CI permissions narrow, use Workload Identity Federation instead of exported keys, and verify repository and service-account state with `gcloud` after apply
+
+> [!note]- Glossary
+>
+> **Artifact Registry**
+> - GCP's managed artifact storage service for container images and other package formats.
+> - It matters because Cloud Run services and jobs in this Terraform chapter pull their images from the repository defined here.
+>
+> > [!info] Registry placement affects runtime behavior
+> >
+> > Keeping the registry in the same region as the workloads reduces pull latency and simplifies the mental model for deployment paths.
+>
+> ---
+>
+> **`google_artifact_registry_repository`**
+> - The Terraform resource used to create and manage an Artifact Registry repository.
+> - It matters because repository lifecycle, cleanup policy behavior, and import strategy all flow through this one Terraform object.
+>
+> > [!warning] Several fields are immutable
+> >
+> > Changing `location`, `repository_id`, or `format` does not reconfigure the existing repository. Terraform has to replace it, which can mean total image loss if handled carelessly.
+>
+> ---
+>
+> **Cleanup policy**
+> - A retention or deletion rule that tells Artifact Registry which images to keep and which to remove automatically.
+> - It matters because CI pipelines produce a steady flow of image versions, and unmanaged accumulation turns storage hygiene into an operational problem.
+>
+> > [!warning] Deletion rules deserve validation
+> >
+> > A cleanup policy can solve sprawl or accidentally delete more than intended. Dry-run capability exists specifically to test that policy logic before it becomes destructive.
+>
+> ---
+>
+> **Untagged image**
+> - An image version that no longer has a tag pointing to it, often after a newer image takes over a tag such as `latest`.
+> - It matters because untagged images are a common source of silent registry growth, and the note's cleanup strategy targets them directly.
+>
+> > [!info] Untagged does not mean unused forever
+> >
+> > An untagged image may still be useful for short-term rollback or investigation. Cleanup policy has to balance retention hygiene against that operational value.
+>
+> ---
+>
+> **Lifecycle protection / `prevent_destroy`**
+> - A Terraform safeguard that blocks planned destruction while the protected resource block still exists.
+> - It matters because a production container registry is stateful infrastructure with real deployment history and should not be easy to replace accidentally.
+>
+> > [!danger] Registry replacement is data loss
+> >
+> > Destroying a registry is not like replacing a stateless compute instance. The stored images are the deployment artifacts themselves, so careless replacement breaks rollback and reproducibility.
+>
+> ---
+>
+> **CI/CD service account**
+> - The dedicated identity used by automation to push images and deploy infrastructure or applications.
+> - It matters because the deployment pipeline in this note should have only the permissions required to build, publish, and deploy, not broad access to unrelated resources.
+>
+> > [!warning] Build identity should stay narrow
+> >
+> > A CI account often touches many critical systems. Overgranting it turns the automation path into one of the highest-value compromise targets in the platform.
+>
+> ---
+>
+> **Least-privilege chain**
+> - The end-to-end permission design where CI can perform deployment actions without inheriting every runtime permission directly.
+> - It matters because the note emphasizes role boundaries between pushing artifacts, deploying workloads, and impersonating runtime identities.
+>
+> > [!info] Chains beat blanket grants
+> >
+> > A narrow chain of explicit permissions is easier to audit and rotate than one broadly privileged CI identity that can do everything by default.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - A GCP authentication model that lets external systems exchange trusted identity assertions for short-lived Google credentials without exporting a service-account key file.
+> - It matters because the note presents WIF as the preferred GitHub Actions authentication pattern.
+>
+> > [!warning] Long-lived keys should be the fallback, not the default
+> >
+> > Static service-account keys are durable secrets that require storage, rotation, and incident response if leaked. WIF reduces that operational burden by removing the key artifact entirely.
+>
+> ---
+>
+> **GitHub Actions OIDC**
+> - GitHub's OpenID Connect identity mechanism that allows workflows to present short-lived identity assertions to external providers such as GCP.
+> - It matters because WIF for GitHub Actions depends on exchanging this OIDC identity for deployable Google credentials.
+>
+> > [!info] Trust is established at runtime
+> >
+> > OIDC-based federation means each workflow run proves its identity when it executes, rather than reusing a pre-issued secret copied into the repository settings.
+>
+> ---
+>
+> **Impersonation / `actAs`**
+> - The permission pattern that lets one identity deploy or attach another service account to a workload.
+> - It matters because CI often needs to deploy Cloud Run workloads under their runtime service accounts without owning all of those permissions directly.
+>
+> > [!warning] Deployment identity is not runtime identity
+> >
+> > The CI account should usually be allowed to attach the runtime identity, not to permanently inherit all of the runtime identity's underlying access itself.
+>
+> ---
+>
+> **Import path**
+> - The identifier Terraform uses to adopt an existing Artifact Registry repository into state.
+> - It matters because registries often exist before Terraform standardization, and safe adoption avoids rebuilding or losing stored images.
+>
+> > [!info] Existing infra can still become managed infra
+> >
+> > Terraform adoption is not limited to greenfield resources. Import lets a registry keep serving images while Terraform starts tracking it under version control.
 
 ## Artifact Registry
 
@@ -119,6 +244,7 @@ europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline
 ```
 
 Images are referenced as:
+
 - `europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/pipeline:latest`
 - `europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline/dashboard:latest`
 
@@ -194,7 +320,6 @@ resource "google_project_iam_member" "ci_run" {
 | `project` | Yes | GCP project to bind the role in. |
 | `role` | Yes | IAM role to grant. Changing forces replacement (removes old binding, adds new one). |
 | `member` | Yes | Identity receiving the role. Format: `serviceAccount:<email>`. Changing forces replacement. |
-
 | Role | What It Allows |
 |---|---|
 | `roles/artifactregistry.writer` | Push (write) Docker images to Artifact Registry. Cannot delete images or modify repository settings. |
@@ -401,15 +526,18 @@ flowchart LR
 ## Related
 
 **Terraform chapter:**
+
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — full IAM design and the workload service accounts this CI account acts as
 - [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Cloud Run services and jobs that pull images from this registry
 
 **GCP services (Folder 06):**
+
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — GCP IAM fundamentals, role hierarchy, and service account best practices
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager for runtime secrets consumed by Cloud Run workloads
 - [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — GCP authentication methods including Workload Identity Federation
 
 **CI/CD and Docker:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflows that use the CI service account
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker tag, push, and build commands for the registry
 

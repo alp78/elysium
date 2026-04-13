@@ -8,41 +8,143 @@ updated: 2026-03-22
 status: complete
 ---
 
-# BigQuery for Data Engineering - Database Objects & Performance
+# BigQuery Engineering
 
 > [!quote]
 > "BigQuery separates storage from compute. That single architectural decision changes everything about how you design tables, partition data, and pay for queries."
 >
 > — **Jordan Tigani**, founding engineer of BigQuery
 
-This note covers BigQuery database objects and performance patterns for data engineering pipelines. It demonstrates views, table functions, clustering design, SCD patterns, gap detection, deduplication, execution plan awareness, transaction semantics, bulk loading strategies, audit columns, and partitioning — all within BigQuery's serverless, pay-per-scan cost model.
+> [!abstract]- Summary
+>
+> BigQuery Engineering is the operational follow-on to the fundamentals note: it focuses on reusable BigQuery objects, storage-layout and cost controls, dimensional-history patterns, and write-path constraints inside a serverless warehouse where bytes scanned and DML quotas matter as much as query correctness.
+>
+> **Metadata and reusable query surfaces**
+> - covers `INFORMATION_SCHEMA`, regular and materialized views, stored procedures for multi-statement scripting, table functions for parameterized reads, and notebook-specific scripting limitations
+>
+> **Storage and cost optimization**
+> - covers partitioning, clustering, search indexes, materialized-view refresh trade-offs, execution-plan awareness, dry runs, and why `SELECT *` or missing partition filters directly raise cost
+>
+> **Dimensional and data-quality patterns**
+> - covers SCD Type 1 versus Type 2 modeling, `LAG`-based gap detection, `ROW_NUMBER()` deduplication, and lineage columns for medallion-style freshness and audit tracking
+>
+> **Write-path and transaction operations**
+> - covers snapshot-based transaction semantics, multi-statement transaction limits, batch versus streaming loads, Storage Write API usage, and cleanup of demo objects
+>
+> **Operations and safety**
+> - Warnings: `INFORMATION_SCHEMA` as primary metadata surface, DML quotas, dry-run necessity, lab-only demo objects, ADC connection behavior, view re-scan cost, missing partition filters, transaction limits, and SCD Type 1 history loss
+> - Recommendations table: 6 defaults covering partition-plus-cluster design, DML monitoring, staging-load flow, demo dataset isolation, dry-run usage, and audit columns
+> - Troubleshooting: 5 failure modes covering `quotaExceeded`, unexpectedly expensive view reads, failed partition pruning, notebook variable-scope surprises, and table-function freshness misunderstandings
 
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| **Materialized view** | A precomputed query result that BigQuery auto-refreshes and uses to transparently rewrite queries. Unlike regular views, materialized views store data and avoid re-scanning base tables. | For expensive dashboard aggregations hit repeatedly, a materialized view eliminates redundant scan costs. | Expecting instant refresh — BigQuery refreshes materialized views on a schedule (not on every write). Stale data is possible between refreshes. |
-| **Table function** | A BigQuery function that returns a table result (`CREATE TABLE FUNCTION`). Equivalent to SQL Server's inline table-valued function (iTVF). The optimizer can inline it into the outer query. | The preferred way to create parameterized, reusable queries in BigQuery — replaces stored procedures for read-only parameterized logic. | Using stored procedures for parameterized reads — BigQuery procedures offer no plan caching and are meant for multi-statement scripting, not parameterized selects. |
-| **DML quota** | BigQuery limits each table to 1,500 DML statements per day (INSERT, UPDATE, DELETE, MERGE combined). Streaming inserts bypass this limit. | A pipeline running MERGE every 5 minutes = 288/day (safe). Every 1 minute = 1,440/day (dangerously close to the limit). | Assuming DML is unlimited — exceeding 1,500/day causes `quotaExceeded` errors that silently stall the pipeline. |
-| **Storage Write API** | BigQuery's programmatic bulk ingestion API. Supports batch mode (free, exactly-once) and committed mode (streaming pricing, sub-second latency). Replaces the legacy `insertAll` API. | For high-frequency writes that would exceed DML quotas, the Storage Write API is the only viable path. | Confusing with `insertAll` (legacy streaming) — `insertAll` offers at-least-once delivery (possible duplicates) at $0.05/GB, while Storage Write API (committed) offers exactly-once. |
-| **`require_partition_filter`** | A table option that forces all queries to include a WHERE filter on the partition column. Queries without it fail with an error instead of silently scanning everything. | Prevents accidental full-table scans on partitioned tables. Should be enabled on all production partitioned tables. | Forgetting to set it — without this guard, a simple `SELECT COUNT(*) FROM table` scans every partition at full cost. |
-| **Snapshot isolation** | BigQuery's only isolation level — every query sees a consistent snapshot of data as of the statement's start time. No configuration needed. No dirty reads, no phantoms. | Unlike SQL Server (5 configurable levels), BigQuery has no isolation-level decisions to make. Every read is consistent automatically. | Expecting configurable isolation — BigQuery has no `READ UNCOMMITTED`, `SERIALIZABLE`, or lock-based concurrency. |
-| **`INFORMATION_SCHEMA`** | BigQuery's metadata views for tables, columns, jobs, partitions, and storage. Equivalent to SQL Server's `sys.*` DMVs but uses the ANSI standard naming. | The only way to inspect table structure, clustering configuration, and query history in BigQuery. | Looking for `sys.tables` or `sys.columns` — those are SQL Server-specific. BigQuery uses `INFORMATION_SCHEMA.TABLES`, `.COLUMNS`, `.JOBS`. |
-
-## What this note covers
-
-- **Views** — regular views, cross-layer dashboard views, re-scan cost implications
-- **Stored procedures** — parameterized CTE pattern, BEGIN...EXCEPTION error handling, jupysql limitations
-- **Table functions** — parameterized table functions as iTVF equivalent
-- **Storage optimization** — partitioning, clustering, search indexes, materialized views (no B-tree indexes)
-- **Slowly changing dimensions** — SCD Type 1 (overwrite) and Type 2 (history tracking) patterns
-- **Gap detection** — LAG-based gap detection for time-series data
-- **Deduplication** — ROW_NUMBER pattern for identifying and removing duplicate rows
-- **Execution plans & optimization** — common anti-patterns, partition pruning, column selection
-- **Transaction model** — snapshot isolation, multi-statement transaction limits
-- **Bulk loading** — batch (free) vs streaming, Storage Write API, DML quota awareness
-- **Data lineage & audit columns** — standard audit columns, freshness checks across medallion layers
-- **Partitioning** — DATE_TRUNC partitioning, clustering, `require_partition_filter`
+> [!note]- Glossary
+>
+> **Materialized view**
+> - A BigQuery object that stores precomputed query results and can transparently satisfy future queries from the cached result instead of rescanning base tables.
+> - It matters because repeated dashboard-style aggregations in this note become much cheaper when BigQuery can serve them from a materialized view.
+>
+> > [!warning] Refresh is not instantaneous
+> >
+> > Materialized views are refreshed on BigQuery's schedule, not on every write. The speed gain comes with potential staleness between refresh events.
+>
+> ---
+>
+> **Table function**
+> - A BigQuery routine created with `CREATE TABLE FUNCTION` that returns a table result and can accept parameters.
+> - It matters because the note treats table functions as the preferred reusable surface for parameterized read logic.
+>
+> > [!info] Read-only parameterization tool
+> >
+> > A table function fills the same niche that an inline table-valued function does in SQL Server. It is usually a better fit than a stored procedure when the output should stay queryable like a table.
+>
+> ---
+>
+> **DML quota**
+> - BigQuery's per-table limit on the number of `INSERT`, `UPDATE`, `DELETE`, and `MERGE` statements allowed in a day.
+> - It matters because pipeline frequency decisions in the note are constrained by that quota, especially when `MERGE` is the chosen load primitive.
+>
+> > [!warning] Quota failure stops writes
+> >
+> > When the DML limit is exceeded, BigQuery returns `quotaExceeded` and the pipeline stops making progress. This is an operational capacity limit, not just a best-practice suggestion.
+>
+> ---
+>
+> **Storage Write API**
+> - BigQuery's modern ingestion API for high-volume or high-frequency writes, supporting batch and committed modes.
+> - It matters because it is the escape hatch when ordinary DML frequency would exceed per-table quotas.
+>
+> > [!info] Different modes solve different problems
+> >
+> > Batch mode is aligned with cost-efficient bulk loads, while committed mode targets low-latency ingestion. Choosing the API is really choosing a write pattern.
+>
+> ---
+>
+> **`require_partition_filter`**
+> - A BigQuery table option that forces queries to include a predicate on the partition column instead of allowing silent full-partition scans.
+> - It matters because the note treats this option as a guardrail against accidental cost blowups on partitioned production tables.
+>
+> > [!warning] Guardrails must be enabled
+> >
+> > Partitioning alone does not protect against an unfiltered scan. Without `require_partition_filter`, someone can still run an expensive full-table query by mistake.
+>
+> ---
+>
+> **Snapshot isolation**
+> - BigQuery's default read-consistency model, where each statement sees a stable snapshot of data as of the statement start.
+> - It matters because the note contrasts BigQuery's fixed concurrency model with SQL Server's configurable isolation levels and lock hints.
+>
+> > [!info] No tuning knob here
+> >
+> > BigQuery does not expose the same isolation-level matrix as SQL Server. The engineering question is less "which isolation level?" and more "does BigQuery fit this workload at all?"
+>
+> ---
+>
+> **`INFORMATION_SCHEMA`**
+> - BigQuery's standards-based metadata surface for tables, columns, jobs, partitions, storage, and other object details.
+> - It matters because introspection, cost monitoring, and structural verification in this note all flow through `INFORMATION_SCHEMA` rather than `sys.*` views.
+>
+> > [!warning] SQL Server instincts mislead here
+> >
+> > Looking for `sys.tables` or `sys.dm_exec_*` in BigQuery is the wrong mental model. BigQuery exposes different metadata under a different naming scheme, even when the intent is similar.
+>
+> ---
+>
+> **Clustering**
+> - BigQuery's within-partition storage ordering by selected columns so the engine can skip blocks whose value ranges do not match the predicate.
+> - It matters because the note pairs clustering with partitioning to reduce scan cost for repeated symbol- or key-based queries.
+>
+> > [!warning] Clustering is secondary pruning
+> >
+> > Clustering works best after partition pruning has already narrowed the search space. Using it as the only optimization lever often leaves too much data in play.
+>
+> ---
+>
+> **Search index**
+> - A BigQuery index type designed for selective text and JSON lookups rather than for general B-tree-style query acceleration.
+> - It matters because the note's indexing section explains that BigQuery optimization is mostly about storage layout, with search indexes as a narrow exception.
+>
+> > [!info] This is not SQL Server indexing
+> >
+> > BigQuery does not offer general-purpose nonclustered indexes for arbitrary predicates. Search indexes help specific lookup shapes, not whole-table workload design.
+>
+> ---
+>
+> **Demo dataset**
+> - A non-production BigQuery dataset used to isolate notebook-created objects from the real medallion datasets.
+> - It matters because the note intentionally creates views, procedures, and temporary objects and needs those experiments to stay safe to rerun.
+>
+> > [!warning] Cleanup is part of the pattern
+> >
+> > Creating demo objects without cleanup leaves confusing residue that can affect later runs and readers. The isolation only works when the lifecycle is explicit.
+>
+> ---
+>
+> **Batch load**
+> - A bulk-ingestion pattern where data is loaded in larger chunks instead of row by row or minute by minute.
+> - It matters because the note recommends batch loading as the default BigQuery write strategy when low-latency streaming is unnecessary.
+>
+> > [!info] Cheap and predictable
+> >
+> > Batch loads align well with BigQuery's warehouse economics. They avoid DML pressure, simplify validation steps, and make cost behavior easier to reason about.
 
 > [!info] INFORMATION_SCHEMA Is BigQuery's Primary Introspection
 >
@@ -100,14 +202,12 @@ OPTIONS(location="europe-west1")
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
 </table>
-
-
 
 ## Views
 
@@ -139,19 +239,20 @@ FROM (
 ) sub
 WHERE rn = 1;
 ```
+
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
 </table>
 
 The complex `ROW_NUMBER` pattern is now hidden behind a simple `SELECT` — downstream queries no longer need to know the dedup logic.
@@ -183,71 +284,68 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>RMS.PA</td>
-            <td>2026-03-12</td>
-            <td>1900.0</td>
-            <td>1918.5</td>
-            <td>1894.0</td>
-            <td>1906.0</td>
-            <td>18681</td>
-        </tr>
-        <tr>
-            <td>RHM.DE</td>
-            <td>2026-03-12</td>
-            <td>1536.0</td>
-            <td>1588.0</td>
-            <td>1535.0</td>
-            <td>1551.5</td>
-            <td>158741</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1194.8</td>
-            <td>1202.2</td>
-            <td>1187.8</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>2026-03-12</td>
-            <td>920.7</td>
-            <td>933.4</td>
-            <td>917.3</td>
-            <td>925.7</td>
-            <td>27887</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>2026-03-12</td>
-            <td>629.0</td>
-            <td>631.6</td>
-            <td>625.6</td>
-            <td>626.6</td>
-            <td>14083</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMS.PA</td>
+<td>2026-03-12</td>
+<td>1900.0</td>
+<td>1918.5</td>
+<td>1894.0</td>
+<td>1906.0</td>
+<td>18681</td>
+</tr>
+<tr>
+<td>RHM.DE</td>
+<td>2026-03-12</td>
+<td>1536.0</td>
+<td>1588.0</td>
+<td>1535.0</td>
+<td>1551.5</td>
+<td>158741</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>2026-03-12</td>
+<td>920.7</td>
+<td>933.4</td>
+<td>917.3</td>
+<td>925.7</td>
+<td>27887</td>
+</tr>
+<tr>
+<td>ARGX.BR</td>
+<td>2026-03-12</td>
+<td>629.0</td>
+<td>631.6</td>
+<td>625.6</td>
+<td>626.6</td>
+<td>14083</td>
+</tr>
 </table>
-
-
 
 ### Views | Cross-Layer Dashboard View
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
-
 
 #### Create a cross-layer dashboard view
 
@@ -278,27 +376,24 @@ JOIN `bq-wh-nb.stoxx_silver.index_dim` d ON s.symbol = d.symbol AND d._index = s
 ```
 
 <table>
-    <thead>
-        <tr>
-            <th>rank</th>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>country</th>
-            <th>current_price</th>
-            <th>composite_score</th>
-            <th>value_score</th>
-            <th>momentum_score</th>
-            <th>weight_pct</th>
-            <th>_index</th>
-            <th>score_date</th>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+<tr>
+<th>rank</th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>current_price</th>
+<th>composite_score</th>
+<th>value_score</th>
+<th>momentum_score</th>
+<th>weight_pct</th>
+<th>_index</th>
+<th>score_date</th>
+</tr>
+</thead>
+<tbody>
 </table>
-
-
-
 
 #### Query the dashboard view for the latest rankings
 
@@ -335,96 +430,94 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>rank</th>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>country</th>
-            <th>current_price</th>
-            <th>composite_score</th>
-            <th>value_score</th>
-            <th>momentum_score</th>
-            <th>weight_pct</th>
-            <th>_index</th>
-            <th>score_date</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>1</td>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-            <td>France</td>
-            <td>87.44</td>
-            <td>0.6796</td>
-            <td>1.497</td>
-            <td>0.46</td>
-            <td>1.94</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>VOW.DE</td>
-            <td>VOLKSWAGEN AG</td>
-            <td>Consumer Cyclical</td>
-            <td>Germany</td>
-            <td>92.85</td>
-            <td>0.5756</td>
-            <td>1.028</td>
-            <td>-0.382</td>
-            <td>0.93</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td>DTE.DE</td>
-            <td>DEUTSCHE TELEKOM AG</td>
-            <td>Communication Services</td>
-            <td>Germany</td>
-            <td>32.55</td>
-            <td>0.487</td>
-            <td>0.226</td>
-            <td>0.706</td>
-            <td>3.13</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>TTE.PA</td>
-            <td>TOTALENERGIES</td>
-            <td>Energy</td>
-            <td>France</td>
-            <td>69.8</td>
-            <td>0.3913</td>
-            <td>0.585</td>
-            <td>1.307</td>
-            <td>2.95</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>5</td>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>Belgium</td>
-            <td>62.76</td>
-            <td>0.3852</td>
-            <td>0.251</td>
-            <td>0.537</td>
-            <td>2.43</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
+<thead>
+<tr>
+<th>rank</th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>current_price</th>
+<th>composite_score</th>
+<th>value_score</th>
+<th>momentum_score</th>
+<th>weight_pct</th>
+<th>_index</th>
+<th>score_date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BNP.PA</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>Financial Services</td>
+<td>France</td>
+<td>87.44</td>
+<td>0.6796</td>
+<td>1.497</td>
+<td>0.46</td>
+<td>1.94</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>2</td>
+<td>VOW.DE</td>
+<td>VOLKSWAGEN AG</td>
+<td>Consumer Cyclical</td>
+<td>Germany</td>
+<td>92.85</td>
+<td>0.5756</td>
+<td>1.028</td>
+<td>-0.382</td>
+<td>0.93</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DTE.DE</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Communication Services</td>
+<td>Germany</td>
+<td>32.55</td>
+<td>0.487</td>
+<td>0.226</td>
+<td>0.706</td>
+<td>3.13</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>4</td>
+<td>TTE.PA</td>
+<td>TOTALENERGIES</td>
+<td>Energy</td>
+<td>France</td>
+<td>69.8</td>
+<td>0.3913</td>
+<td>0.585</td>
+<td>1.307</td>
+<td>2.95</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>Belgium</td>
+<td>62.76</td>
+<td>0.3852</td>
+<td>0.251</td>
+<td>0.537</td>
+<td>2.43</td>
+<td>euro_stoxx_50</td>
+<td>2026-03-12</td>
+</tr>
 </table>
-
-
 
 ## Stored Procedures
 
@@ -443,7 +536,6 @@ The **idiomatic BigQuery pattern** for reusable parameterized logic is a CTE wit
 > [!info] Cross-engine comparison
 >
 > SQL Server stored procedures compile and cache execution plans — a major performance feature. BigQuery procedures offer no plan caching; they simply execute statements sequentially. For parameterized reads, prefer table functions (`CREATE TABLE FUNCTION`) over procedures.
-
 
 #### Parameterized top-N query with a CTE-based params row
 
@@ -479,53 +571,50 @@ LIMIT 5
 5 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>score</th>
-            <th>composite_rank</th>
-            <th>current_price</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>BNP.PA</td>
-            <td>0.6795985859619491</td>
-            <td>1</td>
-            <td>87.44</td>
-        </tr>
-        <tr>
-            <td>VOW.DE</td>
-            <td>0.5756100520413311</td>
-            <td>2</td>
-            <td>92.85</td>
-        </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>0.4870486370039222</td>
-            <td>3</td>
-            <td>32.55</td>
-        </tr>
-        <tr>
-            <td>TTE.PA</td>
-            <td>0.3912872052761238</td>
-            <td>4</td>
-            <td>69.8</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>0.38521031359211527</td>
-            <td>5</td>
-            <td>62.76</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>score</th>
+<th>composite_rank</th>
+<th>current_price</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BNP.PA</td>
+<td>0.6795985859619491</td>
+<td>1</td>
+<td>87.44</td>
+</tr>
+<tr>
+<td>VOW.DE</td>
+<td>0.5756100520413311</td>
+<td>2</td>
+<td>92.85</td>
+</tr>
+<tr>
+<td>DTE.DE</td>
+<td>0.4870486370039222</td>
+<td>3</td>
+<td>32.55</td>
+</tr>
+<tr>
+<td>TTE.PA</td>
+<td>0.3912872052761238</td>
+<td>4</td>
+<td>69.8</td>
+</tr>
+<tr>
+<td>ABI.BR</td>
+<td>0.38521031359211527</td>
+<td>5</td>
+<td>62.76</td>
+</tr>
 </table>
-
-
 
 ### Stored Procedures | Error Handling with BEGIN...EXCEPTION
 
 Production scripts wrap logic in `BEGIN...EXCEPTION...END` with explicit transactions. If anything fails inside the block, execution jumps to the `EXCEPTION` handler where you can roll back and log the error. This is BigQuery's equivalent of SQL Server's `TRY/CATCH`.
-
 
 > [!info] BEGIN...EXCEPTION...END Pattern
 >
@@ -562,15 +651,15 @@ END
 1 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>error_message</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Undeclared variable: rows_loaded</td>
-        </tr>
+<thead>
+<tr>
+<th>error_message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Undeclared variable: rows_loaded</td>
+</tr>
 </table>
 
 > [!warning] jupysql limitation — multi-statement scripts
@@ -584,7 +673,6 @@ BigQuery offers scalar UDFs and table functions. The `CREATE TABLE FUNCTION` syn
 ### User-Defined Functions | Table Function
 
 A BigQuery **table function** (`CREATE TABLE FUNCTION`) is like a parameterized view — you pass arguments, and it returns a table result that the optimizer can inline into the outer query. This is BigQuery's equivalent of SQL Server's inline table-valued function (iTVF). Always prefer table functions over scalar UDFs for returning result sets.
-
 
 #### Create a parameterized table function for price history
 
@@ -609,15 +697,12 @@ AS (
 ```
 
 <table>
-    <thead>
-        <tr>
-        </tr>
-    </thead>
-    <tbody>
+<thead>
+<tr>
+</tr>
+</thead>
+<tbody>
 </table>
-
-
-
 
 #### Call the table function from a SELECT statement
 
@@ -647,66 +732,64 @@ LIMIT 15
 9 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>open</th>
-            <th>high</th>
-            <th>low</th>
-            <th>close</th>
-            <th>volume</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1194.8</td>
-            <td>1202.2</td>
-            <td>1187.8</td>
-            <td>1190.8</td>
-            <td>128223</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>1188.4</td>
-            <td>1210.8</td>
-            <td>1174.0</td>
-            <td>1198.8</td>
-            <td>562904</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>1188.4</td>
-            <td>1208.4</td>
-            <td>1172.2</td>
-            <td>1200.0</td>
-            <td>800815</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>1072.0</td>
-            <td>1147.6</td>
-            <td>1060.2</td>
-            <td>1147.6</td>
-            <td>689086</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>1186.0</td>
-            <td>1192.6</td>
-            <td>1112.8</td>
-            <td>1147.0</td>
-            <td>857271</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1188.4</td>
+<td>1210.8</td>
+<td>1174.0</td>
+<td>1198.8</td>
+<td>562904</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1188.4</td>
+<td>1208.4</td>
+<td>1172.2</td>
+<td>1200.0</td>
+<td>800815</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1072.0</td>
+<td>1147.6</td>
+<td>1060.2</td>
+<td>1147.6</td>
+<td>689086</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1186.0</td>
+<td>1192.6</td>
+<td>1112.8</td>
+<td>1147.0</td>
+<td>857271</td>
+</tr>
 </table>
-
-
 
 ## Indexes
 
@@ -726,7 +809,6 @@ BigQuery does not have traditional B-tree indexes. Instead, it offers storage-le
 > [!info] SQL Server parallel
 >
 > SQL Server's clustered index (physical row order) maps conceptually to BigQuery's clustering (sort order within partitions). SQL Server's non-clustered indexes have no direct BigQuery equivalent — partition pruning and clustering replace them. SQL Server's columnstore indexes are unnecessary in BigQuery because BigQuery is *already* columnar.
-
 
 BigQuery has no manual index creation. Instead, inspect table metadata to verify clustering and partitioning configuration.
 
@@ -754,48 +836,45 @@ FROM `bq-wh-nb.stoxx_silver`.INFORMATION_SCHEMA.COLUMNS
 WHERE table_name = 'eurostoxx50_ohlcv'
 ORDER BY ordinal_position
 LIMIT 15
-
 ```
 
 12 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>table_name</th>
-            <th>clustering_ordinal_position</th>
-            <th>column_name</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>id</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>symbol</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>date</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>open</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>high</td>
-        </tr>
+<thead>
+<tr>
+<th>table_name</th>
+<th>clustering_ordinal_position</th>
+<th>column_name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>eurostoxx50_ohlcv</td>
+<td>None</td>
+<td>id</td>
+</tr>
+<tr>
+<td>eurostoxx50_ohlcv</td>
+<td>None</td>
+<td>symbol</td>
+</tr>
+<tr>
+<td>eurostoxx50_ohlcv</td>
+<td>None</td>
+<td>date</td>
+</tr>
+<tr>
+<td>eurostoxx50_ohlcv</td>
+<td>None</td>
+<td>open</td>
+</tr>
+<tr>
+<td>eurostoxx50_ohlcv</td>
+<td>None</td>
+<td>high</td>
+</tr>
 </table>
-
-
 
 ### Clustering | Design Principles for Data Pipelines
 
@@ -852,7 +931,6 @@ flowchart TD
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
 
-
 This simulation shows the before/after of an SCD Type 1 overwrite: ASML's sector changes from its current value to "Information Technology". In production, this would be a direct `UPDATE` statement.
 
 #### Simulate an SCD Type 1 overwrite on dimension rows
@@ -892,60 +970,57 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>original_sector</th>
-            <th>updated_sector</th>
-            <th>scd_action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>Consumer Defensive</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-            <td>Consumer Defensive</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>Consumer Cyclical</td>
-            <td>Consumer Cyclical</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-            <td>Technology</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>Basic Materials</td>
-            <td>Basic Materials</td>
-            <td>unchanged</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>original_sector</th>
+<th>updated_sector</th>
+<th>scd_action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>Consumer Defensive</td>
+<td>unchanged</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>Consumer Defensive</td>
+<td>Consumer Defensive</td>
+<td>unchanged</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+<td>Consumer Cyclical</td>
+<td>unchanged</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>Technology</td>
+<td>unchanged</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AIR LIQUIDE</td>
+<td>Basic Materials</td>
+<td>Basic Materials</td>
+<td>unchanged</td>
+</tr>
 </table>
-
-
 
 ### Slowly Changing Dimensions | SCD Type 2 History Tracking
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
-
 
 The `stoxx_silver.index_dim` table already implements SCD Type 2 with `valid_from`, `valid_to`, and `is_current` columns. Rows with `is_current = TRUE` and `valid_to = NULL` represent the current state.
 
@@ -982,60 +1057,58 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>short_name</th>
-            <th>sector</th>
-            <th>is_current</th>
-            <th>valid_from</th>
-            <th>valid_to</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ABI.BR</td>
-            <td>AB INBEV</td>
-            <td>Consumer Defensive</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>Consumer Cyclical</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>Technology</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>Basic Materials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>is_current</th>
+<th>valid_from</th>
+<th>valid_to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ABI.BR</td>
+<td>AB INBEV</td>
+<td>Consumer Defensive</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>AD.AS</td>
+<td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
+<td>Consumer Defensive</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ADS.DE</td>
+<td>adidas AG</td>
+<td>Consumer Cyclical</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
+<tr>
+<td>AI.PA</td>
+<td>AIR LIQUIDE</td>
+<td>Basic Materials</td>
+<td>True</td>
+<td>2026-03-04</td>
+<td>None</td>
+</tr>
 </table>
-
-
 
 ## Gap Detection & Gap Filling
 
@@ -1045,7 +1118,6 @@ Time-series data in financial pipelines frequently contains gaps — missing tra
 
 The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
-
 
 `LAG` compares each date to its predecessor within the same symbol's time series. A gap of more than 3 calendar days is flagged as unusual — normal weekends produce a 3-day gap (Friday → Monday), so anything larger indicates a holiday, data issue, or delisting event.
 
@@ -1082,54 +1154,52 @@ LIMIT 10
 10 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>prev_date</th>
-            <th>gap_days</th>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>2026-03-11</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-11</td>
-            <td>2026-03-10</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-10</td>
-            <td>2026-03-09</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-09</td>
-            <td>2026-03-06</td>
-            <td>3</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-06</td>
-            <td>2026-03-05</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>prev_date</th>
+<th>gap_days</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>2026-03-11</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>2026-03-10</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>2026-03-09</td>
+<td>1</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>2026-03-06</td>
+<td>3</td>
+<td>normal</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>2026-03-05</td>
+<td>1</td>
+<td>normal</td>
+</tr>
 </table>
-
-
 
 ## Deduplication Strategies
 
@@ -1139,7 +1209,6 @@ Duplicate rows in source data are one of the most common data quality issues in 
 
 The standard approach: assign `ROW_NUMBER()` within each duplicate group,
 keep `rn = 1`, delete the rest.
-
 
 The simulation below uses `UNION ALL` to create an artificial duplicate, then applies `ROW_NUMBER()` partitioned by the natural key (`symbol, date`) to assign `rn = 1` to the row to keep (highest volume wins). In production, filter to `rn = 1` and write the deduplicated result to the target table.
 
@@ -1188,39 +1257,37 @@ LIMIT 10
 2 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>symbol</th>
-            <th>date</th>
-            <th>close</th>
-            <th>volume</th>
-            <th>source</th>
-            <th>rn</th>
-            <th>copies</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1191.3</td>
-            <td>129222</td>
-            <td>duplicate</td>
-            <td>1</td>
-            <td>2</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-12</td>
-            <td>1190.8</td>
-            <td>128223</td>
-            <td>original</td>
-            <td>2</td>
-            <td>2</td>
-        </tr>
+<thead>
+<tr>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+<th>source</th>
+<th>rn</th>
+<th>copies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1191.3</td>
+<td>129222</td>
+<td>duplicate</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>128223</td>
+<td>original</td>
+<td>2</td>
+<td>2</td>
+</tr>
 </table>
-
-
 
 ## Execution Plans & Query Optimization
 
@@ -1247,7 +1314,6 @@ For a broader look at controlling BigQuery spend through slot management and res
 | No partition filter | Scans all partitions on a partitioned table | Always filter on partition column; use `require_partition_filter` |
 | `ORDER BY` without `LIMIT` | Full sort across all slots — expensive on large result sets | Always pair `ORDER BY` with `LIMIT` |
 | Cross-join with large tables | Cartesian product multiplies bytes scanned | Ensure at least one side is small; use JOIN instead |
-
 
 Both queries return the same count, but the sargable version enables partition pruning. The `EXTRACT` version wraps the column in a function, preventing BigQuery from using partition metadata to skip irrelevant partitions. The range filter version allows direct partition elimination.
 
@@ -1276,20 +1342,18 @@ SELECT
 1 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>bad_function_on_column</th>
-            <th>good_sargable</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>12698</td>
-            <td>12698</td>
-        </tr>
+<thead>
+<tr>
+<th>bad_function_on_column</th>
+<th>good_sargable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12698</td>
+<td>12698</td>
+</tr>
 </table>
-
-
 
 ## Transaction Model
 
@@ -1358,7 +1422,6 @@ Every table in the stoxx database has audit columns:
 | `is_filled` | BOOL | Whether the row was gap-filled (silver) |
 | `is_current` | BOOL | SCD Type 2 current flag (dimension) |
 
-
 A data freshness check across all medallion layers — if any table's `last_update` is more than 1 day behind the current date, the pipeline may have stalled.
 
 #### Check data freshness across all medallion layers
@@ -1393,32 +1456,30 @@ ORDER BY last_update DESC
 4 rows affected.
 
 <table>
-    <thead>
-        <tr>
-            <th>table</th>
-            <th>last_update</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>`bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`</td>
-            <td>2026-03-12 12:45:00.021478</td>
-        </tr>
-        <tr>
-            <td>`bq-wh-nb.stoxx_silver.signals_daily`</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
-        <tr>
-            <td>`bq-wh-nb.stoxx_gold.scores_daily`</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
-        <tr>
-            <td>`bq-wh-nb.stoxx_gold.index_performance`</td>
-            <td>2026-03-12 00:00:00</td>
-        </tr>
+<thead>
+<tr>
+<th>table</th>
+<th>last_update</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>`bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`</td>
+<td>2026-03-12 12:45:00.021478</td>
+</tr>
+<tr>
+<td>`bq-wh-nb.stoxx_silver.signals_daily`</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
+<tr>
+<td>`bq-wh-nb.stoxx_gold.scores_daily`</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
+<tr>
+<td>`bq-wh-nb.stoxx_gold.index_performance`</td>
+<td>2026-03-12 00:00:00</td>
+</tr>
 </table>
-
-
 
 ## Partitioning Strategies
 
@@ -1427,6 +1488,7 @@ Table partitioning divides a BigQuery table into physically separate segments ba
 ### Partitioning Strategies | When to Partition
 
 Partition large tables (millions of rows) by a date column for:
+
 - **Faster queries**: partition elimination skips irrelevant months/years
 - **Easier maintenance**: rebuild one partition, not the whole table
 - **Instant archival**: SWITCH old partitions to archive table
@@ -1502,27 +1564,27 @@ bq.delete_dataset("demo", delete_contents=True, not_found_ok=True)
 print("Demo objects cleaned up")
 ```
 
-    Demo objects cleaned up
+Demo objects cleaned up
 
-## When to Use These Patterns
-
-Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, table functions over procedures for reads, and batch loads over streaming inserts when real-time latency is not required.
-
-- **Views** — when multiple consumers need the same query logic. Regular views for infrequent reads; materialized views for expensive aggregations hit repeatedly.
-- **Table functions** — for parameterized reads that need to be reusable across notebooks, scripts, and scheduled queries. Preferred over stored procedures for read-only logic.
-- **Stored procedures** — only for multi-statement scripting with control flow (`IF`, `LOOP`, `BEGIN...EXCEPTION`). Not for parameterized reads.
-- **Partitioning + clustering** — for any table above ~1GB. Partition by the most common WHERE column (date), cluster by the most common JOIN/filter column (symbol, _index).
-- **SCD Type 2** — for dimension attributes that affect historical calculations. Always prefer over Type 1 for sector, index membership, and weighting changes.
-- **Batch loading** — for cost-sensitive pipelines. Batch loads via `bq load`, `LOAD DATA`, or Storage Write API (batch mode) are free.
-
-## When Not to Use These Patterns
-
-The same patterns become liabilities when applied in the wrong context — regular views hit repeatedly, partitioning on small tables, or high-frequency MERGE that exhausts the DML quota. The scenarios below are the most common misuses seen in code reviews.
-
-- **Regular views for dashboards** — if a dashboard query runs repeatedly throughout the day, the view re-scans on every read. Use a materialized view or scheduled query to a gold table.
-- **MERGE more than once per pipeline cycle** — each MERGE counts against the 1,500 DML/day quota. For high-frequency upserts, switch to the Storage Write API.
-- **Partitioning on small tables** — tables under ~1GB gain negligible benefit from partitioning. The partition metadata overhead can actually increase query latency.
-- **Clustering without partitioning** — while BigQuery supports clustering without partitioning, partition pruning provides coarse elimination first, then clustering provides fine-grained filtering within each partition. Use both.
+> [!example] BigQuery Engineering Fit
+>
+> > [!success] Cost-Aware Design
+> >
+> > - Each pattern in this note earns its place when the workload characteristics match its strengths. Pick the lightest construct that satisfies the requirement — views over stored procedures, table functions over procedures for reads, and batch loads over streaming inserts when real-time latency is not required.
+> > - **Views** — when multiple consumers need the same query logic. Regular views for infrequent reads; materialized views for expensive aggregations hit repeatedly.
+> > - **Table functions** — for parameterized reads that need to be reusable across notebooks, scripts, and scheduled queries. Preferred over stored procedures for read-only logic.
+> > - **Stored procedures** — only for multi-statement scripting with control flow (`IF`, `LOOP`, `BEGIN...EXCEPTION`). Not for parameterized reads.
+> > - **Partitioning + clustering** — for any table above ~1GB. Partition by the most common WHERE column (date), cluster by the most common JOIN/filter column (symbol, _index).
+> > - **SCD Type 2** — for dimension attributes that affect historical calculations. Always prefer over Type 1 for sector, index membership, and weighting changes.
+> > - **Batch loading** — for cost-sensitive pipelines. Batch loads via `bq load`, `LOAD DATA`, or Storage Write API (batch mode) are free.
+>
+> > [!failure] Quota or Re-Scan Trap
+> >
+> > - The same patterns become liabilities when applied in the wrong context — regular views hit repeatedly, partitioning on small tables, or high-frequency MERGE that exhausts the DML quota. The scenarios below are the most common misuses seen in code reviews.
+> > - **Regular views for dashboards** — if a dashboard query runs repeatedly throughout the day, the view re-scans on every read. Use a materialized view or scheduled query to a gold table.
+> > - **MERGE more than once per pipeline cycle** — each MERGE counts against the 1,500 DML/day quota. For high-frequency upserts, switch to the Storage Write API.
+> > - **Partitioning on small tables** — tables under ~1GB gain negligible benefit from partitioning. The partition metadata overhead can actually increase query latency.
+> > - **Clustering without partitioning** — while BigQuery supports clustering without partitioning, partition pruning provides coarse elimination first, then clustering provides fine-grained filtering within each partition. Use both.
 
 ## Warnings
 

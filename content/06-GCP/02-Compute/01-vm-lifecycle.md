@@ -12,14 +12,226 @@ aliases:
 description: "How to create, inspect, operate, resize, schedule, and delete Compute Engine VMs — with IAM provisioning, startup scripts, Spot VMs, right-sizing, and Terraform equivalents."
 ---
 
-# VM Lifecycle — Create, Configure, and Manage
+# VM Lifecycle
 
 > [!quote]
 > "I remember the days when I built my own gaming PCs. Eventually I sold out and bought an Xbox because I just wanted to play games, not build gaming rigs. Serverless is like that."
 >
 > — **Kelsey Hightower**, Twitter (2018)
 
-Compute Engine VMs in `bq-wh-nb` host self-managed services — SQL Server (`stoxx-vm` running `stoxx_db`), monitoring agents, and any workload that doesn't fit the serverless model. Unlike [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) (which is ephemeral), VMs are stateful and persistent, making them your responsibility to provision, secure, operate, and right-size. This page walks through the full lifecycle of `stoxx-vm` — from API enablement and IAM provisioning through creation, inspection, scheduling, resizing, and deletion — all executed live against the `bq-wh-nb` project in `europe-west1-b`.
+> [!abstract]- Summary
+>
+> Covers the full Compute Engine VM lifecycle in `bq-wh-nb`, from API enablement and IAM through creation, inspection, scheduling, right-sizing, Spot provisioning, and deletion, so self-managed workloads such as `stoxx-vm` can be provisioned and operated safely.
+>
+> **Prerequisites**
+> - Enable `compute.googleapis.com` and `monitoring.googleapis.com` before any lifecycle or metrics workflow
+> - Grant `roles/logging.logWriter`, `roles/monitoring.metricWriter`, and `roles/monitoring.viewer` to the dedicated `bq-wh-sa` service account instead of relying on the default Compute Engine identity
+> - Verify project IAM bindings and compare the one-time setup to Terraform `google_project_service` and `google_project_iam_member` resources
+>
+> **Instance creation**
+> - Create `stoxx-vm` with explicit `--machine-type`, image family, boot disk, labels, tags, service account, `--scopes=cloud-platform`, `--metadata=enable-oslogin=true`, and `--no-address`
+> - Attach startup scripts with `--metadata-from-file=startup-script=...` and treat them as root-level boot automation that reruns on every start
+> - Compare the imperative `gcloud compute instances create` path with the `google_compute_instance` Terraform equivalent
+>
+> **Lifecycle operations**
+> - Inspect instance details, state, disks, metadata, and attached identity, then use zonal `gcloud compute instances` commands to start, stop, suspend, resume, and delete VMs
+> - Understand how VM status transitions, no-external-IP access, deletion protection, and disk auto-delete settings affect day-2 operations
+>
+> **Resizing and scheduling**
+> - Resize machine types safely, including stop-before-resize workflows and family selection across `e2-*`, `n2-*`, `n2d-*`, `t2d-*`, `t2a-*`, `c2-*`, `c3-*`, `n4-*`, `m2-*`, and custom sizing
+> - Create regional instance schedules with `gcloud compute resource-policies create instance-schedule`, attach them with `add-resource-policies`, and validate cron, timezone, and next-run status
+> - Use the machine family reference to map dev/test, balanced production, CPU-bound, memory-heavy, and custom-fit workloads to the right sizing model
+>
+> **Spot VMs**
+> - Provision discounted batch workers with `--provisioning-model=SPOT` and `--instance-termination-action`, and separate restartable jobs from stateful services that cannot tolerate preemption
+>
+> **Right-sizing**
+> - Query CPU utilization through the Cloud Monitoring `timeSeries` API with OAuth bearer tokens and combine it with Ops Agent memory telemetry for sizing decisions
+> - Apply utilization thresholds and cost comparisons to decide when to keep `e2-medium`, move to `n2-standard-4`, or resize again after representative workload cycles
+>
+> **Operations and safety**
+> - Warnings: API enablement changes billable project state, startup scripts rerun on every boot, resize and delete actions are state-changing, schedules can restart stopped VMs on the next cron boundary, and Spot VMs can be preempted with 30 seconds of notice
+> - Recommendations table: machine family guidance maps workload profiles to `e2`, `n2`, `n2d`, `t2d`, `t2a`, `c2`, `c3`, `n4`, `m2`, and custom sizing, and Terraform examples mirror the API, IAM, instance, and scheduling workflows
+
+> [!note]- Glossary
+>
+> **Compute Engine**
+> - Google Cloud's infrastructure-as-a-service platform for provisioning and managing virtual machines on Google-managed host hardware.
+> - It is the control plane behind every VM lifecycle command in this note, including provisioning, scheduling, metrics, and deletion workflows.
+>
+> > [!info] Zonal and regional split
+> >
+> > VM instances are zonal resources, but several supporting objects such as subnets and schedule policies are regional. That is why this note alternates between `--zone` and `--region` depending on the resource being managed.
+>
+> ---
+>
+> **Instance**
+> - A single Compute Engine virtual machine identified by project, zone, and instance name.
+> - The note uses `stoxx-vm` as the concrete instance whose full lifecycle is created, inspected, resized, scheduled, and eventually deleted.
+>
+> > [!info] Instance name is local
+> >
+> > An instance name is only unique within its zone and project. Reusing a familiar name in another zone does not refer to the same VM.
+>
+> ---
+>
+> **Zone**
+> - A specific deployment location inside a Google Cloud region where the VM's host hardware runs, such as `europe-west1-b`.
+> - It matters because most instance lifecycle commands in this note are zonal and fail if the VM name is correct but the zone is wrong.
+>
+> > [!warning] Wrong zone, same name
+> >
+> > Many Compute Engine commands require `--zone` explicitly. Using the wrong zone makes a valid instance appear missing.
+>
+> ---
+>
+> **Region**
+> - A geographic area that contains multiple zones and hosts regional services such as subnets and resource policies.
+> - The note uses the region boundary for schedules, pricing context, and regional resources that support the zonal VM.
+>
+> > [!info] Policies attach across zones
+> >
+> > A regional policy such as an instance schedule can target zonal VMs as long as the VM's zone belongs to that region.
+>
+> ---
+>
+> **Machine type**
+> - The predefined or custom CPU and memory shape assigned to a VM, such as `e2-medium` or `n2-standard-4`.
+> - Machine type selection drives both performance and cost, so the note uses it for creation-time sizing, later resize operations, and right-sizing decisions.
+>
+> > [!warning] Resize changes billing
+> >
+> > Switching families or sizes changes the VM's hourly cost immediately. Sizing decisions should be based on utilization data rather than guesswork.
+>
+> ---
+>
+> **Boot disk**
+> - The primary persistent disk that holds the operating system image for a VM and is usually created automatically during instance creation.
+> - It matters because creation flags, disk-size warnings, auto-delete behavior, and final deletion workflows all depend on how the boot disk is configured.
+>
+> > [!warning] Image size is minimum
+> >
+> > The source image size is only the minimum disk size. Creating a larger boot disk often requires the guest OS to expand the filesystem on first boot.
+>
+> ---
+>
+> **Persistent disk**
+> - Network-attached block storage that survives VM stops and can outlive VM deletion when auto-delete is disabled.
+> - The note distinguishes persistent disk behavior from instance lifetime so readers understand what resize, schedule, and delete operations actually preserve.
+>
+> > [!info] VM and disk differ
+> >
+> > Stopping or deleting a VM does not always remove its data disks. Disk persistence is controlled separately from instance state.
+>
+> ---
+>
+> **Service account**
+> - A non-human Google Cloud identity attached to a VM so software on the guest can call Google APIs.
+> - The note uses the dedicated `bq-wh-sa` account as the real permission boundary for logging, monitoring, and data-platform access from `stoxx-vm`.
+>
+> > [!danger] Default identity is broad
+> >
+> > The default Compute Engine service account is often granted excessive project-wide roles. A compromised VM then inherits those permissions immediately.
+>
+> ---
+>
+> **Network tag**
+> - A string label attached to a VM and evaluated by firewall rules to allow or deny traffic.
+> - It matters because tags such as `sql-server` and `iap-ssh` are how the instance is targeted for traffic policy without relying on IP-specific rules.
+>
+> > [!warning] Not the same as labels
+> >
+> > Network tags affect firewall matching. Resource labels do not change network policy and cannot replace tags in firewall rules.
+>
+> ---
+>
+> **Label**
+> - A key-value metadata pair used to organize, filter, and report on cloud resources.
+> - The note uses labels such as `env=dev` and `app=stoxx-db` for billing views, filters, and workload grouping rather than network control.
+>
+> > [!info] Labels aid operations
+> >
+> > Good labels make inventory queries, cost attribution, and cleanup filters safer. They do not grant access or open traffic paths.
+>
+> ---
+>
+> **Metadata**
+> - Key-value data attached to the VM instance and exposed to the guest environment through the metadata service.
+> - In this note, metadata carries settings such as `enable-oslogin=true` and startup-script configuration that alter guest behavior at boot time.
+>
+> > [!warning] Metadata is operational input
+> >
+> > Metadata is not just descriptive text. Changes to metadata can change how the guest boots, authenticates, or initializes software.
+>
+> ---
+>
+> **Startup script**
+> - A shell script provided through instance metadata and executed as root when the VM boots.
+> - The note uses startup scripts to automate baseline package installation and initial host configuration without manual SSH intervention.
+>
+> > [!warning] Must be idempotent
+> >
+> > Startup scripts run on every boot, not only at first creation. Non-idempotent scripts can reinstall packages, duplicate state, or fail on later restarts.
+>
+> ---
+>
+> **OS Login**
+> - A Compute Engine access model that uses IAM-managed identities for SSH authorization instead of project-wide SSH keys stored in metadata.
+> - It matters here because the creation workflow enables `enable-oslogin=true` to tighten host access management for production-style VM administration.
+>
+> > [!info] IAM governs SSH entry
+> >
+> > With OS Login enabled, SSH access is tied to IAM permissions and user identities. This reduces the operational sprawl of unmanaged static SSH keys.
+>
+> ---
+>
+> **IAP**
+> - Identity-Aware Proxy, which can tunnel administrative traffic such as SSH to internal-only VMs without assigning them external IP addresses.
+> - The note relies on IAP so `stoxx-vm` can stay private while still remaining reachable for operator access.
+>
+> > [!warning] Private VM still needs path
+> >
+> > Removing the external IP improves security, but access still depends on the right IAP, firewall, and IAM configuration. A private VM is not automatically reachable.
+>
+> ---
+>
+> **Resource policy**
+> - A Compute Engine object that defines reusable automated behavior such as instance schedules or snapshot schedules.
+> - The note uses a regional resource policy to stop and start `stoxx-vm` on a business-hours timetable.
+>
+> > [!info] Policy and instance separate
+> >
+> > Creating a schedule policy does nothing until it is attached to an instance. Policy definition and policy binding are separate lifecycle steps.
+>
+> ---
+>
+> **Spot VM**
+> - A discounted Compute Engine VM that uses surplus capacity and can be preempted by Google Cloud with short notice.
+> - It matters because the note contrasts cheap, restartable batch workers with persistent stateful services that must not run on preemptible capacity.
+>
+> > [!danger] Preemption is abrupt
+> >
+> > Spot capacity can disappear with about 30 seconds of warning. Stateful services and write-heavy databases should not depend on that runtime model.
+>
+> ---
+>
+> **Ops Agent**
+> - Google Cloud's guest agent for forwarding logs and publishing metrics from the VM into Cloud Logging and Cloud Monitoring.
+> - The note depends on Ops Agent roles and telemetry because right-sizing and observability are incomplete without guest-level metrics.
+>
+> > [!warning] Memory data needs agent
+> >
+> > Compute Engine exposes basic host metrics automatically, but guest memory visibility typically depends on an installed and authorized Ops Agent.
+>
+> ---
+>
+> **Right-sizing**
+> - The practice of adjusting VM size based on observed workload utilization instead of choosing CPU and memory allocations once and never revisiting them.
+> - It matters because the note treats sizing as an operational loop driven by Monitoring API data, cost comparisons, and workload-specific thresholds.
+>
+> > [!info] Baseline before resizing
+> >
+> > A resize decision is only meaningful after a representative workload window. Idle or partial-cycle telemetry produces misleading recommendations.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -48,25 +260,19 @@ stateDiagram-v2
     TERMINATED --> [*] : instances delete
 ```
 
-## Key Definitions
-
-| Term | Definition |
-|---|---|
-| **Compute Engine** | Google Cloud's IaaS service for provisioning and managing virtual machines on Google's infrastructure |
-| **Instance** | A single virtual machine running on Compute Engine — identified by name, zone, and project |
-| **Machine type** | A predefined or custom combination of vCPU count, memory, and optionally GPU — determines the VM's compute capacity and hourly cost |
-| **Zone** | A deployment area within a region (e.g., `europe-west1-b`) — the physical location where the VM's host hardware runs |
-| **Region** | A geographic area containing multiple zones (e.g., `europe-west1`) — resource policies and subnets are regional |
-| **Boot disk** | The persistent disk containing the OS image — created automatically with `instances create` unless an existing disk is specified |
-| **Persistent disk** | Network-attached block storage that survives VM deletion if `autoDelete` is false — types include `pd-standard` (HDD), `pd-balanced` (SSD), and `pd-ssd` (high-IOPS SSD) |
-| **Service account** | An identity attached to the VM that controls which GCP APIs the VM can call — scoped by IAM roles bound to the service account |
-| **Network tag** | A label applied to the VM that firewall rules reference to allow or deny traffic — not the same as resource labels |
-| **Label** | A key-value pair for organizing and filtering resources (e.g., `env=dev`, `app=stoxx-db`) — used in billing reports, IAM conditions, and `--filter` queries |
-| **Metadata** | Key-value pairs attached to the VM instance — used for startup scripts, OS Login configuration, and application settings accessible from the metadata server |
-| **Startup script** | A shell script executed as root on every boot — passed via `--metadata-from-file=startup-script=<path>` or inline via `--metadata=startup-script='...'` |
-| **IAP** | Identity-Aware Proxy — enables SSH access to VMs without external IP addresses by tunneling through Google's IAP infrastructure |
-| **Spot VM** | Surplus Compute Engine capacity at up to 91% discount — can be preempted at any time with 30-second notice, suitable only for fault-tolerant batch workloads |
-| **Resource policy** | A regional Compute Engine object that defines automated behaviors — instance schedules (cron-based start/stop) and snapshot schedules attach to VMs via `add-resource-policies` |
+> [!example] VM Runtime Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use Compute Engine VMs for persistent self-managed workloads such as SQL Server, agents, schedulers, and batch workers that do not fit serverless runtimes.
+> > - Use them when the workload needs host-level control, custom startup logic, attached disks, long-lived processes, or machine-type tuning beyond what managed runtimes expose.
+> > - Use this lifecycle guidance when the team must provision, inspect, resize, schedule, and eventually retire VMs safely in a production-like environment.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not choose VMs for workloads that fit fully managed serverless services better.
+> > - Do not use Spot VMs for stateful services or jobs that cannot tolerate preemption.
+> > - Do not rely on the default Compute Engine service account as the production identity model.
 
 ## Prerequisites
 

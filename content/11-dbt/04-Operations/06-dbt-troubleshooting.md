@@ -13,9 +13,157 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 >
 > — **Charity Majors**, charity.wtf (2018)
 
-Effective dbt troubleshooting follows a consistent pattern: reproduce the error with the smallest possible scope, use `dbt debug` and `dbt compile` to isolate the layer where it originates (Jinja, compilation, or runtime), then fix and verify.
+> [!abstract]- Summary
+>
+> Explains a layered dbt troubleshooting workflow that starts with narrow reproduction and then separates compilation, runtime, test, incremental, snapshot, and environment failures so fixes target the real layer instead of the loudest symptom.
+>
+> **First-response and failure classification**
+> - Starts with the first-responder commands such as `dbt debug`, `dbt compile`, scoped `dbt run`, scoped `dbt test`, and source freshness checks to establish the smallest reliable reproduction path
+> - Separates compilation, runtime, and test failures early so teams stop mixing Jinja, warehouse, and data-quality problems into one opaque incident category
+>
+> **Error patterns and diagnosis**
+> - Covers Jinja syntax errors, missing refs or sources, circular dependencies, connection failures, warehouse SQL errors, timeouts, out-of-memory conditions, and test failures with their likely causes and fast diagnosis paths
+> - Treats dbt troubleshooting as a model of layered systems: some failures belong to compilation, some to adapter connectivity, some to execution plans, and some to the data itself
+>
+> **Failure inspection and recovery guidance**
+> - Covers stored failures, false positives, severity tuning, incremental drift, snapshot issues, and common recurring error signatures so engineers can move from symptom to verified fix systematically
+> - Emphasizes verifying the repaired scope rather than rerunning the whole project blindly after every failure
+>
+> **Operations and safety**
+> - Warnings: rerunning too much too early, debugging warehouse errors as if they were Jinja problems, ignoring stored-failure context, and masking real issues by downgrading severity instead of fixing the cause
+> - Recommendations: narrow the scope first, classify the failure layer explicitly, inspect artifacts and stored failures before guessing, and treat repeated incidents as architecture feedback rather than isolated operator mistakes
 
----
+> [!note]- Glossary
+>
+> **Troubleshooting workflow**
+> - The repeatable process of reproducing a failure narrowly, isolating its layer, applying a fix, and verifying the result.
+> - It matters here because the note is fundamentally about disciplined diagnosis rather than memorizing one-off fixes.
+>
+> > [!info] Sequence matters
+> >
+> > The order of operations matters in troubleshooting. Small, layer-specific checks usually reveal the cause faster than immediately rerunning the whole project.
+>
+> ---
+>
+> **`dbt debug`**
+> - A dbt command that validates profile selection, connection settings, and project parsing prerequisites.
+> - It matters here because many apparent model failures are actually environment or credential issues that this command surfaces early.
+>
+> > [!warning] Fix environment first
+> >
+> > If `dbt debug` is failing, later warehouse or model errors are often secondary noise. Clear the environment and connection layer before deeper debugging.
+>
+> ---
+>
+> **`dbt compile`**
+> - A dbt command that renders models and macros into SQL without executing them in the warehouse.
+> - It matters here because it cleanly isolates Jinja and graph problems from warehouse runtime failures.
+>
+> > [!info] Fastest layer separator
+> >
+> > Compile is one of the best first cuts in dbt debugging because it tells you whether the failure exists before any warehouse execution begins.
+>
+> ---
+>
+> **Compilation error**
+> - A failure that occurs while dbt is parsing Jinja, resolving refs, or building the model graph before SQL is sent to the warehouse.
+> - It matters here because compilation issues require a very different debugging path from runtime SQL failures.
+>
+> > [!warning] Warehouse never saw the query
+> >
+> > When the error is truly a compilation failure, looking at execution plans or warehouse performance is wasted effort. Stay in the dbt and Jinja layer first.
+>
+> ---
+>
+> **Runtime error**
+> - A failure that occurs after dbt has compiled SQL and the warehouse rejects or cannot complete execution.
+> - It matters here because runtime errors are where adapter behavior, database permissions, resource limits, and SQL validity all start to matter.
+>
+> > [!warning] Now the warehouse is in play
+> >
+> > Runtime errors require reading both dbt context and warehouse behavior. The fix may live in credentials, SQL shape, resource limits, or physical design.
+>
+> ---
+>
+> **Circular dependency**
+> - A graph error where two or more dbt nodes depend on each other in a cycle, making execution order impossible.
+> - It matters here because graph structure mistakes are common and can look confusing until they are recognized as dependency design problems.
+>
+> > [!warning] Extract the shared logic
+> >
+> > Cycles are usually solved by introducing a new lower-level model that both sides depend on, not by trying to trick dbt into an execution order it cannot represent.
+>
+> ---
+>
+> **Stored failure**
+> - A persisted table of rows that failed a dbt test when `--store-failures` is enabled.
+> - It matters here because debugging test failures is much faster when the exact offending records can be queried directly.
+>
+> > [!info] Best evidence for data-quality incidents
+> >
+> > Stored failures turn an abstract failing assertion into inspectable data. That often shortens the path from symptom to root cause dramatically.
+>
+> ---
+>
+> **False positive**
+> - A test or alert failure that reflects an expected or acceptable data condition rather than a real defect.
+> - It matters here because not every failing rule is wrong data; sometimes the rule itself is too broad or applied at the wrong layer.
+>
+> > [!warning] Fix the rule, not just the data
+> >
+> > If the same false positive recurs, the testing policy may be wrong. Repeatedly suppressing expected cases is a sign the assertion needs redesign.
+>
+> ---
+>
+> **Severity**
+> - The failure policy for a dbt test, usually `warn` or `error`, that controls whether a run stops.
+> - It matters here because troubleshooting often reveals whether the current severity still matches the real operational impact of the issue.
+>
+> > [!warning] Severity is an operational contract
+> >
+> > Downgrading severity can reduce noise, but it can also silently accept real risk. Change severity only when the incident pattern justifies it.
+>
+> ---
+>
+> **Incremental drift**
+> - The accumulation of incorrect or incomplete state in an incremental model when its selection logic no longer matches real data arrival or correction patterns.
+> - It matters here because some dbt failures present as missing or stale data even though the run itself technically succeeded.
+>
+> > [!warning] Success can still be wrong
+> >
+> > Incremental models can fail semantically without throwing runtime errors. Troubleshooting has to include data-shape validation, not just process status.
+>
+> ---
+>
+> **Snapshot corruption**
+> - A historical-state problem where snapshot logic, keys, or change detection produce incorrect or duplicated temporal records.
+> - It matters here because snapshots can fail in ways that are not obvious from a simple green or red run status.
+>
+> > [!warning] History bugs linger
+> >
+> > Snapshot issues are dangerous because they accumulate over time and are harder to repair once downstream consumers trust the historical record.
+>
+> ---
+>
+> **Scoped reproduction**
+> - The practice of rerunning the smallest relevant model, test, or selector needed to reproduce a failure.
+> - It matters here because controlled troubleshooting starts by shrinking blast radius and feedback time before attempting full-project reruns.
+>
+> > [!info] Smallest failing surface wins
+> >
+> > A narrow reproduction is usually the fastest route to clarity. Broad reruns add latency and noise without necessarily adding understanding.
+
+> [!example] Failure Diagnosis Scope
+>
+> > [!success] Narrow Diagnosis
+> >
+> > - Use this workflow when a dbt run has already failed and you need to classify whether the breakage is in compilation, runtime SQL, tests, incremental state, snapshots, or environment setup before choosing a fix.
+> > - Start with the smallest reproducing command and the most specific artifact or failure table available, so the repair can be verified without rerunning the whole project.
+>
+> > [!failure] Structural Recurrence
+> >
+> > - Do not use troubleshooting as a substitute for upstream prevention when the same class of failure keeps returning; repeated incidents usually point to missing tests, weak contracts, poor orchestration, or fragile model design.
+> > - Avoid broad reruns as a first reflex, because they consume time and compute while often obscuring the exact layer that actually failed.
 
 ### dbt First Responder Commands
 
@@ -45,6 +193,7 @@ Compilation errors occur before any SQL reaches the warehouse. They are dbt or J
 ### Jinja Syntax Errors
 
 #### Symptom — Jinja Syntax Errors
+
 ```
 Compilation Error in model fct_esg_scores
   unexpected end of template, expected 'endif'
@@ -69,6 +218,7 @@ WHERE score_date >= '{{ var("run_date") }}'
 ### Missing `ref()` / `source()`
 
 #### Symptom — Missing ref() / source()
+
 ```
 Compilation Error in model fct_esg_scores
   'stg_esg_msci' is undefined
@@ -77,6 +227,7 @@ Compilation Error in model fct_esg_scores
 **Cause:** `{{ ref('stg_esg_msci') }}` was written as `{{ ref('stg_esg_MSCI') }}` (case mismatch) or the model file does not exist.
 
 #### Fix — Missing ref() / source()
+
 ```bash
 # List all nodes matching a pattern
 dbt ls --select "*msci*"
@@ -87,6 +238,7 @@ Verify the model file name matches the string inside `ref()`. dbt model names ar
 ### Circular Dependencies
 
 #### Symptom — Circular Dependencies
+
 ```
 Found a cycle: model.financial_indices.int_esg_scored
   --> model.financial_indices.fct_esg_scores
@@ -96,6 +248,7 @@ Found a cycle: model.financial_indices.int_esg_scored
 **Cause:** Model A references Model B, and Model B (directly or transitively) references Model A.
 
 #### Diagnosis — Circular Dependencies
+
 ```bash
 dbt ls --select +int_esg_scored   # all upstream
 dbt ls --select int_esg_scored+   # all downstream
@@ -112,6 +265,7 @@ Runtime errors occur after compilation succeeds. The SQL reaches the warehouse a
 ### Connection Failures
 
 #### Symptom — Connection Failures
+
 ```
 Runtime Error
   Database error while running model fct_esg_scores
@@ -136,6 +290,7 @@ cat $GOOGLE_APPLICATION_CREDENTIALS | python -m json.tool | grep client_email
 ### SQL Errors in the Warehouse
 
 #### Symptom — SQL Errors in the Warehouse
+
 ```
 Database Error in model fct_esg_scores
   Syntax error: Unexpected keyword RANGE at [47:5]
@@ -153,12 +308,14 @@ Paste the compiled SQL directly into the BigQuery console or SQL Server Manageme
 ### Query Timeout
 
 #### Symptom — Query Timeout
+
 ```
 Database Error in model fct_index_constituent_history
   Operation timed out after 3600 seconds
 ```
 
 #### Fix — Query Timeout
+
 - For BigQuery: increase `job_timeout_ms` in the model config or profile.
 - For SQL Server: increase `query_timeout` in `profiles.yml`.
 - Longer term: see [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning) for model splitting strategies.
@@ -175,11 +332,13 @@ Database Error in model fct_index_constituent_history
 ### Out-of-Memory (OOM)
 
 #### Symptom (BigQuery) — Out-of-Memory (OOM)
+
 ```
 Resources exceeded during query execution: Out of memory; ...
 ```
 
 #### Fix — Out-of-Memory (OOM)
+
 1. Check if the model performs a large cross-join or missing join predicate.
 2. Enable `allow_large_results` and switch to a temporary table:
 
@@ -253,6 +412,7 @@ columns:
 ## Incremental Drift
 
 Incremental models can diverge from a full-refresh rebuild over time. This is called incremental drift and is most common when:
+
 - The model's SQL logic changed but the table was not full-refreshed.
 - Late-arriving data was not captured by the incremental filter.
 - A bug existed in the incremental logic that has since been fixed.
@@ -364,6 +524,7 @@ dbt snapshot --full-refresh --select snap_issuer_details
 ### `dbt debug`
 
 Checks:
+
 1. `dbt_project.yml` is parseable.
 2. `profiles.yml` exists and the active profile is valid.
 3. Warehouse connection succeeds (executes a `SELECT 1`).
@@ -392,6 +553,7 @@ Connection:
 ### `dbt compile`
 
 Renders all Jinja and produces plain SQL in `target/compiled/`. Use it to:
+
 - Verify `var()` and `env_var()` resolution.
 - Inspect the final SQL before executing.
 - Check `is_incremental()` branches in development.

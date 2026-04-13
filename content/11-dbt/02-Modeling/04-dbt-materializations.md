@@ -13,9 +13,169 @@ description: "View table incremental ephemeral snapshot deep dive"
 >
 > — **Pat Helland**
 
-A materialisation determines how dbt writes a model's SQL output into the warehouse. Choosing the wrong materialisation is one of the most common performance and cost mistakes in a dbt project.
+> [!abstract]- Summary
+>
+> Explains how dbt materializations turn the same model SQL into very different warehouse behaviors by changing persistence, rebuild semantics, incremental state handling, and long-term cost or performance tradeoffs.
+>
+> **Materialization decision model**
+> - Defines the five core dbt materializations â€” `view`, `table`, `incremental`, `ephemeral`, and `snapshot` â€” and compares what object each creates, whether data is stored, and how each behaves across runs
+> - Frames materialization choice as one of the biggest architectural controls in a dbt project because it changes both execution semantics and downstream warehouse behavior
+>
+> **State and persistence patterns**
+> - Covers full rebuilds, `is_incremental()` branches, `unique_key`, schema-change handling, and the major incremental strategies such as append, delete+insert, merge, and insert_overwrite
+> - Shows where materialization decides whether dbt recomputes from scratch, caches warehouse state physically, or inlines logic without creating an object at all
+>
+> **Operational fit and failure modes**
+> - Maps each materialization to the right modeling layer and workload shape, including why staging tends toward views, marts often use tables or incrementals, and snapshots solve historical tracking rather than ordinary transformation
+> - Highlights the most common correctness and cost failures, especially around broken incremental predicates, unnecessary rebuilds, and misuse of ephemeral or snapshot behavior
+>
+> **Operations and safety**
+> - Warnings: wrong `is_incremental()` filters, skipped late-arriving data, casual full refreshes, overuse of views on expensive logic, and snapshot or incremental strategies applied without a clear change model
+> - Recommendations: choose materialization by workload shape, pair incrementals with lookback windows and `unique_key`, treat snapshots as temporal history tools, and revisit materialization when query cost or rebuild time changes materially
 
----
+> [!note]- Glossary
+>
+> **Materialization**
+> - The dbt setting that determines how a model's SQL result is persisted or represented in the warehouse.
+> - It matters here because the entire note is about how persistence choice changes both performance and correctness behavior for the same logical model.
+>
+> > [!warning] Same SQL, different system behavior
+> >
+> > Materialization is not a cosmetic knob. It changes rebuild semantics, query cost, object type, and how downstream consumers interact with the model.
+>
+> ---
+>
+> **`view`**
+> - A materialization that creates a view so the underlying query executes at read time rather than storing a full physical copy.
+> - It matters here because views are a common default, especially in staging, but they push computation into downstream query time.
+>
+> > [!warning] Cheap storage, repeated compute
+> >
+> > Views avoid storage cost but can become expensive when downstream models or BI tools repeatedly re-run complex logic on every query.
+>
+> ---
+>
+> **`table`**
+> - A materialization that drops and recreates a full physical table on each run.
+> - It matters here because tables are the simplest persistent option when full rebuilds are cheap enough and predictable reads matter more than run-time efficiency.
+>
+> > [!info] Full rebuild simplicity
+> >
+> > Tables trade extra build work for clearer runtime behavior. They are often the easiest persistent surface to reason about when dataset size is still manageable.
+>
+> ---
+>
+> **`incremental`**
+> - A materialization that processes only new or changed rows after the first full build instead of recreating the entire relation every time.
+> - It matters here because incremental models are one of the main ways dbt scales large fact-like workloads without constant full rebuilds.
+>
+> > [!warning] Optimization with hidden state
+> >
+> > Incremental models depend on prior warehouse state being correct. A bad predicate can silently skip data for a long time before anyone notices.
+>
+> ---
+>
+> **`ephemeral`**
+> - A materialization that inlines a model as a CTE into dependent SQL instead of creating a separate warehouse object.
+> - It matters here because ephemeral models reduce object clutter but remove the ability to inspect or persist intermediate state directly.
+>
+> > [!warning] No standalone relation to inspect
+> >
+> > Ephemeral is convenient for simple helper logic, but it can make debugging and downstream performance analysis harder once the SQL becomes large or widely reused.
+>
+> ---
+>
+> **`snapshot`**
+> - A dbt resource that stores historical row versions over time, usually for slowly changing dimensions or other temporal tracking.
+> - It matters here because snapshots solve a different problem from ordinary models: recording state change history instead of just publishing the latest result.
+>
+> > [!info] History mechanism, not generic persistence
+> >
+> > Snapshots should be chosen because temporal history matters, not because they seem like another variant of incremental loading.
+>
+> ---
+>
+> **`is_incremental()`**
+> - A dbt macro that evaluates to true when an incremental model is running against an already-existing target relation without full refresh.
+> - It matters here because incremental correctness depends on the branch guarded by `is_incremental()` being written safely.
+>
+> > [!warning] Predicate quality decides data completeness
+> >
+> > The macro is only as safe as the filter behind it. A narrow cutoff can skip late-arriving or corrected records indefinitely.
+>
+> ---
+>
+> **Lookback window**
+> - A small historical overlap included in an incremental predicate so recent rows are reprocessed and corrected if late-arriving data appears.
+> - It matters here because lookback windows are the practical safeguard against gaps and restatements in incremental models.
+>
+> > [!warning] Exact boundaries are brittle
+> >
+> > Filtering strictly from the current max timestamp looks efficient, but it often misses delayed or corrected data. Reprocessing a small window is usually safer.
+>
+> ---
+>
+> **`unique_key`**
+> - A dbt incremental config that identifies which rows should be updated or matched during incremental writes.
+> - It matters here because many incremental strategies depend on a trustworthy row identity to avoid duplicates or stale replacements.
+>
+> > [!warning] Wrong key, wrong history
+> >
+> > If the unique key does not match real model grain, merge and delete+insert strategies produce silent corruption rather than obvious failures.
+>
+> ---
+>
+> **Full refresh**
+> - A dbt execution mode that rebuilds an incremental model from scratch instead of using its incremental branch.
+> - It matters here because it is both a recovery tool and a high-cost operation that changes how model state is rebuilt.
+>
+> > [!warning] Expensive but sometimes necessary
+> >
+> > Full refresh is the cleanest fix for some drift and schema issues, but it can be operationally disruptive on large models if used casually.
+>
+> ---
+>
+> **Merge strategy**
+> - An incremental write strategy that matches rows by key and updates existing records while inserting new ones.
+> - It matters here because merge is the default mental model for many incremental marts, and its behavior depends heavily on adapter support and key correctness.
+>
+> > [!info] Update plus insert path
+> >
+> > Merge is powerful because it supports corrections and late data, but it is not automatically safe. It still needs the right key, predicate, and adapter semantics.
+>
+> ---
+>
+> **Delete+insert strategy**
+> - An incremental strategy that deletes matching target rows and reinserts the replacement set from the incremental run.
+> - It matters here because it offers a simpler alternative to merge on some warehouses or workloads.
+>
+> > [!warning] Rewrites matched slices
+> >
+> > Delete+insert avoids some merge complexity, but it can still be costly or risky if the selected replacement set is too broad or the key definition is unstable.
+>
+> ---
+>
+> **Insert_overwrite strategy**
+> - A partition-oriented incremental strategy that replaces full partitions instead of individual rows, often used on systems like BigQuery or Spark.
+> - It matters here because some large partitioned models are better served by partition replacement than row-level merge behavior.
+>
+> > [!info] Partition-shaped optimization
+> >
+> > Insert_overwrite is powerful when the warehouse and table design support it, but it assumes partition boundaries are the right unit of replacement.
+
+> [!example] Persistence Strategy Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when selecting or reviewing how a model should persist, rebuild, or accumulate state in the warehouse based on data volume, query patterns, and change semantics.
+> > - Use it when the same logical SQL could be correct under several materializations, but cost, rebuild behavior, and downstream expectations differ materially.
+> > - Use it to reason about state, history, and performance before choosing `view`, `table`, `incremental`, `ephemeral`, or `snapshot`.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use this note as a substitute for layer design when the real issue is whether logic belongs in staging, intermediate, or mart models in the first place.
+> > - Do not choose an optimization-heavy materialization just to make one slow query disappear if the underlying change model is still unclear.
+> > - Do not deploy incrementals or snapshots without a well-defined correctness story for late data, keys, and change capture.
 
 ### The Five Materialisation Types
 
@@ -288,6 +448,7 @@ from {{ ref('stg_market_data__daily_prices') }}
 When `int_daily_returns` references `int_price_flags`, dbt compiles the ephemeral model's SQL directly into `int_daily_returns` as a CTE. No warehouse object is created.
 
 **Limitations**:
+
 - Cannot be queried directly.
 - Not accessible via `--defer` (no artifact).
 - Reused in many models = the CTE is duplicated in each compiled output, potentially confusing query planners.
@@ -347,6 +508,7 @@ where '2023-06-30' between dbt_valid_from and coalesce(dbt_valid_to, '9999-12-31
 ```
 
 **Strategies**:
+
 - `timestamp`: uses an `updated_at` column to detect changes. Most reliable.
 - `check`: compares a list of columns (`check_cols`) and marks a new version when any column changes. Use when no reliable `updated_at` exists.
 
@@ -391,8 +553,8 @@ dbt run --select tag:incremental --full-refresh
 ---
 
 ## Related
+
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-mart-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models)
 - [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models)
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)
-

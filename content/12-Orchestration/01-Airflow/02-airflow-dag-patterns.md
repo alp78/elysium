@@ -1,933 +1,413 @@
 ---
 title: "02 - Airflow DAG Patterns"
-tags: [orchestration, python, airflow]
-aliases:
-  - Dynamic DAGs
-  - Airflow dynamic tasks
-  - Airflow task groups
-  - Airflow branching
-  - BranchPythonOperator
-  - trigger rules
-  - Airflow SubDAGs
-  - TaskGroups
-  - Airflow backfill
-  - parameterized DAGs
-  - dataset-driven scheduling
-  - data-aware scheduling
-  - SLA monitoring
-  - on_failure_callback
-  - on_success_callback
-  - Airflow idempotent
-  - depends_on_past
-  - cross_downstream
-  - chain
-description: "Comprehensive reference for Apache Airflow DAG patterns: task dependencies, task groups, dynamic DAG generation, branching, trigger rules, idempotency, backfill, parameterization, dataset-driven scheduling, and SLA/callback configuration."
+tags:
+  - orchestration
+  - airflow
+description: "Real DAG design patterns from the live STOXX Airflow pipeline, including thin orchestration, Cloud Run task boundaries, controlled fan-out and fan-in, idempotent reruns, and the publication path into BigQuery and Firestore."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-13
 status: complete
+parent: "[[domain-airflow]]"
+links:
+  - "[[01-airflow-core-concepts]]"
+  - "[[03-airflow-deployment]]"
+  - "[[04-airflow-troubleshooting]]"
+  - "[[05-airflow-problems]]"
 ---
 
 # Airflow DAG Patterns
 
-> [!quote]
-> "As these systems get more complicated and evolve rapidly, it becomes even more important to have something like Apache Airflow that brings everything together in a sane place where every little piece of the puzzle can be orchestrated properly with sane APIs."
+This chapter does not use generic toy DAGs because the live platform already provides a better teaching surface. The actual workflow on `stoxx-airflow` expresses the design decisions that matter in production: explicit task boundaries, externalized compute, controlled parallelism, deterministic reruns, and a serving handoff that ends in Firestore and Eventarc.
+
+## What This Note Covers
+
+This note explains the real DAG patterns used by `stoxx_stage_yfinance` and why those patterns were chosen for the STOXX-only production demo pipeline.
+
+- The exact orchestration shape from yfinance extraction to Firestore publication.
+- How task boundaries map to Cloud Run jobs and command-line modes.
+- Why silver transforms fan out in parallel and then converge.
+- How reruns stay safe by pushing stateful data work into GCS, SQL Server, BigQuery, and Firestore instead of XCom.
+- Which common Airflow patterns are deliberately not used yet, and what would have to change before they become worthwhile.
+
+## Glossary / Key Terms
+
+> [!info] Key Terms
 >
-> — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
+> | Term | Definition | Why it matters here | Caveat |
+> |---|---|---|---|
+> | Thin orchestration | A DAG design where Airflow coordinates work but does not embed heavy processing logic. | The live DAG only launches Cloud Run jobs and checks their outcomes. | This requires good task boundaries outside Airflow. |
+> | Fan-out | One upstream task unlocking several downstream tasks in parallel. | `load_bronze_into_sql` unlocks the three silver transform tasks. | Fan-out is only safe when the downstream tasks do not write conflicting targets. |
+> | Fan-in | Several upstream tasks converging into one downstream task. | `build_gold_scores` waits for all three silver transforms. | The join point is only correct if every prerequisite is truly required. |
+> | Idempotency | Re-running a task with the same input produces the same durable result. | The pipeline must survive retries and demo reruns safely. | Idempotency lives in the task payload code, not in Airflow alone. |
+> | Task boundary | The unit of responsibility assigned to one Airflow task. | Each task maps to a distinct Cloud Run job or execution mode. | Bad boundaries create oversized retries or tangled failure domains. |
+> | Overlap control | Preventing multiple full DAG runs from modifying the same state at the same time. | `max_active_runs=1` serializes the entire pipeline. | This reduces concurrency in exchange for deterministic state. |
+> | Replay window | The slice of recent data deliberately reopened before a demo rerun. | Reset scripts trim recent bronze, silver, and gold rows so the DAG produces visible inserts again. | Replay logic must be narrow or it will destroy trusted history. |
+> | Publication path | The downstream chain that turns analytical tables into serving data. | The live path is SQL gold -> BigQuery marts -> Firestore -> Eventarc. | A publication path often needs different SLAs than ingestion. |
 
-A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
+## The Real End-To-End DAG Shape
 
-> [!tip] Prerequisites
-> This note assumes familiarity with Airflow fundamentals. See [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
+The live DAG is explicit enough that the best pattern guide is the workflow itself.
 
----
+### The Deployed Graph
 
-## Task Dependencies
+The current DAG orchestrates one end-to-end path from market-data fetch to serving publication. It does not rely on cross-DAG sensors, dynamic task mapping, or dataset scheduling. The graph is kept direct so operators can reason about every dependency from the UI without hidden runtime expansion.
 
-Task dependencies define the execution order. Airflow provides several syntaxes for expressing them.
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    A[fetch_bronze_stage_into_gcs]
+    B[load_bronze_into_sql]
+    C1[transform_ohlcv_to_silver]
+    C2[transform_signals_daily_to_silver]
+    C3[transform_signals_quarterly_to_silver]
+    D[build_gold_scores]
+    E[build_gold_index_performance]
+    F[sync_gold_to_bigquery]
+    G[build_bigquery_marts]
+    H[publish_serving_to_firestore]
+    I[validate_serving_layer]
 
-### Bitshift Operators (`>>` and `<<`)
-
-The primary, most readable syntax. `>>` means "runs before"; `<<` means "runs after".
-
-```python
-from airflow.operators.empty import EmptyOperator
-
-# Sequential chain: A → B → C → D
-task_a >> task_b >> task_c >> task_d
-
-# Fan-out: A triggers B, C, and D in parallel
-task_a >> [task_b, task_c, task_d]
-
-# Fan-in: B, C, D must all complete before E runs
-[task_b, task_c, task_d] >> task_e
-
-# Combined fan-out then fan-in
-task_a >> [task_b, task_c] >> task_d
-
-# Reverse direction with <<
-task_b << task_a  # Equivalent to task_a >> task_b
+    A --> B
+    B --> C1
+    B --> C2
+    B --> C3
+    C1 --> D
+    C2 --> D
+    C3 --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
 ```
 
-### `chain()` for Complex Linear Dependencies
+### A Real Successful Run Proves The Shape
 
-Use `chain()` when you need to express a sequence involving lists without nesting `>>` multiple times. `chain()` zips lists together pairwise.
+The validated end-to-end serving run shows exactly how the graph behaved in production. The three silver tasks started in parallel, then converged before gold building began.
 
-```python
-from airflow.models.baseoperator import chain
-
-# Equivalent to: a >> b >> c >> d
-chain(task_a, task_b, task_c, task_d)
-
-# chain() with lists — creates pairwise dependencies:
-# extract_a >> transform_a, extract_b >> transform_b (NOT cross-product)
-chain([extract_a, extract_b], [transform_a, transform_b])
-
-# Full pattern: fan-out then pairwise chain then fan-in
-chain(
-    start,                              # start runs first
-    [extract_a, extract_b],            # parallel extracts after start
-    [transform_a, transform_b],        # pairwise: a→a, b→b
-    join,                               # join waits for all transforms
-)
+```text
+stoxx_stage_yfinance | transform_ohlcv_to_silver             | success | 2026-04-13T17:32:52.958397+00:00 | 2026-04-13T17:34:07.065424+00:00
+stoxx_stage_yfinance | transform_signals_daily_to_silver     | success | 2026-04-13T17:32:53.576918+00:00 | 2026-04-13T17:33:59.913948+00:00
+stoxx_stage_yfinance | transform_signals_quarterly_to_silver | success | 2026-04-13T17:32:53.740656+00:00 | 2026-04-13T17:34:04.283928+00:00
+stoxx_stage_yfinance | build_gold_scores                     | success | 2026-04-13T17:34:07.755655+00:00 | 2026-04-13T17:35:19.502117+00:00
 ```
 
-### `cross_downstream()` for Full Cross-Product Dependencies
+That timing proves the fan-out and fan-in are not theoretical. Airflow actually ran the silver transforms concurrently and only released the next gold step when the last prerequisite finished.
 
-Use `cross_downstream()` when EVERY task in the upstream list must connect to EVERY task in the downstream list.
+## Pattern 1: Thin Orchestration With External Compute
 
-```python
-from airflow.models.baseoperator import cross_downstream
+The first and most important DAG pattern in the platform is architectural rather than syntactic: Airflow delegates real data processing to Cloud Run jobs.
 
-# Every extract feeds every transform
-# Creates: extract_a → transform_a, extract_a → transform_b,
-#          extract_b → transform_a, extract_b → transform_b
-cross_downstream(
-    [extract_a, extract_b],
-    [transform_a, transform_b],
-)
-```
+### One Airflow Task Maps To One External Responsibility
 
-> [!tip] When to Use Each
-> - `>>` / `<<`: simple sequential or fan-out/fan-in structures
-> - `chain()`: long sequences or pairwise list dependencies
-> - `cross_downstream()`: many-to-many (use sparingly — creates many edges)
+The DAG definition below is representative of the live style. Each task names one operational boundary and invokes one Cloud Run job in one region with one explicit mode or step selection.
 
----
+#### Read The Live Task Definitions
 
-## Task Groups
+The following code is the actual orchestration surface from [stoxx_stage_yfinance.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/airflow-vm/dags/stoxx_stage_yfinance.py:1>).
 
-Task Groups (introduced in Airflow 2.0, replacing SubDAGs) allow you to visually group related tasks in the UI. They do not change execution semantics.
-
-> [!warning] SubDAGs are deprecated
+> [!example] Real Airflow Task Boundaries
 >
-> SubDAGs (using `SubDagOperator`) are deprecated as of Airflow 2.0 and removed in later versions. They caused deadlocks, were difficult to debug, and had separate executors. Always use **TaskGroups** instead.
-
-> [!success] Migration: replace SubDagOperator with TaskGroup
-> Replace `SubDagOperator` blocks with `with TaskGroup(group_id="...", tooltip="...")` context managers. Task IDs inside the group are prefixed with the group ID (e.g., `bronze.ingest_crm`), preserving logical grouping without the deadlock risk or separate executor overhead.
-
-```python
-from airflow.utils.task_group import TaskGroup
-from airflow.operators.python import PythonOperator
-from airflow.operators.empty import EmptyOperator
-
-with DAG("medallion_pipeline", schedule="@daily", start_date=datetime(2024, 1, 1), catchup=False) as dag:
-
-    start = EmptyOperator(task_id="start")
-
-    # --- Bronze Layer Task Group ---
-    with TaskGroup(group_id="bronze", tooltip="Ingest raw data from sources") as bronze_group:
-
-        ingest_crm = PythonOperator(
-            task_id="ingest_crm",       # Becomes "bronze.ingest_crm" in the UI
-            python_callable=lambda: print("Ingesting CRM"),
-        )
-        ingest_erp = PythonOperator(
-            task_id="ingest_erp",       # Becomes "bronze.ingest_erp"
-            python_callable=lambda: print("Ingesting ERP"),
-        )
-        # Tasks within the group run in parallel (no dependencies between them)
-
-    # --- Silver Layer Task Group ---
-    with TaskGroup(group_id="silver", tooltip="Clean and standardize data") as silver_group:
-
-        clean_crm = PythonOperator(task_id="clean_crm", python_callable=lambda: None)
-        clean_erp = PythonOperator(task_id="clean_erp", python_callable=lambda: None)
-        clean_crm >> clean_erp          # Dependencies work normally inside groups
-
-    # --- Gold Layer Task Group ---
-    with TaskGroup(group_id="gold", tooltip="Build analytical models") as gold_group:
-
-        build_customer = PythonOperator(task_id="build_customer_dim", python_callable=lambda: None)
-        build_sales = PythonOperator(task_id="build_sales_fact", python_callable=lambda: None)
-        build_customer >> build_sales
-
-    end = EmptyOperator(task_id="end")
-
-    # Chain the groups — groups act as single nodes for cross-group dependencies
-    start >> bronze_group >> silver_group >> gold_group >> end
-```
-
-### Nested Task Groups
-
-```python
-# Task Groups can be nested up to any depth (keep it readable — max 2-3 levels)
-with TaskGroup("data_quality") as dq_group:
-    with TaskGroup("checks_crm") as crm_checks:
-        check_nulls = PythonOperator(task_id="check_nulls", python_callable=lambda: None)
-        check_schema = PythonOperator(task_id="check_schema", python_callable=lambda: None)
-    with TaskGroup("checks_erp") as erp_checks:
-        check_counts = PythonOperator(task_id="check_counts", python_callable=lambda: None)
-```
-
----
-
-## Dynamic DAGs
-
-Dynamic DAG generation creates tasks programmatically — from a config file, database query, or API call — instead of hardcoding them. This is one of Airflow's most powerful features.
-
-> [!warning] Keep DAG parsing fast
+> ```python
+> fetch_bronze_stage_into_gcs = CloudRunExecuteJobOperator(
+>     task_id="fetch_bronze_stage_into_gcs",
+>     project_id=PROJECT_ID,
+>     region=REGION,
+>     job_name=FETCH_JOB_NAME,
+>     deferrable=False,
+> )
 >
-> DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for slow DAG parsing symptoms.
-
-> [!success] Fix: load config from a static file at module level
-> Read a local YAML or JSON config file (not a DB query) at module level to generate tasks. The file I/O is fast and deterministic. Move any live-data fetches into a `@task` callable so they only run at task execution time, not on every Scheduler parse cycle.
-
-### Pattern 1: Dynamic Tasks from a Config List
-
-```python
-# dags/dynamic_from_config.py
-# Generate one task per data source from a static configuration dict.
-
-from airflow.decorators import dag, task
-from datetime import datetime
-
-# This config is evaluated at parse time — keep it simple and static
-DATA_SOURCES = [
-    {"name": "crm", "table": "customers", "partition_col": "updated_at"},
-    {"name": "erp", "table": "orders",    "partition_col": "order_date"},
-    {"name": "pos", "table": "transactions", "partition_col": "txn_date"},
-]
-
-@dag(
-    dag_id="dynamic_ingestion",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-    tags=["dynamic", "ingestion"],
-)
-def dynamic_ingestion():
-
-    from airflow.operators.python import PythonOperator
-    from airflow.operators.empty import EmptyOperator
-
-    start = EmptyOperator(task_id="start")
-    end = EmptyOperator(task_id="end", trigger_rule="none_failed_min_one_success")
-
-    for source in DATA_SOURCES:
-        # Each iteration creates a distinct task with a unique task_id
-        extract_task = PythonOperator(
-            task_id=f"extract_{source['name']}",
-            python_callable=lambda s=source, **ctx: print(f"Extracting {s['table']} for {ctx['ds']}"),
-            # Note: use default argument (s=source) to capture loop variable correctly
-        )
-        validate_task = PythonOperator(
-            task_id=f"validate_{source['name']}",
-            python_callable=lambda s=source, **ctx: print(f"Validating {s['table']}"),
-        )
-        # Chain: start → extract_X → validate_X → end
-        start >> extract_task >> validate_task >> end
-
-dynamic_ingestion()
-```
-
-### Pattern 2: Dynamic Tasks with TaskFlow API
-
-```python
-# dags/dynamic_taskflow.py
-# TaskFlow-style dynamic task expansion (Airflow 2.3+ dynamic task mapping)
-
-from airflow.decorators import dag, task
-from datetime import datetime
-
-@dag(schedule="@daily", start_date=datetime(2024, 1, 1), catchup=False)
-def dynamic_taskflow():
-
-    @task
-    def get_sources() -> list:
-        """Return a list of sources to process. Can be dynamic at runtime."""
-        # In real usage: could read from a config file, not a live DB query
-        return ["crm", "erp", "pos"]
-
-    @task
-    def process_source(source_name: str, ds=None) -> dict:
-        """Process a single source. This task is dynamically mapped."""
-        print(f"Processing {source_name} for {ds}")
-        return {"source": source_name, "status": "success"}
-
-    @task
-    def aggregate_results(results: list) -> None:
-        """Collect results from all dynamically mapped tasks."""
-        print(f"All results: {results}")
-        successes = [r for r in results if r["status"] == "success"]
-        print(f"{len(successes)}/{len(results)} sources processed successfully")
-
-    # .expand() creates one task instance per element in the list
-    sources = get_sources()
-    results = process_source.expand(source_name=sources)
-    aggregate_results(results)
-
-dynamic_taskflow()
-```
-
-> [!info] Dynamic Task Mapping (Airflow 2.3+)
-> `.expand()` is the modern way to create dynamic tasks. It maps a task function over a list, creating one Task Instance per element. The mapped tasks run in parallel (subject to concurrency limits) and the downstream task receives a list of all results. This is cleaner than loop-generated tasks because the number of tasks can be determined at runtime.
-
-### Pattern 3: DAG Factory (Multiple DAGs from Config)
-
-```python
-# dags/dag_factory.py
-# Generate multiple DAGs from a YAML config — one DAG per business unit.
-
-import yaml
-from pathlib import Path
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime
-
-# Load config at module level (static file — parse-safe)
-CONFIG_PATH = Path(__file__).parent / "configs" / "business_units.yaml"
-
-def create_dag(unit_config: dict) -> DAG:
-    """Factory function: build and return a DAG object for one business unit."""
-    unit_name = unit_config["name"]
-
-    dag = DAG(
-        dag_id=f"ingest_{unit_name}",
-        schedule=unit_config.get("schedule", "@daily"),
-        start_date=datetime(2024, 1, 1),
-        catchup=False,
-        tags=["generated", unit_name],
-    )
-
-    with dag:
-        PythonOperator(
-            task_id="ingest",
-            python_callable=lambda cfg=unit_config: print(f"Ingesting {cfg['name']}"),
-        )
-
-    return dag
-
-# This runs at module level during DAG parsing
-if CONFIG_PATH.exists():
-    with open(CONFIG_PATH) as f:
-        config = yaml.safe_load(f)
-    for unit in config.get("business_units", []):
-        # Each DAG must be assigned to a module-level variable for Airflow to discover it
-        globals()[f"dag_{unit['name']}"] = create_dag(unit)
-```
-
----
-
-## Branching
-
-Branching allows a DAG to follow different paths based on runtime conditions.
-
-### BranchPythonOperator
-
-```python
-from airflow.operators.python import BranchPythonOperator
-from airflow.operators.empty import EmptyOperator
-
-def choose_path(**context):
-    """
-    Must return the task_id (string) or a list of task_ids to follow.
-    Tasks NOT returned are SKIPPED (not failed).
-    """
-    execution_date = context["logical_date"]
-    day_of_week = execution_date.weekday()  # 0=Monday, 6=Sunday
-
-    if day_of_week == 0:  # Monday — run full weekly refresh
-        return "run_weekly_refresh"
-    elif context["params"].get("force_full", False):
-        return "run_full_load"
-    else:
-        return ["run_incremental_load", "run_data_quality"]  # Multiple branches
-
-branch = BranchPythonOperator(
-    task_id="choose_branch",
-    python_callable=choose_path,
-)
-
-weekly = PythonOperator(task_id="run_weekly_refresh", python_callable=lambda: None)
-full   = PythonOperator(task_id="run_full_load",       python_callable=lambda: None)
-incr   = PythonOperator(task_id="run_incremental_load", python_callable=lambda: None)
-dq     = PythonOperator(task_id="run_data_quality",    python_callable=lambda: None)
-
-# Join point — use none_failed to handle skipped branches
-join = EmptyOperator(task_id="join", trigger_rule="none_failed_min_one_success")
-
-branch >> [weekly, full, incr, dq] >> join
-```
-
-### TaskFlow Branching (`@task.branch`)
-
-```python
-from airflow.decorators import dag, task
-from airflow.operators.empty import EmptyOperator
-
-@dag(schedule="@daily", start_date=datetime(2024, 1, 1), catchup=False)
-def branching_example():
-
-    @task.branch
-    def decide(ds=None):
-        """Return the task_id string to execute."""
-        from datetime import datetime
-        if datetime.strptime(ds, "%Y-%m-%d").day == 1:
-            return "monthly_report"
-        return "daily_report"
-
-    @task
-    def daily_report():
-        print("Daily report")
-
-    @task
-    def monthly_report():
-        print("Monthly report")
-
-    join = EmptyOperator(task_id="join", trigger_rule="none_failed_min_one_success")
-
-    decide() >> [daily_report(), monthly_report()] >> join
-
-branching_example()
-```
-
----
-
-### Airflow Trigger Rules Reference
-
-Trigger rules control **when a task is allowed to run** based on the state of its upstream tasks. The default is `all_success`.
-
-```python
-from airflow.utils.trigger_rule import TriggerRule
-from airflow.operators.python import PythonOperator
-
-# --- Trigger Rule Reference ---
-
-# all_success (default): Run only if ALL upstream tasks succeeded
-standard_task = PythonOperator(
-    task_id="standard",
-    python_callable=lambda: None,
-    trigger_rule=TriggerRule.ALL_SUCCESS,   # Default — no need to specify
-)
-
-# all_failed: Run only if ALL upstream tasks failed (e.g., alert on total failure)
-failure_alert = PythonOperator(
-    task_id="send_failure_alert",
-    python_callable=lambda: print("ALL upstream tasks failed — critical alert!"),
-    trigger_rule=TriggerRule.ALL_FAILED,
-)
-
-# one_success: Run if at least one upstream task succeeded
-partial_success = PythonOperator(
-    task_id="partial_success_handler",
-    python_callable=lambda: None,
-    trigger_rule=TriggerRule.ONE_SUCCESS,
-)
-
-# one_failed: Run if at least one upstream task failed (e.g., partial failure alert)
-partial_failure_alert = PythonOperator(
-    task_id="partial_failure_alert",
-    python_callable=lambda: print("At least one upstream task failed"),
-    trigger_rule=TriggerRule.ONE_FAILED,
-)
-
-# none_failed: Run if no upstream tasks failed (success OR skipped are OK)
-# Most useful for joining branches where some may be skipped
-join_after_branch = EmptyOperator(
-    task_id="join",
-    trigger_rule=TriggerRule.NONE_FAILED,
-)
-
-# none_failed_min_one_success: Run if no tasks failed AND at least one succeeded
-# The recommended choice for branch join points
-safe_join = EmptyOperator(
-    task_id="safe_join",
-    trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS,
-)
-
-# all_done: Run when all upstream tasks are done, regardless of state
-# Useful for cleanup tasks that must always run
-cleanup = PythonOperator(
-    task_id="cleanup_temp_files",
-    python_callable=lambda: print("Always cleaning up"),
-    trigger_rule=TriggerRule.ALL_DONE,
-)
-```
-
-> [!tip] Branching + Trigger Rules
-> When using `BranchPythonOperator` or `@task.branch`, tasks that are NOT chosen are **skipped**. A downstream join task with the default `all_success` trigger rule will also be skipped (because not all upstream tasks succeeded). Set the join task to `none_failed_min_one_success` to handle this correctly.
-
----
-
-## Idempotent DAGs
-
-An idempotent pipeline produces the same result whether run once or multiple times for the same time period. This is essential for safe retries and backfills. For a deeper treatment of idempotency beyond Airflow, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
-
-### Key Idempotency Settings
-
-```python
-with DAG(
-    dag_id="idempotent_pipeline",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-
-    # CRITICAL: Only one DAG Run active at a time
-    # Prevents parallel runs from corrupting shared resources (a form of [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) prevention)
-    max_active_runs=1,
-
-    catchup=False,  # Don't auto-backfill — use explicit backfill commands
-) as dag:
-    pass
-```
-
-### `depends_on_past`
-
-```python
-# depends_on_past=True: a task only runs if the same task in the PREVIOUS
-# DAG Run succeeded. Ensures strict ordering of incremental loads.
-
-incremental_load = PythonOperator(
-    task_id="incremental_load",
-    python_callable=load_function,
-    depends_on_past=True,   # Do not run today if yesterday failed
-    # Use sparingly — creates a chain of dependencies that can block DAGs
-    # if the first run ever fails. Hard to recover from without clearing tasks.
-)
-```
-
-> [!warning] depends_on_past + max_active_runs Deadlock
+> load_bronze_into_sql = CloudRunExecuteJobOperator(
+>     task_id="load_bronze_into_sql",
+>     project_id=PROJECT_ID,
+>     region=REGION,
+>     job_name=LOAD_JOB_NAME,
+>     deferrable=False,
+> )
 >
-> Setting `depends_on_past=True` with `max_active_runs > 1` creates a
-> potential deadlock: DAG run N's task B waits for DAG run N-1's task B
-> to succeed, but DAG run N-1 is still running (because `max_active_runs`
-> allows it). If task A in run N-1 is slow, task B in run N is blocked
-> indefinitely. Rule: if you use `depends_on_past=True`, set
-> `max_active_runs=1` to ensure sequential execution.
+> build_bigquery_marts = CloudRunExecuteJobOperator(
+>     task_id="build_bigquery_marts",
+>     project_id=PROJECT_ID,
+>     region=REGION,
+>     job_name=SERVING_JOB_NAME,
+>     deferrable=False,
+>     overrides={"container_overrides": [{"args": ["--mode=build-marts"]}]},
+> )
+> ```
 
-> [!success] Fix: pair depends_on_past=True with max_active_runs=1
-> Always set `max_active_runs=1` whenever `depends_on_past=True` is used on any task in the DAG. This enforces strict sequential execution of DAG runs and eliminates the cross-run blocking deadlock.
+This pattern matters because it keeps the DAG readable:
 
-> [!warning] depends_on_past pitfalls
+- task names describe business boundaries rather than implementation details
+- Airflow knows only enough to launch and wait
+- the data-processing code can evolve independently in its own container image
+
+### The External Jobs Hold The Business Logic
+
+The Airflow DAG stays small because the heavy code lives in the jobs it triggers.
+
+#### Bronze Loading Logic Lives In The Bronze Loader
+
+This excerpt from [load_stage.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/stoxx-bronze-load/load_stage.py:1>) shows that idempotent table loading is owned by the Cloud Run job, not by Airflow.
+
+> [!example] Real Bronze Loader Logic
 >
-> `depends_on_past=True` is powerful but creates a chain-of-dependency that must be manually broken if the first historical run fails. Never use it without a plan for recovery (use `airflow tasks clear` to reset the chain). Prefer idempotent `MERGE`/`UPSERT` logic in the task itself over `depends_on_past`.
-
-> [!success] Fix: prefer idempotent MERGE logic over depends_on_past
-> Design tasks to use `MERGE`/`UPSERT` so they can safely re-run for the same date without side effects. This eliminates the need for `depends_on_past` in most incremental load patterns and avoids the brittle chain that requires manual intervention to break.
-
-> [!danger] Non-transactional DELETE + INSERT
+> ```python
+> def load_ohlcv(cursor: pyodbc.Cursor, index_key: str, records: list[dict[str, Any]]) -> dict[str, int]:
+>     table = bronze_ohlcv_table(index_key)
+>     before = count_rows(cursor, table)
+>     cursor.execute(f"SELECT symbol, CONVERT(VARCHAR(10), [date], 120), ISNULL(volume, 0) FROM {table}")
+>     existing = {(row[0], row[1]): row[2] for row in cursor.fetchall()}
 >
-> If the pipeline crashes between DELETE and INSERT, the partition is empty. Always wrap delete-then-insert in a single transaction. In BigQuery, use scripted transactions (`BEGIN TRANSACTION ... COMMIT`). In SQL Server, use explicit `BEGIN TRAN ... COMMIT`. The MERGE pattern below is inherently atomic and preferred.
+>     inserts: list[tuple[Any, ...]] = []
+>     updates: list[tuple[Any, ...]] = []
+>     for rec in records:
+>         ...
+>         if key not in existing:
+>             inserts.append((symbol, date_value) + values)
+>         elif (existing[key] or 0) == 0 and (to_int(rec.get("volume")) or 0) > 0:
+>             updates.append(values + (symbol, date_value))
+> ```
 
-> [!success] Fix: use transactional DELETE+INSERT or atomic MERGE
-> In BigQuery, wrap the DELETE and INSERT in a `BEGIN TRANSACTION ... COMMIT` block. In SQL Server, use `BEGIN TRAN ... COMMIT`. Alternatively, switch to a `MERGE` statement which is atomic by nature and eliminates the window between delete and insert entirely.
+Airflow does not understand `symbol`, `date`, or merge semantics here. It only records whether the bronze-load task succeeded or failed.
 
-### Idempotent Task Design
+#### The Transform Job Owns The Medallion Step Registry
 
-```python
-def idempotent_load(**context):
-    """
-    This task is idempotent: running it twice for the same date
-    produces the same result as running it once.
-    """
-    ds = context["ds"]  # "2024-01-15"
-    bq_hook = BigQueryHook()
-```
+The silver and gold transforms are not separate DAG files. They are step windows inside the Cloud Run job defined by [run_pipeline.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/stoxx-transforms/utils/run_pipeline.py:1>).
 
-```python
-    # PATTERN 1: Delete-then-insert (partition overwrite)
-    bq_hook.run_query(f"""
-        DELETE FROM `project.dataset.table`
-        WHERE DATE(created_at) = '{ds}'
-    """, use_legacy_sql=False)
-
-    bq_hook.run_query(f"""
-        INSERT INTO `project.dataset.table`
-        SELECT * FROM `project.dataset.staging_{ds.replace('-', '')}`
-    """, use_legacy_sql=False)
-```
-
-```python
-    # PATTERN 2: MERGE/UPSERT (safer for fact tables -- atomic)
-    bq_hook.run_query(f"""
-        MERGE `project.dataset.target` T
-        USING (SELECT * FROM `project.dataset.staging`
-               WHERE date = '{ds}') S
-        ON T.id = S.id AND T.date = S.date
-        WHEN MATCHED THEN
-          UPDATE SET T.value = S.value,
-                     T.updated_at = CURRENT_TIMESTAMP()
-        WHEN NOT MATCHED THEN
-          INSERT (id, date, value, updated_at)
-          VALUES (S.id, S.date, S.value, CURRENT_TIMESTAMP())
-    """, use_legacy_sql=False)
-```
-
----
-
-### Airflow Backfill — Historical DAG Runs
-
-Backfill runs a DAG for a historical date range. Use it for initial data loads, re-processing after bug fixes, or adding new pipeline coverage.
-
-```bash
-# Trigger a backfill for a date range
-# Airflow creates DAG Runs for every scheduled interval in the range
-airflow dags backfill \
-    --dag-id my_pipeline \
-    --start-date 2024-01-01 \
-    --end-date 2024-03-31 \
-    --reset-dagruns          # Re-run even if a DAG Run already exists for that date
-
-# Dry run — show what would be backfilled without running anything
-airflow dags backfill \
-    --dag-id my_pipeline \
-    --start-date 2024-01-01 \
-    --end-date 2024-03-31 \
-    --dry-run
-
-# Run with limited parallelism to avoid overwhelming the target system
-airflow dags backfill \
-    --dag-id my_pipeline \
-    --start-date 2024-01-01 \
-    --end-date 2024-01-31 \
-    --max-jobs 2             # Max 2 DAG Runs in parallel
-
-# Mark a date range as success WITHOUT running tasks (when data already exists)
-airflow dags backfill \
-    --dag-id my_pipeline \
-    --start-date 2024-01-01 \
-    --end-date 2024-01-31 \
-    --mark-success
-```
-
-> [!tip] Backfill and catchup=False
+> [!example] Real Transform Step Registry
 >
-> Setting `catchup=False` does NOT prevent `airflow dags backfill` from working. It only prevents the Scheduler from automatically creating historical DAG Runs when a DAG is unpaused. Explicit backfills always work regardless of `catchup`.
-
----
-
-## Parameterized DAGs
-
-DAGs can accept runtime parameters via `dag_run.conf` (triggered via UI, CLI, or API).
-
-### Params (Airflow 2.2+)
-
-```python
-from airflow import DAG
-from airflow.models.param import Param
-
-with DAG(
-    dag_id="parameterized_pipeline",
-    schedule=None,  # Manual trigger only
-    start_date=datetime(2024, 1, 1),
-    params={
-        # Params define expected parameters with types and defaults
-        "start_date": Param(
-            default="2024-01-01",
-            type="string",
-            description="Start date for processing (YYYY-MM-DD)",
-        ),
-        "end_date": Param(
-            default="2024-01-31",
-            type="string",
-        ),
-        "target_dataset": Param(
-            default="production",
-            enum=["production", "staging", "dev"],
-            description="Target BigQuery dataset",
-        ),
-        "dry_run": Param(default=False, type="boolean"),
-    },
-) as dag:
-
-    def run_with_params(**context):
-        # Access params via context["params"]
-        params = context["params"]
-        start = params["start_date"]
-        end = params["end_date"]
-        dataset = params["target_dataset"]
-        dry_run = params["dry_run"]
-        print(f"Processing {start} to {end} → {dataset} (dry_run={dry_run})")
-
-    PythonOperator(task_id="run", python_callable=run_with_params)
-```
-
-#### Triggering with custom params
-
-```bash
-# CLI: pass params as JSON
-airflow dags trigger parameterized_pipeline \
-    --conf '{"start_date": "2024-06-01", "end_date": "2024-06-30", "target_dataset": "staging"}'
-
-# REST API
-curl -X POST "http://airflow:8080/api/v1/dags/parameterized_pipeline/dagRuns" \
-    -H "Content-Type: application/json" \
-    -u "admin:password" \
-    -d '{"conf": {"start_date": "2024-06-01", "target_dataset": "staging"}}'
-```
-
----
-
-### Dataset-Driven Scheduling (Airflow 2.4+)
-
-Data-aware scheduling allows a DAG to trigger when upstream DAGs produce a **Dataset** (a logical URI representing a data asset). This decouples producer and consumer DAGs.
-
-```python
-# dags/producer_dag.py
-# Producer: this DAG "produces" a Dataset when it completes successfully
-
-from airflow import DAG
-from airflow.datasets import Dataset
-from airflow.operators.python import PythonOperator
-from datetime import datetime
-
-# Define the Dataset — a logical URI (no actual file validation)
-CUSTOMER_DATASET = Dataset("gs://my-bucket/data/customers/")
-ORDERS_DATASET   = Dataset("gs://my-bucket/data/orders/")
-
-with DAG(
-    dag_id="produce_customers",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-) as dag:
-
-    # outlets: declares that this task produces these Datasets on success
-    PythonOperator(
-        task_id="load_customers",
-        python_callable=lambda: print("Loading customers"),
-        outlets=[CUSTOMER_DATASET],  # Signals the Dataset as updated on task success
-    )
-```
-
-```python
-# dags/consumer_dag.py
-# Consumer: triggers when ALL listed Datasets have been updated
-
-from airflow import DAG
-from airflow.datasets import Dataset
-from airflow.operators.python import PythonOperator
-from datetime import datetime
-
-CUSTOMER_DATASET = Dataset("gs://my-bucket/data/customers/")
-ORDERS_DATASET   = Dataset("gs://my-bucket/data/orders/")
-
-with DAG(
-    dag_id="build_customer_orders_report",
-    # This DAG runs when BOTH datasets have been updated in the same scheduling cycle
-    schedule=[CUSTOMER_DATASET, ORDERS_DATASET],
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-) as dag:
-
-    PythonOperator(
-        task_id="build_report",
-        python_callable=lambda: print("Building customer-orders report"),
-    )
-```
-
-> [!info] Dataset Scheduling Semantics
-> The consumer DAG triggers once ALL listed Datasets have been updated (at least once) since the last consumer DAG Run. It does NOT trigger once per producer run — it batches updates. The Scheduler checks Dataset updates and creates a consumer DAG Run when all conditions are met. This replaces polling with `ExternalTaskSensor` for many use cases.
-
----
-
-## SLA Monitoring and Callbacks
-
-### SLA (Service Level Agreement)
-
-An SLA defines the maximum acceptable elapsed time from the scheduled time for a task to complete. If exceeded, Airflow sends an alert (email and/or callback).
-
-```python
-from datetime import timedelta
-
-with DAG(
-    dag_id="sla_monitored_pipeline",
-    schedule="0 6 * * *",    # Scheduled at 06:00 UTC
-    start_date=datetime(2024, 1, 1),
-    # DAG-level SLA: alert if the DAG hasn't finished within 2 hours of its schedule
-    # Note: DAG-level SLA is set per-task, not on the DAG object itself
-) as dag:
-
-    PythonOperator(
-        task_id="critical_load",
-        python_callable=lambda: None,
-        sla=timedelta(hours=2),  # Alert if this task hasn't finished by 08:00 UTC
-    )
-```
-
-### Callbacks
-
-Callbacks are Python functions called by Airflow on specific task/DAG events. Use them for alerting (Slack, PagerDuty), logging to external systems, or triggering recovery workflows.
-
-```python
-def on_task_failure(context):
-    """Called when any task in the DAG fails (if set in default_args)."""
-    task_id = context["task_instance"].task_id
-    dag_id = context["dag"].dag_id
-    execution_date = context["execution_date"]
-    exception = context.get("exception")
-
-    # Example: send Slack notification
-    send_slack_alert(
-        channel="#data-alerts",
-        message=f":red_circle: Task `{task_id}` in `{dag_id}` failed on {execution_date}\nError: {exception}",
-    )
-
-def on_task_success(context):
-    """Called when a specific task succeeds."""
-    rows = context["task_instance"].xcom_pull(key="return_value")
-    print(f"Task succeeded, processed {rows} rows")
-
-def on_dag_success(context):
-    """Called when the entire DAG Run succeeds (dag-level callback)."""
-    dag_run = context["dag_run"]
-    print(f"DAG Run {dag_run.run_id} completed successfully")
-
-def on_sla_miss(dag, task_list, blocking_task_list, slas, blocking_tis):
-    """Called when an SLA is missed. Different signature from other callbacks."""
-    print(f"SLA missed for tasks: {[t.task_id for t in task_list]}")
-    send_pagerduty_alert(f"SLA miss in DAG {dag.dag_id}")
-
-# Apply callbacks in default_args (apply to all tasks) or per-task
-default_args = {
-    "on_failure_callback": on_task_failure,
-    "on_success_callback": on_task_success,  # Use sparingly — fires for every task
-    "on_retry_callback": lambda ctx: print(f"Retrying task {ctx['task_instance'].task_id}"),
-}
-
-with DAG(
-    dag_id="callback_example",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-    default_args=default_args,
-    on_success_callback=on_dag_success,     # DAG-level: fires when whole run succeeds
-    on_failure_callback=on_task_failure,    # DAG-level: fires when any task fails and DAG Run fails
-    sla_miss_callback=on_sla_miss,          # SLA miss callback (DAG-level only)
-) as dag:
-
-    critical_task = PythonOperator(
-        task_id="critical",
-        python_callable=lambda: None,
-        sla=timedelta(hours=1),
-        # Task-level callback overrides default_args callback for this task
-        on_failure_callback=lambda ctx: print("CRITICAL task failed — paging on-call"),
-    )
-```
-
----
-
-### Medallion Architecture DAG — Bronze to Silver to Gold
-
-A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading).
-
-```python
-# dags/medallion_pipeline.py
-# Full Bronze → Silver → Gold pattern with quality gates
-
-from airflow.decorators import dag, task
-from airflow.utils.task_group import TaskGroup
-from airflow.operators.empty import EmptyOperator
-from airflow.utils.trigger_rule import TriggerRule
-from datetime import datetime, timedelta
-
-def alert_failure(context):
-    """Send alert on any task failure."""
-    ti = context["task_instance"]
-    print(f"ALERT: {ti.dag_id}.{ti.task_id} failed on {context['ds']}")
-
-@dag(
-    dag_id="medallion_pipeline",
-    schedule="@daily",
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-    max_active_runs=1,
-    default_args={
-        "retries": 2,
-        "retry_delay": timedelta(minutes=5),
-        "on_failure_callback": alert_failure,
-    },
-    tags=["medallion", "data-platform"],
-)
-def medallion_pipeline():
-
-    start = EmptyOperator(task_id="start")
-    end = EmptyOperator(task_id="end")
-
-    with TaskGroup("bronze", tooltip="Raw ingestion from source systems") as bronze:
-
-        @task(task_id="ingest_crm")
-        def ingest_crm(ds=None):
-            print(f"Ingesting CRM raw data for {ds}")
-            return "gs://bucket/bronze/crm/" + ds
-
-        @task(task_id="ingest_erp")
-        def ingest_erp(ds=None):
-            print(f"Ingesting ERP raw data for {ds}")
-            return "gs://bucket/bronze/erp/" + ds
-
-        crm_path = ingest_crm()
-        erp_path = ingest_erp()
-
-    with TaskGroup("silver", tooltip="Clean, validate, standardize") as silver:
-
-        @task(task_id="clean_crm")
-        def clean_crm(raw_path: str):
-            print(f"Cleaning CRM from {raw_path}")
-            return raw_path.replace("/bronze/", "/silver/")
-
-        @task(task_id="clean_erp")
-        def clean_erp(raw_path: str):
-            print(f"Cleaning ERP from {raw_path}")
-            return raw_path.replace("/bronze/", "/silver/")
-
-        @task(task_id="quality_gate", trigger_rule=TriggerRule.ALL_SUCCESS)
-        def quality_gate(crm_path: str, erp_path: str):
-            print(f"Quality gate: validating {crm_path} and {erp_path}")
-            return True
-
-        clean_crm_result = clean_crm(crm_path)
-        clean_erp_result = clean_erp(erp_path)
-        quality_gate(clean_crm_result, clean_erp_result)
-
-    with TaskGroup("gold", tooltip="Build analytical models") as gold:
-
-        @task(task_id="build_customer_dim")
-        def build_customer_dim():
-            print("Building customer dimension")
-
-        @task(task_id="build_sales_fact")
-        def build_sales_fact():
-            print("Building sales fact table")
-
-        build_customer_dim() >> build_sales_fact()
-
-    start >> bronze >> silver >> gold >> end
-
-medallion_pipeline()
-```
-
----
-
-## Related Notes
-
-- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — DAG structure, Operators, Sensors, XComs, TaskFlow API
-- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Docker Compose setup, Cloud Composer, CI/CD for DAGs
-- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging dynamic DAGs, trigger rule issues, backfill problems
-
-## References
-
-- [Airflow DAG documentation](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html)
-- [Dynamic Task Mapping](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/dynamic-task-mapping.html)
-- [Dataset Scheduling](https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/datasets.html)
-- [Trigger Rules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#trigger-rules)
-- [Task Groups](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html#taskgroups)
+> ```python
+> STEPS = [
+>     (3,  "transform_ohlcv",            step_03_transform_ohlcv),
+>     (8,  "transform_signals_daily",    step_08_transform_signals_daily),
+>     (9,  "transform_signals_quarterly", step_09_transform_signals_quarterly),
+>     (14, "transform_scores_daily",     step_14_transform_scores_daily),
+>     (15, "transform_scores_quarterly", step_15_transform_scores_quarterly),
+>     (16, "transform_index_performance", step_16_transform_index_performance),
+> ]
+> ```
+
+This is why the DAG can ask the same Cloud Run job to do different things safely. Airflow provides the orchestration boundary; the transform container provides the internal step routing.
 
+## Pattern 2: Controlled Fan-Out And Fan-In
+
+The second real pattern is limited parallelism. The DAG does not parallelize everything. It only parallelizes the silver steps that write to disjoint targets and must all complete before the gold phase begins.
+
+### Parallelize Only Where Write Sets Are Clean
+
+The silver tasks are safe to parallelize because they target different downstream tables:
+
+- `transform_ohlcv_to_silver` populates silver OHLCV tables
+- `transform_signals_daily_to_silver` populates `silver.signals_daily`
+- `transform_signals_quarterly_to_silver` populates `silver.signals_quarterly`
+
+They share the bronze layer as input, but they do not race on the same silver target.
+
+#### Read The Real Parallel Join
+
+> [!example] Real Fan-Out And Fan-In
+>
+> ```python
+> load_bronze_into_sql >> [
+>     transform_ohlcv_to_silver,
+>     transform_signals_daily_to_silver,
+>     transform_signals_quarterly_to_silver,
+> ]
+> [
+>     transform_ohlcv_to_silver,
+>     transform_signals_daily_to_silver,
+>     transform_signals_quarterly_to_silver,
+> ] >> build_gold_scores
+> ```
+
+This join point is operationally correct because `build_gold_scores` depends on all three silver surfaces. If Airflow released gold scoring after only one of them, the resulting gold tables would be incomplete or inconsistent.
+
+> [!danger] Fan-Out Without A Clean Join Is A Correctness Bug
+>
+> If one silver input is missing but gold computation proceeds anyway, the platform can publish stale or partial derived scores while still showing a superficially successful run.
+>
+> [!success] The Gold Join Encodes A Data Contract
+>
+> The current join makes the contract explicit: gold scoring is only valid when all prerequisite silver layers have succeeded in the same DAG run.
+
+## Pattern 3: Parameterized External Steps Instead Of Many Tiny DAGs
+
+The platform reuses two Cloud Run jobs, `stoxx-transforms` and `stoxx-serving`, by passing explicit mode arguments from Airflow rather than creating a new image or a new DAG per substep.
+
+### Airflow Passes Modes And Step Windows Explicitly
+
+This pattern is visible in both the transform and serving tasks.
+
+#### Read The Real Parameterization
+
+> [!example] Real Task Parameterization
+>
+> ```python
+> transform_ohlcv_to_silver = CloudRunExecuteJobOperator(
+>     task_id="transform_ohlcv_to_silver",
+>     job_name=TRANSFORM_JOB_NAME,
+>     overrides={"container_overrides": [{"args": ["--step=3"]}]},
+> )
+>
+> build_gold_scores = CloudRunExecuteJobOperator(
+>     task_id="build_gold_scores",
+>     job_name=TRANSFORM_JOB_NAME,
+>     overrides={"container_overrides": [{"args": ["--from=14", "--to=15"]}]},
+> )
+>
+> publish_serving_to_firestore = CloudRunExecuteJobOperator(
+>     task_id="publish_serving_to_firestore",
+>     job_name=SERVING_JOB_NAME,
+>     overrides={"container_overrides": [{"args": ["--mode=publish-firestore"]}]},
+> )
+> ```
+
+This gives the platform three advantages:
+
+- one image can expose several well-defined operational modes
+- Airflow still has task-level visibility and retry control for each stage
+- failures remain isolated to the specific mode that failed
+
+### Why This Is Better Than One Giant End-To-End Task
+
+Putting the whole pipeline behind one single `run_everything` Airflow task would destroy most of Airflow's value:
+
+- no stage-level retry boundaries
+- no clear graph view
+- no visibility into which phase failed
+- no selective reruns of bronze, silver, gold, or serving steps
+
+By contrast, the live DAG uses parameterized external steps so the orchestration graph stays meaningful.
+
+## Pattern 4: Idempotent Reruns And Demo Reset Windows
+
+Airflow can retry tasks, but retries are only safe when the underlying task payloads are designed for reruns. The STOXX pipeline implements rerun safety in the task code and in the demo reset scripts.
+
+### Bronze And Serving Steps Are Built For Re-Execution
+
+The bronze loader reads a manifest, applies deterministic deletes or inserts, and commits one object at a time. The serving job recreates replica tables and rebuilds marts from source truth rather than trying to append blindly.
+
+#### Read The Real Serving Rebuild Pattern
+
+This excerpt from [stoxx_serving.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/stoxx-serving/stoxx_serving.py:1>) shows that the BigQuery replica layer is rebuilt explicitly.
+
+> [!example] Real Replica Rebuild Pattern
+>
+> ```python
+> def ensure_table(client: bigquery.Client, spec: ReplicaTable) -> None:
+>     client.delete_table(spec.fq_name, not_found_ok=True)
+>     table = bigquery.Table(spec.fq_name, schema=spec.schema)
+>     ...
+>     client.create_table(table, exists_ok=True)
+>
+> def load_rows(client: bigquery.Client, spec: ReplicaTable, rows: list[dict[str, Any]]) -> None:
+>     job_config = bigquery.LoadJobConfig(
+>         schema=spec.schema,
+>         write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+>     )
+> ```
+
+This is not append-and-hope behavior. The serving publication path is deterministic because each run rebuilds the desired state from authoritative upstream tables.
+
+### Demo Reruns Reopen Only The Recent Window
+
+The platform also includes reset scripts that truncate only the recent bronze, silver, and gold window before a demonstration. That gives the next DAG run meaningful inserts and updates without destroying the rest of the history.
+
+That reset pattern is separate from Airflow itself, but it is what makes manual reruns operationally useful. Airflow then reruns the same DAG against a deliberately reopened window and records a fresh, observable end-to-end run.
+
+## Pattern 5: Explicit Publication Path Instead Of Hidden Side Effects
+
+The last section of the DAG is deliberately publication-oriented. It does not stop at SQL gold.
+
+### BigQuery And Firestore Are Separate Airflow Steps
+
+The DAG has a visible publication chain:
+
+- `sync_gold_to_bigquery`
+- `build_bigquery_marts`
+- `publish_serving_to_firestore`
+- `validate_serving_layer`
+
+That choice matters because analytical correctness and serving correctness are not the same checkpoint. A mart can build successfully while Firestore publication still fails, and a Firestore publish can succeed while validation still catches missing documents.
+
+#### Read The Real Firestore Publication Trigger
+
+This excerpt from [stoxx_serving.py](</C:/Users/aperi/My Drive/VAULT/.codex-temp/stoxx-serving/stoxx_serving.py:1>) shows that the serving step does more than copy rows. It updates the Firestore control document that the Eventarc demo path listens to.
+
+> [!example] Real Firestore Control-Document Update
+>
+> ```python
+> def publish_control_doc(db: firestore.Client, *, indexes: list[str], root_doc_count: int, ... ) -> None:
+>     control_collection = os.environ.get("FIRESTORE_CONTROL_COLLECTION", "serving_control")
+>     control_document = os.environ.get("FIRESTORE_CONTROL_DOCUMENT", "current")
+>     publish_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S.%fZ")
+>     payload = {
+>         "publish_id": publish_id,
+>         "pipeline": "stoxx_stage_yfinance",
+>         "publisher": "stoxx-serving",
+>         "database": os.environ.get("FIRESTORE_DATABASE", "main"),
+>         ...
+>     }
+>     db.collection(control_collection).document(control_document).set(payload, merge=True)
+> ```
+
+That is why the Airflow DAG can end with `validate_serving_layer` and the separate GCP event path can later catch the Firestore control-document update.
+
+## Patterns Deliberately Not Used Yet
+
+Not every Airflow feature improves this pipeline. The absence of a feature can be a design decision rather than a missing maturity step.
+
+### No Dynamic Task Mapping
+
+The pipeline currently orchestrates exactly three index families:
+
+- `euro_stoxx_50`
+- `stoxx_asia_50`
+- `stoxx_usa_50`
+
+That set is stable, small, and operationally important enough that explicit tasks are clearer than runtime expansion.
+
+### No Sensors Or Dataset Scheduling
+
+The fetch, load, transform, and serving boundaries are all controlled inside one DAG run. There is no need yet for:
+
+- a sensor that waits for another DAG
+- dataset-triggered scheduling from one DAG to another
+- external event-driven scheduling into Airflow
+
+The Firestore-to-Eventarc path happens after the DAG, not as a prerequisite for it.
+
+### No Pools Or Priority Weights Yet
+
+The current deployment is single-DAG and demo-oriented. `max_active_runs=1` already serializes the full workflow. Pools and priority weights will matter when more DAGs compete for the same worker and Cloud Run quotas.
+
+> [!warning] Do Not Add Features Before They Solve A Real Constraint
+>
+> Dynamic mapping, pools, datasets, and sensors all add operational surface area. In a small but stateful pipeline, every extra orchestration feature increases the number of failure modes operators must understand.
+>
+> [!success] The Current DAG Uses Only The Features It Needs
+>
+> Explicit dependencies, one executor model, one Google connection, one worker path, and one publication chain are enough to explain and operate the platform today.
+
+## What To Remember
+
+The real STOXX DAG uses five production-grade patterns that are worth copying:
+
+- keep Airflow thin and move heavy logic into external jobs
+- parallelize only where write sets are clean
+- converge explicitly before downstream derived steps
+- make reruns safe in the task payload, not just in the DAG
+- expose the publication path as first-class Airflow tasks
+
+Everything else in the chapter depends on these patterns: deployment hardens them, troubleshooting protects them, and the problems note explains what broke when those boundaries were violated.

@@ -15,45 +15,155 @@ status: complete
 >
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
 
-This is the practical "I have THIS business need, what do I use?" guide. Instead of starting from theory, it starts from **real-world situations** that data engineers face and works backward to the right architecture, technology stack, and design decisions.
-
-Every scenario in this guide has been built from patterns proven in production. They are starting points, not prescriptions. Adjust based on your constraints — team size, budget, timeline, regulatory requirements, and existing infrastructure.
-
----
-
-## How to Use This Guide
-
-> [!tip] Navigation
-> 1. **Find your scenario** — scan the table of contents or use the quick lookup table at the bottom
-> 2. **Read the business need** — each scenario starts with the exact phrasing a stakeholder might use
-> 3. **Review the stack** — every scenario includes a recommended technology stack with specific tools
-> 4. **Study the architecture** — Mermaid diagrams show how components connect
-> 5. **Understand the decisions** — each scenario explains *why* these choices, not just *what* choices
-> 6. **Follow the links** — deep-dive into specific technologies via linked vault notes
-
-> [!warning] These Are Starting Points
-> No two organizations are identical. Use these scenarios as a foundation and adapt. If your team has deep Snowflake expertise, do not switch to BigQuery just because this guide recommends it. If you already run Kafka, do not rip it out for Pub/Sub. The best architecture is the one your team can build, operate, and debug at 2 AM.
-
-> [!success] Adapt to Your Constraints, Not the Guide's Defaults
+> [!abstract]- Summary
 >
-> For each scenario, identify the two or three constraints that differ from the default (existing tooling, team skill, budget, regulatory requirements). Adjust the recommended stack only where those constraints apply — preserve the rest. Document your deviations in an Architecture Decision Record (ADR) so future engineers know why you diverged, and re-evaluate each deviation at the next major milestone.
+> This note turns the chapter's architecture principles into scenario-first reference stacks, starting from concrete business needs and mapping them to recommended tools, diagrams, cost envelopes, and decision rationale so engineers can adapt a sensible baseline instead of designing every data platform from scratch.
+>
+> **Scenario coverage and baseline stacks**
+> - Covers ten recurring situations: daily batch ingestion, real-time streaming, analytics warehousing, multi-source integration, small-team and large-team platforms, financial index calculation, machine-learning feature delivery, on-prem-to-cloud migration, and cost-optimized pipelines.
+> - For each scenario, pairs the business need with a recommended stack, a reference architecture diagram, key decision explanations, implementation checklists or cost notes, and linked deep dives into the supporting notes.
+>
+> **How to use and adapt the guide**
+> - Treats the guide as a starting point: find the closest scenario, read the stakeholder phrasing, review the stack and architecture, then change only the parts that conflict with your team skill, budget, compliance, timeline, or existing tooling.
+> - Extends beyond the full scenarios into quick-lookup tables, decision flowcharts, and technology-comparison matrices so teams can jump from a new request to a workable architecture quickly.
+>
+> **Decision boundaries and anti-patterns**
+> - Highlights the trade-offs that separate simple batch systems from streaming platforms, warehouse-centric analytics stacks from operational platforms, and minimal-cost builds from higher-control or higher-scale options.
+> - Ends with explicit anti-patterns such as schema-later lakes, Kafka-for-everything, unnecessary microservices, missing tests, premature Terraform standardization, and one-database-fits-all thinking.
+>
+> **Operations and safety**
+> - Warnings: copying the recommended stack without validating business need, latency, scale, and support realities can create an architecture that looks canonical but fits poorly in practice.
+> - Recommendations: identify the two or three constraints that differ from the default, keep the rest of the scenario intact, and document each deviation in an ADR so the adaptation stays explicit and reviewable.
 
-#### Scenarios covered
+> [!note]- Glossary
+>
+> **Reference architecture**
+> - A reusable system blueprint that combines components, data flow, and operating assumptions for a recurring kind of problem.
+> - It matters here because each scenario in the guide is presented as a reference architecture rather than as a one-off tool recommendation.
+>
+> > [!info] Pattern, not prescription
+> >
+> > A reference architecture is meant to accelerate design decisions, not to eliminate the need for local trade-off analysis.
+>
+> ---
+>
+> **Business need**
+> - The stakeholder-facing problem statement that describes what outcome the system must deliver and on what cadence or latency.
+> - It matters here because each scenario begins from the business need and only then derives the architecture and technology choices from it.
+>
+> > [!warning] Do not start from tools
+> >
+> > Starting with a favorite platform instead of the business need usually leads to overbuilt or mismatched designs.
+>
+> ---
+>
+> **Batch pipeline**
+> - A pipeline that collects and processes data on a schedule rather than handling each event continuously as it arrives.
+> - It matters here because several scenarios assume batch as the default and only justify more complex real-time architecture when the latency requirement demands it.
+>
+> > [!info] Simpler by default
+> >
+> > If hourly or daily delivery satisfies the need, batch often provides the clearest and cheapest operating model.
+>
+> ---
+>
+> **Streaming pipeline**
+> - A continuously running system that ingests and processes events with low latency instead of waiting for scheduled batches.
+> - It matters here because the guide contrasts streaming architecture with batch architecture when freshness, event-time logic, or real-time reactions matter operationally.
+>
+> > [!warning] Real time costs more
+> >
+> > Streaming solves a specific latency problem, but it also brings state handling, ordering, replay, and monitoring complexity that batch pipelines avoid.
+>
+> ---
+>
+> **Data warehouse**
+> - A storage and query environment optimized for analytical workloads, broad scans, and SQL-based reporting or modeling.
+> - It matters here because multiple scenarios rely on the warehouse as the serving layer for analysts, dashboards, and historical exploration.
+>
+> > [!info] Separate operational and analytical paths
+> >
+> > Warehouses shine when the dominant need is ad hoc analysis, not transactional application behavior.
+>
+> ---
+>
+> **Multi-source integration**
+> - The work of combining records from several systems into one coherent dataset, often with matching, standardization, and schema alignment steps.
+> - It matters here because one of the core scenarios is built around integrating heterogeneous sources without letting source-system differences leak downstream.
+>
+> > [!warning] Integration amplifies inconsistency
+> >
+> > As soon as multiple sources arrive, naming conflicts, identifier mismatches, and schema drift become first-class design problems.
+>
+> ---
+>
+> **Small-team platform**
+> - A data platform intentionally constrained to low-ops components and minimal coordination burden so a very small team can run it safely.
+> - It matters here because the guide distinguishes architectures that are sustainable for two or three engineers from architectures that only make sense with broader staffing.
+>
+> > [!info] Team size is architecture input
+> >
+> > A platform that fits a ten-person team can be operationally irresponsible for a two-person team even if it looks technically stronger.
+>
+> ---
+>
+> **Data contract**
+> - An explicit agreement about schema, semantics, and delivery expectations between data producers and consumers.
+> - It matters here because the larger-team and integration scenarios depend on contracts to keep many pipelines and teams from drifting independently.
+>
+> > [!warning] Implicit contracts still break
+> >
+> > If producers and consumers rely on assumptions that are not written down or tested, they still have a contract, just a fragile one.
+>
+> ---
+>
+> **Feature pipeline**
+> - A data flow that prepares, stores, and serves machine-learning features for training or inference workloads.
+> - It matters here because the ML scenario introduces requirements that differ from standard analytics pipelines, especially around freshness, reuse, and consistency.
+>
+> > [!info] Consistency matters twice
+> >
+> > Feature pipelines need the training and serving definitions to stay aligned, or model quality degrades in ways that are hard to detect quickly.
+>
+> ---
+>
+> **Migration phase**
+> - A discrete stage in a system move, such as dual-running, validation, backfill, cutover, or decommissioning.
+> - It matters here because the cloud-migration scenario is framed as a phased architecture problem rather than a single-step rewrite.
+>
+> > [!warning] Cutover is not the whole migration
+> >
+> > Successful migrations depend on validation and rollback planning just as much as on the final destination architecture.
+>
+> ---
+>
+> **Cost-optimized architecture**
+> - A design that prioritizes minimizing recurring spend while still meeting the minimum acceptable reliability and delivery requirements.
+> - It matters here because one scenario is explicitly organized around achieving useful data outcomes under tight budget limits.
+>
+> > [!warning] Cheap can still be brittle
+> >
+> > Cost optimization becomes a failure mode when it strips away the observability, automation, or recovery paths the system needs to stay trustworthy.
+>
+> ---
+>
+> **Architecture Decision Record / ADR**
+> - A lightweight document that records a specific architectural choice, its context, and the reasoning behind it.
+> - It matters here because the guide recommends using ADRs to capture the places where your implementation intentionally diverges from the scenario default.
+>
+> > [!info] Preserve the why
+> >
+> > Teams forget deviations quickly; an ADR keeps later reviewers from mistaking a deliberate adaptation for accidental drift.
 
-| # | Scenario | Complexity | Monthly Cost Estimate |
-|---|----------|------------|----------------------|
-| 1 | Daily Batch Pipeline | Low | $50-200 |
-| 2 | Real-Time Streaming Pipeline | High | $300-2,000 |
-| 3 | Data Warehouse for Analytics | Medium | $100-500 |
-| 4 | Multi-Source Data Integration | Medium-High | $200-800 |
-| 5 | Small Team Data Platform (2-3) | Low | $50-100 |
-| 6 | Large Team Data Platform (10+) | High | $2,000-10,000 |
-| 7 | Financial Index Calculation | High | $500-3,000 |
-| 8 | ML Feature Pipeline | Medium-High | $300-1,500 |
-| 9 | Cloud Migration (On-Prem to GCP) | High | Varies |
-| 10 | Cost-Optimized Pipeline | Low-Medium | Minimal |
-
----
+> [!example] Reference Stack Fit
+>
+> > [!success] Adaptable Baseline
+> >
+> > - Use this guide for greenfield architecture design, migration scoping, new product requests, and stakeholder discussions where an example stack is more useful than an abstract principle.
+>
+> > [!failure] Template Worship
+> >
+> > - Do not use the scenarios as rigid templates that ignore existing platform investments, contractual constraints, or real team operating strengths.
 
 ## Scenario 1: Daily Batch Pipeline — Ingest, Transform, Serve
 
@@ -1314,5 +1424,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) | 
-
+**See also:** [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) |

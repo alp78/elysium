@@ -588,20 +588,22 @@ Get-ChildItem -Path . -Filter *.sql -Recurse | ForEach-Object {
 | `-Name` | `-Name` | Return names as strings instead of FileInfo objects |
 
 
-## When to use brace expansion and globbing
-
-- **Generating directory structures** -- `mkdir -p data/{bronze,silver,gold}/{raw,staging}` creates a full medallion-architecture tree in one command.
-- **Bulk file operations by extension** -- `rm *.tmp`, `wc -l **/*.sql`, `gzip *.csv` target file sets without explicit loops.
-- **Quick backups before editing** -- `cp config.yaml{,.bak}` creates a backup copy without retyping the filename.
-- **Numeric sequences for batch processing** -- `echo batch_{001..100}` generates zero-padded identifiers for partition keys or test fixtures.
-- **Excluding files from operations** -- `ls !(*.log|*.tmp)` with `extglob` lists only the files you care about.
-
-## When not to use brace expansion and globbing
-
-- **Filenames with spaces or special characters** -- glob expansion on unquoted variables containing spaces splits into multiple arguments. Always double-quote variables: `"$file"`.
-- **Very large directory trees** -- `**/*.py` with `globstar` can expand to tens of thousands of entries, exceeding `ARG_MAX`. Use `find` or `fd` instead for trees with more than a few thousand matches.
-- **Cross-platform scripts** -- brace expansion is bash-specific (not POSIX). Scripts starting with `#!/bin/sh` cannot use it. PowerShell has no brace expansion at all.
-- **Complex filtering logic** -- when you need to combine inclusion, exclusion, size, date, and permissions filters, `find` is more expressive than glob patterns.
+> [!example] Expansion Pattern Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Generating directory structures** -- `mkdir -p data/{bronze,silver,gold}/{raw,staging}` creates a full medallion-architecture tree in one command.
+> > - **Bulk file operations by extension** -- `rm *.tmp`, `wc -l **/*.sql`, `gzip *.csv` target file sets without explicit loops.
+> > - **Quick backups before editing** -- `cp config.yaml{,.bak}` creates a backup copy without retyping the filename.
+> > - **Numeric sequences for batch processing** -- `echo batch_{001..100}` generates zero-padded identifiers for partition keys or test fixtures.
+> > - **Excluding files from operations** -- `ls !(*.log|*.tmp)` with `extglob` lists only the files you care about.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Filenames with spaces or special characters** -- glob expansion on unquoted variables containing spaces splits into multiple arguments. Always double-quote variables: `"$file"`.
+> > - **Very large directory trees** -- `**/*.py` with `globstar` can expand to tens of thousands of entries, exceeding `ARG_MAX`. Use `find` or `fd` instead for trees with more than a few thousand matches.
+> > - **Cross-platform scripts** -- brace expansion is bash-specific (not POSIX). Scripts starting with `#!/bin/sh` cannot use it. PowerShell has no brace expansion at all.
+> > - **Complex filtering logic** -- when you need to combine inclusion, exclusion, size, date, and permissions filters, `find` is more expressive than glob patterns.
 
 ## Warnings
 

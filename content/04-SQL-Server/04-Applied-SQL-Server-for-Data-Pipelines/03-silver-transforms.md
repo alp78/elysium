@@ -8,14 +8,6 @@ updated: 2026-04-04
 status: complete
 ---
 
-> [!abstract] Medallion Project — Financial Index Pipeline
->
-> This page documents the implementation of a specific financial data pipeline
-> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
-> section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
-
 # Silver Transforms
 
 > [!quote]
@@ -23,17 +15,148 @@ status: complete
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
-The silver layer cleans, deduplicates, and historicizes the raw data from [bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading). Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
+> [!abstract]- Summary
+>
+> This note documents the silver-layer implementation of the STOXX/yfinance medallion pipeline on SQL Server. Silver is where raw bronze data becomes durable, deduplicated, historically meaningful, and analytically trustworthy: business rules start applying here, history begins accumulating across runs, and the layer prepares data for [gold](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) instead of preserving source fidelity for its own sake.
+>
+> **Silver table design**
+> - covers the silver DDL, uniqueness rules, filtered indexes, and the principle that silver enforces one authoritative row per business key and time slice
+>
+> **Dimension historization**
+> - covers `silver.index_dim` as an SCD Type 2 dimension with `valid_from`, `valid_to`, and `is_current` semantics
+>
+> **Fact and signal promotion**
+> - covers daily and quarterly signal upserts and the promotion of bronze snapshots into silver’s durable per-key history
+>
+> **OHLCV quality and gap filling**
+> - covers trading-calendar-driven OHLCV gap fill, forward-fill behavior, and the operational handling of synthetic rows
+>
+> **Role in the medallion pipeline**
+> - maps the pipeline flow from [bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) through Python transforms into silver and then onward to gold scoring, with the key silver improvements of historization, deduplication, validation gates, and retained history
+>
+> **Operations and safety**
+> - Warnings: silver is no longer source-faithful, so bad transforms can create durable errors; gap-fill logic must stay bounded; deduplication depends on the right unique indexes; and SCD Type 2 rules can silently fail if current-row uniqueness is not enforced
+> - Recommendations: keep bronze ephemeral and silver durable, enforce one-row-per-key rules with unique indexes, validate before promotion, use filtered unique indexes for active SCD rows, and monitor freshness plus synthetic-row behavior with explicit checks
 
-**Pipeline flow:** [Bronze](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) → Python transforms → Silver tables → [Gold scoring](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)
-
-Key improvements silver makes over bronze:
-
-- **[SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture)** on dimensions — tracks attribute changes over time
-- **One row per symbol per date** — deduplication via UNIQUE indexes
-- **Gap-filled OHLCV** — forward-fills missing trading days using the [trading calendar](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading#bronzetradingcalendar)
-- **Validation gates** — a [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) between bronze and silver ensures data integrity before promotion
-- **Full history retained** — silver accumulates across runs; bronze is wiped each run
+> [!note]- Glossary
+>
+> **Silver layer**
+> - The cleaned, conformed, and historically meaningful layer in a medallion pipeline that sits between raw landing data and consumer-facing aggregates.
+> - It matters because the note’s transforms are about turning bronze data into something durable and analyzable without yet collapsing it into final reporting outputs.
+>
+> > [!info] Silver is where interpretation starts
+> >
+> > Bronze preserves the source. Silver begins enforcing business rules, quality gates, and stable keys so later analytics do not have to repeat cleanup logic constantly.
+>
+> ---
+>
+> **Historized dataset**
+> - A table design that retains prior valid versions instead of overwriting the past when attributes change.
+> - It matters because silver is the first layer in this project where history is intentionally accumulated across runs rather than discarded.
+>
+> > [!warning] Durability raises the cost of mistakes
+> >
+> > Once a bad transform lands in silver, it can persist across many downstream runs. That is why validation and idempotency matter more here than in ephemeral bronze snapshots.
+>
+> ---
+>
+> **SCD Type 2**
+> - A slowly changing dimension pattern that closes the old row and inserts a new current row when tracked attributes change.
+> - It matters because `silver.index_dim` uses this pattern to preserve attribute history instead of overwriting company metadata in place.
+>
+> > [!info] Change becomes a new row, not an overwrite
+> >
+> > The point of SCD Type 2 is not just storing more data. It is preserving the ability to answer “what was true at that time?” for downstream analytics.
+>
+> ---
+>
+> **Filtered unique index**
+> - A unique index that enforces uniqueness only on rows matching a predicate such as `is_current = 1`.
+> - It matters because silver’s SCD Type 2 design needs one active row per key while still allowing many historical versions.
+>
+> > [!warning] Active-row uniqueness needs explicit enforcement
+> >
+> > Without the filtered uniqueness rule, SCD Type 2 can accidentally produce two “current” rows for the same business key and silently poison downstream logic.
+>
+> ---
+>
+> **Authoritative row**
+> - The single row silver treats as correct for a given business key and time grain after deduplication and validation.
+> - It matters because silver’s job is to collapse duplicates and corrections into one trustworthy record per grain.
+>
+> > [!info] Silver chooses the winner deliberately
+> >
+> > Downstream models should not need to guess which duplicate row is “the real one.” Silver exists partly to make that choice explicit and durable.
+>
+> ---
+>
+> **Gap fill**
+> - The process of inserting rows for missing expected dates or periods so a time series becomes continuous.
+> - It matters because OHLCV series in silver must align with the trading calendar even when the raw feed omits some expected rows.
+>
+> > [!warning] Filling gaps creates synthetic data
+> >
+> > Gap-filled rows are operationally useful, but they are not original source records. The design needs a marker so downstream logic can distinguish them.
+>
+> ---
+>
+> **Forward fill**
+> - A gap-fill method that carries the last known valid value forward into a missing period.
+> - It matters because silver’s OHLCV repair logic uses forward-fill semantics to create usable continuous market series.
+>
+> > [!warning] Fill horizon must stay bounded
+> >
+> > Unbounded forward fill can create plausible-looking but wrong future rows. The transform needs clear rules about when the fill should stop.
+>
+> ---
+>
+> **Trading calendar**
+> - The reference dataset that defines which exchanges are open on which dates and therefore which dates should exist in the market series.
+> - It matters because silver uses it to distinguish a genuine market holiday from a missing data problem.
+>
+> > [!info] Expected dates come from the calendar, not from guesswork
+> >
+> > A time series can only be called incomplete if the calendar says a row should exist. The calendar is what makes gap detection objective.
+>
+> ---
+>
+> **Validation gate**
+> - The quality checkpoint between bronze and silver that prevents malformed or contradictory data from being promoted into durable tables.
+> - It matters because silver stores long-lived curated data, so promotion mistakes are more expensive than bronze landing mistakes.
+>
+> > [!warning] Silver should fail closed
+> >
+> > If validation is weak, silver turns raw-source noise into durable business facts. That is much harder to unwind than rejecting the batch earlier.
+>
+> ---
+>
+> **Freshness check**
+> - A diagnostic query that verifies whether silver tables contain current enough data and whether expected updates have actually arrived.
+> - It matters because a transform can succeed technically while still leaving the silver layer stale or partially updated.
+>
+> > [!info] Pipeline success and data freshness are different questions
+> >
+> > A loader can exit cleanly even when it processed old input or skipped a slice. Freshness checks are what confirm the operational result, not just the process result.
+>
+> ---
+>
+> **Synthetic row**
+> - A row created by transform logic rather than landed directly from the source, often to fill a gap or normalize a series.
+> - It matters because silver intentionally introduces some derived rows, and downstream consumers need to know when a row was inferred rather than observed.
+>
+> > [!warning] Synthetic rows need explicit traceability
+> >
+> > If inferred rows are indistinguishable from source rows, audits and downstream analytics can overstate confidence in the data.
+>
+> ---
+>
+> **Intermediate model**
+> - A transform layer concept, common in dbt and medallion-style pipelines, that sits between raw staging inputs and consumer-ready marts.
+> - It matters because silver serves that exact architectural role in this project, even though the implementation here is hand-built in SQL Server and Python.
+>
+> > [!info] Architecture vocabulary still applies across tools
+> >
+> > Whether the transforms run in dbt or in custom SQL Server code, the layer’s responsibility is the same: clean, conform, and prepare data for higher-level consumption.
 
 ---
 
@@ -209,7 +332,6 @@ INSERT INTO silver.index_dim (
 ) VALUES (?, ?, ?, ?, ?, ...)
 ```
 
-
 ---
 
 ## Upsert — Daily Signals
@@ -273,7 +395,6 @@ A typical run output showing 50 new rows, 45 updates (values changed since last 
 ```text
 records_inserted=50  records_updated=45  records_unchanged=5
 ```
-
 
 ---
 
@@ -430,4 +551,3 @@ DELETE FROM silver.index_usa_ohlcv  WHERE date > CAST(GETDATE() AS DATE) AND is_
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — general idempotent data pipeline patterns including SCD
 - [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) — dbt's declarative approach to the same SCD2 logic
 - [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — validation gates between bronze and silver
-

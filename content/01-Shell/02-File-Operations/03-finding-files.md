@@ -141,31 +141,6 @@ status: complete
 > >
 > > On any machine where `parallel` has not been pre-acknowledged, the first invocation prints a citation prompt and hangs — silently blocking cron jobs and pipeline runs. Run `echo 'will cite' | parallel --citation` interactively on every new machine before scheduling.
 
-When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/03-Text-Processing/02-grep-and-pattern-matching) searches inside those files for content — the two tools complement each other in every investigation.
-
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| `find` | The standard Unix command for searching files by metadata: name, type, size, modification time, permissions, ownership, and more. Traverses the directory tree recursively by default. | The universal tool for locating files in any directory tree. Every Linux system has it. | Performance on very large trees (millions of files). `find` does a full traversal every time -- it has no index. Use `locate` for instant lookups of known filenames. |
-| `fd` | A modern, user-friendly alternative to `find`. Faster (parallelized by default), ignores `.gitignore` patterns, uses regex by default, and has cleaner syntax. | Preferred for interactive use and quick searches. Falls back to `find` for complex filters (permissions, exec). | Not installed by default -- requires `apt install fd-find` (binary name: `fdfind` on Debian/Ubuntu, `fd` on other distros). |
-| `locate` / `mlocate` | A file search tool that queries a pre-built index (database) of all filenames on the system. Returns results instantly but the index may be stale. | Instant filename lookups when you know the name but not the path. | The database is updated by a cron job (usually daily). Recently created files are not found until `updatedb` runs. |
-| `xargs` | A command that reads items from stdin and passes them as arguments to another command. Commonly paired with `find -print0` for safe parallel processing. | Converts a list of filenames from `find` into arguments for `rm`, `grep`, `gzip`, or any other command. | Not using `-print0` / `-0` for null-delimited input. Without it, filenames with spaces or special characters break. |
-| `-exec` | A `find` action that runs a command on each matched file. `{}` is replaced with the filename. The command must be terminated with `\;` (one file at a time) or `+` (batched). | Executes operations directly on search results without piping to `xargs`. | Using `\;` when `+` is available. `\;` forks a new process for each file; `+` batches files into fewer process invocations, which is dramatically faster on large result sets. |
-| `-print0` | A `find` action that outputs filenames separated by null bytes instead of newlines. Paired with `xargs -0` for safe handling of filenames with spaces, newlines, or special characters. | The only safe way to pass `find` results to other commands when filenames may contain spaces. | Forgetting the matching `-0` flag on `xargs`. Without it, `xargs` splits on spaces and newlines, breaking filenames. |
-| `Get-ChildItem` (PS) | The PowerShell cmdlet for searching files. Supports `-Filter`, `-Include`, `-Exclude`, `-Recurse`, and `-Depth`. Returns typed `FileInfo` objects. | The PowerShell equivalent of `find`. Objects pipeline safely without filename-parsing issues. | Using `-Include` without `-Recurse` -- the include pattern may not match as expected. Use `-Filter` for single-pattern, filesystem-level filtering (10x faster). |
-| `-mtime` / `-newer` | `find` time filters. `-mtime +7` matches files modified more than 7 days ago. `-newer ref` matches files newer than a reference file. | Used to find stale files for cleanup, or recent files from a pipeline run. | `-mtime` uses 24-hour periods, not calendar days. `-mtime 0` means "modified today" (within the last 24 hours). |
-
-## What this note covers
-
-- `find` for searching by name, type, size, modification time, permissions, and content
-- Executing actions on results: `-exec`, `-delete`, `xargs`, and GNU `parallel`
-- `fd` as a faster, friendlier alternative for interactive use
-- `locate` for instant filename lookups from a pre-built index
-- PowerShell equivalents: `Get-ChildItem` with filtering, `Where-Object`, recursive search
-- Safe filename handling with `-print0` / `xargs -0`
-
 ## Linux file finding tools
 
 Linux provides three complementary file search tools: `find` for precise metadata-based searching with action chaining, `fd` for fast interactive use with simpler syntax, and `locate` for instant name-based lookup against a pre-built database. `find` is the backbone of pipeline maintenance scripts; `fd` suits interactive investigation; `locate` is best when you simply need to know where a file was placed.
@@ -741,20 +716,22 @@ C:\pipeline\jobs\transform.py:87:    # TODO: investigate deadlock under high con
 | `-Encoding` | `-Encoding UTF8` | Specify file encoding |
 
 
-## When to use file finding tools
-
-- **Incident investigation** -- find all files modified in the last hour during a pipeline failure: `find /data -mmin -60 -type f`.
-- **Disk cleanup** -- find files larger than 1 GB that have not been accessed in 30 days: `find /data -size +1G -atime +30`.
-- **Bulk operations on matching files** -- compress all CSV files older than 7 days: `find /data -name "*.csv" -mtime +7 -exec gzip {} +`.
-- **Verifying pipeline output** -- confirm that expected output files exist and have non-zero size: `find /output -name "*.parquet" -size +0`.
-- **Quick interactive lookups** -- use `fd` or `locate` when you know the filename but not the path.
-
-## When not to use file finding tools
-
-- **Simple directory listing** -- if you just want to see what files are in a directory, use `ls` or `Get-ChildItem`. `find` is overkill for flat listings.
-- **Content search** -- `find` locates files by metadata. To search inside files for patterns, use `grep -r` or `ripgrep`. The two tools complement each other.
-- **Real-time file monitoring** -- `find` is a snapshot tool. For real-time file change detection, use `inotifywait` (Linux) or `FileSystemWatcher` (PowerShell/.NET).
-- **Indexed search on very large filesystems** -- `find` traverses the entire tree every time. For filesystems with millions of files where you search frequently, maintain a `locate` database.
+> [!example] Metadata Search Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Incident investigation** -- find all files modified in the last hour during a pipeline failure: `find /data -mmin -60 -type f`.
+> > - **Disk cleanup** -- find files larger than 1 GB that have not been accessed in 30 days: `find /data -size +1G -atime +30`.
+> > - **Bulk operations on matching files** -- compress all CSV files older than 7 days: `find /data -name "*.csv" -mtime +7 -exec gzip {} +`.
+> > - **Verifying pipeline output** -- confirm that expected output files exist and have non-zero size: `find /output -name "*.parquet" -size +0`.
+> > - **Quick interactive lookups** -- use `fd` or `locate` when you know the filename but not the path.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Simple directory listing** -- if you just want to see what files are in a directory, use `ls` or `Get-ChildItem`. `find` is overkill for flat listings.
+> > - **Content search** -- `find` locates files by metadata. To search inside files for patterns, use `grep -r` or `ripgrep`. The two tools complement each other.
+> > - **Real-time file monitoring** -- `find` is a snapshot tool. For real-time file change detection, use `inotifywait` (Linux) or `FileSystemWatcher` (PowerShell/.NET).
+> > - **Indexed search on very large filesystems** -- `find` traverses the entire tree every time. For filesystems with millions of files where you search frequently, maintain a `locate` database.
 
 ## Warnings
 

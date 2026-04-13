@@ -14,17 +14,44 @@ Monitoring and observability from strategy through implementation — covering
 the observability philosophy, the Datadog platform end-to-end, and GCP-native
 monitoring alternatives. Expand any section to browse page contents.
 
+```mermaid
+mindmap
+  ((Strategy and Foundations))
+    (strategy matrix)
+    (observability deep dive)
+    (compliance and auditability)
+```
+
 > [!guide]+ Strategy and Foundations
 >
 > [[domain-strategy-and-foundations]]
 >
 > Observability philosophy, monitoring matrices, alert severity frameworks, and compliance requirements that guide all instrumentation decisions.
 
+```mermaid
+mindmap
+  ((Datadog Platform))
+    (architecture overview)
+    (agents and integrations)
+    (queries, dashboards, alerting)
+    (logs and traces)
+    (cost and troubleshooting)
+```
+
 > [!guide]+ Datadog Platform
 >
 > [[domain-datadog-platform]]
 >
 > End-to-end Datadog coverage from agent deployment through dashboards, alerting, APM traces, log management, cost optimization, and troubleshooting.
+
+```mermaid
+mindmap
+  ((GCP-Native Monitoring))
+    (Cloud Monitoring)
+    (Cloud Trace and Logging)
+    (pipeline health and SLA)
+    (lineage and catalog)
+```
 
 > [!guide]+ GCP-Native Monitoring
 >

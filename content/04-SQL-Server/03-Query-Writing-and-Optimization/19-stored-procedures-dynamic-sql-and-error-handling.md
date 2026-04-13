@@ -10,9 +10,158 @@ status: complete
 
 # Stored Procedures, Dynamic SQL, and Error Handling
 
-T-SQL is a set-based language with a procedural layer on top: variables, control-of-flow, stored procedures, dynamic SQL, transaction control, and structured error handling. This layer is where the "production grade" part of a database codebase lives — the guarantees that a write either commits cleanly or rolls back atomically, the isolation between business logic and the caller's privileges, the resilience against malformed input or injection attempts. This note covers every piece of that procedural layer in order, with tested demos for each one, and ends with a complete production procedure template that every write procedure in the codebase should follow.
+> [!abstract]- Summary
+>
+> T-SQL’s procedural layer is where database code becomes production software rather than isolated queries: variables, control-of-flow, stored procedures, dynamic SQL, transaction control, security context, and structured error handling determine whether a unit of work is safe, auditable, injection-resistant, and rollback-correct. This note walks that layer end to end against the live `stoxx` database and closes with the procedure template every write path should follow.
+>
+> **Procedural language basics**
+> - covers variables, `DECLARE`, `SET` versus `SELECT` assignment, and control-of-flow constructs layered on top of T-SQL’s set-based core
+>
+> **Stored procedures and dynamic SQL**
+> - covers procedure creation and invocation, parameter patterns, plan reuse, `sp_executesql`, identifier handling, and injection-safe dynamic SQL
+>
+> **Structured error handling**
+> - covers `TRY...CATCH`, error metadata, `THROW`, `RAISERROR`, and the difference between raising a new error and re-throwing the original one
+>
+> **Transactions and security context**
+> - covers explicit transactions, `XACT_ABORT`, `XACT_STATE`, `SAVE TRAN`, procedure ownership, `GRANT EXECUTE`, and `EXECUTE AS` behavior
+>
+> **Production template**
+> - covers the default skeleton for write procedures, including validation order, transactional envelope, rollback behavior, and clean rethrow
+>
+> **Operations and safety**
+> - Warnings: `SELECT` assignment can hide multi-row bugs, concatenated dynamic SQL invites injection, `@@ERROR` is fragile, `RAISERROR` and `THROW` do not have identical semantics, nested transactions are not independent units, and low-privilege execution can break when ownership chaining is misunderstood
+> - Recommendations: prefer scalar `SET` for single-value assignment, use `sp_executesql` with parameters, default to `TRY...CATCH` plus `THROW`, keep `SET NOCOUNT ON` and `SET XACT_ABORT ON` in write procedures, validate inputs before opening a transaction, and use ownership or `EXECUTE AS` deliberately rather than accidentally
 
-Every demo in this note runs against the local `stoxx` database and shows its real output.
+> [!note]- Glossary
+>
+> **Stored procedure**
+> - A named, parameterized, server-side unit of T-SQL that SQL Server compiles, secures, and executes as a reusable program module.
+> - It matters because procedures are where the note’s transaction, security, and error-handling patterns are meant to live in production code.
+>
+> > [!info] Procedure design is operational design
+> >
+> > A stored procedure is not just a query wrapper. It defines how the database exposes a reliable, permission-scoped unit of work to callers.
+>
+> ---
+>
+> **Dynamic SQL**
+> - SQL text assembled at runtime instead of being fixed at procedure compile time.
+> - It matters because some workloads need runtime-selected objects or predicates, but that flexibility creates injection and plan-shape risks.
+>
+> > [!warning] Dynamic does not excuse unsafe string building
+> >
+> > Runtime assembly is sometimes necessary, but concatenating values directly into the SQL text is still a design error. Parameterization and identifier validation remain mandatory.
+>
+> ---
+>
+> **`sp_executesql`**
+> - The SQL Server system procedure for executing dynamic SQL with a parameter definition list and typed parameter values.
+> - It matters because it is the safe and plan-reusable way to run dynamic SQL in production.
+>
+> > [!info] Parameterization is the main defense
+> >
+> > `sp_executesql` separates the statement text from the values, which both reduces injection risk and gives SQL Server a better chance to reuse plans sensibly.
+>
+> ---
+>
+> **SQL injection**
+> - The vulnerability where untrusted input changes the structure or meaning of a SQL statement instead of remaining a data value.
+> - It matters because dynamic SQL is one of the main places where database code can fail catastrophically in both security and correctness.
+>
+> > [!danger] Identifiers and values need different defenses
+> >
+> > Values should be parameterized. Identifiers cannot be parameterized and therefore must be validated and wrapped carefully, usually with `QUOTENAME`.
+>
+> ---
+>
+> **`TRY...CATCH`**
+> - The T-SQL structured error-handling construct that routes statement failures into a catch block where rollback and rethrow logic can run.
+> - It matters because production write procedures should handle failure paths explicitly rather than relying on ad hoc status checks.
+>
+> > [!warning] The handler must respect transaction state
+> >
+> > Catching an error is not enough. The code still needs to determine whether the transaction is committable, doomed, or absent before deciding what to do next.
+>
+> ---
+>
+> **`THROW`**
+> - The modern T-SQL statement for raising a new error or rethrowing the current one inside a `CATCH` block.
+> - It matters because it preserves error metadata correctly when used as a bare rethrow and is the recommended default for new code.
+>
+> > [!info] Bare `THROW` preserves the original error
+> >
+> > Inside `CATCH`, `THROW;` re-raises the exact error context. That makes it the cleanest way to propagate failure after rollback or logging logic.
+>
+> ---
+>
+> **`RAISERROR`**
+> - The older SQL Server error-raising surface that supports formatted messages and some behaviors `THROW` does not replicate directly.
+> - It matters because legacy code uses it heavily, and a few operational scenarios still justify it, but it is not the default rethrow tool.
+>
+> > [!warning] Same general purpose, different semantics
+> >
+> > `RAISERROR` and `THROW` are not interchangeable in every detail. Mixing them carelessly can change severity, formatting, or metadata propagation in ways reviewers miss.
+>
+> ---
+>
+> **`XACT_ABORT`**
+> - The session setting that causes most runtime errors inside a transaction to mark the transaction for automatic rollback.
+> - It matters because it closes many partial-commit edge cases and is a standard safety switch for write procedures.
+>
+> > [!warning] This changes failure behavior materially
+> >
+> > With `XACT_ABORT ON`, many statement-level errors become transaction-dooming events. That is usually what production code wants, but it should be chosen knowingly.
+>
+> ---
+>
+> **`XACT_STATE()`**
+> - The function that reports whether the current session has no transaction, a committable transaction, or an uncommittable transaction.
+> - It matters because robust error handlers need to know whether rollback is required and whether commit is even possible.
+>
+> > [!info] Transaction count alone is not enough
+> >
+> > `@@TRANCOUNT` tells you that a transaction exists. `XACT_STATE()` tells you whether that transaction is still healthy enough to commit.
+>
+> ---
+>
+> **`SAVE TRAN`**
+> - The statement that creates a savepoint inside a transaction so later code can roll back part of the work without aborting the entire outer transaction.
+> - It matters because many engineers mistake nested `BEGIN TRAN` calls for independent transactions when savepoints are the real partial-rollback mechanism.
+>
+> > [!warning] Savepoints are the real inner rollback boundary
+> >
+> > Nested transaction count does not create isolated commit scopes. If the design truly needs partial rollback, `SAVE TRAN` is the mechanism to understand.
+>
+> ---
+>
+> **Ownership chaining**
+> - The SQL Server permission behavior where access to underlying objects can flow through a module when the owners align appropriately.
+> - It matters because stored procedures often rely on it so callers need `EXECUTE` on the procedure rather than direct table rights.
+>
+> > [!warning] Broken ownership changes runtime permissions
+> >
+> > A procedure can work for one principal and fail for another if the ownership chain is interrupted. Security bugs here often look like ordinary “permission denied” noise until the chain is inspected.
+>
+> ---
+>
+> **`EXECUTE AS`**
+> - A module or session impersonation feature that changes the effective security principal under which code runs.
+> - It matters because some procedures, especially those using dynamic SQL, need a different execution context to reach underlying objects safely.
+>
+> > [!warning] Effective identity and audit identity can diverge
+> >
+> > Impersonation is powerful, but it changes the permission context the code runs under. Audit code must still capture the real caller when that distinction matters.
+>
+> ---
+>
+> **`NOCOUNT`**
+> - The session setting controlled by `SET NOCOUNT ON` that suppresses row-count messages such as `DONE_IN_PROC`.
+> - It matters because noisy row-count chatter complicates client behavior and is unnecessary in most stored procedure APIs.
+>
+> > [!info] Cleaner protocol surface is the main benefit
+> >
+> > `NOCOUNT` does not change the work performed. It changes what the server emits back to the client, which is why it belongs near the top of most procedure bodies.
 
 ## Variables and Assignment
 

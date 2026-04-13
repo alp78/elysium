@@ -8,7 +8,7 @@ updated: 2026-04-11
 status: complete
 ---
 
-# SQL Server High Availability — Architecture, Operations, and Troubleshooting
+# SQL Server High Availability Overview
 
 > [!quote] Douglas Adams on things that cannot possibly go wrong
 >
@@ -16,7 +16,63 @@ status: complete
 >
 > — **Douglas Adams**, *Mostly Harmless* (1992)
 
-SQL Server 2022 on Linux GCP VMs supports multiple high availability mechanisms. This note covers the full lifecycle: choosing the right HA option, deploying Always On Availability Groups with Pacemaker, monitoring replication health, performing failovers, handling backup-on-secondary constraints, and handling GCP-specific considerations including Internal Load Balancer configuration as a listener replacement.
+> [!abstract]- Summary
+>
+> SQL Server 2022 on Linux GCP VMs supports multiple high-availability mechanisms, but the operational center of gravity is deciding which failure modes matter, which topology meets the real RTO/RPO target, and how failover is monitored and executed under Linux constraints. This note covers the full lifecycle from option selection through Always On Availability Group operations and GCP-specific routing design.
+>
+> - **Why high availability**
+>   - defines the single-instance failure modes HA protects against and anchors the design around RTO, RPO, SLA, and the boundary between HA and DR
+> - **HA options**
+>   - compares Availability Groups, Failover Cluster Instances, log shipping, and the historical context of removed database mirroring, ending with a decision matrix for Linux and GCP
+> - **Always On AG deployment**
+>   - walks through Pacemaker-based AG setup on Linux, quorum design, certificates, replica roles, and the cluster mechanics needed for automatic failover
+> - **Monitoring and failover**
+>   - covers the `sys.dm_hadr_*` health surface, failover operations, and the checks that prove a replica is actually ready to take traffic
+> - **Read scale and performance**
+>   - explains read-only routing, secondary workload tradeoffs, and the performance constraints that show up once AGs carry real query load
+> - **Operations on GCP**
+>   - addresses backup-on-secondary behavior, Internal Load Balancer design as a listener replacement, and the GCP-specific networking and storage constraints that shape the reference architecture
+> - **Advanced variants and guidance**
+>   - closes with contained and distributed AG variants, a maintenance checklist, and the final recommendations for production topology choices
+
+> [!note]- Glossary
+>
+> - **High availability (HA)**
+>   - design approach that keeps service available through local failures and maintenance events
+> - **Disaster recovery (DR)**
+>   - recovery strategy for larger-scope failures, usually accepting more latency or data loss than HA
+> - **RTO**
+>   - recovery time objective, defining the maximum acceptable downtime
+> - **RPO**
+>   - recovery point objective, defining the maximum acceptable data loss
+> - **SLA**
+>   - uptime commitment derived from the service objective for the workload
+> - **Availability Group (AG)**
+>   - SQL Server feature that replicates one or more databases together across multiple replicas
+> - **Primary replica**
+>   - AG replica currently accepting writes and shipping log records to secondaries
+> - **Secondary replica**
+>   - AG replica receiving log records and optionally serving read-only traffic
+> - **Synchronous commit**
+>   - availability mode where commit acknowledgment waits for a synchronous secondary to harden the log
+> - **Asynchronous commit**
+>   - availability mode where the primary acknowledges commit before the secondary hardens the log
+> - **Configuration-only replica**
+>   - quorum-only AG replica that stores metadata but no user databases
+> - **Pacemaker**
+>   - Linux cluster manager used to coordinate AG health, quorum, and failover
+> - **Quorum**
+>   - cluster voting model that decides whether failover is safe and allowed
+> - **Listener replacement**
+>   - GCP pattern that uses an Internal Load Balancer instead of a traditional floating AG listener IP
+> - **Failover Cluster Instance (FCI)**
+>   - shared-storage SQL Server failover architecture that moves the whole instance between nodes
+> - **Log shipping**
+>   - scheduled log-backup copy-and-restore pattern used mainly for lightweight DR
+> - **Contained AG**
+>   - SQL Server 2022 AG variant that replicates AG-scoped system metadata along with user databases
+> - **Distributed AG**
+>   - AG topology that links separate availability groups, often across regions or environments
 
 ## Why high availability
 
@@ -2067,4 +2123,3 @@ Key production uses:
 - [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-agent-jobs) — SQL Agent job deployment patterns for the preferred-replica backup wrapper and contained AG job replication
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — general DMV triage patterns that complement the AG-specific `sys.dm_hadr_*` queries in this note
 - [moc-sql-server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server) — SQL Server chapter index
-

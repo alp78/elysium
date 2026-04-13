@@ -17,7 +17,138 @@ status: complete
 
 # SQL Server Pipeline Anti-Patterns
 
-This page is a production checklist of failure modes that repeatedly show up in SQL Server data pipelines. It does not try to be the deepest execution-plan or loading tutorial. Instead, it focuses on the mistakes that cause incidents, corruption, blocking, or avoidable performance collapse, and it points to the canonical note when a full lab or deeper walkthrough already exists elsewhere in the vault.
+> [!abstract]- Summary
+>
+> This note is a production checklist of failure modes that repeatedly show up in SQL Server data pipelines. It is intentionally not the deepest loading, execution-plan, or concurrency lab; it is the fast reference for the mistakes that cause incidents, corruption, blocking, or avoidable performance collapse, with live `stoxx` sanity checks and pointers to the deeper canonical notes elsewhere in the vault.
+>
+> **Live sanity checks**
+> - covers the quick environment checks that show whether the current database already has or lacks the basic protections a layered pipeline needs
+>
+> **Loading failure modes**
+> - covers the ingestion mistakes that create partial refreshes, duplicated rows, missing metadata, or needless throughput collapse
+>
+> **Schema and modeling anti-patterns**
+> - covers architectural mistakes such as poor schema separation, weak key design, and layer confusion that make later fixes more expensive
+>
+> **Query and performance anti-patterns**
+> - covers the query-shape and tuning mistakes that repeatedly create scans, wasted CPU, and unstable runtime behavior
+>
+> **History, change, and operations anti-patterns**
+> - covers mistakes around history handling, change capture, concurrency, and operational discipline that turn pipeline issues into persistent production incidents
+>
+> **Operations and safety**
+> - Warnings: anti-patterns in this note usually fail silently before they fail loudly, many of them look convenient in small test data, and several become hard to unwind once downstream layers depend on the resulting shape
+> - Recommendations: use the sanity checks first, treat schema separation and metadata columns as mandatory controls, prefer idempotent and validated loads, and escalate to the deeper linked notes when an anti-pattern is confirmed
+
+> [!note]- Glossary
+>
+> **Pipeline anti-pattern**
+> - A design or operational choice that appears expedient in the short term but predictably creates correctness, observability, or performance problems as the pipeline grows.
+> - It matters because the note is a fast triage map for recurring failure modes rather than a collection of isolated style preferences.
+>
+> > [!warning] These patterns usually scale badly, not immediately
+> >
+> > Many anti-patterns look harmless on tiny datasets or one-person projects. Their danger is that they become expensive only after other parts of the system depend on them.
+>
+> ---
+>
+> **Schema separation**
+> - The explicit use of layered schemas such as bronze, silver, and gold instead of collapsing all tables into a generic default schema.
+> - It matters because layer boundaries are one of the cheapest ways to preserve architectural clarity and operational safety.
+>
+> > [!warning] Weak boundaries create accidental coupling
+> >
+> > When raw, transformed, and consumer-facing tables all drift together, operational mistakes and privilege mistakes become much easier to make.
+>
+> ---
+>
+> **Operational metadata column**
+> - A field such as `_index` or `_ingested_at` that records batch origin, business slice, or arrival time for traceability.
+> - It matters because many pipeline incidents become much harder to debug when rows cannot be tied back to a load slice or ingestion time.
+>
+> > [!warning] Missing metadata is missing explainability
+> >
+> > A row without provenance is much harder to replay, purge, scope, or audit. The data may still be present, but its operational meaning is weakened.
+>
+> ---
+>
+> **Idempotent load**
+> - A load process that can be rerun for the same slice without creating duplicates or drifting the target state.
+> - It matters because retries, crash recovery, and late corrections are normal in real pipelines.
+>
+> > [!warning] Retry safety is not optional in production
+> >
+> > If rerunning the same batch changes the result unpredictably, the pipeline turns ordinary operational retries into data incidents.
+>
+> ---
+>
+> **Validation boundary**
+> - The explicit point where a batch must prove it is structurally and logically acceptable before it is published to downstream consumers.
+> - It matters because anti-patterns often remove or blur this boundary in the name of speed.
+>
+> > [!warning] Publishing before validation multiplies blast radius
+> >
+> > Once bad data reaches a consumer-facing table, every downstream process becomes part of the cleanup story. Validation exists to stop that propagation.
+>
+> ---
+>
+> **Canonical deep dive**
+> - The dedicated note elsewhere in the vault that owns the full lab, reference workflow, or technical surface for one failure domain.
+> - It matters because this note is intentionally a checklist, and it relies on those deeper notes when a specific anti-pattern is actually present.
+>
+> > [!info] Use the checklist to identify, then escalate
+> >
+> > The right workflow is usually: detect the failure domain here, then move to the linked note that owns the full remediation playbook.
+>
+> ---
+>
+> **Silent failure mode**
+> - A problem that leaves the pipeline apparently successful while producing stale, duplicated, or subtly wrong data.
+> - It matters because many SQL Server pipeline anti-patterns are dangerous precisely because they do not crash immediately.
+>
+> > [!warning] “Job succeeded” is not a data-quality guarantee
+> >
+> > Pipelines can complete cleanly while still publishing wrong answers. Operational checks need to look for correctness, not just process exit status.
+>
+> ---
+>
+> **Layer confusion**
+> - The mistake of putting raw, cleaned, and consumer-ready responsibilities into the wrong stage of the pipeline.
+> - It matters because it creates unnecessary duplication, weakens debugging boundaries, and makes schema design drift away from the intended architecture.
+>
+> > [!warning] Convenience today becomes ambiguity tomorrow
+> >
+> > When one layer starts doing another layer’s job, the immediate result may still work. The long-term result is a pipeline no one can reason about cleanly.
+>
+> ---
+>
+> **Operational discipline**
+> - The repeatable practices around refresh, concurrency, schema change, and monitoring that keep a pipeline predictable under failure and scale.
+> - It matters because several anti-patterns in the note are really failures of release, retry, or runbook discipline rather than of SQL syntax.
+>
+> > [!warning] Good SQL cannot compensate for bad operating habits
+> >
+> > A technically correct query still causes incidents if it runs in the wrong place, at the wrong time, or without the right safety boundaries.
+>
+> ---
+>
+> **Performance collapse**
+> - The transition from acceptable runtime to severe slowdown caused by a design that no longer fits current data volume or workload shape.
+> - It matters because many anti-patterns hide as “fine for now” until the pipeline reaches production scale.
+>
+> > [!warning] Scale reveals design debt abruptly
+> >
+> > The line between tolerable and disastrous is often crossed suddenly after data or concurrency grows. Anti-pattern checklists exist to catch that debt earlier.
+>
+> ---
+>
+> **Corrective path**
+> - The recommended move from detecting an anti-pattern to the deeper note or remediation workflow that resolves it properly.
+> - It matters because identifying the mistake is only useful if it leads to the right next operational action.
+>
+> > [!info] Detection and repair should stay linked
+> >
+> > A checklist without a corrective path creates awareness but not progress. This note is most useful when it points quickly to the right follow-up playbook.
 
 ---
 
@@ -38,6 +169,7 @@ Before diagnosing anti-patterns in the abstract, verify the basic protections th
 >
 > *This query counts user tables by schema so the reader can immediately see whether layer isolation exists or whether `dbo` is absorbing most of the workload.*
 >
+
 ```sql
 SELECT s.name AS schema_name,
        COUNT(*) AS table_count
@@ -71,6 +203,7 @@ _`stoxx` does have explicit bronze, silver, and gold schemas, which is the corre
 >
 > *This query shows which bronze tables already include the key operational metadata columns `_index` and `_ingested_at`.*
 >
+
 ```sql
 SELECT TABLE_SCHEMA,
        TABLE_NAME,
@@ -108,6 +241,7 @@ _This is a healthy sign. The core bronze tables already carry load-time metadata
 >
 > *This query verifies whether the live dimension table has the filtered unique index that prevents duplicate current rows.*
 >
+
 ```sql
 SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
        OBJECT_NAME(i.object_id) AS table_name,
@@ -172,6 +306,7 @@ Use a stage table, validate row count and business keys there, then publish.
 >
 > *These snippets show why a multi-step load must be wrapped in one explicit transaction.*
 >
+
 ```sql
 DELETE FROM silver.signals_daily
 WHERE _index = @key;
@@ -360,4 +495,3 @@ Use this page as the checklist.
   - `Fundamentals of Data Engineering.epub`
   - `Data Engineering Design Patterns.pdf`
   - `Expert Performance Indexing in Azure SQL and SQL Server 2022, Fourth Edition Toward Faster Results and Lower Maintenance Both….pdf`
-

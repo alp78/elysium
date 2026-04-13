@@ -8,14 +8,6 @@ updated: 2026-04-04
 status: complete
 ---
 
-> [!abstract] Medallion Project — Financial Index Pipeline
->
-> This page documents the implementation of a specific financial data pipeline
-> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
-> section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
-
 # Bronze Layer Loading
 
 > [!quote]
@@ -23,13 +15,148 @@ status: complete
 >
 > — **Zhamak Dehghani**, *Data Mesh*
 
-The bronze layer is the raw data landing zone in the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms).
-
-**Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [Silver transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)
-
-> [!info] Bronze Layer Role
+> [!abstract]- Summary
 >
-> Bronze is append-friendly and ephemeral for snapshot tables. Most bronze tables are truncated and reloaded on every pipeline run — history is preserved in silver, not bronze. The exception is OHLCV data, which accumulates over time.
+> This note documents the bronze-layer implementation of the STOXX/yfinance medallion pipeline on SQL Server. Bronze is the raw landing zone: data is stored 1:1 with the incoming JSON, business logic is deferred to [silver](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms), and the operational question is how to land each feed safely without losing the original source shape.
+>
+> **Environment and setup**
+> - covers idempotent database and schema creation, shared `pyodbc` connectivity, and the project-specific setup code that every loader imports
+>
+> **Bronze table design**
+> - covers the bronze DDL surface, table families, index design, and the rule that raw source fidelity takes priority over transformation convenience
+>
+> **Dynamic OHLCV structures**
+> - covers the dynamic-per-index OHLCV table pattern and the supporting helper logic that drives loader behavior by symbol and source slice
+>
+> **JSON to bronze load patterns**
+> - covers truncate-and-reload for snapshot-style feeds, merge/upsert for append-and-correct OHLCV history, and the Python loader flow from API JSON to bronze tables
+>
+> **Role in the medallion pipeline**
+> - maps the pipeline flow from yfinance API to JSON files to Python loaders to bronze tables and then onward to silver transforms, with the bronze rule that snapshot history is usually ephemeral here and preserved downstream instead
+>
+> **Operations and safety**
+> - Warnings: corrupting bronze destroys the clean source-of-truth boundary, loading logic must stay idempotent, dynamic schema creation needs careful catalog checks, and append-versus-reload behavior differs by feed type
+> - Recommendations: keep bronze source-faithful, use truncate-and-reload for complete snapshot tables, use merge logic only where the source corrects history over time, and keep history or business interpretation in silver rather than forcing it into bronze
+
+> [!note]- Glossary
+>
+> **Bronze layer**
+> - The raw landing layer in a medallion pipeline where source data is stored as received, before business transformations are applied.
+> - It matters because every implementation choice in the note is constrained by the requirement to preserve source fidelity first and optimize convenience second.
+>
+> > [!warning] Bronze is the recovery boundary
+> >
+> > If the landing zone is mutated beyond recognition, the pipeline loses its clean “source as received” checkpoint. That makes later replay, audit, and bug isolation much harder.
+>
+> ---
+>
+> **Raw landing zone**
+> - The database area where inbound payloads first become persistent rows under minimal interpretation.
+> - It matters because the bronze layer’s main purpose is to create a trustworthy handoff point between external fetchers and downstream transforms.
+>
+> > [!info] Land first, interpret later
+> >
+> > A good landing zone optimizes for faithful capture and replayability. Enrichment and reshaping belong to later layers that can be rerun from this checkpoint.
+>
+> ---
+>
+> **Medallion pipeline**
+> - A layered data architecture that separates raw ingestion, cleaned transforms, and consumer-facing analytics into bronze, silver, and gold stages.
+> - It matters because the note is not describing bronze in isolation; it is describing bronze as one stage in a larger SQL Server pipeline design.
+>
+> > [!info] Layer meaning determines load behavior
+> >
+> > Bronze is allowed to be raw, silver is allowed to clean and conform, and gold is allowed to aggregate. Confusing those responsibilities creates unnecessary churn and duplication.
+>
+> ---
+>
+> **Snapshot table**
+> - A table whose source feed represents the full current state of a bounded business slice each time it lands.
+> - It matters because many bronze feeds in this project are best loaded by truncating and reloading the slice rather than reconciling rows one by one.
+>
+> > [!warning] Upsert is not always the right default
+> >
+> > If the incoming file already contains the whole truth for the slice, row-level merge logic adds complexity without improving correctness.
+>
+> ---
+>
+> **Append-friendly history**
+> - A feed behavior where new rows arrive over time and past rows may occasionally be corrected rather than replaced as a whole slice.
+> - It matters because OHLCV is the main bronze exception that justifies merge-style handling instead of full replacement.
+>
+> > [!warning] History feeds need different load mechanics
+> >
+> > Treating an append-and-correct feed like a disposable snapshot can erase legitimate historical depth. The loader must match the source’s temporal contract.
+>
+> ---
+>
+> **Idempotent DDL**
+> - Schema-creation logic that can be rerun safely without duplicating objects or failing after a partial prior run.
+> - It matters because data pipelines restart, bootstrap fresh environments, and reapply setup scripts repeatedly.
+>
+> > [!warning] Restartability depends on rerunnable setup
+> >
+> > A pipeline that crashes midway and cannot rerun its setup safely is operationally fragile before any business logic even starts.
+>
+> ---
+>
+> **`pyodbc` connection factory**
+> - The shared Python helper that constructs SQL Server connections for every bronze loader using environment-driven settings.
+> - It matters because all loaders inherit their transactional behavior, driver choice, and credential handling from that one connection pattern.
+>
+> > [!info] Connection policy is centralized behavior
+> >
+> > Timeouts, autocommit, driver version, and certificate settings all live at this boundary. That makes the factory an operational control point, not just a convenience wrapper.
+>
+> ---
+>
+> **`fast_executemany`**
+> - A `pyodbc` batch-insert mode that sends many parameterized rows more efficiently than one statement per row.
+> - It matters because bronze loaders often need better-than-row-by-row throughput without switching all the way to external bulk tooling.
+>
+> > [!warning] Faster client batching is still not full bulk tooling
+> >
+> > `fast_executemany` reduces round-trips substantially, but it does not replace the operational role of true bulk interfaces when file scale gets much larger.
+>
+> ---
+>
+> **Business slice**
+> - The bounded unit of data a load treats as complete, such as one index snapshot, one day, or one feed batch.
+> - It matters because bronze loading decisions depend on whether that slice can be replaced atomically or must be merged into an ongoing history.
+>
+> > [!info] Slice definition drives the safest load pattern
+> >
+> > Once the slice boundary is clear, the right pattern is usually obvious. Ambiguous slice boundaries are what make loader logic drift into complexity.
+>
+> ---
+>
+> **Merge load**
+> - A loader behavior that inserts new rows and updates changed rows for an existing history instead of deleting and reloading the full slice.
+> - It matters because the OHLCV bronze tables use this pattern to preserve ongoing history while still accepting corrected source values.
+>
+> > [!warning] Merge should be the exception, not the reflex
+> >
+> > Merge logic is heavier to test and reason about than full replacement. It is worth paying for only when the source contract truly requires partial correction of existing history.
+>
+> ---
+>
+> **`_ingested_at`**
+> - The ingestion timestamp column that records when SQL Server received a row from the upstream loader.
+> - It matters because bronze tables often need a physical arrival marker even when the business event time is stored separately in the payload.
+>
+> > [!info] Arrival time and business time are different facts
+> >
+> > A row can describe one market date and arrive later. Keeping both facts makes replay, freshness checks, and debugging much easier.
+>
+> ---
+>
+> **Source-faithful storage**
+> - The principle that bronze columns and row semantics should stay close to the source payload rather than being normalized for downstream convenience.
+> - It matters because this principle is what keeps bronze useful as the authoritative replay and audit checkpoint.
+>
+> > [!warning] Convenience transforms belong later
+> >
+> > Once bronze starts reshaping data for downstream consumers, it stops being a trustworthy raw layer. That usually pushes preventable complexity into every later troubleshooting session.
 
 ---
 
@@ -58,7 +185,6 @@ IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bronze')
     EXEC('CREATE SCHEMA bronze');
 GO
 ```
-
 
 ### Connection Helper (`utils/db.py`)
 
@@ -113,7 +239,6 @@ WHERE _index = ?
 | ASML.AS | 2021-01-04 |
 | MC.PA | 2021-01-04 |
 | SAP.DE | 2021-01-04 |
-
 
 ---
 
@@ -181,7 +306,6 @@ CREATE INDEX IX_bronze_index_dim_index
 GO
 ```
 
-
 ### bronze.signals_daily — Daily Trading Signals
 
 One snapshot per stock per pipeline run. Stores price metrics, momentum, and analyst sentiment from yfinance.
@@ -229,7 +353,6 @@ CREATE INDEX IX_bronze_signals_daily_index_symbol
     ON bronze.signals_daily (_index, symbol, timestamp);
 GO
 ```
-
 
 ### bronze.signals_quarterly — Quarterly Fundamentals
 
@@ -398,7 +521,6 @@ CREATE INDEX IX_bronze_trading_calendar_exchange
 GO
 ```
 
-
 ---
 
 ## Dynamic OHLCV Tables
@@ -471,7 +593,6 @@ CREATE TABLE silver.{ohlcv_table} (
 CREATE UNIQUE INDEX UX_silver_{ohlcv_table}
     ON silver.{ohlcv_table} (symbol, date);
 ```
-
 
 ---
 
@@ -605,4 +726,3 @@ Every bronze table has at least one nonclustered index beyond the clustered prim
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — the design principles behind rerunnable DDL and loaders
 - [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion) — pyodbc connection patterns, fast_executemany benchmarks, and parameterized queries
 - [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion) — C# SqlBulkCopy and bcp alternatives for high-volume ingestion
-

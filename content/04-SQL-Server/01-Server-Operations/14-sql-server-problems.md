@@ -8,7 +8,7 @@ updated: 2026-04-11
 description: "Catalog of 25 SQL Server production problems ranked by severity, with live diagnosis captures from the local stoxx instance, field-definition tables, value guides, and concrete fix procedures. Covers log and disk exhaustion, deadlocks, backup corruption, TDE recovery, parameter sniffing, blocking chains, stale statistics, tempdb latch contention, and operational debt on SQL Server 2022."
 ---
 
-# SQL Server Production Problems
+# SQL Server Problems
 
 > [!quote] Mike Tyson on operational planning
 >
@@ -16,9 +16,49 @@ description: "Catalog of 25 SQL Server production problems ranked by severity, w
 >
 > — **Mike Tyson**
 
-SQL Server is the transactional backbone of the index calculation platform. Bronze ingestion, silver cleaning, gold aggregation, and the API serving layer all depend on it, and on a self-managed Linux instance without a dedicated DBA the data engineering team owns every aspect: performance tuning, backup strategy, concurrency management, and capacity planning. Every problem in this catalog has caused a production incident or near-miss on comparable workloads. Each problem is structured as a narrative (what happens, root cause, consequences) followed by command-level H4 operations with contextual framing, live captures against the local `stoxx` SQL Server 2022 instance, field-definition tables, and value guides.
+> [!abstract]- Summary
+>
+> SQL Server is the transactional backbone of the index-calculation platform. Bronze ingestion, silver cleaning, gold aggregation, and the API serving layer all depend on it, and on a self-managed Linux instance without a dedicated DBA the data engineering team owns performance tuning, backup strategy, concurrency management, and capacity planning. This catalog is organized around concrete production problems that have caused incidents or near-misses on comparable workloads, with each problem documented as a narrative plus command-level operations, live captures, field tables, and value guides.
+>
+> - **Severity and triage**
+>   - frames the catalog through four severity bands and a symptom-first decision flow so incoming incidents map quickly to the right diagnostic branch
+> - **Critical problems**
+>   - covers data-loss and full-outage risks such as log exhaustion, disk exhaustion, deadlocks, corrupt backups, and lost TDE certificates
+> - **High-severity problems**
+>   - addresses degraded SLA and data-quality failures such as blocking chains, parameter sniffing, MERGE races, stale statistics, and related operational regressions
+> - **Moderate and low-severity problems**
+>   - captures the monitoring-heavy issues, recurring footguns, and technical debt patterns that erode reliability over time even when they do not wake on-call immediately
+> - **Operational reference**
+>   - ends with reference tables, a diagnostic decision flow, and related notes so responders can widen or narrow the investigation without leaving the series
+> - **Reference environment**
+>   - the narrative assumes a hypothetical SQL Server 2022 workload on Ubuntu 22.04, GCP Compute Engine (`n2-standard-8`, `500 GB` `pd-ssd`), with a `bronze -> silver -> gold` medallion architecture driven by Python `pyodbc`, a C# `Dapper` API, and Airflow under EU BMR deadlines; live captures are executed against the local `stoxx` SQL Server 2022 Developer Edition instance (`16.0.4236.2`, `SQL_Latin1_General_CP1_CI_AS`) via the `stoxx-queries` skill, with narrative object names rewritten to `stoxx` schemas where needed
 
-**Reference environment.** The narrative refers to a hypothetical production workload running SQL Server 2022 on Ubuntu 22.04, GCP Compute Engine (n2-standard-8, 500 GB pd-ssd), with a `bronze → silver → gold` medallion architecture driven by Python `pyodbc` pipelines, a C# `Dapper` API layer, and Airflow orchestration, under the EU Benchmark Regulation (BMR) which makes publication deadlines legally binding. Live captures in this note are executed against the local `stoxx` SQL Server 2022 Developer Edition instance (`16.0.4236.2`, `SQL_Latin1_General_CP1_CI_AS`) using the `stoxx-queries` skill. Queries that mention `analytics_db`, `bronze.*`, `silver.*`, or `gold.*` as narrative table names are rewritten against `stoxx` schemas for the live capture step; the demo context is disclosed in an `[!info]` callout above every such cell.
+> [!note]- Glossary
+>
+> - **Severity band**
+>   - response-priority classification that maps a problem to the urgency and ownership of the fix
+> - **Triage**
+>   - first-response process of mapping symptoms to the most likely failure class and the first safe diagnostic query
+> - **Blocking chain**
+>   - set of sessions waiting behind a blocking head session that holds the needed lock
+> - **Deadlock**
+>   - circular lock dependency where SQL Server aborts one session as the victim to break the cycle
+> - **Parameter sniffing**
+>   - plan instability caused when a cached plan optimized for one parameter set performs poorly for another
+> - **`log_reuse_wait_desc`**
+>   - `sys.databases` field showing why SQL Server cannot currently truncate the transaction log
+> - **VLF**
+>   - virtual log file, the internal segment SQL Server uses to manage the transaction log
+> - **TDE certificate chain**
+>   - certificate and private-key backup path required to recover TDE-protected databases and backups elsewhere
+> - **Stale statistics**
+>   - outdated distribution metadata that leads the optimizer to bad row-count estimates and poor plans
+> - **Tempdb latch contention**
+>   - allocation or metadata latch pressure in `tempdb`, often visible as `PAGELATCH_*` waits
+> - **Live capture**
+>   - query output executed against the local lab instance instead of fabricated examples
+> - **Fix procedure**
+>   - ordered operational response that follows diagnosis and carries real state-changing risk if applied to the wrong cause
 
 ## Severity and triage
 
@@ -578,7 +618,6 @@ WHERE s.name = 'system_health'
 | session_name | deadlock_events_in_ring |
 |---|---|
 | system_health | 1 |
-
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
 | `deadlock_events_in_ring` | `0` | normal | No deadlock in the current ring buffer window | Either no deadlocks, or ring buffer rotated |
@@ -2202,7 +2241,6 @@ ORDER BY table_name, column_name;
 | `table_name` | computed | `nvarchar` | Two-part schema-qualified name |
 | `column_name` | `sys.columns.name` | `sysname` | Column name |
 | `data_type` | `sys.types.name` | `sysname` | `datetime` (3.33ms precision, 1753 minimum) or `smalldatetime` (1 minute precision, 1900 minimum) |
-
 | Column | Value | Watch | Meaning | Implication |
 |---|---|---|---|---|
 | `data_type` | `datetime` | legacy | 3.33 ms precision, 1753 minimum | Migrate to `datetime2(3)` |
@@ -3139,4 +3177,3 @@ Every wait family in the flowchart maps to a specific problem in this note. Once
 - Microsoft Learn — [sys.databases](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-databases-transact-sql), [sys.dm_db_log_space_usage](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-log-space-usage-transact-sql), [sys.dm_db_index_physical_stats](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql), [sys.dm_database_encryption_keys](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-database-encryption-keys-transact-sql), [sys.query_store_plan](https://learn.microsoft.com/sql/relational-databases/system-catalog-views/sys-query-store-plan-transact-sql), [sys.dm_exec_query_stats](https://learn.microsoft.com/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-query-stats-transact-sql), [BACKUP (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/backup-transact-sql), [RESTORE (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/restore-statements-transact-sql), [ALTER INDEX](https://learn.microsoft.com/sql/t-sql/statements/alter-index-transact-sql), [DBCC CHECKDB](https://learn.microsoft.com/sql/t-sql/database-console-commands/dbcc-checkdb-transact-sql), [UPDATE STATISTICS](https://learn.microsoft.com/sql/t-sql/statements/update-statistics-transact-sql), [sqlcmd utility](https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-utility), [mssql-conf Linux settings](https://learn.microsoft.com/sql/linux/sql-server-linux-configure-mssql-conf)
 - Community — Paul Randal "Transaction log is full", Erik Darling "Parameter Sniffing", Brent Ozar "Implicit Conversions" and "String or Binary Data Truncated", Aaron Bertrand "Don't use MERGE", Michael J. Swart "What to avoid if you want to use MERGE", Ola Hallengren "IndexOptimize" solution, Glenn Berry "SQL Server Diagnostic Information Queries"
 - Microsoft Knowledge Base — KB2694124, KB2925678, KB4497928 (MERGE concurrency issues)
-

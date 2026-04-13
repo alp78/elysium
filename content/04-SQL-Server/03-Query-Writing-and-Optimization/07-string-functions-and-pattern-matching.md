@@ -10,21 +10,158 @@ status: complete
 
 # String Functions and Pattern Matching
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> Text handling in T-SQL is deceptively dense. The same `varchar` column can silently change meaning across collations, truncate invisibly under Unicode rules, kill an index seek with a wrapper function, or round-trip incorrectly through a missing `N` prefix. This note is the authoritative reference for string-level T-SQL. It covers:
+> String work in T-SQL spans storage, comparison, transformation, and search semantics: this note explains how SQL Server stores and interprets text, how core string functions reshape it, and how pattern-matching and collation decisions affect both correctness and index usage in the live `stoxx` environment.
 >
-> - the `char`/`varchar`/`nchar`/`nvarchar` family with storage, padding, and Unicode rules
-> - `LEN` vs `DATALENGTH` and the byte/character distinction
-> - `CONCAT`, `CONCAT_WS`, `STRING_AGG`, and the legacy `STUFF + FOR XML PATH` aggregation pattern
-> - `LEFT`, `RIGHT`, `SUBSTRING`, `STUFF`, `REPLACE`, `TRANSLATE`, `REVERSE`, `REPLICATE`, `SPACE`
-> - `TRIM`, `LTRIM`, `RTRIM`, `LOWER`, `UPPER`, and the non-SARGable predicate traps
-> - pattern matching with `CHARINDEX`, `PATINDEX`, `LIKE`, character classes, and `ESCAPE`
-> - collation rules, case/accent sensitivity, and collation-conflict error 468
-> - `STRING_SPLIT`, `QUOTENAME`, `STRING_ESCAPE`, and identifier safety for dynamic SQL
-> - `ASCII`, `UNICODE`, `CHAR`, `NCHAR`, `SOUNDEX`, `DIFFERENCE`, and `FORMATMESSAGE`
+> **String storage and Unicode**
+> - covers `char`, `varchar`, `nchar`, and `nvarchar`, trailing-space behavior, byte versus character length, Unicode literals, and UTF-8-aware collation choices
 >
-> All examples execute against the live `stoxx` database. Every code cell is followed by its real result or, for trap demos, the real error block.
+> **Concatenation and transformation**
+> - covers `CONCAT`, `CONCAT_WS`, `STRING_AGG`, legacy `STUFF + FOR XML PATH`, plus extraction and substitution functions such as `LEFT`, `RIGHT`, `SUBSTRING`, `REPLACE`, and `TRANSLATE`
+>
+> **Normalization and search**
+> - covers trimming, case folding, `CHARINDEX`, `PATINDEX`, `LIKE`, wildcard and character-class patterns, and the non-SARGable traps created by wrapping indexed text columns
+>
+> **Collation and identifier safety**
+> - covers case and accent sensitivity, cross-collation conflicts, `STRING_SPLIT`, `QUOTENAME`, `STRING_ESCAPE`, and defensive text handling for dynamic SQL
+>
+> **Character-code and parsing utilities**
+> - covers `ASCII`, `UNICODE`, `CHAR`, `NCHAR`, `SOUNDEX`, `DIFFERENCE`, `FORMATMESSAGE`, and practical parsing patterns for tickers and ISO codes
+>
+> **Operations and safety**
+> - Warnings: missing `N` prefixes can corrupt Unicode literals, `LEN` hides trailing spaces, wrapper functions on indexed columns defeat seeks, leading-wildcard `LIKE` scans, `STRING_AGG` can overflow short string targets, and collation mismatches raise error 468
+> - Recommendations: prefer `CONCAT_WS` and `STRING_AGG` over manual `+`, use `DATALENGTH` when bytes matter, keep text-cleaning out of predicates, pair `STRING_SPLIT` with ordinal output when order matters, and wrap dynamic identifiers with `QUOTENAME`
+
+> [!note]- Glossary
+>
+> **Character type family**
+> - The SQL Server text storage types `char`, `varchar`, `nchar`, and `nvarchar`, split across fixed versus variable width and non-Unicode versus Unicode storage.
+> - It matters because the wrong type choice creates avoidable storage cost, padding behavior, or character-loss bugs that surface long after schema creation.
+>
+> > [!warning] Text type is a schema contract
+> >
+> > Changing a text column later is expensive and disruptive. Pick the family based on actual encoding and width requirements, not on habit.
+>
+> ---
+>
+> **Unicode literal / `N'...'`**
+> - A string literal prefixed with `N` so SQL Server parses it as Unicode instead of as a non-Unicode `varchar` literal.
+> - It matters because omitting the prefix can silently lose or misinterpret non-ASCII characters before the value ever reaches an `nvarchar` column.
+>
+> > [!warning] The literal can be corrupted before insert
+> >
+> > Even if the target column is Unicode, a non-Unicode literal may already be damaged by the time SQL Server converts it. The `N` prefix is the safe default.
+>
+> ---
+>
+> **`LEN` / `DATALENGTH`**
+> - Two length functions where `LEN` counts characters but ignores trailing spaces, while `DATALENGTH` reports the number of bytes actually stored.
+> - It matters because text quality checks, storage estimates, and fixed-width troubleshooting depend on knowing whether the question is about characters or bytes.
+>
+> > [!warning] `LEN` is not a raw-length function
+> >
+> > Trailing spaces vanish from `LEN`, which makes it convenient for display logic but misleading for auditing padded or dirty input.
+>
+> ---
+>
+> **`STRING_AGG`**
+> - The aggregate function that concatenates many row values into one delimited string.
+> - It matters because it is the modern SQL Server tool for text aggregation and report-style list building.
+>
+> > [!warning] Output width still matters
+> >
+> > If the expression stays in a narrow string type, large aggregations can overflow. Casting to `nvarchar(max)` is a practical defensive default when size is uncertain.
+>
+> ---
+>
+> **`CONCAT_WS`**
+> - A concatenation function that joins multiple string arguments with a supplied separator while skipping null inputs.
+> - It matters because it avoids the separator and null-propagation problems common in manual `+` concatenation.
+>
+> > [!info] Separator handling is the main benefit
+> >
+> > `CONCAT_WS` is not just shorter syntax. It eliminates the boilerplate required to avoid extra delimiters around missing values.
+>
+> ---
+>
+> **Legacy `STUFF` + `FOR XML PATH` aggregation**
+> - The pre-`STRING_AGG` pattern that builds a delimited string by concatenating XML fragments and trimming the leading separator.
+> - It matters because older SQL Server codebases still use it, and readers need to recognize what it is doing before replacing it.
+>
+> > [!warning] Readable enough to keep, outdated enough to replace
+> >
+> > The pattern still works, but `STRING_AGG` is clearer and usually the right choice in modern code unless backward compatibility forces the older form.
+>
+> ---
+>
+> **`LIKE` pattern**
+> - A SQL pattern-matching expression that uses wildcards such as `%`, `_`, and bracket classes to test text values.
+> - It matters because it is the most common text-search predicate in T-SQL and one of the easiest places to trade correctness for performance by accident.
+>
+> > [!warning] Leading wildcards kill seekability
+> >
+> > `LIKE 'prefix%'` can often seek. `LIKE '%suffix'` or `LIKE '%mid%'` usually cannot, because the engine no longer knows where to start in the index.
+>
+> ---
+>
+> **`CHARINDEX` / `PATINDEX`**
+> - Search functions that return the position of a substring or wildcard pattern inside a string.
+> - It matters because they are the building blocks for many parsing expressions, but they are still function wrappers when used in predicates.
+>
+> > [!warning] Search functions in filters are usually non-SARGable
+> >
+> > These functions are excellent for projection and parsing. When placed on the indexed column side of a `WHERE` predicate, they typically force scans.
+>
+> ---
+>
+> **Collation**
+> - The rule set that controls how SQL Server compares and sorts strings, including case and accent sensitivity.
+> - It matters because equality, ordering, indexing behavior, and cross-database joins all depend on the collation in effect.
+>
+> > [!warning] String semantics are configuration-dependent
+> >
+> > Whether `'a'` equals `'A'` or accented variants compare together is decided by collation, not by a universal SQL rule. Mixed collations can fail at runtime.
+>
+> ---
+>
+> **`STRING_SPLIT`**
+> - The built-in function that breaks a delimited string into one row per token.
+> - It matters because parsing inbound lists is common, but order is only preserved when ordinal output is requested explicitly.
+>
+> > [!warning] Token order is not implied
+> >
+> > If the caller cares about original sequence, enable ordinal output and sort by it. Otherwise the split rows are just a set.
+>
+> ---
+>
+> **`QUOTENAME`**
+> - A function that safely wraps an identifier in delimiters such as brackets and escapes any closing delimiter characters inside it.
+> - It matters because dynamic SQL must treat identifiers differently from values, and manual bracket assembly is fragile.
+>
+> > [!danger] Identifier interpolation is an injection boundary
+> >
+> > Parameterization does not solve dynamic identifier names. Every schema, table, column, or alias inserted into dynamic SQL should be validated and wrapped safely.
+>
+> ---
+>
+> **`STRING_ESCAPE`**
+> - A function that escapes special characters for a target format such as JSON.
+> - It matters because text that is safe inside one syntax can become invalid or dangerous when emitted into another format.
+>
+> > [!info] Output format determines escaping rules
+> >
+> > Escaping is not generic text cleanup. It only makes sense relative to the format being produced, such as JSON or a quoted SQL fragment.
+>
+> ---
+>
+> **Phonetic matching**
+> - Approximate text matching based on pronunciation, represented in SQL Server by functions such as `SOUNDEX` and `DIFFERENCE`.
+> - It matters because these tools are sometimes useful for fuzzy person-name matching, but they are far weaker than exact parsing or normalized keys.
+>
+> > [!warning] Phonetic similarity is coarse
+> >
+> > `SOUNDEX` is a heuristic, not a robust entity-resolution system. It can be useful for rough candidate generation, but it should not be treated as authoritative matching logic.
 
 ## String Types, Length, and Unicode
 

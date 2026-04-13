@@ -17,7 +17,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform — GCP Data Services Block Library
+# Data Services Blocks
 
 > [!quote] Werner Vogels on automation
 >
@@ -25,7 +25,135 @@ status: complete
 >
 > — **Werner Vogels**, AWS re:Invent keynote
 
-This note is an atomic block library for GCP data services. Each block is self-contained and production-ready. Copy a block, swap names, wire in your variables, and apply. Blocks are grouped by service and then by resource type within each service. Every section opens with a brief **when to use** paragraph so you can scan quickly.
+> [!abstract]- Summary
+>
+> Data Services Blocks is the GCP Terraform snippet library for the chapter's data-plane services: it collects production-oriented blocks for BigQuery, Firestore, Dataflow, Cloud SQL, monitoring and logging integrations, and billing controls, all organized as standalone snippets that can be lifted into larger Terraform codebases with clear operational trade-offs.
+>
+> **Warehouse and analytics blocks**
+> - covers BigQuery datasets, tables, views, materialized views, UDFs, external tables, scheduled queries, reservations, and the schema and protection settings that govern stateful analytical resources
+>
+> **Operational data-service blocks**
+> - covers Firestore databases and indexes, Dataflow batch and streaming jobs, and Cloud SQL instances together with the lifecycle choices that change deletion, migration, and throughput behavior
+>
+> **Observability and cost controls**
+> - covers monitoring, logging, alerting, and budget blocks that turn service provisioning into something observable and financially bounded
+>
+> **Library reference structure**
+> - covers assumed variables, table-schema reference material, cross-references, and the snippet-library rule that each block is self-contained even when multiple blocks naturally compose into a broader system
+>
+> **Operations and safety**
+> - Warnings: changing BigQuery dataset location destroys the dataset, production tables need deletion protection, credentials and passwords can land in Terraform state, Firestore `deletion_policy = "DELETE"` destroys all data, Dataflow `on_delete = "cancel"` can lose in-flight work, major Cloud SQL changes force replacement, and budgets warn about spend but do not stop it automatically
+> - Recommendations: protect stateful datasets and tables, keep credentials in Secret Manager, use `ABANDON` for production Firestore lifecycles, drain streaming jobs instead of canceling them, treat Cloud SQL replacement fields with care, and pair budget alerts with automated enforcement or human response workflows
+
+> [!note]- Glossary
+>
+> **Atomic block library**
+> - A collection of standalone Terraform snippets designed to be copied into real configurations without assuming one monolithic root module.
+> - It matters because this note is written as a toolbox of reusable service blocks rather than as one directly applied environment definition.
+>
+> > [!info] Standalone still requires judgment
+> >
+> > A block can be self-contained syntactically and still require architectural context before it is safe in production. Snippet libraries reduce repetition, not design responsibility.
+>
+> ---
+>
+> **BigQuery dataset**
+> - The top-level container for BigQuery tables, views, routines, and related warehouse objects within a project and location.
+> - It matters because many analytical blocks in this library build upward from dataset creation and inherit its location and lifecycle choices.
+>
+> > [!warning] Location is a deep lifecycle choice
+> >
+> > Changing a dataset location is not an in-place tweak. For stateful production data, it is effectively a replacement event and should be treated that way.
+>
+> ---
+>
+> **Materialized view**
+> - A BigQuery view type that stores precomputed results and refreshes them automatically instead of rescanning base tables on every query.
+> - It matters because the library includes both logical and materialized analytical patterns, and the operational trade-offs differ.
+>
+> > [!info] Faster reads trade for refresh semantics
+> >
+> > Materialized views improve repeated query performance, but they also introduce refresh timing and storage considerations that plain views do not.
+>
+> ---
+>
+> **Deletion protection**
+> - A safeguard on certain GCP data resources that prevents accidental deletion while enabled.
+> - It matters because many blocks in this library manage stateful systems where deletion should be difficult by default.
+>
+> > [!warning] Stateful services need stronger defaults
+> >
+> > Datasets, tables, and database instances carry data gravity. A safe snippet library should bias toward protecting those resources from routine mistakes.
+>
+> ---
+>
+> **Terraform state exposure**
+> - The risk that credentials, passwords, or secret values handled by Terraform are persisted in state and inherit the backend's security posture.
+> - It matters because several data-service blocks accept sensitive connection values that are dangerous to manage carelessly.
+>
+> > [!danger] Managed secrets can still leak through state
+> >
+> > Even if the destination service is secure, Terraform may still process the plaintext value on the way there. State security is therefore part of secret design, not a separate problem.
+>
+> ---
+>
+> **Firestore `deletion_policy`**
+> - A lifecycle choice that determines whether deleting the Terraform resource also deletes the Firestore database or leaves it behind.
+> - It matters because Firestore holds durable application data and a wrong deletion policy can turn cleanup into irreversible loss.
+>
+> > [!danger] `DELETE` is final for the data too
+> >
+> > In production, abandoning the database while removing Terraform ownership is usually safer than deleting the database outright. The lifecycle setting should reflect that distinction explicitly.
+>
+> ---
+>
+> **Dataflow job**
+> - A managed GCP data-processing workload running Apache Beam pipelines in batch or streaming mode.
+> - It matters because the library includes both provisioning patterns and operational lifecycle decisions for these jobs.
+>
+> > [!warning] Batch and streaming have different delete semantics
+> >
+> > A Dataflow lifecycle setting that is acceptable for batch work can be harmful for streaming workloads. Operational mode should drive job-deletion behavior.
+>
+> ---
+>
+> **`on_delete = "drain"`**
+> - A Dataflow lifecycle choice that drains a streaming job instead of canceling it abruptly.
+> - It matters because safe teardown of streaming pipelines often depends on letting in-flight messages finish processing.
+>
+> > [!warning] Cancel can drop work
+> >
+> > A fast stop is not always a safe stop. For streaming jobs, `cancel` may abandon messages or partially processed state in ways `drain` is designed to avoid.
+>
+> ---
+>
+> **Cloud SQL instance**
+> - A managed relational database instance in GCP, with lifecycle properties such as region and engine version that can force replacement.
+> - It matters because database blocks are some of the highest-risk snippets in the library: they are easy to provision and expensive to replace carelessly.
+>
+> > [!warning] Database replacement fields are not cosmetic
+> >
+> > Region changes or major-version jumps can become destructive events. Database HCL should always be reviewed with migration thinking, not only syntax thinking.
+>
+> ---
+>
+> **Monitoring alert policy**
+> - A GCP monitoring resource that defines conditions under which alerts are emitted for services or infrastructure.
+> - It matters because provisioning data services without observability leaves the platform unable to detect many failures early.
+>
+> > [!info] Provisioning and alerting should stay close
+> >
+> > If the infrastructure code creates a critical service, colocating its alerting pattern in the same library makes the operational contract much clearer.
+>
+> ---
+>
+> **Budget alert**
+> - A GCP billing control that notifies operators when spending thresholds are crossed.
+> - It matters because cost visibility is part of operating data services responsibly, especially with BigQuery, Dataflow, and managed databases.
+>
+> > [!warning] Alerts do not enforce by themselves
+> >
+> > Budgets are observability for cost, not an automatic kill switch. If spend must truly be constrained, the alert needs a response workflow or automated enforcement behind it.
 
 > [!info] Assumed variables
 >

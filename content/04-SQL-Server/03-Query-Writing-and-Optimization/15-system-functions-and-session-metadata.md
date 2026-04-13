@@ -10,20 +10,161 @@ status: complete
 
 # System Functions and Session Metadata
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note is the authoritative catalog for every session-variable-style function and metadata helper in T-SQL — the functions that return **state about the current execution** rather than values from user tables. It covers:
+> T-SQL exposes a second layer of built-ins that report execution state rather than business data: this note catalogs the session-state functions, metadata helpers, identity functions, and context stores that tell a batch who it is, where it is running, what just happened, and how to join that information to DMVs safely.
 >
-> - **Session-state variables** — `@@ROWCOUNT`, `@@TRANCOUNT`, `@@ERROR`, `@@NESTLEVEL`, `@@SPID`, and the capture-idiom traps they all share.
-> - **Server and database properties** — `@@VERSION`, `SERVERPROPERTY`, `DATABASEPROPERTYEX`, `CONNECTIONPROPERTY`, `CURRENT_REQUEST_ID`, `CURRENT_TRANSACTION_ID`.
-> - **Principal identity** — the nine functions that return different forms of "who is running this code" (`SUSER_SNAME`, `SUSER_NAME`, `SUSER_ID`, `USER_NAME`, `USER_ID`, `CURRENT_USER`, `SESSION_USER`, `SYSTEM_USER`, `ORIGINAL_LOGIN`), their `EXECUTE AS` behavior, and which one to use for auditing.
-> - **Permission checks** — `IS_SRVROLEMEMBER`, `IS_ROLEMEMBER`, `HAS_PERMS_BY_NAME`.
-> - **Database and object metadata** — `DB_NAME`/`DB_ID`, `OBJECT_ID`/`OBJECT_NAME`/`OBJECT_SCHEMA_NAME`, `SCHEMA_ID`/`SCHEMA_NAME`, `OBJECTPROPERTY`/`OBJECTPROPERTYEX`, `COL_NAME`/`COL_LENGTH`/`COLUMNPROPERTY`, `TYPE_NAME`/`TYPE_ID`, `PARSENAME`, and the idempotent DDL patterns that chain them.
-> - **Session context storage** — the legacy `CONTEXT_INFO` 128-byte blob, the modern `SESSION_CONTEXT` key/value store, the `@read_only` flag, and the Row-Level Security integration pattern worked end-to-end.
-> - **Legacy server counters** — `@@CONNECTIONS`, `@@CPU_BUSY`, `@@IO_BUSY`, `@@PACK_*`, `@@TOTAL_*`, `@@LANGUAGE`, `@@DATEFIRST`, `@@DBTS`, `@@MICROSOFTVERSION` — still useful for quick probes, superseded by DMVs for production monitoring.
-> - **DMV joining patterns** — how `OBJECT_ID`, `DB_ID`, `SCHEMA_ID`, and `@@SPID` plug into `sys.dm_db_index_usage_stats`, `sys.dm_exec_sessions`, and the rest of the DMV surface.
+> **Session-state helpers**
+> - covers `@@ROWCOUNT`, `@@TRANCOUNT`, `@@ERROR`, `@@NESTLEVEL`, `@@SPID`, and the capture-order traps that make these functions easy to misuse
 >
-> `SCOPE_IDENTITY`, `@@IDENTITY`, and `IDENT_CURRENT` belong to [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns#identity-and-sequence) and are cross-referenced here but not re-documented. Full stored-procedure error handling and the `TRY/CATCH`/`ERROR_*()` family belong to note 19. Lock compatibility, deadlock analysis, and full Row-Level Security theory belong to the concurrency chapter (notes 16–18); this note shows the `SESSION_CONTEXT` + RLS integration pattern operationally.
+> **Server, database, and connection properties**
+> - covers `@@VERSION`, `SERVERPROPERTY`, `DATABASEPROPERTYEX`, `CONNECTIONPROPERTY`, `CURRENT_REQUEST_ID`, and `CURRENT_TRANSACTION_ID`
+>
+> **Security and identity surface**
+> - covers principal-identity functions, `EXECUTE AS` behavior, permission checks, and the distinction between session identity, effective user, and original login
+>
+> **Object and schema metadata**
+> - covers `DB_ID`, `OBJECT_ID`, `SCHEMA_ID`, `OBJECTPROPERTY`, `COLUMNPROPERTY`, `TYPE_NAME`, `PARSENAME`, and idempotent DDL patterns built on them
+>
+> **Session context and legacy counters**
+> - covers `CONTEXT_INFO`, `SESSION_CONTEXT`, the `@read_only` flag, Row-Level Security integration, and older `@@` counters that still help with quick probes
+>
+> **DMV joining patterns**
+> - covers how `OBJECT_ID`, `DB_ID`, `SCHEMA_ID`, and `@@SPID` bridge these helpers into practical DMV queries
+>
+> **Operations and safety**
+> - Warnings: `@@ROWCOUNT` and `@@ERROR` are clobbered by later statements, most identity functions follow `EXECUTE AS`, `host_name` and `program_name` are client-supplied, `SERVERPROPERTY` / `DATABASEPROPERTYEX` return `sql_variant`, and missing session-context setup can silently break RLS behavior
+> - Recommendations: capture volatile `@@` values immediately, use `ORIGINAL_LOGIN()` for audit identity, cast property functions explicitly, use `SESSION_CONTEXT` with `@read_only = 1` for security-critical session keys, and pair `OBJECT_ID` with `DB_ID` in DMV filters
+
+> [!note]- Glossary
+>
+> **Session-state function**
+> - A built-in function that reports information about the current session or immediately preceding statement rather than data from user tables.
+> - It matters because this note is about the execution environment around a query, not the business rows the query processes.
+>
+> > [!warning] State functions are often volatile
+> >
+> > Many of these values change from statement to statement. If the code needs a stable copy, it must capture the value immediately.
+>
+> ---
+>
+> **`@@ROWCOUNT`**
+> - The function that returns how many rows the previous statement affected or returned.
+> - It matters because branching on “did anything change?” is a common stored-procedure pattern, and this function is easy to clobber accidentally.
+>
+> > [!warning] One intervening statement destroys the evidence
+> >
+> > `SELECT`, `PRINT`, variable assignment, and many other statements overwrite `@@ROWCOUNT`. The defensive pattern is to copy it into a local variable immediately.
+>
+> ---
+>
+> **`@@TRANCOUNT`**
+> - The function that returns the current nesting depth of explicit transactions in the session.
+> - It matters because transaction-sensitive procedures often need to know whether they are running inside an outer transaction before deciding how to commit or roll back.
+>
+> > [!warning] Nesting depth is not independent transaction scope
+> >
+> > SQL Server does not create fully independent nested transactions for each `BEGIN TRAN`. `@@TRANCOUNT` counts nesting, but rollback behavior is still broader than many authors expect.
+>
+> ---
+>
+> **`@@SPID`**
+> - The session identifier of the current connection.
+> - It matters because it is the simplest anchor for joining the current session to DMVs and live diagnostic views.
+>
+> > [!info] Stable session handle, not business identity
+> >
+> > `@@SPID` tells you which session you are, not who the real user is. It is excellent for diagnostics and useless as an audit identity by itself.
+>
+> ---
+>
+> **`sql_variant` property function**
+> - A property-returning function such as `SERVERPROPERTY` or `DATABASEPROPERTYEX` whose result is typed as `sql_variant`.
+> - It matters because many client libraries and query patterns handle `sql_variant` awkwardly unless the value is cast explicitly.
+>
+> > [!warning] Mixed-type metadata needs explicit casting
+> >
+> > `sql_variant` is flexible for the engine and inconvenient for consumers. Casting the result to the expected type avoids downstream decoding and comparison problems.
+>
+> ---
+>
+> **Effective user**
+> - The security principal SQL Server treats as current for permission checks at the moment a statement runs.
+> - It matters because many identity functions report the effective context, which can differ from the original login under `EXECUTE AS`.
+>
+> > [!warning] “Who is running this?” has more than one answer
+> >
+> > Session user, current user, original login, and system user can diverge under impersonation. The correct function depends on whether the question is about permissions or accountability.
+>
+> ---
+>
+> **`ORIGINAL_LOGIN()`**
+> - The function that returns the login that originally authenticated the session, regardless of later `EXECUTE AS` impersonation.
+> - It matters because audit trails should record the real actor, not the temporarily impersonated principal.
+>
+> > [!info] This is the audit-safe login identity
+> >
+> > Most other identity helpers answer “who am I now?” `ORIGINAL_LOGIN()` answers “who started this session?” That difference is critical for trustworthy auditing.
+>
+> ---
+>
+> **Permission check helper**
+> - A built-in such as `IS_SRVROLEMEMBER`, `IS_ROLEMEMBER`, or `HAS_PERMS_BY_NAME` that tests privileges without attempting the protected action itself.
+> - It matters because procedures often need to branch safely on permissions before deciding what code path to run.
+>
+> > [!warning] Membership is not identical to effective permission
+> >
+> > Roles, ownership chains, explicit denies, and impersonation can complicate the picture. Permission-check helpers are useful, but they should be interpreted in context.
+>
+> ---
+>
+> **`OBJECT_ID` / `DB_ID` pair**
+> - The common metadata key pair used to identify one database object unambiguously in catalog and DMV queries.
+> - It matters because many DMVs are database-scoped or object-scoped, and using only one side of the pair can broaden the result set incorrectly.
+>
+> > [!info] Filtering discipline prevents misleading DMV reads
+> >
+> > `OBJECT_ID` alone is often not enough in cross-database DMV work. Pairing it with `DB_ID` makes the target explicit and keeps the diagnostic scope honest.
+>
+> ---
+>
+> **Idempotent DDL pattern**
+> - A defensive DDL pattern that checks metadata first so a create, drop, or alter operation can be re-run safely.
+> - It matters because deployment scripts and maintenance routines need object-existence checks that do not accidentally target the wrong object type.
+>
+> > [!warning] Type code matters
+> >
+> > `OBJECT_ID(N'name')` without an object-type code is weaker than it looks. A type code such as `'U'` or `'P'` prevents unrelated objects with the same name from matching.
+>
+> ---
+>
+> **`CONTEXT_INFO`**
+> - The legacy session-scoped 128-byte binary blob available for storing small amounts of caller-defined context.
+> - It matters because older codebases still use it, but it is more rigid and less expressive than `SESSION_CONTEXT`.
+>
+> > [!warning] Legacy compatibility is its main remaining value
+> >
+> > `CONTEXT_INFO` still works, but its fixed binary shape and awkward ergonomics make it a poor default for new security or routing logic.
+>
+> ---
+>
+> **`SESSION_CONTEXT`**
+> - The key-value session storage surface that lets code set and read named context entries for the current session.
+> - It matters because it is the modern way to attach application or security metadata to a session and is especially useful with Row-Level Security.
+>
+> > [!warning] Security-sensitive keys should be read-only
+> >
+> > Without the `@read_only` flag, later code in the same session can overwrite a context value. That is unsafe for tenant or security-bound identifiers.
+>
+> ---
+>
+> **DMV joining pattern**
+> - The practice of using system functions and metadata helpers as join keys into dynamic management views for diagnostics.
+> - It matters because many of the note’s helpers are most valuable when they serve as the glue between a session, an object, and the DMV rows that describe them.
+>
+> > [!info] These functions become more useful in combination
+> >
+> > `@@SPID`, `OBJECT_ID`, `DB_ID`, and identity helpers are not just standalone probes. Their real operational value is how they anchor precise DMV queries.
 
 ## @@ Session Variables — the Legacy State Helpers
 

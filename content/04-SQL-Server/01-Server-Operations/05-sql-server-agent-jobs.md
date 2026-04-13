@@ -15,7 +15,57 @@ status: complete
 
 # SQL Server Agent Jobs
 
-SQL Server Agent is SQL Server's built-in scheduler for maintenance and database-local automation. It is good at recurring T-SQL work and SQL Server-native maintenance. It is not a general orchestrator. On Linux, that boundary matters even more because Agent supports fewer job-step subsystems than it does on Windows.
+> [!abstract]- Summary
+>
+> SQL Server Agent is SQL Server's built-in scheduler for recurring database-local automation, not a general orchestrator. This note frames Agent around the Linux-specific subsystem boundary, the `msdb` catalogs that hold its state, and the operational checks needed to decide whether a workload belongs inside Agent or in an external scheduler.
+>
+> - **Current instance state**
+>   - establishes whether Agent is actually usable by checking `Agent XPs`, `sysjobs`, `syssubsystems`, and the Linux `sqlagent.out` log surface
+> - **Enablement on Linux**
+>   - covers the `mssql-conf` switch, service startup model, and how engine-side configuration differs from the OS-level Agent process
+> - **Job creation**
+>   - walks through the `sp_add_job`, `sp_add_jobstep`, `sp_add_schedule`, `sp_attach_schedule`, and `sp_add_jobserver` pattern, including ownership, retries, schedules, and local server binding
+> - **Monitoring and history**
+>   - explains how `sysjobsteps`, `sysschedules`, `sysjobservers`, and `sysjobhistory` combine into a complete observability surface for configuration and runtime outcome
+> - **Notifications and metadata**
+>   - covers operators, job categories, and the practical catalog relationships that keep Agent inventories understandable
+> - **Linux platform constraints**
+>   - shows why proxies are effectively irrelevant on Linux Agent and ends with a decision framework for Agent vs external orchestrator ownership
+>
+> Every query and DDL example in this note runs against the local `stoxx` SQL Server 2022 instance, and the output tables under code cells are captured from live execution.
+
+> [!note]- Glossary
+>
+> - **SQL Server Agent**
+>   - built-in scheduling service for recurring SQL Server maintenance and database-local automation
+> - **`Agent XPs`**
+>   - engine-side feature switch that exposes Agent stored procedures and related code paths
+> - **`msdb`**
+>   - system database that stores Agent jobs, steps, schedules, history, operators, and related operational metadata
+> - **Job**
+>   - named Agent workload definition stored in `msdb.dbo.sysjobs`
+> - **Job step**
+>   - single executable unit inside a job, stored in `msdb.dbo.sysjobsteps`
+> - **Subsystem**
+>   - execution type for a job step, such as `TSQL`, with Linux supporting a narrower set than Windows
+> - **Schedule**
+>   - reusable timing definition stored in `msdb.dbo.sysschedules`
+> - **Job binding**
+>   - linkage that attaches a schedule to a job and registers the job to a target server
+> - **Job owner**
+>   - principal whose security context governs job execution unless a proxy overrides it
+> - **Operator**
+>   - notification target used for Agent alerting and job outcome email
+> - **Category**
+>   - metadata label used to group jobs for inventory and administration
+> - **`sysjobservers`**
+>   - catalog that stores the last-run outcome summary for each job/server pair
+> - **`sysjobhistory`**
+>   - append-only execution history for Agent jobs and steps
+> - **Proxy**
+>   - alternate credential context for certain job-step subsystems, largely irrelevant on Linux Agent because the supported subsystem surface is limited
+> - **External orchestrator**
+>   - scheduler outside SQL Server, such as cron, Airflow, or another platform control plane, used when the workflow extends beyond database-local automation
 
 ---
 
@@ -66,6 +116,7 @@ The `Agent XPs` instance setting is the feature flag that exposes the Agent exte
 >
 > *This query checks whether the `Agent XPs` instance feature switch is on.*
 >
+
 ```sql
 SELECT
     name,
@@ -124,6 +175,7 @@ WHERE name = 'Agent XPs';
 >
 > *Returns a single integer: the number of Agent jobs defined in `msdb` on this instance.*
 >
+
 ```sql
 SELECT COUNT(*) AS job_count
 FROM msdb.dbo.sysjobs;
@@ -148,6 +200,7 @@ FROM msdb.dbo.sysjobs;
 >
 > *Returns the most recently created Agent jobs with their enabled state and audit timestamps.*
 >
+
 ```sql
 SELECT
     name,
@@ -200,6 +253,7 @@ ORDER BY date_created DESC;
 >
 > *Returns every subsystem the Agent service knows how to launch on this instance.*
 >
+
 ```sql
 SELECT
     subsystem_id,
@@ -250,6 +304,7 @@ The Agent process writes its own log file separate from the SQL Server error log
 >
 > *Decodes and prints the most recent entries from the Linux Agent log file.*
 >
+
 ```bash
 docker exec stoxx-db bash -c \
   'iconv -f UTF-16 -t UTF-8 /var/opt/mssql/log/sqlagent.out | tail -25'
@@ -368,6 +423,7 @@ The `sqlagent.*` keys exposed by `mssql-conf list`:
 >
 > *Enables SQL Server Agent on Linux and restarts the engine so the Agent surface is initialized.*
 >
+
 ```bash
 sudo /opt/mssql/bin/mssql-conf set sqlagent.enabled true
 sudo systemctl restart mssql-server
@@ -495,6 +551,7 @@ The remaining two procedures are simple binders.
 >
 > *Creates an empty Agent job container called `Vault Demo - Hello` in `msdb.dbo.sysjobs`.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_add_job
     @job_name = N'Vault Demo - Hello',
@@ -521,6 +578,7 @@ EXEC msdb.dbo.sp_add_job
 >
 > *Adds a `TSQL` step that prints a single line to the Agent step log.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_add_jobstep
     @job_name = N'Vault Demo - Hello',
@@ -552,6 +610,7 @@ EXEC msdb.dbo.sp_add_jobstep
 >
 > *Creates a daily schedule that fires at 03:17:00 every day, enabled, no end date.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_add_schedule
     @schedule_name = N'Vault Demo Daily 03:17',
@@ -579,6 +638,7 @@ EXEC msdb.dbo.sp_add_schedule
 >
 > *Wires the schedule to the job and registers the job on the local server so Agent will actually run it.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_attach_schedule
     @job_name = N'Vault Demo - Hello',
@@ -615,6 +675,7 @@ EXEC msdb.dbo.sp_add_jobserver
 >
 > *Asks Agent to run the named job immediately, returning before the job completes.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_start_job
     @job_name = N'Vault Demo - Hello';
@@ -673,6 +734,7 @@ If Agent owns production maintenance, `msdb` must be part of your observability 
 >
 > *Returns the step configuration for every job on this instance, in (job, step_id) order.*
 >
+
 ```sql
 SELECT
     j.name              AS job_name,
@@ -725,6 +787,7 @@ ORDER BY j.name, s.step_id;
 >
 > *Returns every schedule defined in `msdb`, in `schedule_id` order.*
 >
+
 ```sql
 SELECT
     s.schedule_id,
@@ -778,6 +841,7 @@ ORDER BY s.schedule_id;
 >
 > *Returns the most recent run summary for every job, joined to `sys.servers` for the server display name.*
 >
+
 ```sql
 SELECT
     j.name             AS job_name,
@@ -840,6 +904,7 @@ ORDER BY j.name;
 >
 > *Returns recent Agent executions with status, encoded date/time/duration, and the message excerpt.*
 >
+
 ```sql
 SELECT
     j.name              AS job_name,
@@ -927,6 +992,7 @@ Each operator is a named contact with optional email, pager, and NET SEND addres
 >
 > *Returns every operator currently defined in `msdb`.*
 >
+
 ```sql
 SELECT
     id,
@@ -957,6 +1023,7 @@ ORDER BY id;
 >
 > *Creates an enabled operator with an email address but no pager or NET SEND configuration.*
 >
+
 ```sql
 EXEC msdb.dbo.sp_add_operator
     @name = N'Vault Demo Operator',
@@ -1014,6 +1081,7 @@ These two catalogs round out the Agent metadata surface but matter very differen
 >
 > *Returns every job-class category defined in `msdb`, including SQL Server-shipped defaults and any user-created categories.*
 >
+
 ```sql
 SELECT
     category_id,
@@ -1065,6 +1133,7 @@ ORDER BY category_id;
 >
 > *Returns every proxy account defined on this instance.*
 >
+
 ```sql
 SELECT
     proxy_id,
@@ -1172,4 +1241,3 @@ flowchart TD
 > Before defining a new Agent job on Linux, ask: "Could this run as a single `TSQL` job step?" If the answer is yes, Agent is probably the right owner. If the answer requires `CmdExec`, `PowerShell`, an SDK call, a file copy, a webhook, or coordination with another system, the answer is no — move it to the orchestrator that owns that other system.
 
 ---
-

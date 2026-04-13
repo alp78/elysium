@@ -16,18 +16,183 @@ status: complete
 
 # Server Configuration
 
-This note focuses on the instance-level settings that decide whether a SQL Server instance behaves predictably in production. The defaults shipped by the product are not a production baseline. The point is not to change everything. The point is to verify the settings that materially affect stability, memory pressure, parallelism, TempDB allocation, and operational access.
+> [!abstract]- Summary
+>
+> Establishes a production-oriented SQL Server instance baseline for memory, parallelism, TempDB, and Linux host settings, using live outputs from the current `stoxx` environment as the concrete reference point. The note exists to separate product defaults from operationally safe defaults on a Linux-hosted SQL Server 2022 CU23 Developer Edition instance with 16 visible CPUs and about 24.7 GB of host memory.
+>
+> **Instance Baseline**
+> - Audit the nine instance settings that most often distinguish a lab default from a production baseline: `Agent XPs`, `backup compression default`, `contained database authentication`, `cost threshold for parallelism`, `max degree of parallelism`, `max server memory (MB)`, `min server memory (MB)`, `optimize for ad hoc workloads`, and `remote admin connections`
+> - Interpret those settings against CPU count and committed-versus-target memory from `sys.dm_os_sys_info`, then apply deliberate remediation batches for memory caps, backup compression, ad hoc plan-cache protection, and parallelism defaults
+>
+> **TempDB**
+> - Verify TempDB data-file count, equal sizing, fixed autogrowth, and log-file layout so allocation concurrency and growth behavior are explicit rather than assumed
+> - Add additional TempDB data files only when the current layout is undersized or when measured `PAGELATCH` contention justifies expansion, keeping all data files parity-aligned
+>
+> **Linux Host Settings**
+> - Check Linux host controls that materially affect SQL Server behavior, especially `vm.swappiness`, Transparent Huge Pages, and the SSD I/O scheduler state
+> - Apply the Microsoft-recommended Linux baseline deliberately so the host does not undermine SQL Server memory behavior or introduce latency spikes under pressure
 
-
-The live outputs in this note come from the current `stoxx` instance, which is:
-
-- SQL Server 2022 CU23
-- Developer Edition
-- Linux-hosted engine
-- 16 visible CPUs
-- approximately 24.7 GB physical memory on the host
-
----
+> [!note]- Glossary
+>
+> **`sys.configurations`**
+> - The instance-wide catalog view that stores SQL Server configuration options surfaced through `sp_configure`.
+> - It matters because the note’s first audit query pulls the production-critical settings directly from this catalog and compares configured values with values currently in use.
+>
+> > [!info] Metadata and runtime both matter
+> >
+> > The difference between `value` and `value_in_use` is operationally important. A setting can be configured in metadata but still not be active yet.
+>
+> ---
+>
+> **`max server memory (MB)`**
+> - The upper bound on the main SQL Server memory clerks, especially the buffer pool, expressed in MiB.
+> - It matters because leaving it effectively unlimited is one of the most common ways to let SQL Server starve the operating system on a production host.
+>
+> > [!warning] Product default is not a production baseline
+> >
+> > `2147483647` is effectively uncapped. On a real host, that is a risk decision, not a neutral default.
+>
+> ---
+>
+> **`min server memory (MB)`**
+> - The floor below which SQL Server will not shrink once it has already grown past that point.
+> - It matters because it changes how aggressively SQL Server yields memory back under host pressure and is sometimes used to protect SQL from noisy neighbors.
+>
+> > [!warning] It does not pre-allocate memory
+> >
+> > `min server memory` is a retention floor, not an immediate reservation. Misunderstanding that leads to incorrect capacity assumptions.
+>
+> ---
+>
+> **Cost threshold for parallelism**
+> - The optimizer cost threshold above which SQL Server will even consider producing a parallel plan.
+> - It matters because the shipped default of `5` is usually too permissive on modern hardware and causes trivial queries to be considered for parallelism too cheaply.
+>
+> > [!warning] Cost units are not seconds
+> >
+> > The threshold is based on SQL Server’s internal optimizer cost model, not elapsed time. Treating it like a duration leads to bad tuning decisions.
+>
+> ---
+>
+> **MAXDOP / `max degree of parallelism`**
+> - The ceiling on how many schedulers a single parallel plan is allowed to use.
+> - It matters because parallel query width needs to be a deliberate instance-level decision relative to CPU and NUMA layout, not an accidental inheritance from the default `0`.
+>
+> > [!warning] `0` means "no explicit ceiling"
+> >
+> > It does not mean "use zero CPUs." It means SQL Server is left to its own defaults within its internal parallelism rules.
+>
+> ---
+>
+> **`optimize for ad hoc workloads`**
+> - A setting that stores a lightweight plan stub on first execution of an ad hoc batch and only caches the full plan on the second execution.
+> - It matters because it reduces plan-cache waste in workloads with many one-off ad hoc queries.
+>
+> > [!info] Cache protection, not query acceleration
+> >
+> > The benefit is lower cache bloat, not faster execution of a single query. It is mainly a plan-cache hygiene setting.
+>
+> ---
+>
+> **`backup compression default`**
+> - A setting that makes SQL Server compress backups by default unless a backup command explicitly disables compression.
+> - It matters because backup size, write volume, and restore behavior are strongly affected by whether compression is the default stance or the exception.
+>
+> > [!warning] CPU tradeoff is real
+> >
+> > Compression usually improves storage and throughput characteristics, but it consumes more CPU during backup creation. That is usually acceptable, not always free.
+>
+> ---
+>
+> **Dedicated Admin Connection (DAC) / `remote admin connections`**
+> - The emergency administrative connection path that can bypass normal connectivity starvation, plus the setting that controls whether it is reachable remotely.
+> - It matters because incident response is materially easier when the DAC is deliberately enabled for remote use and protected appropriately.
+>
+> > [!warning] Emergency access should still be controlled
+> >
+> > Remote DAC is valuable, but it widens an administrative entry point. Enable it deliberately alongside firewall and permission controls.
+>
+> ---
+>
+> **`Agent XPs`**
+> - The instance setting that exposes the extended stored procedures SQL Server Agent relies on.
+> - It matters because Agent job execution, schedules, alerts, and maintenance plans depend on this surface being available when Agent is actually part of the operational model.
+>
+> > [!info] Service state often drives the value
+> >
+> > On many systems, `Agent XPs` is not a setting you toggle manually first. It is enabled when Agent is intentionally installed and started.
+>
+> ---
+>
+> **Contained database authentication**
+> - The instance setting that allows databases to authenticate users at the database level without relying exclusively on server logins.
+> - It matters because contained users change the security boundary and login-audit model of the instance.
+>
+> > [!warning] Security model changes with it
+> >
+> > This is not just a compatibility toggle. Enabling contained authentication changes how identities are managed and audited.
+>
+> ---
+>
+> **TempDB**
+> - The system database used for temporary objects, worktables, sorts, hash spills, version store activity, and many internal engine operations.
+> - It matters because TempDB layout is one of the few engine-level physical designs that still has a direct impact on concurrency and stability.
+>
+> > [!warning] Misconfiguration hurts under load
+> >
+> > TempDB problems often stay invisible in a quiet lab and then become severe under concurrency, especially when file layout and growth behavior are poor.
+>
+> ---
+>
+> **TempDB file parity**
+> - The practice of keeping TempDB data files the same size and the same fixed autogrowth increment.
+> - It matters because equal-sized files let proportional fill distribute allocations more evenly and reduce classic allocation bottlenecks.
+>
+> > [!warning] More files is not automatically better
+> >
+> > Additional files help only when the layout is actually undersized or contention evidence supports the change. Over-provisioning adds management overhead without guaranteed benefit.
+>
+> ---
+>
+> **`PAGELATCH` allocation contention**
+> - In-memory latch contention on allocation-map pages such as PFS, GAM, and SGAM, often surfacing in TempDB-heavy workloads.
+> - It matters because it is one of the main empirical reasons to revisit TempDB data-file count and allocation layout.
+>
+> > [!warning] This is not storage I/O latency
+> >
+> > `PAGELATCH` waits are memory-structure synchronization waits, not disk-read waits. Treating them like slow storage leads to the wrong fix.
+>
+> ---
+>
+> **`vm.swappiness`**
+> - The Linux kernel control that governs how aggressively anonymous memory is pushed toward swap.
+> - It matters because SQL Server already manages its own memory aggressively, and heavy kernel swapping of SQL memory causes severe latency and unpredictability.
+>
+> > [!warning] Distribution defaults are often wrong for SQL Server
+> >
+> > A default such as `60` is normal for general-purpose Linux behavior, not for a dedicated database host where SQL memory should stay resident.
+>
+> ---
+>
+> **Transparent Huge Pages (THP)**
+> - A Linux memory feature that coalesces smaller pages into larger ones automatically.
+> - It matters because background THP activity can introduce latency spikes for large database processes under memory pressure.
+>
+> > [!warning] Automatic huge pages are not automatically good
+> >
+> > SQL Server on Linux generally prefers THP disabled for predictable latency. Memory features that help other workloads can hurt database stability.
+>
+> ---
+>
+> **I/O scheduler**
+> - The Linux block-layer policy that decides how disk requests are queued and ordered.
+> - It matters because SSD-backed SQL Server hosts usually want a no-op or minimal scheduler policy rather than one designed for spinning-disk seek optimization.
+>
+> > [!info] Storage type changes the right default
+> >
+> > The scheduler choice that makes sense for HDDs is often wrong for SSD-backed database volumes, where extra scheduling can add overhead with little benefit.
+>
+> ---
 
 ## Instance Baseline
 
@@ -74,6 +239,7 @@ The query in the next subsection reads these nine settings from `sys.configurati
 >
 > *This query shows the effective values of the instance settings that usually need explicit production decisions rather than product defaults.*
 >
+
 ```sql
 SELECT
     name,
@@ -155,6 +321,7 @@ Configuration values are not meaningful without the host context they run in. A 
 >
 > *This query shows the CPU footprint and the memory target SQL Server is currently aiming for on this host.*
 >
+
 ```sql
 SELECT
     sqlserver_start_time,
@@ -219,6 +386,7 @@ The current baseline calls for a small number of concrete changes before this in
 >
 > *This batch applies the most common first-round production configuration corrections for memory governance, backup storage efficiency, and ad hoc plan-cache hygiene.*
 >
+
 ```sql
 EXEC sp_configure 'show advanced options', 1;
 RECONFIGURE;
@@ -261,6 +429,7 @@ RECONFIGURE;
 >
 > *This batch sets an explicit starting baseline for SQL Server parallelism instead of relying on the product defaults.*
 >
+
 ```sql
 EXEC sp_configure 'show advanced options', 1;
 RECONFIGURE;
@@ -273,9 +442,6 @@ RECONFIGURE;
 > [!info] Live state of these settings on stoxx
 >
 > The audit query at the top of this section already captures the current value of `max degree of parallelism` and `cost threshold for parallelism` on the live `stoxx` instance — they are at the product defaults `0` and `5` respectively. The batch above is shown as the *intended remediation*, not as something that has been executed against `stoxx` in this note. Leaving the instance at its lab defaults preserves the teaching value of the audit query as a "before" snapshot.
-
----
-
 
 ---
 
@@ -314,6 +480,7 @@ This subsection verifies the number of TempDB files, their size parity, and thei
 >
 > *This query verifies whether TempDB is laid out with equal-sized data files and fixed-size growth increments.*
 >
+
 ```sql
 SELECT
     file_id,
@@ -374,6 +541,7 @@ ORDER BY file_id;
 >
 > *This command pattern adds one additional TempDB data file with the same size and growth behavior as the existing data files.*
 >
+
 ```sql
 ALTER DATABASE tempdb ADD FILE
 (
@@ -429,6 +597,7 @@ These commands must be run on the Linux host that runs SQL Server, not from SSMS
 >
 > *These commands verify the Linux host settings that most often matter to SQL Server latency and memory behavior on Linux.*
 >
+
 ```bash
 cat /proc/sys/vm/swappiness
 cat /sys/kernel/mm/transparent_hugepage/enabled
@@ -476,6 +645,7 @@ always [madvise] never
 >
 > *This command set shows the common Linux-host pattern for reducing swap aggressiveness, disabling THP, and using the `none` scheduler on SSD-backed devices.*
 >
+
 ```bash
 sudo sysctl vm.swappiness=1
 echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
@@ -483,4 +653,3 @@ echo none | sudo tee /sys/block/sdb/queue/scheduler
 ```
 
 ---
-

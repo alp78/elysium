@@ -12,35 +12,250 @@ tags:
 >
 > — **Linus Torvalds**, Git mailing list
 
-Three strategies for integrating changes from one branch into another. Each produces a different commit history shape: a standard merge preserves branch topology with a merge commit, rebase replays commits linearly with new SHAs, and squash merge collapses all branch commits into one. Choosing the wrong strategy for your context can make history hard to read, bisect, or revert — and in the worst case, can destroy teammates' work by rewriting shared history.
+> [!abstract]- Summary
+>
+> Compares merge, rebase, and squash as branch-integration strategies, showing how each reshapes history, conflict handling, review traceability, revertability, and compliance boundaries for teams that care about both readable timelines and auditable change provenance.
+>
+> **Graph shape and merge semantics**
+> - Defines merge commits, fast-forward, three-way merge, common ancestors, branch pointers, and history rewriting before contrasting the graph each strategy produces
+> - Shows how standard merge preserves branch topology, how rebase linearizes by replaying commits with new SHAs, and how squash collapses a branch into one target-side commit
+>
+> **Strategy-specific workflows**
+> - Walks through standard merge, rebase, squash merge, and interactive rebase cleanup, including autosquash, fixup commits, rerere, and `merge.conflictstyle=zdiff3`
+> - Connects those choices to bisectability, revert granularity, branch traceability, stacked PRs, and merge-queue behavior
+>
+> **Governance and operating models**
+> - Maps integration strategy to workflow models, review policy, DCO or signed-history requirements, and semi-linear merge modes used by hosted platforms
+> - Distinguishes when clean history matters more than preserved branch ancestry and when regulatory or audit needs make merge commits the safer default
+>
+> **Operations and safety**
+> - Warnings: force-push after rebase, orphaned commits, lost traceability, conflict churn during replay, and policy drift between local habits and server-side merge settings
+> - Recommendations: treat strategy choice as policy, use rebase only on branches you own, keep `--force-with-lease` mandatory after rewrites, and preserve merge commits where auditability matters
+> - Troubleshooting: recovery guidance for bad rebases, incorrect squash usage, force-push mistakes, and conflict-heavy integration paths
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Merge commit**
+> - A commit with two parent pointers — one from each branch being joined. It records the integration point where two lines of work converged. Created by `git merge` when branches have diverged.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Fast-forward**
+> - When the target branch has not diverged from the source, Git moves the branch pointer forward to the source tip without creating a merge commit. No new commit is produced — the pointer simply advances.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Three-way merge**
+> - The merge algorithm Git uses when branches have diverged. It compares three snapshots: the common ancestor, the tip of the current branch, and the tip of the branch being merged. The result is a new merge commit combining both diffs.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Common ancestor**
+> - The most recent commit shared by both branches before they diverged. Git finds this automatically using `git merge-base`. It is the reference point for computing diffs during a merge or rebase.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Rebase**
+> - Detaching commits from their original base and replaying them one by one onto a new base commit. Each replayed commit receives a new SHA because its parent pointer changes. The content (diff) is identical but the identity (hash) is not.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **SHA (commit hash)**
+> - A 40-character hexadecimal identifier computed from a commit's content, parent pointer(s), author, timestamp, and message. Changing any of these — including the parent — produces a different SHA.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **History rewriting**
+> - Any operation that changes existing commit SHAs: rebase, amend, interactive rebase, filter-branch. After rewriting, the original commits become orphaned and are retained in the reflog for approximately 90 days.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Squash merge**
+> - Combining all commits from a branch into a single staged changeset on the target branch. The individual commits are discarded from the target's log. The branch pointer is not advanced.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Reflog**
+> - A local log of every position HEAD and branch pointers have occupied. It records orphaned commits after rebase or amend, making recovery possible within the default 90-day expiry window.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Force push**
+> - Overwriting a remote branch with local history that has diverged from the remote's history. Required after rebase because the rewritten SHAs no longer match the remote. `--force-with-lease` is the safe variant — it refuses if the remote has commits you have not fetched.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **ort strategy**
+> - The default merge strategy since Git 2.34, replacing the older `recursive` strategy. It handles renames, directory merges, and large repositories more efficiently.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **Branch pointer**
+> - A lightweight movable reference that points to a specific commit SHA. Creating a branch, merging, and rebasing all work by moving these pointers — no files are copied.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Orphaned commit**
+> - A commit that is no longer reachable from any branch pointer. It still exists in the object store and can be found via `git reflog` until garbage collection removes it (default: 90 days for unreachable objects).
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Merge traceability**
+> - The ability to determine, from `git log --graph`, when a set of changes was integrated and from which branch. Standard merge preserves this via the merge commit's two parents. Rebase and squash discard it.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **Conflict markers**
+> - Lines Git writes into a file when it cannot automatically merge a region. `<<<<<<< HEAD`, `=======`, and `>>>>>>> branch` delimit the two versions. The developer must edit the file to resolve the conflict, then stage it.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **rerere**
+> - "Reuse recorded resolution" — a Git feature that remembers how you resolved a conflict and automatically applies the same resolution if the same conflict pattern appears again. Enabled with `git config rerere.enabled true`.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **zdiff3**
+> - An enhanced conflict marker style (Git 2.35+) that shows three sections — yours, the common ancestor, and theirs — making it easier to understand what each side changed. Enabled with `git config merge.conflictstyle zdiff3`.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Context changes meaning
+> >
+> > Conflict-related terminology depends on workflow context. Resolve whether you are merging, rebasing, or replaying history before choosing a command.
+>
+> ---
+>
+> **Merge queue**
+> - A server-side feature (GitHub, GitLab) that serializes PR merges — each PR is tested against the accumulated changes of all PRs ahead of it in the queue, preventing broken builds on `main`.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Stacked PRs**
+> - A workflow where PR2 depends on PR1, PR3 depends on PR2, and so on. Each PR's branch is based on the previous PR's branch rather than on `main`.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **DCO (Developer Certificate of Origin)**
+> - A lightweight mechanism for contributors to certify they have the right to submit code. Implemented via `Signed-off-by:` trailers in commit messages. Required by many open-source projects and some regulated companies.
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **Semi-linear merge**
+> - A server-side merge mode (GitLab, Azure DevOps) that rebases the branch onto the target first, then creates a merge commit. Combines the benefits of rebase (up-to-date branch) with merge (traceability).
+> - It matters in this note because the workflows for integration strategy selection, history cleanup, auditability, and recovery ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
 
-Every term used in this page is defined here. If a term appears in a command output or diagram, this table is the reference.
-
-| Term | Definition |
-|---|---|
-| **Merge commit** | A commit with two parent pointers — one from each branch being joined. It records the integration point where two lines of work converged. Created by `git merge` when branches have diverged. |
-| **Fast-forward** | When the target branch has not diverged from the source, Git moves the branch pointer forward to the source tip without creating a merge commit. No new commit is produced — the pointer simply advances. |
-| **Three-way merge** | The merge algorithm Git uses when branches have diverged. It compares three snapshots: the common ancestor, the tip of the current branch, and the tip of the branch being merged. The result is a new merge commit combining both diffs. |
-| **Common ancestor** | The most recent commit shared by both branches before they diverged. Git finds this automatically using `git merge-base`. It is the reference point for computing diffs during a merge or rebase. |
-| **Rebase** | Detaching commits from their original base and replaying them one by one onto a new base commit. Each replayed commit receives a new SHA because its parent pointer changes. The content (diff) is identical but the identity (hash) is not. |
-| **SHA (commit hash)** | A 40-character hexadecimal identifier computed from a commit's content, parent pointer(s), author, timestamp, and message. Changing any of these — including the parent — produces a different SHA. |
-| **History rewriting** | Any operation that changes existing commit SHAs: rebase, amend, interactive rebase, filter-branch. After rewriting, the original commits become orphaned and are retained in the reflog for approximately 90 days. |
-| **Squash merge** | Combining all commits from a branch into a single staged changeset on the target branch. The individual commits are discarded from the target's log. The branch pointer is not advanced. |
-| **Reflog** | A local log of every position HEAD and branch pointers have occupied. It records orphaned commits after rebase or amend, making recovery possible within the default 90-day expiry window. |
-| **Force push** | Overwriting a remote branch with local history that has diverged from the remote's history. Required after rebase because the rewritten SHAs no longer match the remote. `--force-with-lease` is the safe variant — it refuses if the remote has commits you have not fetched. |
-| **ort strategy** | The default merge strategy since Git 2.34, replacing the older `recursive` strategy. It handles renames, directory merges, and large repositories more efficiently. |
-| **Branch pointer** | A lightweight movable reference that points to a specific commit SHA. Creating a branch, merging, and rebasing all work by moving these pointers — no files are copied. |
-| **Orphaned commit** | A commit that is no longer reachable from any branch pointer. It still exists in the object store and can be found via `git reflog` until garbage collection removes it (default: 90 days for unreachable objects). |
-| **Merge traceability** | The ability to determine, from `git log --graph`, when a set of changes was integrated and from which branch. Standard merge preserves this via the merge commit's two parents. Rebase and squash discard it. |
-| **Conflict markers** | Lines Git writes into a file when it cannot automatically merge a region. `<<<<<<< HEAD`, `=======`, and `>>>>>>> branch` delimit the two versions. The developer must edit the file to resolve the conflict, then stage it. |
-| **rerere** | "Reuse recorded resolution" — a Git feature that remembers how you resolved a conflict and automatically applies the same resolution if the same conflict pattern appears again. Enabled with `git config rerere.enabled true`. |
-| **zdiff3** | An enhanced conflict marker style (Git 2.35+) that shows three sections — yours, the common ancestor, and theirs — making it easier to understand what each side changed. Enabled with `git config merge.conflictstyle zdiff3`. |
-| **Merge queue** | A server-side feature (GitHub, GitLab) that serializes PR merges — each PR is tested against the accumulated changes of all PRs ahead of it in the queue, preventing broken builds on `main`. |
-| **Stacked PRs** | A workflow where PR2 depends on PR1, PR3 depends on PR2, and so on. Each PR's branch is based on the previous PR's branch rather than on `main`. |
-| **DCO (Developer Certificate of Origin)** | A lightweight mechanism for contributors to certify they have the right to submit code. Implemented via `Signed-off-by:` trailers in commit messages. Required by many open-source projects and some regulated companies. |
-| **Semi-linear merge** | A server-side merge mode (GitLab, Azure DevOps) that rebases the branch onto the target first, then creates a merge commit. Combines the benefits of rebase (up-to-date branch) with merge (traceability). |
+> [!example] Strategy Selection Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when choosing a default PR merge mode, cleaning private branch history, or teaching why the same diff can produce very different repository history.
+> > - Use it when auditability, revertability, branch traceability, and hosted-platform merge policy matter as much as visual history cleanliness.
+> > - Use it to compare merge, rebase, and squash as governance choices rather than as interchangeable personal preferences.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not rebase commits that teammates have already based work on unless the coordination and force-push path are explicit.
+> > - Do not squash-merge when individual commit history must stay visible and attributable on the target branch.
+> > - Do not treat history cleanup as harmless if the repository depends on merge evidence for compliance, blame, or rollback.
 
 ## Conceptual Model
 

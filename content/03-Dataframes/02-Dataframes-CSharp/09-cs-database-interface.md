@@ -9,30 +9,140 @@ updated: 2026-04-04
 status: complete
 ---
 
-# 09 — Database & SQL Interface
+# Database and SQL Interface - C#
 
 > [!quote]
 > "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
 >
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
 
-This note covers SQL integration for C# DataFrame workflows: querying DataFrames with Polars.NET SQL context, using DuckDB.NET for analytical SQL, connecting to SQL Server via ADO.NET (SqlClient), and bridging results into Polars.NET DataFrames with helper functions.
+> [!abstract]- Summary
+>
+> Covers the SQL-facing side of C# dataframe work by pairing in-memory Polars.NET SQL queries, embedded analytical SQL through DuckDB.NET, and direct SQL Server access through ADO.NET. The note exists to clarify where SQL should run in each workflow: inside the dataframe engine, inside an embedded analytical database, or against a real server with explicit command, reader, and bulk-load control.
+>
+> **Setup**
+> - Configure the notebook runtime, load Polars.NET, DuckDB.NET, SqlClient, Dapper, and environment-loading support, then establish the formatter and helper setup needed to bridge SQL results back into dataframe form
+>
+> **Polars.NET SQL Context**
+> - Register in-memory dataframes as SQL tables and run SQL directly against them when the data is already local and the goal is SQL-shaped exploration rather than expression-first pipelines
+>
+> **DuckDB.NET**
+> - Use embedded SQL for analytical queries, CTEs, window functions, and direct file access over CSV or Parquet without standing up a separate database server
+> - Treat DuckDB as an in-process analytical engine rather than as the same thing as Polars SQL or SQL Server connectivity
+>
+> **SQL Server**
+> - Connect through ADO.NET and `Microsoft.Data.SqlClient`, run parameterized queries, stream results with `SqlDataReader`, call stored procedures, and load or export data using server-native patterns such as `SqlBulkCopy`
+> - Use explicit bridge helpers like `DuckDbToPolars()` and `SqlToPolars()` when result materialization needs to cross back into Polars.NET frames
+>
+> **Performance Comparison**
+> - Compare query styles and handoff costs across DuckDB.NET, SQL Server, and Polars.NET so execution locality and conversion cost are visible rather than hidden
+>
+> **Operations and safety**
+> - Warnings: the current warning/recommendation block is inherited from earlier transform notes, so the true operational boundaries in this file are SQL dialect differences, bridge-copy costs, parameterization discipline, and server-versus-embedded execution assumptions
+> - Recommendations: 4 inherited recommendations remain at the tail, while the body itself argues for parameterized SQL, explicit result-shape validation, and using the right engine for the query style
+> - Troubleshooting: the current tail table remains inherited, but the actual database-interface risks here are connection setup, reader/materialization mismatches, unsupported SQL dialect features, and expensive conversion boundaries
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Polars.NET SQL** | Polars.NET's built-in SQL context for querying registered DataFrames. | Lets SQL-fluent users query in-memory DataFrames without learning the expression API. | Uses Polars SQL dialect — not all T-SQL or PostgreSQL syntax is supported. |
-| **DuckDB.NET** | A .NET wrapper for DuckDB — an embedded analytical database that queries DataFrames and files. | Complex analytical SQL (CTEs, window functions) on in-memory data without a server. | DuckDB runs in-process — no network setup, but also no persistence by default. |
-| **SqlClient** | `Microsoft.Data.SqlClient` — the modern ADO.NET driver for SQL Server. | Direct SQL Server connectivity with parameters, transactions, and streaming readers. | Requires the ODBC driver or SqlClient NuGet package installed. |
-| **SqlDataReader** | ADO.NET streaming reader — reads query results row by row without materializing all rows. | Memory-efficient reading of large result sets. | Must be consumed sequentially — cannot go back to a previous row. |
-
-## What this note covers
-
-- **Polars.NET SQL context** — registering DataFrames, running SQL queries
-- **DuckDB.NET** — querying DataFrames and Parquet files with analytical SQL
-- **SQL Server connectivity** — ADO.NET connection, read/write, stored procedures
-- **Bridge helpers** — `DuckDbToPolars()` and `SqlToPolars()` conversion patterns
+> [!note]- Glossary
+>
+> **Polars.NET SQL**
+> - The SQL interface for querying registered Polars.NET dataframes as in-memory tables.
+> - It matters because it gives SQL-fluent users a direct way to explore dataframe data without rewriting every query as an expression chain.
+>
+> > [!warning] Dialect is not T-SQL
+> >
+> > Polars SQL is its own supported subset and will not accept every construct from SQL Server, PostgreSQL, or DuckDB unchanged.
+>
+> ---
+>
+> **DuckDB.NET**
+> - A .NET wrapper around DuckDB, an embedded analytical database designed for in-process SQL over files and in-memory data.
+> - It matters because the note uses DuckDB.NET for richer SQL patterns such as CTEs and window functions when those are more natural than dataframe expressions.
+>
+> > [!info] Embedded, not remote
+> >
+> > DuckDB runs inside the process. That removes network overhead and server administration, but it also changes persistence and concurrency expectations.
+>
+> ---
+>
+> **`SqlClient`**
+> - The Microsoft ADO.NET provider for connecting to SQL Server from .NET code.
+> - It matters because all direct SQL Server access in the note flows through this driver and its command, parameter, and transaction model.
+>
+> > [!warning] Driver setup is part of the runtime boundary
+> >
+> > A query can be logically correct and still fail before execution if the provider, connection string, or environment dependencies are wrong.
+>
+> ---
+>
+> **`SqlDataReader`**
+> - A forward-only ADO.NET result reader that streams rows from a SQL Server query.
+> - It matters because reader-based access is one of the most memory-efficient ways to move server results into custom dataframe-building logic.
+>
+> > [!warning] Streaming is sequential
+> >
+> > A `SqlDataReader` is not a random-access table. If your transformation assumes rewind or arbitrary row lookups, you need to materialize differently.
+>
+> ---
+>
+> **ADO.NET**
+> - The core .NET data-access model built around connections, commands, readers, parameters, and transactions.
+> - It matters because SQL Server integration in the note is intentionally explicit and low-level rather than hidden behind a dataframe-specific ORM abstraction.
+>
+> > [!info] Verbose by design
+> >
+> > ADO.NET makes resource boundaries and execution steps visible, which is often exactly what you want in performance-sensitive or production database code.
+>
+> ---
+>
+> **Parameterized query**
+> - A SQL statement where values are supplied separately from the SQL text through typed parameters.
+> - It matters because safe server-side querying and reproducible query plans both depend on parameterization rather than string interpolation.
+>
+> > [!warning] String-built SQL is a security bug
+> >
+> > Concatenating user or runtime values into SQL text creates injection risk and makes query behavior harder to reason about.
+>
+> ---
+>
+> **CTE**
+> - A common table expression introduced with `WITH ... AS (...)` that names a temporary query block inside a larger SQL statement.
+> - It matters because CTEs are one of the main reasons to reach for DuckDB.NET or SQL Server SQL instead of forcing everything into dataframe chaining.
+>
+> > [!info] Readability feature first
+> >
+> > CTEs help structure complex SQL, but their main value in this note is making analytical logic easier to express and audit.
+>
+> ---
+>
+> **Bridge helper**
+> - A custom helper function that converts database or embedded-SQL results into a Polars.NET dataframe shape.
+> - It matters because the note’s interop patterns depend on explicit conversion boundaries such as `DuckDbToPolars()` and `SqlToPolars()` rather than magical native handoff.
+>
+> > [!warning] Conversion hides cost if unnamed
+> >
+> > A helper makes the bridge readable, but it does not eliminate the fact that types, nulls, and memory layout may be translated along the way.
+>
+> ---
+>
+> **`SqlBulkCopy`**
+> - A SQL Server bulk-load API for sending many rows efficiently into a destination table.
+> - It matters because high-volume writes should not be treated like ordinary row-by-row command execution if throughput matters.
+>
+> > [!warning] Bulk load still needs schema discipline
+> >
+> > `SqlBulkCopy` is fast, but it assumes the incoming column order, names, and types line up with the target table contract.
+>
+> ---
+>
+> **Embedded database**
+> - A database engine that runs inside the application process rather than as a separate network service.
+> - It matters because DuckDB.NET changes the operational envelope: lower setup cost, tighter locality, and a different persistence/concurrency model from SQL Server.
+>
+> > [!info] Great for analytics, not the same as a server
+> >
+> > Embedded databases shine for local analytical workloads, but they are not a replacement for a transactional multi-user SQL Server environment.
+>
+> ---
 
 ## Setup
 
@@ -108,7 +218,7 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 Console.WriteLine($"SQL Server: {SQL_CONN.Split(';')[0]}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+Data directory: c:\Users\aperi\DEV\LANG\data
     SQL Server: Data Source=localhost,1434
 
 ---
@@ -161,9 +271,9 @@ catch (Exception ex)
 }
 ```
 
-    Loaded DataFrame: (66355, 12)
+Loaded DataFrame: (66355, 12)
 
-    Found SQL-related types:
+Found SQL-related types:
       Polars.CSharp.SqlContext
 
 #### Polars.NET | Confirmed: SQLContext not usable in 0.4.0
@@ -183,7 +293,7 @@ Console.WriteLine("Polars.NET 0.4.0: SQLContext not available.");
 Console.WriteLine("Proceeding with DuckDB.NET for SQL operations.");
 ```
 
-    Polars.NET 0.4.0: SQLContext not available.
+Polars.NET 0.4.0: SQLContext not available.
     Proceeding with DuckDB.NET for SQL operations.
 
 ---
@@ -243,7 +353,7 @@ foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()
 }
 ```
 
-    DuckDB assemblies loaded: [DuckDB.NET.Data, DuckDB.NET.Bindings]
+DuckDB assemblies loaded: [DuckDB.NET.Data, DuckDB.NET.Bindings]
     duckdb.dll exists: True
       Skip DuckDB.NET.Data: A resolver is already set for the assembly.
       Skip DuckDB.NET.Bindings: A resolver is already set for the assembly.
@@ -329,7 +439,7 @@ DataFrame SqlToPolars(SqlConnection conn, string sql)
 Console.WriteLine("DuckDbToPolars() and SqlToPolars() helpers ready.");
 ```
 
-    DuckDbToPolars() and SqlToPolars() helpers ready.
+DuckDbToPolars() and SqlToPolars() helpers ready.
 
 ### DuckDB | Query data
 
@@ -579,9 +689,9 @@ catch (Exception ex)
 }
 ```
 
-    Connected: localhost,1434 / stoxx (v16.00.4236)
+Connected: localhost,1434 / stoxx (v16.00.4236)
 
-    Tables: 22
+Tables: 22
 
 <!-- Polars DataFrame: (22 rows, 3 columns) --><table><thead><tr><th>TABLE_SCHEMA</th><th>TABLE_NAME</th><th>TABLE_TYPE</th></tr></thead><tbody><tr><td>bronze</td><td>dim_country</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>dim_index</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>eurostoxx50_ohlcv</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>index_dim</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>oil20_ohlcv</td><td>BASE TABLE</td></tr></tbody></table></div>
 
@@ -683,11 +793,11 @@ catch (Exception ex)
 }
 ```
 
-    SAP.DE (via SqlCommand + @param):
+SAP.DE (via SqlCommand + @param):
 
 <!-- Polars DataFrame: (1 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>SAP.DE</td><td>12-Mar-26 0:00:00</td><td>166.52</td><td>806722</td></tr></tbody></table></div>
 
-    SIE.DE (via Dapper + @param):
+SIE.DE (via Dapper + @param):
 
 <!-- Polars DataFrame: (1 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>SIE.DE</td><td>12-Mar-26 0:00:00</td><td>223.75</td><td>409494</td></tr></tbody></table></div>
 
@@ -783,9 +893,9 @@ catch (Exception ex)
 }
 ```
 
-    Source rows for bulk insert: 100
+Source rows for bulk insert: 100
 
-    Bulk inserted 100 rows in 4 ms
+Bulk inserted 100 rows in 4 ms
 
 ### SQL Server | Schema inspection
 
@@ -895,12 +1005,12 @@ Console.WriteLine();
 Console.WriteLine($"Both results match: {Math.Abs(duckResult - polarsResult) < 0.01}");
 ```
 
-    Engine          Avg (ms)    Min (ms)    Max (ms)    Result      
+Engine          Avg (ms)    Min (ms)    Max (ms)    Result
     ----------------------------------------------------------------
-    DuckDB          8.4         7           10          671.3489    
-    Polars.NET      4.8         3           9           671.3489    
-    
-    Both results match: True
+    DuckDB          8.4         7           10          671.3489
+    Polars.NET      4.8         3           9           671.3489
+
+Both results match: True
 
 ---
 
@@ -963,4 +1073,3 @@ Quick-reference matrix across the three tools used in this notebook. "Result →
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
 | `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
 | MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
-

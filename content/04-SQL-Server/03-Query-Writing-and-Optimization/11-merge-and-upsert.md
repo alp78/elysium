@@ -10,19 +10,168 @@ status: complete
 
 # MERGE and Upsert
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note owns every pattern for inserting-or-updating rows in T-SQL, plus the trade-offs between them:
+> Upsert logic in SQL Server is really a choice between concurrency models and maintenance cost: this note compares the classic multi-statement insert-or-update patterns with `MERGE`, explains the full `MERGE` grammar and failure modes, and shows when a staging-table or SCD workflow justifies the extra complexity.
 >
-> - **Pre-MERGE upsert patterns** — `INSERT WHERE NOT EXISTS` with lock hints, `UPDATE` then `INSERT` in one transaction, delete-and-reinsert slice refresh.
-> - **Full MERGE grammar** — target and source forms, `ON` predicate, `WHEN MATCHED [AND filter]`, `WHEN NOT MATCHED BY TARGET`, `WHEN NOT MATCHED BY SOURCE`, multiple `WHEN MATCHED` clauses, and the `OUTPUT $action` column.
-> - **MERGE error modes** — error 8672 multi-row source match and the `ROW_NUMBER()` deduplication fix, error 10713 missing semicolon, the implicit-ordering traps on multi-match sources.
-> - **MERGE concurrency** — the default race narrative, why `HOLDLOCK` alone is insufficient in practice, the safer `UPDATE + INSERT WHERE NOT EXISTS` pattern with `UPDLOCK, HOLDLOCK` on the target, and `sp_getapplock` as a coarser serialization alternative.
-> - **Slowly changing dimensions via MERGE** — SCD Type 1 (overwrite on change) as a single `MERGE` with `WHEN NOT MATCHED BY SOURCE ... DELETE`, and SCD Type 2 (effective-dated history) as the two-step `UPDATE` + `INSERT` pattern that a single `MERGE` cannot cleanly express.
-> - **Warehouse staging-table upsert** — the canonical bulk-load → deduplicate → merge → truncate pattern used by every medallion pipeline.
-> - **Decision guide** — when to use `MERGE`, when to use plain `INSERT ... WHERE NOT EXISTS`, when to use the two-step pattern, and when to reach for `sp_getapplock`.
+> **Pre-`MERGE` upsert patterns**
+> - covers `INSERT ... WHERE NOT EXISTS`, explicit `UPDATE` then `INSERT`, and delete-and-reinsert slice refresh for cases where simpler, safer statements are enough
 >
-> Basic `INSERT`, `UPDATE`, `DELETE`, the `OUTPUT` clause, composable DML, identity/SEQUENCE, transactions, and the `XACT_ABORT`/`TRY/CATCH` error-handling envelope belong to [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns). Lock compatibility theory, deadlock analysis, and row-versioning internals belong to the concurrency chapter.
+> **`MERGE` syntax and semantics**
+> - covers target and source forms, `ON`, `WHEN MATCHED`, `WHEN NOT MATCHED BY TARGET`, `WHEN NOT MATCHED BY SOURCE`, multiple match branches, and `OUTPUT $action`
+>
+> **Error modes and diagnostics**
+> - covers source-duplication error 8672, missing-semicolon error 10713, and the need to deduplicate source rows deterministically before merge
+>
+> **Concurrency and serialization**
+> - covers the default race patterns, why plain `MERGE` is risky under concurrent writers, the safer `UPDATE` plus `INSERT ... WHERE NOT EXISTS` alternative with `UPDLOCK, HOLDLOCK`, and `sp_getapplock` for coarser serialization
+>
+> **Warehouse and dimension patterns**
+> - covers SCD Type 1, SCD Type 2 via the two-step pattern, and the bulk-load → deduplicate → merge → truncate staging-table workflow
+>
+> **Operations and safety**
+> - Warnings: duplicate source keys break `MERGE`, semicolon omission raises error 10713, `HOLDLOCK` alone is not a complete concurrency story, `MERGE` trigger behavior is harder to reason about, and a single-statement shape does not make the logic safer by itself
+> - Recommendations: default to simpler pre-`MERGE` patterns when they express the requirement, deduplicate sources with `ROW_NUMBER()`, use `UPDLOCK, HOLDLOCK` for concurrent upsert paths, reserve `MERGE` for genuine multi-action batch logic, and use the two-step pattern for SCD Type 2
+
+> [!note]- Glossary
+>
+> **Upsert**
+> - A write pattern that inserts a row when the business key is missing and updates an existing row when the key is already present.
+> - It matters because the note is fundamentally about choosing the safest way to express that insert-or-update decision in SQL Server.
+>
+> > [!warning] Upsert is a concurrency problem, not just a syntax problem
+> >
+> > Two sessions can both decide that a row is “missing” unless the predicate and the lock strategy work together. Correctness depends on serialization, not on the word “upsert.”
+>
+> ---
+>
+> **`MERGE`**
+> - The SQL Server statement that compares a source rowset to a target rowset and routes rows to insert, update, or delete actions in one declarative statement.
+> - It matters because it offers a compact multi-action shape, but that compactness comes with sharper concurrency and debugging edges than simpler alternatives.
+>
+> > [!warning] Single statement does not mean simple behavior
+> >
+> > `MERGE` can be elegant in batch workflows and troublesome in concurrent ones. The fact that all actions appear in one statement should not be mistaken for lower operational risk.
+>
+> ---
+>
+> **Business key**
+> - The logical key used to decide whether a source row matches an existing target row during upsert.
+> - It matters because every upsert and merge pattern lives or dies on whether the match key is unique, stable, and correctly enforced.
+>
+> > [!warning] Weak match keys create nondeterminism
+> >
+> > If the source contains multiple rows per business key or the target does not enforce uniqueness, the merge logic becomes ambiguous before the engine ever executes it.
+>
+> ---
+>
+> **`WHEN MATCHED`**
+> - The `MERGE` branch that defines what to do when a source row matches a target row according to the `ON` predicate.
+> - It matters because update and delete behavior inside `MERGE` is mostly expressed through matched-branch logic and optional filters.
+>
+> > [!info] Match is defined only by `ON`
+> >
+> > Everything that qualifies as a match comes from the `ON` predicate, not from branch filters. Filters on `WHEN MATCHED` refine the action, but they do not change the match relationship itself.
+>
+> ---
+>
+> **`WHEN NOT MATCHED BY TARGET`**
+> - The `MERGE` branch that handles source rows with no matching target row, usually by inserting them.
+> - It matters because this is the explicit insert path inside `MERGE`.
+>
+> > [!info] This is the insert arm
+> >
+> > A row reaches this branch only after SQL Server has failed to find a target match according to the `ON` predicate. The quality of that predicate therefore controls insert correctness too.
+>
+> ---
+>
+> **`WHEN NOT MATCHED BY SOURCE`**
+> - The `MERGE` branch that handles target rows absent from the source, commonly for delete or soft-delete synchronization.
+> - It matters because full-mirror workloads depend on it, but it is also one of the easiest branches to scope too broadly.
+>
+> > [!warning] Deletion scope must be explicit
+> >
+> > An unscoped “not matched by source” delete can remove far more target rows than intended if the source is only a slice of the truth rather than the full authoritative dataset.
+>
+> ---
+>
+> **`$action`**
+> - The `MERGE` output pseudo-column that reports whether each affected row was inserted, updated, or deleted.
+> - It matters because it enables routed auditing and post-merge bookkeeping without writing separate statements for each action type.
+>
+> > [!info] Action labeling is `MERGE`’s strongest feature
+> >
+> > When audit sinks need to know which branch fired for each row, `$action` is often the cleanest reason to tolerate `MERGE`’s added complexity.
+>
+> ---
+>
+> **Error 8672**
+> - The `MERGE` runtime error raised when a target row matches more than one source row in a way that would update or delete the same target row multiple times.
+> - It matters because duplicate source business keys are one of the classic merge failure modes.
+>
+> > [!warning] Deduplicate before merge logic reaches the target
+> >
+> > `MERGE` does not choose a winning source row for you. If duplicates are possible, the source must be reduced to one row per business key first.
+>
+> ---
+>
+> **`ROW_NUMBER()` deduplication**
+> - The pattern of ranking source rows by business key and keeping only the chosen winner before the upsert or merge runs.
+> - It matters because it is the standard deterministic fix for duplicate source rows in staging loads and `MERGE` inputs.
+>
+> > [!warning] The tie-break rule must be explicit
+> >
+> > Ranking is only safe when the `ORDER BY` explains which source version wins and why. “Latest by load timestamp” is valid only if that timestamp is truly the intended tie-breaker.
+>
+> ---
+>
+> **`UPDLOCK` / `HOLDLOCK`**
+> - Lock hints that turn a read-for-write predicate into a more serializable check by protecting candidate keys against conflicting inserts or updates.
+> - It matters because safer multi-statement upsert patterns depend on these locks to prevent two writers from both seeing the same row as missing.
+>
+> > [!warning] Lock hints are correctness tools here
+> >
+> > In upsert code, these hints are not premature tuning. They are part of the race-condition fix that keeps the existence test and the write action from drifting apart.
+>
+> ---
+>
+> **`sp_getapplock`**
+> - A system stored procedure that grants an application-defined lock on a named resource inside a transaction or session.
+> - It matters because some upsert workloads are easiest to protect by coarse logical serialization rather than by fine-grained key-range locking.
+>
+> > [!info] Coarse serialization buys simplicity
+> >
+> > An application lock can be the pragmatic choice when business rules center on one logical resource and the throughput cost of serializing it is acceptable.
+>
+> ---
+>
+> **SCD Type 1**
+> - A slowly changing dimension pattern that overwrites changed attribute values in place and keeps only the current version.
+> - It matters because it is one of the clearest cases where a single `MERGE` statement can map naturally to the business rule.
+>
+> > [!info] Overwrite semantics fit `MERGE` well
+> >
+> > When history is not preserved, matched rows can simply be updated and missing rows inserted. That is one of `MERGE`’s strongest natural fits.
+>
+> ---
+>
+> **SCD Type 2**
+> - A slowly changing dimension pattern that preserves history by expiring the old row and inserting a new current row.
+> - It matters because it is the canonical example of a workflow that usually reads better and behaves more clearly as two explicit statements instead of one `MERGE`.
+>
+> > [!warning] History logic is not a clean single-row rewrite
+> >
+> > SCD Type 2 changes one row and creates another. That dual action is possible to force through `MERGE`, but the explicit two-step pattern is usually easier to reason about and audit.
+>
+> ---
+>
+> **Staging-table upsert**
+> - The batch pattern that loads raw rows into staging, deduplicates them, merges them into the target, and then clears the staging table inside one transactional workflow.
+> - It matters because this is the warehouse-oriented form of upsert the note recommends for large periodic loads.
+>
+> > [!info] Stage first, decide once
+> >
+> > A staging table separates ingestion from reconciliation. That makes auditing, deduplication, and retry logic far easier than merging directly from a volatile external source.
 
 ## Upsert Patterns Before MERGE
 

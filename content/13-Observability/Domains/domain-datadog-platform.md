@@ -50,16 +50,8 @@ mindmap
 
 > [!abstract]- [[09-datadog-alerting]]
 
-> [!abstract]- [datadog-airflow-observability](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability)
->
-> - [StatsD metrics flow](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#how-statsd-metrics-flow-from-airflow-to-datadog)
-> - [Key metrics reference](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference)
-> - [Airflow dashboard](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#airflow-orchestration-dashboard-in-datadog)
-> - [Recommended monitors](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#recommended-airflow-monitors-in-datadog)
-> - [Self-hosted limitations](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#limitations-of-self-hosted-airflow-observability)
+> [!abstract]- [[05-datadog-airflow-observability]]
 
 > [!abstract]- [[13-datadog-cost-optimization]]
 
 > [!abstract]- [[14-datadog-troubleshooting]]
-
-> [!abstract]- [[05-datadog-airflow-observability]]

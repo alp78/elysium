@@ -8,11 +8,143 @@ tags:
 
 # Schemas, Tables, and Constraints
 
-This note owns the structural Data Definition Language that turns a SQL Server database into a usable model. It covers schemas as namespaces and security boundaries, `CREATE TABLE` mechanics including data types and nullability, the choice between heap and clustered physical shapes, the full constraint family (`PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK`, `DEFAULT`), safe `ALTER TABLE` evolution patterns, special table variants (temporal, memory-optimized, ledger, graph), and the catalog-view surface for inspecting every object this note creates.
+> [!abstract]- Summary
+>
+> This note owns the structural Data Definition Language that turns a SQL Server database into a usable model. It covers schemas as namespaces and security boundaries, `CREATE TABLE` mechanics including data types and nullability, the choice between heap and clustered physical shapes, the full constraint family (`PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK`, `DEFAULT`), safe `ALTER TABLE` evolution patterns, special table variants, and the catalog-view surface for inspecting every object the note creates. All live captures come from the local `stoxx` SQL Server 2022 Developer Edition instance and every query output was captured against real objects.
+>
+> **Schemas and ownership**
+> - covers schemas as namespaces, security boundaries, ownership via `AUTHORIZATION`, medallion layout, and the inspection surface in `sys.schemas`
+>
+> **Tables and columns**
+> - walks through `CREATE TABLE`, data-type choice, precision and scale, nullability contracts, identity columns, and computed columns
+>
+> **Physical shape and constraints**
+> - compares heaps and clustered tables, then covers the full constraint family with naming conventions, trust states, referential actions, and bulk-load patterns
+>
+> **Evolution and special variants**
+> - explains safe `ALTER TABLE` evolution plus temporal, memory-optimized, ledger, and graph tables
+>
+> **Inspection surface**
+> - closes with catalog-view queries for schemas, tables, constraints, defaults, computed columns, and related metadata
+>
+> **Operations and safety**
+> - Warnings: omitted `AUTHORIZATION`, system-named constraints, bad type choices, casual `sp_rename`, untrusted constraints, and heaps without a clear reason create long-lived production debt
+> - Recommendations: preserve table grain, use explicit names, default to clustered rowstore tables, restore trust after `NOCHECK`, and use special table variants only for their exact use case
+> - Troubleshooting: 11 failure modes covering schema drops, `ALTER TABLE` failures, constraint violations, rename blockers, NULL semantics, and missing memory-optimized prerequisites
 
-All live captures in this note come from the `stoxx` SQL Server 2022 Developer Edition instance running in the local `stoxx-db` Docker container. Every query is read-only and every output was captured at refactor time against real objects in the database.
+> [!note]- Glossary
+>
+> **DDL**
+> - The subset of SQL used to define and change database objects rather than row data.
+> - It matters because almost every operation in this note changes schema shape, metadata, or structural rules rather than business rows.
+>
+> > [!warning] Structural changes can still be expensive
+> >
+> > DDL is often mistaken for “just metadata.” Some schema changes rewrite data, take `SCH-M` locks, or invalidate cached plans.
+>
+> ---
+>
+> **Schema**
+> - A named container inside one database that groups related objects under a shared namespace.
+> - It matters because schemas are the note’s primary unit of naming, security, and lifecycle separation.
+>
+> > [!warning] A schema is not a separate database
+> >
+> > Mixing those ideas leads to confused security and deployment design. Schemas separate objects inside one database.
+>
+> ---
+>
+> **Table grain**
+> - The business meaning of one row, fixed before the table is created.
+> - It matters because keys, uniqueness rules, and downstream joins only make sense when the row grain is explicit.
+>
+> > [!danger] Grain drift breaks consumers silently
+> >
+> > A table can keep working technically while its business meaning has changed. That kind of drift is expensive to unwind later.
+>
+> ---
+>
+> **Business key / natural key**
+> - The real-world column set that makes a row unique according to the domain.
+> - It matters because natural-key uniqueness often needs explicit protection even when a surrogate key is used for joins.
+>
+> > [!warning] A surrogate key does not prove business uniqueness
+> >
+> > Generated `id` values prevent duplicate row identifiers, not duplicate business facts. The natural key still needs its own rule.
+>
+> ---
+>
+> **Surrogate key**
+> - A generated identifier with no business meaning, often implemented with `IDENTITY`.
+> - It matters because surrogate keys simplify joins and relationships, but they solve a different problem from business-key enforcement.
+>
+> > [!info] Join convenience is not an integrity contract
+> >
+> > Surrogate keys are useful, but they are not a substitute for the row-grain rules the business actually cares about.
+>
+> ---
+>
+> **`PRIMARY KEY`**
+> - The table’s main uniqueness declaration, backed by a unique index and clustered by default unless specified otherwise.
+> - It matters because it is both a logical identity contract and often a major physical storage decision.
+>
+> > [!warning] Logical identity and clustering are separate choices
+> >
+> > The primary key says what identifies a row. Whether that key should also define the table’s physical order depends on workload shape.
+>
+> ---
+>
+> **`FOREIGN KEY`**
+> - A constraint requiring child values to exist in a parent key, optionally with referential actions.
+> - It matters because foreign keys are the strongest built-in relational integrity mechanism, but they also shape load and evolution workflows.
+>
+> > [!warning] Enabled does not always mean trusted
+> >
+> > After `NOCHECK` workflows, a foreign key can enforce new writes while still being unusable by the optimizer until trust is restored.
+>
+> ---
+>
+> **`CHECK` constraint**
+> - A row-level predicate that each insert or update must satisfy unless the expression evaluates to `UNKNOWN`.
+> - It matters because it is one of the cleanest ways to keep invalid states out of the table without relying only on application code.
+>
+> > [!warning] `CHECK` does not replace `NOT NULL`
+> >
+> > Because SQL uses three-valued logic, a `CHECK` can still pass on `NULL` unless nullability is constrained separately.
+>
+> ---
+>
+> **`DEFAULT` constraint**
+> - A column-level expression that supplies a value when an insert omits that column.
+> - It matters because defaults are convenient write-time behavior, but they need explicit naming and usually need companion validation rules.
+>
+> > [!warning] Defaults are filler, not proof
+> >
+> > A default makes an omitted value possible. It does not prove the resulting value is semantically correct for the workload.
+>
+> ---
+>
+> **Heap**
+> - A table with no clustered index, storing rows without clustered-key order.
+> - It matters because heaps have distinct update, lookup, and forwarded-row behavior and should therefore be deliberate rather than accidental.
+>
+> > [!warning] A heap is not a neutral permanent-table default
+> >
+> > Without a reason, heaps usually become a hidden maintenance and performance cost as the workload evolves.
+>
+> ---
+>
+> **Computed column**
+> - A column whose value is derived from other columns in the same row, optionally persisted and indexed.
+> - It matters because computed columns often bridge relational storage and semi-structured access patterns in production schemas.
+>
+> > [!warning] Indexability depends on the expression
+> >
+> > Persisted and indexable are not automatic properties. Determinism and precision rules still apply.
+>
+> ---
 
-## Key terms used in this note
+## Key Concepts
 
 | Term | Plain-English definition | Why it matters here | Common mistake / confusion |
 |---|---|---|---|
@@ -54,19 +186,6 @@ All live captures in this note come from the `stoxx` SQL Server 2022 Developer E
 | **Memory-optimized table** | An in-memory OLTP table (SQL Server 2014+) declared with `WITH (MEMORY_OPTIMIZED = ON)`. Stored entirely in memory, optionally durable. Designed for extreme-throughput OLTP workloads. | Covered in the special variants section. Has significant constraint-support limitations compared to disk-based tables. | Using memory-optimized tables for analytical workloads. They are optimised for short, high-frequency transactional operations, not for scans. |
 | **Ledger table** | An append-only cryptographically-protected table (SQL Server 2022+) declared with `LEDGER = ON`. Every change is recorded to a ledger and can be verified against a database digest. | Covered in the special variants section. Answers compliance requirements around tamper-evident audit trails. | Treating ledger tables as a general-purpose audit mechanism. They are specifically designed for regulated compliance use cases where the database itself must prove it has not been tampered with. |
 | **Graph table** | A table declared with `AS NODE` or `AS EDGE` (SQL Server 2017+) that participates in graph queries via the `MATCH` clause. Each node table has a hidden `$node_id` column, each edge table has hidden `$edge_id`, `$from_id`, `$to_id`. | Covered in the special variants section. Useful for hierarchical and relationship-heavy data (org charts, supply chains) where recursive CTEs would be clumsy. | Using graph tables as a general replacement for normalised relational modelling. They are a specialised tool for genuinely graph-shaped data, not a universal upgrade. |
-
-## What this note covers
-
-The note is organised from the outside in: schema → table → column → constraint → evolution. Each section builds on the previous one.
-
-- [[#Schemas, Namespaces, and Ownership]] — schemas as namespaces, ownership via `AUTHORIZATION`, medallion layering, the `sys.schemas` inspection surface, and transfer / drop patterns.
-- [[#CREATE TABLE, Column Types, and Nullability]] — the full `CREATE TABLE` statement, data type choice, precision and scale, nullability contracts, identity columns, and computed columns.
-- [[#Heaps, Clustered Tables, and Physical Shape]] — the b-tree versus heap choice, forwarded rows, the `sys.dm_db_index_physical_stats` detection query, and the decision tree between shapes.
-- [[#Constraints — PRIMARY KEY, UNIQUE, FOREIGN KEY, CHECK, DEFAULT]] — the full constraint family with naming conventions, trust states, referential actions, the nullable-UNIQUE workaround, and the FK disable / re-enable bulk-load pattern.
-- [[#ALTER TABLE — Safe Evolution Patterns]] — adding columns, dropping columns, renaming via `sp_rename`, and the expand / migrate / contract deployment pattern.
-- [[#Special Table Variants]] — temporal, memory-optimized, ledger, and graph tables.
-- [[#Inspecting Schemas, Tables, and Constraints via Catalog Views]] — the production-grade inspection queries for every object type touched in the note.
-- [[#Warnings]], [[#Recommendations]], [[#Troubleshooting]], [[#Cross-references]] — operational closing material.
 
 ## Schemas, Namespaces, and Ownership
 
@@ -2525,7 +2644,8 @@ A mirror of the warnings: the affirmative patterns the note recommends for each 
     - Memory-optimized — extreme-throughput OLTP with contention as the bottleneck.
     - Ledger — tamper-evident audit trails for regulated compliance.
     - Graph — multi-hop relational traversal where recursive CTEs would be clumsy.
-    Don't reach for any of them without a matching requirement.
+
+Don't reach for any of them without a matching requirement.
 
 ## Troubleshooting
 

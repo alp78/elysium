@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog APM Traces — Pipeline Instrumentation
+# Datadog APM Traces
 
 > [!quote]
 > "I think of monitoring as TDD for production. And observability as debugging for production — give Future You the power to answer any question."
 >
 > — **Charity Majors**, charity.wtf (2018)
 
-The `data-pipeline-pipeline` Cloud Run job uses `ddtrace` for APM instrumentation. No significant code changes are needed — `ddtrace` auto-instruments Python libraries at import time and creates per-step flame graphs showing SQL query durations, HTTP call latency, and overall step timing.
+> [!abstract]- Summary
+>
+> This note covers the request-level side of the observability stack: the pipeline code is instrumented with `ddtrace-run`, spans are emitted from Cloud Run through the Datadog agent, and trace IDs are reused in logs so performance, SQL calls, and failures can be followed as one correlated execution path rather than as disconnected metrics and log lines.
+>
+> **Instrumentation model**
+> - Explains Datadog auto-instrumentation, the Dockerfile entrypoint, and the environment variables that make tracing active in Cloud Run.
+> - Keeps the trace path grounded in deployable runtime configuration rather than in abstract APM concepts.
+>
+> **Trace flow and spans**
+> - Shows how spans move from the pipeline runtime to the local agent and what a useful pipeline trace should contain at the step level.
+> - Connects end-to-end traces to concrete pipeline stages and SQL activity so latency can be localized.
+>
+> **Correlation and local behavior**
+> - Covers manual spans, log-to-trace correlation, and the behavior of local development runs when no Datadog agent is present.
+> - Helps the reader reason about when traces should exist and when their absence is expected.
+>
+> **Search and shutdown**
+> - Ends with trace search patterns and the settings used to disable tracing when needed.
+> - When to use: the goal is to understand runtime flow, latency, and per-step execution details beyond what metrics alone can show.
 
----
+> [!note]- Glossary
+>
+> **APM trace**
+> - An end-to-end record of one request or job execution composed of multiple timed spans.
+> - It matters here because the pipeline is easier to diagnose when one run can be followed across all of its stages.
+>
+> > [!info] Execution storyline
+> >
+> > A trace explains sequence and latency, not just whether a counter went up.
+>
+> ---
+>
+> **span**
+> - A timed unit of work inside a trace, such as one pipeline stage or SQL call.
+> - It matters here because useful traces depend on spans that align with real operational steps.
+>
+> > [!tip] Smallest trace unit
+> >
+> > If spans are too coarse, root-cause localization gets blurry; if they are too fine, the trace becomes noisy.
+>
+> ---
+>
+> **`ddtrace-run`**
+> - The Datadog wrapper that enables auto-instrumentation for supported Python libraries at process startup.
+> - It matters here because this is how tracing is activated for the pipeline without rewriting every library call manually.
+>
+> > [!info] Bootstrap tracer
+> >
+> > The entrypoint changes the runtime behavior before application code starts executing.
+>
+> ---
+>
+> **auto-instrumentation**
+> - The automatic creation of spans for supported frameworks and libraries.
+> - It matters here because pyodbc, requests, and other libraries can produce useful spans without hand-written tracing code everywhere.
+>
+> > [!tip] Coverage with low friction
+> >
+> > Auto-instrumentation gets you baseline visibility quickly, then manual spans fill the business-specific gaps.
+>
+> ---
+>
+> **manual span**
+> - A trace span created explicitly in application code around a custom operation.
+> - It matters here because pipeline stages are often more meaningful than the library calls inside them.
+>
+> > [!info] Business-level trace boundary
+> >
+> > Manual spans are how the trace learns the language of the pipeline rather than only the language of its dependencies.
+>
+> ---
+>
+> **trace correlation ID**
+> - The trace and span identifiers injected into logs so a log entry can be tied back to a specific trace.
+> - It matters here because log-to-trace navigation depends on those IDs being present and indexed.
+>
+> > [!tip] Bridge logs and traces
+> >
+> > Correlation IDs turn logs from isolated text into clickable evidence attached to one execution.
+>
+> ---
+>
+> **trace agent endpoint**
+> - The Datadog agent network endpoint that receives spans from the instrumented application.
+> - It matters here because traces can disappear if the application points at the wrong host or port even when instrumentation is enabled.
+>
+> > [!info] Transport path matters
+> >
+> > A traced application with no reachable agent behaves like instrumentation that never ran.
+>
+> ---
+>
+> **sampling**
+> - The practice of keeping only some traces or spans rather than every possible execution record.
+> - It matters here because cost and volume management become relevant once tracing is broadly enabled.
+>
+> > [!tip] Volume control lever
+> >
+> > Tracing every request is not always necessary; choose visibility depth deliberately.
 
 ### How ddtrace Works (APM Auto-Instrumentation)
 
@@ -75,6 +171,7 @@ Cloud Run Job             Airflow VM              Datadog
 ```
 
 Requirements:
+
 - VPC access on Cloud Run with `egress = "PRIVATE_RANGES_ONLY"`
 - Firewall rule `data-pipeline-allow-apm` allowing TCP 8126 from `10.0.0.0/24` to tag `airflow`
 - dd-agent with `-p 8126:8126` (host port mapping) and `DD_APM_NON_LOCAL_TRAFFIC=true`
@@ -170,9 +267,11 @@ service:data-pipeline-pipeline resource_name:transform_index_performance  # Spec
 If you want to remove Datadog/ddtrace:
 
 1. Revert the Dockerfile entrypoint:
-   ```dockerfile
+
+```dockerfile
    ENTRYPOINT ["python", "utils/run_pipeline.py"]
-   ```
+```
+
 2. Remove `ddtrace>=2.10.0` from `requirements.txt`
 3. Rebuild and push the pipeline image
 4. The logger and run_pipeline trace code no-ops automatically (`ImportError` guard)

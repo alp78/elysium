@@ -28,6 +28,154 @@ updated: 2026-03-22
 status: complete
 ---
 
+# Dimensional Modeling
+
+> [!quote]
+> "The grain declaration becomes a binding contract on the design."
+>
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
+
+> [!abstract]- Summary
+>
+> This note defines dimensional modeling as Kimball-style analytical design built around explicit grain, fact tables, and dimensions, then walks through star and snowflake structures, slowly changing dimensions, advanced warehouse patterns, physical implementation choices, and end-to-end query usage in a financial index-provider domain.
+>
+> **Kimball design process and core structures**
+> - Covers the four-step process of selecting the business process, declaring grain, identifying dimensions, and identifying facts so every later design choice stays anchored to one analytical contract.
+> - Explains star schemas, fact tables, and dimension tables as the basic structure that makes warehouse data understandable and performant for analytical querying.
+>
+> **Fact, dimension, and schema patterns**
+> - Walks through full fact and dimension designs, snowflake normalization trade-offs, and the performance consequences of schema shape for analytical workloads.
+> - Treats keys, additivity, and schema structure as decisions that directly affect both correctness and query cost.
+>
+> **Historical and advanced modeling patterns**
+> - Covers all major slowly changing dimension types plus conformed dimensions, bus matrices, bridge tables, factless facts, aggregates, and late-arriving data handling.
+> - Positions these patterns as the tools that make a dimensional model survive real production history and cross-process reuse.
+>
+> **Implementation and safety**
+> - Warnings: grain mistakes corrupt the entire design, mixed additivity leads to wrong aggregates, and uncontrolled SCD handling breaks historical truth.
+> - Recommendations: declare grain first, keep dimensions conformed where reuse matters, choose SCD types deliberately, and validate physical implementation choices in the actual warehouse engine.
+
+> [!note]- Glossary
+>
+> **Business process**
+> - The measurable operational activity that generates the events or states a fact table is meant to record.
+> - It matters here because Kimball design starts by choosing the process before any table shape or metric list is finalized.
+>
+> > [!info] Model the activity, not the org chart
+> >
+> > A fact table should describe a concrete recurring process such as valuation or rebalancing, not an abstract department or reporting team.
+>
+> ---
+>
+> **Grain**
+> - The exact level of detail represented by one row in a fact table.
+> - It matters here because every dimension, measure, and uniqueness rule in the model must remain true for that declared grain.
+>
+> > [!warning] Binding design contract
+> >
+> > Once the grain is declared, incompatible measures or dimensions belong somewhere else. Mixing grains inside one fact table creates silent analytical errors.
+>
+> ---
+>
+> **Fact table**
+> - The central table in a dimensional model that stores measurements and foreign keys at a declared grain.
+> - It matters here because facts are where analytical events or states become queryable and aggregatable.
+>
+> > [!info] Measures live at the center
+> >
+> > Fact tables are powerful because they anchor all descriptive context around a consistent measurement event or snapshot.
+>
+> ---
+>
+> **Dimension table**
+> - A descriptive table that provides the who, what, where, when, or how context used to filter and group fact rows.
+> - It matters here because dimensions make fact measures understandable to humans and reusable across many queries.
+>
+> > [!info] Descriptive context layer
+> >
+> > A dimensional model succeeds partly because users can reason about rich descriptive attributes without reading operational source-system schemas directly.
+>
+> ---
+>
+> **Star schema**
+> - A dimensional layout where one fact table connects directly to surrounding denormalized dimension tables.
+> - It matters here because the star schema is the default analytical pattern that balances understandable SQL with strong query performance.
+>
+> > [!info] Simple join shape
+> >
+> > Stars work well because they minimize join complexity for both humans and BI tools while keeping the fact table grain explicit.
+>
+> ---
+>
+> **Snowflake schema**
+> - A more normalized dimensional layout where some dimensions are split into additional related tables.
+> - It matters here because the note compares snowflakes with stars when hierarchy reuse or normalization pressure increases.
+>
+> > [!warning] Normalization trades simplicity
+> >
+> > Snowflaking can reduce duplication, but it usually adds join complexity and can make analyst-facing queries harder to understand or optimize.
+>
+> ---
+>
+> **Surrogate key**
+> - A warehouse-generated identifier used to join facts and dimensions independently of unstable source-system business keys.
+> - It matters here because surrogate keys simplify slowly changing dimensions and help keep analytical joins stable over time.
+>
+> > [!info] Warehouse identity, not business meaning
+> >
+> > Surrogate keys are useful because source keys often change, collide across systems, or fail to express historical versioning cleanly.
+>
+> ---
+>
+> **Slowly Changing Dimension / SCD**
+> - A set of patterns for managing how dimensional attributes change over time while preserving the desired amount of history.
+> - It matters here because real analytical models almost always need deliberate rules for how attribute changes affect reporting history.
+>
+> > [!warning] History policy must be explicit
+> >
+> > Choosing an SCD type is a business decision about historical truth, not just a technical storage trick.
+>
+> ---
+>
+> **Conformed dimension**
+> - A shared dimension reused consistently across multiple fact tables or marts.
+> - It matters here because conformance is what lets separate business processes roll up into one coherent analytical model.
+>
+> > [!info] Shared language across marts
+> >
+> > Conformed dimensions make cross-process reporting possible because different facts still agree on how entities are described and keyed.
+>
+> ---
+>
+> **Bus matrix**
+> - A planning artifact that maps business processes to the dimensions they share so a dimensional program can be designed coherently.
+> - It matters here because large warehouse efforts need an upfront view of reuse and scope before teams build isolated marts that cannot align later.
+>
+> > [!info] Design coordination tool
+> >
+> > The bus matrix is valuable because it surfaces shared dimensions early, which is far cheaper than retrofitting conformance after marts diverge.
+>
+> ---
+>
+> **Bridge table**
+> - A structure used to represent many-to-many or multi-valued relationships in a dimensional model without breaking the grain of the fact table.
+> - It matters here because real business relationships often do not fit cleanly into one-to-many star joins.
+>
+> > [!warning] Weighting and duplication risks
+> >
+> > Bridge tables need careful design because many-to-many relationships can multiply rows and distort aggregates if the join logic is not controlled.
+>
+> ---
+>
+> **Factless fact table**
+> - A fact table that records the occurrence of an event or condition without storing additive numeric measures.
+> - It matters here because not every analytically important process produces a number; sometimes the existence of the row is the fact.
+>
+> > [!info] Event presence still matters
+> >
+> > Factless tables are often the right tool for coverage, attendance, eligibility, or workflow-state questions where counting occurrences is the main analytical need.
+>
+
 > [!info] ER Diagram Legend — Relationship Connectors
 
 ```mermaid
@@ -42,18 +190,15 @@ erDiagram
     }
 ```
 
-# Dimensional Modeling
-
-> [!quote]
-> "The grain declaration becomes a binding contract on the design."
+> [!example] Analytical Modeling Fit
 >
-> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
-
-Dimensional modeling is the foundational technique for structuring data in analytical warehouses. Developed by Ralph Kimball, it organizes data into **facts** (what happened — the measurements) and **dimensions** (the context — who, what, where, when, how). The resulting schemas are optimized for human understandability and query performance, making them the standard for virtually every analytics platform.
-
-This note uses a **financial index provider** domain throughout. An index provider is a company that calculates stock market indices (broad equity benchmarks, sector indices, thematic indices), decides which stocks belong in each index, computes daily index values, processes corporate actions, and distributes index data to asset managers and exchanges.
-
----
+> > [!success] Star-Schema Workloads
+> >
+> > - Use dimensional modeling for reporting, BI, and repeated slice-and-dice warehouse workloads where declared grain, human-readable schemas, and predictable joins matter more than write flexibility.
+>
+> > [!failure] Operational or Flexible Workloads
+> >
+> > - Avoid treating dimensional modeling as the default for high-write OLTP systems, pure append-event logs, or workloads where schema flexibility matters more than analytical usability.
 
 ## The Kimball Four-Step Dimensional Design Process
 
@@ -3272,4 +3417,3 @@ For an index provider, the core model consists of four fact tables (`fact_index_
 Physical implementation varies by platform: SQL Server uses clustered columnstore indexes, partitioning, and PAGE compression on dimensions; BigQuery uses partitioning, clustering, nested STRUCT fields, and materialized views. dbt provides the transformation framework, organizing models into staging, intermediate, and mart layers with built-in lineage and testing.
 
 The key decisions that determine model quality are: grain declaration, SCD type selection per attribute, and conformed dimension alignment across fact tables. Get these right and the rest follows.
-

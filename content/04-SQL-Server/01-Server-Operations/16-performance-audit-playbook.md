@@ -19,9 +19,47 @@ status: complete
 
 # Performance Audit Playbook
 
-This page is a production audit sequence, not a bag of disconnected DMV snippets. The goal is to move from instance context to workload signals, then to physical design, concurrency, capacity, and security. The queries are written in a production-facing form and the outputs below are real results from the current `stoxx` instance.
+> [!abstract]- Summary
+>
+> This page is a production audit sequence, not a bag of disconnected DMV snippets. The goal is to move from instance context to workload signals, then to physical design, concurrency, capacity, and security. The queries are written in a production-facing form and the outputs below are real results from the current `stoxx` instance.
+>
+> - **Audit order matters**
+>   - the phases are meant to run in order because Phase 1 establishes the confidence boundary for every later phase, especially when the instance has recently restarted and DMV history is short
+> - **Instance and workload baseline**
+>   - starts with build, uptime, configuration, memory, and waits so later interpretations are grounded in the actual engine state
+> - **Performance surfaces**
+>   - moves through I/O, expensive cached statements, index health, TempDB, blocking, deadlocks, statistics, and plan cache behavior
+> - **Capacity and security checks**
+>   - finishes with database files, log reuse, security quick checks, and report compilation so the audit ends as an actionable operational artifact
+> - **Live evidence**
+>   - every table below is captured from the current `stoxx` instance and should be treated as real evidence from one observation window rather than generic sample output
 
-Run the phases in order. The first phase sets the confidence boundary for every later phase, especially when the instance has recently restarted and DMV history is short.
+> [!note]- Glossary
+>
+> - **Audit baseline**
+>   - initial context that determines how confidently later findings can be interpreted
+> - **Cumulative DMV**
+>   - DMV whose counters accumulate since instance start and therefore depend on uptime
+> - **Point-in-time evidence**
+>   - snapshot evidence that is useful right now but not necessarily representative of a full workload cycle
+> - **Buffer pool**
+>   - SQL Server memory region for cached data and index pages
+> - **Wait family**
+>   - category of waits that points to a resource bottleneck such as locks, CPU, storage, or memory
+> - **RCSI**
+>   - read committed snapshot isolation, where readers use row versions instead of shared locks under `READ COMMITTED`
+> - **Missing-index signal**
+>   - optimizer suggestion from missing-index DMVs that requires validation before implementation
+> - **Plan cache**
+>   - memory area storing compiled plans and execution metadata
+> - **Log reuse**
+>   - ability of SQL Server to recycle inactive transaction-log space
+> - **TempDB health**
+>   - combination of allocation, contention, and space signals inside `tempdb`
+> - **Blocking**
+>   - lock-based waiting where one session prevents another from proceeding
+> - **`optimize for ad hoc workloads`**
+>   - setting that stores plan stubs on first execution to reduce cache waste from one-off ad hoc queries
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1790,4 +1828,3 @@ flowchart LR
 - [sys.database_permissions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-permissions-transact-sql?view=sql-server-ver17)
 - [Server-level roles](https://learn.microsoft.com/en-us/sql/relational-databases/security/authentication-access/server-level-roles?view=sql-server-ver17)
 - [SQL Server security best practices](https://learn.microsoft.com/en-us/sql/relational-databases/security/sql-server-security-best-practices?view=sql-server-ver17)
-

@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog SQL Server Log Collection
+# Datadog SQL Server Logs
 
 > [!quote]
 > "A log is a record of what happened. A good log is a record of what happened that you can actually understand six months later at 3 AM."
 >
 > — **Bryan Cantrill**, CTO of Oxide Computer
 
-The Datadog Agent collects SQL Server metrics by default, but **log collection requires a separate config file**. Without it, no logs appear in Datadog's Log Explorer. This note documents the setup, permission requirements, and how to test that logs are flowing.
+> [!abstract]- Summary
+>
+> This note narrows the broader log-management model down to one source: the SQL Server errorlog on the Ubuntu VM. It shows how Datadog tails that file, how to validate that bytes are actually being read, which events are worth searching for, and how to keep the log path separate from the metrics-side SQL integration config.
+>
+> **Source configuration**
+> - Shows the SQL Server log source definition that tells the agent which file to tail and how to tag it.
+> - Keeps this file-level setup distinct from the SQL metrics integration so the two telemetry paths are not conflated.
+>
+> **Validation flow**
+> - Covers the checks used to prove the agent is reading the errorlog and the practical ways to force sample entries into the file.
+> - Uses local validation first so empty searches in Datadog are traced back to the host state quickly.
+>
+> **Search and troubleshooting**
+> - Explains what SQL Server writes into the errorlog, how to query for those events, and what to inspect when byte counts stay at zero.
+> - Treats the errorlog as a targeted operational source rather than as a replacement for all SQL diagnostics.
+>
+> **Boundary with metrics config**
+> - Ends by making the separation from the SQL Server metrics integration explicit.
+> - When to use: the problem is specific to SQL Server log collection rather than to general Datadog log onboarding.
 
----
+> [!note]- Glossary
+>
+> **SQL Server errorlog**
+> - The database engine's rolling text log for startup messages, checkpoints, failed logins, and other server events.
+> - It matters here because this is the specific file Datadog tails to expose SQL operational events.
+>
+> > [!info] Engine event stream
+> >
+> > The errorlog is the authoritative text source for many server-level events that metrics cannot describe.
+>
+> ---
+>
+> **file source config**
+> - The Datadog log-collection block that defines one tailed file and its tags.
+> - It matters here because the agent needs an explicit source definition before it will read the SQL Server errorlog.
+>
+> > [!tip] Explicit tail target
+> >
+> > The agent does not infer which database files matter; the source must be declared.
+>
+> ---
+>
+> **bytes read**
+> - The Datadog status indicator that shows whether the agent has actually consumed log data from the configured file.
+> - It matters here because it is one of the fastest local checks when logs are missing in Datadog.
+>
+> > [!info] Read proof
+> >
+> > A zero-byte reader usually points to a path, permission, or file-state problem before anything reaches Log Explorer.
+>
+> ---
+>
+> **checkpoint entry**
+> - A SQL Server log message written when the engine performs a checkpoint.
+> - It matters here because forcing a checkpoint is one easy way to generate a known-good test event.
+>
+> > [!tip] Controlled test signal
+> >
+> > Synthetic but safe events are useful when validating the log pipeline end to end.
+>
+> ---
+>
+> **failed login event**
+> - A SQL Server errorlog record generated when authentication fails.
+> - It matters here because it provides another deterministic way to prove log tailing works.
+>
+> > [!info] High-signal test case
+> >
+> > Authentication failures are useful validation events because they are easy to search and operationally recognizable.
+>
+> ---
+>
+> **log search query**
+> - The filter expression used in Datadog Log Explorer to isolate SQL Server events of interest.
+> - It matters here because ingestion success still needs a practical search pattern to become useful during incidents.
+>
+> > [!tip] Search makes collection useful
+> >
+> > A collected log source is only valuable if responders know how to cut through volume quickly.
+>
+> ---
+>
+> **path ownership**
+> - The file path and permission context that determine whether the agent can open and tail the target log.
+> - It matters here because SQL log collection failures are often mundane filesystem problems rather than Datadog-side indexing issues.
+>
+> > [!info] Filesystem reality
+> >
+> > When the host cannot read the file, no amount of dashboard work will surface the missing logs.
+>
+> ---
+>
+> **metrics versus logs config**
+> - The separation between the SQL integration file for metrics and the file-source block for errorlog tailing.
+> - It matters here because these two collection paths fail independently and should be debugged independently.
+>
+> > [!tip] Separate telemetry layers
+> >
+> > A healthy SQL metric check does not prove the errorlog source is healthy, and vice versa.
 
 ### Configure the SQL Server Log Source
 

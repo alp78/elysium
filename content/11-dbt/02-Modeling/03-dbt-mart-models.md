@@ -13,9 +13,159 @@ description: "Consumption-ready facts and dimensions, gold layer"
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
-Mart models are the [gold layer](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
+> [!abstract]- Summary
+>
+> Explains how dbt mart models become the published gold layer by defining clear fact and dimension grains, stable consumer-facing contracts, and performance-oriented physical designs that BI tools and APIs can rely on directly.
+>
+> **Mart role and contract boundary**
+> - Defines marts as consumption-ready facts and dimensions with explicit grain, strong documentation, and no direct raw-source access, positioned as the stable output surface of the dbt DAG
+> - Connects mart design to downstream trust, where naming, grain statements, and documentation are part of the model contract rather than optional metadata
+>
+> **Fact and dimension implementation**
+> - Covers fact and dimension naming, YAML grain declarations, incremental and table materializations, rolling metrics, and exposure registration so mart logic is both queryable and traceable to its consumers
+> - Shows how marts aggregate or publish reusable intermediate logic instead of reintroducing raw-system assumptions or hidden transformations
+>
+> **Performance and publication behavior**
+> - Explains why marts usually materialize as `table` or `incremental`, how incremental windows and schema changes are handled, and where consumer-facing performance needs override lighter internal modeling defaults
+> - Reinforces the idea that marts are the layer where operational stability and downstream expectations matter most
+>
+> **Operations and safety**
+> - Warnings: ambiguous grain, undocumented columns, direct `source()` use, view-based marts that collapse under BI load, and mart outputs that skip exposure or consumer traceability
+> - Recommendations: declare grain explicitly, document every published column, materialize marts for query stability, and treat mart changes as contract changes with downstream blast radius
 
----
+> [!note]- Glossary
+>
+> **Mart model**
+> - A consumption-ready dbt model intended for direct use by BI tools, APIs, analysts, or other downstream consumers.
+> - It matters here because the note is about what turns an internal dbt relation into a published and supportable warehouse surface.
+>
+> > [!warning] Published means supported
+> >
+> > Once a model is a mart, changes to structure, grain, or semantics can break downstream consumers immediately. Mart design is contract design.
+>
+> ---
+>
+> **Gold layer**
+> - The final modeled layer in a medallion-style warehouse, where curated outputs are optimized for direct analytical consumption.
+> - It matters here because mart models are positioned as the gold layer in the chapter's dbt architecture.
+>
+> > [!info] Final publication layer
+> >
+> > The gold label matters because it signals that the relation is no longer just an internal transform. It is intended to be read and trusted by consumers outside the modeling team.
+>
+> ---
+>
+> **Fact model**
+> - A mart table centered on measurable events or observations, usually at a clearly defined transactional or periodic grain.
+> - It matters here because fact marts such as performance tables are the main way business metrics become queryable and aggregatable downstream.
+>
+> > [!warning] Grain drives every metric
+> >
+> > If the fact grain is ambiguous, every rollup and join built on top of it becomes questionable, even when the SQL itself is technically valid.
+>
+> ---
+>
+> **Dimension model**
+> - A mart table that provides descriptive context about business entities such as instruments, indices, or other reference domains.
+> - It matters here because marts are not only about metrics; they also publish stable descriptive entities that facts and consumers depend on.
+>
+> > [!info] Context around events
+> >
+> > Dimensions are what make fact rows interpretable. Keeping them well-documented and stable is part of making marts usable beyond the modeling team.
+>
+> ---
+>
+> **Grain**
+> - The exact level of uniqueness for one row in a model, usually expressed as a combination of business keys and time.
+> - It matters here because mart trust starts with explicit grain statements in YAML and documentation.
+>
+> > [!warning] Ambiguous grain creates silent misuse
+> >
+> > Consumers often aggregate first and ask questions later. If grain is not declared explicitly, dashboards and joins will eventually produce plausible but wrong answers.
+>
+> ---
+>
+> **Exposure**
+> - A dbt metadata object that declares a downstream dependency such as a dashboard, notebook, or application consuming a model.
+> - It matters here because exposures make marts traceable to the systems and people that rely on them.
+>
+> > [!info] Consumer lineage layer
+> >
+> > Exposures extend lineage beyond dbt models. They show who gets hurt when a mart changes, which is why they belong on published outputs.
+>
+> ---
+>
+> **Consumer contract**
+> - The documented promise about a mart's structure, semantics, grain, and stability that downstream systems rely on.
+> - It matters here because marts are the layer where metadata quality stops being optional and becomes part of operational reliability.
+>
+> > [!warning] Contract changes need change management
+> >
+> > Renaming a column or changing a mart's grain is not a local refactor. It is a downstream-breaking event unless consumers have been prepared for it.
+>
+> ---
+>
+> **Incremental mart**
+> - A mart that appends or merges only recent changes instead of rebuilding all history on every run.
+> - It matters here because large fact marts often need incremental execution for cost and runtime reasons.
+>
+> > [!warning] Performance optimization with state risk
+> >
+> > Incremental marts need careful lookback logic, unique keys, and schema-change handling. Fast publication is only useful if historical correctness remains intact.
+>
+> ---
+>
+> **Table materialization**
+> - A materialization that stores the full mart result physically and rebuilds it on each run.
+> - It matters here because many published dimensions and smaller marts favor predictable physical tables over repeatedly executed views.
+>
+> > [!info] Predictable consumer surface
+> >
+> > Tables often make marts easier to query and reason about because consumers are not paying the full transformation cost at read time.
+>
+> ---
+>
+> **`on_schema_change`**
+> - A dbt incremental config that controls how schema drift is handled when upstream columns are added or changed.
+> - It matters here because published marts often evolve under active consumer usage, and schema change behavior affects both stability and rollout risk.
+>
+> > [!warning] Drift reaches consumers fast
+> >
+> > Schema handling decisions in marts are visible to dashboards and applications quickly. Choose them with consumer compatibility in mind, not just developer convenience.
+>
+> ---
+>
+> **Rolling metric**
+> - A measure calculated across a moving historical window, such as trailing returns or volatility.
+> - It matters here because many mart facts publish consumer-ready rolling analytics built from intermediate calculations.
+>
+> > [!info] Final metric publication point
+> >
+> > Rolling logic is often prepared upstream, but marts are where it becomes part of the stable analytical surface consumers actually query.
+>
+> ---
+>
+> **Direct consumption**
+> - The use of a model by downstream tools or users without another dbt layer sitting in between.
+> - It matters here because direct consumption is what separates marts from internal-only models operationally.
+>
+> > [!warning] Query behavior becomes user experience
+> >
+> > Once a model is directly consumed, latency, documentation, naming, and stability all become external-facing concerns, not just internal engineering preferences.
+
+> [!example] Published Model Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when publishing stable fact and dimension models for BI, APIs, dashboards, and contractual downstream analytics.
+> > - Use it when grain, consumer-facing documentation, exposure registration, and physical performance behavior must be treated as part of the model contract.
+> > - Use it to design marts as the supported gold layer rather than as a casual extension of intermediate logic.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use marts for raw cleanup or reusable internal logic that belongs in staging or intermediate layers.
+> > - Do not publish ad-hoc analyst convenience tables as marts without a defined grain, documentation, and support boundary.
+> > - Do not let marts reach back to raw sources directly; that bypasses the entire layered modeling contract.
 
 ### Mart Model Core Principles
 
@@ -522,8 +672,8 @@ exposures:
 ---
 
 ## Related
+
 - [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models)
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
 - [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)
-

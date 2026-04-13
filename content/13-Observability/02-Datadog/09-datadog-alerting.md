@@ -8,16 +8,112 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Datadog Alerting — Monitors and Notification Channels
+# Datadog Alerting
 
 > [!quote]
 > "Nines don't matter if users aren't happy."
 >
 > — **Charity Majors**, charity.wtf (2019)
 
-Datadog monitors watch metrics over time and trigger notifications when conditions are met. The data platform uses monitors for SQL Server deadlock detection and Airflow scheduler health.
+> [!abstract]- Summary
+>
+> This note moves from visibility to action: it defines the monitor layer that converts Datadog metrics into deadlock alerts, Airflow health notifications, severity guidance, and dashboard thresholds so operators know not just what changed, but when the platform should page, warn, or stay quiet.
+>
+> **SQL Server monitors**
+> - Starts with the DBA monitor set, including the deadlock alert and its test path, so database contention becomes a detectable operational event.
+> - Keeps alert design close to the signals that matter for correctness and throughput on the SQL side.
+>
+> **Airflow monitors**
+> - Defines orchestration monitors and the priority guide that distinguishes urgent failures from useful but lower-noise warnings.
+> - Frames alerting as a policy choice about operator attention, not a mechanical translation of every metric into a page.
+>
+> **Threshold display**
+> - Covers dashboard conditional formatting so the same severity logic is visible in dashboards, not just in monitor state changes.
+> - Connects alert rules and dashboards into one visual language for triage.
+>
+> **Noise control**
+> - Ends with GCE host automuting and related practices that keep planned infrastructure actions from becoming false incidents.
+> - When to use: the metrics and dashboards exist and the next job is to define which conditions deserve human interruption.
 
----
+> [!note]- Glossary
+>
+> **monitor**
+> - A Datadog rule that evaluates telemetry and changes state when its condition is met.
+> - It matters here because the note is about turning passive visibility into active notification.
+>
+> > [!info] Alerting rule object
+> >
+> > Dashboards show state; monitors decide when that state is important enough to escalate.
+>
+> ---
+>
+> **threshold**
+> - The numeric or logical boundary that separates normal behavior from warning or alert conditions.
+> - It matters here because a monitor is only as useful as the boundary it uses to define abnormal behavior.
+>
+> > [!tip] Thresholds encode policy
+> >
+> > Good thresholds reflect business risk and noise tolerance, not just arbitrary round numbers.
+>
+> ---
+>
+> **priority**
+> - The severity or urgency assigned to a monitor so responders know how quickly to act.
+> - It matters here because not every Airflow or SQL symptom deserves the same interruption level.
+>
+> > [!info] Urgency ladder
+> >
+> > Priority helps preserve human attention for conditions that actually threaten freshness, correctness, or uptime.
+>
+> ---
+>
+> **notification channel**
+> - The destination a Datadog monitor uses to reach people or systems when it changes state.
+> - It matters here because alert value depends on the message reaching the right responder path.
+>
+> > [!tip] Signal needs routing
+> >
+> > A correct monitor with the wrong receiver behaves like a silent failure.
+>
+> ---
+>
+> **recovery condition**
+> - The rule that determines when an alert returns to a healthy state.
+> - It matters here because noisy flapping often comes from poor recovery logic rather than poor trigger logic.
+>
+> > [!info] Alerts need an exit
+> >
+> > The team needs to know not only when something broke, but also when it actually returned to normal.
+>
+> ---
+>
+> **conditional formatting**
+> - Dashboard color or display logic that mirrors severity thresholds visually.
+> - It matters here because operators often scan dashboards before opening monitor histories.
+>
+> > [!tip] Visual severity language
+> >
+> > Using the same boundaries in widgets and monitors reduces cognitive translation during triage.
+>
+> ---
+>
+> **automuting**
+> - The suppression of alerts during known and intentional infrastructure state changes.
+> - It matters here because planned VM stops should not look like incidents.
+>
+> > [!info] Expected silence
+> >
+> > Mute logic protects alert quality by reserving pages for unexpected conditions.
+>
+> ---
+>
+> **deadlock alert**
+> - A monitor that fires when SQL Server deadlock activity crosses the chosen threshold.
+> - It matters here because deadlocks are both actionable and directly tied to application throughput risk.
+>
+> > [!tip] Alert on actionable contention
+> >
+> > Deadlock monitoring works well because the corrective investigation path is usually concrete and time-sensitive.
 
 ## SQL Server DBA Monitors
 
@@ -148,4 +244,3 @@ Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 - [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow scheduler metrics
 - [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCE Automuting for VM stop/start
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — Manual queries to investigate after a deadlock alert
-

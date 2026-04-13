@@ -8,7 +8,7 @@ updated: 2026-04-05
 status: complete
 ---
 
-# Terraform Resource Dependencies
+# Resource Dependencies
 
 > [!quote] Mitchell Hashimoto on the dependency graph
 >
@@ -16,7 +16,125 @@ status: complete
 >
 > — **Mitchell Hashimoto**, HashiConf talk
 
-Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [problems](https://alp78.github.io/elysium/07-Terraform/problems).
+> [!abstract]- Summary
+>
+> Resource Dependencies explains how Terraform turns references into a directed execution graph, why that graph controls ordering and parallelism more reliably than manual sequencing, and how dependency mistakes show up as cycles, cascaded replacements, or unsafe refactors during real infrastructure changes.
+>
+> **Graph fundamentals**
+> - covers how Terraform builds the dependency graph, why destroy walks the graph in reverse, and how parallelism interacts with dependency depth
+>
+> **Implicit and explicit edges**
+> - covers natural dependencies created by resource references, when `depends_on` is actually justified, and the special cases where data sources or side effects still need explicit ordering
+>
+> **Debugging graph behavior**
+> - covers graph visualization, dependency troubleshooting, circular dependencies, and the practical techniques for breaking unsatisfied cycles
+>
+> **Refactoring and replacement safety**
+> - covers cascading recreation, replacement propagation, and the role of `moved` blocks when addresses change but the underlying infrastructure should stay intact
+>
+> **Operations and safety**
+> - Warnings: `depends_on` should stay a last resort, circular references make the graph unsolvable, forced recreation can propagate through downstream resources, and `moved` blocks do not solve cross-state migrations
+> - Recommendations: prefer implicit dependencies from real references, inspect the graph when ordering feels surprising, use lifecycle controls to contain replacement blast radius, and declare `moved` blocks before address refactors become destructive applies
+
+> [!note]- Glossary
+>
+> **Dependency graph / DAG**
+> - The directed acyclic graph Terraform builds from references and explicit dependency declarations to determine execution order.
+> - It matters because apply and destroy ordering come from the graph, not from file order or from the position of blocks in source files.
+>
+> > [!info] Order is computed, not scripted
+> >
+> > Terraform does not execute configuration top to bottom like a shell script. The graph is what tells Terraform which operations may run in parallel and which must wait.
+>
+> ---
+>
+> **Implicit dependency**
+> - A dependency Terraform infers automatically because one resource directly references an attribute of another.
+> - It matters because most correct Terraform ordering should come from real data flow rather than from manual ordering hints.
+>
+> > [!info] The safest dependency is the one Terraform can see
+> >
+> > When a resource reference expresses the real relationship, Terraform gains both ordering and clearer intent. That is usually stronger than an external comment or a hand-added dependency edge.
+>
+> ---
+>
+> **Explicit dependency / `depends_on`**
+> - A Terraform meta-argument that forces one resource or module to wait for another even when there is no direct attribute reference.
+> - It matters because some side effects or out-of-band behaviors still need ordering that Terraform cannot infer automatically.
+>
+> > [!warning] Extra edges reduce graph quality
+> >
+> > Overusing `depends_on` makes the graph less precise and can hide missing real references. It should express genuine dependency gaps, not become a substitute for understanding the resource model.
+>
+> ---
+>
+> **Parallelism**
+> - Terraform's ability to execute independent graph nodes concurrently during apply or destroy.
+> - It matters because graph quality directly influences how much safe concurrency Terraform can exploit.
+>
+> > [!warning] More concurrency is not always better
+> >
+> > Increasing `-parallelism` can speed up large applies, but it can also trigger provider rate limits or make failure analysis noisier. Graph concurrency and operational concurrency are related, not identical.
+>
+> ---
+>
+> **Graph visualization**
+> - The process of rendering Terraform's dependency graph to inspect how Terraform understands the relationships between resources.
+> - It matters because confusing ordering behavior is often easier to debug visually than by staring at many resource blocks.
+>
+> > [!info] Useful when intent and behavior diverge
+> >
+> > If Terraform is applying in an order that surprises you, the graph visualization usually reveals whether the issue is a missing reference, an unnecessary explicit edge, or a hidden cycle.
+>
+> ---
+>
+> **Circular dependency**
+> - A dependency loop where two or more graph nodes require each other before any of them can be created or evaluated.
+> - It matters because Terraform requires an acyclic graph and will fail when references or explicit edges create a loop.
+>
+> > [!danger] Cycles are unsatisfiable, not slow
+> >
+> > Terraform cannot "try harder" to resolve a cycle. The configuration has to be redesigned so that at least one edge is removed or replaced with a different pattern.
+>
+> ---
+>
+> **Replacement propagation**
+> - The way a forced replacement of one resource can trigger changes or replacements in resources that depend on its attributes.
+> - It matters because the blast radius of a small-looking change is often determined by the dependency edges leaving that resource.
+>
+> > [!warning] One immutable field can fan out widely
+> >
+> > If an upstream object's identity changes, downstream resources that key off that identity may also have to update or recreate. Dependency reasoning is therefore part of change-impact analysis.
+>
+> ---
+>
+> **Lifecycle meta-argument**
+> - A Terraform configuration control such as `create_before_destroy` that changes how resources behave during replacement or deletion.
+> - It matters because lifecycle rules are one of the main tools for reducing the operational damage of dependency-driven replacement waves.
+>
+> > [!info] Graph structure and lifecycle work together
+> >
+> > Dependencies decide who is connected; lifecycle rules influence how replacement unfolds across those connections. You often need both concepts to control risk.
+>
+> ---
+>
+> **`moved` block**
+> - A Terraform language construct that tells Terraform a resource address has changed even though the underlying object should be treated as the same one.
+> - It matters because dependency-safe refactoring often means changing addresses without destroying infrastructure.
+>
+> > [!warning] Address refactors are destructive without guidance
+> >
+> > If Terraform sees a new address and no `moved` block, it usually interprets the change as delete-old and create-new. That is why refactors need declarative migration metadata.
+>
+> ---
+>
+> **Cross-state move**
+> - A refactor where a resource has to move between separate Terraform state files rather than just to a new address inside the same state.
+> - It matters because `moved` blocks do not solve this class of migration, and operators often overestimate what address mapping can do.
+>
+> > [!warning] State boundaries are real boundaries
+> >
+> > Moving between states is not the same as renaming within one state. Cross-state migration needs explicit state operations or separate adoption workflows, not only in-configuration move declarations.
 
 ## How the Dependency Graph Works
 
@@ -106,6 +224,7 @@ resource "google_compute_subnetwork" "main" {
 ```
 
 The `network` argument references `google_compute_network.main.id`, which tells Terraform: "this subnet needs the VPC to exist first, and I need its ID." Terraform will:
+
 1. Create the VPC (`google_compute_network.main`)
 2. Wait for the VPC to finish and capture its `id` output attribute
 3. Create the subnet with the resolved ID
@@ -314,18 +433,22 @@ Terraform updates the state to reflect the new address without any infrastructur
 ## Related
 
 **Terraform Patterns:**
+
 - [conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/conditional-resources) — how `count` and `for_each` interact with the dependency graph
 - [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) — module boundaries and inter-module dependency passing
 
 **Terraform Fundamentals:**
+
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — reading the plan to understand what will be created, updated, or destroyed
 - [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL syntax for resource references and attribute access
 - [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — how state tracks the real resource IDs that references resolve to
 
 **GCP Services:**
+
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM bindings and service accounts referenced in the dependency graph
 
 **CI/CD:**
+
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines running `terraform plan` and `terraform apply`
 
 ## References

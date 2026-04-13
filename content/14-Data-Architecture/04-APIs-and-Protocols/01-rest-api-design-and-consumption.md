@@ -36,10 +36,136 @@ status: complete
 >
 > — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
 
-> [!abstract] Purpose
-> This is the definitive reference on REST APIs for data engineering work. It covers two directions: **consuming** external APIs (market data vendors, SaaS platforms, financial data feeds) and **building** internal data APIs that serve processed results to dashboards, downstream systems, and automated consumers. Dense with working code.
+> [!abstract]- Summary
+>
+> This note defines REST API work for data engineers in both directions, covering how to consume external HTTP APIs safely and how to build internal data-serving APIs with predictable contracts, authentication, retries, pagination, and documentation.
+>
+> **REST fundamentals and HTTP behavior**
+> - Explains REST structure, HTTP methods, URL anatomy, request and response metadata, and idempotency so pipeline behavior stays aligned with the semantics of the underlying protocol.
+> - Treats status codes and method safety as operational controls that directly shape retry logic and failure handling.
+>
+> **Authentication and production API consumption**
+> - Covers API keys, OAuth2 bearer tokens, GCP service-account tokens, basic auth, and mTLS, then moves into pagination, rate limiting, async consumption with `httpx`, and pipeline-oriented error handling.
+> - Connects request headers, backoff, and streaming-like consumption patterns to the realities of large external data pulls.
+>
+> **Building and documenting data APIs**
+> - Explains when data engineers should build APIs with FastAPI, how to structure endpoints and Pydantic models, and how OpenAPI, Swagger, and `curl` support testing and consumer onboarding.
+> - Adds design practices for versioning, filtering, bulk operations, compression, ETags, and health checks so served data stays durable as a contract.
+>
+> **Operations and safety**
+> - Warnings: POST is not idempotent by default, ignoring headers hides rate-limit and retry metadata, and weak auth or logging practices can leak secrets or corrupt state.
+> - Recommendations: retry only with method-aware semantics, use idempotency keys for unsafe creates, document contracts with OpenAPI, and keep authentication plus pagination behavior explicit in code and docs.
 
----
+> [!note]- Glossary
+>
+> **REST**
+> - A stateless architectural style for HTTP-based systems that exposes resources through a uniform interface.
+> - It matters here because the note treats REST as the default external API contract most data pipelines must consume or produce.
+>
+> > [!info] Ubiquitous and operationally visible
+> >
+> > REST remains common partly because every tool can speak HTTP, inspect headers, and debug calls with minimal specialized infrastructure.
+>
+> ---
+>
+> **Statelessness**
+> - The property that each request contains all the information needed for the server to process it without relying on stored client session state.
+> - It matters here because stateless APIs are much easier to retry, parallelize, and scale in pipeline contexts.
+>
+> > [!info] Retry-friendly by design
+> >
+> > Statelessness is valuable operationally because a failed request can often be retried independently without reconstructing hidden server-side conversation state.
+>
+> ---
+>
+> **Idempotency**
+> - The property that making the same request multiple times yields the same final effect as making it once.
+> - It matters here because safe pipeline retry behavior depends on understanding which HTTP operations are naturally idempotent and which need extra safeguards.
+>
+> > [!warning] POST needs help
+> >
+> > Create operations usually are not idempotent unless the client and server cooperate through stable identifiers or explicit idempotency keys.
+>
+> ---
+>
+> **Rate limiting**
+> - The server-side control that restricts how many requests a client may make in a given time window.
+> - It matters here because large data pulls often fail operationally through quota exhaustion rather than through protocol misuse.
+>
+> > [!warning] Headers carry the truth
+> >
+> > Good clients watch remaining quota and reset timing in headers. Ignoring them is a common reason pipelines hit avoidable 429s.
+>
+> ---
+>
+> **Pagination**
+> - The splitting of a large result set into multiple requests using page numbers, offsets, cursors, or tokens.
+> - It matters here because pipeline consumers usually need complete extraction, not just one visible page of records.
+>
+> > [!info] Extraction loop contract
+> >
+> > Pagination is not just a UI convenience. It defines how a pipeline walks a dataset without missing or duplicating records.
+>
+> ---
+>
+> **API key**
+> - A static credential used to identify or authorize a client for API access.
+> - It matters here because many vendor APIs data engineers consume still rely on API keys as the primary auth mechanism.
+>
+> > [!warning] Simple but easy to leak
+> >
+> > Keys often end up in logs, URLs, or copied scripts unless teams enforce header-based usage and secret management consistently.
+>
+> ---
+>
+> **Bearer token / OAuth2**
+> - A time-bounded access token, often obtained through an OAuth2 flow, that authorizes API requests without exposing long-lived credentials directly.
+> - It matters here because modern internal and external APIs increasingly rely on token-based authentication rather than static secrets.
+>
+> > [!info] Stronger lifecycle control
+> >
+> > Tokens are operationally useful because they can expire, be scoped, and be refreshed without rotating every client credential by hand.
+>
+> ---
+>
+> **OpenAPI**
+> - A machine-readable specification format that describes HTTP endpoints, payloads, parameters, auth, and responses.
+> - It matters here because documentation and client generation become much more reliable when the API contract is formalized.
+>
+> > [!info] Contract plus tooling surface
+> >
+> > OpenAPI is valuable because it improves both human understanding and automation, from Swagger UIs to generated clients and test scaffolds.
+>
+> ---
+>
+> **ETag**
+> - A response identifier used for conditional requests so clients can detect whether a resource changed before re-downloading or overwriting it.
+> - It matters here because conditional fetch and optimistic update patterns can save bandwidth and prevent stale writes in data-serving APIs.
+>
+> > [!info] Cheap change detection
+> >
+> > ETags are most useful when consumers poll or cache frequently and need a lightweight way to ask whether the resource is still current.
+>
+> ---
+>
+> **mTLS**
+> - Mutual TLS authentication, where both client and server present certificates to verify each other.
+> - It matters here because high-trust internal or regulated data APIs sometimes need stronger peer authentication than header-based tokens alone.
+>
+> > [!warning] Strong but operationally heavier
+> >
+> > mTLS improves trust at the transport layer, but certificate issuance, rotation, and troubleshooting add real operational complexity.
+>
+
+> [!example] REST Interface Fit
+>
+> > [!success] Broad HTTP Adoption
+> >
+> > - Use REST when you need to consume vendor or SaaS APIs, or expose processed data and platform state through internal HTTP interfaces that many consumers can adopt quickly.
+>
+> > [!failure] Low-Latency or Streaming Mismatch
+> >
+> > - Do not default to REST for ultra-low-latency internal hops, streaming-heavy binary pipelines, or cases where gRPC or eventing protocols fit the workload better.
 
 ## REST Fundamentals for Data Engineers
 

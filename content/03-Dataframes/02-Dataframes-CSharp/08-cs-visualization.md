@@ -9,32 +9,145 @@ updated: 2026-04-08
 status: complete
 ---
 
-# 08 — Visualization
+# Visualization - C#
 
 > [!quote]
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
 >
 > — **John Tukey**, *Exploratory Data Analysis* (1977)
 
-This note covers DataFrame visualization in C#: interactive charts with Plotly.NET (candlestick, line, bar, scatter), static SVG charts with ScottPlot for notebook-inline display, and PDF-ready output with OxyPlot. All examples use real EuroStoxx 50 financial data.
+> [!abstract]- Summary
+>
+> Covers dataframe visualization in C# by pairing interactive browser-native charts in Plotly.NET with static SVG and image-oriented output in ScottPlot, all on real EuroStoxx financial data. The note exists to make output target part of the charting decision: choose interactive HTML when hover and zoom are analytical features, and choose static rendering when notebook-native display, batch export, or publication constraints dominate.
+>
+> **Setup**
+> - Configure the notebook runtime, install the charting packages, and load typed arrays from the shared OHLCV data so chart libraries with different input expectations can all work from the same source
+> - Establish helper functions and theme primitives early so notebook output stays consistent across interactive Plotly and static ScottPlot sections
+>
+> **Plotly.NET**
+> - Build interactive line, multi-line, dual-axis, grouped bar, stacked bar, scatter, histogram, box, candlestick, volume-overlay, heatmap, pie, donut, and radar charts with dark-theme layout control
+> - Use Plotly when hover inspection, zoom, pan, financial chart types, and HTML export are part of the workflow rather than optional extras
+>
+> **ScottPlot**
+> - Build notebook-native static charts rendered as SVG, including line, bar, financial, scatter, distribution, heatmap, and specialty layouts with explicit theme control and export helpers
+> - Use ScottPlot when server-side rendering, inline SVG, PNG/SVG persistence, and batch-friendly static output matter more than interactivity
+>
+> **Operations and safety**
+> - Warnings: the current warning/recommendation block is inherited from an earlier transform-focused note, so the real visualization risks in this body are mismatched chart/input expectations, HTML-widget-versus-image confusion, and export-target drift
+> - Recommendations: 4 inherited recommendations remain at the tail, while the body itself operationally supports Plotly.NET for interactive analysis and ScottPlot for notebook-native/static output
+> - Troubleshooting: the current tail table remains inherited, but the note’s actual failure surfaces are chart export format, typed-array preparation, and choosing the wrong rendering model for the destination
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Plotly.NET** | A .NET wrapper for Plotly.js — renders interactive HTML/JavaScript charts. | Interactive financial charts with hover, zoom, pan, and range selectors. | Charts are HTML widgets, not images — export with `Chart.SaveHtml()`. |
-| **ScottPlot** | A .NET charting library that renders to bitmap or SVG. | Static, publication-quality charts inline in Polyglot Notebooks. | No interactivity — use Plotly.NET for hover/zoom features. |
-| **OxyPlot** | A .NET charting library focused on PDF and image export. | Automated report generation and CI/CD-friendly chart output. | Less interactive than Plotly.NET; more suited to batch rendering. |
-| **Candlestick chart** | A financial chart showing OHLC prices as body (open-close) and wicks (high-low). | Standard visualization for price action analysis. | Requires OHLC columns in correct order — misnamed columns produce empty charts. |
-
-## What this note covers
-
-- **Plotly.NET** — interactive candlestick, line, bar, scatter charts with dark theme
-- **ScottPlot** — inline SVG rendering, Tokyo Night styling, multi-axis plots
-- **OxyPlot** — PDF export, static publication charts
-- **Library comparison** — when to use each for different output targets
-
----
+> [!note]- Glossary
+>
+> **Plotly.NET**
+> - A .NET charting library built on Plotly.js that produces interactive HTML/JavaScript visualizations.
+> - It matters because the note uses Plotly.NET for browser-native exploration where hover, zoom, and rich financial traces add analytical value.
+>
+> > [!warning] Widget, not static image
+> >
+> > A Plotly chart is fundamentally interactive web content. If the destination cannot render HTML/JS reliably, you need an explicit static export path.
+>
+> ---
+>
+> **ScottPlot**
+> - A .NET plotting library optimized for static rendering to bitmap or SVG outputs.
+> - It matters because the note uses ScottPlot as the static counterpart to Plotly.NET for notebook-inline SVG and publication-oriented rendering.
+>
+> > [!info] Strong static-first fit
+> >
+> > ScottPlot is often the better choice when the chart must render without a browser runtime and still look intentional in notebooks or exported reports.
+>
+> ---
+>
+> **Interactive chart**
+> - A chart that supports user actions such as hover inspection, zooming, panning, toggling, or range selection after it is rendered.
+> - It matters because the note’s main visualization split is between interactive analytical inspection and static explanatory output.
+>
+> > [!warning] Interactivity changes deployment assumptions
+> >
+> > Once a chart depends on browser behavior, the output target is no longer just "a figure." It becomes a runtime environment question as well.
+>
+> ---
+>
+> **Static export**
+> - A non-interactive rendered chart artifact such as SVG, PNG, or PDF intended to look the same everywhere it is viewed.
+> - It matters because static export is the safe default for notebooks, reports, CI artifacts, and publication pipelines that cannot rely on live JavaScript.
+>
+> > [!info] Predictability is the main benefit
+> >
+> > Static charts trade interactive exploration for repeatable rendering, smaller dependencies, and easier downstream embedding.
+>
+> ---
+>
+> **Candlestick chart**
+> - A financial chart that encodes open, high, low, and close values for each time interval using candle bodies and wicks.
+> - It matters because OHLC visualization is one of the core charting tasks in the note and one of Plotly.NET's most useful domain-native chart types.
+>
+> > [!warning] OHLC ordering must be correct
+> >
+> > Candlestick traces depend on the right columns in the right semantic order. A mislabeled or swapped OHLC array produces misleading output or an empty chart.
+>
+> ---
+>
+> **Dual-axis chart**
+> - A chart that overlays two measures with different scales by assigning them to separate y-axes on the same x-axis.
+> - It matters because financial charts often need price and volume together without compressing one measure into unreadability.
+>
+> > [!warning] Scale can distort interpretation
+> >
+> > A dual-axis chart is only useful when the visual relationship remains honest. Poor axis scaling can imply correlation or magnitude relationships that are not actually there.
+>
+> ---
+>
+> **Heatmap**
+> - A matrix-style chart where cell color represents the magnitude of a numeric value.
+> - It matters because correlation matrices and dense tabular comparisons in the note are much more legible as color-coded grids than as raw tables.
+>
+> > [!warning] Palette choice changes the story
+> >
+> > Diverging and sequential scales communicate different semantics. The wrong palette can flatten or invert the meaning of the values.
+>
+> ---
+>
+> **Radar chart**
+> - A polar chart that plots several normalized measures around a circular axis to compare multidimensional profiles.
+> - It matters because the note uses radar charts for entity-level metric comparison where shape matters more than strict Cartesian accuracy.
+>
+> > [!warning] Normalization is mandatory
+> >
+> > Raw values from different scales do not belong on the same radar chart. Without normalization, the shape is visually dramatic but analytically meaningless.
+>
+> ---
+>
+> **HTML export**
+> - Saving a chart as a self-contained or linked HTML artifact that preserves its interactive behavior in a browser.
+> - It matters because Plotly.NET output is most naturally shared and persisted in HTML form rather than as a static image.
+>
+> > [!warning] Output size can grow quickly
+> >
+> > Interactive HTML exports may carry substantial JavaScript and figure payloads, which affects sharing, storage, and notebook responsiveness.
+>
+> ---
+>
+> **SVG**
+> - A vector image format that preserves sharp rendering at any display size and is well suited to charts and notebook embedding.
+> - It matters because ScottPlot’s inline SVG path is one of the key static-output advantages highlighted in the note.
+>
+> > [!info] Good fit for line art and labels
+> >
+> > SVG keeps chart geometry and text crisp across zoom levels, which is especially useful for documentation and publication workflows.
+>
+> ---
+>
+> **Typed array extraction**
+> - Converting dataframe columns into strongly typed .NET arrays for chart libraries that do not consume dataframe columns directly.
+> - It matters because much of the C# charting workflow in the note depends on preparing arrays from Polars columns before plotting.
+>
+> > [!warning] Type coercion is not automatic
+> >
+> > A date column or mixed-type column may need explicit conversion before `ToArray<T>()` will produce the form a chart library expects.
+>
+> ---
 
 ## Setup
 
@@ -802,7 +915,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M87.6748 390.039L87.6748 46.2813M188.469 390.039L188.469 46.2813M289.264 390.039L289.264 46.2813M390.059 390.039L390.059 46.2813M490.853 390.039L490.853 46.2813M591.648 390.039L591.648 46.2813M692.443 390.039L692.443 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M87.6748 390.039L87.6748 46.2813M188.469 390.039L188.469 46.2813M289.264 390.039L289.264 46.2813M390.059 390.039L390.059 46.2813M490.853 390.039L490.853 46.2813M591.648 390.039L591.648 46.2813M692.443 390.039L692.443 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 384.932L745 384.932M63.916 348.865L745 348.865M63.916 312.799L745 312.799M63.916 276.732L745 276.732M63.916 240.666L745 240.666M63.916 204.599L745 204.599M63.916 168.533L745 168.533M63.916 132.466L745 132.466M63.916 96.3994L745 96.3994M63.916 60.3328L745 60.3328"/>
 	<clipPath id="cl_622">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -926,6 +1040,7 @@ ShowPlot(plt);
 			ASML — Close Price (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Multi-line — ASML, SAP, Siemens with custom line styles
@@ -967,7 +1082,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M115.513 390.039L115.513 46.2813M211.828 390.039L211.828 46.2813M308.143 390.039L308.143 46.2813M404.458 390.039L404.458 46.2813M500.773 390.039L500.773 46.2813M597.088 390.039L597.088 46.2813M693.403 390.039L693.403 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M115.513 390.039L115.513 46.2813M211.828 390.039L211.828 46.2813M308.143 390.039L308.143 46.2813M404.458 390.039L404.458 46.2813M500.773 390.039L500.773 46.2813M597.088 390.039L597.088 46.2813M693.403 390.039L693.403 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 384.809L745 384.809M63.916 358.209L745 358.209M63.916 331.61L745 331.61M63.916 305.01L745 305.01M63.916 278.411L745 278.411M63.916 251.811L745 251.811M63.916 225.212L745 225.212M63.916 198.612L745 198.612M63.916 172.013L745 172.013M63.916 145.413L745 145.413M63.916 118.814L745 118.814M63.916 92.2142L745 92.2142M63.916 65.6147L745 65.6147"/>
 	<clipPath id="cl_624">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -1147,6 +1263,7 @@ ShowPlot(plt);
 			Close Price Comparison — ASML vs SAP vs Siemens (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Dual Y-axis — close price + volume on twin axes
@@ -1205,7 +1322,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M89.5335 390.039L89.5335 46.2813M184.038 390.039L184.038 46.2813M278.543 390.039L278.543 46.2813M373.047 390.039L373.047 46.2813M467.552 390.039L467.552 46.2813M562.056 390.039L562.056 46.2813M656.561 390.039L656.561 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M89.5335 390.039L89.5335 46.2813M184.038 390.039L184.038 46.2813M278.543 390.039L278.543 46.2813M373.047 390.039L373.047 46.2813M467.552 390.039L467.552 46.2813M562.056 390.039L562.056 46.2813M656.561 390.039L656.561 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 384.932L709.18 384.932M63.916 348.865L709.18 348.865M63.916 312.799L709.18 312.799M63.916 276.732L709.18 276.732M63.916 240.666L709.18 240.666M63.916 204.599L709.18 204.599M63.916 168.533L709.18 168.533M63.916 132.466L709.18 132.466M63.916 96.3994L709.18 96.3994M63.916 60.3328L709.18 60.3328"/>
 	<clipPath id="cl_629">
 		<rect x="63.916016" y="46.28125" width="645.26367" height="343.75781"/>
@@ -1425,6 +1543,7 @@ ShowPlot(plt);
 			ASML — Close Price + Volume (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | SignalXY — high-performance rendering of full 66k-row dataset
@@ -1456,7 +1575,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M166.871 390.039L166.871 46.2813M277.745 390.039L277.745 46.2813M388.619 390.039L388.619 46.2813M499.493 390.039L499.493 46.2813M610.367 390.039L610.367 46.2813M721.241 390.039L721.241 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M166.871 390.039L166.871 46.2813M277.745 390.039L277.745 46.2813M388.619 390.039L388.619 46.2813M499.493 390.039L499.493 46.2813M610.367 390.039L610.367 46.2813M721.241 390.039L721.241 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 367.789L745 367.789M63.916 315.114L745 315.114M63.916 262.439L745 262.439M63.916 209.764L745 209.764M63.916 157.089L745 157.089M63.916 104.414L745 104.414M63.916 51.7389L745 51.7389"/>
 	<clipPath id="cl_62d">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -1565,6 +1685,7 @@ ShowPlot(plt);
 			Euro Stoxx 50 — All Close Prices (Last 60-Day View, 66&apos;355 points via SignalXY)
 	</text>
 </svg>
+
 </div>
 
 ---
@@ -1609,7 +1730,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M146.472 390.039L146.472 46.2813M275.465 390.039L275.465 46.2813M404.458 390.039L404.458 46.2813M533.451 390.039L533.451 46.2813M662.444 390.039L662.444 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M146.472 390.039L146.472 46.2813M275.465 390.039L275.465 46.2813M404.458 390.039L404.458 46.2813M533.451 390.039L533.451 46.2813M662.444 390.039L662.444 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 390.039L745 390.039M63.916 353.563L745 353.563M63.916 317.088L745 317.088M63.916 280.612L745 280.612M63.916 244.137L745 244.137M63.916 207.661L745 207.661M63.916 171.185L745 171.185M63.916 134.71L745 134.71M63.916 98.2343L745 98.2343M63.916 61.7587L745 61.7587"/>
 	<clipPath id="cl_630">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -1750,6 +1872,7 @@ ShowPlot(plt);
 			Top 5 Symbols — Average Close Price
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Grouped bars — up-day vs down-day volume for top 5 symbols
@@ -1793,7 +1916,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M129.322 390.039L129.322 46.2813M265.233 390.039L265.233 46.2813M401.145 390.039L401.145 46.2813M537.056 390.039L537.056 46.2813M672.967 390.039L672.967 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M129.322 390.039L129.322 46.2813M265.233 390.039L265.233 46.2813M401.145 390.039L401.145 46.2813M537.056 390.039L537.056 46.2813M672.967 390.039L672.967 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M57.2891 367.62L745 367.62M57.2891 336.283L745 336.283M57.2891 304.945L745 304.945M57.2891 273.608L745 273.608M57.2891 242.27L745 242.27M57.2891 210.933L745 210.933M57.2891 179.595L745 179.595M57.2891 148.258L745 148.258M57.2891 116.92L745 116.92M57.2891 85.5826L745 85.5826M57.2891 54.2451L745 54.2451"/>
 	<clipPath id="cl_632">
 		<rect x="57.289063" y="46.28125" width="687.71094" height="343.75781"/>
@@ -1960,6 +2084,7 @@ ShowPlot(plt);
 			Top 5 — Volume by Day Type (Grouped)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Stacked bars — quarterly volume breakdown for ASML
@@ -2020,7 +2145,8 @@ ShowPlot(plt, 900, 500);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="422">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M92.0721 327L92.0721 46.2813M122.526 327L122.526 46.2813M152.98 327L152.98 46.2813M183.433 327L183.433 46.2813M213.887 327L213.887 46.2813M244.341 327L244.341 46.2813M274.794 327L274.794 46.2813M305.248 327L305.248 46.2813M335.702 327L335.702 46.2813M366.156 327L366.156 46.2813M396.609 327L396.609 46.2813M427.063 327L427.063 46.2813M457.517 327L457.517 46.2813M487.971 327L487.971 46.2813M518.424 327L518.424 46.2813M548.878 327L548.878 46.2813M579.332 327L579.332 46.2813M609.785 327L609.785 46.2813M640.239 327L640.239 46.2813M670.693 327L670.693 46.2813M701.147 327L701.147 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M92.0721 327L92.0721 46.2813M122.526 327L122.526 46.2813M152.98 327L152.98 46.2813M183.433 327L183.433 46.2813M213.887 327L213.887 46.2813M244.341 327L244.341 46.2813M274.794 327L274.794 46.2813M305.248 327L305.248 46.2813M335.702 327L335.702 46.2813M366.156 327L366.156 46.2813M396.609 327L396.609 46.2813M427.063 327L427.063 46.2813M457.517 327L457.517 46.2813M487.971 327L487.971 46.2813M518.424 327L518.424 46.2813M548.878 327L548.878 46.2813M579.332 327L579.332 46.2813M609.785 327L609.785 46.2813M640.239 327L640.239 46.2813M670.693 327L670.693 46.2813M701.147 327L701.147 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M48.2188 308.692L745 308.692M48.2188 269.703L745 269.703M48.2188 230.714L745 230.714M48.2188 191.725L745 191.725M48.2188 152.735L745 152.735M48.2188 113.746L745 113.746M48.2188 74.7569L745 74.7569"/>
 	<clipPath id="cl_636">
 		<rect x="48.21875" y="46.28125" width="696.78125" height="280.71875"/>
@@ -2284,6 +2410,7 @@ ShowPlot(plt, 900, 500);
 			ASML — Quarterly Volume (Stacked by Day Type)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Horizontal bars — composite score ranking from scores_daily
@@ -2327,7 +2454,8 @@ ShowPlot(plt, 900, 500);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="422">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M95.7133 370.758L95.7133 46.2813M140.919 370.758L140.919 46.2813M186.125 370.758L186.125 46.2813M231.331 370.758L231.331 46.2813M276.537 370.758L276.537 46.2813M321.743 370.758L321.743 46.2813M366.949 370.758L366.949 46.2813M412.154 370.758L412.154 46.2813M457.36 370.758L457.36 46.2813M502.566 370.758L502.566 46.2813M547.772 370.758L547.772 46.2813M592.978 370.758L592.978 46.2813M638.184 370.758L638.184 46.2813M683.39 370.758L683.39 46.2813M728.596 370.758L728.596 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M95.7133 370.758L95.7133 46.2813M140.919 370.758L140.919 46.2813M186.125 370.758L186.125 46.2813M231.331 370.758L231.331 46.2813M276.537 370.758L276.537 46.2813M321.743 370.758L321.743 46.2813M366.949 370.758L366.949 46.2813M412.154 370.758L412.154 46.2813M457.36 370.758L457.36 46.2813M502.566 370.758L502.566 46.2813M547.772 370.758L547.772 46.2813M592.978 370.758L592.978 46.2813M638.184 370.758L638.184 46.2813M683.39 370.758L683.39 46.2813M728.596 370.758L728.596 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M64.7949 338.08L745 338.08M64.7949 309.289L745 309.289M64.7949 280.497L745 280.497M64.7949 251.706L745 251.706M64.7949 222.915L745 222.915M64.7949 194.124L745 194.124M64.7949 165.333L745 165.333M64.7949 136.542L745 136.542M64.7949 107.75L745 107.75M64.7949 78.9592L745 78.9592"/>
 	<clipPath id="cl_63a">
 		<rect x="64.794922" y="46.28125" width="680.20508" height="324.47656"/>
@@ -2555,6 +2683,7 @@ ShowPlot(plt, 900, 500);
 			Euro Stoxx 50 — Top 10 by Composite Score
 	</text>
 </svg>
+
 </div>
 
 ---
@@ -2605,7 +2734,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 378.602L745 378.602M63.916 345.121L745 345.121M63.916 311.64L745 311.64M63.916 278.158L745 278.158M63.916 244.677L745 244.677M63.916 211.196L745 211.196M63.916 177.715L745 177.715M63.916 144.234L745 144.234M63.916 110.753L745 110.753M63.916 77.2714L745 77.2714"/>
 	<clipPath id="cl_63c">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -2852,6 +2982,7 @@ ShowPlot(plt);
 			ASML — Candlestick (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | OHLC bars — alternative representation for the same 60-day window
@@ -2876,7 +3007,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 378.602L745 378.602M63.916 345.121L745 345.121M63.916 311.64L745 311.64M63.916 278.158L745 278.158M63.916 244.677L745 244.677M63.916 211.196L745 211.196M63.916 177.715L745 177.715M63.916 144.234L745 144.234M63.916 110.753L745 110.753M63.916 77.2714L745 77.2714"/>
 	<clipPath id="cl_63e">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -3005,6 +3137,7 @@ ShowPlot(plt);
 			ASML — OHLC Bars (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Candlestick + SMA(20) and SMA(50) overlays
@@ -3067,7 +3200,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 378.602L745 378.602M63.916 345.121L745 345.121M63.916 311.64L745 311.64M63.916 278.158L745 278.158M63.916 244.677L745 244.677M63.916 211.196L745 211.196M63.916 177.715L745 177.715M63.916 144.234L745 144.234M63.916 110.753L745 110.753M63.916 77.2714L745 77.2714"/>
 	<clipPath id="cl_640">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -3342,6 +3476,7 @@ ShowPlot(plt);
 			ASML — Candlestick + Moving Averages
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Candlestick + Bollinger Bands with fill shading
@@ -3413,7 +3548,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M91.3159 390.039L91.3159 46.2813M190.952 390.039L190.952 46.2813M290.588 390.039L290.588 46.2813M390.224 390.039L390.224 46.2813M489.86 390.039L489.86 46.2813M589.497 390.039L589.497 46.2813M689.133 390.039L689.133 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 372.063L745 372.063M63.916 342.483L745 342.483M63.916 312.904L745 312.904M63.916 283.325L745 283.325M63.916 253.746L745 253.746M63.916 224.167L745 224.167M63.916 194.588L745 194.588M63.916 165.009L745 165.009M63.916 135.43L745 135.43M63.916 105.851L745 105.851M63.916 76.2725L745 76.2725M63.916 46.6935L745 46.6935"/>
 	<clipPath id="cl_645">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -3716,6 +3852,7 @@ ShowPlot(plt);
 			ASML — Candlestick + Bollinger Bands
 	</text>
 </svg>
+
 </div>
 
 ---
@@ -3746,7 +3883,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M80.9721 368.758L80.9721 46.2813M104.304 368.758L104.304 46.2813M127.636 368.758L127.636 46.2813M150.968 368.758L150.968 46.2813M174.3 368.758L174.3 46.2813M197.632 368.758L197.632 46.2813M220.964 368.758L220.964 46.2813M244.295 368.758L244.295 46.2813M267.627 368.758L267.627 46.2813M290.959 368.758L290.959 46.2813M314.291 368.758L314.291 46.2813M337.623 368.758L337.623 46.2813M360.955 368.758L360.955 46.2813M384.287 368.758L384.287 46.2813M407.619 368.758L407.619 46.2813M430.951 368.758L430.951 46.2813M454.283 368.758L454.283 46.2813M477.615 368.758L477.615 46.2813M500.946 368.758L500.946 46.2813M524.278 368.758L524.278 46.2813M547.61 368.758L547.61 46.2813M570.942 368.758L570.942 46.2813M594.274 368.758L594.274 46.2813M617.606 368.758L617.606 46.2813M640.938 368.758L640.938 46.2813M664.27 368.758L664.27 46.2813M687.602 368.758L687.602 46.2813M710.934 368.758L710.934 46.2813M734.266 368.758L734.266 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M80.9721 368.758L80.9721 46.2813M104.304 368.758L104.304 46.2813M127.636 368.758L127.636 46.2813M150.968 368.758L150.968 46.2813M174.3 368.758L174.3 46.2813M197.632 368.758L197.632 46.2813M220.964 368.758L220.964 46.2813M244.295 368.758L244.295 46.2813M267.627 368.758L267.627 46.2813M290.959 368.758L290.959 46.2813M314.291 368.758L314.291 46.2813M337.623 368.758L337.623 46.2813M360.955 368.758L360.955 46.2813M384.287 368.758L384.287 46.2813M407.619 368.758L407.619 46.2813M430.951 368.758L430.951 46.2813M454.283 368.758L454.283 46.2813M477.615 368.758L477.615 46.2813M500.946 368.758L500.946 46.2813M524.278 368.758L524.278 46.2813M547.61 368.758L547.61 46.2813M570.942 368.758L570.942 46.2813M594.274 368.758L594.274 46.2813M617.606 368.758L617.606 46.2813M640.938 368.758L640.938 46.2813M664.27 368.758L664.27 46.2813M687.602 368.758L687.602 46.2813M710.934 368.758L710.934 46.2813M734.266 368.758L734.266 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 346.924L745 346.924M63.916 315.451L745 315.451M63.916 283.977L745 283.977M63.916 252.503L745 252.503M63.916 221.03L745 221.03M63.916 189.556L745 189.556M63.916 158.082L745 158.082M63.916 126.609L745 126.609M63.916 95.135L745 95.135M63.916 63.6614L745 63.6614"/>
 	<clipPath id="cl_64c">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="322.47656"/>
@@ -5412,6 +5550,7 @@ ShowPlot(plt);
 			ASML — Close Price vs Volume
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Color-mapped scatter — points colored by daily return magnitude
@@ -5458,7 +5597,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M93.5654 390.039L93.5654 46.2813M213.014 390.039L213.014 46.2813M332.462 390.039L332.462 46.2813M451.91 390.039L451.91 46.2813M571.686 390.039L571.686 46.2813M691.134 390.039L691.134 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M93.5654 390.039L93.5654 46.2813M213.014 390.039L213.014 46.2813M332.462 390.039L332.462 46.2813M451.91 390.039L451.91 46.2813M571.686 390.039L571.686 46.2813M691.134 390.039L691.134 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 366.765L745 366.765M63.916 333.214L745 333.214M63.916 299.663L745 299.663M63.916 266.112L745 266.112M63.916 232.562L745 232.562M63.916 199.011L745 199.011M63.916 165.46L745 165.46M63.916 131.91L745 131.91M63.916 98.359L745 98.359M63.916 64.8083L745 64.8083"/>
 	<clipPath id="cl_64e">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -13556,6 +13696,7 @@ ShowPlot(plt);
 			ASML — Close Price Colored by Daily Return (Green=Up, Red=Down)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Bubble — forward PE vs dividend yield, size = market cap
@@ -13656,7 +13797,8 @@ ShowPlot(plt, 900, 550);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="464">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M70.8211 412.758L70.8211 46.2813M109.474 412.758L109.474 46.2813M148.126 412.758L148.126 46.2813M186.779 412.758L186.779 46.2813M225.432 412.758L225.432 46.2813M264.084 412.758L264.084 46.2813M302.737 412.758L302.737 46.2813M341.389 412.758L341.389 46.2813M380.042 412.758L380.042 46.2813M418.695 412.758L418.695 46.2813M457.347 412.758L457.347 46.2813M496 412.758L496 46.2813M534.653 412.758L534.653 46.2813M573.305 412.758L573.305 46.2813M611.958 412.758L611.958 46.2813M650.61 412.758L650.61 46.2813M689.263 412.758L689.263 46.2813M727.916 412.758L727.916 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M70.8211 412.758L70.8211 46.2813M109.474 412.758L109.474 46.2813M148.126 412.758L148.126 46.2813M186.779 412.758L186.779 46.2813M225.432 412.758L225.432 46.2813M264.084 412.758L264.084 46.2813M302.737 412.758L302.737 46.2813M341.389 412.758L341.389 46.2813M380.042 412.758L380.042 46.2813M418.695 412.758L418.695 46.2813M457.347 412.758L457.347 46.2813M496 412.758L496 46.2813M534.653 412.758L534.653 46.2813M573.305 412.758L573.305 46.2813M611.958 412.758L611.958 46.2813M650.61 412.758L650.61 46.2813M689.263 412.758L689.263 46.2813M727.916 412.758L727.916 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M57.2891 393.125L745 393.125M57.2891 363.7L745 363.7M57.2891 334.274L745 334.274M57.2891 304.849L745 304.849M57.2891 275.423L745 275.423M57.2891 245.998L745 245.998M57.2891 216.572L745 216.572M57.2891 187.147L745 187.147M57.2891 157.721L745 157.721M57.2891 128.296L745 128.296M57.2891 98.8705L745 98.8705M57.2891 69.445L745 69.445"/>
 	<clipPath id="cl_b81">
 		<rect x="57.289063" y="46.28125" width="687.71094" height="366.47656"/>
@@ -14345,6 +14487,7 @@ ShowPlot(plt, 900, 550);
 			Euro Stoxx 50 — Forward PE vs Dividend Yield (Latest Snapshot, Size = Market Cap)
 	</text>
 </svg>
+
 </div>
 
 ---
@@ -14399,7 +14542,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M76.9397 368.758L76.9397 46.2813M126.435 368.758L126.435 46.2813M175.93 368.758L175.93 46.2813M225.424 368.758L225.424 46.2813M274.919 368.758L274.919 46.2813M324.414 368.758L324.414 46.2813M373.909 368.758L373.909 46.2813M423.404 368.758L423.404 46.2813M472.899 368.758L472.899 46.2813M522.394 368.758L522.394 46.2813M571.889 368.758L571.889 46.2813M621.384 368.758L621.384 46.2813M670.879 368.758L670.879 46.2813M720.374 368.758L720.374 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M76.9397 368.758L76.9397 46.2813M126.435 368.758L126.435 46.2813M175.93 368.758L175.93 46.2813M225.424 368.758L225.424 46.2813M274.919 368.758L274.919 46.2813M324.414 368.758L324.414 46.2813M373.909 368.758L373.909 46.2813M423.404 368.758L423.404 46.2813M472.899 368.758L472.899 46.2813M522.394 368.758L522.394 46.2813M571.889 368.758L571.889 46.2813M621.384 368.758L621.384 46.2813M670.879 368.758L670.879 46.2813M720.374 368.758L720.374 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M54.6875 347.727L745 347.727M54.6875 310.83L745 310.83M54.6875 273.933L745 273.933M54.6875 237.037L745 237.037M54.6875 200.14L745 200.14M54.6875 163.244L745 163.244M54.6875 126.347L745 126.347M54.6875 89.4503L745 89.4503M54.6875 52.5537L745 52.5537"/>
 	<clipPath id="cl_bc5">
 		<rect x="54.6875" y="46.28125" width="690.3125" height="322.47656"/>
@@ -14687,6 +14831,7 @@ ShowPlot(plt);
 			ASML — Daily Returns Distribution (%)
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Box & whisker — close price distribution for top 5 symbols
@@ -14733,7 +14878,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M146.472 390.039L146.472 46.2813M275.465 390.039L275.465 46.2813M404.458 390.039L404.458 46.2813M533.451 390.039L533.451 46.2813M662.444 390.039L662.444 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M146.472 390.039L146.472 46.2813M275.465 390.039L275.465 46.2813M404.458 390.039L404.458 46.2813M533.451 390.039L533.451 46.2813M662.444 390.039L662.444 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 375.953L745 375.953M63.916 321.841L745 321.841M63.916 267.728L745 267.728M63.916 213.615L745 213.615M63.916 159.502L745 159.502M63.916 105.389L745 105.389M63.916 51.2759L745 51.2759"/>
 	<clipPath id="cl_bc7">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -14879,6 +15025,7 @@ ShowPlot(plt);
 			Close Price Distribution — Top 5 Symbols
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Error bars — mean ± std close price for top 5 symbols
@@ -14923,7 +15070,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M94.8744 390.039L94.8744 46.2813M249.666 390.039L249.666 46.2813M404.458 390.039L404.458 46.2813M559.25 390.039L559.25 46.2813M714.042 390.039L714.042 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M94.8744 390.039L94.8744 46.2813M249.666 390.039L249.666 46.2813M404.458 390.039L404.458 46.2813M559.25 390.039L559.25 46.2813M714.042 390.039L714.042 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 381.66L745 381.66M63.916 357.578L745 357.578M63.916 333.495L745 333.495M63.916 309.413L745 309.413M63.916 285.331L745 285.331M63.916 261.249L745 261.249M63.916 237.167L745 237.167M63.916 213.084L745 213.084M63.916 189.002L745 189.002M63.916 164.92L745 164.92M63.916 140.838L745 140.838M63.916 116.755L745 116.755M63.916 92.6733L745 92.6733M63.916 68.5911L745 68.5911"/>
 	<clipPath id="cl_bcd">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -15085,6 +15233,7 @@ ShowPlot(plt);
 			Top 5 — Mean ± Std Close Price
 	</text>
 </svg>
+
 </div>
 
 #### ScottPlot | Fill between — ASML high/low price channel
@@ -15123,7 +15272,8 @@ ShowPlot(plt);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="420">
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M87.6748 390.039L87.6748 46.2813M188.469 390.039L188.469 46.2813M289.264 390.039L289.264 46.2813M390.059 390.039L390.059 46.2813M490.853 390.039L490.853 46.2813M591.648 390.039L591.648 46.2813M692.443 390.039L692.443 46.2813"/>
+
+<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M87.6748 390.039L87.6748 46.2813M188.469 390.039L188.469 46.2813M289.264 390.039L289.264 46.2813M390.059 390.039L390.059 46.2813M490.853 390.039L490.853 46.2813M591.648 390.039L591.648 46.2813M692.443 390.039L692.443 46.2813"/>
 	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M63.916 378.602L745 378.602M63.916 345.121L745 345.121M63.916 311.64L745 311.64M63.916 278.158L745 278.158M63.916 244.677L745 244.677M63.916 211.196L745 211.196M63.916 177.715L745 177.715M63.916 144.234L745 144.234M63.916 110.753L745 110.753M63.916 77.2714L745 77.2714"/>
 	<clipPath id="cl_bd0">
 		<rect x="63.916016" y="46.28125" width="681.08398" height="343.75781"/>
@@ -15285,6 +15435,7 @@ ShowPlot(plt);
 			ASML — High/Low Price Channel (Last 60 Trading Days)
 	</text>
 </svg>
+
 </div>
 
 ---
@@ -15329,7 +15480,8 @@ ShowPlot(plt, 760, 600);
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="760" height="600">
-	<clipPath id="cl_c31">
+
+<clipPath id="cl_c31">
 		<rect width="760" height="600"/>
 	</clipPath>
 	<g clip-path="url(#cl_c31)">
@@ -15399,6 +15551,7 @@ ShowPlot(plt, 760, 600);
 		</text>
 	</g>
 </svg>
+
 </div>
 
 #### ScottPlot | Coxcomb — sector composite scores
@@ -15487,7 +15640,8 @@ display(HTML(
 ```
 
 <div style='max-width:760px;width:100%;margin:0 auto;display:grid;grid-template-columns:minmax(0,500px) 220px;column-gap:16px;align-items:center;justify-content:center'><div style='min-width:0'><div style='max-width:500px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="500" height="500">
-	<clipPath id="cl_c33">
+
+<clipPath id="cl_c33">
 		<rect width="500" height="500"/>
 	</clipPath>
 	<g clip-path="url(#cl_c33)">
@@ -15526,8 +15680,11 @@ display(HTML(
 		<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.35294119" transform="matrix(-0.587785 -0.809017 0.809017 -0.587785 250 250)" d="M0.0711034 0L0.0711034 0L76.087 0Q76.087 1.49416 76.0283 2.98716Q75.9697 4.48017 75.8524 5.96972Q75.7352 7.45927 75.5596 8.94307Q75.384 10.4269 75.1502 11.9026Q74.9165 13.3784 74.625 14.8438Q74.3335 16.3093 73.9847 17.7622Q73.6359 19.215 73.2303 20.6531Q72.8247 22.0911 72.363 23.5122Q71.9013 24.9332 71.3841 26.335Q70.867 27.7368 70.2952 29.1172Q69.7234 30.4976 69.0979 31.8546Q68.4723 33.2115 67.794 34.5428Q67.1157 35.8741 66.3856 37.1777Q65.6555 38.4814 64.8748 39.7553Q64.0941 41.0293 63.264 42.2717Q62.4339 43.514 61.5557 44.7228L0.0711034 0Z"/>
 	</g>
 </svg>
+
 </div></div><div style='width:220px;box-sizing:border-box;padding:14px 16px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.03)'><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#42a5f5;margin-top:2px;flex:0 0 12px'></span><span>Communication Services<br><span style='font-weight:500;opacity:.85'>+0.49</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#66bb6a;margin-top:2px;flex:0 0 12px'></span><span>Energy<br><span style='font-weight:500;opacity:.85'>+0.33</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ffa726;margin-top:2px;flex:0 0 12px'></span><span>Healthcare<br><span style='font-weight:500;opacity:.85'>+0.08</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ab47bc;margin-top:2px;flex:0 0 12px'></span><span>Technology<br><span style='font-weight:500;opacity:.85'>+0.05</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ef5350;margin-top:2px;flex:0 0 12px'></span><span>Industrials<br><span style='font-weight:500;opacity:.85'>+0.05</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#26c6da;margin-top:2px;flex:0 0 12px'></span><span>Financial Services<br><span style='font-weight:500;opacity:.85'>-0.01</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ec407a;margin-top:2px;flex:0 0 12px'></span><span>Basic Materials<br><span style='font-weight:500;opacity:.85'>-0.01</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#9ccc65;margin-top:2px;flex:0 0 12px'></span><span>Consumer Defensive<br><span style='font-weight:500;opacity:.85'>-0.06</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#8d6e63;margin-top:2px;flex:0 0 12px'></span><span>Consumer Cyclical<br><span style='font-weight:500;opacity:.85'>-0.10</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#78909c;margin-top:2px;flex:0 0 12px'></span><span>Utilities<br><span style='font-weight:500;opacity:.85'>-0.10</span></span></div></div></div>
+
 #### ScottPlot | Radial gauge — YTD performance for top 5 symbols
+
 ```csharp
 // Radial gauge — YTD returns for top 5 symbols from scores_daily
 var plt = new ScottPlot.Plot();
@@ -15555,8 +15712,10 @@ plt.HideGrid();
 plt.ShowLegend(Alignment.LowerRight);
 ShowPlot(plt, 700, 550);
 ```
+
 <div style='max-width:700px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="700" height="550">
-	<clipPath id="cl_c35">
+
+<clipPath id="cl_c35">
 		<rect width="700" height="550"/>
 	</clipPath>
 	<g clip-path="url(#cl_c35)">
@@ -15605,6 +15764,7 @@ ShowPlot(plt, 700, 550);
 		<path fill="none" stroke="#FFA726" stroke-width="10" stroke-miterlimit="4" d="M623.449 530.02L603.449 530.02"/>
 	</g>
 </svg>
+
 </div>
 
 #### ScottPlot | Multi-plot 2×2 panel — ASML overview dashboard
@@ -15690,384 +15850,30 @@ DisplaySvg(compositeSvg, totalW);
 svgStream.Dispose();
 ```
 
-<div style='max-width:720px;width:100%;margin:0 auto'><svg style="max-width:100%;height:auto;display:block;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="554">
-	<rect fill="white" fill-opacity="0" width="720" height="554"/>
-	<rect transform="translate(18 18)" width="720" height="554" fill="white" fill-opacity="0"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(18 18)" d="M97.3464 215.039L97.3464 46.2813M176.186 215.039L176.186 46.2813M255.026 215.039L255.026 46.2813"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(18 18)" d="M48.6348 194.826L315 194.826M48.6348 159.414L315 159.414M48.6348 124.003L315 124.003M48.6348 88.5911L315 88.5911M48.6348 53.1794L315 53.1794"/>
-	<clipPath id="cl_c38">
-		<rect x="66.634766" y="64.28125" width="266.36523" height="168.75781"/>
-	</clipPath>
-	<g clip-path="url(#cl_c38)">
-		<path fill="none" stroke="#42A5F5" stroke-width="1.5" stroke-miterlimit="4" transform="translate(18 18)" d="M60.7423 191.781L63.558 204.033L66.3737 197.411L69.1894 194.26L77.6365 196.243L80.4522 193.693L83.2679 195.18L97.3464 192.418L100.162 188.31L102.978 187.248L108.609 164.266L117.056 140.575L119.872 137.813L122.688 141.071L125.503 154.811L128.319 130.519L136.766 128.819L139.582 123.082L142.398 129.598L145.213 106.509L148.029 100.206L156.476 116.779L159.292 109.838L162.107 104.597L164.923 96.9483L167.739 96.3108L176.186 96.3817L179.002 82.3587L181.817 90.5742L184.633 91.424L187.449 83.0669L195.896 79.809L198.712 91.9906L201.527 109.626L204.343 106.439L207.159 90.7866L215.606 86.8913L218.421 91.0699L221.237 85.829L224.053 95.7443L226.869 91.9906L235.316 90.3617L238.131 88.8744L240.947 72.7267L243.763 75.0638L246.578 68.9022L255.026 71.1686L257.841 66.1401L260.657 57.2872L263.473 77.1177L266.288 76.7636L274.735 84.9083L277.551 102.118L280.367 88.6619L283.183 93.5487L285.998 107.359L294.445 107.147L297.261 88.5911L300.077 89.016L302.892 91.849"/>
-	</g>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 46.3812L315 46.3812"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M97.3464 215.039L97.3464 219.039"/>
-	<text fill="white" transform="translate(115.346 239.039)" font-size="12" font-family="Segoe UI" x="-27.852539, -21.383789, -14.915039, -10.116211, -1.7021484, 4.5732422, 10.116211, 14.915039, 21.383789, " y="11.027344, ">
-			29-Dec-25
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M176.186 215.039L176.186 219.039"/>
-	<text fill="white" transform="translate(194.186 239.039)" font-size="12" font-family="Segoe UI" x="-26.326172, -19.857422, -13.388672, -8.5898438, -4.3066406, 1.7988281, 8.5898438, 13.388672, 19.857422, " y="11.027344, ">
-			26-Jan-26
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M255.026 215.039L255.026 219.039"/>
-	<text fill="white" transform="translate(273.026 239.039)" font-size="12" font-family="Segoe UI" x="-27.331055, -20.862305, -14.393555, -9.5947266, -3.7353516, 2.5400391, 9.5947266, 14.393555, 20.862305, " y="11.027344, ">
-			23-Feb-26
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 215.039L315 215.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 194.826L44.6348 194.826"/>
-	<text fill="white" transform="translate(57.6348 212.826)" font-size="12" font-family="Segoe UI" x="-19.40625, -12.9375, -6.46875, " y="3.046875, ">
-			900
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 159.414L44.6348 159.414"/>
-	<text fill="white" transform="translate(57.6348 177.414)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">
-			1&apos;000
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 124.003L44.6348 124.003"/>
-	<text fill="white" transform="translate(57.6348 142.003)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">
-			1&apos;100
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 88.5911L44.6348 88.5911"/>
-	<text fill="white" transform="translate(57.6348 106.591)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">
-			1&apos;200
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 53.1794L44.6348 53.1794"/>
-	<text fill="white" transform="translate(57.6348 71.1794)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">
-			1&apos;300
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 208.991L46.6348 208.991"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 201.908L46.6348 201.908"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 187.744L46.6348 187.744"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 180.661L46.6348 180.661"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 173.579L46.6348 173.579"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 166.497L46.6348 166.497"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 152.332L46.6348 152.332"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 145.25L46.6348 145.25"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 138.167L46.6348 138.167"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 131.085L46.6348 131.085"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 116.92L46.6348 116.92"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 109.838L46.6348 109.838"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 102.756L46.6348 102.756"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 95.6734L46.6348 95.6734"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 81.5088L46.6348 81.5088"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 74.4264L46.6348 74.4264"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 67.3441L46.6348 67.3441"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 60.2618L46.6348 60.2618"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M48.6348 215.039L48.6348 46.2813"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 18)" d="M315 215.039L315 46.2813"/>
-	<text fill="white" transform="translate(199.817 49.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-63.964844, -53.980469, -49.433594, -39.652344, -32.613281, -23.957031, -19.542969, -9.7148438, -3.3476563, 1.1992188, 8.8789063, 17.535156, 21.949219, 27.855469, 37.058594, 46.261719, 58.058594, " y="-6.890625, ">
-			Close Price (60D)
-	</text>
-	<rect transform="translate(372 18)" width="720" height="554" fill="white" fill-opacity="0"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(372 18)" d="M87.4624 215.039L87.4624 46.2813M169.416 215.039L169.416 46.2813M251.369 215.039L251.369 46.2813"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(372 18)" d="M35.5391 204.033L315 204.033M35.5391 151.177L315 151.177M35.5391 98.3216L315 98.3216"/>
-	<clipPath id="cl_c3a">
-		<rect x="407.53906" y="64.28125" width="279.46094" height="168.75781"/>
-	</clipPath>
-	<g clip-path="url(#cl_c3a)">
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="48.241833" y="136.20505" width="2.341526" height="67.828064"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="48.241833" y="136.20505" width="2.341526" height="67.828064"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="51.168739" y="123.50085" width="2.3415222" height="80.532265"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="51.168739" y="123.50085" width="2.3415222" height="80.532265"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="54.095642" y="125.01305" width="2.341526" height="79.020065"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="54.095642" y="125.01305" width="2.341526" height="79.020065"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="57.022549" y="72.082474" width="2.341526" height="131.95064"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="57.022549" y="72.082474" width="2.341526" height="131.95064"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="65.803268" y="164.32556" width="2.3415222" height="39.70755"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="65.803268" y="164.32556" width="2.3415222" height="39.70755"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="68.730171" y="176.7308" width="2.3415222" height="27.302307"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="68.730171" y="176.7308" width="2.3415222" height="27.302307"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="71.657074" y="197.7343" width="2.3415222" height="6.2988129"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="71.657074" y="197.7343" width="2.3415222" height="6.2988129"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="86.291603" y="163.79637" width="2.3415298" height="40.23674"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="86.291603" y="163.79637" width="2.3415298" height="40.23674"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="89.218506" y="161.52728" width="2.3415298" height="42.505829"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="89.218506" y="161.52728" width="2.3415298" height="42.505829"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="92.145416" y="187.53705" width="2.3415222" height="16.496063"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="92.145416" y="187.53705" width="2.3415222" height="16.496063"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="97.999222" y="119.58254" width="2.3415298" height="84.450569"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="97.999222" y="119.58254" width="2.3415298" height="84.450569"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="106.77995" y="102.73785" width="2.3415222" height="101.29527"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="106.77995" y="102.73785" width="2.3415222" height="101.29527"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="109.70685" y="138.58459" width="2.3415222" height="65.448517"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="109.70685" y="138.58459" width="2.3415222" height="65.448517"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="112.63375" y="142.30586" width="2.3415298" height="61.727249"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="112.63375" y="142.30586" width="2.3415298" height="61.727249"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="115.56066" y="131.53333" width="2.3415222" height="72.499786"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="115.56066" y="131.53333" width="2.3415222" height="72.499786"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="118.48756" y="123.96693" width="2.3415222" height="80.066185"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="118.48756" y="123.96693" width="2.3415222" height="80.066185"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="127.26828" y="139.28664" width="2.3415222" height="64.746475"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="127.26828" y="139.28664" width="2.3415222" height="64.746475"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="130.19519" y="139.0842" width="2.3415222" height="64.948914"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="130.19519" y="139.0842" width="2.3415222" height="64.948914"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="133.1221" y="139.20047" width="2.3415222" height="64.832642"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="133.1221" y="139.20047" width="2.3415222" height="64.832642"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="136.049" y="57.287201" width="2.3415222" height="146.74591"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="136.049" y="57.287201" width="2.3415222" height="146.74591"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="138.97591" y="121.04401" width="2.3415222" height="82.989105"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="138.97591" y="121.04401" width="2.3415222" height="82.989105"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="147.75662" y="148.66843" width="2.3415222" height="55.364685"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="147.75662" y="148.66843" width="2.3415222" height="55.364685"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="150.68353" y="115.18633" width="2.3415222" height="88.846786"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="150.68353" y="115.18633" width="2.3415222" height="88.846786"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="153.61043" y="130.86375" width="2.3415375" height="73.169357"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="153.61043" y="130.86375" width="2.3415375" height="73.169357"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="156.53734" y="115.64342" width="2.3415222" height="88.389694"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="156.53734" y="115.64342" width="2.3415222" height="88.389694"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="159.46423" y="136.34331" width="2.3415222" height="67.689804"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="159.46423" y="136.34331" width="2.3415222" height="67.689804"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="168.24496" y="143.3692" width="2.3415222" height="60.66391"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="168.24496" y="143.3692" width="2.3415222" height="60.66391"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="171.17186" y="116.82263" width="2.3415222" height="87.21048"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="171.17186" y="116.82263" width="2.3415222" height="87.21048"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="174.09877" y="70.201859" width="2.3415222" height="133.83125"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="174.09877" y="70.201859" width="2.3415222" height="133.83125"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="177.02568" y="100.24147" width="2.3415222" height="103.79164"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="177.02568" y="100.24147" width="2.3415222" height="103.79164"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="179.95258" y="103.30847" width="2.3415222" height="100.72464"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="179.95258" y="103.30847" width="2.3415222" height="100.72464"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="188.73329" y="136.78296" width="2.3415222" height="67.250153"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="188.73329" y="136.78296" width="2.3415222" height="67.250153"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="191.6602" y="134.87593" width="2.3415222" height="69.157181"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="191.6602" y="134.87593" width="2.3415222" height="69.157181"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="194.58711" y="133.7278" width="2.3415222" height="70.305313"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="194.58711" y="133.7278" width="2.3415222" height="70.305313"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="197.51401" y="127.44336" width="2.3415375" height="76.589752"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="197.51401" y="127.44336" width="2.3415375" height="76.589752"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="200.44092" y="146.3783" width="2.3415222" height="57.654816"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="200.44092" y="146.3783" width="2.3415222" height="57.654816"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="209.22163" y="155.78375" width="2.3415222" height="48.249359"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="209.22163" y="155.78375" width="2.3415222" height="48.249359"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="212.14854" y="155.46123" width="2.3415222" height="48.571884"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="212.14854" y="155.46123" width="2.3415222" height="48.571884"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="215.07544" y="147.93922" width="2.3415375" height="56.093887"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="215.07544" y="147.93922" width="2.3415375" height="56.093887"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="218.00235" y="144.97253" width="2.3415222" height="59.060577"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="218.00235" y="144.97253" width="2.3415222" height="59.060577"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="220.92926" y="129.17871" width="2.3415222" height="74.854401"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="220.92926" y="129.17871" width="2.3415222" height="74.854401"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="229.70998" y="183.34358" width="2.3415222" height="20.689529"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="229.70998" y="183.34358" width="2.3415222" height="20.689529"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="232.63689" y="160.18315" width="2.3415222" height="43.84996"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="232.63689" y="160.18315" width="2.3415222" height="43.84996"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="235.56378" y="148.72255" width="2.3415222" height="55.310562"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="235.56378" y="148.72255" width="2.3415222" height="55.310562"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="238.49069" y="149.29773" width="2.3415222" height="54.735382"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="238.49069" y="149.29773" width="2.3415222" height="54.735382"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="241.4176" y="144.25285" width="2.3415222" height="59.780258"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="241.4176" y="144.25285" width="2.3415222" height="59.780258"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="250.19832" y="153.34509" width="2.3415222" height="50.688019"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="250.19832" y="153.34509" width="2.3415222" height="50.688019"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="253.12521" y="131.04146" width="2.3415222" height="72.991653"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="253.12521" y="131.04146" width="2.3415222" height="72.991653"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="256.05212" y="149.61824" width="2.3415222" height="54.414871"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="256.05212" y="149.61824" width="2.3415222" height="54.414871"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="258.97903" y="132.47089" width="2.3415222" height="71.562225"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="258.97903" y="132.47089" width="2.3415222" height="71.562225"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="261.90594" y="97.190742" width="2.3414917" height="106.84237"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="261.90594" y="97.190742" width="2.3414917" height="106.84237"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="270.68665" y="111.9302" width="2.3415222" height="92.102913"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="270.68665" y="111.9302" width="2.3415222" height="92.102913"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="273.61356" y="104.45872" width="2.3415222" height="99.574394"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="273.61356" y="104.45872" width="2.3415222" height="99.574394"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="276.54047" y="128.49307" width="2.3415222" height="75.540039"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="276.54047" y="128.49307" width="2.3415222" height="75.540039"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="279.46735" y="121.78103" width="2.3415527" height="82.252083"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="279.46735" y="121.78103" width="2.3415527" height="82.252083"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="282.39429" y="113.40974" width="2.3414917" height="90.623375"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="282.39429" y="113.40974" width="2.3414917" height="90.623375"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="291.17499" y="131.18881" width="2.3415222" height="72.844299"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="291.17499" y="131.18881" width="2.3415222" height="72.844299"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="294.1019" y="119.37778" width="2.3415222" height="84.655327"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="294.1019" y="119.37778" width="2.3415222" height="84.655327"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="297.02881" y="144.52771" width="2.3415222" height="59.505402"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="297.02881" y="144.52771" width="2.3415222" height="59.505402"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(372 18)" x="299.95572" y="190.47847" width="2.3415222" height="13.554642"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" x="299.95572" y="190.47847" width="2.3415222" height="13.554642"/>
-	</g>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 46.3812L315 46.3812"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M87.4624 215.039L87.4624 219.039"/>
-	<text fill="white" transform="translate(459.462 239.039)" font-size="12" font-family="Segoe UI" x="-27.852539, -21.383789, -14.915039, -10.116211, -1.7021484, 4.5732422, 10.116211, 14.915039, 21.383789, " y="11.027344, ">
-			29-Dec-25
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M169.416 215.039L169.416 219.039"/>
-	<text fill="white" transform="translate(541.416 239.039)" font-size="12" font-family="Segoe UI" x="-26.326172, -19.857422, -13.388672, -8.5898438, -4.3066406, 1.7988281, 8.5898438, 13.388672, 19.857422, " y="11.027344, ">
-			26-Jan-26
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M251.369 215.039L251.369 219.039"/>
-	<text fill="white" transform="translate(623.369 239.039)" font-size="12" font-family="Segoe UI" x="-27.331055, -20.862305, -14.393555, -9.5947266, -3.7353516, 2.5400391, 9.5947266, 14.393555, 20.862305, " y="11.027344, ">
-			23-Feb-26
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 215.039L315 215.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 204.033L31.5391 204.033"/>
-	<text fill="white" transform="translate(398.539 222.033)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">
-			0
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 151.177L31.5391 151.177"/>
-	<text fill="white" transform="translate(398.539 169.177)" font-size="12" font-family="Segoe UI" x="-15.539063, -9.0703125, -6.46875, " y="3.046875, ">
-			0.5
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 98.3216L31.5391 98.3216"/>
-	<text fill="white" transform="translate(398.539 116.322)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">
-			1
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 214.604L33.5391 214.604"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 193.462L33.5391 193.462"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 182.891L33.5391 182.891"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 172.32L33.5391 172.32"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 161.749L33.5391 161.749"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 140.606L33.5391 140.606"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 130.035L33.5391 130.035"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 119.464L33.5391 119.464"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 108.893L33.5391 108.893"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 87.7505L33.5391 87.7505"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 77.1794L33.5391 77.1794"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 66.6082L33.5391 66.6082"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 56.037L33.5391 56.037"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M35.5391 215.039L35.5391 46.2813"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(372 18)" d="M315 215.039L315 46.2813"/>
-	<text fill="white" transform="translate(547.27 49.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-64.242188, -53.570313, -43.789063, -39.242188, -29.5625, -14.90625, -6.25, -1.8359375, 4.0703125, 19.382813, 23.71875, 28.132813, 37.335938, 46.539063, 58.335938, " y="-6.890625, ">
-			Volume (M, 60D)
-	</text>
-	<rect transform="translate(18 291)" width="720" height="554" fill="white" fill-opacity="0"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(18 291)" d="M47.1508 215.039L47.1508 46.2813M70.2567 215.039L70.2567 46.2813M93.3626 215.039L93.3626 46.2813M116.468 215.039L116.468 46.2813M139.574 215.039L139.574 46.2813M162.68 215.039L162.68 46.2813M185.786 215.039L185.786 46.2813M208.892 215.039L208.892 46.2813M231.998 215.039L231.998 46.2813M255.104 215.039L255.104 46.2813M278.21 215.039L278.21 46.2813M301.315 215.039L301.315 46.2813"/>
-	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(18 291)" d="M26.4688 204.033L315 204.033M26.4688 162.106L315 162.106M26.4688 120.178L315 120.178M26.4688 78.2509L315 78.2509"/>
-	<clipPath id="cl_c3c">
-		<rect x="44.46875" y="337.28125" width="288.53125" height="168.75781"/>
-	</clipPath>
-	<g clip-path="url(#cl_c3c)">
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="39.583809" y="120.17831" width="7.8953476" height="83.854805"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="39.583809" y="120.17831" width="7.8953476" height="83.854805"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="48.356422" y="162.10571" width="7.8953476" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="48.356422" y="162.10571" width="7.8953476" height="41.927399"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="57.129036" y="183.06941" width="7.8953476" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="57.129036" y="183.06941" width="7.8953476" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="65.901642" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="74.674255" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="74.674255" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="83.446869" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="83.446869" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="92.21949" y="162.10571" width="7.8953476" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="92.21949" y="162.10571" width="7.8953476" height="41.927399"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="100.9921" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="100.9921" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="109.76471" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="109.76471" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="118.53732" y="141.142" width="7.8953552" height="62.891113"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="118.53732" y="141.142" width="7.8953552" height="62.891113"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="127.30994" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="127.30994" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="136.08255" y="99.2146" width="7.8953552" height="104.81851"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="136.08255" y="99.2146" width="7.8953552" height="104.81851"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="144.85516" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="144.85516" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="153.62778" y="57.287201" width="7.8953552" height="146.74591"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="153.62778" y="57.287201" width="7.8953552" height="146.74591"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="162.40039" y="99.2146" width="7.8953552" height="104.81851"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="162.40039" y="99.2146" width="7.8953552" height="104.81851"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="171.173" y="141.142" width="7.8953552" height="62.891113"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="171.173" y="141.142" width="7.8953552" height="62.891113"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="179.94562" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="179.94562" y="120.17831" width="7.8953552" height="83.854805"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="188.71823" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="188.71823" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="197.49084" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="206.26346" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="215.03607" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="215.03607" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="223.80869" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="223.80869" y="162.10571" width="7.8953552" height="41.927399"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="232.5813" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="241.35391" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="241.35391" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="250.12653" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="258.89914" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="267.67175" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="276.44437" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="276.44437" y="183.06941" width="7.8953552" height="20.963699"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="285.21698" y="204.03311" width="7.8953552" height="0"/>
-		<rect fill="#9CA3AF" fill-opacity="0.70588237" transform="translate(18 291)" x="293.98959" y="141.142" width="7.8953552" height="62.891113"/>
-		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" x="293.98959" y="141.142" width="7.8953552" height="62.891113"/>
-	</g>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M47.1508 215.039L47.1508 219.039"/>
-	<text fill="white" transform="translate(65.1508 512.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">
-			-4
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M70.2567 215.039L70.2567 219.039"/>
-	<text fill="white" transform="translate(88.2567 512.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">
-			-3
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M93.3626 215.039L93.3626 219.039"/>
-	<text fill="white" transform="translate(111.363 512.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">
-			-2
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M116.468 215.039L116.468 219.039"/>
-	<text fill="white" transform="translate(134.468 512.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">
-			-1
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M139.574 215.039L139.574 219.039"/>
-	<text fill="white" transform="translate(157.574 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			0
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M162.68 215.039L162.68 219.039"/>
-	<text fill="white" transform="translate(180.68 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			1
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M185.786 215.039L185.786 219.039"/>
-	<text fill="white" transform="translate(203.786 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			2
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M208.892 215.039L208.892 219.039"/>
-	<text fill="white" transform="translate(226.892 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			3
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M231.998 215.039L231.998 219.039"/>
-	<text fill="white" transform="translate(249.998 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			4
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M255.104 215.039L255.104 219.039"/>
-	<text fill="white" transform="translate(273.104 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			5
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M278.21 215.039L278.21 219.039"/>
-	<text fill="white" transform="translate(296.21 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			6
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M301.315 215.039L301.315 219.039"/>
-	<text fill="white" transform="translate(319.315 512.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">
-			7
-	</text>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M28.6661 215.039L28.6661 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M33.2873 215.039L33.2873 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M37.9085 215.039L37.9085 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M42.5296 215.039L42.5296 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M51.772 215.039L51.772 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M56.3932 215.039L56.3932 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M61.0143 215.039L61.0143 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M65.6355 215.039L65.6355 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M74.8779 215.039L74.8779 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M79.499 215.039L79.499 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M84.1202 215.039L84.1202 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M88.7414 215.039L88.7414 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M97.9837 215.039L97.9837 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M102.605 215.039L102.605 217.039"/>
-	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(18 291)" d="M107.226 215.039L107.226 217.039"/>
-	<path fill="none"
+> [!info] Composite SVG output omitted in source
+>
+> The original notebook-exported inline SVG block for the four-panel ScottPlot composite was truncated in this markdown file and broke Quartz HTML parsing. Re-run the notebook cell to regenerate the rendered figure if you need the visual embedded here.
+
 ---
+
 ## Warnings
+
 > [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
 > Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
 > [!warning] `IfElse` in Polars.NET is not `When/Then/Otherwise`
 > The C# API uses `Col("x").Gt(0).IfElse(trueVal, falseVal)` — not `When().Then().Otherwise()`. Translating from Python literally produces compile errors.
 > [!warning] Type mismatches between Polars.NET and MDA are common
 > Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
+
 ## Recommendations
+
 1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
 2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.
 3. **Validate output schemas after transforms** — assert column names and types match expectations.
 4. **Prefer Parquet for intermediate data** — lossless type preservation between transform steps.
+
 ## Troubleshooting and failure modes
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |

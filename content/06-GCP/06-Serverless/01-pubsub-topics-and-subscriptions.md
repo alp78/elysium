@@ -15,31 +15,209 @@ status: complete
 >
 > — **Alan Kay**, *The Early History of Smalltalk* (1993)
 
-Pub/Sub decouples producers from consumers. Instead of pipeline stages calling each other directly (tight coupling), they publish events to topics and subscribe independently. This pattern enables retry logic, dead letter queues, and horizontal scaling without changing the producer code. A topic is the named channel; subscriptions are the delivery mechanisms. Multiple subscriptions on the same topic each receive all messages independently.
-
-> [!todo] Prerequisites
+> [!abstract]- Summary
 >
-> 1. Enable the Pub/Sub API: `gcloud services enable pubsub.googleapis.com`
-> 2. Ensure the publishing identity has `roles/pubsub.publisher` on the target topic
-> 3. Ensure the consuming identity has `roles/pubsub.subscriber` on the target subscription
-> 4. For dead letter forwarding, grant `roles/pubsub.publisher` on the dead letter topic and `roles/pubsub.subscriber` on the source subscription to the Pub/Sub service account (`service-PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com`)
-
-> [!info] Pricing Model
+> Covers Google Cloud Pub/Sub topic and subscription design with `gcloud`, including topic creation, pull and push delivery, retention, acknowledgement windows, dead letter routing, BigQuery subscriptions, and delivery-model tradeoffs for event-driven pipelines.
 >
-> Pub/Sub charges per message operation (publish + delivery), with a 1 KB minimum per operation. Message retention beyond the default 7-day window incurs storage fees at the GCS Nearline rate. Seek operations on retained messages are billed separately. Throughput pricing is negligible for most pipelines — the cost risk is in large backlogs with extended retention.
+> **Why Pub/Sub**
+> - Decouple producers from consumers so pipeline stages publish events to a topic instead of calling downstream stages directly
+> - Support retry logic, dead letter queues, replay, fan-out, and horizontal consumer scaling without changing producer code
+>
+> **Prerequisites and pricing**
+> - Enable `pubsub.googleapis.com`, grant `roles/pubsub.publisher` to publishing identities, and grant `roles/pubsub.subscriber` to consuming identities
+> - For dead letter forwarding, grant the Pub/Sub service account `service-PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com` publisher access on the dead letter topic and subscriber access on the source subscription
+> - Price operations per publish and delivery with a 1 KB minimum, add storage cost for extended message retention, and expect backlog retention rather than throughput to be the main cost risk in most pipelines
+>
+> **Topic management**
+> - Create topics with optional `--message-retention-duration`, schema validation, message encoding, labels, and CMEK encryption settings
+> - Treat topics as the named publish channels that fan messages out to every attached subscription independently
+>
+> **Subscription management**
+> - Create pull subscriptions with `--ack-deadline`, `--message-retention-duration`, expiration control, attribute filtering, exactly-once delivery, and retained acknowledged messages
+> - Create push subscriptions with `--push-endpoint`, OIDC authentication, and retry backoff settings, then attach dead letter policies with `--dead-letter-topic` and `--max-delivery-attempts`
+> - Use BigQuery subscriptions when Pub/Sub should write directly into a BigQuery table without an intermediate consumer process
+>
+> **Delivery models**
+> - Compare pull, push, and BigQuery subscriptions by rate control, backpressure, authentication model, endpoint requirements, and best-fit workload shape
+> - Use pull for batch and variable-rate consumers, push for event-driven HTTP handlers, and BigQuery subscriptions for direct analytics ingestion
+>
+> **Operations and safety**
+> - Warnings: Pub/Sub is at-least-once by default, short ack deadlines cause redelivery, inactive subscriptions expire after 31 days unless configured otherwise, and non-matching filters silently keep messages away from the consumer
+> - Recommendations table: the pull-vs-push-vs-BigQuery comparison table maps consumer architecture, rate control, backpressure, authentication, and ideal use cases to the right subscription type
 
-### Why Pub/Sub for Data Pipelines
+> [!note]- Glossary
+>
+> **Pub/Sub**
+> - Google Cloud's managed messaging service for asynchronous event publication and delivery between independent producers and consumers.
+> - It matters here because the note treats Pub/Sub as the communication layer that keeps pipeline stages loosely coupled and independently scalable.
+>
+> > [!info] Communication, not execution
+> >
+> > Pub/Sub moves messages; it does not run business logic for you. Consumers still need to process, retry, and observe the delivered work.
+>
+> ---
+>
+> **Topic**
+> - The named publish channel that producers send messages to in Pub/Sub.
+> - It matters because every subscription in the note attaches to a topic and receives its own delivery stream from that source.
+>
+> > [!info] Topics enable fan-out
+> >
+> > One published message can be delivered independently to many subscriptions on the same topic. Adding a new consumer does not require changing the producer.
+>
+> ---
+>
+> **Subscription**
+> - The delivery configuration that tells Pub/Sub how messages from a topic should reach a consumer or destination.
+> - It matters because retention, acknowledgement behavior, dead letter handling, and push or pull delivery are all defined at the subscription layer.
+>
+> > [!warning] Source and delivery are separate
+> >
+> > A topic stores the publish path, but the subscription controls delivery semantics. Changing subscriptions can alter consumer behavior without touching the topic.
+>
+> ---
+>
+> **Pull subscription**
+> - A subscription type in which the consumer explicitly requests messages from Pub/Sub when it is ready to process them.
+> - It matters because pull is the default model for batch pipelines and workloads that need explicit rate control or natural backpressure.
+>
+> > [!info] Consumer controls pace
+> >
+> > Pull keeps the consumer in charge of how fast messages are received. That makes it easier to protect downstream systems from overload.
+>
+> ---
+>
+> **Push subscription**
+> - A subscription type in which Pub/Sub sends messages as HTTP POST requests to a configured endpoint.
+> - It matters because push fits event-driven HTTP services such as Cloud Run or Cloud Functions that react immediately to new messages.
+>
+> > [!warning] Endpoint must stay healthy
+> >
+> > Push delivery assumes the endpoint is reachable and returns `2xx` responses when processing succeeds. Failures cause retry behavior that can hammer weak endpoints if backoff is not configured.
+>
+> ---
+>
+> **BigQuery subscription**
+> - A Pub/Sub subscription type that writes messages directly into a BigQuery table using Google's managed integration path.
+> - It matters because it removes the need for a separate consumer process when the destination is analytics storage rather than application logic.
+>
+> > [!info] No middle consumer needed
+> >
+> > BigQuery subscriptions are the simplest route for structured event ingestion into analytics tables, but they trade away custom processing flexibility.
+>
+> ---
+>
+> **Acknowledgement deadline**
+> - The time window a consumer has to acknowledge a delivered message before Pub/Sub considers it outstanding and eligible for redelivery.
+> - It matters because the deadline must exceed real processing time or duplicate deliveries become routine.
+>
+> > [!warning] Too short means retries
+> >
+> > A small ack deadline does not speed the pipeline up; it only increases the chance that Pub/Sub redelivers messages that are still being processed.
+>
+> ---
+>
+> **Message retention**
+> - The configured period during which messages remain available in topic or subscription storage for replay or delayed consumption.
+> - It matters because retention controls how long backlogs and historical messages survive for debugging, replay, or late-arriving consumers.
+>
+> > [!warning] Storage has a cost
+> >
+> > Longer retention is operationally useful, but large retained backlogs can become a real cost driver. Retention is not free historical archiving.
+>
+> ---
+>
+> **At-least-once delivery**
+> - A delivery guarantee that ensures every message is delivered one or more times, rather than exactly once.
+> - It matters because consumers in this note must tolerate duplicates and make processing idempotent unless a stronger guarantee is enabled.
+>
+> > [!warning] Duplicates are normal
+> >
+> > Redelivery is expected behavior under at-least-once semantics. Consumer logic must be safe when the same message appears more than once.
+>
+> ---
+>
+> **Exactly-once delivery**
+> - An optional Pub/Sub delivery mode that adds deduplication guarantees beyond the normal at-least-once behavior.
+> - It matters because it can reduce duplicate-processing risk for sensitive consumers at the cost of additional delivery overhead.
+>
+> > [!info] Stronger guarantees cost more
+> >
+> > Exactly-once delivery is not a free upgrade. It adds complexity and latency, so it should be enabled for a concrete reason rather than by default.
+>
+> ---
+>
+> **Attribute filter**
+> - A server-side subscription rule that keeps only messages whose attributes match a given expression.
+> - It matters because one topic can serve multiple selective consumers without each client implementing its own filtering logic.
+>
+> > [!warning] Non-matching messages disappear from that consumer
+> >
+> > Messages that fail the filter are not delivered to that subscription at all. If the filter is wrong, the consumer may silently miss valid events.
+>
+> ---
+>
+> **Dead letter topic**
+> - A separate topic that receives messages that could not be processed successfully after repeated delivery attempts.
+> - It matters because it prevents one poison message from being retried forever on the main subscription path.
+>
+> > [!warning] DLQ forwarding needs IAM too
+> >
+> > Dead letter routing is not just a configuration toggle. The Pub/Sub service account must have the required permissions or forwarding will not work correctly.
+>
+> ---
+>
+> **delivery attempt**
+> - One try by Pub/Sub to hand a message to a subscription consumer or endpoint.
+> - It matters because dead letter routing and retry analysis both depend on how many attempts a message has already consumed.
+>
+> > [!info] Attempts accumulate operational evidence
+> >
+> > Rising delivery attempts usually indicate a persistent consumer bug, malformed payload, or unreachable endpoint rather than a one-off transient failure.
+>
+> ---
+>
+> **OIDC token**
+> - An identity token used by Pub/Sub push delivery to authenticate itself to an HTTPS endpoint.
+> - It matters because push subscriptions in this note rely on service-account-backed OIDC authentication rather than anonymous inbound requests.
+>
+> > [!info] Push auth is explicit
+> >
+> > Pub/Sub can prove its identity to the receiver, but the endpoint must still validate the token audience and caller identity correctly.
+>
+> ---
+>
+> **subscription expiration**
+> - The inactivity-based deletion behavior that removes a subscription after a configured period without observed activity.
+> - It matters because infrequent pipelines can break silently if an unused subscription expires before the next publish window.
+>
+> > [!warning] Infrequent is not inactive on purpose
+> >
+> > Monthly or sporadic workloads can look abandoned to the default expiration policy. Set an explicit value or `never` when the subscription must persist.
+>
+> ---
+>
+> **seek**
+> - A Pub/Sub replay operation that moves a subscription's read position to a chosen timestamp or retained message point.
+> - It matters because retention only becomes operationally useful when messages can be replayed intentionally for debugging or recovery.
+>
+> > [!info] Replay is an explicit action
+> >
+> > Retained messages do not reappear on their own. Seek is the control that lets operators revisit historical message state when needed.
 
-Without Pub/Sub, pipeline stages call each other directly — a failure in Stage B blocks Stage A. With Pub/Sub, Stage A publishes to a topic and Stage B subscribes independently, enabling retry logic, dead letter queues, and horizontal scaling without modifying the producer. This decoupling is the foundation of event-driven data architectures.
-
-```text
-Without Pub/Sub (tight coupling):
-  Stage A calls Stage B directly → Stage B failure blocks Stage A
-
-With Pub/Sub (loose coupling):
-  Stage A publishes to topic → Stage B subscribes and processes independently
-  Stage B can retry, scale, or be replaced without touching Stage A
-```
+> [!example] Delivery Model Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use Pub/Sub topics and subscriptions when producers and consumers must stay decoupled and each consumer needs its own retry, backlog, and replay behavior.
+> > - Use pull subscriptions when the consumer must control pace and backpressure, push subscriptions when a healthy HTTPS endpoint should react immediately, and BigQuery subscriptions when the destination is managed analytics ingestion.
+> > - Use dead letter topics, retention, and attribute filters when the stream needs operational safety controls rather than one undifferentiated delivery path.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use push delivery for consumers that are intermittently offline, unstable, or unable to validate inbound identity correctly.
+> > - Do not rely on default subscription expiration or minimal retention for low-frequency pipelines that must survive long idle periods or support replay.
+> > - Do not run poison-message-prone pipelines without dead letter design, because one bad payload can otherwise consume retries indefinitely and hide the real failure mode.
 
 ## Topic Management
 
@@ -302,7 +480,7 @@ flowchart TD
 
 - [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Publishing messages to topics and consuming from subscriptions
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services are common push subscription endpoints
-- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `pubsub.googleapis.com` must be enabled
+- [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) — `pubsub.googleapis.com` must be enabled
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Pub/Sub delivery failures appear in Cloud Logging
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler can publish to Pub/Sub topics on a cron schedule

@@ -7,55 +7,450 @@ tags:
 
 # GitHub Actions Patterns
 
-Reusable, composable, and advanced workflow patterns for production GitHub Actions. This page teaches the pattern mechanics — how to structure, parameterize, and combine workflow building blocks. Full end-to-end CI/CD pipelines are in page 03; data-engineering applied workflows are in page 04.
+> [!abstract]- Summary
+>
+> Explains reusable GitHub Actions design patterns so you can scale workflow composition, data movement, execution control, and repository architecture without duplicating YAML or creating fragile automation edges.
+>
+> **Pattern model and composition**
+> - Defines matrix mechanics, reusable workflows, composite actions, container and JavaScript actions, and workflow chaining as the core ways to structure reusable automation units
+> - Distinguishes caller versus callee behavior, static versus dynamic matrices, and how each composition mechanism changes runner isolation, input handling, and maintenance cost
+>
+> **Data flow and control flow**
+> - Covers outputs, environment variables, artifacts, caches, job summaries, concurrency groups, conditionals, timeouts, path filters, and status-check functions as the runtime channels that connect and gate jobs
+> - Explains exact cache keys, restore keys, branch scoping, retention, and execution cancellation semantics so patterns remain predictable under reruns and parallel activity
+>
+> **Architecture patterns and applied scenarios**
+> - Maps the building blocks into monorepo CI, release automation, security-hardening, cost optimization, and data-engineering workflow designs that combine reuse, isolation, and scoped deployment behavior
+> - Connects pattern choice to blast radius, maintainability, and reviewability instead of presenting matrix fan-out or workflow reuse as purely syntactic conveniences
+>
+> **Operations and safety**
+> - Warnings: matrix explosion, cache misuse, untrusted workflow chaining, over-broad environment access, mutable third-party actions, and hidden coupling between caller and callee workflows
+> - Recommendations: choose the smallest reusable unit that fits, keep data channels explicit, bound concurrency deliberately, pin third-party actions, and optimize patterns for review clarity as well as YAML reuse
+> - Troubleshooting: guidance for matrix fan-out issues, cache misses, artifact handoff problems, workflow-call input mismatches, path-filter surprises, and control-flow dead ends
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **matrix strategy**
+> - Job-level configuration that creates multiple parallel job instances from a set of variable combinations
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`fail-fast`**
+> - Matrix property that cancels all in-progress jobs when any combination fails (default: `true`)
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`max-parallel`**
+> - Matrix property that limits the number of concurrently running combinations
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`include`**
+> - Matrix modifier that adds extra variable combinations or attaches additional variables to existing ones
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`exclude`**
+> - Matrix modifier that removes specific variable combinations from the cross-product
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **dynamic matrix**
+> - Matrix whose values are computed at runtime by a previous job and passed via `fromJSON()`
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **reusable workflow**
+> - A workflow file with `on: workflow_call` that can be invoked by other workflows as a job
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
 
-Every term used in this page is defined here. The table is organized by pattern category.
+> ---
+>
+> **composite action**
+> - An `action.yml` that bundles multiple steps into a single reusable step, running in the caller's environment
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **Docker container action**
+> - An `action.yml` that runs inside a Docker container, providing full environment isolation
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **JavaScript action**
+> - An `action.yml` that runs Node.js code directly on the runner
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`workflow_call`**
+> - The trigger event that makes a workflow reusable — it accepts typed inputs, secrets, and returns outputs
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **`caller`**
+> - The workflow that invokes a reusable workflow with `uses:` at the job level
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`callee`**
+> - The reusable workflow being invoked — it receives inputs and secrets from the caller
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **`workflow_run`**
+> - Event that triggers a workflow when another named workflow completes, succeeds, or fails
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`workflow_dispatch`**
+> - Event that enables manual triggering of a workflow via the GitHub UI or API, with optional typed inputs
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **service container**
+> - A Docker container that runs alongside a job, providing services like databases or caches
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **concurrency group**
+> - A named group that serializes or cancels workflow runs sharing the same group identifier
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`cancel-in-progress`**
+> - Concurrency option that cancels the currently running job when a new run enters the same group
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`artifact`**
+> - A file or directory uploaded during a workflow run, downloadable by other jobs or after the run completes
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`cache`**
+> - A persistent store for dependencies or build outputs, keyed by a hash, shared across runs on the same branch
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **cache key**
+> - The exact string used to store and retrieve a cache entry — a miss triggers a fresh download
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **cache scope**
+> - Branch-level isolation — caches are scoped to the branch where they were created, plus the default branch
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`restore-keys`**
+> - Ordered fallback prefixes tried when the exact cache key misses
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`retention`**
+> - The number of days an artifact or cache is kept before automatic deletion (artifact default: 90 days, cache: 7 days unused)
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **path filter**
+> - An `on.push.paths` or `on.pull_request.paths` condition that limits workflow triggers to changes in specific files
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`monorepo`**
+> - A single repository containing multiple projects, services, or packages with independent CI needs
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **`environment`**
+> - A named deployment target (e.g., `staging`, `production`) with optional protection rules and scoped secrets
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **protection rule**
+> - A constraint on an environment requiring reviewers, wait timers, or branch restrictions before deployment
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **deployment branch policy**
+> - An environment setting that restricts which branches can deploy to that environment
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **`OIDC`**
+> - OpenID Connect — a protocol that lets GitHub mint short-lived tokens for authenticating to cloud providers without stored secrets
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **Workload Identity Federation**
+> - Cloud-provider mechanism (GCP, AWS, Azure) that trusts GitHub's OIDC tokens to grant temporary credentials
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **SHA pin**
+> - Referencing a third-party action by its full commit SHA instead of a mutable tag, preventing supply-chain attacks
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **immutable tag**
+> - A tag that cannot be moved after creation — SHA pins are immutable; version tags like `v4` are not
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete GitHub Actions object, runtime surface, or workflow control rather than as a loose synonym. The surrounding YAML behaves differently depending on this exact meaning.
+>
+> ---
+>
+> **`provenance`**
+> - Cryptographic metadata proving where and how an artifact was built, enabling supply-chain verification
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
+>
+> ---
+>
+> **job summary**
+> - Markdown content written to `$GITHUB_STEP_SUMMARY` that renders on the workflow run page in GitHub
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture depend on choosing this mechanism deliberately instead of treating nearby GitHub Actions features as interchangeable.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`annotation`**
+> - A notice, warning, or error message attached to a specific file and line in the workflow run and PR diff
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`expression`**
+> - A `${{ }}` syntax for accessing contexts, evaluating conditions, and computing values in workflow YAML
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`context`**
+> - A named object (e.g., `github`, `env`, `steps`, `needs`, `matrix`) providing runtime data to expressions
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Operational blast radius
+> >
+> > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
+>
+> ---
+>
+> **status check function**
+> - Built-in functions (`success()`, `failure()`, `always()`, `cancelled()`) that test the aggregate result of prior steps or jobs
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`fromJSON()`**
+> - Expression function that parses a JSON string into a native object, commonly used for dynamic matrices
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
+>
+> ---
+>
+> **`toJSON()`**
+> - Expression function that serializes an object to a JSON string, useful for debugging context values
+> - It matters in this note because the workflows for workflow composition, data flow, execution control, and reusable GitHub Actions architecture read, scope, or constrain this part of the Actions runtime directly, and misunderstanding it leads to the wrong safety or execution assumption.
+>
+> > [!warning] Evaluation scope matters
+> >
+> > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
 
-| Term | Definition |
-|------|-----------|
-| matrix strategy | Job-level configuration that creates multiple parallel job instances from a set of variable combinations |
-| fail-fast | Matrix property that cancels all in-progress jobs when any combination fails (default: `true`) |
-| max-parallel | Matrix property that limits the number of concurrently running combinations |
-| include | Matrix modifier that adds extra variable combinations or attaches additional variables to existing ones |
-| exclude | Matrix modifier that removes specific variable combinations from the cross-product |
-| dynamic matrix | Matrix whose values are computed at runtime by a previous job and passed via `fromJSON()` |
-| reusable workflow | A workflow file with `on: workflow_call` that can be invoked by other workflows as a job |
-| composite action | An `action.yml` that bundles multiple steps into a single reusable step, running in the caller's environment |
-| Docker container action | An `action.yml` that runs inside a Docker container, providing full environment isolation |
-| JavaScript action | An `action.yml` that runs Node.js code directly on the runner |
-| workflow_call | The trigger event that makes a workflow reusable — it accepts typed inputs, secrets, and returns outputs |
-| caller | The workflow that invokes a reusable workflow with `uses:` at the job level |
-| callee | The reusable workflow being invoked — it receives inputs and secrets from the caller |
-| workflow_run | Event that triggers a workflow when another named workflow completes, succeeds, or fails |
-| workflow_dispatch | Event that enables manual triggering of a workflow via the GitHub UI or API, with optional typed inputs |
-| service container | A Docker container that runs alongside a job, providing services like databases or caches |
-| concurrency group | A named group that serializes or cancels workflow runs sharing the same group identifier |
-| cancel-in-progress | Concurrency option that cancels the currently running job when a new run enters the same group |
-| artifact | A file or directory uploaded during a workflow run, downloadable by other jobs or after the run completes |
-| cache | A persistent store for dependencies or build outputs, keyed by a hash, shared across runs on the same branch |
-| cache key | The exact string used to store and retrieve a cache entry — a miss triggers a fresh download |
-| cache scope | Branch-level isolation — caches are scoped to the branch where they were created, plus the default branch |
-| restore-keys | Ordered fallback prefixes tried when the exact cache key misses |
-| retention | The number of days an artifact or cache is kept before automatic deletion (artifact default: 90 days, cache: 7 days unused) |
-| path filter | An `on.push.paths` or `on.pull_request.paths` condition that limits workflow triggers to changes in specific files |
-| monorepo | A single repository containing multiple projects, services, or packages with independent CI needs |
-| environment | A named deployment target (e.g., `staging`, `production`) with optional protection rules and scoped secrets |
-| protection rule | A constraint on an environment requiring reviewers, wait timers, or branch restrictions before deployment |
-| deployment branch policy | An environment setting that restricts which branches can deploy to that environment |
-| OIDC | OpenID Connect — a protocol that lets GitHub mint short-lived tokens for authenticating to cloud providers without stored secrets |
-| Workload Identity Federation | Cloud-provider mechanism (GCP, AWS, Azure) that trusts GitHub's OIDC tokens to grant temporary credentials |
-| SHA pin | Referencing a third-party action by its full commit SHA instead of a mutable tag, preventing supply-chain attacks |
-| immutable tag | A tag that cannot be moved after creation — SHA pins are immutable; version tags like `v4` are not |
-| provenance | Cryptographic metadata proving where and how an artifact was built, enabling supply-chain verification |
-| job summary | Markdown content written to `$GITHUB_STEP_SUMMARY` that renders on the workflow run page in GitHub |
-| annotation | A notice, warning, or error message attached to a specific file and line in the workflow run and PR diff |
-| expression | A `${{ }}` syntax for accessing contexts, evaluating conditions, and computing values in workflow YAML |
-| context | A named object (e.g., `github`, `env`, `steps`, `needs`, `matrix`) providing runtime data to expressions |
-| status check function | Built-in functions (`success()`, `failure()`, `always()`, `cancelled()`) that test the aggregate result of prior steps or jobs |
-| fromJSON() | Expression function that parses a JSON string into a native object, commonly used for dynamic matrices |
-| toJSON() | Expression function that serializes an object to a JSON string, useful for debugging context values |
+> [!example] Pattern Selection Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when the problem is workflow architecture: reusable workflows, composite actions, matrices, artifacts, caches, concurrency, or monorepo scaling.
+> > - Use it when repeated YAML, inconsistent control flow, or unclear blast radius means the team needs a durable reuse pattern rather than another one-off workflow file.
+> > - Use it to compare abstraction choices by runner isolation, trust boundary, maintenance cost, and review clarity before standardizing across repositories.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not introduce reuse layers before repeated workflow pain is real; premature abstraction makes review and debugging harder.
+> > - Do not apply a pattern that hides execution boundaries the team still needs to understand explicitly, especially around caches, environments, and workflow chaining.
+> > - Do not use this note as a substitute for the fundamentals if the underlying trigger, runner, and expression model is still unclear.
 
 ## Conceptual Model
 

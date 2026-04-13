@@ -6,22 +6,299 @@ updated: 2026-03-23
 description: "Comprehensive catalog of BigQuery production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers cost control, query performance, DML concurrency, data types, and operational issues."
 ---
 
-# BigQuery Production Problems
+# BigQuery Problems
 
-> [!quote]
+> [!quote] Patrick McKenzie on Learning by Solving
 > "Every great developer you know got there by solving problems they were unqualified to solve until they actually did it."
 >
 > — **Patrick McKenzie**, kalzumeus.com
 
-BigQuery is deceptively simple — write SQL, get results. But in a production data platform serving financial index calculations, the pay-per-scan pricing model, DML concurrency limits, and implicit behaviors around partitioning, data types, and NULL handling create a minefield. A single unfiltered `SELECT *` on a 10TB table costs $62.50. A pipeline that runs 20 concurrent MERGEs hits a hard quota wall. FLOAT64 arithmetic that works in a spreadsheet produces wrong index values in BigQuery. This note catalogs every major problem with actionable prevention and fixes.
-
-**Platform context:** BigQuery serves as the analytics warehouse for a financial index and ESG data provider on GCP. Workloads include: published index level consumption by clients, analytical queries by analysts, dbt transformation targets, scheduled queries for derived tables, materialized views for dashboards, and INFORMATION_SCHEMA for cost monitoring. On-demand pricing is used primarily. Data flows from a SQL Server gold layer into BigQuery via Cloud Run export jobs. The platform is EU BMR regulated — audit trail and reproducibility are non-negotiable.
-
----
+> [!abstract]- Summary
+>
+> Catalogs 25 production BigQuery failure modes for an EU BMR-regulated financial index platform using on-demand pricing, dbt, scheduled queries, materialized views, and Cloud Run-fed warehouse loads, so engineers can prevent cost spikes, correctness bugs, concurrency failures, and audit gaps before they hit client-facing analytics.
+>
+> **Platform context**
+> - BigQuery is the analytical warehouse behind client index consumption, analyst queries, dbt transformations, scheduled-query outputs, dashboard materialized views, and `INFORMATION_SCHEMA` cost monitoring
+> - Data lands from a SQL Server gold layer through Cloud Run export jobs, on-demand pricing is the main billing model, and audit trail plus reproducibility are mandatory because the platform sits inside an EU BMR-regulated workflow
+> - Each problem section follows the same operator-facing structure: what happens, root cause, consequences, prevention protocol, and fix procedure
+>
+> **Critical — Cost explosion / data loss**
+> - Uncontrolled full-table scans from missing partition filters, `SELECT *`, dashboard auto-refresh, and missing byte caps under on-demand pricing
+> - Project-wide concurrent interactive DML limits, `resourcesExceeded` failures from oversized queries, accidental table or dataset deletion, and streaming-insert cost explosions
+>
+> **High — Data quality / performance**
+> - `FLOAT64` precision loss in financial math, partition pruning defeated by function wrapping, and missing clustering on common filter columns
+> - Expensive incremental `MERGE` patterns, slot starvation during peak usage, silent `NULL` propagation in calculations, and materialized views falling behind freshness expectations
+>
+> **Moderate — Operational pain**
+> - Schema evolution breaking downstream consumers, scheduled queries failing without alerting, and cross-region query or egress costs
+> - Table-level DML concurrency conflicts, external-table performance traps, authorized-view and policy-tag conflicts, `INFORMATION_SCHEMA` overhead, and time-travel expiry blocking historical reproduction
+>
+> **Low — Annoyances / technical debt**
+> - Missing `require_partition_filter`, weak label discipline for cost attribution, legacy wildcard table sharding, BI Engine cache misses from dynamic SQL, and stale views after source-table renames
+>
+> **bq CLI flag reference**
+> - Consolidates the core operational flags for `bq query`, `bq load`, `bq update`, `bq cancel`, `bq extract`, `bq cp`, and `bq rm`
+>
+> **Operations and safety**
+> - When to use: design reviews, pre-production hardening, incident triage, postmortems, regulated reproducibility checks, and cost-governance runbooks
+> - Warnings: on-demand scan costs compound silently, the 20 concurrent interactive DML limit is hard, time travel expires permanently, region and security boundaries are easy to cross incorrectly, and some failures surface only when queried
+> - Recommendations: codify prevention in Terraform, dbt, Airflow, Cloud Billing, and CI checks; dry-run and cap large queries; enforce partition filters and labels; and treat each prevention protocol plus fix procedure as an operational runbook
+>
+> [!note]- Glossary
+>
+> **BigQuery**
+> - Google Cloud's analytical database service that stores tables, executes SQL, manages jobs, and exposes operational metadata for warehouse workloads.
+> - Every problem in this note is BigQuery-specific, even when the surrounding platform also uses dbt, Airflow, Cloud Run, or SQL Server.
+>
+> > [!info] Service behavior matters
+> >
+> > BigQuery looks simple at query time, but many of the real production risks live in its pricing model, storage layout, quotas, and system views rather than in SQL syntax alone.
+>
+> ---
+>
+> **Audit trail / reproducibility**
+> - The requirement that you can explain what data, query, code path, and point-in-time state produced a published result.
+> - The note treats this as non-negotiable because regulated financial calculations cannot rely on best-effort reconstruction after the fact.
+>
+> > [!warning] Recovery windows expire
+> >
+> > Reproducibility is not guaranteed just because BigQuery supports time travel. If retention, logging, labels, and snapshots are missing, historical reconstruction eventually becomes impossible.
+>
+> ---
+>
+> **On-demand pricing**
+> - BigQuery's pay-per-scan billing model where query cost is driven primarily by bytes processed rather than by reserved compute capacity.
+> - The note uses on-demand pricing as the baseline because many of the listed incidents are really scan-amplification failures expressed as money.
+>
+> > [!warning] Small mistakes compound fast
+> >
+> > An individual query may look cheap until a dashboard, retry loop, or scheduled job repeats it continuously. On-demand risk is often multiplicative rather than singular.
+>
+> ---
+>
+> **DML / `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE`**
+> - BigQuery statements that mutate table data instead of only reading it.
+> - The note treats DML as a concurrency and reliability risk because mutations consume shared quota, can conflict with each other, and are harder to reason about than pure reads.
+>
+> > [!warning] Mutations share scarce slots
+> >
+> > A project can run out of DML headroom long before it runs out of ideas for parallelism. Treat mutating workloads as capacity-managed operations, not as infinitely parallel tasks.
+>
+> ---
+>
+> **`MERGE`**
+> - A BigQuery DML statement that conditionally inserts, updates, or deletes rows by matching a source dataset against a target table.
+> - The note highlights `MERGE` because it is central to incremental pipelines and also a common source of full-table scans, long-running mutations, and quota contention.
+>
+> > [!warning] Incremental does not guarantee cheap
+> >
+> > A logically incremental `MERGE` can still scan a huge target table if the matching predicates do not align with partitioning or clustering. The intent of the statement does not control the cost by itself.
+>
+> ---
+>
+> **Streaming inserts / Storage Write API**
+> - BigQuery's low-latency ingestion path for row-by-row or near-real-time writes outside ordinary batch load jobs.
+> - The note includes it because streaming is operationally attractive but can become a cost trap when used for workloads that should stay batched.
+>
+> > [!warning] Convenience has a price
+> >
+> > Streaming is not just "faster load." It changes cost, ingestion semantics, and downstream behavior, so using it by default can create a permanently expensive pipeline shape.
+>
+> ---
+>
+> **Partitioned table**
+> - A BigQuery table physically divided by time or range boundaries so only relevant segments need to be scanned for qualifying queries.
+> - The note treats partitioning as the first structural defense against cost explosion and runaway scan volume.
+>
+> > [!info] Structure beats discipline
+> >
+> > Good user habits help, but partitioning is stronger because it changes the storage shape itself. When the table is designed well, cost control becomes easier to enforce automatically.
+>
+> ---
+>
+> **Partition pruning**
+> - BigQuery's ability to skip irrelevant table partitions when a filter can be resolved against the partition boundary during planning.
+> - Several problem sections depend on pruning because a table can be partitioned correctly and still scan excessively if pruning is not triggered.
+>
+> > [!warning] Expressions can disable it
+> >
+> > Wrapping the partition column in functions or otherwise hiding it behind dynamic expressions can prevent pruning. The presence of a date filter does not automatically mean BigQuery can use it efficiently.
+>
+> ---
+>
+> **`require_partition_filter`**
+> - A BigQuery table option that rejects queries lacking a partition predicate on a partitioned table.
+> - The note uses it as a preventive guardrail because relying on human discipline alone is not enough on shared analytical platforms.
+>
+> > [!warning] Protection changes compatibility
+> >
+> > Enabling the option is desirable, but it can also break existing dashboards, views, or ad hoc habits. Guardrails should be deployed deliberately, not assumed to be transparent.
+>
+> ---
+>
+> **Clustering**
+> - A BigQuery storage optimization that orders data within tables or partitions by selected columns so irrelevant blocks can be skipped.
+> - The note treats clustering as the second major scan-reduction lever after partitioning, especially for repeated filters on business keys.
+>
+> > [!info] Best with real access patterns
+> >
+> > Clustering helps when it matches how queries actually filter data. Choosing columns by intuition instead of observed workload often wastes the feature.
+>
+> ---
+>
+> **Wildcard table / `_TABLE_SUFFIX`**
+> - A legacy BigQuery pattern where many sharded tables are queried together with a wildcard name and optionally filtered by the special `_TABLE_SUFFIX` pseudo-column.
+> - The note includes it because older sharded designs still exist and create scan and governance problems that native partitioned tables solve better.
+>
+> > [!warning] No built-in guardrail
+> >
+> > Wildcard queries do not get the same enforcement features as native partitioned tables. Forgetting `_TABLE_SUFFIX` can silently fan out across years of shards.
+>
+> ---
+>
+> **`FLOAT64`**
+> - BigQuery's binary floating-point numeric type, optimized for approximate arithmetic rather than exact decimal financial calculations.
+> - The note flags it because financial index math can be wrong in subtle ways even when the query runs successfully.
+>
+> > [!warning] Approximation is the bug
+> >
+> > Floating-point issues are dangerous because they often look plausible. A value can be mathematically wrong without triggering any explicit error or quota boundary.
+>
+> ---
+>
+> **`NUMERIC`**
+> - BigQuery's exact decimal type designed for fixed-precision arithmetic such as prices, weights, and ratios that must not accumulate binary rounding error.
+> - The note positions `NUMERIC` as the safer choice when monetary or index calculations require reproducible decimal results.
+>
+> > [!info] Exactness has storage tradeoffs
+> >
+> > Exact decimal types are usually worth the cost for regulated financial outputs. Precision errors are typically more expensive than the marginal storage or compute overhead.
+>
+> ---
+>
+> **`NULL` propagation**
+> - The way SQL expressions often return `NULL` when any contributing operand is `NULL`, unless the expression is explicitly guarded.
+> - The note includes this because silent null behavior can mask missing upstream data and turn data-quality issues into understated aggregates or blank downstream values.
+>
+> > [!warning] Silence looks clean
+> >
+> > `NULL` propagation is dangerous precisely because it often produces no hard failure. A dashboard that quietly shows blanks or lower totals can be harder to catch than a crashed job.
+>
+> ---
+>
+> **Slot / `total_slot_ms`**
+> - The unit of BigQuery compute capacity and the metric used to measure how much processing time a query consumed.
+> - The note uses slot behavior to discuss starvation, contention, compute intensity, and the distinction between scan-heavy and CPU-heavy workloads.
+>
+> > [!info] Cost and capacity are related
+> >
+> > Even when on-demand pricing bills by bytes, slot pressure still determines latency and concurrency. Fast enough and cheap enough are separate dimensions.
+>
+> ---
+>
+> **Materialized view**
+> - A BigQuery-managed precomputed query result that is refreshed automatically to serve repeated reads more efficiently than recomputing the full source query every time.
+> - The note includes materialized views because they can solve repeated-query cost problems while also introducing freshness and fallback surprises.
+>
+> > [!warning] Freshness is conditional
+> >
+> > A materialized view can be valid, deployed, and still not represent the latest source data at the moment someone queries it. Operational SLAs must account for refresh behavior.
+>
+> ---
+>
+> **Scheduled query**
+> - A managed BigQuery job that executes SQL on a schedule without requiring an external orchestrator to trigger it manually.
+> - The note treats scheduled queries as convenient but operationally risky when alerting, ownership, or dependency visibility is weak.
+>
+> > [!warning] Managed does not mean monitored
+> >
+> > A scheduled query can fail repeatedly while remaining "managed" in the control plane. Without explicit alerts and ownership, automation simply hides the failure loop.
+>
+> ---
+>
+> **Time travel**
+> - BigQuery's bounded historical row-version retention that lets you query or restore past table states for a limited number of hours or days.
+> - The note uses time travel in both recovery and reproducibility scenarios, especially around accidental deletion and historical reruns.
+>
+> > [!warning] Retention is finite
+> >
+> > Time travel feels like a safety net until the window expires. If you need historical reproducibility beyond the retention limit, you must create a different preservation mechanism in advance.
+>
+> ---
+>
+> **External table**
+> - A BigQuery table definition that reads data in place from an external storage system such as Cloud Storage instead of storing the data natively inside BigQuery.
+> - The note includes external tables because they are tempting for quick access patterns but often underperform native tables for repeated analytical workloads.
+>
+> > [!warning] External is not free lunch
+> >
+> > Avoid assuming that skipping a load step makes the system simpler overall. Performance, pruning, statistics, and downstream ergonomics can all degrade when data never becomes native.
+>
+> ---
+>
+> **Authorized view**
+> - A BigQuery view granted access to underlying data so consumers can query the view without direct access to the source tables.
+> - The note covers authorized views because they are part of secure-sharing patterns and can conflict with other fine-grained security mechanisms.
+>
+> > [!info] Access is mediated by the view
+> >
+> > Authorized views are powerful because they separate data exposure from table-level grants. They are also subtle because the access path becomes indirect rather than obvious from table IAM alone.
+>
+> ---
+>
+> **Policy tag / column-level security**
+> - A metadata classification and access-control mechanism that restricts visibility of specific columns based on taxonomy-backed permissions.
+> - The note includes policy tags because column security can interact badly with authorized views and downstream expectations about accessible schemas.
+>
+> > [!warning] Security layers can collide
+> >
+> > Combining multiple protection mechanisms is not automatically additive. One layer can block or invalidate another in ways that only surface when a view or query is executed.
+>
+> ---
+>
+> **`INFORMATION_SCHEMA`**
+> - BigQuery's family of system views that expose metadata about jobs, tables, options, views, and other warehouse objects through SQL.
+> - The note uses these views heavily for cost monitoring, dependency discovery, and operational audits.
+>
+> > [!warning] Metadata can still cost
+> >
+> > `INFORMATION_SCHEMA` queries are often cheaper than data-table scans, but they are not magically free or cached in every case. Poorly scoped metadata queries can become their own operational issue.
+>
+> ---
+>
+> **Label / job label**
+> - Key-value metadata attached to BigQuery resources or jobs so teams can group, govern, and attribute cost or ownership consistently.
+> - The note treats labels as essential infrastructure for cost attribution because unlabeled spend is hard to assign or remediate after the fact.
+>
+> > [!warning] Missing labels erase blame lines
+> >
+> > Costs without ownership metadata become shared pain with no clear operator. Once a job is finished, some missing attribution details cannot be reconstructed cleanly.
+>
+> ---
+>
+> **BI Engine**
+> - BigQuery's in-memory acceleration layer for repeated analytical queries, especially dashboard-style workloads.
+> - The note includes BI Engine because reservation spend is only worthwhile when cacheable query patterns actually hit the accelerator.
+>
+> > [!warning] Dynamic SQL defeats caching
+> >
+> > Buying acceleration does not help if the query text changes constantly. Cache architecture rewards stable query shapes, not just expensive reservations.
+>
+> ---
+>
+> **Airflow pool**
+> - An orchestration-level concurrency control in Apache Airflow that caps how many tasks of a given class can run simultaneously.
+> - The note uses Airflow pools as the operational fix for BigQuery DML quotas because warehouse limits must be reflected upstream in the orchestrator.
+>
+> > [!info] Orchestration must know the quota
+> >
+> > BigQuery will enforce the limit whether Airflow understands it or not. Pools turn an external hard limit into an explicit scheduling rule instead of a recurring failure pattern.
 
 ## Table of Contents
 
 **Critical — Cost Explosion / Data Loss**
+
 1. [Uncontrolled Full-Table Scans ($$$)](#1-uncontrolled-full-table-scans-)
 2. [DML Quota Exceeded (20 Concurrent Mutations)](#2-dml-quota-exceeded-20-concurrent-mutations)
 3. [Resources Exceeded During Query](#3-resources-exceeded-during-query)
@@ -29,6 +306,7 @@ BigQuery is deceptively simple — write SQL, get results. But in a production d
 5. [Streaming Insert Cost Explosion](#5-streaming-insert-cost-explosion)
 
 **High — Data Quality / Performance**
+
 1. [FLOAT64 Precision Loss in Financial Calculations](#6-float64-precision-loss-in-financial-calculations)
 2. [Partition Pruning Not Triggered](#7-partition-pruning-not-triggered)
 3. [No Clustering on Filter Columns](#8-no-clustering-on-filter-columns)
@@ -38,6 +316,7 @@ BigQuery is deceptively simple — write SQL, get results. But in a production d
 7. [Materialized View Silently Stale](#12-materialized-view-silently-stale)
 
 **Moderate — Operational Pain**
+
 1. [Schema Evolution Breaks Downstream](#13-schema-evolution-breaks-downstream)
 2. [Scheduled Query Fails Silently](#14-scheduled-query-fails-silently)
 3. [Cross-Region Query Costs](#15-cross-region-query-costs)
@@ -48,6 +327,7 @@ BigQuery is deceptively simple — write SQL, get results. But in a production d
 8. [Time Travel Expiry — Can't Reproduce Historical Calculation](#20-time-travel-expiry-cant-reproduce-historical-calculation)
 
 **Low — Annoyances / Technical Debt**
+
 1. [No require_partition_filter Enforced](#21-no-require_partition_filter-enforced)
 2. [Label/Tag Discipline Missing](#22-labeltag-discipline-missing)
 3. [Wildcard Table Queries (Legacy Sharding)](#23-wildcard-table-queries-legacy-sharding)
@@ -307,6 +587,7 @@ bq update \
 ### BigQuery | DML Quota | concurrent mutation limit exceeded
 
 #### What happens
+
 An Airflow DAG refreshes the `analytics.index_levels` partitioned table. The DAG has 25 parallel tasks, each running a `MERGE` statement targeting a different monthly partition. Tasks 1–20 start normally. Tasks 21–25 fail immediately with: `Quota exceeded: Your project exceeded quota for concurrent interactive DML statements`. The index publishing pipeline fails, client-facing data is not updated, and the on-call engineer gets paged at 07:00.
 
 #### Root cause
@@ -314,6 +595,7 @@ An Airflow DAG refreshes the `analytics.index_levels` partitioned table. The DAG
 BigQuery enforces a hard project-level quota of **20 concurrent interactive DML statements** (INSERT, UPDATE, DELETE, MERGE, TRUNCATE). This is not a soft limit — it is enforced at the project level, not the table level. A MERGE that runs for 10 minutes holds one DML slot for the entire duration. With 25 parallel Airflow tasks each running a MERGE, 5 will always fail. The quota applies separately to interactive and batch jobs (batch DML has a separate, lower-priority queue).
 
 #### Consequences
+
 - Pipeline fails mid-run, leaving some partitions updated and others stale — partial state that is very hard to debug
 - Retry logic without backoff immediately re-queues the failed tasks, potentially blocking other pipelines in the same project
 - Client-facing index levels are inconsistent — some dates show new values, others show the previous run's values
@@ -422,7 +704,6 @@ job_config = bigquery.QueryJobConfig(
 #### Fix procedure
 
 1. Identify which jobs are holding DML slots (use the DML queue inspection query from the prevention section above).
-
 2. Cancel stuck/runaway jobs if necessary:
 
 *Cancel a specific BigQuery job by job ID.*
@@ -453,6 +734,7 @@ merge_group.max_active_tasks = 15
 ### BigQuery | Query Execution | resources exceeded during query
 
 #### What happens
+
 A data analyst runs an ad-hoc query joining three large tables: `analytics.daily_prices` (1B rows), `analytics.index_weights` (500M rows), and `analytics.esg_scores` (200M rows) — all without partition filters, to produce a time-series cross-sectional analysis. After 10 minutes, the query fails with: `Resources exceeded during query execution: The query could not be executed in the allotted memory`. No partial results are returned. The analyst has paid to scan ~3TB of data ($18.75) and received nothing.
 
 #### Root cause
@@ -460,6 +742,7 @@ A data analyst runs an ad-hoc query joining three large tables: `analytics.daily
 BigQuery executes queries in a distributed shuffle-based execution engine. Large JOINs require materializing intermediate results across worker nodes (shuffle). When the shuffle data exceeds available memory across all assigned slots, the query fails. On-demand pricing assigns slots dynamically, but memory per slot is bounded. Wide Cartesian-like JOINs (e.g., joining on a non-unique key), queries with many GROUP BY dimensions, and ARRAY_AGG on large groups are common triggers. The failure is an execution error, not a quota error — the job will not automatically retry.
 
 #### Consequences
+
 - Analyst paid \$10–50 in scan costs and received no result
 - Long-running queries (10+ minutes) block slot allocation for other users
 - Complex analytical queries for index methodology validation may be impossible without query restructuring
@@ -597,6 +880,7 @@ bq show --format=prettyjson --job <job_id> | jq '.statistics.query.queryPlan[] |
 ### BigQuery | Table Management | accidental table or dataset deletion
 
 #### What happens
+
 A dbt developer refactors the `finance.corporate_actions` model, changing the target dataset from `staging` to `finance`. The dbt run includes a `--full-refresh` flag. The production `finance.corporate_actions` table — containing 5 years of corporate action history used for index backcalculation — is dropped and recreated from the current incremental slice. Five years of history are gone. Alternatively: a Terraform `apply` on a refactored module drops a dataset because the resource was moved without a `moved {}` block.
 
 #### Root cause
@@ -604,6 +888,7 @@ A dbt developer refactors the `finance.corporate_actions` model, changing the ta
 BigQuery does not have a confirmation prompt for `DROP TABLE` or `DROP DATASET`. dbt's `--full-refresh` flag explicitly drops and recreates tables. Terraform destroy is triggered automatically when a managed resource is removed from state. BigQuery's time travel feature retains data for up to 7 days (configurable) after deletion, making recovery possible within that window.
 
 #### Consequences
+
 - Loss of historical data required for BMR-regulated index backcalculation
 - Pipeline failures for all downstream models that depend on the deleted table
 - Potential regulatory breach if audit data cannot be reproduced
@@ -741,6 +1026,7 @@ bq rm --project_id=bq-wh-nb \
 ### BigQuery | Streaming API | insert cost explosion
 
 #### What happens
+
 A Cloud Run job exports corporate action events from SQL Server to BigQuery using the legacy streaming API. The developer wrote a loop that calls `rows.insert_rows_json()` once per row. Processing 1 million events takes 45 minutes and generates 1 million API calls. Cost: streaming inserts are billed at $0.012 per 200MB of data — but the real problem is the per-call overhead: latency per insert is 100–500ms, making this 45x slower than a batch load job. Additionally, streamed rows are not available for DML (UPDATE/DELETE) for up to 30 minutes.
 
 #### Root cause
@@ -748,6 +1034,7 @@ A Cloud Run job exports corporate action events from SQL Server to BigQuery usin
 BigQuery has three data ingestion mechanisms with dramatically different cost and performance profiles: (1) **Load jobs**: free, batch, supports all formats, data immediately available for all DML. (2) **Storage Write API**: low cost ($0.025/GB), streaming, supports exactly-once semantics, high throughput. (3) **Legacy Streaming API**: $0.012/200MB, low throughput per connection, not immediately DML-accessible. The legacy streaming API was designed for low-latency single-event ingestion (e.g., clickstream), not batch financial data loads.
 
 #### Consequences
+
 - Cloud Run export jobs run 45x longer, consuming more CPU and memory → higher Cloud Run costs
 - BigQuery streaming insert costs add up: 1M rows/day × 365 = $365M rows/year at row-level API overhead
 - Rows recently inserted via streaming cannot be updated or deleted for ~30 minutes, breaking downstream MERGE operations
@@ -946,6 +1233,7 @@ These problems produce incorrect results or severe performance degradation. Many
 ### BigQuery | Data Types | FLOAT64 precision loss in financial calculations
 
 #### What happens
+
 Index constituent weights are stored as `FLOAT64` in the `analytics.index_weights` table. A validation query checks that constituent weights sum to 1.0 for each index on each date. The query returns `0.9999999999999998` for the MSCI World index. An automated audit validation script that checks `SUM(weight) = 1.0` fails. The pipeline is halted pending investigation. The root cause is not a data error — it is FLOAT64's fundamental inability to represent certain decimal fractions exactly.
 
 #### Root cause
@@ -953,6 +1241,7 @@ Index constituent weights are stored as `FLOAT64` in the `analytics.index_weight
 `FLOAT64` (IEEE 754 double-precision) stores numbers as binary fractions. Decimal values like `0.1`, `0.2`, and `0.3` cannot be represented exactly in binary — they become repeating fractions. When you sum 1,500 constituent weights that are each imprecisely stored, the errors compound. `NUMERIC` (DECIMAL) in BigQuery stores numbers as exact decimal values with up to 38 digits of precision and 9 decimal places, making it the correct type for stored financial values. For intermediate calculation results that chain many operations (e.g., cumulative index return calculations), `BIGNUMERIC` (76 digits precision, 38 decimal places) prevents precision exhaustion in long calculation chains.
 
 #### Consequences
+
 - Audit validation failures trigger false alarms, causing pipeline halts
 - Index levels calculated from FLOAT64 weights are technically incorrect (error is tiny but non-zero)
 - EU BMR compliance requires exact reproducibility — FLOAT64 arithmetic is non-deterministic across platforms
@@ -1126,6 +1415,7 @@ ORDER BY table_name, column_name;
 ### BigQuery | Partition Pruning | pruning not triggered by function wrapping
 
 #### What happens
+
 The `analytics.daily_prices` table is partitioned by `price_date` (DATE type). A scheduled query filters data with `WHERE DATE(price_date) = '2026-03-22'`. Although the filter appears to target a single day, the `DATE()` function wrapped around the partition column prevents BigQuery from applying partition pruning. The query scans the entire 5TB table instead of a single day's 2GB partition — 2,500x more data than necessary, costing $31.25 instead of $0.01.
 
 #### Root cause
@@ -1133,6 +1423,7 @@ The `analytics.daily_prices` table is partitioned by `price_date` (DATE type). A
 BigQuery's partition pruning requires that the filter expression directly reference the partition column with a comparison operator (`=`, `<`, `>`, `BETWEEN`, `IN`). Any transformation applied to the partition column — including scalar functions like `DATE()`, `TIMESTAMP_TRUNC()`, `FORMAT_DATE()`, or even string concatenation — prevents the query planner from statically determining which partitions to read. The planner cannot invert arbitrary functions to determine the affected partition range.
 
 #### Consequences
+
 - Scheduled queries and dbt models that appear correct run at 100–2500x expected cost
 - Performance is indistinguishable from an unpartitioned table
 - The partition structure provides zero benefit despite the storage and maintenance overhead
@@ -1269,6 +1560,7 @@ bq query --dry_run --use_legacy_sql=false \
 ### BigQuery | Clustering | missing clustering on filter columns
 
 #### What happens
+
 The `analytics.daily_prices` table is partitioned by `price_date`. Each daily partition contains 500,000 rows across 3,000 instruments and 50 indices. An analyst queries data for a single index (`index_code = 'MSCI_EM'`) on a single date. Partition pruning works correctly — only today's partition is read. But within that partition, all 500,000 rows are scanned to find the ~10,000 rows belonging to `MSCI_EM`. Without clustering, BigQuery has no way to skip rows within a partition.
 
 #### Root cause
@@ -1276,6 +1568,7 @@ The `analytics.daily_prices` table is partitioned by `price_date`. Each daily pa
 BigQuery clustering physically sorts and co-locates data by the specified columns within each partition. When you filter on a cluster column, BigQuery reads only the data blocks that contain matching values — this is called "block pruning." Without clustering, every query that filters on `index_code` or `instrument_isin` scans the entire partition. Clustering is free (no storage overhead, no maintenance jobs) and reduces bytes billed proportionally to the column selectivity.
 
 #### Consequences
+
 - Queries on large partitions scan 10–100x more data than necessary
 - Cost scales linearly with partition size even for highly selective queries
 - Performance degradation as partition sizes grow over time
@@ -1313,25 +1606,25 @@ CREATE TABLE analytics.daily_prices (
 PARTITION BY price_date
 CLUSTER BY index_code, instrument_isin
 OPTIONS (require_partition_filter = TRUE);
+
 ```
-
 2. In Terraform:
-
 ```hcl
+
 resource "google_bigquery_table" "daily_prices" {
   dataset_id = "analytics"
   table_id   = "daily_prices"
 
-  time_partitioning {
+time_partitioning {
     type                     = "DAY"
     field                    = "price_date"
     require_partition_filter = true
   }
 
-  clustering = ["index_code", "instrument_isin"]  # Up to 4 columns
+clustering = ["index_code", "instrument_isin"]  # Up to 4 columns
 }
-```
 
+```
 ##### Measure clustering impact
 
 *Cost comparison — same query on clustered vs unclustered table. Expect ~80% reduction in bytes processed.*
@@ -1340,7 +1633,6 @@ FROM analytics.daily_prices          -- clustered by index_code, instrument_isin
 WHERE price_date = '2026-03-22'
   AND index_code = 'MSCI_EM'
 GROUP BY instrument_isin;
-
 ```
 
 #### Fix procedure
@@ -1384,6 +1676,7 @@ ORDER BY table_name, clustering_ordinal_position;
 ### BigQuery | MERGE Statement | expensive incremental full-table scan
 
 #### What happens
+
 A dbt incremental model uses the default `merge` strategy to update `analytics.index_levels` (1 billion rows, partitioned by `level_date`). The Cloud Run job exports 100 new rows for today. dbt generates a MERGE statement that joins the 100-row source against the 1-billion-row target to find rows to update or insert. The MERGE scans the entire 1B row table — approximately 2TB — costing $12.50 to load 100 rows. Running this 288 times per day (every 5 minutes) costs $3,600/day.
 
 #### Root cause
@@ -1391,6 +1684,7 @@ A dbt incremental model uses the default `merge` strategy to update `analytics.i
 BigQuery's MERGE statement evaluates the `WHEN MATCHED` condition across all rows in both the source and target that join on the merge key. Without predicates that restrict which partitions of the target are considered, the engine must scan every partition to find potential matches. dbt's default `merge` strategy does not add partition predicates unless explicitly configured with `incremental_predicates`.
 
 #### Consequences
+
 - Incremental model refresh cost scales with total table size, not incremental data size
 - As the table grows over time, costs increase even with a constant daily row count
 - High slot consumption for a simple insert/update operation blocks other queries
@@ -1509,6 +1803,7 @@ LIMIT 10;
 ### BigQuery | Slot Management | slot starvation during peak hours
 
 #### What happens
+
 At 09:00 CET, index calculation pipelines start, analysts begin running queries, and dashboards auto-refresh. The project is on on-demand pricing. Simple queries that take 5 seconds at midnight take 5 minutes at 09:00. A client-facing dashboard that queries `analytics.index_levels` shows "Loading..." for 4 minutes. The on-call engineer checks the BigQuery console and sees a queue of 200 pending queries.
 
 #### Root cause
@@ -1516,6 +1811,7 @@ At 09:00 CET, index calculation pipelines start, analysts begin running queries,
 On-demand BigQuery pricing gives each project up to 2,000 concurrent slots (soft limit). Slots are shared across all queries in the project. When demand exceeds available slots, queries are queued. Query queueing is fair-schedule based — there is no priority mechanism in on-demand pricing. ETL pipelines, analyst ad-hoc queries, and dashboard refreshes all compete for the same pool. There is no guaranteed latency in on-demand mode.
 
 #### Consequences
+
 - Client-facing dashboards become unusable during business hours
 - SLA breaches for index level publication times
 - Analysts lose trust in the platform and resort to downloading data to Excel
@@ -1626,6 +1922,7 @@ job_config = bigquery.QueryJobConfig(priority=bigquery.QueryPriority.BATCH)
 ### BigQuery | NULL Handling | silent NULL propagation in calculations
 
 #### What happens
+
 The index return calculation model computes: `SAFE_DIVIDE(current_level - previous_level, previous_level)` to get daily returns. For 3 instruments, `previous_level` is NULL (new listings with no prior day). `SAFE_DIVIDE` returns NULL for these rows. The NULL values flow into the downstream `AVG(daily_return)` aggregation, which silently excludes them. The index level is calculated on incomplete constituent data. No error is raised. The published index level is wrong.
 
 #### Root cause
@@ -1633,6 +1930,7 @@ The index return calculation model computes: `SAFE_DIVIDE(current_level - previo
 SQL's NULL semantics: any arithmetic operation involving NULL returns NULL. Aggregate functions like `SUM`, `AVG`, `MAX`, and `MIN` silently exclude NULL values. `COUNT(*)` counts NULLs but `COUNT(col)` does not. This is standard SQL behavior, but it means that data quality issues (missing values) are silently absorbed into calculations rather than surfaced as errors. In financial calculations, silent partial data is more dangerous than an explicit failure.
 
 #### Consequences
+
 - Published index levels are calculated on incomplete constituent data with no indication of the issue
 - The error is invisible in the output — the result is a number, just the wrong number
 - BMR audit trail cannot demonstrate that the calculation used complete data
@@ -1747,6 +2045,7 @@ GROUP BY 1;
 ### BigQuery | Materialized Views | silently stale view fallback
 
 #### What happens
+
 A client-facing dashboard queries `analytics_mv.index_levels_summary` — a materialized view over `analytics.index_levels`. The base table receives DML updates 20 times per day as indices are recalculated. BigQuery's auto-refresh for the materialized view cannot keep up with the DML frequency. The view exceeds its `max_staleness` window. BigQuery falls back to querying the base table directly — scanning 500GB instead of the 2GB materialized view, costing 250x more per query. Worse, the dashboard team does not know this is happening: queries return results as normal, just slower and more expensive.
 
 #### Root cause
@@ -1754,6 +2053,7 @@ A client-facing dashboard queries `analytics_mv.index_levels_summary` — a mate
 BigQuery materialized views auto-refresh when the base table changes, subject to a `max_staleness` interval. When the base table receives DML faster than the view can refresh, or when refresh jobs fail, the view becomes stale beyond `max_staleness`. BigQuery's fallback behavior is to query the base table directly — this maintains correctness but silently abandons all performance and cost benefits of the materialized view. There is no error or warning surfaced to the querying user.
 
 #### Consequences
+
 - Dashboard query costs increase 50–250x without any visible indication
 - Dashboard performance degrades from seconds to minutes
 - Reserved slot allocations for dashboard workloads are consumed by unexpectedly large scans
@@ -1865,6 +2165,7 @@ These problems cause pipeline failures, silent staleness, or escalating manual t
 ### BigQuery | Schema Evolution | column rename breaks downstream
 
 #### What happens
+
 The SQL Server gold layer renames the column `close_px` to `close_price` in the `prices` table. The Cloud Run export job immediately picks up the new column name. After the next export, the BigQuery staging table `staging.prices` has a `close_price` column but not `close_px`. All 12 dbt models that reference `close_px` fail with `Unrecognized name: close_px`. Three materialized views break. Five scheduled queries start returning errors. The index calculation pipeline fails. The on-call engineer spends 3 hours tracking down all references.
 
 #### Root cause
@@ -1872,6 +2173,7 @@ The SQL Server gold layer renames the column `close_px` to `close_price` in the 
 BigQuery views, scheduled queries, and dbt models reference table columns by name at query time, not at definition time. A rename in the upstream schema immediately breaks all downstream consumers. BigQuery has no built-in column lineage tracking that can enumerate all consumers of a given column. Finding all dependents requires scanning INFORMATION_SCHEMA.VIEWS and searching scheduled query definitions manually.
 
 #### Consequences
+
 - Cascading failures across all pipeline layers simultaneously
 - No centralized way to identify all affected objects without manual investigation
 - Index calculation pipeline down until all references are updated
@@ -1976,6 +2278,7 @@ bq show --transfer_config <transfer_config_id>
 ### BigQuery | Scheduled Queries | silent failure without alerting
 
 #### What happens
+
 A scheduled query refreshes `analytics.esg_aggregates` daily at 06:00. The service account used by the scheduled query had its `bigquery.jobs.create` role removed during a quarterly IAM review. Starting Monday, the query fails with `Access Denied: BigQuery: Permission denied`. No alert is configured. The failure is discovered on Wednesday when an analyst notices stale ESG data. Three days of ESG aggregate data is missing.
 
 #### Root cause
@@ -1983,6 +2286,7 @@ A scheduled query refreshes `analytics.esg_aggregates` daily at 06:00. The servi
 BigQuery scheduled queries run under a service account and log results to INFORMATION_SCHEMA.JOBS. However, failures do not proactively notify anyone — there is no built-in alerting for scheduled query failures. Cloud Monitoring can alert on BigQuery job failures, but this requires explicit configuration. The default state is silent failure.
 
 #### Consequences
+
 - Data consumers discover stale data days after the failure, with no context on when it stopped working
 - Backfilling 3 days of aggregates may require manual intervention and re-running expensive queries
 - Regulatory gap: ESG data used in client reports was stale for 3 days without detection
@@ -2120,6 +2424,7 @@ gcloud projects add-iam-policy-binding bq-wh-nb \
 ### BigQuery | Cross-Region | query result egress costs
 
 #### What happens
+
 The BigQuery dataset `analytics` is located in `EU` (multi-region). A Cloud Run job deployed in `us-central1` submits query jobs to this dataset. BigQuery processes the query in the EU region, but the job submission originates from the US. Although BigQuery query costs are region-agnostic for data-at-rest, the query results (potentially several GB) are transferred back to the US Cloud Run instance, incurring network egress charges of \$0.08–\$0.12/GB. A job that transfers 50GB of results per day costs \$4/day (\$1,460/year) just in egress.
 
 #### Root cause
@@ -2127,6 +2432,7 @@ The BigQuery dataset `analytics` is located in `EU` (multi-region). A Cloud Run 
 BigQuery stores data in the specified region. Query compute runs in that region. Results delivered to a client outside that region traverse Google's network. Egress from GCP regions to external IPs or other regions incurs data transfer charges. Additionally, cross-region queries may have higher latency due to round-trip network overhead.
 
 #### Consequences
+
 - Unexpected egress costs accumulate silently — not visible in BigQuery billing line items
 - Higher latency for Cloud Run jobs in a different region than the dataset
 - Data residency complications for EU GDPR compliance if results traverse US infrastructure
@@ -2205,6 +2511,7 @@ gcloud functions list --format="table(name,region)" --project=bq-wh-nb
 ### BigQuery | DML Concurrency | table-level lock conflicts
 
 #### What happens
+
 Two Airflow tasks run concurrently: one inserts new index level rows for today into `analytics.index_levels`, and another updates historical rows for a corporate action adjustment. Both target the same table simultaneously. One task fails with: `Table "index_levels" is currently busy. Please try again later.` This is distinct from the 20-slot quota issue — this is a per-table concurrency conflict on DML operations.
 
 #### Root cause
@@ -2212,6 +2519,7 @@ Two Airflow tasks run concurrently: one inserts new index level rows for today i
 BigQuery serializes DML operations on the same table at the partition level for some operations (INSERT into different partitions can be concurrent), but UPDATE and DELETE acquire table-level locks. A concurrent INSERT and UPDATE/DELETE on the same table will conflict. MERGE operations also acquire exclusive locks during execution. The conflict resolution is immediate failure — BigQuery does not queue the second operation.
 
 #### Consequences
+
 - One of two simultaneous DML operations always fails, requiring retry logic
 - Partial pipeline state: some data is written, some is not
 - Complex retry logic is needed in Airflow to handle BQ concurrency conflicts without double-counting
@@ -2314,6 +2622,7 @@ ORDER BY start_time;
 ### BigQuery | External Tables | performance trap from missing optimizations
 
 #### What happens
+
 A data engineer creates an external table pointing to Parquet files in GCS as a quick way to query staging data. The table works correctly. However, every query against it reads directly from GCS with no caching, no clustering, no statistics. A query that takes 2 seconds on a native BigQuery table takes 25 seconds on the external table. Dashboards using the external table for "live" data are slow and expensive.
 
 #### Root cause
@@ -2321,6 +2630,7 @@ A data engineer creates an external table pointing to Parquet files in GCS as a 
 BigQuery external tables (a.k.a. federated queries) read data from GCS, Cloud Bigtable, Google Sheets, or Cloud SQL at query time. There is no Capacitor columnar format, no clustering, no statistics collection, and no query cache. Each query reads raw files from GCS, paying GCS read API costs and BigQuery processing costs. For Parquet files, column projection works (only referenced columns are read), but row filtering requires reading and decoding all rows in all files.
 
 #### Consequences
+
 - Queries 5–20x slower than equivalent native BigQuery tables
 - No benefit from BigQuery's optimizations (clustering, partition pruning, caching)
 - GCS data reads are not cached — repeated identical queries pay full cost each time
@@ -2408,6 +2718,7 @@ WHERE table_type = 'EXTERNAL';
 ### BigQuery | Column Security | authorized view and policy tag conflict
 
 #### What happens
+
 The data team creates an authorized view `analytics_restricted.index_levels_public` that exposes only non-sensitive columns to external clients. The authorized view is granted access to the source table `analytics.index_levels`. An external client queries the view and receives `Access Denied: BigQuery BigQuery: Permission denied while reading table analytics.index_levels, column: benchmark_fee`. The view was not designed to expose `benchmark_fee`, but column-level security on the source table evaluates access using the querying user's identity, not the view's identity.
 
 #### Root cause
@@ -2415,6 +2726,7 @@ The data team creates an authorized view `analytics_restricted.index_levels_publ
 BigQuery authorized views allow a view to access a table even if the querying user does not have direct table access — but column-level security (policy tags) is evaluated against the **end user's identity**, not the view's identity. If the end user lacks access to a policy-tagged column and that column exists in the source table (even if not selected by the view), the query may fail depending on how the policy tag is configured.
 
 #### Consequences
+
 - External clients receive cryptic Access Denied errors on what appears to be a permitted operation
 - The authorized view mechanism does not fully isolate users from column-level policies
 - Debugging requires understanding the interaction between authorized views, policy tags, and IAM
@@ -2474,6 +2786,7 @@ bq show --schema --format=prettyjson bq-wh-nb:stoxx_gold.index_performance | \
 ### BigQuery | INFORMATION_SCHEMA | metadata query cost overhead
 
 #### What happens
+
 An engineer writes a cost monitoring query: `SELECT * FROM INFORMATION_SCHEMA.JOBS`. On a busy project with hundreds of jobs per day, this query scans days of job history metadata. The query processes several GB and costs \$0.02–\$0.10 per run. Scheduled to run every hour for cost monitoring, it costs \$50/month in monitoring overhead — spending money to find where money is being spent.
 
 #### Root cause
@@ -2481,6 +2794,7 @@ An engineer writes a cost monitoring query: `SELECT * FROM INFORMATION_SCHEMA.JO
 `INFORMATION_SCHEMA` tables in BigQuery contain metadata about jobs, tables, and schemas. `INFORMATION_SCHEMA.JOBS` stores the full query text, statistics, and metadata for every job in the project. Without a `creation_time` filter, it scans all available history (up to 180 days for JOBS). This metadata storage is substantial on active projects. Always constrain INFORMATION_SCHEMA queries with time bounds and use the most specific view available.
 
 #### Consequences
+
 - Cost monitoring infrastructure itself becomes a significant cost center
 - Slow metadata queries give the impression of BigQuery being slow
 - `SELECT *` on INFORMATION_SCHEMA views retrieves dozens of columns, many of which are large nested structs
@@ -2563,6 +2877,7 @@ ORDER BY total_bytes_billed DESC;
 ### BigQuery | Time Travel | expiry prevents historical reproduction
 
 #### What happens
+
 A client challenges the index level published on 2026-03-10, which is 14 days ago. The EU BMR requires the data provider to demonstrate reproducibility of the calculation. A data engineer attempts to query the historical state of `analytics.index_weights` as of that date: `SELECT * FROM analytics.index_weights FOR SYSTEM_TIME AS OF '2026-03-10 00:00:00'`. The query fails: `Time travel is not supported for the given timestamp`. BigQuery's time travel window for that table is 7 days. The historical state is gone.
 
 #### Root cause
@@ -2570,6 +2885,7 @@ A client challenges the index level published on 2026-03-10, which is 14 days ag
 BigQuery time travel retains all versions of table data for a configurable window (default: 7 days, maximum: 7 days). After expiry, historical versions are permanently deleted. For a financial platform under EU BMR regulation, 7 days of time travel is grossly insufficient — regulatory inquiries can arrive months after the fact. The solution requires a separate snapshot or export strategy for long-term audit retention.
 
 #### Consequences
+
 - Inability to reproduce a published index level for regulatory audit
 - Potential regulatory breach under EU BMR Article 11 (record-keeping requirements)
 - Client disputes cannot be investigated with precision
@@ -2606,7 +2922,6 @@ SET OPTIONS (max_time_travel_hours = 168);
 *Cloud Run job that creates daily snapshot clones with 5-year BMR retention.*
 
 ```python
-
 from google.cloud import bigquery
 from datetime import date, timedelta
 
@@ -2719,6 +3034,7 @@ These problems accumulate silently over months and become expensive to reverse. 
 ### BigQuery | Partition Filter | require_partition_filter not enforced
 
 #### What happens
+
 The `analytics.daily_prices` table is partitioned by `price_date` to improve query performance and reduce costs. However, the `require_partition_filter` option is not enabled. Analysts routinely run queries without date filters — `SELECT instrument_isin, AVG(close_price) FROM analytics.daily_prices WHERE index_code = 'MSCI_WORLD'` — triggering full table scans on every execution. The partition structure provides no cost benefit because nothing forces its use.
 
 #### Root cause
@@ -2726,6 +3042,7 @@ The `analytics.daily_prices` table is partitioned by `price_date` to improve que
 BigQuery's `require_partition_filter` is an opt-in table option. It must be explicitly set. When disabled (the default), queries without partition filters succeed — they simply scan the entire table. This is a sensible default for flexibility but creates a cost risk in production tables.
 
 #### Consequences
+
 - Partition investment provides zero ROI if queries don't use it
 - Cost and performance are equivalent to an unpartitioned table for unfiltered queries
 - Difficult to enforce through code review alone — needs to be enforced at the table level
@@ -2795,6 +3112,7 @@ Run `ALTER TABLE ... SET OPTIONS (require_partition_filter = TRUE)` on all parti
 ### BigQuery | Labels | cost attribution discipline missing
 
 #### What happens
+
 After 18 months of production operation, the finance team asks which teams and pipelines are responsible for the $45,000 monthly BigQuery bill. Without job labels, it is impossible to break down costs by team, pipeline, or data domain. INFORMATION_SCHEMA.JOBS shows `user_email` (service accounts, not teams) but no business context. Every cost inquiry requires manual cross-referencing of service account names to team ownership — a multi-hour exercise with imprecise results.
 
 #### Root cause
@@ -2802,6 +3120,7 @@ After 18 months of production operation, the finance team asks which teams and p
 BigQuery supports labels on datasets, tables, and query jobs. Labels are key-value pairs that propagate to Cloud Billing export data, enabling cost attribution by any dimension. Labels must be applied at the time of resource creation or job submission — they cannot be retroactively applied to completed jobs.
 
 #### Consequences
+
 - Cost attribution by team, environment, or business domain is impossible
 - Showback/chargeback models cannot be implemented
 - Identifying the owner of expensive queries requires detective work
@@ -2912,6 +3231,7 @@ WHERE table_name NOT IN (
 ### BigQuery | Table Sharding | legacy wildcard table queries
 
 #### What happens
+
 A legacy data pipeline from 2021 creates date-sharded tables: `prices_20260101`, `prices_20260102`, ..., `prices_20260322`. A scheduled query aggregates across all of them using `FROM prices_*`. BigQuery treats the `_TABLE_SUFFIX` filter as a partition-equivalent filter, but without a `_TABLE_SUFFIX` predicate, all tables are scanned. The pattern is also incompatible with clustering, cannot benefit from `require_partition_filter`, and makes schema evolution across shards difficult.
 
 #### Root cause
@@ -2919,6 +3239,7 @@ A legacy data pipeline from 2021 creates date-sharded tables: `prices_20260101`,
 Date sharding was a common BigQuery pattern before native partitioning was mature. It provides approximate partition pruning via `_TABLE_SUFFIX` filters, but is strictly inferior to native partitioning in every dimension: cost (table metadata overhead), performance (multiple table opens), manageability (schema consistency across shards), and clustering (unavailable on wildcard queries).
 
 #### Consequences
+
 - `FROM prices_*` without `_TABLE_SUFFIX` scans all historical shards — potentially years of data
 - New analysts are unaware of the `_TABLE_SUFFIX` convention and write queries without it
 - Schema changes require updating every shard individually
@@ -2999,6 +3320,7 @@ ORDER BY table_name;
 ### BigQuery | BI Engine | cache misses from dynamic queries
 
 #### What happens
+
 The team purchases a 10GB BI Engine reservation for the EU region to accelerate dashboard queries. After deployment, cache hit rates are below 20%. Investigation reveals that Looker Studio dashboards are using dynamic date range parameters (`last_N_days` relative filters) that generate a different SQL query text on each execution. BI Engine caches by query hash — each unique query string is treated as a cache miss. The BI Engine reservation is consuming budget without delivering the expected speedup.
 
 #### Root cause
@@ -3006,6 +3328,7 @@ The team purchases a 10GB BI Engine reservation for the EU region to accelerate 
 BI Engine uses an in-memory cache keyed on query hash (the exact SQL text). Queries with dynamic parameters, user-specific filters, or timestamp-based expressions (`CURRENT_DATE()`, `NOW()`) generate unique SQL strings on each execution, preventing cache reuse. Queries must be structurally identical (same SQL text, same parameters) to benefit from BI Engine caching.
 
 #### Consequences
+
 - BI Engine reservation cost ($X/GB/hour) is wasted if cache hit rate is low
 - Dashboard performance does not improve despite the reservation spend
 - Difficult to diagnose without cache hit rate monitoring
@@ -3087,6 +3410,7 @@ resource "google_bigquery_bi_reservation" "analytics" {
 ### BigQuery | View Dependencies | stale views after source rename
 
 #### What happens
+
 The `staging.instruments` table is renamed to `staging.instruments_master` during a data model refactoring. The rename is done with `bq cp` followed by `bq rm`. Fifteen BigQuery views in `analytics` and `analytics_restricted` reference `staging.instruments`. After the rename, none of the views fail at definition time — BigQuery views are not validated at creation. They fail only when queried: `Table 'staging.instruments' was not found`. An analyst running a report at 08:00 discovers 15 broken views.
 
 #### Root cause
@@ -3094,6 +3418,7 @@ The `staging.instruments` table is renamed to `staging.instruments_master` durin
 BigQuery views store the view definition as a SQL string and validate it only at query execution time, not at definition time. A view referencing a renamed or dropped table remains in a syntactically valid but semantically broken state until someone queries it. There is no built-in dependency tracking that proactively notifies view owners when a referenced table changes.
 
 #### Consequences
+
 - Silent breakage: views appear healthy in the schema browser but fail when queried
 - Discovery during business hours causes analyst-visible failures
 - Without lineage tracking, enumerating all affected views requires scanning all view definitions

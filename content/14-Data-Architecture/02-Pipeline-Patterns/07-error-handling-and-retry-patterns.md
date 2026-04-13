@@ -27,9 +27,136 @@ status: complete
 >
 > — **Martin Kleppmann**, *Designing Data-Intensive Applications* (2017)
 
-Every tool in the vault handles errors in its own way — bash `trap`, Airflow retries, SQL Server deadlock retry, API backoff. This page provides the **universal theory** that cuts across all of them: error classification, retry strategies, failure propagation, circuit breakers, and dead letter queues. Every implementation detail links to the specific page and heading where it already exists.
+> [!abstract]- Summary
+>
+> This note defines the cross-cutting failure-handling model for data pipelines, showing how errors should be classified, retried, propagated, quarantined, budgeted, and escalated so recovery behavior is deliberate instead of left to each tool's default settings.
+>
+> **Error classification and retry design**
+> - Classifies failures into transient, permanent, data-dependent, resource-exhaustion, and partial-failure categories so the response is chosen by failure type rather than by habit.
+> - Compares retry strategies from immediate retry through exponential backoff with jitter, treating classification plus delay policy as the core reliability decision.
+>
+> **Circuit breakers, DLQs, and propagation**
+> - Explains circuit breakers, dead letter queues, and multi-step failure propagation as the mechanisms that stop one bad dependency or bad message from consuming the whole pipeline.
+> - Connects row-level or message-level isolation to broader workflow behavior so recovery can be targeted instead of all-or-nothing.
+>
+> **Operational control and escalation**
+> - Covers tool-specific error handling, retry budgets, alerting thresholds, and anti-patterns to show when automated recovery is still healthy and when it has become an incident.
+> - Frames retries as a finite operational budget tied to SLAs and downstream impact rather than as an infinite loop.
+>
+> **Operations and safety**
+> - Warnings: retrying permanent errors, retrying without backoff, retrying without idempotency, or swallowing failures silently all turn recovery logic into a source of corruption.
+> - Recommendations: classify first, retry only transient failures, cap retry budgets, isolate poison messages with a DLQ, and escalate once retries stop helping.
 
----
+> [!note]- Glossary
+>
+> **Error classification**
+> - The process of assigning a failure to a category that determines the correct recovery response.
+> - It matters here because the note treats classification as the prerequisite for every sensible retry or escalation policy.
+>
+> > [!warning] Response follows category
+> >
+> > The same exception handling code should not treat a 503, a schema mismatch, and a duplicate-key row as equivalent problems. They require different actions.
+>
+> ---
+>
+> **Transient error**
+> - A temporary failure that may resolve on its own if the operation is attempted again later.
+> - It matters here because transient failures are the main class of errors where retry logic adds value instead of waste.
+>
+> > [!info] Retryable by nature
+> >
+> > Timeouts, short-lived overload, and deadlock victims are good retry candidates because the underlying state can change without code changes.
+>
+> ---
+>
+> **Permanent error**
+> - A failure that will keep occurring until code, configuration, credentials, or assumptions are corrected.
+> - It matters here because retries against permanent failures consume time and alerting budget without increasing success probability.
+>
+> > [!warning] Do not loop on it
+> >
+> > Bad SQL, invalid auth, or schema mismatch should fail fast and loudly. Repeating them only delays the real fix.
+>
+> ---
+>
+> **Data-dependent error**
+> - A failure caused by the content of specific rows or messages rather than by the health of the infrastructure.
+> - It matters here because these failures often call for quarantine or partial continuation rather than whole-pipeline retry.
+>
+> > [!info] Bad row, not bad system
+> >
+> > The right move is often to isolate the problematic data and keep good data flowing, not to reprocess the same bad row indefinitely.
+>
+> ---
+>
+> **Exponential backoff with jitter**
+> - A retry strategy that increases delay between attempts and adds randomness so many clients do not hammer a dependency in sync.
+> - It matters here because the note treats this as the safest default retry pattern for overloaded or rate-limited systems.
+>
+> > [!warning] Jitter prevents herds
+> >
+> > Without randomness, well-behaved clients can still become a coordinated attack by retrying at the same precise moments.
+>
+> ---
+>
+> **Circuit breaker**
+> - A protective pattern that stops calls to a repeatedly failing dependency for a cooldown period before cautiously probing again.
+> - It matters here because some failures should trigger isolation and recovery time rather than endless repeated attempts.
+>
+> > [!info] Protect the rest of the system
+> >
+> > Circuit breakers are valuable because they prevent one dead dependency from consuming all worker time, connections, or retry budget.
+>
+> ---
+>
+> **Dead letter queue / DLQ**
+> - A holding destination for messages or payloads that could not be processed successfully after the allowed recovery attempts.
+> - It matters here because the pipeline needs a safe place for poison messages that should neither be dropped nor retried forever.
+>
+> > [!warning] Keep the evidence
+> >
+> > A DLQ is not just disposal. It preserves failed payloads for inspection, replay, and root-cause analysis.
+>
+> ---
+>
+> **Retry budget**
+> - The bounded amount of time or attempts a system is allowed to spend retrying before escalation or failure is required.
+> - It matters here because unlimited retries can violate SLAs even if they eventually succeed.
+>
+> > [!info] Reliability has a limit
+> >
+> > A retry policy is only healthy if it respects the time window in which the result is still useful to downstream consumers.
+>
+> ---
+>
+> **Failure propagation**
+> - The way an upstream error affects downstream steps, tasks, or consumers in a multi-stage pipeline.
+> - It matters here because the note compares propagation strategies rather than assuming every failure should either halt everything or be ignored locally.
+>
+> > [!warning] Containment is a design choice
+> >
+> > Good propagation design keeps failures visible without unnecessarily widening their blast radius across independent stages.
+>
+> ---
+>
+> **Idempotent retry**
+> - A retryable operation whose repeated execution leaves the system in the same correct end state instead of compounding side effects.
+> - It matters here because safe retries depend on the underlying write patterns already being idempotent.
+>
+> > [!warning] Retries need write safety
+> >
+> > If the retried operation inserts duplicates or partially rewrites state, the retry mechanism amplifies the incident instead of recovering from it.
+>
+
+> [!example] Recovery Strategy Fit
+>
+> > [!success] Controlled Recovery
+> >
+> > - Use these patterns anywhere pipelines depend on networks, databases, APIs, messaging systems, or other services that will fail intermittently and need controlled recovery behavior.
+>
+> > [!failure] Blind Retry Loop
+> >
+> > - Do not wrap failures in generic retries without classification, idempotency, or escalation boundaries.
 
 ## Error Classification — The Most Important Distinction
 
@@ -386,4 +513,3 @@ Failed Pub/Sub messages that are nack'd cycle forever in the subscription, consu
 "Pipeline failed" tells you nothing. WHICH step? WHAT error? WHICH row? Without context, debugging starts from zero.
 
 **The fix:** structured logging with `stage`, `batch_id`, `error_type`, `error_message`, and `row_context`. See [defensive-scripting > trap EXIT — guaranteed cleanup on script exit, error, or signal](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting#trap-exit--guaranteed-cleanup-on-script-exit-error-or-signal) for bash and [gcp-pipeline-health-and-sla > Alerting Runbook for Data Engineers](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#alerting-runbook-for-data-engineers) for pipeline alerting.
-

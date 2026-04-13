@@ -9,37 +9,190 @@ updated: 2026-03-24
 status: complete
 ---
 
-# 07 — Advanced Types & Interoperability
+# Advanced Types and Interop - Python
 
 > [!quote]
 > "The nice thing about standards is that you have so many to choose from."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
 
-This note covers advanced data types (Categorical, Enum, List, Struct, Arrow-backed dtypes) and interoperability between Pandas and Polars, including zero-copy conversion, Arrow exchange, and comprehensive file I/O coverage for CSV, JSON, and Parquet with encoding, compression, schema handling, and round-trip fidelity.
+> [!abstract]- Summary
+>
+> Covers advanced column types and cross-library data exchange in Pandas and Polars, showing how categorical and nested schemas interact with Arrow memory, zero-copy conversion, and loss-aware file I/O across CSV, JSON, and Parquet when fidelity, schema control, and encoding correctness matter.
+>
+> **Advanced types**
+> - Compare `Categorical`, `Enum`, `List`, `Struct`, and Arrow-backed dtypes, focusing on memory savings, closed-vs-open category domains, and nested data support
+> - Show where advanced types help analytical pipelines and where they block joins, SQL persistence, or legacy Pandas-only code paths
+>
+> **Interoperability**
+> - Move data between Pandas and Polars through Arrow-compatible paths, including zero-copy exchange when both sides use Arrow-backed memory
+> - Contrast cheap schema-preserving conversion with fallback copy-heavy conversion when NumPy-backed Pandas dtypes remain in play
+>
+> **CSV / JSON / Parquet**
+> - Read and write CSV with explicit delimiters, quoting rules, header control, type overrides, null sentinels, bad-line handling, and encoding declarations
+> - Contrast JSON and NDJSON orientation, nested-structure handling, schema inference, and round-trip behavior
+> - Treat Parquet as the default analytical format, including compression choices, row-group sizing, partition-aware reads, metadata inspection, and schema-preserving round trips
+>
+> **Character encodings & binary data**
+> - Handle UTF-8, Latin-1, and other text encodings explicitly rather than relying on heuristics or platform defaults
+> - Show how raw binary payloads become base64 for text formats or `pl.Binary` / Parquet-native binary columns for lossless round trips
+>
+> **Operations and safety**
+> - Warnings: categorical ordering affects comparisons, `pl.Enum` rejects undeclared values, zero-copy requires Arrow-backed memory on both sides, Parquet codecs must exist on the reader, encoding detection is heuristic, and CSV round-trip loses types
+> - Recommendations: 7 practices covering Parquet-first persistence, categorical dimension columns, Enum for closed domains, Arrow exchange over serialization, explicit encodings, round-trip tests, and `zstd` for Parquet compression
+> - Troubleshooting: 7 failure modes covering Enum append errors, unexpected copies in interop, codec issues, garbled text from wrong encodings, nested JSON read failures, schema mismatch on Parquet append, and integer overflow during CSV inference
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **Categorical** | A dtype that maps each unique value to an integer code. Pandas: `pd.CategoricalDtype`. Polars: `pl.Categorical`. | Reduces memory 5–20x for low-cardinality string columns (country codes, sectors, status flags). | Not appropriate for high-cardinality columns (UUIDs, timestamps) — the dictionary overhead exceeds savings. |
-| **Enum** | A Polars-only strict categorical type (`pl.Enum`) that defines all allowed values upfront. Values not in the enum are rejected. | Enforces a closed set of valid values — catches data quality issues at ingest. | Polars `Categorical` accepts new categories at runtime; `Enum` does not. Use Enum when the domain is fixed. |
-| **List type** | A Polars column type where each cell contains a variable-length list (e.g., `[1, 2, 3]`). | Stores nested/repeating data without flattening into multiple rows. | List columns cannot be used directly in joins or group_by — explode first. |
-| **Struct type** | A Polars column type where each cell contains a named set of fields (like a row within a row). | Packs related fields for compact storage or complex `map_elements()` inputs. | Accessing struct fields requires `.struct.field("name")` — not regular column selection. |
-| **Arrow-backed dtypes** | Pandas 2.x dtypes backed by Apache Arrow arrays instead of NumPy. Declared via `pd.ArrowDtype(pa.int64())`. | Enables zero-copy exchange with Arrow-native libraries (Polars, DuckDB) and provides native null support. | Not all Pandas operations are optimized for Arrow-backed dtypes yet — some fall back to NumPy internally. |
-| **Apache Arrow** | An open-standard columnar memory format used internally by Polars. Enables zero-copy data sharing between compatible libraries. | The lingua franca for columnar data exchange — eliminates serialization overhead between Polars, DuckDB, and Spark. | Arrow is a memory format, not a file format. Parquet is the file format; Arrow is the in-memory representation. |
-| **zero-copy conversion** | Transferring data between libraries without copying the underlying memory. Requires compatible memory layouts (Arrow). | Eliminates the overhead of data copying when moving between Polars, Pandas (Arrow-backed), and DuckDB. | Only works when both sides use Arrow-compatible memory. Pandas with NumPy-backed dtypes requires a copy. |
-| **Parquet** | A columnar binary file format with embedded schema, compression, and support for nested types. | The preferred format for analytical workloads — smallest files, fastest reads, schema preservation. | Parquet files are not human-readable. Different compression codecs (snappy, zstd, gzip) trade speed for size. |
-| **encoding** | The character encoding used to interpret bytes as text (UTF-8, Latin-1, Windows-1252, etc.). | Determines how non-ASCII characters (accents, symbols, CJK) are stored and read. | UTF-8 is the modern standard. Assuming UTF-8 when a file is actually Latin-1 produces garbled characters (`Ã¤` instead of `ä`). |
-
-## What this note covers
-
-- **Advanced types** — Categorical, Enum, List, Struct, and Arrow-backed dtypes
-- **Library interoperability** — Pandas ↔ Polars conversion, Arrow exchange, zero-copy patterns
-- **CSV deep dive** — reading/writing with schema overrides, delimiter handling, quoting, encoding
-- **JSON deep dive** — JSON vs NDJSON, nested data, schema inference, array orientation
-- **Parquet deep dive** — compression codecs, row group tuning, column projection, metadata inspection
-- **Character encodings and binary data** — UTF-8, Latin-1, detection, and conversion
+> [!note]- Glossary
+>
+> **Categorical**
+> - A dictionary-encoded column type that stores unique category values once and represents each row with an internal code.
+> - It matters because the note uses it as the primary memory-saving type for repeated low-cardinality strings such as sector, country, and status fields.
+>
+> > [!warning] Best only for low-cardinality domains
+> >
+> > When most values are unique, the category dictionary becomes overhead instead of a savings. High-cardinality IDs and timestamps are usually poor candidates.
+>
+> ---
+>
+> **Enum**
+> - A strict Polars categorical type whose allowed values are declared up front and validated at cast time.
+> - It matters because it turns domain validation into a dtype-level guarantee instead of a later cleanup step.
+>
+> > [!warning] Closed set means real rejection
+> >
+> > Values outside the declared enum are not silently added. That is useful for quality control, but it also means the domain must truly be known in advance.
+>
+> ---
+>
+> **List type**
+> - A nested column type where each row holds a variable-length list of values of the same underlying element type.
+> - It matters because the note shows how Polars can store repeating attributes without flattening them immediately.
+>
+> > [!warning] Nested lists are not join keys
+> >
+> > List-valued columns often need to be exploded before relational operations such as joins or grouped comparisons make sense.
+>
+> ---
+>
+> **Struct type**
+> - A nested column type where each row contains a fixed set of named fields, similar to a tiny record embedded inside a cell.
+> - It matters because struct columns make nested JSON-like data and grouped field bundles manageable without immediate denormalization.
+>
+> > [!warning] Field access is explicit
+> >
+> > Struct contents are not addressed like ordinary top-level columns. You need struct-specific accessors or unnesting to work with their fields cleanly.
+>
+> ---
+>
+> **Arrow-backed dtypes**
+> - Pandas dtypes backed by Apache Arrow arrays instead of classic NumPy/object representations.
+> - They matter because they are the Pandas side of fast interop and native-null exchange with Polars and other Arrow-native systems.
+>
+> > [!warning] Not every Pandas path is Arrow-optimized
+> >
+> > Some Pandas operations still fall back to NumPy-like behavior or trigger copies. Arrow-backed does not guarantee every downstream operation stays zero-copy.
+>
+> ---
+>
+> **Apache Arrow**
+> - A columnar in-memory data standard designed for fast analytics and efficient exchange between libraries.
+> - It matters because the note's interoperability patterns all depend on Arrow as the shared memory contract.
+>
+> > [!info] Memory standard, not storage format
+> >
+> > Arrow describes how data lives in memory. Parquet is the storage format that often carries Arrow-compatible schemas to disk.
+>
+> ---
+>
+> **Zero-copy conversion**
+> - Transferring data between libraries without duplicating the underlying buffers in memory.
+> - It matters because avoiding copies reduces latency, RAM pressure, and serialization overhead in mixed Pandas/Polars workflows.
+>
+> > [!warning] Requires compatible backing memory
+> >
+> > If one side uses object-heavy or NumPy-backed representations that Arrow cannot reuse directly, the conversion still copies even if the API call looks similar.
+>
+> ---
+>
+> **Parquet**
+> - A columnar binary file format that stores schema, compression metadata, and typed column data efficiently on disk.
+> - It matters because the note treats Parquet as the default persistence format for analytical pipelines and round-trip fidelity.
+>
+> > [!info] Best default for typed analytics
+> >
+> > Parquet preserves schema and compresses well, which makes it a much safer default than CSV when downstream type fidelity matters.
+>
+> ---
+>
+> **Encoding**
+> - The rule set used to interpret bytes as text characters, such as UTF-8, Latin-1, or Windows-1252.
+> - It matters because cross-system file exchange fails quickly when text bytes are decoded under the wrong character set.
+>
+> > [!warning] Never assume UTF-8 blindly
+> >
+> > UTF-8 is the modern default, but legacy feeds still use other encodings. Garbled text often means the wrong decoding assumption, not corrupted source data.
+>
+> ---
+>
+> **Interoperability**
+> - The ability to exchange typed data cleanly between libraries, runtimes, and file formats without losing schema or wasting time on unnecessary conversion.
+> - It matters because the note is not just about one library's features; it is about keeping data portable across Pandas, Polars, Arrow, and storage formats.
+>
+> > [!info] Schema matters more than syntax
+> >
+> > Interop problems are usually schema or memory-layout problems rather than API-shape problems. Matching dtypes and expectations is what preserves fidelity.
+>
+> ---
+>
+> **CSV**
+> - A plain-text tabular format with delimiters but no embedded schema, no native compression contract, and no guaranteed type fidelity.
+> - It matters because the note contrasts human-readable CSV convenience with its operational weaknesses for typed data exchange.
+>
+> > [!warning] CSV is lossy by default
+> >
+> > Dates, nullable integers, booleans, and binary payloads all need extra handling when serialized to CSV. Round-tripping through CSV usually changes dtypes.
+>
+> ---
+>
+> **JSON / NDJSON**
+> - Text-based structured formats where JSON commonly represents whole documents and NDJSON stores one JSON object per line.
+> - They matter because nested data exchange and row-oriented streaming workflows in the note depend on choosing the right JSON flavor.
+>
+> > [!warning] Structure must stay regular
+> >
+> > Mixed nesting depth or inconsistent field types quickly make JSON ingestion messy. NDJSON works best when each line follows the same schema.
+>
+> ---
+>
+> **Row group**
+> - A Parquet storage subdivision that chunks rows into independently readable blocks on disk.
+> - It matters because row-group sizing influences scan efficiency, predicate pruning, and how much data must be read for a partial query.
+>
+> > [!info] Row groups affect scan cost
+> >
+> > Very small row groups increase metadata overhead, while very large ones reduce pruning precision. Tuning is workload-dependent rather than universally fixed.
+>
+> ---
+>
+> **Compression codec**
+> - The algorithm used to compress stored data, such as `snappy`, `zstd`, or `gzip`.
+> - It matters because file size, write speed, read speed, and cross-environment compatibility all depend on the chosen codec.
+>
+> > [!warning] Reader support is part of the contract
+> >
+> > A file written successfully is not necessarily readable everywhere. If the downstream environment lacks codec support, the file becomes operationally unusable.
+>
+> ---
+>
+> **Binary data / `pl.Binary` / base64**
+> - Raw byte payloads represented either as native binary columns in Polars/Parquet or as base64 text when a text-only format must carry them.
+> - It matters because the note contrasts lossless binary-native storage with the text-safe base64 workaround required for CSV-like transport.
+>
+> > [!warning] Text formats need an encoding layer
+> >
+> > CSV and similar text outputs cannot safely store arbitrary bytes directly. Encode binary payloads first, or use a binary-capable storage format instead.
+>
+> ---
 
 ---
 
@@ -78,7 +231,7 @@ import json as json_mod
 import shutil
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Categorical
 
@@ -99,7 +252,7 @@ print(f"Categories: {dim_pd["sector_cat"].cat.categories.tolist()[:5]}")
 print(f"Memory: str={dim_pd["sector"].memory_usage()}, cat={dim_pd["sector_cat"].memory_usage()}")
 ```
 
-    Categories: ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy']
+Categories: ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy']
     Memory: str=1484, cat=681
 
 #### Polars | Categorical encoding
@@ -114,7 +267,7 @@ print(f"dtype: {dim_cat["sector_cat"].dtype}")
 display(dim_cat.select("symbol", "sector", "sector_cat").head(5))
 ```
 
-    dtype: Categorical
+dtype: Categorical
 
 <div><!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>sector</th><th>sector_cat</th></tr><tr><td>str</td><td>str</td><td>cat</td></tr></thead><tbody><tr><td>ASML.AS</td><td>Technology</td><td>Technology</td></tr><tr><td>MC.PA</td><td>Consumer Cyclical</td><td>Consumer Cyclical</td></tr><tr><td>RMS.PA</td><td>Consumer Cyclical</td><td>Consumer Cyclical</td></tr><tr><td>OR.PA</td><td>Consumer Defensive</td><td>Consumer Defensive</td></tr><tr><td>SAP.DE</td><td>Technology</td><td>Technology</td></tr></tbody></table></div>
 
@@ -197,7 +350,7 @@ df = pd.DataFrame({"symbol": pd.array(["ASML.AS", "MC.PA"], dtype="string[pyarro
 print(f"dtype: {df["symbol"].dtype}")
 ```
 
-    dtype: string
+dtype: string
 
 ## Summary — Advanced Types
 
@@ -210,6 +363,7 @@ print(f"dtype: {df["symbol"].dtype}")
 | Arrow string | string[pyarrow] | pl.Utf8 |
 
 ---
+
 ## Interoperability
 
 ### Dataset Loading
@@ -233,103 +387,103 @@ print(f"Type: {type(pdf)}")
 display(pdf)
 ```
 
-    Type: <class 'pandas.core.frame.DataFrame'>
+Type: <class 'pandas.core.frame.DataFrame'>
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>21160</td>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>58.85</td>
-      <td>56.78</td>
-      <td>57.21</td>
-      <td>53.5761</td>
-      <td>1513937</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>21161</td>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.98</td>
-      <td>56.75</td>
-      <td>57.18</td>
-      <td>53.5480</td>
-      <td>1382722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>21162</td>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.94</td>
-      <td>57.39</td>
-      <td>58.77</td>
-      <td>55.0370</td>
-      <td>1370204</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>21163</td>
-      <td>ABI.BR</td>
-      <td>2021-01-07</td>
-      <td>58.68</td>
-      <td>58.86</td>
-      <td>57.88</td>
-      <td>58.40</td>
-      <td>54.6905</td>
-      <td>1469911</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>21164</td>
-      <td>ABI.BR</td>
-      <td>2021-01-08</td>
-      <td>58.16</td>
-      <td>58.40</td>
-      <td>57.43</td>
-      <td>57.86</td>
-      <td>54.1848</td>
-      <td>1428681</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>21160</td>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>58.85</td>
+<td>56.78</td>
+<td>57.21</td>
+<td>53.5761</td>
+<td>1513937</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>21161</td>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.98</td>
+<td>56.75</td>
+<td>57.18</td>
+<td>53.5480</td>
+<td>1382722</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>21162</td>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.94</td>
+<td>57.39</td>
+<td>58.77</td>
+<td>55.0370</td>
+<td>1370204</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>21163</td>
+<td>ABI.BR</td>
+<td>2021-01-07</td>
+<td>58.68</td>
+<td>58.86</td>
+<td>57.88</td>
+<td>58.40</td>
+<td>54.6905</td>
+<td>1469911</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>4</th>
+<td>21164</td>
+<td>ABI.BR</td>
+<td>2021-01-08</td>
+<td>58.16</td>
+<td>58.40</td>
+<td>57.43</td>
+<td>57.86</td>
+<td>54.1848</td>
+<td>1428681</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 
 ### Pandas-to-Polars Conversion
@@ -346,7 +500,7 @@ print(f"Type: {type(plf)}")
 display(plf)
 ```
 
-    Type: <class 'polars.dataframe.frame.DataFrame'>
+Type: <class 'polars.dataframe.frame.DataFrame'>
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>datetime[ms]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04 00:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05 00:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06 00:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07 00:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08 00:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
@@ -363,7 +517,7 @@ arr=ohlcv_pl["close"].head(5).to_numpy()
 print(f"Type: {type(arr)}, dtype: {arr.dtype}, values: {arr}")
 ```
 
-    Type: <class 'numpy.ndarray'>, dtype: float64, values: [57.21 57.18 58.77 58.4  57.86]
+Type: <class 'numpy.ndarray'>, dtype: float64, values: [57.21 57.18 58.77 58.4  57.86]
 
 ### Arrow Interoperability
 
@@ -382,7 +536,7 @@ print(f"Type: {type(arrow_table)}")
 print(f"Schema: {arrow_table.schema}")
 ```
 
-    Type: <class 'pyarrow.lib.Table'>
+Type: <class 'pyarrow.lib.Table'>
     Schema: id: int64
     symbol: large_string
     date: date32[day]
@@ -421,7 +575,7 @@ print(f"Type: {type(d)}")
 for row in d: print(f"  {row}")
 ```
 
-    Type: <class 'list'>
+Type: <class 'list'>
       {'symbol': 'BNP.PA', 'composite_score': 0.6839467847784353}
       {'symbol': 'DTE.DE', 'composite_score': 0.5150053634526331}
       {'symbol': 'IFX.DE', 'composite_score': 0.5122353361255053}
@@ -441,7 +595,7 @@ back=pl.from_arrow(table)
 print(f"Same data, no copy: {back.shape}")
 ```
 
-    Same data, no copy: (66355, 12)
+Same data, no copy: (66355, 12)
 
 ### Summary
 
@@ -454,7 +608,6 @@ print(f"Same data, no copy: {back.shape}")
 | Polars to NumPy | .to_numpy() | Depends on dtype |
 
 ---
----
 
 Advanced reading and writing for CSV, JSON, and Parquet. Covers every major option: encoding, compression, schema, partitioning, nested data, and edge cases.
 
@@ -463,7 +616,7 @@ TMP = Path(tempfile.mkdtemp())
 print(f"Temp dir: {TMP}")
 ```
 
-    Temp dir: C:\Users\aperi\AppData\Local\Temp\tmpmnzrnm_0
+Temp dir: C:\Users\aperi\AppData\Local\Temp\tmpmnzrnm_0
 
 ## CSV
 
@@ -494,94 +647,91 @@ display(pd.read_fwf(io.StringIO(fwf)))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>3.14</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>2.72</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>3.14</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>2.72</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>city</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>New York</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>London</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>city</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>New York</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>London</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-      <th>city</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-      <td>NYC</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-      <td>LON</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+<th>city</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+<td>NYC</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+<td>LON</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Read CSV — separators and delimiters
@@ -605,9 +755,7 @@ display(pl.read_csv(io.StringIO(pipe), separator="|"))
 ```
 
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>Alice</td><td>3.14</td></tr><tr><td>Bob</td><td>2.72</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>city</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>Alice</td><td>New York</td></tr><tr><td>Bob</td><td>London</td></tr></tbody></table></div>
 
 ### Column Names & Headers
@@ -637,98 +785,95 @@ display(pd.read_csv(io.StringIO(raw), header=[0, 1]))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>group</th>
-      <th colspan="2" halign="left">A</th>
-      <th colspan="2" halign="left">B</th>
-    </tr>
-    <tr>
-      <th></th>
-      <th>metric</th>
-      <th>x</th>
-      <th>y</th>
-      <th>x</th>
-      <th>y</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>NaN</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>group</th>
+<th colspan="2" halign="left">A</th>
+<th colspan="2" halign="left">B</th>
+</tr>
+<tr>
+<th></th>
+<th>metric</th>
+<th>x</th>
+<th>y</th>
+<th>x</th>
+<th>y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>NaN</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Read CSV — has_header, new_columns, skip_rows
@@ -752,9 +897,7 @@ display(pl.read_csv(io.StringIO(raw), skip_rows_after_header=1))
 ```
 
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr></tbody></table></div>
 
 ### Type Control & Parsing
@@ -792,141 +935,137 @@ display(df)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>id</th>
-      <td>int32</td>
-    </tr>
-    <tr>
-      <th>name</th>
-      <td>category</td>
-    </tr>
-    <tr>
-      <th>score</th>
-      <td>float64</td>
-    </tr>
-    <tr>
-      <th>date</th>
-      <td>object</td>
-    </tr>
-    <tr>
-      <th>active</th>
-      <td>boolean</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>id</th>
+<td>int32</td>
+</tr>
+<tr>
+<th>name</th>
+<td>category</td>
+</tr>
+<tr>
+<th>score</th>
+<td>float64</td>
+</tr>
+<tr>
+<th>date</th>
+<td>object</td>
+</tr>
+<tr>
+<th>active</th>
+<td>boolean</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>id</th>
-      <td>int64</td>
-    </tr>
-    <tr>
-      <th>name</th>
-      <td>object</td>
-    </tr>
-    <tr>
-      <th>score</th>
-      <td>float64</td>
-    </tr>
-    <tr>
-      <th>date</th>
-      <td>datetime64[ns]</td>
-    </tr>
-    <tr>
-      <th>active</th>
-      <td>bool</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>id</th>
+<td>int64</td>
+</tr>
+<tr>
+<th>name</th>
+<td>object</td>
+</tr>
+<tr>
+<th>score</th>
+<td>float64</td>
+</tr>
+<tr>
+<th>date</th>
+<td>datetime64[ns]</td>
+</tr>
+<tr>
+<th>active</th>
+<td>bool</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>dt</th>
-      <th>val</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2024-01-15</td>
-      <td>10</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2024-02-20</td>
-      <td>20</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>dt</th>
+<th>val</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2024-01-15</td>
+<td>10</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2024-02-20</td>
+<td>20</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>3.14</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Carol</td>
-      <td>NaN</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>3.14</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Carol</td>
+<td>NaN</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>3.14</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Carol</td>
-      <td>NaN</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>3.14</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Carol</td>
+<td>NaN</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Read CSV — schema_overrides, null_values, try_parse_dates
@@ -956,7 +1095,7 @@ _Reads a CSV with embedded commas and doubled-quote escaping, then writes the sa
 
 ```python
 # Fields containing commas, quotes, newlines
-raw = 'name,bio\nAlice,"Likes cats, dogs"\nBob,"Said ""hello"""'  
+raw = 'name,bio\nAlice,"Likes cats, dogs"\nBob,"Said ""hello"""'
 display(pd.read_csv(io.StringIO(raw)))
 
 # Writing with quoting options
@@ -970,38 +1109,38 @@ print(df.to_csv(index=False, quoting=csv.QUOTE_NONNUMERIC))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>bio</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>Likes cats, dogs</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>Said "hello"</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>bio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>Likes cats, dogs</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>Said "hello"</td>
+</tr>
+</tbody>
 </table>
 
-    --- QUOTE_MINIMAL (default) ---
+--- QUOTE_MINIMAL (default) ---
     name,bio
     Alice,"Likes cats, dogs"
     Bob,Said hello
-    
-    --- QUOTE_ALL ---
+
+--- QUOTE_ALL ---
     "name","bio"
     "Alice","Likes cats, dogs"
     "Bob","Said hello"
-    
-    --- QUOTE_NONNUMERIC ---
+
+--- QUOTE_NONNUMERIC ---
     "name","bio"
     "Alice","Likes cats, dogs"
     "Bob","Said hello"
@@ -1014,7 +1153,7 @@ _Reads a 2-row CSV with embedded commas and doubled-quote escaping, then writes 
 
 ```python
 # Polars handles standard RFC 4180 quoting automatically
-raw = 'name,bio\nAlice,"Likes cats, dogs"\nBob,"Said ""hello"""'  
+raw = 'name,bio\nAlice,"Likes cats, dogs"\nBob,"Said ""hello"""'
 display(pl.read_csv(io.StringIO(raw)))
 
 # Writing with quote style
@@ -1027,12 +1166,12 @@ print(df.write_csv(quote_style="always"))
 
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>bio</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>Alice</td><td>Likes cats, dogs</td></tr><tr><td>Bob</td><td>Said hello</td></tr></tbody></table></div>
 
-    --- auto (default) ---
+--- auto (default) ---
     name,bio
     Alice,"Likes cats, dogs"
     Bob,Said hello
-    
-    --- always ---
+
+--- always ---
     "name","bio"
     "Alice","Likes cats, dogs"
     "Bob","Said hello"
@@ -1060,84 +1199,82 @@ display(pd.read_csv(io.StringIO(raw), comment="#"))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Carol</td>
-      <td>28</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Carol</td>
+<td>28</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Person0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Person1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Person2</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Person3</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Person4</td>
-      <td>4</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Person0</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Person1</td>
+<td>1</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Person2</td>
+<td>2</td>
+</tr>
+<tr>
+<th>3</th>
+<td>Person3</td>
+<td>3</td>
+</tr>
+<tr>
+<th>4</th>
+<td>Person4</td>
+<td>4</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Read CSV — truncate_ragged_lines, n_rows, comment_prefix
@@ -1161,9 +1298,7 @@ display(pl.read_csv(io.StringIO(raw), comment_prefix="#"))
 ```
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr><tr><td>Carol</td><td>28</td></tr></tbody></table></div>
-
 <div><!-- shape: (5, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Person0</td><td>0</td></tr><tr><td>Person1</td><td>1</td></tr><tr><td>Person2</td><td>2</td></tr><tr><td>Person3</td><td>3</td></tr><tr><td>Person4</td><td>4</td></tr></tbody></table></div>
-
 <div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr></tbody></table></div>
 
 ### CSV Compression (read & write)
@@ -1192,73 +1327,73 @@ for ext in ["csv.gz", "csv.bz2", "csv.zip", "csv.zst"]:
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>21160</td>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>58.15</td>
-      <td>58.85</td>
-      <td>56.78</td>
-      <td>57.21</td>
-      <td>53.5761</td>
-      <td>1513937</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>21161</td>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>56.90</td>
-      <td>57.98</td>
-      <td>56.75</td>
-      <td>57.18</td>
-      <td>53.5480</td>
-      <td>1382722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>21162</td>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>57.96</td>
-      <td>58.94</td>
-      <td>57.39</td>
-      <td>58.77</td>
-      <td>55.0370</td>
-      <td>1370204</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>21160</td>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>58.15</td>
+<td>58.85</td>
+<td>56.78</td>
+<td>57.21</td>
+<td>53.5761</td>
+<td>1513937</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>21161</td>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>56.90</td>
+<td>57.98</td>
+<td>56.75</td>
+<td>57.18</td>
+<td>53.5480</td>
+<td>1382722</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>21162</td>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>57.96</td>
+<td>58.94</td>
+<td>57.39</td>
+<td>58.77</td>
+<td>55.0370</td>
+<td>1370204</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 
-    csv.gz    :    2,394 bytes
+csv.gz    :    2,394 bytes
     csv.bz2   :    2,058 bytes
     csv.zip   :    2,488 bytes
     csv.zst   :    2,305 bytes
@@ -1282,7 +1417,7 @@ print(f"Compressed: {(TMP / 'ohlcv_pl.csv.gz').stat().st_size:,} bytes")
 
 <div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-    Compressed: 2,384 bytes
+Compressed: 2,384 bytes
 
 ### Writing Options
 
@@ -1318,7 +1453,7 @@ print("--- 2 decimal places ---")
 print(df[["close", "volume"]].head(3).to_csv(index=False, float_format="%.2f"))
 ```
 
-    --- With index ---
+--- With index ---
     ,id,symbol,date,open,high,low,close,adj_close,volume,dividends,stock_splits,is_filled
     0,21160,ABI.BR,2021-01-04,58.15,58.85,56.78,57.21,53.5761,1513937,0.0,0.0,False
     1,21161,ABI.BR,2021-01-05,56.9,5
@@ -1333,23 +1468,23 @@ print(df[["close", "volume"]].head(3).to_csv(index=False, float_format="%.2f"))
     ABI.BR,58.77
     ABI.BR,58.4
     ABI.BR,57.86
-    
-    --- Semicolon-separated ---
+
+--- Semicolon-separated ---
     symbol;close
     ABI.BR;57.21
     ABI.BR;57.18
     ABI.BR;58.77
     ABI.BR;58.4
     ABI.BR;57.86
-    
-    --- No header ---
+
+--- No header ---
     ABI.BR,57.21
     ABI.BR,57.18
     ABI.BR,58.77
     ABI.BR,58.4
     ABI.BR,57.86
-    
-    --- 2 decimal places ---
+
+--- 2 decimal places ---
     close,volume
     57.21,1513937
     57.18,1382722
@@ -1386,36 +1521,36 @@ df.write_csv(TMP / "polars_out.csv")
 print(f"Written: {(TMP / 'polars_out.csv').stat().st_size:,} bytes")
 ```
 
-    --- Default ---
+--- Default ---
     symbol,close
     ABI.BR,57.21
     ABI.BR,57.18
     ABI.BR,58.77
     ABI.BR,58.4
     ABI.BR,57.86
-    
-    --- Semicolon ---
+
+--- Semicolon ---
     symbol;close
     ABI.BR;57.21
     ABI.BR;57.18
     ABI.BR;58.77
     ABI.BR;58.4
     ABI.BR;57.86
-    
-    --- No header ---
+
+--- No header ---
     ABI.BR,57.21
     ABI.BR,57.18
     ABI.BR,58.77
     ABI.BR,58.4
     ABI.BR,57.86
-    
-    --- Custom null ---
+
+--- Custom null ---
     a,b
     1,x
     NA,NA
     3,z
-    
-    Written: 470 bytes
+
+Written: 470 bytes
 
 ### Chunked & Streaming Reading
 
@@ -1445,7 +1580,7 @@ for chunk in pd.read_csv(path, chunksize=10_000, usecols=["close"]):
 print(f"Average close: {avg_close / n:.2f}")
 ```
 
-    Read 66,355 rows in chunks of 10,000
+Read 66,355 rows in chunks of 10,000
     Average close: 197.03
 
 #### Polars | Read CSV — scan_csv (lazy, predicate pushdown)
@@ -1471,12 +1606,12 @@ for batch in pl.scan_csv(DATA / "eurostoxx50_ohlcv.csv").collect_batches(chunk_s
 print(f"Batched read: {total:,} rows")
 ```
 
-    Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
+Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
     Filtered: (1331, 2)
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr></tbody></table></div>
 
-    Batched read: 66,355 rows
+Batched read: 66,355 rows
 
 ## JSON
 
@@ -1497,7 +1632,7 @@ df = pd.DataFrame({"name": ["Alice", "Bob"], "age": [30, 25], "city": ["NYC", "L
 print(df.to_json(orient="records", indent=2))
 ```
 
-    [
+[
       {
         "name":"Alice",
         "age":30,
@@ -1515,7 +1650,7 @@ print(df.to_json(orient="records", indent=2))
 print(df.to_json(orient="columns", indent=2))
 ```
 
-    {
+{
       "name":{
         "0":"Alice",
         "1":"Bob"
@@ -1535,7 +1670,7 @@ print(df.to_json(orient="columns", indent=2))
 print(df.to_json(orient="index", indent=2))
 ```
 
-    {
+{
       "0":{
         "name":"Alice",
         "age":30,
@@ -1553,7 +1688,7 @@ print(df.to_json(orient="index", indent=2))
 print(df.to_json(orient="split", indent=2))
 ```
 
-    {
+{
       "columns":[
         "name",
         "age",
@@ -1582,7 +1717,7 @@ print(df.to_json(orient="split", indent=2))
 print(df.to_json(orient="values", indent=2))
 ```
 
-    [
+[
       [
         "Alice",
         30,
@@ -1600,7 +1735,7 @@ print(df.to_json(orient="values", indent=2))
 print(df.to_json(orient="table", indent=2))
 ```
 
-    {
+{
       "schema":{
         "fields":[
           {
@@ -1655,7 +1790,7 @@ for orient in orientations:
     print(f"orient={orient:10s}: shape={back.shape}, cols={list(back.columns)}")
 ```
 
-    orient=records   : shape=(2, 3), cols=['name', 'age', 'city']
+orient=records   : shape=(2, 3), cols=['name', 'age', 'city']
     orient=columns   : shape=(2, 3), cols=['name', 'age', 'city']
     orient=index     : shape=(2, 3), cols=['name', 'age', 'city']
     orient=split     : shape=(2, 3), cols=['name', 'age', 'city']
@@ -1702,96 +1837,94 @@ print("\nNested array with meta:")
 display(df_emp)
 ```
 
-    Raw nested:
+Raw nested:
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>address</th>
-      <th>scores</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>{'city': 'NYC', 'zip': '10001'}</td>
-      <td>[90, 85, 92]</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>{'city': 'London', 'zip': 'EC1A'}</td>
-      <td>[78, 88, 95]</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>address</th>
+<th>scores</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>{'city': 'NYC', 'zip': '10001'}</td>
+<td>[90, 85, 92]</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>{'city': 'London', 'zip': 'EC1A'}</td>
+<td>[78, 88, 95]</td>
+</tr>
+</tbody>
 </table>
 
-    
-    Flattened:
+Flattened:
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>scores</th>
-      <th>address.city</th>
-      <th>address.zip</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>[90, 85, 92]</td>
-      <td>NYC</td>
-      <td>10001</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>[78, 88, 95]</td>
-      <td>London</td>
-      <td>EC1A</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>scores</th>
+<th>address.city</th>
+<th>address.zip</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>[90, 85, 92]</td>
+<td>NYC</td>
+<td>10001</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>[78, 88, 95]</td>
+<td>London</td>
+<td>EC1A</td>
+</tr>
+</tbody>
 </table>
 
-    
-    Nested array with meta:
+Nested array with meta:
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>role</th>
-      <th>company</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>Eng</td>
-      <td>ACME</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>PM</td>
-      <td>ACME</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Carol</td>
-      <td>Eng</td>
-      <td>Globex</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>role</th>
+<th>company</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>Eng</td>
+<td>ACME</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>PM</td>
+<td>ACME</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Carol</td>
+<td>Eng</td>
+<td>Globex</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | JSON — unnest and explode for nested Struct and List
@@ -1824,18 +1957,16 @@ print("\nUnnested + exploded:")
 display(df_exploded)
 ```
 
-    Schema with nested types:
+Schema with nested types:
     Schema({'name': String, 'address': Struct({'city': String, 'zip': String}), 'scores': List(Int64)})
 
 <div><!-- shape: (2, 3) --><table><thead><tr><th>name</th><th>address</th><th>scores</th></tr><tr><td>str</td><td>struct[2]</td><td>list[i64]</td></tr></thead><tbody><tr><td>Alice</td><td>{NYC,10001}</td><td>[90, 85, 92]</td></tr><tr><td>Bob</td><td>{London,EC1A}</td><td>[78, 88, 95]</td></tr></tbody></table></div>
 
-    
-    Unnested:
+Unnested:
 
 <div><!-- shape: (2, 4) --><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>list[i64]</td></tr></thead><tbody><tr><td>Alice</td><td>NYC</td><td>10001</td><td>[90, 85, 92]</td></tr><tr><td>Bob</td><td>London</td><td>EC1A</td><td>[78, 88, 95]</td></tr></tbody></table></div>
 
-    
-    Unnested + exploded:
+Unnested + exploded:
 
 <div><!-- shape: (6, 4) --><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>NYC</td><td>10001</td><td>90</td></tr><tr><td>Alice</td><td>NYC</td><td>10001</td><td>85</td></tr><tr><td>Alice</td><td>NYC</td><td>10001</td><td>92</td></tr><tr><td>Bob</td><td>London</td><td>EC1A</td><td>78</td></tr><tr><td>Bob</td><td>London</td><td>EC1A</td><td>88</td></tr><tr><td>Bob</td><td>London</td><td>EC1A</td><td>95</td></tr></tbody></table></div>
 
@@ -1877,48 +2008,47 @@ print(f"\nLazy schema: {lf.collect_schema()}")
 #### Pandas | NDJSON output
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-      <th>age</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Alice</td>
-      <td>30</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Bob</td>
-      <td>25</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Carol</td>
-      <td>35</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+<th>age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Alice</td>
+<td>30</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Bob</td>
+<td>25</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Carol</td>
+<td>35</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | NDJSON output
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr><tr><td>Bob</td><td>25</td></tr><tr><td>Carol</td><td>35</td></tr></tbody></table></div>
 
-    --- Pandas NDJSON output ---
+--- Pandas NDJSON output ---
     {"name":"Alice","age":30}
     {"name":"Bob","age":25}
     {"name":"Carol","age":35}
-    
-    --- Polars NDJSON output ---
+
+--- Polars NDJSON output ---
     {"name":"Alice","age":30}
     {"name":"Bob","age":25}
     {"name":"Carol","age":35}
-    
-    
-    Lazy schema: Schema({'name': String, 'age': Int64})
+
+Lazy schema: Schema({'name': String, 'age': Int64})
 
 ### JSON Writing Options
 
@@ -1955,7 +2085,7 @@ df.to_json(TMP / "ohlcv.json.gz", orient="records", compression="gzip")
 print(f"\nCompressed JSON: {(TMP / 'ohlcv.json.gz').stat().st_size:,} bytes")
 ```
 
-    --- indent=2 ---
+--- indent=2 ---
     [
       {
         "symbol":"ABI.BR",
@@ -1981,8 +2111,8 @@ print(f"\nCompressed JSON: {(TMP / 'ohlcv.json.gz').stat().st_size:,} bytes")
     [{"city":"M\u00fcnchen"},{"city":"Z\u00fcrich"}]
     --- force_ascii=False ---
     [{"city":"München"},{"city":"Zürich"}]
-    
-    Compressed JSON: 113 bytes
+
+Compressed JSON: 113 bytes
 
 #### Polars | Write JSON — write_json, write_ndjson, to_dicts()
 
@@ -2010,16 +2140,15 @@ print("\n--- Custom via to_dicts() ---")
 print(custom)
 ```
 
-    --- Polars JSON ---
+--- Polars JSON ---
     [{"symbol":"ABI.BR","date":"2021-01-04","close":57.21},{"symbol":"ABI.BR","date":"2021-01-05","close":57.18},{"symbol":"ABI.BR","date":"2021-01-06","close":58.77}]
-    
-    --- Polars NDJSON ---
+
+--- Polars NDJSON ---
     {"symbol":"ABI.BR","date":"2021-01-04","close":57.21}
     {"symbol":"ABI.BR","date":"2021-01-05","close":57.18}
     {"symbol":"ABI.BR","date":"2021-01-06","close":58.77}
-    
-    
-    --- Custom via to_dicts() ---
+
+--- Custom via to_dicts() ---
     [
       {
         "symbol": "ABI.BR",
@@ -2070,22 +2199,22 @@ display(df)
 #### Pandas | JSON read — dtype override
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>0</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>id</th>
-      <td>int64</td>
-    </tr>
-    <tr>
-      <th>val</th>
-      <td>float64</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>id</th>
+<td>int64</td>
+</tr>
+<tr>
+<th>val</th>
+<td>float64</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | JSON read — schema_overrides
@@ -2128,7 +2257,7 @@ for level in [1, 5, 9, 19]:
     print(f"zstd(level={level:2d}): {path.stat().st_size:>10,} bytes")
 ```
 
-    snappy  :    405,191 bytes
+snappy  :    405,191 bytes
     gzip    :    302,502 bytes
     brotli  :    283,158 bytes
     zstd    :    302,040 bytes
@@ -2160,7 +2289,7 @@ for level in [1, 5, 10, 22]:
     print(f"zstd(level={level:2d}): {path.stat().st_size:>10,} bytes")
 ```
 
-    snappy        :    338,226 bytes
+snappy        :    338,226 bytes
     gzip          :    210,473 bytes
     brotli        :    239,972 bytes
     zstd          :    216,877 bytes
@@ -2218,23 +2347,22 @@ df.write_parquet(path_no_stats, statistics=False)
 print(f"\nWith stats: {path_small.stat().st_size:,}, without: {path_no_stats.stat().st_size:,}")
 ```
 
-    
-    small (1K): 10 row groups, 10000 rows, 9,956 bytes
+small (1K): 10 row groups, 10000 rows, 9,956 bytes
       RG 0: 1000 rows, 78,001 bytes
       RG 1: 1000 rows, 78,014 bytes
       RG 2: 1000 rows, 78,014 bytes
-    
-    large (10K): 1 row groups, 10000 rows, 2,063 bytes
+
+large (10K): 1 row groups, 10000 rows, 2,063 bytes
       RG 0: 10000 rows, 741,091 bytes
-    
-    Column statistics for row group 0:
+
+Column statistics for row group 0:
       id             : min=21160, max=22159, nulls=0
       symbol         : min=ABI.BR, max=ABI.BR, nulls=0
       date           : min=2021-01-04, max=2024-11-21, nulls=0
       open           : min=46.0, max=65.26, nulls=0
       high           : min=46.585, max=65.86, nulls=0
-    
-    With stats: 268,457, without: 215,668
+
+With stats: 268,457, without: 215,668
 
 ### Schema Control & Type Mapping
 
@@ -2269,37 +2397,37 @@ print(pq.read_schema(TMP / "typed.parquet"))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ABI.BR</td>
-      <td>2021-01-04</td>
-      <td>57.21</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ABI.BR</td>
-      <td>2021-01-05</td>
-      <td>57.18</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ABI.BR</td>
-      <td>2021-01-06</td>
-      <td>58.77</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ABI.BR</td>
+<td>2021-01-04</td>
+<td>57.21</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ABI.BR</td>
+<td>2021-01-05</td>
+<td>57.18</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ABI.BR</td>
+<td>2021-01-06</td>
+<td>58.77</td>
+</tr>
+</tbody>
 </table>
 
-    Parquet schema:
+Parquet schema:
       id                  : int64
       symbol              : string
       date                : date32[day]
@@ -2312,8 +2440,8 @@ print(pq.read_schema(TMP / "typed.parquet"))
       dividends           : double
       stock_splits        : double
       is_filled           : bool
-    
-    Written with explicit schema:
+
+Written with explicit schema:
     id: int32
     value: float
     label: large_string
@@ -2348,9 +2476,9 @@ print("PyArrow engine:", pq.read_schema(TMP / "pl_pyarrow.parquet"))
 
 <div><!-- shape: (3, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td></tr></tbody></table></div>
 
-    Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
-    
-    Written schema: id: int32
+Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
+
+Written schema: id: int32
     value: float
     label: large_string
     PyArrow engine: id: int64
@@ -2395,9 +2523,9 @@ for p in sorted((part_dir / "by_symbol_year").rglob("*.parquet")):
     print(f"  {p.relative_to(part_dir / 'by_symbol_year')}")
 ```
 
-      by_symbol\symbol=ASML.AS\68419add66e54df8884428d44897a5e4-0.parquet  (20,869 bytes)
-    
-    Multi-level partitions:
+by_symbol\symbol=ASML.AS\68419add66e54df8884428d44897a5e4-0.parquet  (20,869 bytes)
+
+Multi-level partitions:
       symbol=ASML.AS\year=2021\8791271a22434bc7ab0bec4da71a4f5b-0.parquet
       symbol=ASML.AS\year=2022\8791271a22434bc7ab0bec4da71a4f5b-0.parquet
 
@@ -2431,13 +2559,13 @@ display(result.head(3))
 
 #### Pandas | Read partitioned Parquet — output
 
-    Shape: (300, 12), symbols: ['ASML.AS']
+Shape: (300, 12), symbols: ['ASML.AS']
     Categories (1, object): ['ASML.AS']
     Filtered: (300, 12)
 
 #### Polars | Read partitioned Parquet — output
 
-    Shape: (300, 12), symbols: ['ASML.AS']
+Shape: (300, 12), symbols: ['ASML.AS']
 
 #### Polars | Read partitioned Parquet — lazy filtered scan
 
@@ -2473,12 +2601,12 @@ table_back = pq.read_table(TMP / "with_meta.parquet")
 print(f"\nRound-trip metadata: {table_back.schema.metadata[b'version']}")
 ```
 
-    File metadata:
+File metadata:
       created_by: notebook_08
       version: 1.0
       row_count: 100
-    
-    Round-trip metadata: b'1.0'
+
+Round-trip metadata: b'1.0'
 
 ## Character Encodings & Binary Data
 
@@ -2523,14 +2651,14 @@ except ImportError:
     print("\n(chardet not installed — pip install chardet)")
 ```
 
-    utf-8     : ['München', 'Zürich', 'São Paulo']
+utf-8     : ['München', 'Zürich', 'São Paulo']
     latin-1   : ['München', 'Zürich', 'São Paulo']
     cp1252    : ['München', 'Zürich', 'São Paulo']
     utf-16    : ['München', 'Zürich', 'São Paulo']
-    
-    Written as latin-1: b'name,city\r\nAlice,M\xfcnchen\r\nBob,Z\xfcrich\r\nCarol,S\xe3o Paulo\r\n'
-    
-    Detected encoding: {'encoding': 'Windows-1252', 'confidence': 0.09340473165624712, 'language': 'pt', 'mime_type': 'text/plain'}
+
+Written as latin-1: b'name,city\r\nAlice,M\xfcnchen\r\nBob,Z\xfcrich\r\nCarol,S\xe3o Paulo\r\n'
+
+Detected encoding: {'encoding': 'Windows-1252', 'confidence': 0.09340473165624712, 'language': 'pt', 'mime_type': 'text/plain'}
 
 #### Polars | Read CSV — UTF-8 only, decode non-UTF-8 before reading
 
@@ -2567,7 +2695,7 @@ df = read_csv_encoded(TMP / "cities_cp1252.csv", "cp1252")
 print(f"CP1252: {df['city'].to_list()}")
 ```
 
-    UTF-8: ['München', 'Zürich', 'São Paulo']
+UTF-8: ['München', 'Zürich', 'São Paulo']
     Latin-1: ['München', 'Zürich', 'São Paulo']
     UTF-16: ['München', 'Zürich', 'São Paulo']
     CP1252: ['München', 'Zürich', 'São Paulo']
@@ -2596,7 +2724,7 @@ df = pl.read_csv(io.StringIO(text))
 print(f"Polars columns: {df.columns}")
 ```
 
-    Pandas columns: ['name', 'age']
+Pandas columns: ['name', 'age']
     Polars columns: ['name', 'age']
 
 ### Base64 & Binary Data in DataFrames
@@ -2648,42 +2776,42 @@ print(df_csv.write_csv())
 #### Pandas with base64
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>blob_b64</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>IAkd87tVZPNCk4g8EE/6hBeXif5fOxMLmj+Eo6+QGas=</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>9VwPMCC3iQiZvmM4+V971Dg3kpHHGqZgq4LM4efXUZw=</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3</td>
-      <td>JRYn36L7sTc4tB2zcauhCeE5YrvUHs546qGQMVEaYBE=</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>blob_b64</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>IAkd87tVZPNCk4g8EE/6hBeXif5fOxMLmj+Eo6+QGas=</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>9VwPMCC3iQiZvmM4+V971Dg3kpHHGqZgq4LM4efXUZw=</td>
+</tr>
+<tr>
+<th>2</th>
+<td>3</td>
+<td>JRYn36L7sTc4tB2zcauhCeE5YrvUHs546qGQMVEaYBE=</td>
+</tr>
+</tbody>
 </table>
 
-    Round-trip OK
+Round-trip OK
 
 #### Polars with Binary dtype
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>id</th><th>blob</th></tr><tr><td>i64</td><td>binary</td></tr></thead><tbody><tr><td>1</td><td>b\x20\x09\x1d\xf3\xbbUd\xf3B\x93\x88&lt;\x10O\xfa\x84\x17\x97\x89\xfe_;\x13\x0b\x9a?\x84\xa3\xaf\x90\x19\xab</td></tr><tr><td>2</td><td>b\xf5\\x0f0\x20\xb7\x89\x08\x99\xbec8\xf9_{\xd487\x92\x91\xc7\x1a\xa6`\xab\x82\xcc\xe1\xe7\xd7Q\x9c</td></tr><tr><td>3</td><td>b%\x16&#x27;\xdf\xa2\xfb\xb178\xb4\x1d\xb3q\xab\xa1\x09\xe19b\xbb\xd4\x1e\xcex\xea\xa1\x901Q\x1a`\x11</td></tr></tbody></table></div>
 
-    dtype: Binary
+dtype: Binary
     Binary Parquet round-trip OK
-    
-    For CSV export:
+
+For CSV export:
     id,blob_b64
     1,IAkd87tVZPNCk4g8EE/6hBeXif5fOxMLmj+Eo6+QGas=
     2,9VwPMCC3iQiZvmM4+V971Dg3kpHHGqZgq4LM4efXUZw=
@@ -2719,26 +2847,26 @@ shutil.rmtree(TMP, ignore_errors=True)
 print("Temp files cleaned up")
 ```
 
-    Temp files cleaned up
+Temp files cleaned up
 
 ---
 
-## When to use advanced types and interop
-
-- **Categorical/Enum** — use for columns with fewer than ~1000 unique values where memory savings and faster group_by are important (sectors, status codes, country codes, exchange identifiers).
-- **List/Struct types** — use when data is naturally nested (tags per document, OHLCV bars per ticker-day) and you want to avoid premature flattening.
-- **Arrow-backed Pandas dtypes** — use when you need zero-copy exchange between Pandas and Polars/DuckDB, or when you want native null support in Pandas.
-- **Parquet** — use as the default file format for any analytical pipeline. Prefer over CSV and JSON for persistence and data exchange.
-- **Encoding handling** — apply whenever data originates from external sources (web scraping, legacy systems, third-party feeds) where UTF-8 is not guaranteed.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| High-cardinality Categorical (>10K unique values) | Dictionary overhead exceeds memory savings; group_by gains disappear | Use String dtype and filter/hash instead |
-| Nested types in SQL-backed pipelines | SQL databases cannot natively store List or Struct columns | Flatten to relational form before database insertion |
-| Arrow-backed dtypes in Pandas with legacy code | Some Pandas operations fall back to NumPy, silently converting and copying | Stay with NumPy-backed dtypes if the pipeline is Pandas-only |
-| CSV for production data exchange | No embedded schema, no compression, slow reads, encoding ambiguity | Use Parquet — preserves types, compresses, and reads faster |
+> [!example] Type and Interop Fit
+>
+> > [!success] Applicability
+> >
+> > - **Categorical/Enum** — use for columns with fewer than ~1000 unique values where memory savings and faster group_by are important (sectors, status codes, country codes, exchange identifiers).
+> > - **List/Struct types** — use when data is naturally nested (tags per document, OHLCV bars per ticker-day) and you want to avoid premature flattening.
+> > - **Arrow-backed Pandas dtypes** — use when you need zero-copy exchange between Pandas and Polars/DuckDB, or when you want native null support in Pandas.
+> > - **Parquet** — use as the default file format for any analytical pipeline. Prefer over CSV and JSON for persistence and data exchange.
+> > - **Encoding handling** — apply whenever data originates from external sources (web scraping, legacy systems, third-party feeds) where UTF-8 is not guaranteed.
+>
+> > [!failure] Limitations
+> >
+> > - **High-cardinality Categorical (>10K unique values)** — Dictionary overhead exceeds memory savings; group_by gains disappear. Better approach: Use String dtype and filter/hash instead
+> > - **Nested types in SQL-backed pipelines** — SQL databases cannot natively store List or Struct columns. Better approach: Flatten to relational form before database insertion
+> > - **Arrow-backed dtypes in Pandas with legacy code** — Some Pandas operations fall back to NumPy, silently converting and copying. Better approach: Stay with NumPy-backed dtypes if the pipeline is Pandas-only
+> > - **CSV for production data exchange** — No embedded schema, no compression, slow reads, encoding ambiguity. Better approach: Use Parquet — preserves types, compresses, and reads faster
 
 ## Warnings
 
@@ -2781,4 +2909,3 @@ print("Temp files cleaned up")
 | JSON read fails on nested data | Irregular nesting depth or mixed types per key | Use NDJSON format; preprocess with `jq` to normalize structure |
 | Parquet schema mismatch on append | New data has different column names or types | Validate schema before appending; use `schema_overrides` on read |
 | `OverflowError` on large integers in CSV | CSV reader infers `int64` but values exceed range | Pass `dtypes={"col": pl.UInt64}` or use `schema_overrides` |
-

@@ -8,42 +8,244 @@ updated: 2026-04-12
 status: complete
 ---
 
-# Disks and Snapshots — Multi-Disk Storage for SQL Server
+# Disks and Snapshots
 
 > [!quote]
 > "Backups are not sexy, but neither is data loss."
 >
 > — **W. Curtis Preston**, *Backup & Recovery* (2007)
-
-A production SQL Server deployment separates data files, transaction logs, and TempDB onto dedicated persistent disks. This isolation provides three benefits: **IOPS isolation** (a heavy TempDB workload does not compete with data file reads), **independent sizing** (the transaction log disk can be smaller and cheaper than the data disk), and **independent snapshot/backup** (you can snapshot the data disk without including TempDB, which is ephemeral by design). This page demonstrates the full lifecycle — creating disks, attaching them to `stoxx-vm`, formatting, mounting with persistent fstab entries, snapshot management, restore procedures, automated schedules, and online resize.
-
-> [!info] Prerequisites
+> [!abstract]- Summary
 >
-> - **API:** `compute.googleapis.com` must be enabled.
-> - **IAM:** `roles/compute.storageAdmin` for disk and snapshot operations; `roles/compute.instanceAdmin.v1` for attaching/detaching disks to VM instances.
-> - **VM:** `stoxx-vm` must already exist in `bq-wh-nb` / `europe-west1-b` (created in page 01).
+> Covers multi-disk storage design for SQL Server on Compute Engine, including persistent-disk creation, guest formatting and mounting, point-in-time snapshots, restore workflows, automated schedules, and online resize so `stoxx-vm` can separate data, log, and TempDB storage safely in `bq-wh-nb`.
+>
+> **Prerequisites**
+> - Require `compute.googleapis.com`, `roles/compute.storageAdmin` for disks and snapshots, `roles/compute.instanceAdmin.v1` for attach and detach operations, and an existing `stoxx-vm` in `bq-wh-nb` / `europe-west1-b`
+> - Use dedicated disks for SQL Server data, transaction log, and TempDB to isolate IOPS, size each volume independently, and avoid backing up ephemeral TempDB data
+>
+> **Disk creation**
+> - Create `stoxx-data`, `stoxx-log`, and `stoxx-tempdb` with `gcloud compute disks create`, explicit sizes, disk types, and labels, then verify layout with `disks list` and `disks describe`
+> - Compare imperative creation with Terraform `google_compute_disk` resources and understand zonal, regional, Persistent Disk, and Hyperdisk choices
+>
+> **Attachment and Linux mounting**
+> - Attach disks to `stoxx-vm` with `instances attach-disk --device-name`, verify `autoDelete` behavior, and rely on stable `/dev/disk/by-id/google-DEVICE_NAME` identifiers instead of volatile `/dev/sdX` names
+> - Identify raw devices with `lsblk`, format them with `mkfs.ext4`, create mount points, collect `blkid` UUIDs, and persist mounts in `/etc/fstab`
+>
+> **Snapshots and restore**
+> - Create manual snapshots, understand first-full then incremental block capture, and restore by creating a new disk from `--source-snapshot` before detach and reattach cutover
+> - Automate protection with `resource-policies create snapshot-schedule`, attach policies to disks, and verify retention and schedule status
+>
+> **Resize and cleanup**
+> - Resize disks online with `gcloud compute disks resize`, then expand the guest filesystem with `resize2fs` or `xfs_growfs`
+> - Detach and delete disks only after unmounting them, and use the disk family reference to choose between `pd-standard`, `pd-balanced`, `pd-ssd`, `pd-extreme`, regional disks, and Hyperdisk variants
+>
+> **Operations and safety**
+> - Warnings: regional disks cost roughly 2× zonal disks, first snapshots are full, restored disks can change device mappings, resize requires a guest filesystem expansion step, and missing `nofail` can break boot
+> - Recommendations table: the disk family reference compares Persistent Disk and Hyperdisk types for database, analytics, archive, and RPO = 0 designs
+> - Troubleshooting: 10 failure modes covering wrong post-resize size, bad `fstab`, wrong mount path, already-attached disks, slow snapshots, in-use deletes, restore UUID mismatches, wrong `resize2fs` target, missing schedule execution, and mount-point ownership errors
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **Persistent disk**
+> - A network-attached block storage volume that exists independently of the VM and continues to exist until explicitly deleted.
+> - It is the base storage model for every create, attach, snapshot, resize, restore, and delete workflow in this note.
+>
+> > [!info] VM and disk lifetimes differ
+> >
+> > A VM can stop, restart, or even be deleted without automatically destroying every attached disk. Disk retention is controlled separately from instance state.
+>
+> ---
+>
+> **Zonal disk**
+> - A persistent disk that lives in one zone and can only be attached to VMs in that same zone.
+> - It matters because all example disks in this note are created in `europe-west1-b` and must stay aligned with `stoxx-vm`.
+>
+> > [!warning] Zone mismatch blocks attach
+> >
+> > A correctly named disk still cannot attach if it was created in a different zone from the VM. Zone is part of the disk's identity and placement.
+>
+> ---
+>
+> **Regional disk**
+> - A persistent disk replicated synchronously across two zones in the same region for zero-data-loss failover scenarios.
+> - It matters as the higher-availability alternative when the workload needs stronger resilience than a single zonal disk can provide.
+>
+> > [!warning] Availability costs more
+> >
+> > Regional replication materially increases cost, usually to about twice the zonal equivalent. Use it for explicit RPO = 0 needs, not by default.
+>
+> ---
+>
+> **`pd-ssd`**
+> - An SSD-backed Persistent Disk type optimized for low-latency random I/O and database workloads.
+> - The note uses it for SQL Server data, log, and TempDB volumes because those files are sensitive to storage latency and IOPS ceilings.
+>
+> > [!info] Good default for databases
+> >
+> > `pd-ssd` is the practical baseline for OLTP-style storage when you need strong random I/O without stepping up to more specialized offerings.
+>
+> ---
+>
+> **`pd-balanced`**
+> - A lower-cost SSD-backed Persistent Disk tier that provides moderate performance for general-purpose workloads.
+> - It matters because the note treats it as suitable for the VM boot disk, where storage demand is lower than the database volumes.
+>
+> > [!info] Cheaper than `pd-ssd`
+> >
+> > `pd-balanced` reduces cost while keeping SSD behavior. It is often the right choice for operating-system disks and non-critical service volumes.
+>
+> ---
+>
+> **`pd-standard`**
+> - An HDD-backed Persistent Disk tier intended for sequential reads, archival storage, and low-cost capacity.
+> - It matters as the low-performance, low-cost option that is usually a poor fit for active database files but reasonable for colder backup data.
+>
+> > [!warning] Cheap can be slow
+> >
+> > `pd-standard` is capacity-oriented rather than latency-oriented. Database workloads that rely on random I/O will usually suffer on it.
+>
+> ---
+>
+> **`pd-extreme`**
+> - A high-performance Persistent Disk tier that lets you provision IOPS explicitly for demanding database workloads.
+> - It matters as the upper-end Persistent Disk option when standard SSD tiers cannot meet the required transaction latency or throughput targets.
+>
+> > [!warning] Provisioned IOPS affect price
+> >
+> > `pd-extreme` charges for both capacity and configured IOPS. It is easy to overspend if the workload does not truly need that performance profile.
+>
+> ---
+>
+> **Hyperdisk**
+> - A newer Compute Engine block-storage family that decouples size, IOPS, and throughput into separately managed dimensions.
+> - It matters because the note treats Hyperdisk as the modern alternative when storage performance must scale independently from capacity.
+>
+> > [!info] Availability is not universal
+> >
+> > Hyperdisk support varies by zone and product variant. Always verify regional and zonal availability before designing around it.
+>
+> ---
+>
+> **IOPS**
+> - Input/Output Operations Per Second, a performance measure for how many read or write operations storage can sustain.
+> - It matters because SQL Server data and TempDB workloads are strongly shaped by random I/O performance rather than by capacity alone.
+>
+> > [!info] Random and sequential differ
+> >
+> > A disk can have enough capacity and still perform poorly if its IOPS ceiling is too low for the workload's access pattern. Storage sizing is not only about GB.
+>
+> ---
+>
+> **Throughput**
+> - The sustained data-transfer rate of storage, usually measured in MB/s.
+> - It matters in this note for sequential scans, backup streams, restore flows, and analytics workloads that move large blocks of data.
+>
+> > [!info] High throughput is not high IOPS
+> >
+> > Throughput and IOPS solve different bottlenecks. Sequential-heavy ETL can be throughput-bound even when random transaction latency is acceptable.
+>
+> ---
+>
+> **Snapshot**
+> - A point-in-time capture of a persistent disk stored in Google-managed snapshot storage and usable to create new disks later.
+> - It matters because snapshots are the recovery boundary for restore, rollback, and scheduled protection workflows in the note.
+>
+> > [!warning] Restore is not in-place
+> >
+> > Restoring from a snapshot creates a new disk. You do not overwrite the existing disk directly, which is why cutover and validation steps matter.
+>
+> ---
+>
+> **Incremental snapshot**
+> - A snapshot after the first one that stores only changed blocks relative to earlier snapshot state.
+> - It matters because snapshot chains become faster and more space-efficient after the initial full capture.
+>
+> > [!info] First snapshot is different
+> >
+> > The first snapshot must capture the full disk state. Later snapshots are normally cheaper and quicker because they only persist block-level changes.
+>
+> ---
+>
+> **Resource policy**
+> - A reusable Compute Engine policy object that can automate recurring actions such as snapshot schedules.
+> - It matters because scheduled protection in the note is implemented by attaching a snapshot policy to the data and log disks.
+>
+> > [!warning] Policy must be attached
+> >
+> > Creating the policy alone does nothing. The disk must reference the policy before scheduled snapshots start appearing.
+>
+> ---
+>
+> **Device name**
+> - The stable identifier assigned at disk-attachment time and exposed inside the guest under `/dev/disk/by-id/google-DEVICE_NAME`.
+> - It matters because Linux kernel device names such as `/dev/sdb` can shift after reboot, detach, or restore, while the device-name mapping remains stable.
+>
+> > [!info] Better than attachment order
+> >
+> > Attachment order is not a durable storage contract. Device names give the guest a predictable reference path even when `/dev/sdX` changes.
+>
+> ---
+>
+> **UUID**
+> - The filesystem-level unique identifier recorded on a formatted volume and retrievable with `blkid`.
+> - It matters because the note uses UUID-based `/etc/fstab` entries to keep the right filesystem mounted at the right path across reboots and restores.
+>
+> > [!warning] Restores can change identity
+> >
+> > A restored or reformatted disk can present a different UUID from the original. Always verify the UUID before assuming old `fstab` entries still match.
+>
+> ---
+>
+> **Mount point**
+> - The directory path where a mounted filesystem becomes visible to the operating system, such as `/mnt/sqldata`.
+> - It matters because SQL Server layout depends on keeping data, log, and TempDB volumes mounted at consistent paths.
+>
+> > [!info] Applications target paths
+> >
+> > Software usually cares about the mount path, not the raw block device. Stable mount points are what make storage layouts operationally reusable.
+>
+> ---
+>
+> **Filesystem**
+> - The on-disk data structure, such as `ext4` or `xfs`, that organizes a raw block device into readable and writable files and directories.
+> - It matters because new disks are unusable until they are formatted, and resize operations are incomplete until the filesystem is expanded too.
+>
+> > [!warning] Raw disk is not ready
+> >
+> > Attaching a blank disk does not make it immediately usable. The guest still needs formatting, mounting, and persistence configuration before applications can write to it.
+>
+> ---
+>
+> **`fstab`**
+> - The Linux configuration file at `/etc/fstab` that defines mounts to be applied during boot.
+> - It matters because the note uses it to make SQL Server disk mounts survive reboot instead of requiring manual remount steps after every restart.
+>
+> > [!danger] Bad entries can block boot
+> >
+> > An incorrect `fstab` entry can prevent the VM from booting cleanly. Using UUIDs plus `nofail` reduces that risk when a disk is missing or delayed.
+>
+> ---
+>
+> **TempDB**
+> - SQL Server's temporary-workload database used for spills, sorts, intermediate objects, and other ephemeral operations.
+> - It matters because the note places TempDB on its own disk to isolate I/O and explicitly excludes it from durable snapshot planning.
+>
+> > [!info] Treat as rebuildable
+> >
+> > TempDB is recreated by SQL Server and should not be handled like durable business data. Isolating it improves both performance and backup discipline.
 
-| Term | Definition |
-|---|---|
-| **Persistent disk** | Network-attached block storage volume that exists independently of the VM. Persists until explicitly deleted. |
-| **Zonal disk** | A persistent disk that resides in a single zone. Must be in the same zone as the VM it is attached to. |
-| **Regional disk** | A persistent disk replicated synchronously across two zones in the same region. Provides automatic failover with RPO = 0. Created with `--replica-zones`. Costs ~2× the zonal equivalent. |
-| **pd-ssd** | SSD-backed persistent disk optimized for random I/O. Up to 30 IOPS per GB (read and write). Best for databases, OLTP, and latency-sensitive workloads. ~$0.17/GB/month (US). |
-| **pd-balanced** | SSD-backed persistent disk with lower IOPS (6/6 per GB) at lower cost. General-purpose production workloads, boot disks. ~$0.10/GB/month (US). |
-| **pd-standard** | HDD-backed persistent disk for sequential reads, cold backups, archive. 0.75/1.5 IOPS per GB. ~$0.04/GB/month (US). |
-| **pd-extreme** | Highest-performance SSD disk with explicitly provisioned IOPS (up to 120,000). For mission-critical OLTP. ~$0.125/GB/month + $0.003/provisioned IOPS. |
-| **Hyperdisk** | Next-generation block storage with independently configurable IOPS and throughput, decoupled from disk size. GA since 2024. |
-| **IOPS** | Input/Output Operations Per Second. The primary performance metric for database workloads. SQL Server data files require high random IOPS; log files require high sequential write IOPS. |
-| **Throughput** | Data transfer rate in MB/s. Relevant for sequential scan workloads (ETL reads, backup streams). |
-| **Snapshot** | A point-in-time capture of a persistent disk's contents, stored in Cloud Storage. Incremental — only changed blocks are stored after the first full snapshot. Cross-regional: a snapshot from `europe-west1` can restore a disk in `us-central1`. |
-| **Incremental snapshot** | Every snapshot after the first captures only blocks that changed since the previous snapshot, making them fast and storage-efficient. |
-| **Resource policy** | A reusable policy object that automates snapshot creation and deletion on a schedule. Attached to one or more disks. |
-| **Device name** | A stable identifier assigned when attaching a disk to a VM. Creates a symlink at `/dev/disk/by-id/google-DEVICE_NAME` inside the guest OS. Unlike `/dev/sdX` names, device names do not change across reboots. |
-| **Mount point** | A directory in the filesystem where a disk is made accessible (e.g., `/mnt/sqldata`). |
-| **Filesystem** | The logical structure (ext4, xfs) that organizes data on a raw block device. A new disk must be formatted with a filesystem before it can be mounted. |
-| **fstab** | `/etc/fstab` — the Linux file that defines persistent mount configurations. Entries here ensure disks are automatically mounted on boot. |
+> [!example] Stateful Storage Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use these patterns for stateful workloads such as SQL Server that need separate data, log, and TempDB volumes, scheduled protection, and online storage growth.
+> > - Use them when disk layout, attach order, filesystem mounting, snapshots, restore cutover, and resize steps must be documented and repeatable.
+> > - Use them when the team needs durable block storage that survives VM restarts and can be restored or resized deliberately.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not treat TempDB or other explicitly ephemeral scratch storage as durable backup material.
+> > - Do not persist `/dev/sdX` names in `/etc/fstab` when stable device-name or UUID references are available.
+> > - Do not detach or delete disks while they are still mounted or in active use by the guest.
 
 ## Conceptual Model
 

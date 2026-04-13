@@ -10,18 +10,188 @@ status: complete
 
 # Joins, Subqueries, and APPLY
 
-> [!abstract] Scope of this note
+> [!abstract]- Summary
 >
-> This note owns every row-combination pattern in T-SQL:
+> T-SQL row-combination work is about preserving, multiplying, filtering, or reshaping rowsets deliberately: joins, subqueries, `APPLY`, set operators, and transposition features all answer different questions about match retention, correlation, duplication, and output shape.
 >
-> - **Joins** — `INNER JOIN`, `LEFT OUTER JOIN`, `RIGHT OUTER JOIN`, `FULL OUTER JOIN`, `CROSS JOIN`, and self joins.
-> - **Anti-joins and semi-joins** — `NOT EXISTS`, `LEFT JOIN ... WHERE IS NULL`, `EXISTS`, and the trap comparisons between them.
-> - **Subqueries** — scalar, row-valued, and table-valued; correlated vs non-correlated; the error 512 "multi-row scalar subquery" trap.
-> - **APPLY operators** — `CROSS APPLY` and `OUTER APPLY` for row-wise derived sets, per-row top-N, and table-valued functions.
-> - **Set operators** — `UNION`, `UNION ALL`, `EXCEPT`, `INTERSECT` with precedence rules and the duplicate-preservation contrast.
-> - **`PIVOT` and `UNPIVOT`** — transposing rows to columns and columns to rows, with the `CROSS APPLY (VALUES ...)` modern alternative.
+> **Join families**
+> - covers `INNER`, `LEFT`, `RIGHT`, `FULL OUTER`, `CROSS`, and self joins, including retention rules, multi-column `ON` clauses, and the difference between matching and preserving rows
 >
-> Physical join operators (nested loops, merge join, hash match, adaptive join) and performance tuning belong to the query-plan sibling note. Window functions belong to the window-functions sibling note and are referenced here where they replace a correlated subquery pattern.
+> **Semi-joins, anti-joins, and subqueries**
+> - compares `EXISTS`, `NOT EXISTS`, `LEFT JOIN ... IS NULL`, scalar and correlated subqueries, and the correctness traps around row multiplication and multi-row scalar results
+>
+> **`CROSS APPLY` and `OUTER APPLY`**
+> - explains row-wise derived rowsets, per-row top-N, table-valued function patterns, and when apply semantics are cleaner than joins or correlated subqueries
+>
+> **Set operators**
+> - covers `UNION`, `UNION ALL`, `EXCEPT`, and `INTERSECT`, with duplicate-preservation rules, branch compatibility requirements, and precedence behavior
+>
+> **Transpose patterns**
+> - covers `PIVOT`, `UNPIVOT`, and the `CROSS APPLY (VALUES ...)` alternative for turning rows into columns and columns back into rows
+>
+> **Operations and safety**
+> - Warnings: right-side filters in `WHERE` can collapse a `LEFT JOIN` into an `INNER JOIN`, missing join predicates create Cartesian products, scalar subqueries fail when more than one row is returned, `UNION` adds deduplication cost, `UNPIVOT` drops `NULL` rows, and mixed set operators need explicit parentheses
+> - Recommendations: alias every table, keep preservation logic in the `ON` clause, use `EXISTS` / `NOT EXISTS` for semi-join and anti-join patterns, prefer `CROSS APPLY` for per-row top-N, prefer `UNION ALL` when deduplication is not required, and use `CROSS APPLY (VALUES ...)` instead of new `UNPIVOT` code
+
+> [!note]- Glossary
+>
+> **Join**
+> - A relational operation that combines rows from two rowsets based on a matching condition or, in the Cartesian case, on every possible pair.
+> - It matters because the central question in this note is which join form preserves unmatched rows, multiplies rows, or filters them away.
+>
+> > [!warning] Join choice changes row count semantics
+> >
+> > Two queries can look similar and still return different row counts because the join type changes which unmatched rows survive. Always reason about retention, not just syntax.
+>
+> ---
+>
+> **Outer join**
+> - A join family that preserves unmatched rows from one side (`LEFT` or `RIGHT`) or both sides (`FULL`) and fills the missing columns with `NULL`.
+> - It matters because many business queries need to keep the driving table even when related facts or dimensions are missing.
+>
+> > [!warning] Post-join filters can undo preservation
+> >
+> > A `LEFT JOIN` only stays outer if right-side filters remain in the `ON` clause or are written with null-aware intent. Moving them to `WHERE` often erases the preserved rows.
+>
+> ---
+>
+> **Cartesian product**
+> - The all-to-all combination of rows from two sources, produced intentionally by `CROSS JOIN` or accidentally by a missing join predicate.
+> - It matters because accidental Cartesian growth is one of the fastest ways to explode row counts and resource usage.
+>
+> > [!danger] Missing predicates scale catastrophically
+> >
+> > A small-looking omission in the `ON` clause can multiply every row by every row on the other side. The result is often both wrong and operationally expensive.
+>
+> ---
+>
+> **Self join**
+> - A join where the same base table appears twice under different aliases.
+> - It matters because comparison-to-prior-row, hierarchy, and peer-matching patterns often need two logical roles from one physical table.
+>
+> > [!info] Aliases create the logical roles
+> >
+> > A self join works because each alias represents a different role in the comparison. Without clear aliases, the query becomes difficult to reason about correctly.
+>
+> ---
+>
+> **Semi-join**
+> - A matching pattern that returns left-side rows when a match exists on the right without returning right-side columns or multiplying rows by match count.
+> - It matters because `EXISTS` is often the clearest and safest way to answer “does a related row exist?”
+>
+> > [!info] Presence test, not row merge
+> >
+> > Semi-joins are about existence, not enrichment. If the query only needs to know whether a match exists, `EXISTS` usually expresses that intent directly.
+>
+> ---
+>
+> **Anti-join**
+> - A matching pattern that returns left-side rows only when no related row exists on the right.
+> - It matters because absence testing is common in data-quality, exception, and synchronization queries.
+>
+> > [!warning] Nullable exclusion needs care
+> >
+> > `NOT EXISTS` is generally safer than `NOT IN` for anti-join logic because nullable right-side values can corrupt `NOT IN` semantics.
+>
+> ---
+>
+> **Correlated subquery**
+> - A subquery that references columns from the outer query and therefore executes conceptually per outer row.
+> - It matters because correlated logic is powerful but can often be replaced by joins, window functions, or `APPLY` when the intent is row-wise derivation.
+>
+> > [!warning] Correlation changes cost and shape
+> >
+> > A correlated subquery is not just a nested SELECT. It creates a dependency on the outer row and can be more expensive or less readable than alternative patterns.
+>
+> ---
+>
+> **Scalar subquery**
+> - A subquery used in an expression position where exactly one value must be returned.
+> - It matters because SQL Server raises an error when the subquery returns more than one row, making row-cardinality guarantees operationally important.
+>
+> > [!warning] One value means one row
+> >
+> > If a scalar subquery can return multiple rows, the statement fails at runtime. The safe fix is to constrain it, aggregate it, or redesign the query shape.
+>
+> ---
+>
+> **`CROSS APPLY`**
+> - The operator that evaluates a right-side table expression for each left-side row and keeps only left rows that produce a result.
+> - It matters because it is the canonical T-SQL tool for per-row top-N, row-wise expansion, and reusable correlated table expressions.
+>
+> > [!warning] `CROSS APPLY` can discard left rows
+> >
+> > If the right-side expression returns nothing, the left row disappears. That is often correct, but it surprises readers who expected outer-preserving behavior.
+>
+> ---
+>
+> **`OUTER APPLY`**
+> - The outer-preserving form of `APPLY` that keeps left-side rows even when the right-side expression returns no rows.
+> - It matters because it gives row-wise derivation semantics without sacrificing the driving set.
+>
+> > [!info] Apply semantics with null extension
+> >
+> > `OUTER APPLY` is the row-wise analogue of a `LEFT JOIN`. It is usually the right choice when the derived right side is optional.
+>
+> ---
+>
+> **Set operator**
+> - A query operator that combines complete result sets branch by branch instead of matching rows side by side.
+> - It matters because `UNION`, `UNION ALL`, `EXCEPT`, and `INTERSECT` solve different deduplication and comparison problems from joins.
+>
+> > [!warning] Branches must line up structurally
+> >
+> > Set-operator branches need compatible column counts and types. Structural mismatch fails before the engine ever gets to logical comparison.
+>
+> ---
+>
+> **`UNION` / `UNION ALL`**
+> - Two set operators where `UNION ALL` concatenates branches as-is and `UNION` adds duplicate elimination.
+> - It matters because deduplication is expensive and should only be paid for when it is a real requirement.
+>
+> > [!warning] `UNION` does more work
+> >
+> > `UNION` is not a harmless default. It usually adds a sort or hash aggregate and can hide duplicate causes that should be understood explicitly.
+>
+> ---
+>
+> **`EXCEPT` / `INTERSECT`**
+> - Set operators that return rows present in the left branch but not the right (`EXCEPT`), or present in both branches (`INTERSECT`).
+> - It matters because they express set comparison directly and have precedence rules that surprise readers in mixed operator chains.
+>
+> > [!warning] `INTERSECT` binds first
+> >
+> > In mixed set-operator expressions, precedence is not always obvious from visual order. Parentheses make the intended comparison chain explicit.
+>
+> ---
+>
+> **`PIVOT`**
+> - A T-SQL operator that turns row values into separate columns using an aggregate over a fixed output column list.
+> - It matters because it can produce report-shaped output, but the required hard-coded column list makes it less flexible than many readers expect.
+>
+> > [!warning] Output columns are compile-time choices
+> >
+> > Static `PIVOT` only works when the output headers are known ahead of time. Dynamic variants exist, but they add complexity and dynamic SQL risk.
+>
+> ---
+>
+> **`UNPIVOT`**
+> - A T-SQL operator that turns several source columns into repeated output rows with a label column and a value column.
+> - It matters because it provides built-in column-to-row transposition but imposes type compatibility rules and null-dropping behavior.
+>
+> > [!warning] `UNPIVOT` discards null-valued source columns
+> >
+> > Rows are not emitted for source columns whose value is `NULL`. That behavior is documented, but it still surprises many authors and can hide missing data.
+>
+> ---
+>
+> **`CROSS APPLY (VALUES ...)`**
+> - A modern row-constructor pattern that emits labeled row fragments from a source row without the restrictions of `UNPIVOT`.
+> - It matters because it is often the cleaner default for column-to-row reshaping, especially when mixed types or nullable values are involved.
+>
+> > [!info] More flexible than `UNPIVOT`
+> >
+> > This pattern preserves `NULL` values, supports arbitrary expressions, and gives the author full control over labels and ordering. That makes it the better default for new code.
 
 ## INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN
 
@@ -1538,5 +1708,3 @@ A short checklist of habits derived from the traps and rules covered above. Each
 - **Prefer conditional aggregation (`SUM(CASE WHEN ...)`) over PIVOT** when the output columns are known at parse time. Dynamic PIVOT is error-prone; static PIVOT is harder to read than the `SUM(CASE ...)` equivalent. See the `#### PIVOT IN list must be hard-coded` subsection.
 - **Parenthesize mixed set operator chains** (`UNION`/`INTERSECT`/`EXCEPT`). Precedence defaults to `INTERSECT` first, which can surprise. See the `### Set operator precedence` subsection.
 - **Match column counts and types across set operator branches.** Column count mismatch raises error 205 at parse time. See the `#### Column count mismatch error 205` subsection.
-
-

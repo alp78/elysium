@@ -13,16 +13,170 @@ updated: 2026-03-22
 status: complete
 ---
 
-# DataOps for Index Calculation Platforms
+# DataOps for Indices
 
 > [!quote]
 > "Inspection to improve quality is too late, ineffective, costly. Quality comes not from inspection, but from the improvement of the production process."
 >
 > — **W. Edwards Deming**, *Out of the Crisis* (1986)
 
-Operational reference covering the full DataOps lifecycle for stock index calculation platforms: parallel backtesting, continuous validation, blue-green data deployment, methodology versioning, and incident response. All examples are production-ready and infrastructure-agnostic at the naming level.
+> [!abstract]- Summary
+>
+> This note turns DataOps into an operational playbook for index-calculation platforms, showing how to prove methodological changes numerically, validate post-market outputs, deploy data safely, version methodology alongside code, and respond when published benchmark values are wrong or delayed.
+>
+> **Parallel backtesting and numerical diffing**
+> - Defines the shadow-versus-baseline backtest architecture used to run new and production calculation engines in parallel across long historical windows, then compare levels, returns, weights, corporate-action factors, and divisors before a merge is allowed.
+> - Includes GitHub Actions orchestration, Workload Identity Federation, temporary BigQuery datasets, Cloud Run job execution, and the SQL used to surface only material deviations beyond tolerated precision.
+>
+> **Continuous validation and deployment safety**
+> - Covers scheduled end-of-day validation for production data, including weight-sum, missing-price, level-range, corporate-action, and ESG-freshness checks that catch issues caused by upstream data or operational drift rather than by code changes alone.
+> - Explains blue-green data deployment patterns for BigQuery and SQL Server so schema or engine changes can be validated, swapped atomically, and rolled back without destabilizing consumer-facing aliases.
+>
+> **Methodology-as-code and controlled change**
+> - Treats index methodology, capping rules, schedules, screens, ESG overlays, and schema migrations as versioned artifacts that move through the same review, backtest, and deployment controls as the calculation engine itself.
+> - Uses idempotent migrations and a tracked schema history to keep operational changes auditable and safe to re-run.
+>
+> **Incident response and operational reference**
+> - Defines severity classes, a SEV-1 restatement runbook, recalculation and publication-repair flow, subscriber notification expectations, and post-mortem follow-up for materially wrong benchmark outputs.
+> - Ends with precision standards, severity decision logic, key `bq` commands, and Terraform resource examples so the note can serve as a working runbook as well as a design reference.
+>
+> **Operations and safety**
+> - Warnings: unexplained deviations are potential restatement events, post-hoc validation is too late for subscriber-facing calculations, access controls can be lost during naive alias swaps, and SEV-1 incidents require compliance involvement rather than silent correction.
+> - Recommendations: run parallel backtests on every consequential change, validate production outputs daily, keep methodology and migrations in version control, and maintain a pre-authorized restatement workflow with compliance and subscriber teams.
 
----
+> [!note]- Glossary
+>
+> **Parallel backtest**
+> - A validation run where new calculation logic and the current production logic process the same historical date range side by side.
+> - It matters here because the note uses parallel backtesting as the primary proof that an index-engine change is numerically safe before promotion.
+>
+> > [!info] Compare history, not intent
+> >
+> > For regulated calculations, a change is only trustworthy once its historical outputs have been measured against the current baseline.
+>
+> ---
+>
+> **Shadow dataset**
+> - A temporary dataset used to hold candidate calculation outputs during validation without exposing them to production consumers.
+> - It matters here because the workflow relies on isolated shadow data to compare new and baseline runs cleanly and to delete the evidence afterward if the change is rejected.
+>
+> > [!info] Safe isolation for diffing
+> >
+> > Shadow data lets the team test production-like outputs without polluting the production dataset or forcing awkward table-name conventions into downstream consumers.
+>
+> ---
+>
+> **Baseline image**
+> - The currently approved production calculation-engine artifact used as the control case in a parallel comparison.
+> - It matters here because the note measures every new output against the actual deployed behavior, not just against a theoretical expected result.
+>
+> > [!warning] Validate against what is running
+> >
+> > If the baseline does not match production, the diff can prove the wrong thing with complete confidence.
+>
+> ---
+>
+> **Workload Identity Federation / WIF**
+> - An authentication pattern that lets GitHub Actions obtain cloud access without storing long-lived service-account keys in the repository.
+> - It matters here because the note uses WIF to secure CI/CD access to GCP while keeping the validation workflow auditable and keyless.
+>
+> > [!info] Credentials without static secrets
+> >
+> > WIF reduces secret-sprawl risk, but the workflow still needs tightly scoped roles and clear trust-boundary configuration.
+>
+> ---
+>
+> **Diff tolerance**
+> - The numeric precision threshold that defines when two calculation outputs should be treated as equivalent versus materially different.
+> - It matters here because index levels, returns, weights, and factors must be compared with field-specific precision rather than with a single generic equality test.
+>
+> > [!warning] Tolerance is part of the methodology
+> >
+> > Overly loose tolerances hide defects, while overly strict ones create noise that blocks legitimate changes for the wrong reasons.
+>
+> ---
+>
+> **Blue-green data deployment**
+> - A deployment pattern where one physical dataset or table serves production while another candidate copy is prepared, validated, and then swapped into the production alias.
+> - It matters here because the note uses blue-green patterns to reduce downtime and make rollback immediate for data-serving changes.
+>
+> > [!warning] Alias swaps still need controls
+> >
+> > The swap may be atomic, but access rules, validation checks, and rollback paths still need to be designed explicitly around it.
+>
+> ---
+>
+> **Methodology-as-code**
+> - The practice of storing index rules, schedules, capping settings, ESG parameters, and related methodological definitions in version control beside the engine that implements them.
+> - It matters here because the note treats benchmark methodology as an executable operational artifact, not as a PDF that drifts away from production behavior.
+>
+> > [!info] Rules deserve the same discipline as code
+> >
+> > A methodology update without version control, review, and backtesting is still a production change, just a less visible one.
+>
+> ---
+>
+> **Divisor**
+> - The normalization value used in index calculation to preserve continuity when corporate actions, rebalances, or structural changes would otherwise create artificial jumps.
+> - It matters here because divisor changes are one of the fields that must be backtested, audited, and included in incident investigations.
+>
+> > [!warning] Continuity depends on it
+> >
+> > A wrong divisor can make an index appear mathematically consistent while still publishing an economically false level.
+>
+> ---
+>
+> **Corporate action factor**
+> - An adjustment value applied so splits, spinoffs, or related events are reflected correctly in constituent or index calculations.
+> - It matters here because the note includes factor comparisons and validation checks as part of the operational safety net around methodology and data changes.
+>
+> > [!warning] Small factors, large impact
+> >
+> > A subtle corporate-action mismatch can cascade into incorrect weights, levels, and subscriber outputs even when the raw input feed looks mostly intact.
+>
+> ---
+>
+> **Restatement event**
+> - A formal correction process triggered when published benchmark values are materially wrong and must be amended for subscribers and regulators.
+> - It matters here because the note treats SEV-1 incidents as compliance-bound operational events, not just as internal bugs to fix quietly.
+>
+> > [!danger] Silent correction is not acceptable
+> >
+> > Once incorrect benchmark values have been distributed, the organization has disclosure obligations that go beyond technical remediation.
+>
+> ---
+>
+> **SEV-1**
+> - The highest-severity incident level in this note, used when published index values are materially wrong or delayed beyond acceptable regulatory or subscriber thresholds.
+> - It matters here because the SEV-1 classification activates the halt-publication, compliance, recalculation, and restatement workflow immediately.
+>
+> > [!danger] Classification drives response speed
+> >
+> > If the team hesitates to call a true SEV-1, it usually loses the time window in which downstream damage and regulatory exposure can still be minimized.
+>
+> ---
+>
+> **Incident recalculation dataset**
+> - A dedicated dataset created during an incident to hold corrected outputs for affected indices and dates before they are merged back into production.
+> - It matters here because the runbook separates incident recalculation from live production writes until the corrected values have been independently validated.
+>
+> > [!info] Repair in isolation first
+> >
+> > Recomputing directly into production makes it harder to verify, explain, and if necessary reverse the repair path during a high-pressure event.
+
+> [!example] Benchmark Operations Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for index-engine changes, methodology revisions, release gating, benchmark validation design, regulated publication workflows, and restatement preparedness reviews.
+> > - Use it when numerical equivalence, auditability, and subscriber-facing publication safety matter more than generic pipeline convenience.
+> > - Use it to design parallel backtests, continuous validation, blue-green publication paths, and incident response around regulated benchmark outputs.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not apply this operating model wholesale to lightweight analytical pipelines that do not publish regulated benchmark values or require strict historical equivalence checks.
+> > - Do not collapse material benchmark deviations into ordinary pipeline bugs; the control and escalation requirements are higher here.
+> > - Do not ship methodology or schema changes without the side-by-side evidence and recovery path this note expects.
 
 ## Parallel Backtesting Architecture
 
@@ -1211,4 +1365,3 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   }
 }
 ```
-

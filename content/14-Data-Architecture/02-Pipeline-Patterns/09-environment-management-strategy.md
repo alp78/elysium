@@ -28,9 +28,126 @@ status: complete
 >
 > — **Gene Kim**, *The DevOps Handbook* (2016)
 
-Every tool in the stack — gcloud, Terraform, dbt, Airflow, GitHub Actions, SQL Server, BigQuery — has its own mechanism for separating dev from prod. This page is the unifying strategy that coordinates all of them: how many environments, what differs between them, how changes are promoted, and how each tool switches context.
+> [!abstract]- Summary
+>
+> This note defines the environment strategy for the platform, showing how dev, staging, and prod should differ, how each tool switches context safely, and how promotions, isolation boundaries, and cost trade-offs are managed so one environment can change without endangering another.
+>
+> **Topology and environment differences**
+> - Compares two-tier, three-tier, and four-tier topologies, then maps the practical differences between dev, staging, and prod across projects, datasets, buckets, service accounts, data volume, and IAM posture.
+> - Treats environment count as a balance among team size, compliance pressure, deployment frequency, and cost rather than as a one-size-fits-all template.
+>
+> **Tool-by-tool separation**
+> - Covers how `gcloud`, Terraform, dbt, Airflow, GitHub Actions, SQL Server, and BigQuery each represent environment boundaries and switch context.
+> - Emphasizes explicit context selection and project or dataset isolation so destructive commands and deployments cannot silently land in the wrong environment.
+>
+> **Promotion workflow and operational trade-offs**
+> - Explains the code path from dev to prod, what blocks promotion, and why seemingly working dev changes still fail in production when environment contracts diverge.
+> - Adds a cost model and anti-patterns so teams can choose the lightest environment structure that still controls blast radius and risk.
+>
+> **Operations and safety**
+> - Warnings: mixed projects, wrong active context, and implicit defaults in Terraform or dbt can route destructive actions into production.
+> - Recommendations: separate projects by environment, keep defaults on the safest non-prod target, verify active context before destructive steps, and make promotion gates explicit in CI/CD.
 
----
+> [!note]- Glossary
+>
+> **Environment topology**
+> - The overall shape of dev, staging, QA, and prod tiers used to separate change, validation, and live workloads.
+> - It matters here because the note starts by deciding how many environments are justified before drilling into tool-specific switching patterns.
+>
+> > [!info] Structure follows risk
+> >
+> > More environments reduce blast radius and catch more integration issues, but they also add cost and operational overhead. The right topology depends on real team and compliance needs.
+>
+> ---
+>
+> **Environment isolation**
+> - The deliberate separation of projects, credentials, data, and permissions so actions in one environment cannot accidentally affect another.
+> - It matters here because shared boundaries are the fastest path to promotion mistakes and mixed billing or IAM behavior.
+>
+> > [!warning] Shared boundaries erase safety
+> >
+> > If dev and prod share too much infrastructure, the distinction becomes mostly conceptual and operational mistakes gain a direct path into production.
+>
+> ---
+>
+> **Staging environment**
+> - A pre-production environment intended to approximate production closely enough to reveal integration and deployment issues before live release.
+> - It matters here because the note frames staging as a cost-risk trade-off rather than a mandatory checkbox for every team.
+>
+> > [!info] Pre-prod confidence layer
+> >
+> > Staging earns its cost only when it is used to validate realistic promotions and environment-sensitive behavior, not when it drifts into an ignored duplicate of dev.
+>
+> ---
+>
+> **Promotion workflow**
+> - The controlled path by which code, configuration, and infrastructure changes move from development through validation into production.
+> - It matters here because safe environments are not just separated spaces; they also need explicit rules for how changes cross the boundaries.
+>
+> > [!warning] Promotion needs gates
+> >
+> > Without automated checks and approval rules, multiple environments still allow risky changes to move forward with little more safety than direct prod edits.
+>
+> ---
+>
+> **`gcloud` configuration**
+> - A named CLI context that stores the active project, account, region, and related settings for Google Cloud commands.
+> - It matters here because the active configuration determines where every `gcloud` action lands.
+>
+> > [!warning] Context leaks into commands
+> >
+> > The command itself may look harmless, but if the active project is wrong, the operation is aimed at the wrong environment before the first API call is sent.
+>
+> ---
+>
+> **Terraform workspace / variable file**
+> - A mechanism for selecting environment-specific infrastructure state or parameters while reusing shared Terraform code.
+> - It matters here because infrastructure promotion is only safe when state and inputs are clearly scoped to the intended environment.
+>
+> > [!warning] State targeting is operationally critical
+> >
+> > Running `apply` against the wrong workspace or tfvars file is not a minor mistake. It can create, mutate, or destroy the wrong environment's resources immediately.
+>
+> ---
+>
+> **dbt target**
+> - The connection profile output that tells dbt which warehouse, schema, and credentials to use for a run.
+> - It matters here because a wrong default target can route local experimentation into production tables.
+>
+> > [!info] Safe default matters
+> >
+> > Setting the default to dev reduces the chance that a plain `dbt run` becomes a production mutation from a developer workstation.
+>
+> ---
+>
+> **Airflow connection and variable**
+> - Environment-scoped runtime configuration objects that hold external connection details and operational settings for DAGs.
+> - It matters here because orchestration behavior changes by environment even when the DAG code stays the same.
+>
+> > [!info] Same DAG, different bindings
+> >
+> > Good environment strategy lets one DAG definition behave differently through scoped connections and variables instead of through ad hoc code forks.
+>
+> ---
+>
+> **Blast radius**
+> - The scope of systems and data that can be damaged when a mistake or bad deployment occurs.
+> - It matters here because environment design is fundamentally about limiting how far one wrong command or change can travel.
+>
+> > [!warning] Small mistakes scale fast
+> >
+> > Environment boundaries matter most when humans are tired or automation is wrong. Blast-radius reduction is the concrete payoff of that separation.
+>
+
+> [!example] Environment Boundary Fit
+>
+> > [!success] Safe Promotion Boundaries
+> >
+> > - Use this strategy to define or repair environment boundaries for a multi-tool platform where infrastructure, pipelines, and warehouse assets must promote predictably across stages.
+>
+> > [!failure] Convenience Collapse
+> >
+> > - Do not use convenience as a reason to share one project, one credential set, or one default target across all work.
 
 ## Environment Topology — How Many and Why
 
@@ -378,4 +495,3 @@ What each environment actually costs per month. For full per-service pricing det
 - [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — foundational principles including "choose boring technology"
 - [gcp-billing-and-pricing](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-billing-and-pricing) — per-service pricing detail
 - [gcp-total-cost-of-ownership](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — complete architecture cost breakdowns
-

@@ -8,19 +8,197 @@ updated: 2026-03-22
 status: complete
 ---
 
-# Linux Task Scheduling — Cron, Systemd Timers, at, and Anacron
+# Linux Scheduling
 
 > [!quote]
 > "As an industry we've been pushing: Automate. Automate. Automate. We should have been saying: Understand. Understand. Understand."
 >
 > — **Kelsey Hightower**, tweet (2020)
 
-Linux task scheduling encompasses every mechanism for running commands automatically at a specified time or interval: cron for recurring jobs, systemd timers for dependency-aware scheduling, `at` for one-time future execution, and anacron for machines that are not always powered on. This reference covers all four tools plus SSH configuration for remote scheduling, data engineering patterns, and a decision framework for when to use cron vs Airflow vs Cloud Scheduler.
+> [!abstract]- Summary
+>
+> Linux scheduling is not one tool but a set of mechanisms for recurring, one-time, dependency-aware, and catch-up execution, and this note defines when to use cron, systemd timers, `at`, `batch`, or anacron, plus the environment, locking, logging, SSH, and pipeline patterns needed to run scheduled jobs safely on Linux hosts.
+>
+> **Recurring schedulers on Linux**
+> - Covers cron and crontab syntax, field operators, special strings, common schedule patterns, environment handling, output redirection, and user versus system crontabs.
+> - Uses cron as the baseline for lightweight recurring work and contrasts it with more stateful or dependency-aware alternatives.
+>
+> **Modern service-aware scheduling**
+> - Explains systemd timers, `OnCalendar`, persistent missed-run behavior, journald-based log inspection, and service-plus-timer unit design.
+> - Treats systemd timers as the stronger default when the job needs dependency ordering, environment control, resource limits, or richer observability.
+>
+> **One-time and intermittent scheduling**
+> - Covers `at`, `batch`, and anacron for one-off jobs, load-aware execution, and machines that are not always powered on.
+> - Distinguishes fixed-time scheduling from run-when-available scheduling and from catch-up-after-boot behavior.
+>
+> **Operational patterns and safety**
+> - Covers overlap prevention with `flock`, log rotation, cron debugging through syslog or journald, SSH configuration for remote scheduling, tunneling, and production scheduling patterns for pipelines, backups, and health checks.
+> - Warnings: cron runs with a minimal environment, DST and timezone handling can move jobs unexpectedly, concurrent runs need locking, and systemd unit design must encode dependencies explicitly.
+> - Decision guide: the comparison section for cron, Airflow, and Cloud Scheduler is the main orchestration-choice surface.
 
-> [!info] Source
-> Core content in sections 1 and 5 is derived verbatim from *The Senior Data Engineer Book*, Chapters 19 and 20. Substantial additional content has been added throughout.
+> [!note]- Glossary
+>
+> **Cron**
+> - The traditional Unix scheduler that runs commands at fixed recurring times based on a five-field schedule expression.
+> - It matters here because it is the simplest and most widespread Linux scheduling primitive covered in the note.
+>
+> > [!info] Good for small recurring jobs
+> >
+> > Cron is strongest when the job is local, periodic, and simple. Once retries, dependencies, or richer state matter, its simplicity becomes the limit.
+>
+> ---
+>
+> **Crontab**
+> - The file or per-user configuration that stores cron schedule entries and the commands they execute.
+> - It matters here because job definition, environment overrides, and operator habits all start with how crontab entries are written and maintained.
+>
+> > [!warning] Minimal context by default
+> >
+> > A crontab entry does not inherit the friendly shell environment people expect from interactive sessions. Paths, variables, and working directories need to be made explicit.
+>
+> ---
+>
+> **Cron expression**
+> - The minute, hour, day-of-month, month, and day-of-week pattern used to define recurring schedules.
+> - It matters here because schedule correctness depends on understanding how field operators, ranges, steps, and named values are interpreted.
+>
+> > [!warning] Time syntax can hide mistakes
+> >
+> > Small syntax errors can change run frequency drastically without obvious failure. Named weekdays and tested expressions reduce ambiguity.
+>
+> ---
+>
+> **Cron daemon**
+> - The background service that reads crontab entries and launches scheduled commands at the appropriate times.
+> - It matters here because job behavior ultimately depends on the daemon's implementation, logs, and local system timezone.
+>
+> > [!info] Implementation differences matter
+> >
+> > Not every cron implementation supports the same extensions. Verify behavior on the actual target system instead of assuming every crond acts identically.
+>
+> ---
+>
+> **Systemd timer**
+> - A systemd scheduling unit that activates a matching service unit based on calendar expressions or elapsed time conditions.
+> - It matters here because it is the modern Linux alternative when jobs need richer environment control, dependencies, and native service supervision.
+>
+> > [!warning] More power more structure
+> >
+> > Timers are safer for serious jobs, but they require correct unit design. Scheduling and execution are split across timer and service definitions, and both need review.
+>
+> ---
+>
+> **`OnCalendar`**
+> - The systemd timer setting that expresses calendar-based schedules such as weekdays, month ranges, and specific times.
+> - It matters here because it replaces cron syntax when using systemd timers and supports a different but more expressive scheduling model.
+>
+> > [!info] Different syntax from cron
+> >
+> > `OnCalendar` is not just cron with new punctuation. Test expressions before deployment so the normalized schedule matches the intended run times.
+>
+> ---
+>
+> **`Persistent=true`**
+> - A systemd timer option that runs a missed job after boot if the host was down at the scheduled time.
+> - It matters here because it is one of the main differences between timers and plain cron on intermittently powered machines.
+>
+> > [!warning] Catch-up changes semantics
+> >
+> > This setting is helpful for missed maintenance or ETL jobs, but it also means the job may run at boot under different resource conditions than the original schedule window.
+>
+> ---
+>
+> **`flock`**
+> - A Linux file-locking utility used to prevent overlapping executions of the same script or command.
+> - It matters here because scheduled jobs often run longer than their interval, and overlap prevention is a core safety pattern in the note.
+>
+> > [!danger] Concurrency guardrail
+> >
+> > Without explicit locking, recurring jobs can corrupt shared outputs, double-ingest data, or overload downstream systems when runs overlap.
+>
+> ---
+>
+> **`at`**
+> - A Linux scheduler for one-time future execution of commands at a specified time.
+> - It matters here because not every scheduled operation is recurring; migrations, delayed fixes, and planned one-off jobs often fit this model better.
+>
+> > [!info] Single-shot scheduling
+> >
+> > `at` is easier than building and later deleting a recurring schedule when the work should happen only once.
+>
+> ---
+>
+> **`batch`**
+> - A load-aware scheduling mode that runs queued work when system load drops below a configured threshold.
+> - It matters here because some jobs should run when the machine is quiet rather than at a fixed wall-clock time.
+>
+> > [!warning] Load gate not time guarantee
+> >
+> > `batch` optimizes for system conditions, not schedule precision. Use it only when deferred execution is acceptable.
+>
+> ---
+>
+> **Anacron**
+> - A scheduler designed for machines that are not always on, ensuring daily, weekly, or monthly jobs eventually run after missed windows.
+> - It matters here because laptops, desktops, and intermittently powered hosts need catch-up semantics that ordinary cron does not provide.
+>
+> > [!info] Missed-run recovery tool
+> >
+> > Anacron is about eventual execution after downtime, not fine-grained recurring schedules. It complements cron instead of replacing every use case.
+>
+> ---
+>
+> **Minimal environment**
+> - The reduced shell context a scheduler such as cron provides when launching a job, typically without interactive shell initialization.
+> - It matters here because many scheduled-job failures are really missing PATH, working directory, locale, or environment-variable assumptions.
+>
+> > [!warning] Interactive assumptions break here
+> >
+> > If a script only works from a logged-in shell, it is not yet safe for scheduling. Make runtime paths, env vars, and interpreters explicit.
+>
+> ---
+>
+> **SSH config**
+> - The per-user SSH configuration file that defines host aliases, identities, tunneling, and connection defaults.
+> - It matters here because remote scheduling and bastion-based administration become much more manageable when access patterns are codified instead of typed ad hoc.
+>
+> > [!info] Repeatable remote access pattern
+> >
+> > Clean SSH config reduces operational mistakes and makes remote scheduling commands short enough to automate safely.
+>
+> ---
+>
+> **SSH tunnel**
+> - A forwarded network connection carried over SSH that exposes a remote service locally or vice versa.
+> - It matters here because pipeline operators often need scheduled jobs or admin commands to reach protected databases and services through a bastion host.
+>
+> > [!warning] Access path with security implications
+> >
+> > Tunnels are powerful, but they also create hidden network reachability. Keep port mappings intentional and close long-lived tunnels that no longer serve an operational need.
+>
+> ---
+>
+> **Log rotation**
+> - The practice of aging out, compressing, or deleting old log files so scheduled jobs do not fill local disk over time.
+> - It matters here because reliable scheduling includes managing the side effects of repeated output, not only making jobs start on time.
+>
+> > [!warning] Output becomes capacity risk
+> >
+> > A well-scheduled job can still create an outage if its logs grow without bounds. Retention and compression need to be part of the scheduler design.
 
----
+> [!example] Host-Level Scheduling Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note when a single Linux host or VM needs reliable local scheduling without the full complexity of Airflow or a managed cloud orchestrator.
+> > - Use it when the real choice is between cron, systemd timers, `at`, `batch`, and anacron, along with the environment, locking, and logging patterns required to run them safely.
+> > - Use it for host-bound automation such as backups, local pipeline launchers, health checks, and periodic maintenance where the machine itself is the execution boundary.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not use host-level scheduling when the workflow needs cross-task dependencies, centralized state, rich retries, or multi-step orchestration better handled by Airflow or managed cloud services.
+> > - Do not assume cron alone is enough for dependency-aware services, missed-run recovery, or richer observability if systemd timers are the better fit.
+> > - Do not treat a scheduled shell command as production-safe until environment, overlap control, timezone, and logging have been designed explicitly.
 
 ## Cron and Crontab
 

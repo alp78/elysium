@@ -939,8 +939,18 @@ Architecture reference for large-scale data movement — MFT gateways, GCS Trans
 
 **What:** Dedicated gateways for large file transfers with multiplexing, packet-level resume, encryption, audit.
 
-**When to use:** Regulated industries, multi-partner B2B exchange, files > 100 GB.
-**When NOT to use:** Internal cloud-to-cloud transfers.
+> [!example] MFT Workload Fit
+>
+> > [!success] Governed Transfer
+> >
+> > - Use MFT when file exchange is a governed delivery surface: regulated partners, audit requirements, encryption policy, resumability, and transfer receipts all matter operationally.
+> > - Choose it for large multi-partner B2B exchanges where restartable transfers and SLA visibility are more important than keeping the path minimal.
+>
+> > [!failure] Native Cloud Path
+> >
+> > - Avoid MFT for internal cloud-to-cloud transfers; native cloud services are usually faster to operate and cheaper to run.
+> > - Do not use it for real-time event streaming, because MFT is optimized for governed file movement rather than low-latency message delivery.
+
 
 #### GCS Transfer Service
 

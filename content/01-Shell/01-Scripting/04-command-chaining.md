@@ -44,8 +44,6 @@ status: complete
 > - Cleanup on failure: use `trap 'cleanup' EXIT` (bash) or `try/catch/finally` (PS) — not `||`
 >
 > **Operations and safety**
-> - When to use: deployment chains, causally dependent data pipeline steps, fallback logic, diagnostic sweeps, streaming log processing, guard clauses
-> - When not to use: complex multi-level conditional logic, steps requiring cleanup, long pipelines needing per-stage monitoring, PowerShell 5.1 environments
 > - Warnings: semicolons in data pipelines mask failures silently; `&& / ||` try/catch pattern has a fragile edge case when the success branch fails; pipeline exit code is last-command-only without `pipefail`; `&&` / `||` are syntax errors in PS 5.1
 > - Recommendations table: 7 scenarios covering script header, dependent steps, fallback logic, cleanup, long pipelines, cross-platform, and interactive use
 > - Troubleshooting: 5 failure modes covering silent step continuation, empty pipeline output, `&&` syntax error in PS, `||` triggering on success-branch failure, and `$?` / `$LASTEXITCODE` mismatch in PowerShell
@@ -513,21 +511,23 @@ PowerShell pipes raw text strings when you run an external executable (e.g., `gi
 | `*>` | `cmd *> file.txt` | Redirects all output streams (stdout + stderr + verbose + warning + debug + information) to a file |
 
 
-## When to use command chaining
-
-- **Deployment scripts** — chain `git pull && build && restart` so a build never starts on broken code and a restart never happens with a broken build.
-- **Data pipeline steps with causal dependencies** — `truncate_staging && load_data && validate_count` ensures each step only runs if the previous succeeded.
-- **Fallback logic** — `rsync ... || scp ...` tries the fast path first and falls back to the universally available alternative.
-- **Quick diagnostic sweeps** — `free -h ; df -h ; docker ps ; ss -tlnp` gathers all information regardless of individual command failures during an incident.
-- **Streaming data processing** — `zcat | grep | awk | sort | uniq -c | head` processes gigabytes of data in a single pass without intermediate files.
-- **Guard clauses** — `[ -f config.yaml ] || { echo "Missing config" >&2; exit 1; }` validates prerequisites before the main script logic runs.
-
-## When not to use command chaining
-
-- **Complex conditional logic** — if you need more than one level of `&&` / `||` nesting, write a proper `if/then/else` block or a function. Deeply nested chaining is unreadable and error-prone.
-- **Steps requiring cleanup on failure** — `&&` stops execution but does not run cleanup code. Use `trap 'cleanup_function' EXIT` in bash or `try/catch/finally` in PowerShell for guaranteed cleanup.
-- **Long-running pipelines that need individual stage monitoring** — a 10-stage streaming pipeline hides which stage is slow or failing. Break it into named steps with intermediate checkpoints when debuggability matters more than streaming efficiency.
-- **PowerShell 5.1 environments** — `&&` and `||` are only available in PowerShell 7+. Use `try/catch` or manual `$LASTEXITCODE` checks instead.
+> [!example] Shell Chaining Fit
+>
+> > [!success] Appropriate
+> >
+> > - **Deployment scripts** — chain `git pull && build && restart` so a build never starts on broken code and a restart never happens with a broken build.
+> > - **Data pipeline steps with causal dependencies** — `truncate_staging && load_data && validate_count` ensures each step only runs if the previous succeeded.
+> > - **Fallback logic** — `rsync ... || scp ...` tries the fast path first and falls back to the universally available alternative.
+> > - **Quick diagnostic sweeps** — `free -h ; df -h ; docker ps ; ss -tlnp` gathers all information regardless of individual command failures during an incident.
+> > - **Streaming data processing** — `zcat | grep | awk | sort | uniq -c | head` processes gigabytes of data in a single pass without intermediate files.
+> > - **Guard clauses** — `[ -f config.yaml ] || { echo "Missing config" >&2; exit 1; }` validates prerequisites before the main script logic runs.
+>
+> > [!failure] Inappropriate
+> >
+> > - **Complex conditional logic** — if you need more than one level of `&&` / `||` nesting, write a proper `if/then/else` block or a function. Deeply nested chaining is unreadable and error-prone.
+> > - **Steps requiring cleanup on failure** — `&&` stops execution but does not run cleanup code. Use `trap 'cleanup_function' EXIT` in bash or `try/catch/finally` in PowerShell for guaranteed cleanup.
+> > - **Long-running pipelines that need individual stage monitoring** — a 10-stage streaming pipeline hides which stage is slow or failing. Break it into named steps with intermediate checkpoints when debuggability matters more than streaming efficiency.
+> > - **PowerShell 5.1 environments** — `&&` and `||` are only available in PowerShell 7+. Use `try/catch` or manual `$LASTEXITCODE` checks instead.
 
 ## Warnings
 

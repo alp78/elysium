@@ -27,14 +27,132 @@ updated: 2026-03-22
 status: complete
 ---
 
-# GCP Data Lineage and Catalog — Definitive Reference
+# GCP Data Lineage and Catalog
 
 > [!quote]
 > "Data lineage is the Rosetta Stone for analytics teams — it lets you trace any number back to its source and understand every transformation along the way."
 >
 > — **Maxime Beauchemin**, creator of Apache Airflow and Apache Superset
 
----
+> [!abstract]- Summary
+>
+> This note treats lineage and cataloging as the governance half of observability: Dataplex, catalog metadata, tag templates, business glossary terms, lineage capture, quality scans, and impact analysis are what make data movement explainable before and after a change instead of forcing every investigation into manual archaeology.
+>
+> **Why lineage and cataloging matter**
+> - Explains the operational and compliance reasons for knowing where a number came from and what a dataset means, including audit, privacy, and ownership concerns.
+> - Frames lineage and cataloging as prerequisites for trustworthy self-service analytics rather than optional documentation work.
+>
+> **GCP governance surface**
+> - Maps the roles of Dataplex, Data Catalog, BigQuery, Dataflow, Airflow, Spark, and dbt in the broader lineage and metadata landscape.
+> - Positions Dataplex as the convergence point where discovery, tags, lineage, and quality become one operating surface.
+>
+> **Lineage, tags, and quality**
+> - Covers lakes, zones, assets, tag templates, glossary management, automatic and custom lineage, OpenLineage integration, and Dataplex quality scans.
+> - Shows how metadata, provenance, and quality rules reinforce one another in daily operations.
+>
+> **Impact analysis and operations**
+> - Ends with impact-analysis workflows, lineage gaps, setup phases, governance procedures, quotas, and troubleshooting guidance.
+> - When to use: the platform needs explainable data movement and searchable business context, not only runtime health metrics.
+
+> [!note]- Glossary
+>
+> **Dataplex**
+> - Google Cloud's unified governance surface for data discovery, lineage, cataloging, and quality.
+> - It matters here because the note treats it as the main GCP-native control plane for data governance observability.
+>
+> > [!info] Governance convergence point
+> >
+> > Dataplex is where multiple metadata and lineage streams become one searchable operating surface.
+>
+> ---
+>
+> **Data Catalog**
+> - Google's metadata and tagging capability for datasets, now surfaced through the broader Dataplex platform.
+> - It matters here because existing tag and metadata concepts still matter even as Dataplex becomes the preferred entry point.
+>
+> > [!tip] Metadata vocabulary still matters
+> >
+> > Platform branding changes do not remove the need for stable tag and glossary practices.
+>
+> ---
+>
+> **Lineage API**
+> - The API surface that records upstream and downstream relationships between data assets and processing steps.
+> - It matters here because both automatic and custom lineage ultimately depend on this provenance graph.
+>
+> > [!info] Provenance backbone
+> >
+> > If the lineage graph is missing, impact analysis becomes guesswork.
+>
+> ---
+>
+> **column-level lineage**
+> - Lineage that traces one output column back to specific source columns and transformations.
+> - It matters here because regulatory, financial, and debugging questions often target one field, not one whole table.
+>
+> > [!tip] Precision provenance
+> >
+> > Table-level lineage is useful, but column-level lineage is what closes many audit gaps.
+>
+> ---
+>
+> **tag template**
+> - The reusable schema for metadata tags applied to datasets, tables, or columns.
+> - It matters here because governance becomes scalable only when metadata fields are standardized.
+>
+> > [!info] Metadata contract
+> >
+> > Templates stop cataloging from turning into free-form notes that no one can query reliably.
+>
+> ---
+>
+> **business glossary**
+> - The controlled set of business terms and meanings attached to data assets.
+> - It matters here because discoverability is not only about finding tables, but also about understanding what the data represents.
+>
+> > [!tip] Meaning layer
+> >
+> > Technical lineage answers where data came from; glossary terms answer what it is supposed to mean.
+>
+> ---
+>
+> **auto-discovery**
+> - The process by which Dataplex inventories and profiles supported data assets automatically.
+> - It matters here because discovery shortens the gap between creating data and making it visible to consumers and operators.
+>
+> > [!info] Inventory without manual crawling
+> >
+> > Discovery reduces metadata blind spots, but it still needs curated tags and ownership to become fully useful.
+>
+> ---
+>
+> **OpenLineage**
+> - An open standard for emitting lineage events from tools such as Airflow, Spark, and dbt.
+> - It matters here because not every important lineage path is captured automatically by BigQuery or Dataplex alone.
+>
+> > [!tip] Extend beyond native capture
+> >
+> > Open standards fill provenance gaps where managed platforms stop short.
+>
+> ---
+>
+> **impact analysis**
+> - The process of identifying what downstream assets or jobs will be affected by a proposed data change.
+> - It matters here because safe schema evolution depends on knowing the blast radius before modifying a source or table.
+>
+> > [!info] Change before breakage
+> >
+> > Impact analysis turns lineage from passive documentation into a pre-change safety tool.
+>
+> ---
+>
+> **quality scan**
+> - A Dataplex-managed job that evaluates data against declared quality rules.
+> - It matters here because lineage and cataloging are strongest when they are paired with evidence about whether the data currently meets expectations.
+>
+> > [!tip] Governance plus validation
+> >
+> > Metadata says what data should be; quality scans test whether it actually behaves that way.
 
 ## Why Lineage and Cataloging Matter for Data Engineers
 
@@ -266,6 +384,7 @@ gcloud dataplex assets list \
 ### Auto-Discovery in Detail
 
 When discovery is enabled, Dataplex crawls attached assets and automatically:
+
 - Discovers new tables and GCS partitions
 - Extracts schema (column names, data types, descriptions from BigQuery schema definitions)
 - Creates catalog entries for every discovered entity
@@ -691,6 +810,7 @@ client.create_tag(parent=entry.name, tag=tag)
 ### Automatic Lineage (Zero-Config for BigQuery)
 
 BigQuery captures lineage automatically for every SQL operation that reads from tables and writes to tables. This includes:
+
 - `INSERT INTO ... SELECT FROM`
 - `CREATE TABLE AS SELECT`
 - `CREATE OR REPLACE TABLE AS SELECT`
@@ -708,6 +828,7 @@ BigQuery captures lineage automatically for every SQL operation that reads from 
 > - `TRUNCATE TABLE` followed by `INSERT` may not create a link if done as separate statements across sessions
 
 #### View lineage in the console
+
 BigQuery Studio → Select a table → "Lineage" tab → Visual graph of upstream sources and downstream consumers.
 
 #### Query lineage via gcloud
@@ -794,6 +915,7 @@ for link in response.links:
 For any pipeline step that involves systems outside BigQuery — SQL Server ingestion, REST API pulls, CSV file processing, transformations in Python — you must report lineage explicitly using the Lineage API.
 
 #### Core concepts — Lineage API — Custom Lineage for Non-BigQuery Sources
+
 - **Process**: A logical pipeline (e.g., "daily-market-data-ingestion"). Created once, reused across runs.
 - **Run**: A single execution of the process (e.g., the 2026-03-22 run). Created per execution.
 - **LineageEvent**: A specific data transfer within a run. Contains one or more `EventLink` objects, each with a source and target `EntityReference`.
@@ -1209,6 +1331,7 @@ See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architect
 ### Lineage Visualization
 
 #### Console views — Lineage Visualization
+
 - BigQuery Studio → Table → Lineage tab: shows immediate upstream/downstream with one hop
 - Dataplex → Lineage Explorer: full multi-hop cross-system lineage graph, filterable by time range
 
@@ -1854,6 +1977,7 @@ CREATE TABLE IF NOT EXISTS governance.lineage_gaps (
 ### Decision Guide
 
 #### Choose GCP-native Dataplex when
+
 - Your data stack is primarily on GCP
 - You want zero operational overhead — no Kubernetes clusters to manage
 - You are already paying for BigQuery and Dataflow; lineage is included
@@ -1861,12 +1985,14 @@ CREATE TABLE IF NOT EXISTS governance.lineage_gaps (
 - Your team is small and cannot dedicate engineering time to operating open-source infrastructure
 
 #### Choose OpenMetadata or DataHub when
+
 - You have a multi-cloud or hybrid stack (AWS, Azure, on-prem, GCP)
 - You need deeper integrations with tools GCP does not natively cover (Snowflake, Redshift, Tableau, Looker — note Looker is GCP-native but DataHub has better lineage extraction)
 - You want a richer, more customizable UI for data discovery
 - Your data platform team has Kubernetes operational expertise
 
 #### Choose Collibra or Alation when
+
 - You have a large governance team and need workflow management (approval workflows, stewardship assignments)
 - You need a business-facing catalog with deep business glossary and policy management
 - Your compliance team requires a dedicated governance platform with audit trails beyond what GCP provides
@@ -1882,9 +2008,11 @@ CREATE TABLE IF NOT EXISTS governance.lineage_gaps (
 ### Phase 1: Foundation (Day 1)
 
 - [ ] Enable Dataplex, Data Catalog, and Lineage APIs
-  ```bash
+
+```bash
   gcloud services enable dataplex.googleapis.com datalineage.googleapis.com datacatalog.googleapis.com
-  ```
+```
+
 - [ ] Create IAM roles for governance service account (`roles/dataplex.admin`, `roles/datalineage.admin`, `roles/datacatalog.admin`)
 - [ ] Create Dataplex Lake with environment label (`env=prod`)
 - [ ] Create Raw, Curated, and Consumption zones within the lake
@@ -1997,6 +2125,7 @@ def find_orphaned_tables(project_id: str, dataset: str, location: str) -> list[s
 ### Troubleshooting Common Issues
 
 #### Auto-discovery not finding new tables
+
 ```bash
 # Check discovery status
 gcloud dataplex assets describe ASSET_NAME \
@@ -2009,6 +2138,7 @@ gcloud dataplex assets run-discovery ASSET_NAME \
 ```
 
 #### Lineage not appearing for a BigQuery transformation
+
 ```bash
 # Check if the job was captured in the Lineage API
 gcloud dataplex lineage search-links \
@@ -2020,6 +2150,7 @@ gcloud dataplex lineage search-links \
 ```
 
 #### Tag template field validation errors
+
 ```bash
 # List tag template fields to verify correct field IDs
 gcloud data-catalog tag-templates describe pipeline-metadata \
@@ -2028,6 +2159,7 @@ gcloud data-catalog tag-templates describe pipeline-metadata \
 ```
 
 #### Permission denied on Lineage API
+
 ```bash
 # Verify the service account has the lineage producer role
 gcloud projects get-iam-policy PROJECT_ID \

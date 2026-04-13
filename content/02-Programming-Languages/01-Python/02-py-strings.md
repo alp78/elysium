@@ -1249,19 +1249,21 @@ zip code US         : \d{5}(-\d{4})?
 strong password     : ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$
 ```
 
-## When to Use
-
-- **Text parsing and transformation** — Python's rich set of `str` methods (`split`, `strip`, `replace`, `translate`) and slice syntax make it the most productive language for ad-hoc text processing.
-- **Regex-heavy workflows** — the `re` module with raw strings and named groups is more concise than C#'s `Regex` class for one-off pattern matching.
-- **Data cleaning in pipelines** — normalizing column names, stripping whitespace, extracting fields from semi-structured text (log lines, CSV variants, email headers).
-- **Prototyping format strings** — f-strings with format specifiers are faster to iterate on than C#'s composite formatting.
-
-## When Not to Use / Limits
-
-- **High-throughput string processing** — Python string operations allocate on every transformation. For millions of rows, use Polars/Pandas string methods (vectorized) or move to C# `Span<char>` for zero-allocation parsing.
-- **Binary protocol parsing** — use `bytes`/`memoryview` instead of `str` to avoid encode/decode overhead.
-- **Locale-dependent formatting in production** — Python's `locale` module is fragile across platforms. Use the `babel` library or format in the presentation layer.
-- **Security-sensitive string assembly** — never use f-strings or `+` to build SQL, shell commands, or HTML. Use parameterized queries, `shlex.quote()`, or template engines.
+> [!example] Python String Workloads
+>
+> > [!success] Applicability
+> >
+> > - **Text parsing and transformation** — Python's rich set of `str` methods (`split`, `strip`, `replace`, `translate`) and slice syntax make it the most productive language for ad-hoc text processing.
+> > - **Regex-heavy workflows** — the `re` module with raw strings and named groups is more concise than C#'s `Regex` class for one-off pattern matching.
+> > - **Data cleaning in pipelines** — normalizing column names, stripping whitespace, extracting fields from semi-structured text (log lines, CSV variants, email headers).
+> > - **Prototyping format strings** — f-strings with format specifiers are faster to iterate on than C#'s composite formatting.
+>
+> > [!failure] Limitations
+> >
+> > - **High-throughput string processing** — Python string operations allocate on every transformation. For millions of rows, use Polars/Pandas string methods (vectorized) or move to C# `Span<char>` for zero-allocation parsing.
+> > - **Binary protocol parsing** — use `bytes`/`memoryview` instead of `str` to avoid encode/decode overhead.
+> > - **Locale-dependent formatting in production** — Python's `locale` module is fragile across platforms. Use the `babel` library or format in the presentation layer.
+> > - **Security-sensitive string assembly** — never use f-strings or `+` to build SQL, shell commands, or HTML. Use parameterized queries, `shlex.quote()`, or template engines.
 
 ## Warnings
 

@@ -2,13 +2,13 @@
 title: "04 - SQL Server on Compute Engine"
 tags: [gcp, compute, sql-server]
 aliases: [SQL Server on GCE, SQL Server VM GCP, stoxx-db GCE deployment]
-description: "End-to-end deployment of SQL Server 2022 on a Compute Engine VM with dedicated disks for data, log, and TempDB — replicating the stoxx_db production-pattern layout from Docker to GCE."
+description: "End-to-end deployment of SQL Server 2022 on a Compute Engine VM with dedicated disks for data, log, and TempDB — including the stoxx_db split-file layout and the bronze/silver/gold-only stoxx provisioning workflow."
 created: 2026-04-12
-updated: 2026-04-12
+updated: 2026-04-13
 status: complete
 ---
 
-# SQL Server on Compute Engine — Production Deployment
+# SQL Server on Compute Engine
 
 > [!quote] The cloud is just a different datacenter
 >
@@ -16,35 +16,229 @@ status: complete
 >
 > Source: Dmitri Korotkevitch | *SQL Server Advanced Troubleshooting and Performance Tuning*
 
-This page documents the end-to-end deployment of SQL Server 2022 Developer Edition on the GCE VM `stoxx-vm` (project `bq-wh-nb`, zone `europe-west1-b`), replicating the `stoxx_db` reference database layout currently running in the local Docker container `stoxx-db`. The migration moves from Docker-managed volumes to dedicated persistent disks: a 100 GB SSD for data files, a 20 GB SSD for the transaction log, and a 20 GB SSD for TempDB. This separation delivers independent IOPS budgets per workload tier (hot user data, sequential log writes, and TempDB's sort/hash/spill activity), enables independent snapshot and backup cadences per disk, and allows scaling each disk independently without downtime on the others.
+> [!abstract]- Summary
+>
+> Covers the full self-managed SQL Server 2022 deployment pattern on Compute Engine, using `stoxx-vm` in `bq-wh-nb` with dedicated disks, private IAP access, Linux package installation, engine configuration, data publication, startup automation, teardown, and cost analysis.
+>
+> **Prerequisites and storage layout**
+> - Build on the mounted disk layout from page 03: `/mnt/sqldata` on `stoxx-data` (100 GB `pd-ssd`), `/mnt/sqllog` on `stoxx-log` (20 GB `pd-ssd`), and `/mnt/sqltempdb` on `stoxx-tempdb` (20 GB `pd-ssd`)
+> - Replace Docker-managed storage from the local `stoxx-db` reference with independent VM disks so data files, transaction log, and TempDB have separate IOPS, snapshot cadence, and resize boundaries
+>
+> **Package installation and bootstrap**
+> - Import the Microsoft GPG key, register the SQL Server 2022 and `prod` APT repositories with `signed-by=`, install `mssql-server`, run non-interactive `mssql-conf setup`, install `mssql-tools18`, and verify build `16.0.4245.2`
+> - Depend on Cloud NAT for outbound package access and use `sqlcmd -C` because the initial Linux deployment uses a self-signed TLS certificate
+>
+> **Engine and platform configuration**
+> - Configure SQL Server on Ubuntu with `mssql-conf`, dedicated data, log, TempDB, and backup paths, firewall rules, and IAP/private-port access to `1433`
+> - Keep the instance private with `--no-address` and reach it through port forwarding and local tools mapped to `localhost`
+>
+> **Database restore and publish workflow**
+> - Recreate the `stoxx_db` reference layout on the VM, then run a separate publish path that seeds `stoxx` with only the `bronze`, `silver`, and `gold` schemas while excluding `demo_stc`
+> - Validate schema inventory and row counts, take a compressed post-cutover backup, and drop the temporary `stoxx_seed` database only after the final target is confirmed
+>
+> **Startup, teardown, and cost**
+> - Attach a metadata startup script that refuses to start SQL Server unless all required mounts are present, then logs actions through `google-guest-agent`
+> - Use the ordered teardown sequence to stop SQL Server, stop the VM, detach and delete data disks, remove snapshots and firewall rules, and finally delete the instance
+> - Review the monthly cost breakdown, scheduled start and stop savings, and Cloud SQL for SQL Server cost comparison
+>
+> **Operations and safety**
+> - Warnings: non-interactive GPG import needs `gpg --batch`, Ubuntu 22.04 repo files need `signed-by=`, `sa` passwords must satisfy complexity policy, local `sqlcmd` needs `-C` without a CA-signed cert, and boot-time startup must verify disk mounts before service start
+> - Recommendations table: the cost section contrasts always-on GCE, scheduled stop and start savings, and Cloud SQL for SQL Server pricing to frame the management-versus-cost tradeoff
+> - Troubleshooting: 5 failure modes covering `/dev/tty` GPG import failures, `NO_PUBKEY` APT errors, weak `sa` password setup failures, self-signed TLS validation failures, and mount-dependent startup safety
 
-The VM already has three additional disks attached and mounted (completed in page 03):
+> [!note]- Glossary
+>
+> **Compute Engine**
+> - Google Cloud's virtual-machine platform for running guest operating systems and software on managed infrastructure.
+> - It matters here because SQL Server is deployed as a normal Linux workload on a standard VM rather than as a managed database service.
+>
+> > [!info] Cloud does not remove fundamentals
+> >
+> > Running SQL Server on Compute Engine keeps the same core responsibilities as any other VM deployment: storage layout, package management, networking, startup order, and recovery planning.
+>
+> ---
+>
+> **persistent disk**
+> - Google Cloud's durable block storage that remains attached to or independent from a VM across restarts and resize operations.
+> - It matters because the deployment separates SQL Server data, log, and TempDB onto distinct disks with different operational roles.
+>
+> > [!info] Storage survives the process
+> >
+> > SQL Server can stop or the VM can reboot without erasing the database files. That persistence is what makes snapshotting, restore, and independent growth possible.
+>
+> ---
+>
+> **Cloud NAT**
+> - A Google Cloud network service that gives private VMs outbound internet access without assigning them public IP addresses.
+> - It matters because `stoxx-vm` needs package access to Microsoft repositories while still remaining private behind `--no-address`.
+>
+> > [!warning] Private VM still needs egress
+> >
+> > A private VM cannot install packages from the internet unless some outbound path exists. Cloud NAT solves that without exposing the VM to inbound public traffic.
+>
+> ---
+>
+> **filegroup**
+> - A logical SQL Server container that holds one or more data files and acts as the placement target for tables and indexes.
+> - It matters because the note reproduces a multi-file, multi-filegroup layout rather than collapsing all data into one default file.
+>
+> > [!info] Objects land in filegroups
+> >
+> > SQL Server places objects into filegroups, not directly into files. Filegroup design is the layer that lets you distribute storage intentionally.
+>
+> ---
+>
+> **data file (MDF)**
+> - The primary SQL Server data file that every database must have and that anchors the PRIMARY filegroup.
+> - It matters because the VM deployment uses the MDF as the base file around which additional NDF files and filegroups are organized.
+>
+> > [!info] One primary anchor
+> >
+> > A database has exactly one MDF. Expansion beyond that uses additional data files rather than extra primary files.
+>
+> ---
+>
+> **secondary data file (NDF)**
+> - An additional SQL Server data file used to extend storage inside an existing or separate filegroup.
+> - It matters because the note mirrors the reference layout by distributing user data across multiple files rather than relying on one large MDF.
+>
+> > [!info] Scale data laterally
+> >
+> > NDF files let you add capacity and distribute I/O within a filegroup design. They are the normal way to grow complex SQL Server layouts.
+>
+> ---
+>
+> **transaction log (LDF)**
+> - SQL Server's sequential write-ahead log that records every committed or pending transaction change.
+> - It matters because recoverability, crash recovery, and point-in-time restore depend on keeping the log isolated, durable, and correctly sized.
+>
+> > [!danger] Log health is recovery health
+> >
+> > If the log chain is broken or the log volume is mishandled, restore options collapse quickly. The log is not just a write buffer; it is the recovery backbone.
+>
+> ---
+>
+> **TempDB**
+> - SQL Server's shared temporary database for sorts, spills, work tables, row versioning, and session-scoped temporary objects.
+> - It matters because TempDB has heavy transient I/O and therefore benefits from its own disk rather than competing with user data or the transaction log.
+>
+> > [!info] Busy but disposable
+> >
+> > TempDB is performance-critical even though it is not durable business data. Isolating it improves runtime behavior without changing recovery planning.
+>
+> ---
+>
+> **recovery model**
+> - The SQL Server setting that determines how transaction log truncation and backup-based recovery behave for a database.
+> - It matters because the deployed databases need the right balance between log growth, backup cadence, and point-in-time restore capability.
+>
+> > [!warning] Recovery model changes operations
+> >
+> > Switching between `SIMPLE`, `FULL`, and `BULK_LOGGED` changes backup and restore expectations immediately. It is an operational choice, not a cosmetic setting.
+>
+> ---
+>
+> **collation**
+> - The rule set that defines how SQL Server compares and sorts text, including case, accent, and supplementary-character behavior.
+> - It matters because the deployment fixes database text semantics up front with `Latin1_General_100_CI_AS_SC_UTF8`.
+>
+> > [!warning] Collation is foundational
+> >
+> > Collation choices affect comparisons, indexing behavior, and string semantics. Changing them later is disruptive, so the initial choice matters.
+>
+> ---
+>
+> **IOPS**
+> - Input and output operations per second, a storage-performance measure for how many read or write operations a disk can sustain.
+> - It matters because the note deliberately allocates separate IOPS budgets to data, log, and TempDB by placing them on different SSD volumes.
+>
+> > [!info] Storage performance is partitioned
+> >
+> > Separating workloads across disks is a practical way to keep one hot path from consuming another path's IOPS budget.
+>
+> ---
+>
+> **`mssql-conf`**
+> - The SQL Server on Linux configuration utility that writes instance settings into `/var/opt/mssql/mssql.conf`.
+> - It matters because the deployment uses it both for the initial non-interactive setup and for later instance-level configuration changes.
+>
+> > [!warning] Many changes need restart
+> >
+> > `mssql-conf` writes configuration state, but many settings do not take effect until the SQL Server service is restarted. Treat it as configuration, not immediate runtime mutation.
+>
+> ---
+>
+> **`sqlcmd`**
+> - The command-line client for sending T-SQL batches and scripts to SQL Server from Linux or Windows shells.
+> - It matters because almost every validation, restore, publication, inventory, and backup step in the note is executed through `sqlcmd`.
+>
+> > [!warning] Local TLS still applies
+> >
+> > Even local connections can fail certificate validation when SQL Server uses a self-signed cert. That is why this note repeatedly uses `-C` for trusted local administration.
+>
+> ---
+>
+> **IAP tunnel**
+> - Identity-Aware Proxy TCP forwarding from a local machine to a private VM port over Google's authenticated proxy path.
+> - It matters because the VM has no public IP, so local administration of SQL Server on port `1433` depends on IAP rather than direct ingress.
+>
+> > [!info] Private SQL needs transport
+> >
+> > A private database port is still usable from a workstation when IAP forwards the traffic. Security comes from identity-gated access instead of public reachability.
+>
+> ---
+>
+> **port forwarding**
+> - A networking pattern that binds a local port and relays its traffic to a remote port through a tunnel.
+> - It matters because local tools connect to `localhost` while the tunnel carries the traffic to SQL Server on the VM.
+>
+> > [!info] Local tools stay normal
+> >
+> > Port forwarding lets SSMS, `sqlcmd`, and similar tools behave as if the database were local. The tunnel hides the private network path from the client application.
+>
+> ---
+>
+> **startup script**
+> - A bash script stored in Compute Engine instance metadata and executed by the guest agent during VM boot.
+> - It matters because the deployment uses boot-time verification to ensure SQL Server does not start unless every required mount exists.
+>
+> > [!danger] Missing mounts can corrupt placement
+> >
+> > If SQL Server starts without the intended mount points, it can recreate files in the wrong location on the boot disk. Startup checks prevent that class of silent failure.
+>
+> ---
+>
+> **Developer Edition**
+> - The full-featured, non-production SQL Server edition licensed for development and testing workloads.
+> - It matters because the note installs Developer Edition to retain Enterprise-level capabilities while keeping the environment legally limited to non-production use.
+>
+> > [!warning] Features do not equal license rights
+> >
+> > Developer Edition exposes advanced features, but that does not make it production-licensed. Operational capability and licensing permission are separate concerns.
+>
+> ---
+>
+> **medallion schema**
+> - A layered data-model pattern in which `bronze`, `silver`, and `gold` schemas represent progressively refined versions of the data.
+> - It matters because the final `stoxx` publication intentionally copies only these three schema layers and excludes the source-only `demo_stc` objects.
+>
+> > [!info] Publication is selective
+> >
+> > The target VM database is not a byte-for-byte copy of the local source. It is a curated publication that keeps only the medallion-serving layers.
 
-| Mount point | Device | Disk name | Type | Size | Purpose |
-|---|---|---|---|---|---|
-| `/mnt/sqldata` | `sdd` | stoxx-data | pd-ssd | 100 GB | MDF + NDF data files, backups |
-| `/mnt/sqllog` | `sdb` | stoxx-log | pd-ssd | 20 GB | LDF transaction log |
-| `/mnt/sqltempdb` | `sdc` | stoxx-tempdb | pd-ssd | 20 GB | TempDB data and log files |
-
-## Key Definitions
-
-| Term | Definition |
-|---|---|
-| **Compute Engine** | GCP's IaaS service providing virtual machines. SQL Server runs inside a standard Linux VM, exactly as it would on bare metal. |
-| **persistent disk** | GCP's network-attached block storage. Survives VM restarts and can be resized or snapshotted independently of the VM. |
-| **filegroup** | A named container for one or more SQL Server data files. Tables and indexes are placed in a filegroup, not directly in a file. |
-| **data file (MDF)** | The primary database data file. Every database has exactly one MDF, located in the PRIMARY filegroup. |
-| **secondary data file (NDF)** | Additional data files in any filegroup. NDF files distribute I/O across files or disks within a filegroup. |
-| **transaction log (LDF)** | The sequential write-ahead log that records every transaction. SQL Server's crash recovery and point-in-time restore depend entirely on an intact, unbroken log chain. |
-| **TempDB** | SQL Server's shared workspace database for sorts, hash joins, row versioning (RCSI), temporary tables, and work tables. All user sessions share one TempDB instance. |
-| **recovery model** | Controls whether the transaction log is truncated automatically (SIMPLE) or preserved for backup and point-in-time restore (FULL / BULK_LOGGED). |
-| **collation** | Character set rules for sorting and comparison. `Latin1_General_100_CI_AS_SC_UTF8` provides case-insensitive, accent-sensitive, supplementary-character-aware UTF-8 storage. |
-| **IOPS** | I/O operations per second. pd-ssd delivers up to 30 IOPS/GB for reads and writes, capped at the VM's disk I/O limit. Separating data, log, and TempDB onto distinct disks gives each workload its own IOPS budget. |
-| **mssql-conf** | The SQL Server on Linux configuration tool. Writes settings to `/var/opt/mssql/mssql.conf`. Most settings require a service restart to take effect. |
-| **sqlcmd** | The SQL Server command-line client. On Linux, installed as part of the `mssql-tools18` package. Requires `-C` (trust server certificate) for connections without a signed TLS certificate. |
-| **IAP tunnel** | Identity-Aware Proxy TCP forwarding. Establishes an encrypted WebSocket connection from a local port to a GCE VM port without requiring a public IP or VPN. Required for reaching port 1433 on `--no-address` VMs. |
-| **port forwarding** | SSH's `-L` flag or `gcloud compute start-iap-tunnel` forwards a local TCP port through the IAP tunnel to a remote port on the VM. |
-| **startup script** | A bash script attached to VM instance metadata under the `startup-script` key. Executed by the guest agent on every VM boot before systemd services reach multi-user target. |
+> [!example] Self-Managed SQL Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this pattern for self-managed SQL Server workloads that need full control over edition, file layout, restore workflow, disk placement, startup sequence, and cost profile.
+> > - Use it when dedicated data, log, and TempDB disks, private IAP-only access, and VM-level operating-system control are explicit requirements.
+> > - Use it when the team is prepared to own package management, storage layout, startup safety, backup, firewalling, and teardown discipline.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not choose this route when managed patching, managed HA, and service simplicity matter more than low-level control.
+> > - Do not use Developer Edition assumptions for production licensing decisions.
+> > - Do not allow SQL Server to start when required mount points are missing or storage layout is not yet verified.
 
 ## Conceptual Model
 
@@ -1232,6 +1426,567 @@ RESTORE DATABASE successfully processed 706 pages in 1.346 seconds (4.094 MB/sec
 ```
 
 706 pages restored successfully. The same page count as the backup confirms restore fidelity. Throughput of 4.094 MB/sec (lower than backup's 16.502 MB/sec) reflects the overhead of creating and initializing new database files versus reading from an existing one.
+
+## Provisioning the stoxx Database
+
+The operational target on `stoxx-vm` is not `stoxx_db`. It is `stoxx`, carrying only the `bronze`, `silver`, and `gold` schemas from the local source database while preserving the VM split-file layout on `/mnt/sqldata` and `/mnt/sqllog`. This workflow creates a named sysadmin login, restores the local `stoxx` source backup into a temporary `stoxx_seed` database, runs the VM migration script from `/opt/stoxx/ddl/`, validates the final `stoxx` file layout and row counts, and then removes the seed database.
+
+### Ubuntu | sysadmin and migration | provision bronze, silver, and gold
+
+Run this workflow from an interactive shell on `stoxx-vm` reached via `gcloud compute ssh stoxx-vm --zone=europe-west1-b --tunnel-through-iap`. The procedure uses Linux's host-level password-reset path to recover `sa`, creates the named `dba_break_glass` sysadmin login, and then uses that named login for every restore, migration, validation, and backup command. The pre-existing `stoxx_db` database remains untouched by this workflow.
+
+> [!warning] `set-sa-password` refuses to run while SQL Server is active
+>
+> On this Ubuntu 22.04 host and SQL Server 2022 build, `mssql-conf -n set-sa-password` exits immediately if `mssql-server` is still running.
+
+> [!success] Stop the engine first, then restart it after the reset
+>
+> The safe recovery sequence is: stop `mssql-server`, reset `sa` with `MSSQL_SA_PASSWORD` in the process environment, write the generated secrets to a root-only file, then start the engine again and verify service health before attempting any T-SQL login.
+
+> [!danger] Do not write generated credentials to instance metadata or the vault
+>
+> Instance metadata is readable from inside the VM, and markdown notes persist long after the emergency access need has passed. Either pattern turns a break-glass secret into a standing credential leak.
+
+> [!success] Persist the generated credentials in a root-only file on the VM
+>
+> This pattern writes `SA_PWD`, `BREAK_GLASS_LOGIN`, and `BREAK_GLASS_PWD` to `/root/.stoxx_sql_login.env` under `umask 077`. That keeps the generated credentials available for the remainder of the provisioning workflow without exposing them through shell history, metadata, or documentation.
+
+#### Reset the SA password and write a root-only credential file
+
+**When to run:** when the original SQL admin password is unknown and no tested named sysadmin exists on the instance.
+**Trigger:** failed authentication for `sa`, missing instance metadata for the original bootstrap password, or post-bootstrap drift where the only surviving admin path is host root.
+**Context:** Ubuntu shell on the VM as `root`. State-changing. Requires stopping `mssql-server` first. The generated passwords are stored locally on the VM in `/root/.stoxx_sql_login.env`.
+**Purpose:** recover SQL administrative access without rebuilding the VM and stage the generated credentials for the named login created in the next step.
+
+*Stop the engine, generate fresh `sa` and break-glass passwords, write them to `/root/.stoxx_sql_login.env`, and run `mssql-conf -n set-sa-password`.*
+
+```bash
+sudo systemctl stop mssql-server
+
+umask 077
+
+SA_PWD=$(python3 - <<'PY'
+import secrets
+print("Sa!2026" + secrets.token_hex(10))
+PY
+)
+
+BREAK_GLASS_PWD=$(python3 - <<'PY'
+import secrets
+print("Bg!2026" + secrets.token_hex(10))
+PY
+)
+
+cat > /root/.stoxx_sql_login.env <<EOF
+SA_PWD=$SA_PWD
+BREAK_GLASS_LOGIN=dba_break_glass
+BREAK_GLASS_PWD=$BREAK_GLASS_PWD
+EOF
+
+MSSQL_SA_PASSWORD="$SA_PWD" /opt/mssql/bin/mssql-conf -n set-sa-password
+ls -l /root/.stoxx_sql_login.env
+systemctl is-active mssql-server
+```
+
+```text
+ForceFlush is enabled for this instance.
+Failed to open password policy registry path. Using default password policy values.
+BulkAdmin AllowedPathsList cleared (path filtering disabled)
+ForceFlush feature is enabled for log durability.
+Configuring SQL Server...
+The system administrator password has been changed.
+Please run 'sudo systemctl start mssql-server' to start SQL Server.
+-rw------- 1 root root 113 Apr 13 12:54 /root/.stoxx_sql_login.env
+inactive
+```
+
+The password reset completed successfully, the credential file was written with `0600` semantics, and the service remained stopped as expected. On this build, `mssql-conf` does not auto-start SQL Server after `set-sa-password`, so a manual `systemctl start` is required before any T-SQL login can succeed.
+
+#### Restart SQL Server after the password reset
+
+**When to run:** immediately after `set-sa-password` completes.
+**Trigger:** the password reset command finishes with the engine still inactive.
+**Context:** Ubuntu shell on the VM as `root`. State-changing at the service level but not at the database level. Read-only from SQL Server's metadata perspective once the service is back up.
+**Purpose:** bring the database engine back online and confirm that the reset did not leave the service in a failed startup state.
+
+*Start `mssql-server` again and inspect the first 12 lines of service status.*
+
+```bash
+sudo systemctl start mssql-server
+sleep 8
+sudo systemctl status mssql-server --no-pager | head -12
+```
+
+```text
+● mssql-server.service - Microsoft SQL Server Database Engine
+     Loaded: loaded (/lib/systemd/system/mssql-server.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2026-04-13 12:55:10 UTC; 13s ago
+       Docs: https://docs.microsoft.com/en-us/sql/linux
+   Main PID: 19605 (sqlservr)
+      Tasks: 151
+     Memory: 642.0M
+        CPU: 13.693s
+     CGroup: /system.slice/mssql-server.service
+             ├─19605 /opt/mssql/bin/sqlservr
+             └─19608 /opt/mssql/bin/sqlservr
+```
+
+The engine returned to `active (running)` state cleanly, and the new PID pair confirms a fresh startup after the `sa` reset. Memory usage at 642 MB is a normal immediately-after-start footprint for this instance.
+
+#### Create the named `dba_break_glass` sysadmin login
+
+**When to run:** immediately after `sa` access has been restored.
+**Trigger:** successful service restart and the need to move away from using `sa` for all subsequent administration.
+**Context:** Ubuntu shell on the VM. State-changing T-SQL executed through `sqlcmd` using the freshly reset `sa` credential sourced from `/root/.stoxx_sql_login.env`.
+**Purpose:** create a stable named sysadmin login, grant it `sysadmin`, and make the rest of the provisioning workflow independent of the default `sa` account.
+
+*Create `dba_break_glass` if it does not already exist, add it to `sysadmin`, and list both admin logins with their role state.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+cat > /tmp/create_break_glass.sql <<SQL
+SET NOCOUNT ON;
+IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'dba_break_glass')
+BEGIN
+    CREATE LOGIN [dba_break_glass]
+        WITH PASSWORD = N'$BREAK_GLASS_PWD',
+             CHECK_POLICY = ON,
+             CHECK_EXPIRATION = OFF,
+             DEFAULT_DATABASE = [master];
+END;
+IF IS_SRVROLEMEMBER(N'sysadmin', N'dba_break_glass') <> 1
+BEGIN
+    ALTER SERVER ROLE [sysadmin] ADD MEMBER [dba_break_glass];
+END;
+SELECT name, type_desc, is_disabled, IS_SRVROLEMEMBER(N'sysadmin', name) AS is_sysadmin
+FROM sys.server_principals
+WHERE name IN (N'sa', N'dba_break_glass')
+ORDER BY name;
+SQL
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "$SA_PWD" -C -b -W -s "|" -h -1 \
+  -i /tmp/create_break_glass.sql
+```
+
+```text
+dba_break_glass|SQL_LOGIN|0|1
+sa|SQL_LOGIN|0|1
+```
+
+Both logins are enabled (`is_disabled = 0`) and both are currently members of `sysadmin` (`is_sysadmin = 1`). That is the safe Linux pattern: create and test a named sysadmin first, then decide separately whether `sa` should later be disabled or renamed.
+
+#### Verify the named sysadmin login directly
+
+**When to run:** immediately after the named login is created and added to `sysadmin`.
+**Trigger:** completion of the `CREATE LOGIN` / `ALTER SERVER ROLE` step.
+**Context:** Ubuntu shell on the VM. Read-only T-SQL through `sqlcmd`, authenticated as the new named login.
+**Purpose:** prove that the named login works before it is used for restore and migration operations.
+
+*Connect as `dba_break_glass` and confirm the login name, `sysadmin` membership, and default database.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "SET NOCOUNT ON; SELECT ORIGINAL_LOGIN() AS login_name, IS_SRVROLEMEMBER(N'sysadmin') AS is_sysadmin, DB_NAME() AS current_db;"
+```
+
+```text
+dba_break_glass|1|master
+```
+
+The session authenticated as `dba_break_glass`, inherited `sysadmin = 1`, and landed in `master` as expected from the login definition. From this point onward the provisioning workflow no longer depends on `sa`.
+
+#### Inspect the instance before provisioning the new `stoxx` database
+
+**When to run:** before restoring the source backup and before creating the final target database.
+**Trigger:** successful break-glass login validation.
+**Context:** Ubuntu shell on the VM. Read-only T-SQL executed as `dba_break_glass`.
+**Purpose:** confirm the current database inventory and verify that `stoxx` does not already exist before the migration creates it.
+
+*List every database on the instance before the `stoxx_seed` restore.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "SET NOCOUNT ON; SELECT name, state_desc, recovery_model_desc FROM sys.databases ORDER BY database_id;"
+```
+
+```text
+master|ONLINE|SIMPLE
+tempdb|ONLINE|SIMPLE
+model|ONLINE|FULL
+msdb|ONLINE|SIMPLE
+stoxx_db|ONLINE|FULL
+```
+
+Before the provisioning run, the instance contains only the system databases plus the earlier `stoxx_db` lab database. There is no existing `stoxx` target yet, so the migration can create it side-by-side without overwriting another database.
+
+#### Verify the staged `stoxx` source backup
+
+**When to run:** before any restore from the local source backup.
+**Trigger:** the `stoxx` backup file has been copied to `/mnt/sqldata/backup/incoming/`.
+**Context:** Ubuntu shell on the VM. Read-only restore metadata operation through `sqlcmd`.
+**Purpose:** prove that SQL Server can read the staged backup before spending time on the full restore.
+
+*Run `RESTORE VERIFYONLY` against the staged local `stoxx` backup.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "RESTORE VERIFYONLY FROM DISK = '/mnt/sqldata/backup/incoming/stoxx_local_20260413_143719.bak';"
+```
+
+```text
+The backup set on file 1 is valid.
+```
+
+The staged backup is readable and structurally valid. This is the minimum recoverability check required before the side-by-side `stoxx_seed` restore.
+
+#### Inspect the logical files inside the staged `stoxx` backup
+
+**When to run:** immediately after `RESTORE VERIFYONLY` succeeds and before writing the `MOVE` clauses for the seed restore.
+**Trigger:** recoverability has been confirmed and the restore path is about to be executed.
+**Context:** Ubuntu shell on the VM. Read-only restore metadata inspection through `sqlcmd`.
+**Purpose:** retrieve the logical file names that must be referenced in the `RESTORE DATABASE ... WITH MOVE ...` statement.
+
+*Run `RESTORE FILELISTONLY` against the staged local `stoxx` backup.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "RESTORE FILELISTONLY FROM DISK = '/mnt/sqldata/backup/incoming/stoxx_local_20260413_143719.bak';"
+```
+
+```text
+stoxx|/var/opt/mssql/data/stoxx.mdf|D|PRIMARY|746586112|35184372080640|1|0|0|76D72DD3-4E60-40AC-8234-6B36ECBBD9F3|0|0|57409536|4096|1|NULL|397000001744800001|CD1461BC-5D79-4AF8-AAE8-A411A130329A|0|1|NULL|NULL
+stoxx_log|/var/opt/mssql/data/stoxx_log.ldf|L|NULL|1082130432|2199023255552|2|0|0|BAA74412-3CC0-4B9F-BCDC-919F176B37E7|0|0|0|4096|0|NULL|0|00000000-0000-0000-0000-000000000000|0|1|NULL|NULL
+demo_stc_xtp|/var/opt/mssql/data/demo_stc_xtp|S|demo_stc_xtp_fg|0|0|65537|397000006737600003|0|FAC2827A-4A1A-492E-A129-F3F23BDC0C93|0|0|985399296|4096|2|NULL|0|00000000-0000-0000-0000-000000000000|0|1|NULL|NULL
+
+(3 rows affected)
+```
+
+Three logical files matter to the restore: `stoxx` (primary data), `stoxx_log` (transaction log), and `demo_stc_xtp` (the memory-optimized filegroup container from the source database). All three names must appear in the `MOVE` list when the backup is restored as `stoxx_seed`.
+
+#### Restore the staged backup into `stoxx_seed`
+
+**When to run:** after the backup file has passed `VERIFYONLY` and its logical file names are known.
+**Trigger:** the instance is ready to materialize a temporary full-fidelity source database on the VM.
+**Context:** Ubuntu shell on the VM. State-changing restore through `sqlcmd` as `dba_break_glass`. The command drops any stale `stoxx_seed` copy first and removes the previous XTP directory if present.
+**Purpose:** create a temporary on-VM source database that exactly matches the local `stoxx` backup, so the final migration script can copy only `bronze`, `silver`, and `gold` into the published VM `stoxx`.
+
+> [!info]- Why `stoxx_seed` exists
+>
+> The source backup contains `bronze`, `silver`, `gold`, and `demo_stc`. Restoring it directly as the final target would bring `demo_stc` into the published VM database and would also preserve the source file layout. The seed pattern restores the full backup under a temporary name, then rebuilds the final `stoxx` in the VM split-file layout from that seed while intentionally leaving `demo_stc` behind.
+
+*Drop any stale `stoxx_seed`, clear the old XTP directory, and restore the staged backup as `stoxx_seed`.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "IF DB_ID(N'stoxx_seed') IS NOT NULL BEGIN ALTER DATABASE [stoxx_seed] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [stoxx_seed]; END;"
+
+rm -rf /mnt/sqldata/stoxx_seed_xtp
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "
+RESTORE DATABASE [stoxx_seed]
+FROM DISK = '/mnt/sqldata/backup/incoming/stoxx_local_20260413_143719.bak'
+WITH
+  MOVE 'stoxx'        TO '/mnt/sqldata/stoxx_seed_Primary.mdf',
+  MOVE 'stoxx_log'    TO '/mnt/sqllog/stoxx_seed_Log.ldf',
+  MOVE 'demo_stc_xtp' TO '/mnt/sqldata/stoxx_seed_xtp',
+  REPLACE,
+  RECOVERY,
+  STATS = 10;"
+```
+
+```text
+10 percent processed.
+Processed 7024 pages for database 'stoxx_seed', file 'stoxx' on file 1.
+Processed 12743 pages for database 'stoxx_seed', file 'stoxx_log' on file 1.
+Processed 1 pages for database 'stoxx_seed', file 'demo_stc_xtp' on file 1.
+100 percent processed.
+RESTORE DATABASE successfully processed 19768 pages in 5.805 seconds (26.604 MB/sec).
+```
+
+The full local `stoxx` backup is now materialized on the VM as `stoxx_seed`. The restore touched 19,768 pages across the primary data file, log file, and XTP container, giving the migration script a complete local source database to read from.
+
+#### Run the bronze/silver/gold migration script to build the final VM `stoxx`
+
+**When to run:** immediately after `stoxx_seed` is online and before any application traffic points at the VM `stoxx` database.
+**Trigger:** successful seed restore and the presence of `/opt/stoxx/ddl/stoxx_bsg_vm_migration.sql` on the VM.
+**Context:** Ubuntu shell on the VM. State-changing `sqlcmd -i` execution using `-v` sqlcmd variables to parameterize the source database, target database, and file locations.
+**Purpose:** create a new split-layout `stoxx` database on the VM, copy only `bronze`, `silver`, and `gold` from `stoxx_seed`, recreate their defaults, primary keys, and nonclustered indexes, and validate per-table row counts.
+
+*Run the staged migration script against `stoxx_seed` and publish the final VM `stoxx` to `/mnt/sqldata` and `/mnt/sqllog`.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -v SourceDb="stoxx_seed" TargetDb="stoxx" DataDir="/mnt/sqldata" LogDir="/mnt/sqllog" \
+     PrimarySizeMB="256" CurrentSizeMB="512" ArchiveSizeMB="256" LogSizeMB="256" \
+  -i /opt/stoxx/ddl/stoxx_bsg_vm_migration.sql
+```
+
+```text
+Changed database context to 'master'.
+The filegroup property 'DEFAULT' has been set.
+bronze|dim_country|212|212
+bronze|dim_index|4|4
+bronze|eurostoxx50_ohlcv|50|50
+bronze|index_dim|169|169
+bronze|oil20_ohlcv|19|19
+bronze|pulse|40|40
+bronze|pulse_tickers|40|40
+bronze|signals_daily|169|169
+bronze|signals_quarterly|169|169
+bronze|stoxxasia50_ohlcv|50|50
+bronze|stoxxusa50_ohlcv|50|50
+bronze|trading_calendar|29335|29335
+gold|index_performance|5351|5351
+gold|scores_daily|635|635
+gold|scores_quarterly|176|176
+silver|eurostoxx50_ohlcv|67155|67155
+silver|index_dim|169|169
+silver|oil20_ohlcv|25080|25080
+silver|signals_daily|635|635
+silver|signals_quarterly|188|188
+silver|stoxxasia50_ohlcv|64875|64875
+silver|stoxxusa50_ohlcv|66000|66000
+Migration complete. The target database stoxx now contains bronze/silver/gold from stoxx_seed with VM split-file layout.
+```
+
+Every row-count pair matched exactly, so the published VM `stoxx` database is a complete bronze/silver/gold copy of the seed source. `demo_stc` never entered the target because the migration script reads only those three schemas.
+
+#### Validate the final `stoxx` file layout
+
+**When to run:** immediately after the migration script completes successfully.
+**Trigger:** creation of the final VM `stoxx` database.
+**Context:** Ubuntu shell on the VM. Read-only T-SQL against `sys.master_files`.
+**Purpose:** confirm that the target database really uses the VM split-file layout rather than the original source layout from the backup.
+
+*List the logical files and physical paths for the final VM `stoxx` database.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "SET NOCOUNT ON; SELECT DB_NAME(database_id) AS db_name, name AS logical_name, type_desc, physical_name FROM sys.master_files WHERE DB_NAME(database_id) = N'stoxx' ORDER BY file_id;"
+```
+
+```text
+stoxx|stoxx_Primary|ROWS|/mnt/sqldata/stoxx_Primary.mdf
+stoxx|stoxx_Log|LOG|/mnt/sqllog/stoxx_Log.ldf
+stoxx|stoxx_Current_01|ROWS|/mnt/sqldata/stoxx_Current_01.ndf
+stoxx|stoxx_Current_02|ROWS|/mnt/sqldata/stoxx_Current_02.ndf
+stoxx|stoxx_Archive_01|ROWS|/mnt/sqldata/stoxx_Archive_01.ndf
+```
+
+The file placement is correct for the VM design: one primary file, two `FG_Current` files, one archive file, and a separate log file on `/mnt/sqllog`. This is the only intentional structural difference from the local `stoxx` source database.
+
+#### Validate the published schema inventory
+
+**When to run:** after file-layout validation and before any application or demo process targets the new database.
+**Trigger:** successful migration script completion.
+**Context:** Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database.
+**Purpose:** verify that only the intended schemas were published into the final target.
+
+*Count the tables per schema in the final VM `stoxx` database.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "SET NOCOUNT ON; SELECT s.name AS schema_name, COUNT(*) AS table_count FROM stoxx.sys.tables t JOIN stoxx.sys.schemas s ON s.schema_id = t.schema_id GROUP BY s.name ORDER BY s.name;"
+```
+
+```text
+bronze|12
+gold|3
+silver|7
+```
+
+The published target contains exactly the three medallion schemas and no `demo_stc` objects. Table counts match the local source: 12 bronze, 7 silver, and 3 gold.
+
+#### Validate the published row counts
+
+**When to run:** after schema inventory validation and before taking the first on-VM backup of the published database.
+**Trigger:** confirmation that only `bronze`, `silver`, and `gold` exist in the final target.
+**Context:** Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database, authenticated as `dba_break_glass`.
+**Purpose:** confirm that every published table contains the same current data volume as the local source after the bronze/silver/gold-only migration.
+
+*Count the rows in every published `bronze`, `silver`, and `gold` table in the final VM `stoxx` database.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "
+SET NOCOUNT ON;
+SELECT N'bronze', N'dim_country', COUNT_BIG(*) FROM stoxx.bronze.dim_country
+UNION ALL SELECT N'bronze', N'dim_index', COUNT_BIG(*) FROM stoxx.bronze.dim_index
+UNION ALL SELECT N'bronze', N'eurostoxx50_ohlcv', COUNT_BIG(*) FROM stoxx.bronze.eurostoxx50_ohlcv
+UNION ALL SELECT N'bronze', N'index_dim', COUNT_BIG(*) FROM stoxx.bronze.index_dim
+UNION ALL SELECT N'bronze', N'oil20_ohlcv', COUNT_BIG(*) FROM stoxx.bronze.oil20_ohlcv
+UNION ALL SELECT N'bronze', N'pulse', COUNT_BIG(*) FROM stoxx.bronze.pulse
+UNION ALL SELECT N'bronze', N'pulse_tickers', COUNT_BIG(*) FROM stoxx.bronze.pulse_tickers
+UNION ALL SELECT N'bronze', N'signals_daily', COUNT_BIG(*) FROM stoxx.bronze.signals_daily
+UNION ALL SELECT N'bronze', N'signals_quarterly', COUNT_BIG(*) FROM stoxx.bronze.signals_quarterly
+UNION ALL SELECT N'bronze', N'stoxxasia50_ohlcv', COUNT_BIG(*) FROM stoxx.bronze.stoxxasia50_ohlcv
+UNION ALL SELECT N'bronze', N'stoxxusa50_ohlcv', COUNT_BIG(*) FROM stoxx.bronze.stoxxusa50_ohlcv
+UNION ALL SELECT N'bronze', N'trading_calendar', COUNT_BIG(*) FROM stoxx.bronze.trading_calendar
+UNION ALL SELECT N'gold', N'index_performance', COUNT_BIG(*) FROM stoxx.gold.index_performance
+UNION ALL SELECT N'gold', N'scores_daily', COUNT_BIG(*) FROM stoxx.gold.scores_daily
+UNION ALL SELECT N'gold', N'scores_quarterly', COUNT_BIG(*) FROM stoxx.gold.scores_quarterly
+UNION ALL SELECT N'silver', N'eurostoxx50_ohlcv', COUNT_BIG(*) FROM stoxx.silver.eurostoxx50_ohlcv
+UNION ALL SELECT N'silver', N'index_dim', COUNT_BIG(*) FROM stoxx.silver.index_dim
+UNION ALL SELECT N'silver', N'oil20_ohlcv', COUNT_BIG(*) FROM stoxx.silver.oil20_ohlcv
+UNION ALL SELECT N'silver', N'signals_daily', COUNT_BIG(*) FROM stoxx.silver.signals_daily
+UNION ALL SELECT N'silver', N'signals_quarterly', COUNT_BIG(*) FROM stoxx.silver.signals_quarterly
+UNION ALL SELECT N'silver', N'stoxxasia50_ohlcv', COUNT_BIG(*) FROM stoxx.silver.stoxxasia50_ohlcv
+UNION ALL SELECT N'silver', N'stoxxusa50_ohlcv', COUNT_BIG(*) FROM stoxx.silver.stoxxusa50_ohlcv
+ORDER BY 1, 2;"
+```
+
+```text
+bronze|dim_country|212
+bronze|dim_index|4
+bronze|eurostoxx50_ohlcv|50
+bronze|index_dim|169
+bronze|oil20_ohlcv|19
+bronze|pulse|40
+bronze|pulse_tickers|40
+bronze|signals_daily|169
+bronze|signals_quarterly|169
+bronze|stoxxasia50_ohlcv|50
+bronze|stoxxusa50_ohlcv|50
+bronze|trading_calendar|29335
+gold|index_performance|5351
+gold|scores_daily|635
+gold|scores_quarterly|176
+silver|eurostoxx50_ohlcv|67155
+silver|index_dim|169
+silver|oil20_ohlcv|25080
+silver|signals_daily|635
+silver|signals_quarterly|188
+silver|stoxxasia50_ohlcv|64875
+silver|stoxxusa50_ohlcv|66000
+```
+
+The published table counts match the local source across all 22 target tables. In aggregate, the VM `stoxx` database now exposes 260,571 rows across the three medallion schemas, with the source-only `demo_stc` layer excluded by design.
+
+#### Back up the provisioned VM `stoxx` database
+
+**When to run:** immediately after the target database has passed row-count and schema validation.
+**Trigger:** successful publication of the final `stoxx` database.
+**Context:** Ubuntu shell on the VM. State-changing `BACKUP DATABASE` command executed as `dba_break_glass`.
+**Purpose:** establish the first on-VM recoverability artifact for the published `stoxx` database before the temporary seed database is dropped.
+
+*Create a full compressed backup of the provisioned VM `stoxx` database.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "BACKUP DATABASE [stoxx] TO DISK = '/mnt/sqldata/backup/stoxx_post_cutover_full.bak' WITH INIT, COMPRESSION, CHECKSUM, STATS = 10;"
+```
+
+```text
+10 percent processed.
+21 percent processed.
+30 percent processed.
+42 percent processed.
+51 percent processed.
+60 percent processed.
+70 percent processed.
+81 percent processed.
+90 percent processed.
+100 percent processed.
+Processed 552 pages for database 'stoxx', file 'stoxx_Primary' on file 1.
+Processed 2232 pages for database 'stoxx', file 'stoxx_Current_01' on file 1.
+Processed 2192 pages for database 'stoxx', file 'stoxx_Current_02' on file 1.
+Processed 48 pages for database 'stoxx', file 'stoxx_Archive_01' on file 1.
+Processed 2 pages for database 'stoxx', file 'stoxx_Log' on file 1.
+BACKUP DATABASE successfully processed 5026 pages in 0.447 seconds (87.833 MB/sec).
+```
+
+The final `stoxx` backup completed successfully and is materially smaller than the restored seed because only the published medallion schemas exist in the target. The resulting file on disk is 11 MB:
+
+```bash
+ls -lh /mnt/sqldata/backup/stoxx_post_cutover_full.bak
+```
+
+```text
+-rw-rw---- 1 mssql mssql 11M Apr 13 12:58 /mnt/sqldata/backup/stoxx_post_cutover_full.bak
+```
+
+#### Drop the temporary `stoxx_seed` database and confirm the final inventory
+
+**When to run:** only after the published `stoxx` database has been backed up and validated.
+**Trigger:** successful creation of `stoxx_post_cutover_full.bak`.
+**Context:** Ubuntu shell on the VM. State-changing `DROP DATABASE` cleanup followed by a read-only inventory query.
+**Purpose:** remove the temporary full-source copy so only the published target remains, then confirm the final instance database list.
+
+*Drop `stoxx_seed`, remove its XTP directory, and list the final database inventory on the VM.*
+
+```bash
+source /root/.stoxx_sql_login.env
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "IF DB_ID(N'stoxx_seed') IS NOT NULL BEGIN ALTER DATABASE [stoxx_seed] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [stoxx_seed]; END;"
+
+rm -rf /mnt/sqldata/stoxx_seed_xtp
+
+/opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U dba_break_glass -P "$BREAK_GLASS_PWD" -C -b -W -s "|" -h -1 \
+  -Q "SET NOCOUNT ON; SELECT name, state_desc, recovery_model_desc FROM sys.databases ORDER BY database_id;"
+```
+
+```text
+master|ONLINE|SIMPLE
+tempdb|ONLINE|SIMPLE
+model|ONLINE|FULL
+msdb|ONLINE|SIMPLE
+stoxx_db|ONLINE|FULL
+stoxx|ONLINE|FULL
+```
+
+The temporary seed copy is gone. The final instance now contains the published VM `stoxx` database alongside the earlier `stoxx_db` lab copy. If the legacy `stoxx_db` should be retired after cutover, back it up first and drop it in a separate maintenance step rather than mixing that destructive cleanup into the provisioning run.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-n` | `mssql-conf -n set-sa-password` | Run `mssql-conf` non-interactively. Required when the new `sa` password is supplied through `MSSQL_SA_PASSWORD`. |
+| `-S` | `sqlcmd -S localhost` | Target SQL Server host and optional `,port`. |
+| `-U` | `sqlcmd -U dba_break_glass` | SQL login name. |
+| `-P` | `sqlcmd -P "$BREAK_GLASS_PWD"` | SQL login password. |
+| `-C` | `sqlcmd -C` | Trust the server certificate for local TLS connections. |
+| `-b` | `sqlcmd -b` | Exit with a non-zero status on T-SQL errors so shell automation fails fast. |
+| `-W` | `sqlcmd -W` | Remove trailing spaces from output. Useful when capturing pipe-delimited tables. |
+| `-s` | `sqlcmd -s "|"` | Set the column separator. `|` is convenient for markdown conversion and human scanning. |
+| `-h` | `sqlcmd -h -1` | Suppress column headers in output. |
+| `-Q` | `sqlcmd -Q "..."` | Execute an inline query and exit. |
+| `-i` | `sqlcmd -i /opt/stoxx/ddl/stoxx_bsg_vm_migration.sql` | Execute a SQL script from a file. |
+| `-v` | `sqlcmd -v SourceDb="stoxx_seed"` | Set a sqlcmd variable used inside the script via `$(VariableName)` substitution. |
 
 ## Startup Script
 

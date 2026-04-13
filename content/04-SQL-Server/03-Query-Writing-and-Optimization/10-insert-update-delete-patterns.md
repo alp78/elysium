@@ -10,7 +10,171 @@ status: complete
 
 # INSERT, UPDATE, DELETE, and OUTPUT Patterns
 
-`INSERT`, `UPDATE`, `DELETE`, and the `OUTPUT` clause form the full surface of data modification in T-SQL. Every row change the database engine applies — whether from an application, an ETL job, a report refresh, or a one-time fix — ultimately resolves to one of these statements. This note documents every pattern a production workload uses, the constraints and performance characteristics of each form, and the decision rules that pick the right statement for a given scenario.
+> [!abstract]- Summary
+>
+> T-SQL data modification is a set-based, transactional surface: every application write, ETL load, cleanup job, and corrective fix ultimately resolves to `INSERT`, `UPDATE`, `DELETE`, or `OUTPUT`, and this note maps the safe patterns, logging behavior, identity rules, and decision boundaries for each.
+>
+> **Conceptual model**
+> - establishes the shared invariants for DML: set-based execution, implicit transactionality, and the statement-level comparison between `INSERT`, `UPDATE`, `DELETE`, and `TRUNCATE`
+>
+> **Insert patterns**
+> - covers literal-row inserts, multi-row table value constructors, `INSERT ... SELECT`, `INSERT ... EXEC`, `SELECT INTO`, bulk load forms, and the cases where minimal logging is available
+>
+> **Identity and sequence semantics**
+> - covers `IDENTITY`, `SCOPE_IDENTITY()`, `@@IDENTITY`, `IDENT_CURRENT`, and `SEQUENCE` behavior around row creation and key retrieval
+>
+> **Update and delete patterns**
+> - covers searched DML, joined updates and deletes, deterministic `TOP (N)` patterns, batching, and `TRUNCATE` versus row-logged delete behavior
+>
+> **The `OUTPUT` clause**
+> - covers `INSERTED` and `DELETED` row images, audit capture, composable DML, and destructive-read queue patterns
+>
+> **Transactions and performance**
+> - covers error handling, `XACT_ABORT`, Halloween protection, minimal logging boundaries, batching large DML, and row-by-row anti-patterns
+>
+> **Operations and safety**
+> - Warnings: missing `WHERE` clauses can affect every row, `@@IDENTITY` leaks across trigger scope, `SELECT INTO` omits production constraints, nondeterministic joined updates can pick arbitrary source rows, `OUTPUT` can emit rows before rollback, and cursor-style RBAR DML destroys throughput
+> - Recommendations: prefer set-based DML, use explicit transactions for risky changes, use `SCOPE_IDENTITY()`, pre-aggregate joined update sources to one row per target key, batch very large modifications, and choose `TRUNCATE` only when its lock, trigger, and FK semantics are acceptable
+
+> [!note]- Glossary
+>
+> **Data modification language**
+> - The T-SQL statement family that changes stored data, primarily `INSERT`, `UPDATE`, `DELETE`, and related features such as `OUTPUT` and `TRUNCATE`.
+> - It matters because the note is not about query-only logic; it is about the write surface that changes persistent state and therefore carries higher operational risk.
+>
+> > [!warning] Write operations change more than rows
+> >
+> > DML affects transaction log growth, locking, triggers, and downstream consumers. Treating it like “just another query” is how routine maintenance turns into outages.
+>
+> ---
+>
+> **Set-based execution**
+> - The rule that a DML statement logically operates on the entire qualifying rowset at once rather than looping row by row.
+> - It matters because correct SQL Server write patterns are expressed as one statement over a set, not as procedural per-row code.
+>
+> > [!info] SQL Server optimizes the set, not the loop
+> >
+> > A single statement gives the optimizer freedom to choose an efficient plan. Row-by-row loops surrender that advantage and multiply overhead.
+>
+> ---
+>
+> **Implicit transaction**
+> - The statement-level transaction SQL Server creates automatically when DML runs outside an explicit `BEGIN TRAN`.
+> - It matters because every data change is atomic even when the author does not write explicit transaction control.
+>
+> > [!warning] Autocommit is still transactional
+> >
+> > A successful statement commits in full and a failed statement rolls back in full. The absence of explicit `BEGIN TRAN` does not mean the change is non-transactional.
+>
+> ---
+>
+> **Table value constructor**
+> - The multi-row `VALUES (...), (...), ...` syntax that supplies several literal rows to one `INSERT` statement.
+> - It matters because it is the cleanest insert form for small fixed row batches before bulk or staging patterns become necessary.
+>
+> > [!warning] Practical limits still apply
+> >
+> > The constructor is convenient, but it is not a bulk-load substitute. Large literal batches become awkward quickly and have engine limits that staging patterns avoid.
+>
+> ---
+>
+> **`SELECT INTO`**
+> - The statement form that creates a new table from a query result and loads it in the same operation.
+> - It matters because it is fast for staging and analysis, but dangerous when mistaken for a production table-creation workflow.
+>
+> > [!warning] Structure is copied, not governance
+> >
+> > `SELECT INTO` does not recreate primary keys, foreign keys, defaults, checks, indexes, or triggers. It is a convenience for transient tables, not a substitute for designed schema.
+>
+> ---
+>
+> **Minimal logging**
+> - A reduced-logging write path available only for certain bulk-oriented operations under specific recovery-model and table-shape conditions.
+> - It matters because bulk loads can be dramatically faster and lighter on the log when the engine is allowed to take this path.
+>
+> > [!warning] Recovery model is part of the contract
+> >
+> > Many authors remember `TABLOCK` and forget the recovery-model requirement. In `FULL` recovery, the hoped-for minimal logging often does not happen.
+>
+> ---
+>
+> **`BULK INSERT` / `OPENROWSET(BULK ...)`**
+> - SQL Server’s file-ingest surfaces for loading or reading external data into a table or query.
+> - It matters because they are the canonical high-volume entry points for CSV and other external file formats in DML workflows.
+>
+> > [!info] Load surface and analysis surface differ
+> >
+> > `BULK INSERT` is focused on loading tables. `OPENROWSET(BULK ...)` can also participate in query pipelines where the file data must be filtered or reshaped first.
+>
+> ---
+>
+> **`SCOPE_IDENTITY()`**
+> - The function that returns the most recent identity value generated in the current session and current scope.
+> - It matters because it is the safe default for discovering the key assigned by an `INSERT` in application and procedural code.
+>
+> > [!warning] Scope is the reason this is safe
+> >
+> > `@@IDENTITY` can be polluted by trigger activity in the same session. `SCOPE_IDENTITY()` avoids that cross-scope leakage and should be the normal choice.
+>
+> ---
+>
+> **`SEQUENCE`**
+> - A schema-level object that generates ordered numeric values independently of any single table.
+> - It matters because it decouples number generation from one target table and supports patterns where several tables or statements need the same allocator.
+>
+> > [!warning] Sequence consumption is outside row insert success
+> >
+> > Once a sequence value is taken, gaps are possible if the statement rolls back or skips a row. That is normal behavior, not a defect.
+>
+> ---
+>
+> **`OUTPUT` clause**
+> - The DML extension that returns row images from the `INSERTED` and `DELETED` pseudo-tables during `INSERT`, `UPDATE`, and `DELETE`.
+> - It matters because it is the built-in mechanism for audit capture, destructive reads, and composable DML pipelines without triggers.
+>
+> > [!warning] Emitted rows do not prove commit
+> >
+> > `OUTPUT` can stream rows even if the enclosing statement later fails and rolls back. Treat captured rows as tentative until the transaction has committed.
+>
+> ---
+>
+> **`INSERTED` / `DELETED` pseudo-tables**
+> - The transient row images SQL Server exposes during DML to represent the after-state and before-state of affected rows.
+> - It matters because `OUTPUT` and DML triggers both depend on these logical rowsets to inspect what changed.
+>
+> > [!info] Row images are set-shaped too
+> >
+> > These are not single-row variables. A statement that affects many rows populates `INSERTED` and `DELETED` with many rows.
+>
+> ---
+>
+> **Halloween protection**
+> - The optimizer safeguard that prevents an update or delete from repeatedly requalifying rows as it modifies the same data it is scanning.
+> - It matters because write plans often contain extra spool or blocking operators specifically to preserve correctness during self-referential DML.
+>
+> > [!info] Extra work can be correctness work
+> >
+> > Not every spool in a DML plan is a performance smell. Some exist because the engine must prevent a row from being modified twice by one statement.
+>
+> ---
+>
+> **Batched DML**
+> - The pattern of splitting a very large modification into repeated smaller statements, typically using `TOP (N)` and a loop.
+> - It matters because large one-shot updates or deletes can explode the transaction log, escalate locks, and hold resources for too long.
+>
+> > [!warning] One giant transaction is rarely the safest option
+> >
+> > Even when SQL Server can finish a huge statement, the operational side effects may be unacceptable. Batching trades some simplicity for far better control.
+>
+> ---
+>
+> **`TRUNCATE TABLE`**
+> - The deallocation-oriented table-clearing statement that removes all rows without logging one delete record per row.
+> - It matters because it is often the fastest way to empty a table, but its semantics differ materially from `DELETE`.
+>
+> > [!warning] Faster does not mean equivalent
+> >
+> > `TRUNCATE` resets identity values, does not fire delete triggers, and cannot be used when foreign-key rules disallow it. It should be chosen for its semantics, not just its speed.
 
 ## Conceptual Model
 
@@ -282,7 +446,6 @@ DROP TABLE #top_signals;
 | rows_loaded |
 |---:|
 | 100 |
-
 | symbol | signal_date | forward_pe | beta |
 |---|---|---:|---:|
 | NVDA | 2026-03-12 | 17.232882 | 2.375 |
@@ -866,7 +1029,6 @@ WHERE symbol = 'SAP.DE';
 | deleted_rows |
 |---:|
 | 1 |
-
 | remaining_sap_de |
 |---:|
 | 3 |
@@ -1016,7 +1178,6 @@ DROP TABLE #scratch;
 | before_truncate |
 |---:|
 | 3 |
-
 | after_truncate |
 |---:|
 | 0 |

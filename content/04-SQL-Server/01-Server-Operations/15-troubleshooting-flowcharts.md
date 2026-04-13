@@ -10,15 +10,49 @@ status: complete
 
 # Troubleshooting Flowcharts
 
-> [!abstract] Routing layer for the most common SQL Server production incidents
+> [!abstract]- Summary
 >
-> This page is a routing layer for production incidents, not a replacement for the deeper notes. Its job is to answer the first question quickly:
+> This page is a routing layer for production incidents, not a replacement for the deeper notes. Its job is to answer the first question quickly: which diagnostic surface to open first, which branch is most likely given the first real signal, and which deeper note owns the full remediation workflow.
 >
-> - **Which diagnostic surface should I open first?** Every flowchart below starts at the most general evidence, not at the most specific symptom.
-> - **Which branch is most likely given the first real signal?** The decision trees prioritize what the live DMVs actually return on the local `stoxx` instance over what a generic handout assumes.
-> - **Which deeper note owns the full remediation workflow?** Every terminal branch routes to one of the deep notes in this chapter so this page stays short and navigational.
+> - **Master routing**
+>   - starts with a decision matrix that maps symptom classes to the first flowchart, the primary DMV or system view, and the deep note that owns remediation
+> - **Performance and pipeline flowcharts**
+>   - routes generic slowness and pipeline-failure reports through waits, sessions, and workload evidence before jumping to narrow fixes
+> - **Index and storage decisions**
+>   - handles add-an-index judgment calls and disk-space emergencies with starter queries that surface the real constraint first
+> - **Concurrency and tempdb**
+>   - splits deadlocks, tempdb pressure, and related contention into the correct branch rather than collapsing them into one generic “database is slow” bucket
+> - **AG lag**
+>   - isolates send queue, redo queue, and sync-commit impact when a secondary falls behind
+> - **Live evidence discipline**
+>   - every starter query is captured live against the local `stoxx` SQL Server 2022 instance, but the DMV counters used here are cumulative since instance start and must be re-run against the current system during an incident
 
-Every starter query on the page is captured live against the local `stoxx` SQL Server 2022 instance, so the output tables below are real DMV snapshots, not fabricated examples. The DMV counters used here (`sys.dm_os_wait_stats`, `sys.dm_db_missing_index_*`) are cumulative since the instance last started and must be interpreted as point-in-time evidence — re-run them against the current instance during an incident rather than trusting the frozen values printed in the note.
+> [!note]- Glossary
+>
+> - **Routing layer**
+>   - navigation page that points the responder to the right diagnostic branch before deep remediation starts
+> - **Starter query**
+>   - first low-cost query used to classify the incident and choose the next branch
+> - **Cumulative DMV**
+>   - DMV whose counters accumulate since instance start rather than representing only the current moment
+> - **`sys.dm_os_wait_stats`**
+>   - wait-statistics DMV used to classify resource families behind generic slowness
+> - **`sys.dm_exec_sessions`**
+>   - DMV used to inspect active sessions and their status during workload or pipeline incidents
+> - **Missing-index DMVs**
+>   - `sys.dm_db_missing_index_*` views that suggest indexing opportunities but require judgment before action
+> - **`system_health`**
+>   - default Extended Events session that captures deadlock graphs and other baseline diagnostics
+> - **Tempdb pressure**
+>   - space, allocation, or version-store stress inside `tempdb`
+> - **Send queue**
+>   - backlog of log records not yet shipped from the AG primary to a secondary
+> - **Redo queue**
+>   - backlog of log records already received by a secondary but not yet replayed into data pages
+> - **`VIEW SERVER PERFORMANCE STATE`**
+>   - SQL Server 2022 permission that grants access to performance-oriented DMVs without the broader server-state surface
+> - **Deep note**
+>   - detailed chapter note that owns the full remediation workflow once the flowchart identifies the problem family
 
 > [!info] Permissions note for SQL Server 2022+
 >
@@ -1103,4 +1137,3 @@ ORDER BY ag.name, ar.replica_server_name;
 > Any one source by itself can produce a misleading root cause — only the correlation across them is reliable.
 
 → **Continue in:** [high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/high-availability-overview) for the full HA taxonomy (WSFC, AG, log shipping, DBCC CHECKDB strategy across replicas) and the live 3-replica capture this flowchart would reproduce on a real AG topology. For the deeper AG operational playbook (failover, seeding, read-intent routing, listener configuration), see [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/always-on-availability-groups).
-

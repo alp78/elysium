@@ -175,27 +175,6 @@ flowchart LR
     style H fill:#292e42,stroke:#9ece6a
 ```
 
-
-## Key terms used in this note
-
-| Term | Plain-English definition | Why it matters here | Common mistake / confusion |
-|---|---|---|---|
-| Bash script | A text file containing a sequence of bash commands executed by the bash interpreter. Starts with `#!/usr/bin/env bash`. | The standard automation language for Linux data engineering tasks: file processing, pipeline orchestration, scheduled jobs, and deployment. | Writing scripts without `set -euo pipefail`. Without strict mode, errors are silently ignored. |
-| Shebang (`#!`) | The first line of a script (`#!/usr/bin/env bash`) that tells the OS which interpreter to use. | Determines whether the script runs in bash, sh, python, or another interpreter. | Using `#!/bin/bash` (hardcoded path) instead of `#!/usr/bin/env bash` (PATH-based lookup). |
-| Idempotent script | A script that produces the same result whether run once or multiple times. Re-running does not create duplicates or fail on completed steps. | Production scripts must be idempotent because retries are common (network failures, timeouts, scheduler restarts). | Not checking for existing output before creating it. An idempotent `mkdir` uses `-p`; an idempotent insert checks for existing rows. |
-| Exit code | The numeric value (0-255) a script returns. 0 = success; non-zero = failure. Checked by schedulers, CI/CD, and chaining operators. | Orchestrators use exit codes to determine task success. A script that fails but exits 0 causes silent pipeline corruption. | Not propagating errors. Catching an error, logging it, but exiting 0 hides the failure. |
-| Parameter validation | Checking that required inputs (arguments, env vars, files) exist before the script performs any work. | Prevents running with missing configuration, which could produce corrupt output or delete wrong data. | Validating late in the script. Check all parameters in the first few lines, before any side effects. |
-| Logging pattern | Writing timestamped messages to stderr so script data output on stdout remains clean for piping. | Enables debugging and audit trails. `log() { echo "[$(date)] $*" >&2; }` is the standard pattern. | Mixing log messages with data output on stdout. Downstream commands receive log noise instead of data. |
-
-## What this note covers
-
-- File intake, validation, and processing automation patterns
-- Database interaction scripts (SQL Server via sqlcmd/bcp)
-- API polling and data fetch automation
-- Pipeline orchestration wrapper scripts
-- Idempotent script design and error handling
-- Production script template with logging, cleanup, and parameter validation
-
 ## File intake and validation
 
 Incoming data is the single largest source of pipeline failures. A file that arrives with missing columns, null values in mandatory fields, or duplicate keys will propagate errors silently through every downstream transformation. These scripts catch problems at the gate, before any processing begins.
@@ -1245,20 +1224,22 @@ SUCCESS — daily_etl exited with code 0
 ```
 
 
-## When to use bash automation
-
-- **File intake and validation** -- checking for expected files, validating row counts, detecting encoding issues before processing.
-- **Database operations** -- wrapping sqlcmd/bcp calls with error checking, retry logic, and logging for scheduled ETL.
-- **Deployment scripts** -- git pull, build, test, restart sequences that must fail fast on any error.
-- **Scheduled data processing** -- cron or Airflow BashOperator tasks that run daily data quality checks or report generation.
-- **Glue scripts** -- short scripts coordinating between tools (download from API, transform with awk, upload to GCS).
-
-## When not to use bash automation
-
-- **Complex business logic** -- if the script needs data structures, error handling with retries, or API pagination, use Python or C#.
-- **Cross-platform scripts** -- bash is Linux-only. For Windows+Linux, use PowerShell 7 or Python.
-- **Scripts longer than 200 lines** -- long bash scripts become unmaintainable. Refactor into a proper programming language.
-- **Anything handling JSON/XML** -- bash has no native structured data support. Use Python with `json`/`xml` modules or `jq`.
+> [!example] Bash Automation Fit
+>
+> > [!success] Appropriate
+> >
+> > - **File intake and validation** -- checking for expected files, validating row counts, detecting encoding issues before processing.
+> > - **Database operations** -- wrapping sqlcmd/bcp calls with error checking, retry logic, and logging for scheduled ETL.
+> > - **Deployment scripts** -- git pull, build, test, restart sequences that must fail fast on any error.
+> > - **Scheduled data processing** -- cron or Airflow BashOperator tasks that run daily data quality checks or report generation.
+> > - **Glue scripts** -- short scripts coordinating between tools (download from API, transform with awk, upload to GCS).
+>
+> > [!failure] Inappropriate
+> >
+> > - **Complex business logic** -- if the script needs data structures, error handling with retries, or API pagination, use Python or C#.
+> > - **Cross-platform scripts** -- bash is Linux-only. For Windows+Linux, use PowerShell 7 or Python.
+> > - **Scripts longer than 200 lines** -- long bash scripts become unmaintainable. Refactor into a proper programming language.
+> > - **Anything handling JSON/XML** -- bash has no native structured data support. Use Python with `json`/`xml` modules or `jq`.
 
 ## Warnings
 

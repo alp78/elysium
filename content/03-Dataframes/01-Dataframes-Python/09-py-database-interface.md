@@ -9,35 +9,160 @@ updated: 2026-04-04
 status: complete
 ---
 
-# 09 — Database & SQL Interface
+# Database and SQL Interface - Python
 
 > [!quote]
 > "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
 >
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
 
-This note covers the full database interface for DataFrame workflows: running SQL queries against in-memory DataFrames (Polars SQLContext, DuckDB), connecting to SQL Server via SQLAlchemy and pyodbc, reading from and writing to relational databases, executing stored procedures, and choosing between DataFrame-native SQL and database-native SQL for different workloads.
+> [!abstract]- Summary
+>
+> Brings together both sides of DataFrame database work: SQL over in-memory frames with Polars `SQLContext` and DuckDB, and direct SQL Server access through SQLAlchemy and pyodbc. The note focuses on where each interface belongs, how reads, writes, and stored procedures behave, and which performance, security, and memory constraints determine whether SQL should run inside the DataFrame toolchain or in the database itself.
+>
+> **In-memory SQL on DataFrames**
+> - Use Polars `SQLContext` to register DataFrames as virtual tables, run `SELECT`/`JOIN`/`GROUP BY` queries, and materialize `LazyFrame` results only when needed
+> - Use DuckDB when analytical SQL patterns such as CTEs, richer window functions, direct Parquet scans, and set operations are easier to express in SQL than in chained DataFrame expressions
+>
+> **SQL Server Integration**
+> - Connect through SQLAlchemy and pyodbc, build connection strings safely, and read relational data into Pandas or Polars with the right balance between convenience and low-level control
+> - Write DataFrames back to SQL Server, execute DDL/DML and stored procedures, inspect schema, and compare SQLAlchemy versus raw pyodbc for portability, bulk performance, and SQL Server-specific behavior
+>
+> **Operations and safety**
+> - When to use each interface: `SQLContext` for SQL-fluent work on in-memory Polars data, DuckDB for embedded analytical SQL, SQLAlchemy for standard ETL/database access, pyodbc for cursor-level SQL Server control
+> - Limits: in-memory SQL engines do not replace server-side processing for larger-than-RAM queries, high-concurrency writes, CDC, or multi-procedure orchestration
+> - Warnings: slow default `to_sql()`, SQL injection from string-built queries, SQLAlchemy 2.0 API changes, large `read_sql()` loads, and plaintext credentials in source
+> - Recommendations and troubleshooting: parameterize queries, use pooling and batched reads, enable `fast_executemany` for bulk loads, validate schema after reads, and diagnose common ODBC, connectivity, table-exists, truncation, and type-inference failures
 
-## Key terms used in this note
-
-| Term | Definition | Purpose | Common mistake / confusion |
-|---|---|---|---|
-| **SQLContext** | A Polars object that registers DataFrames as virtual tables and allows SQL queries against them. | Lets SQL-fluent users query DataFrames without learning the Polars expression API. | SQLContext uses Polars' SQL dialect — not all PostgreSQL or T-SQL syntax is supported. |
-| **DuckDB** | An embedded analytical database engine that can query Pandas and Polars DataFrames directly via SQL. | Runs complex analytical SQL (window functions, CTEs, set operations) on in-memory DataFrames without a database server. | DuckDB creates its own execution plan — it does not use Polars' optimizer. Results must be converted back to DataFrame format. |
-| **SQLAlchemy** | A Python ORM and database toolkit. Provides `create_engine()` for connection management and `pd.read_sql()` integration. | The standard Python interface for relational databases — works with PostgreSQL, MySQL, SQL Server, SQLite, and more. | SQLAlchemy 2.0 changed the API significantly — `engine.execute()` is removed; use `with engine.connect() as conn:` instead. |
-| **pyodbc** | A Python ODBC driver for direct database connectivity. Used for SQL Server, Azure SQL, and other ODBC-capable databases. | Lower-level than SQLAlchemy — provides cursor-based access, stored procedure execution, and bulk insert control. | Requires an ODBC driver installed on the system (e.g., `ODBC Driver 18 for SQL Server`). Driver version mismatches cause connection failures. |
-| **connection string** | A formatted string containing server, database, authentication, and driver parameters for database connectivity. | The entry point for every database operation — incorrect strings produce cryptic connection errors. | Windows Authentication (`Trusted_Connection=yes`) vs SQL Authentication (`UID=...;PWD=...`) — mixing them up causes access denied errors. |
-| **read_sql / read_database** | Pandas: `pd.read_sql(query, engine)`. Polars: `pl.read_database(query, connection_uri)`. | Executes a SQL query and returns the result as a DataFrame. | Large result sets load entirely into memory. Use `chunksize=` (Pandas) or OFFSET/FETCH in SQL for batched reads. |
-| **to_sql** | Pandas method that writes a DataFrame to a database table. | Bulk-inserts DataFrame rows into a relational table. | Default insert is row-by-row — extremely slow on large DataFrames. Use `method="multi"` or `fast_executemany=True` for bulk performance. |
-| **stored procedure** | A pre-compiled SQL routine stored in the database. Called with `EXEC proc_name @param=value`. | Encapsulates complex database logic that should not live in application code. | Some ORMs don't support stored procedure output parameters natively. Use raw pyodbc cursors for full stored procedure support. |
-
-## What this note covers
-
-- **Polars SQLContext** — registering DataFrames, running SQL queries, joins and aggregations via SQL
-- **DuckDB integration** — querying DataFrames with analytical SQL, CTEs, window functions
-- **SQL Server connectivity** — SQLAlchemy and pyodbc connection setup, read/write operations
-- **Stored procedures** — executing and reading results from SQL Server procedures
-- **Performance patterns** — bulk insert, chunked reads, connection pooling
+> [!note]- Glossary
+>
+> **`SQLContext`**
+> - A Polars interface that registers DataFrames as virtual tables and lets SQL compile into Polars query plans.
+> - It matters because the note uses it as the bridge for SQL-first exploration without leaving the Polars execution model.
+>
+> > [!warning] Dialect is Polars SQL, not T-SQL
+> >
+> > `SQLContext` supports a useful SQL subset, but not every PostgreSQL, DuckDB, or SQL Server construct transfers directly.
+>
+> ---
+>
+> **`LazyFrame`**
+> - Polars' deferred execution object, where transformations are planned first and executed only when materialized.
+> - It matters because `SQLContext.execute()` returns a `LazyFrame`, so SQL results are not concrete until `.collect()` runs.
+>
+> > [!info] Execution boundary matters
+> >
+> > Keeping work lazy lets Polars optimize before touching memory, but downstream notebook display still requires explicit materialization.
+>
+> ---
+>
+> **DuckDB**
+> - An embedded analytical database that runs full SQL directly inside the Python process against DataFrames, Parquet files, and other local data sources.
+> - It matters because the note uses DuckDB when the SQL itself is the clearest way to express joins, CTEs, and window-heavy analysis.
+>
+> > [!warning] Separate optimizer, separate result conversion
+> >
+> > DuckDB does not become Polars internally; it executes its own plan and then hands the result back in the requested DataFrame form.
+>
+> ---
+>
+> **SQLAlchemy**
+> - Python's standard database toolkit for engines, connections, SQL execution, and DataFrame integration across relational systems.
+> - It matters because Pandas relies on it for `read_sql()`/`to_sql()`, and the note uses it as the main portable path into SQL Server.
+>
+> > [!warning] SQLAlchemy 2.0 changed old habits
+> >
+> > Legacy `engine.execute()` patterns no longer apply. Use explicit connections and `text()` for executable SQL.
+>
+> ---
+>
+> **pyodbc**
+> - A lower-level ODBC driver interface for direct cursor-based access to SQL Server and other ODBC-capable databases.
+> - It matters because the note uses it where stored procedures, driver-specific options, and bulk insert tuning need more control than high-level wrappers provide.
+>
+> > [!warning] Driver installation is part of the runtime contract
+> >
+> > Missing or mismatched ODBC drivers cause connection failures before any Python-side logic runs.
+>
+> ---
+>
+> **Connection string**
+> - The DSN-style or URL-style string that specifies server, database, driver, and authentication details for a database session.
+> - It matters because every read, write, and procedure call depends on getting this boundary object exactly right.
+>
+> > [!warning] Authentication mode confusion is common
+> >
+> > Mixing trusted authentication with username/password settings is a routine source of "access denied" and handshake errors.
+>
+> ---
+>
+> **`read_sql()` / `read_database()`**
+> - DataFrame APIs that execute a SQL query and materialize the result into Pandas or Polars.
+> - It matters because they are the default bridge from relational result sets into in-memory analytical work.
+>
+> > [!warning] Reads are materialization events
+> >
+> > These helpers pull result sets into memory. For large tables, chunking or server-side filtering must happen before the DataFrame is built.
+>
+> ---
+>
+> **Chunked read**
+> - A pattern where a large SQL result is consumed in batches rather than loaded all at once.
+> - It matters because the note uses `chunksize=` and SQL paging patterns to keep large reads inside realistic memory limits.
+>
+> > [!info] Chunking changes workflow shape
+> >
+> > Once results arrive in batches, downstream code must aggregate or persist incrementally instead of assuming one monolithic DataFrame.
+>
+> ---
+>
+> **`to_sql()`**
+> - The Pandas method that writes DataFrame rows into a relational table using a database engine.
+> - It matters because it is the most direct write-back path in Python, but its defaults are often too slow for serious loads.
+>
+> > [!warning] Default insert mode is conservative
+> >
+> > Row-by-row inserts are easy to use and easy to regret. Bulk options matter quickly once row counts stop being tiny.
+>
+> ---
+>
+> **`fast_executemany`**
+> - A pyodbc execution mode that batches parameterized inserts more efficiently for SQL Server workloads.
+> - It matters because the note uses it as one of the main bulk-load levers when `to_sql()` defaults become a bottleneck.
+>
+> > [!info] Performance comes from batching, not magic
+> >
+> > The gain is largest when inserts are parameterized and sent in sizable batches rather than as individual statements.
+>
+> ---
+>
+> **Stored procedure**
+> - A named SQL routine stored in the database and executed with parameters from client code.
+> - It matters because the note covers how DataFrame workflows call existing database logic without rewriting it as inline application SQL.
+>
+> > [!warning] ORM abstraction ends quickly here
+> >
+> > Output parameters, multi-result behavior, and procedure-specific conventions often require raw cursor handling.
+>
+> ---
+>
+> **Parameterized query**
+> - A SQL statement where values are bound separately from the SQL text rather than interpolated into the string.
+> - It matters because the note treats parameterization as the default safe execution pattern for both correctness and security.
+>
+> > [!danger] String-formatted SQL is a security bug
+> >
+> > F-strings and `.format()` are acceptable for note prose, not for executable query construction against real systems.
+>
+> ---
+>
+> **Connection pooling**
+> - Reusing existing database connections across operations instead of opening a brand-new session for every query.
+> - It matters because SQLAlchemy pools by default, and the note recommends preserving that behavior for stable ETL and notebook workloads.
+>
+> > [!info] Pooling is a throughput feature
+> >
+> > Creating engines or connections per query adds latency and unnecessary load even when each individual statement is cheap.
 
 ---
 
@@ -78,7 +203,7 @@ import pyodbc
 import sqlalchemy as sa
 ```
 
-    OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Polars SQLContext
 
@@ -219,7 +344,7 @@ for t in ["eurostoxx50_ohlcv", "index_dim", "scores_daily"]:
     print(f"{t}: {count:,} rows")
 ```
 
-    eurostoxx50_ohlcv: 66,355 rows
+eurostoxx50_ohlcv: 66,355 rows
     index_dim: 169 rows
     scores_daily: 466 rows
 
@@ -237,87 +362,87 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-      <th>volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>128223</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>562904</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>800815</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>689086</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>857271</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ASML.AS</td>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>778081</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ASML.AS</td>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>714587</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>ASML.AS</td>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>941945</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ASML.AS</td>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>871267</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ASML.AS</td>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1010698</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>562904</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>800815</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>689086</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>857271</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ASML.AS</td>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>778081</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ASML.AS</td>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>714587</td>
+</tr>
+<tr>
+<th>7</th>
+<td>ASML.AS</td>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>941945</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ASML.AS</td>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>871267</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ASML.AS</td>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1010698</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -336,98 +461,98 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>days</th>
-      <th>avg_close</th>
-      <th>min_close</th>
-      <th>max_close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>1331</td>
-      <td>1761.56</td>
-      <td>842.60</td>
-      <td>2839.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ADYEN.AS</td>
-      <td>1331</td>
-      <td>1545.98</td>
-      <td>630.80</td>
-      <td>2766.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>1331</td>
-      <td>671.35</td>
-      <td>397.45</td>
-      <td>1288.4</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>MC.PA</td>
-      <td>1331</td>
-      <td>662.40</td>
-      <td>437.55</td>
-      <td>902.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>RHM.DE</td>
-      <td>1324</td>
-      <td>544.66</td>
-      <td>77.00</td>
-      <td>1988.5</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ARGX.BR</td>
-      <td>1331</td>
-      <td>413.69</td>
-      <td>208.80</td>
-      <td>803.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>OR.PA</td>
-      <td>1331</td>
-      <td>377.54</td>
-      <td>290.10</td>
-      <td>456.9</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>MUV2.DE</td>
-      <td>1324</td>
-      <td>374.66</td>
-      <td>209.15</td>
-      <td>610.6</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>RACE.MI</td>
-      <td>1321</td>
-      <td>289.75</td>
-      <td>154.70</td>
-      <td>487.9</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ALV.DE</td>
-      <td>1324</td>
-      <td>252.19</td>
-      <td>159.62</td>
-      <td>392.7</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>days</th>
+<th>avg_close</th>
+<th>min_close</th>
+<th>max_close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>1331</td>
+<td>1761.56</td>
+<td>842.60</td>
+<td>2839.0</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ADYEN.AS</td>
+<td>1331</td>
+<td>1545.98</td>
+<td>630.80</td>
+<td>2766.0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>1331</td>
+<td>671.35</td>
+<td>397.45</td>
+<td>1288.4</td>
+</tr>
+<tr>
+<th>3</th>
+<td>MC.PA</td>
+<td>1331</td>
+<td>662.40</td>
+<td>437.55</td>
+<td>902.0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>RHM.DE</td>
+<td>1324</td>
+<td>544.66</td>
+<td>77.00</td>
+<td>1988.5</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ARGX.BR</td>
+<td>1331</td>
+<td>413.69</td>
+<td>208.80</td>
+<td>803.0</td>
+</tr>
+<tr>
+<th>6</th>
+<td>OR.PA</td>
+<td>1331</td>
+<td>377.54</td>
+<td>290.10</td>
+<td>456.9</td>
+</tr>
+<tr>
+<th>7</th>
+<td>MUV2.DE</td>
+<td>1324</td>
+<td>374.66</td>
+<td>209.15</td>
+<td>610.6</td>
+</tr>
+<tr>
+<th>8</th>
+<td>RACE.MI</td>
+<td>1321</td>
+<td>289.75</td>
+<td>154.70</td>
+<td>487.9</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ALV.DE</td>
+<td>1324</td>
+<td>252.19</td>
+<td>159.62</td>
+<td>392.7</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -445,109 +570,109 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>short_name</th>
-      <th>sector</th>
-      <th>country</th>
-      <th>avg_close</th>
-      <th>avg_volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>HERMES INTL</td>
-      <td>Consumer Cyclical</td>
-      <td>France</td>
-      <td>1761.56</td>
-      <td>61333.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ADYEN.AS</td>
-      <td>ADYEN</td>
-      <td>Technology</td>
-      <td>Netherlands</td>
-      <td>1545.98</td>
-      <td>82946.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>ASML HOLDING</td>
-      <td>Technology</td>
-      <td>Netherlands</td>
-      <td>671.35</td>
-      <td>710046.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>MC.PA</td>
-      <td>LVMH</td>
-      <td>Consumer Cyclical</td>
-      <td>France</td>
-      <td>662.40</td>
-      <td>419125.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>RHM.DE</td>
-      <td>RHEINMETALL AG</td>
-      <td>Industrials</td>
-      <td>Germany</td>
-      <td>544.66</td>
-      <td>232900.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ARGX.BR</td>
-      <td>ARGENX SE</td>
-      <td>Healthcare</td>
-      <td>Netherlands</td>
-      <td>413.69</td>
-      <td>71069.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>OR.PA</td>
-      <td>L'OREAL</td>
-      <td>Consumer Defensive</td>
-      <td>France</td>
-      <td>377.54</td>
-      <td>363723.0</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>MUV2.DE</td>
-      <td>MUENCHENER RUECKVERS.-GES. AG N</td>
-      <td>Financial Services</td>
-      <td>Germany</td>
-      <td>374.66</td>
-      <td>301211.0</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>RACE.MI</td>
-      <td>FERRARI</td>
-      <td>Consumer Cyclical</td>
-      <td>Italy</td>
-      <td>289.75</td>
-      <td>360852.0</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ALV.DE</td>
-      <td>Allianz SE</td>
-      <td>Financial Services</td>
-      <td>Germany</td>
-      <td>252.19</td>
-      <td>832296.0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>avg_close</th>
+<th>avg_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>HERMES INTL</td>
+<td>Consumer Cyclical</td>
+<td>France</td>
+<td>1761.56</td>
+<td>61333.0</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>1545.98</td>
+<td>82946.0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>671.35</td>
+<td>710046.0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>MC.PA</td>
+<td>LVMH</td>
+<td>Consumer Cyclical</td>
+<td>France</td>
+<td>662.40</td>
+<td>419125.0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>RHM.DE</td>
+<td>RHEINMETALL AG</td>
+<td>Industrials</td>
+<td>Germany</td>
+<td>544.66</td>
+<td>232900.0</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ARGX.BR</td>
+<td>ARGENX SE</td>
+<td>Healthcare</td>
+<td>Netherlands</td>
+<td>413.69</td>
+<td>71069.0</td>
+</tr>
+<tr>
+<th>6</th>
+<td>OR.PA</td>
+<td>L'OREAL</td>
+<td>Consumer Defensive</td>
+<td>France</td>
+<td>377.54</td>
+<td>363723.0</td>
+</tr>
+<tr>
+<th>7</th>
+<td>MUV2.DE</td>
+<td>MUENCHENER RUECKVERS.-GES. AG N</td>
+<td>Financial Services</td>
+<td>Germany</td>
+<td>374.66</td>
+<td>301211.0</td>
+</tr>
+<tr>
+<th>8</th>
+<td>RACE.MI</td>
+<td>FERRARI</td>
+<td>Consumer Cyclical</td>
+<td>Italy</td>
+<td>289.75</td>
+<td>360852.0</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ALV.DE</td>
+<td>Allianz SE</td>
+<td>Financial Services</td>
+<td>Germany</td>
+<td>252.19</td>
+<td>832296.0</td>
+</tr>
+</tbody>
 </table>
 
 ### Query DataFrames Directly (Zero-Copy)
@@ -570,40 +695,40 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>avg_close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>1761.555748</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ADYEN.AS</td>
-      <td>1545.976409</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>671.348911</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>MC.PA</td>
-      <td>662.404508</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>RHM.DE</td>
-      <td>544.661533</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>avg_close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>1761.555748</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ADYEN.AS</td>
+<td>1545.976409</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>671.348911</td>
+</tr>
+<tr>
+<th>3</th>
+<td>MC.PA</td>
+<td>662.404508</td>
+</tr>
+<tr>
+<th>4</th>
+<td>RHM.DE</td>
+<td>544.661533</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -617,65 +742,65 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>sector</th>
-      <th>stocks</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Financial Services</td>
-      <td>32</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Technology</td>
-      <td>26</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Energy</td>
-      <td>24</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Industrials</td>
-      <td>22</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Consumer Cyclical</td>
-      <td>18</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>Healthcare</td>
-      <td>15</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>Consumer Defensive</td>
-      <td>12</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>Communication Services</td>
-      <td>12</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>Basic Materials</td>
-      <td>6</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>Utilities</td>
-      <td>2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>sector</th>
+<th>stocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Financial Services</td>
+<td>32</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Technology</td>
+<td>26</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Energy</td>
+<td>24</td>
+</tr>
+<tr>
+<th>3</th>
+<td>Industrials</td>
+<td>22</td>
+</tr>
+<tr>
+<th>4</th>
+<td>Consumer Cyclical</td>
+<td>18</td>
+</tr>
+<tr>
+<th>5</th>
+<td>Healthcare</td>
+<td>15</td>
+</tr>
+<tr>
+<th>6</th>
+<td>Consumer Defensive</td>
+<td>12</td>
+</tr>
+<tr>
+<th>7</th>
+<td>Communication Services</td>
+<td>12</td>
+</tr>
+<tr>
+<th>8</th>
+<td>Basic Materials</td>
+<td>6</td>
+</tr>
+<tr>
+<th>9</th>
+<td>Utilities</td>
+<td>2</td>
+</tr>
+</tbody>
 </table>
 
 ### Window Functions
@@ -697,192 +822,192 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>sector</th>
-      <th>avg_close</th>
-      <th>sector_rank</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>AI.PA</td>
-      <td>Basic Materials</td>
-      <td>145.43</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>BAS.DE</td>
-      <td>Basic Materials</td>
-      <td>50.56</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>DTE.DE</td>
-      <td>Communication Services</td>
-      <td>22.43</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>RMS.PA</td>
-      <td>Consumer Cyclical</td>
-      <td>1761.56</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>MC.PA</td>
-      <td>Consumer Cyclical</td>
-      <td>662.40</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>RACE.MI</td>
-      <td>Consumer Cyclical</td>
-      <td>289.75</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>OR.PA</td>
-      <td>Consumer Defensive</td>
-      <td>377.54</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>BN.PA</td>
-      <td>Consumer Defensive</td>
-      <td>60.29</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ABI.BR</td>
-      <td>Consumer Defensive</td>
-      <td>54.86</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>TTE.PA</td>
-      <td>Energy</td>
-      <td>53.14</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>ENI.MI</td>
-      <td>Energy</td>
-      <td>13.40</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>MUV2.DE</td>
-      <td>Financial Services</td>
-      <td>374.66</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>ALV.DE</td>
-      <td>Financial Services</td>
-      <td>252.19</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>DB1.DE</td>
-      <td>Financial Services</td>
-      <td>184.80</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>ARGX.BR</td>
-      <td>Healthcare</td>
-      <td>413.69</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>EL.PA</td>
-      <td>Healthcare</td>
-      <td>191.91</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>SAN.PA</td>
-      <td>Healthcare</td>
-      <td>90.30</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>RHM.DE</td>
-      <td>Industrials</td>
-      <td>544.66</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>SU.PA</td>
-      <td>Industrials</td>
-      <td>179.03</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>SAF.PA</td>
-      <td>Industrials</td>
-      <td>171.83</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>ADYEN.AS</td>
-      <td>Technology</td>
-      <td>1545.98</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>ASML.AS</td>
-      <td>Technology</td>
-      <td>671.35</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>SAP.DE</td>
-      <td>Technology</td>
-      <td>154.33</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>IBE.MC</td>
-      <td>Utilities</td>
-      <td>12.26</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>ENEL.MI</td>
-      <td>Utilities</td>
-      <td>6.82</td>
-      <td>2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>sector</th>
+<th>avg_close</th>
+<th>sector_rank</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>AI.PA</td>
+<td>Basic Materials</td>
+<td>145.43</td>
+<td>1</td>
+</tr>
+<tr>
+<th>1</th>
+<td>BAS.DE</td>
+<td>Basic Materials</td>
+<td>50.56</td>
+<td>2</td>
+</tr>
+<tr>
+<th>2</th>
+<td>DTE.DE</td>
+<td>Communication Services</td>
+<td>22.43</td>
+<td>1</td>
+</tr>
+<tr>
+<th>3</th>
+<td>RMS.PA</td>
+<td>Consumer Cyclical</td>
+<td>1761.56</td>
+<td>1</td>
+</tr>
+<tr>
+<th>4</th>
+<td>MC.PA</td>
+<td>Consumer Cyclical</td>
+<td>662.40</td>
+<td>2</td>
+</tr>
+<tr>
+<th>5</th>
+<td>RACE.MI</td>
+<td>Consumer Cyclical</td>
+<td>289.75</td>
+<td>3</td>
+</tr>
+<tr>
+<th>6</th>
+<td>OR.PA</td>
+<td>Consumer Defensive</td>
+<td>377.54</td>
+<td>1</td>
+</tr>
+<tr>
+<th>7</th>
+<td>BN.PA</td>
+<td>Consumer Defensive</td>
+<td>60.29</td>
+<td>2</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ABI.BR</td>
+<td>Consumer Defensive</td>
+<td>54.86</td>
+<td>3</td>
+</tr>
+<tr>
+<th>9</th>
+<td>TTE.PA</td>
+<td>Energy</td>
+<td>53.14</td>
+<td>1</td>
+</tr>
+<tr>
+<th>10</th>
+<td>ENI.MI</td>
+<td>Energy</td>
+<td>13.40</td>
+<td>2</td>
+</tr>
+<tr>
+<th>11</th>
+<td>MUV2.DE</td>
+<td>Financial Services</td>
+<td>374.66</td>
+<td>1</td>
+</tr>
+<tr>
+<th>12</th>
+<td>ALV.DE</td>
+<td>Financial Services</td>
+<td>252.19</td>
+<td>2</td>
+</tr>
+<tr>
+<th>13</th>
+<td>DB1.DE</td>
+<td>Financial Services</td>
+<td>184.80</td>
+<td>3</td>
+</tr>
+<tr>
+<th>14</th>
+<td>ARGX.BR</td>
+<td>Healthcare</td>
+<td>413.69</td>
+<td>1</td>
+</tr>
+<tr>
+<th>15</th>
+<td>EL.PA</td>
+<td>Healthcare</td>
+<td>191.91</td>
+<td>2</td>
+</tr>
+<tr>
+<th>16</th>
+<td>SAN.PA</td>
+<td>Healthcare</td>
+<td>90.30</td>
+<td>3</td>
+</tr>
+<tr>
+<th>17</th>
+<td>RHM.DE</td>
+<td>Industrials</td>
+<td>544.66</td>
+<td>1</td>
+</tr>
+<tr>
+<th>18</th>
+<td>SU.PA</td>
+<td>Industrials</td>
+<td>179.03</td>
+<td>2</td>
+</tr>
+<tr>
+<th>19</th>
+<td>SAF.PA</td>
+<td>Industrials</td>
+<td>171.83</td>
+<td>3</td>
+</tr>
+<tr>
+<th>20</th>
+<td>ADYEN.AS</td>
+<td>Technology</td>
+<td>1545.98</td>
+<td>1</td>
+</tr>
+<tr>
+<th>21</th>
+<td>ASML.AS</td>
+<td>Technology</td>
+<td>671.35</td>
+<td>2</td>
+</tr>
+<tr>
+<th>22</th>
+<td>SAP.DE</td>
+<td>Technology</td>
+<td>154.33</td>
+<td>3</td>
+</tr>
+<tr>
+<th>23</th>
+<td>IBE.MC</td>
+<td>Utilities</td>
+<td>12.26</td>
+<td>1</td>
+</tr>
+<tr>
+<th>24</th>
+<td>ENEL.MI</td>
+<td>Utilities</td>
+<td>6.82</td>
+<td>2</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -901,154 +1026,154 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>sma_7</th>
-      <th>sma_30</th>
-      <th>prev_close</th>
-      <th>daily_return_pct</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1181.43</td>
-      <td>1204.41</td>
-      <td>1198.8</td>
-      <td>-0.67</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1177.29</td>
-      <td>1204.45</td>
-      <td>1200.0</td>
-      <td>-0.10</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1178.94</td>
-      <td>1204.31</td>
-      <td>1147.6</td>
-      <td>4.57</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1183.71</td>
-      <td>1204.89</td>
-      <td>1147.0</td>
-      <td>0.05</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1195.83</td>
-      <td>1205.91</td>
-      <td>1186.0</td>
-      <td>-3.29</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1216.03</td>
-      <td>1206.95</td>
-      <td>1199.8</td>
-      <td>-1.15</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1227.09</td>
-      <td>1206.63</td>
-      <td>1161.8</td>
-      <td>3.27</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1234.14</td>
-      <td>1205.13</td>
-      <td>1210.4</td>
-      <td>-4.02</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1247.54</td>
-      <td>1204.40</td>
-      <td>1233.4</td>
-      <td>-1.86</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1251.51</td>
-      <td>1201.40</td>
-      <td>1232.4</td>
-      <td>0.08</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>2026-02-26</td>
-      <td>1232.4</td>
-      <td>1253.14</td>
-      <td>1199.19</td>
-      <td>1288.4</td>
-      <td>-4.35</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>2026-02-25</td>
-      <td>1288.4</td>
-      <td>1248.40</td>
-      <td>1196.43</td>
-      <td>1263.4</td>
-      <td>1.98</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>2026-02-24</td>
-      <td>1263.4</td>
-      <td>1235.06</td>
-      <td>1189.62</td>
-      <td>1249.2</td>
-      <td>1.14</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>2026-02-23</td>
-      <td>1249.2</td>
-      <td>1224.63</td>
-      <td>1184.26</td>
-      <td>1255.6</td>
-      <td>-0.51</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>2026-02-20</td>
-      <td>1255.6</td>
-      <td>1214.71</td>
-      <td>1178.83</td>
-      <td>1238.2</td>
-      <td>1.41</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>sma_7</th>
+<th>sma_30</th>
+<th>prev_close</th>
+<th>daily_return_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1181.43</td>
+<td>1204.41</td>
+<td>1198.8</td>
+<td>-0.67</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1177.29</td>
+<td>1204.45</td>
+<td>1200.0</td>
+<td>-0.10</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1178.94</td>
+<td>1204.31</td>
+<td>1147.6</td>
+<td>4.57</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1183.71</td>
+<td>1204.89</td>
+<td>1147.0</td>
+<td>0.05</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1195.83</td>
+<td>1205.91</td>
+<td>1186.0</td>
+<td>-3.29</td>
+</tr>
+<tr>
+<th>5</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1216.03</td>
+<td>1206.95</td>
+<td>1199.8</td>
+<td>-1.15</td>
+</tr>
+<tr>
+<th>6</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1227.09</td>
+<td>1206.63</td>
+<td>1161.8</td>
+<td>3.27</td>
+</tr>
+<tr>
+<th>7</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1234.14</td>
+<td>1205.13</td>
+<td>1210.4</td>
+<td>-4.02</td>
+</tr>
+<tr>
+<th>8</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1247.54</td>
+<td>1204.40</td>
+<td>1233.4</td>
+<td>-1.86</td>
+</tr>
+<tr>
+<th>9</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1251.51</td>
+<td>1201.40</td>
+<td>1232.4</td>
+<td>0.08</td>
+</tr>
+<tr>
+<th>10</th>
+<td>2026-02-26</td>
+<td>1232.4</td>
+<td>1253.14</td>
+<td>1199.19</td>
+<td>1288.4</td>
+<td>-4.35</td>
+</tr>
+<tr>
+<th>11</th>
+<td>2026-02-25</td>
+<td>1288.4</td>
+<td>1248.40</td>
+<td>1196.43</td>
+<td>1263.4</td>
+<td>1.98</td>
+</tr>
+<tr>
+<th>12</th>
+<td>2026-02-24</td>
+<td>1263.4</td>
+<td>1235.06</td>
+<td>1189.62</td>
+<td>1249.2</td>
+<td>1.14</td>
+</tr>
+<tr>
+<th>13</th>
+<td>2026-02-23</td>
+<td>1249.2</td>
+<td>1224.63</td>
+<td>1184.26</td>
+<td>1255.6</td>
+<td>-0.51</td>
+</tr>
+<tr>
+<th>14</th>
+<td>2026-02-20</td>
+<td>1255.6</td>
+<td>1214.71</td>
+<td>1178.83</td>
+<td>1238.2</td>
+<td>1.41</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1069,138 +1194,138 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>avg_close</th>
-      <th>quartile</th>
-      <th>pct_rank</th>
-      <th>cume_dist</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>1761.56</td>
-      <td>4</td>
-      <td>1.000</td>
-      <td>1.00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ADYEN.AS</td>
-      <td>1545.98</td>
-      <td>4</td>
-      <td>0.980</td>
-      <td>0.98</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>671.35</td>
-      <td>4</td>
-      <td>0.959</td>
-      <td>0.96</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>MC.PA</td>
-      <td>662.40</td>
-      <td>4</td>
-      <td>0.939</td>
-      <td>0.94</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>RHM.DE</td>
-      <td>544.66</td>
-      <td>4</td>
-      <td>0.918</td>
-      <td>0.92</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ARGX.BR</td>
-      <td>413.69</td>
-      <td>4</td>
-      <td>0.898</td>
-      <td>0.90</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>OR.PA</td>
-      <td>377.54</td>
-      <td>4</td>
-      <td>0.878</td>
-      <td>0.88</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>MUV2.DE</td>
-      <td>374.66</td>
-      <td>4</td>
-      <td>0.857</td>
-      <td>0.86</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>RACE.MI</td>
-      <td>289.75</td>
-      <td>4</td>
-      <td>0.837</td>
-      <td>0.84</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ALV.DE</td>
-      <td>252.19</td>
-      <td>4</td>
-      <td>0.816</td>
-      <td>0.82</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>ADS.DE</td>
-      <td>205.43</td>
-      <td>4</td>
-      <td>0.796</td>
-      <td>0.80</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>EL.PA</td>
-      <td>191.91</td>
-      <td>4</td>
-      <td>0.776</td>
-      <td>0.78</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>DB1.DE</td>
-      <td>184.80</td>
-      <td>3</td>
-      <td>0.755</td>
-      <td>0.76</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>SU.PA</td>
-      <td>179.03</td>
-      <td>3</td>
-      <td>0.735</td>
-      <td>0.74</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>SAF.PA</td>
-      <td>171.83</td>
-      <td>3</td>
-      <td>0.714</td>
-      <td>0.72</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>avg_close</th>
+<th>quartile</th>
+<th>pct_rank</th>
+<th>cume_dist</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>1761.56</td>
+<td>4</td>
+<td>1.000</td>
+<td>1.00</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ADYEN.AS</td>
+<td>1545.98</td>
+<td>4</td>
+<td>0.980</td>
+<td>0.98</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>671.35</td>
+<td>4</td>
+<td>0.959</td>
+<td>0.96</td>
+</tr>
+<tr>
+<th>3</th>
+<td>MC.PA</td>
+<td>662.40</td>
+<td>4</td>
+<td>0.939</td>
+<td>0.94</td>
+</tr>
+<tr>
+<th>4</th>
+<td>RHM.DE</td>
+<td>544.66</td>
+<td>4</td>
+<td>0.918</td>
+<td>0.92</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ARGX.BR</td>
+<td>413.69</td>
+<td>4</td>
+<td>0.898</td>
+<td>0.90</td>
+</tr>
+<tr>
+<th>6</th>
+<td>OR.PA</td>
+<td>377.54</td>
+<td>4</td>
+<td>0.878</td>
+<td>0.88</td>
+</tr>
+<tr>
+<th>7</th>
+<td>MUV2.DE</td>
+<td>374.66</td>
+<td>4</td>
+<td>0.857</td>
+<td>0.86</td>
+</tr>
+<tr>
+<th>8</th>
+<td>RACE.MI</td>
+<td>289.75</td>
+<td>4</td>
+<td>0.837</td>
+<td>0.84</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ALV.DE</td>
+<td>252.19</td>
+<td>4</td>
+<td>0.816</td>
+<td>0.82</td>
+</tr>
+<tr>
+<th>10</th>
+<td>ADS.DE</td>
+<td>205.43</td>
+<td>4</td>
+<td>0.796</td>
+<td>0.80</td>
+</tr>
+<tr>
+<th>11</th>
+<td>EL.PA</td>
+<td>191.91</td>
+<td>4</td>
+<td>0.776</td>
+<td>0.78</td>
+</tr>
+<tr>
+<th>12</th>
+<td>DB1.DE</td>
+<td>184.80</td>
+<td>3</td>
+<td>0.755</td>
+<td>0.76</td>
+</tr>
+<tr>
+<th>13</th>
+<td>SU.PA</td>
+<td>179.03</td>
+<td>3</td>
+<td>0.735</td>
+<td>0.74</td>
+</tr>
+<tr>
+<th>14</th>
+<td>SAF.PA</td>
+<td>171.83</td>
+<td>3</td>
+<td>0.714</td>
+<td>0.72</td>
+</tr>
+</tbody>
 </table>
 
 ### Common Table Expressions (CTEs)
@@ -1233,98 +1358,98 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>sector</th>
-      <th>daily_vol</th>
-      <th>avg_ret</th>
-      <th>annualized_vol</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ADYEN.AS</td>
-      <td>Technology</td>
-      <td>3.17</td>
-      <td>-0.0010</td>
-      <td>50.32</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ENR.DE</td>
-      <td>Industrials</td>
-      <td>3.15</td>
-      <td>0.1762</td>
-      <td>50.00</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>RHM.DE</td>
-      <td>Industrials</td>
-      <td>2.57</td>
-      <td>0.2498</td>
-      <td>40.80</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>PRX.AS</td>
-      <td>Consumer Cyclical</td>
-      <td>2.50</td>
-      <td>0.0400</td>
-      <td>39.69</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ARGX.BR</td>
-      <td>Healthcare</td>
-      <td>2.48</td>
-      <td>0.1015</td>
-      <td>39.37</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>ASML.AS</td>
-      <td>Technology</td>
-      <td>2.37</td>
-      <td>0.1091</td>
-      <td>37.62</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>IFX.DE</td>
-      <td>Technology</td>
-      <td>2.35</td>
-      <td>0.0455</td>
-      <td>37.31</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>VOW.DE</td>
-      <td>Consumer Cyclical</td>
-      <td>2.24</td>
-      <td>-0.0194</td>
-      <td>35.56</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>UCG.MI</td>
-      <td>Financial Services</td>
-      <td>2.24</td>
-      <td>0.1891</td>
-      <td>35.56</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>ADS.DE</td>
-      <td>Consumer Cyclical</td>
-      <td>2.17</td>
-      <td>-0.0330</td>
-      <td>34.45</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>sector</th>
+<th>daily_vol</th>
+<th>avg_ret</th>
+<th>annualized_vol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ADYEN.AS</td>
+<td>Technology</td>
+<td>3.17</td>
+<td>-0.0010</td>
+<td>50.32</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ENR.DE</td>
+<td>Industrials</td>
+<td>3.15</td>
+<td>0.1762</td>
+<td>50.00</td>
+</tr>
+<tr>
+<th>2</th>
+<td>RHM.DE</td>
+<td>Industrials</td>
+<td>2.57</td>
+<td>0.2498</td>
+<td>40.80</td>
+</tr>
+<tr>
+<th>3</th>
+<td>PRX.AS</td>
+<td>Consumer Cyclical</td>
+<td>2.50</td>
+<td>0.0400</td>
+<td>39.69</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ARGX.BR</td>
+<td>Healthcare</td>
+<td>2.48</td>
+<td>0.1015</td>
+<td>39.37</td>
+</tr>
+<tr>
+<th>5</th>
+<td>ASML.AS</td>
+<td>Technology</td>
+<td>2.37</td>
+<td>0.1091</td>
+<td>37.62</td>
+</tr>
+<tr>
+<th>6</th>
+<td>IFX.DE</td>
+<td>Technology</td>
+<td>2.35</td>
+<td>0.0455</td>
+<td>37.31</td>
+</tr>
+<tr>
+<th>7</th>
+<td>VOW.DE</td>
+<td>Consumer Cyclical</td>
+<td>2.24</td>
+<td>-0.0194</td>
+<td>35.56</td>
+</tr>
+<tr>
+<th>8</th>
+<td>UCG.MI</td>
+<td>Financial Services</td>
+<td>2.24</td>
+<td>0.1891</td>
+<td>35.56</td>
+</tr>
+<tr>
+<th>9</th>
+<td>ADS.DE</td>
+<td>Consumer Cyclical</td>
+<td>2.17</td>
+<td>-0.0330</td>
+<td>34.45</td>
+</tr>
+</tbody>
 </table>
 
 ### Recursive CTE
@@ -1342,65 +1467,65 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>dt</th>
-      <th>day_name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2024-01-01</td>
-      <td>Monday</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2024-01-02</td>
-      <td>Tuesday</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2024-01-03</td>
-      <td>Wednesday</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2024-01-04</td>
-      <td>Thursday</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2024-01-05</td>
-      <td>Friday</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2024-01-06</td>
-      <td>Saturday</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2024-01-07</td>
-      <td>Sunday</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2024-01-08</td>
-      <td>Monday</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2024-01-09</td>
-      <td>Tuesday</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2024-01-10</td>
-      <td>Wednesday</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>dt</th>
+<th>day_name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2024-01-01</td>
+<td>Monday</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2024-01-02</td>
+<td>Tuesday</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2024-01-03</td>
+<td>Wednesday</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2024-01-04</td>
+<td>Thursday</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2024-01-05</td>
+<td>Friday</td>
+</tr>
+<tr>
+<th>5</th>
+<td>2024-01-06</td>
+<td>Saturday</td>
+</tr>
+<tr>
+<th>6</th>
+<td>2024-01-07</td>
+<td>Sunday</td>
+</tr>
+<tr>
+<th>7</th>
+<td>2024-01-08</td>
+<td>Monday</td>
+</tr>
+<tr>
+<th>8</th>
+<td>2024-01-09</td>
+<td>Tuesday</td>
+</tr>
+<tr>
+<th>9</th>
+<td>2024-01-10</td>
+<td>Wednesday</td>
+</tr>
+</tbody>
 </table>
 
 ### Read Files Directly (No Import Step)
@@ -1417,46 +1542,46 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>SAP.DE</td>
-      <td>2026-03-12</td>
-      <td>166.52</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>SAP.DE</td>
-      <td>2026-03-11</td>
-      <td>165.44</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>SAP.DE</td>
-      <td>2026-03-10</td>
-      <td>169.60</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>SAP.DE</td>
-      <td>2026-03-09</td>
-      <td>171.88</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>2026-03-06</td>
-      <td>172.74</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>date</th>
+<th>close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>SAP.DE</td>
+<td>2026-03-12</td>
+<td>166.52</td>
+</tr>
+<tr>
+<th>1</th>
+<td>SAP.DE</td>
+<td>2026-03-11</td>
+<td>165.44</td>
+</tr>
+<tr>
+<th>2</th>
+<td>SAP.DE</td>
+<td>2026-03-10</td>
+<td>169.60</td>
+</tr>
+<tr>
+<th>3</th>
+<td>SAP.DE</td>
+<td>2026-03-09</td>
+<td>171.88</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>2026-03-06</td>
+<td>172.74</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1469,244 +1594,244 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>_index</th>
-      <th>symbol</th>
-      <th>score_date</th>
-      <th>sector</th>
-      <th>pe_zscore</th>
-      <th>pb_zscore</th>
-      <th>ev_ebitda_zscore</th>
-      <th>yield_zscore</th>
-      <th>relative_value_score</th>
-      <th>relative_value_rank</th>
-      <th>relative_strength</th>
-      <th>sma_50_ratio</th>
-      <th>sma_200_ratio</th>
-      <th>dist_from_52w_high</th>
-      <th>momentum_score</th>
-      <th>momentum_rank</th>
-      <th>implied_upside</th>
-      <th>recommendation_mean</th>
-      <th>price_falling_analysts_bullish</th>
-      <th>sentiment_score</th>
-      <th>sentiment_rank</th>
-      <th>composite_score</th>
-      <th>composite_rank</th>
-      <th>_scored_at</th>
-      <th>sma_30_close</th>
-      <th>sma_90_close</th>
-      <th>market_cap</th>
-      <th>index_weight</th>
-      <th>short_name</th>
-      <th>country</th>
-      <th>current_price</th>
-      <th>day_change_pct</th>
-      <th>five_day_change_pct</th>
-      <th>ytd_change_pct</th>
-      <th>currency</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>163</td>
-      <td>euro_stoxx_50</td>
-      <td>BNP.PA</td>
-      <td>2026-03-04</td>
-      <td>Financial Services</td>
-      <td>0.913389</td>
-      <td>1.261140</td>
-      <td>NaN</td>
-      <td>2.388962</td>
-      <td>1.521163</td>
-      <td>1</td>
-      <td>0.016123</td>
-      <td>1.009090</td>
-      <td>1.130264</td>
-      <td>0.082486</td>
-      <td>0.477966</td>
-      <td>16</td>
-      <td>0.153157</td>
-      <td>1.84211</td>
-      <td>False</td>
-      <td>0.052711</td>
-      <td>25</td>
-      <td>0.683947</td>
-      <td>1</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>92.085000</td>
-      <td>81.181889</td>
-      <td>99751215104</td>
-      <td>0.019525</td>
-      <td>BNP PARIBAS ACT.A</td>
-      <td>France</td>
-      <td>89.320</td>
-      <td>0.011437</td>
-      <td>-0.073156</td>
-      <td>0.105582</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>168</td>
-      <td>euro_stoxx_50</td>
-      <td>DTE.DE</td>
-      <td>2026-03-04</td>
-      <td>Communication Services</td>
-      <td>0.326587</td>
-      <td>0.387463</td>
-      <td>0.379532</td>
-      <td>-0.127867</td>
-      <td>0.241429</td>
-      <td>24</td>
-      <td>-0.205598</td>
-      <td>1.120650</td>
-      <td>1.112416</td>
-      <td>0.055524</td>
-      <td>0.685752</td>
-      <td>8</td>
-      <td>0.121212</td>
-      <td>1.33333</td>
-      <td>False</td>
-      <td>0.617835</td>
-      <td>10</td>
-      <td>0.515005</td>
-      <td>2</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>30.838000</td>
-      <td>28.554556</td>
-      <td>164294311936</td>
-      <td>0.032159</td>
-      <td>DEUTSCHE TELEKOM AG</td>
-      <td>Germany</td>
-      <td>33.000</td>
-      <td>0.011649</td>
-      <td>-0.019608</td>
-      <td>0.193059</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>174</td>
-      <td>euro_stoxx_50</td>
-      <td>IFX.DE</td>
-      <td>2026-03-04</td>
-      <td>Technology</td>
-      <td>0.509398</td>
-      <td>0.637215</td>
-      <td>0.677068</td>
-      <td>-0.696662</td>
-      <td>0.281755</td>
-      <td>22</td>
-      <td>0.000965</td>
-      <td>1.048244</td>
-      <td>1.198626</td>
-      <td>0.088845</td>
-      <td>0.675764</td>
-      <td>9</td>
-      <td>0.126408</td>
-      <td>1.37500</td>
-      <td>False</td>
-      <td>0.579187</td>
-      <td>11</td>
-      <td>0.512235</td>
-      <td>3</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>43.480333</td>
-      <td>38.855556</td>
-      <td>57222533120</td>
-      <td>0.011201</td>
-      <td>INFINEON TECHNOLOGIES AG</td>
-      <td>Germany</td>
-      <td>43.945</td>
-      <td>0.054343</td>
-      <td>-0.066490</td>
-      <td>0.164723</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>172</td>
-      <td>euro_stoxx_50</td>
-      <td>ENR.DE</td>
-      <td>2026-03-04</td>
-      <td>Industrials</td>
-      <td>-0.902738</td>
-      <td>-0.743338</td>
-      <td>-1.693212</td>
-      <td>-1.326075</td>
-      <td>-1.166341</td>
-      <td>46</td>
-      <td>1.645455</td>
-      <td>1.137007</td>
-      <td>1.474095</td>
-      <td>0.051850</td>
-      <td>2.541889</td>
-      <td>1</td>
-      <td>0.075269</td>
-      <td>1.80000</td>
-      <td>False</td>
-      <td>-0.123264</td>
-      <td>29</td>
-      <td>0.417428</td>
-      <td>4</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>155.675000</td>
-      <td>129.122000</td>
-      <td>139207262208</td>
-      <td>0.027249</td>
-      <td>Siemens Energy AG</td>
-      <td>Germany</td>
-      <td>162.750</td>
-      <td>0.047297</td>
-      <td>-0.039256</td>
-      <td>0.351744</td>
-      <td>EUR</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>149</td>
-      <td>euro_stoxx_50</td>
-      <td>ABI.BR</td>
-      <td>2026-03-04</td>
-      <td>Consumer Defensive</td>
-      <td>0.474084</td>
-      <td>0.844075</td>
-      <td>0.552739</td>
-      <td>-0.975005</td>
-      <td>0.223973</td>
-      <td>25</td>
-      <td>-0.029791</td>
-      <td>1.058542</td>
-      <td>1.142783</td>
-      <td>0.063063</td>
-      <td>0.651891</td>
-      <td>10</td>
-      <td>0.186198</td>
-      <td>1.69231</td>
-      <td>False</td>
-      <td>0.344755</td>
-      <td>17</td>
-      <td>0.406873</td>
-      <td>5</td>
-      <td>2026-03-04 22:40:25.489180</td>
-      <td>64.342000</td>
-      <td>57.869333</td>
-      <td>125566156800</td>
-      <td>0.024579</td>
-      <td>AB INBEV</td>
-      <td>Belgium</td>
-      <td>64.480</td>
-      <td>-0.017073</td>
-      <td>-0.040762</td>
-      <td>0.174499</td>
-      <td>EUR</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>_index</th>
+<th>symbol</th>
+<th>score_date</th>
+<th>sector</th>
+<th>pe_zscore</th>
+<th>pb_zscore</th>
+<th>ev_ebitda_zscore</th>
+<th>yield_zscore</th>
+<th>relative_value_score</th>
+<th>relative_value_rank</th>
+<th>relative_strength</th>
+<th>sma_50_ratio</th>
+<th>sma_200_ratio</th>
+<th>dist_from_52w_high</th>
+<th>momentum_score</th>
+<th>momentum_rank</th>
+<th>implied_upside</th>
+<th>recommendation_mean</th>
+<th>price_falling_analysts_bullish</th>
+<th>sentiment_score</th>
+<th>sentiment_rank</th>
+<th>composite_score</th>
+<th>composite_rank</th>
+<th>_scored_at</th>
+<th>sma_30_close</th>
+<th>sma_90_close</th>
+<th>market_cap</th>
+<th>index_weight</th>
+<th>short_name</th>
+<th>country</th>
+<th>current_price</th>
+<th>day_change_pct</th>
+<th>five_day_change_pct</th>
+<th>ytd_change_pct</th>
+<th>currency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>163</td>
+<td>euro_stoxx_50</td>
+<td>BNP.PA</td>
+<td>2026-03-04</td>
+<td>Financial Services</td>
+<td>0.913389</td>
+<td>1.261140</td>
+<td>NaN</td>
+<td>2.388962</td>
+<td>1.521163</td>
+<td>1</td>
+<td>0.016123</td>
+<td>1.009090</td>
+<td>1.130264</td>
+<td>0.082486</td>
+<td>0.477966</td>
+<td>16</td>
+<td>0.153157</td>
+<td>1.84211</td>
+<td>False</td>
+<td>0.052711</td>
+<td>25</td>
+<td>0.683947</td>
+<td>1</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>92.085000</td>
+<td>81.181889</td>
+<td>99751215104</td>
+<td>0.019525</td>
+<td>BNP PARIBAS ACT.A</td>
+<td>France</td>
+<td>89.320</td>
+<td>0.011437</td>
+<td>-0.073156</td>
+<td>0.105582</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>1</th>
+<td>168</td>
+<td>euro_stoxx_50</td>
+<td>DTE.DE</td>
+<td>2026-03-04</td>
+<td>Communication Services</td>
+<td>0.326587</td>
+<td>0.387463</td>
+<td>0.379532</td>
+<td>-0.127867</td>
+<td>0.241429</td>
+<td>24</td>
+<td>-0.205598</td>
+<td>1.120650</td>
+<td>1.112416</td>
+<td>0.055524</td>
+<td>0.685752</td>
+<td>8</td>
+<td>0.121212</td>
+<td>1.33333</td>
+<td>False</td>
+<td>0.617835</td>
+<td>10</td>
+<td>0.515005</td>
+<td>2</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>30.838000</td>
+<td>28.554556</td>
+<td>164294311936</td>
+<td>0.032159</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>Germany</td>
+<td>33.000</td>
+<td>0.011649</td>
+<td>-0.019608</td>
+<td>0.193059</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>2</th>
+<td>174</td>
+<td>euro_stoxx_50</td>
+<td>IFX.DE</td>
+<td>2026-03-04</td>
+<td>Technology</td>
+<td>0.509398</td>
+<td>0.637215</td>
+<td>0.677068</td>
+<td>-0.696662</td>
+<td>0.281755</td>
+<td>22</td>
+<td>0.000965</td>
+<td>1.048244</td>
+<td>1.198626</td>
+<td>0.088845</td>
+<td>0.675764</td>
+<td>9</td>
+<td>0.126408</td>
+<td>1.37500</td>
+<td>False</td>
+<td>0.579187</td>
+<td>11</td>
+<td>0.512235</td>
+<td>3</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>43.480333</td>
+<td>38.855556</td>
+<td>57222533120</td>
+<td>0.011201</td>
+<td>INFINEON TECHNOLOGIES AG</td>
+<td>Germany</td>
+<td>43.945</td>
+<td>0.054343</td>
+<td>-0.066490</td>
+<td>0.164723</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>3</th>
+<td>172</td>
+<td>euro_stoxx_50</td>
+<td>ENR.DE</td>
+<td>2026-03-04</td>
+<td>Industrials</td>
+<td>-0.902738</td>
+<td>-0.743338</td>
+<td>-1.693212</td>
+<td>-1.326075</td>
+<td>-1.166341</td>
+<td>46</td>
+<td>1.645455</td>
+<td>1.137007</td>
+<td>1.474095</td>
+<td>0.051850</td>
+<td>2.541889</td>
+<td>1</td>
+<td>0.075269</td>
+<td>1.80000</td>
+<td>False</td>
+<td>-0.123264</td>
+<td>29</td>
+<td>0.417428</td>
+<td>4</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>155.675000</td>
+<td>129.122000</td>
+<td>139207262208</td>
+<td>0.027249</td>
+<td>Siemens Energy AG</td>
+<td>Germany</td>
+<td>162.750</td>
+<td>0.047297</td>
+<td>-0.039256</td>
+<td>0.351744</td>
+<td>EUR</td>
+</tr>
+<tr>
+<th>4</th>
+<td>149</td>
+<td>euro_stoxx_50</td>
+<td>ABI.BR</td>
+<td>2026-03-04</td>
+<td>Consumer Defensive</td>
+<td>0.474084</td>
+<td>0.844075</td>
+<td>0.552739</td>
+<td>-0.975005</td>
+<td>0.223973</td>
+<td>25</td>
+<td>-0.029791</td>
+<td>1.058542</td>
+<td>1.142783</td>
+<td>0.063063</td>
+<td>0.651891</td>
+<td>10</td>
+<td>0.186198</td>
+<td>1.69231</td>
+<td>False</td>
+<td>0.344755</td>
+<td>17</td>
+<td>0.406873</td>
+<td>5</td>
+<td>2026-03-04 22:40:25.489180</td>
+<td>64.342000</td>
+<td>57.869333</td>
+<td>125566156800</td>
+<td>0.024579</td>
+<td>AB INBEV</td>
+<td>Belgium</td>
+<td>64.480</td>
+<td>-0.017073</td>
+<td>-0.040762</td>
+<td>0.174499</td>
+<td>EUR</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1718,22 +1843,22 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>total_rows</th>
-      <th>earliest</th>
-      <th>latest</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>156193</td>
-      <td>2021-01-04</td>
-      <td>2026-03-12</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>total_rows</th>
+<th>earliest</th>
+<th>latest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>156193</td>
+<td>2021-01-04</td>
+<td>2026-03-12</td>
+</tr>
+</tbody>
 </table>
 
 ### Export Results
@@ -1771,7 +1896,7 @@ print(f"JSON: {(TMP / 'asml.json').stat().st_size:,} bytes")
 print((TMP / "asml.json").read_text()[:300])
 ```
 
-    Parquet: 6,823 bytes
+Parquet: 6,823 bytes
     CSV: 33,410 bytes
     JSON: 278 bytes
     {"symbol":"ASML.AS","date":"2021-01-04","close":406.25}
@@ -1806,7 +1931,7 @@ arr = db.execute("SELECT close FROM eurostoxx50_ohlcv WHERE symbol = 'ASML.AS' L
 print(f"NumPy:  {arr['close']}")
 ```
 
-    Pandas: DataFrame, shape=(5, 3)
+Pandas: DataFrame, shape=(5, 3)
     Polars: DataFrame, shape=(5, 3)
     Arrow:  Table, rows=5
     Python: 5 rows, first=('ASML.AS', datetime.date(2021, 1, 4), 406.25)
@@ -1833,7 +1958,7 @@ if row_count:
 pdb.close()
 ```
 
-    Database file: 12,288 bytes
+Database file: 12,288 bytes
     After reopen: 66,355 rows
 
 ### Views & Macros
@@ -1854,70 +1979,70 @@ display(db.execute("SELECT * FROM v_stock_summary ORDER BY avg_close DESC LIMIT 
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>short_name</th>
-      <th>sector</th>
-      <th>country</th>
-      <th>days</th>
-      <th>avg_close</th>
-      <th>std_close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>HERMES INTL</td>
-      <td>Consumer Cyclical</td>
-      <td>France</td>
-      <td>1331</td>
-      <td>1761.56</td>
-      <td>481.32</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>ADYEN.AS</td>
-      <td>ADYEN</td>
-      <td>Technology</td>
-      <td>Netherlands</td>
-      <td>1331</td>
-      <td>1545.98</td>
-      <td>417.81</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>ASML HOLDING</td>
-      <td>Technology</td>
-      <td>Netherlands</td>
-      <td>1331</td>
-      <td>671.35</td>
-      <td>162.75</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>MC.PA</td>
-      <td>LVMH</td>
-      <td>Consumer Cyclical</td>
-      <td>France</td>
-      <td>1331</td>
-      <td>662.40</td>
-      <td>103.50</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>RHM.DE</td>
-      <td>RHEINMETALL AG</td>
-      <td>Industrials</td>
-      <td>Germany</td>
-      <td>1324</td>
-      <td>544.66</td>
-      <td>586.08</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>short_name</th>
+<th>sector</th>
+<th>country</th>
+<th>days</th>
+<th>avg_close</th>
+<th>std_close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>HERMES INTL</td>
+<td>Consumer Cyclical</td>
+<td>France</td>
+<td>1331</td>
+<td>1761.56</td>
+<td>481.32</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ADYEN.AS</td>
+<td>ADYEN</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>1331</td>
+<td>1545.98</td>
+<td>417.81</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>ASML HOLDING</td>
+<td>Technology</td>
+<td>Netherlands</td>
+<td>1331</td>
+<td>671.35</td>
+<td>162.75</td>
+</tr>
+<tr>
+<th>3</th>
+<td>MC.PA</td>
+<td>LVMH</td>
+<td>Consumer Cyclical</td>
+<td>France</td>
+<td>1331</td>
+<td>662.40</td>
+<td>103.50</td>
+</tr>
+<tr>
+<th>4</th>
+<td>RHM.DE</td>
+<td>RHEINMETALL AG</td>
+<td>Industrials</td>
+<td>Germany</td>
+<td>1324</td>
+<td>544.66</td>
+<td>586.08</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -1941,87 +2066,87 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>sma_7</th>
-      <th>sma_30</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>1181.43</td>
-      <td>1204.41</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2026-03-11</td>
-      <td>1198.8</td>
-      <td>1177.29</td>
-      <td>1204.45</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2026-03-10</td>
-      <td>1200.0</td>
-      <td>1178.94</td>
-      <td>1204.31</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2026-03-09</td>
-      <td>1147.6</td>
-      <td>1183.71</td>
-      <td>1204.89</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2026-03-06</td>
-      <td>1147.0</td>
-      <td>1195.83</td>
-      <td>1205.91</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2026-03-05</td>
-      <td>1186.0</td>
-      <td>1216.03</td>
-      <td>1206.95</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2026-03-04</td>
-      <td>1199.8</td>
-      <td>1227.09</td>
-      <td>1206.63</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2026-03-03</td>
-      <td>1161.8</td>
-      <td>1234.14</td>
-      <td>1205.13</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2026-03-02</td>
-      <td>1210.4</td>
-      <td>1247.54</td>
-      <td>1204.40</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2026-02-27</td>
-      <td>1233.4</td>
-      <td>1251.51</td>
-      <td>1201.40</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>sma_7</th>
+<th>sma_30</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>1181.43</td>
+<td>1204.41</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2026-03-11</td>
+<td>1198.8</td>
+<td>1177.29</td>
+<td>1204.45</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2026-03-10</td>
+<td>1200.0</td>
+<td>1178.94</td>
+<td>1204.31</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2026-03-09</td>
+<td>1147.6</td>
+<td>1183.71</td>
+<td>1204.89</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2026-03-06</td>
+<td>1147.0</td>
+<td>1195.83</td>
+<td>1205.91</td>
+</tr>
+<tr>
+<th>5</th>
+<td>2026-03-05</td>
+<td>1186.0</td>
+<td>1216.03</td>
+<td>1206.95</td>
+</tr>
+<tr>
+<th>6</th>
+<td>2026-03-04</td>
+<td>1199.8</td>
+<td>1227.09</td>
+<td>1206.63</td>
+</tr>
+<tr>
+<th>7</th>
+<td>2026-03-03</td>
+<td>1161.8</td>
+<td>1234.14</td>
+<td>1205.13</td>
+</tr>
+<tr>
+<th>8</th>
+<td>2026-03-02</td>
+<td>1210.4</td>
+<td>1247.54</td>
+<td>1204.40</td>
+</tr>
+<tr>
+<th>9</th>
+<td>2026-02-27</td>
+<td>1233.4</td>
+<td>1251.51</td>
+<td>1201.40</td>
+</tr>
+</tbody>
 </table>
 
 ### JSON Functions
@@ -2040,40 +2165,40 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>json_row</th>
-      <th>extracted</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>{"symbol":"ASML.AS","close":1190.8,"date":"2026-03-12"}</td>
-      <td>"ASML.AS"</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>{"symbol":"ASML.AS","close":1198.8,"date":"2026-03-11"}</td>
-      <td>"ASML.AS"</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>{"symbol":"ASML.AS","close":1200.0,"date":"2026-03-10"}</td>
-      <td>"ASML.AS"</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>{"symbol":"ASML.AS","close":1147.6,"date":"2026-03-09"}</td>
-      <td>"ASML.AS"</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>{"symbol":"ASML.AS","close":1147.0,"date":"2026-03-06"}</td>
-      <td>"ASML.AS"</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>json_row</th>
+<th>extracted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>{"symbol":"ASML.AS","close":1190.8,"date":"2026-03-12"}</td>
+<td>"ASML.AS"</td>
+</tr>
+<tr>
+<th>1</th>
+<td>{"symbol":"ASML.AS","close":1198.8,"date":"2026-03-11"}</td>
+<td>"ASML.AS"</td>
+</tr>
+<tr>
+<th>2</th>
+<td>{"symbol":"ASML.AS","close":1200.0,"date":"2026-03-10"}</td>
+<td>"ASML.AS"</td>
+</tr>
+<tr>
+<th>3</th>
+<td>{"symbol":"ASML.AS","close":1147.6,"date":"2026-03-09"}</td>
+<td>"ASML.AS"</td>
+</tr>
+<tr>
+<th>4</th>
+<td>{"symbol":"ASML.AS","close":1147.0,"date":"2026-03-06"}</td>
+<td>"ASML.AS"</td>
+</tr>
+</tbody>
 </table>
 
 ### String & Date Functions
@@ -2093,109 +2218,109 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>ticker</th>
-      <th>exchange</th>
-      <th>sym_len</th>
-      <th>upper_name</th>
-      <th>short</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>ASML.AS</td>
-      <td>ASML</td>
-      <td>AS</td>
-      <td>7</td>
-      <td>ASML HOLDING</td>
-      <td>ASML HOLDI</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>MC.PA</td>
-      <td>MC</td>
-      <td>PA</td>
-      <td>5</td>
-      <td>LVMH</td>
-      <td>LVMH</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>RMS.PA</td>
-      <td>RMS</td>
-      <td>PA</td>
-      <td>6</td>
-      <td>HERMES INTL</td>
-      <td>HERMES INT</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>OR.PA</td>
-      <td>OR</td>
-      <td>PA</td>
-      <td>5</td>
-      <td>L'OREAL</td>
-      <td>L'OREAL</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SAP.DE</td>
-      <td>SAP</td>
-      <td>DE</td>
-      <td>6</td>
-      <td>SAP SE</td>
-      <td>SAP SE</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>SIE.DE</td>
-      <td>SIE</td>
-      <td>DE</td>
-      <td>6</td>
-      <td>SIEMENS AG</td>
-      <td>SIEMENS AG</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>ITX.MC</td>
-      <td>ITX</td>
-      <td>MC</td>
-      <td>6</td>
-      <td>INDUSTRIA DE DISE...O TEXTIL S.</td>
-      <td>INDUSTRIA</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>DTE.DE</td>
-      <td>DTE</td>
-      <td>DE</td>
-      <td>6</td>
-      <td>DEUTSCHE TELEKOM AG</td>
-      <td>DEUTSCHE T</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>SAN.MC</td>
-      <td>SAN</td>
-      <td>MC</td>
-      <td>6</td>
-      <td>BANCO SANTANDER S.A.</td>
-      <td>BANCO SANT</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>SU.PA</td>
-      <td>SU</td>
-      <td>PA</td>
-      <td>5</td>
-      <td>SCHNEIDER ELECTRIC SE</td>
-      <td>SCHNEIDER</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>ticker</th>
+<th>exchange</th>
+<th>sym_len</th>
+<th>upper_name</th>
+<th>short</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ASML.AS</td>
+<td>ASML</td>
+<td>AS</td>
+<td>7</td>
+<td>ASML HOLDING</td>
+<td>ASML HOLDI</td>
+</tr>
+<tr>
+<th>1</th>
+<td>MC.PA</td>
+<td>MC</td>
+<td>PA</td>
+<td>5</td>
+<td>LVMH</td>
+<td>LVMH</td>
+</tr>
+<tr>
+<th>2</th>
+<td>RMS.PA</td>
+<td>RMS</td>
+<td>PA</td>
+<td>6</td>
+<td>HERMES INTL</td>
+<td>HERMES INT</td>
+</tr>
+<tr>
+<th>3</th>
+<td>OR.PA</td>
+<td>OR</td>
+<td>PA</td>
+<td>5</td>
+<td>L'OREAL</td>
+<td>L'OREAL</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SAP.DE</td>
+<td>SAP</td>
+<td>DE</td>
+<td>6</td>
+<td>SAP SE</td>
+<td>SAP SE</td>
+</tr>
+<tr>
+<th>5</th>
+<td>SIE.DE</td>
+<td>SIE</td>
+<td>DE</td>
+<td>6</td>
+<td>SIEMENS AG</td>
+<td>SIEMENS AG</td>
+</tr>
+<tr>
+<th>6</th>
+<td>ITX.MC</td>
+<td>ITX</td>
+<td>MC</td>
+<td>6</td>
+<td>INDUSTRIA DE DISE...O TEXTIL S.</td>
+<td>INDUSTRIA</td>
+</tr>
+<tr>
+<th>7</th>
+<td>DTE.DE</td>
+<td>DTE</td>
+<td>DE</td>
+<td>6</td>
+<td>DEUTSCHE TELEKOM AG</td>
+<td>DEUTSCHE T</td>
+</tr>
+<tr>
+<th>8</th>
+<td>SAN.MC</td>
+<td>SAN</td>
+<td>MC</td>
+<td>6</td>
+<td>BANCO SANTANDER S.A.</td>
+<td>BANCO SANT</td>
+</tr>
+<tr>
+<th>9</th>
+<td>SU.PA</td>
+<td>SU</td>
+<td>PA</td>
+<td>5</td>
+<td>SCHNEIDER ELECTRIC SE</td>
+<td>SCHNEIDER</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -2216,120 +2341,120 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>yr</th>
-      <th>mo</th>
-      <th>day_name</th>
-      <th>week</th>
-      <th>week_ago</th>
-      <th>days_since_start</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2026-03-12</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Thursday</td>
-      <td>11</td>
-      <td>2026-03-05</td>
-      <td>1893</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2026-03-11</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Wednesday</td>
-      <td>11</td>
-      <td>2026-03-04</td>
-      <td>1892</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2026-03-10</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Tuesday</td>
-      <td>11</td>
-      <td>2026-03-03</td>
-      <td>1891</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2026-03-09</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Monday</td>
-      <td>11</td>
-      <td>2026-03-02</td>
-      <td>1890</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2026-03-06</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Friday</td>
-      <td>10</td>
-      <td>2026-02-27</td>
-      <td>1887</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2026-03-05</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Thursday</td>
-      <td>10</td>
-      <td>2026-02-26</td>
-      <td>1886</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2026-03-04</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Wednesday</td>
-      <td>10</td>
-      <td>2026-02-25</td>
-      <td>1885</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2026-03-03</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Tuesday</td>
-      <td>10</td>
-      <td>2026-02-24</td>
-      <td>1884</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2026-03-02</td>
-      <td>2026</td>
-      <td>3</td>
-      <td>Monday</td>
-      <td>10</td>
-      <td>2026-02-23</td>
-      <td>1883</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2026-02-27</td>
-      <td>2026</td>
-      <td>2</td>
-      <td>Friday</td>
-      <td>9</td>
-      <td>2026-02-20</td>
-      <td>1880</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>yr</th>
+<th>mo</th>
+<th>day_name</th>
+<th>week</th>
+<th>week_ago</th>
+<th>days_since_start</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2026-03-12</td>
+<td>2026</td>
+<td>3</td>
+<td>Thursday</td>
+<td>11</td>
+<td>2026-03-05</td>
+<td>1893</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2026-03-11</td>
+<td>2026</td>
+<td>3</td>
+<td>Wednesday</td>
+<td>11</td>
+<td>2026-03-04</td>
+<td>1892</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2026-03-10</td>
+<td>2026</td>
+<td>3</td>
+<td>Tuesday</td>
+<td>11</td>
+<td>2026-03-03</td>
+<td>1891</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2026-03-09</td>
+<td>2026</td>
+<td>3</td>
+<td>Monday</td>
+<td>11</td>
+<td>2026-03-02</td>
+<td>1890</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2026-03-06</td>
+<td>2026</td>
+<td>3</td>
+<td>Friday</td>
+<td>10</td>
+<td>2026-02-27</td>
+<td>1887</td>
+</tr>
+<tr>
+<th>5</th>
+<td>2026-03-05</td>
+<td>2026</td>
+<td>3</td>
+<td>Thursday</td>
+<td>10</td>
+<td>2026-02-26</td>
+<td>1886</td>
+</tr>
+<tr>
+<th>6</th>
+<td>2026-03-04</td>
+<td>2026</td>
+<td>3</td>
+<td>Wednesday</td>
+<td>10</td>
+<td>2026-02-25</td>
+<td>1885</td>
+</tr>
+<tr>
+<th>7</th>
+<td>2026-03-03</td>
+<td>2026</td>
+<td>3</td>
+<td>Tuesday</td>
+<td>10</td>
+<td>2026-02-24</td>
+<td>1884</td>
+</tr>
+<tr>
+<th>8</th>
+<td>2026-03-02</td>
+<td>2026</td>
+<td>3</td>
+<td>Monday</td>
+<td>10</td>
+<td>2026-02-23</td>
+<td>1883</td>
+</tr>
+<tr>
+<th>9</th>
+<td>2026-02-27</td>
+<td>2026</td>
+<td>2</td>
+<td>Friday</td>
+<td>9</td>
+<td>2026-02-20</td>
+<td>1880</td>
+</tr>
+</tbody>
 </table>
 
 ### PIVOT & UNPIVOT
@@ -2350,120 +2475,120 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>sector</th>
-      <th>2021</th>
-      <th>2022</th>
-      <th>2023</th>
-      <th>2024</th>
-      <th>2025</th>
-      <th>2026</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Basic Materials</td>
-      <td>92.40</td>
-      <td>86.26</td>
-      <td>95.60</td>
-      <td>105.90</td>
-      <td>109.07</td>
-      <td>105.97</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Communication Services</td>
-      <td>16.67</td>
-      <td>18.06</td>
-      <td>20.68</td>
-      <td>24.50</td>
-      <td>30.82</td>
-      <td>30.17</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Consumer Cyclical</td>
-      <td>308.44</td>
-      <td>296.79</td>
-      <td>383.32</td>
-      <td>423.22</td>
-      <td>424.14</td>
-      <td>382.46</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Consumer Defensive</td>
-      <td>125.78</td>
-      <td>119.62</td>
-      <td>135.95</td>
-      <td>137.95</td>
-      <td>132.23</td>
-      <td>138.42</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Energy</td>
-      <td>25.07</td>
-      <td>31.99</td>
-      <td>36.07</td>
-      <td>37.97</td>
-      <td>34.42</td>
-      <td>40.00</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>Financial Services</td>
-      <td>64.25</td>
-      <td>66.01</td>
-      <td>79.92</td>
-      <td>99.19</td>
-      <td>125.30</td>
-      <td>127.33</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>Healthcare</td>
-      <td>136.39</td>
-      <td>157.01</td>
-      <td>177.90</td>
-      <td>189.54</td>
-      <td>247.28</td>
-      <td>265.22</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>Industrials</td>
-      <td>89.13</td>
-      <td>92.61</td>
-      <td>116.08</td>
-      <td>163.54</td>
-      <td>286.22</td>
-      <td>321.53</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>Technology</td>
-      <td>599.48</td>
-      <td>452.04</td>
-      <td>408.80</td>
-      <td>473.39</td>
-      <td>506.48</td>
-      <td>517.70</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>Utilities</td>
-      <td>9.17</td>
-      <td>7.89</td>
-      <td>8.54</td>
-      <td>9.44</td>
-      <td>11.79</td>
-      <td>14.28</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>sector</th>
+<th>2021</th>
+<th>2022</th>
+<th>2023</th>
+<th>2024</th>
+<th>2025</th>
+<th>2026</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Basic Materials</td>
+<td>92.40</td>
+<td>86.26</td>
+<td>95.60</td>
+<td>105.90</td>
+<td>109.07</td>
+<td>105.97</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Communication Services</td>
+<td>16.67</td>
+<td>18.06</td>
+<td>20.68</td>
+<td>24.50</td>
+<td>30.82</td>
+<td>30.17</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Consumer Cyclical</td>
+<td>308.44</td>
+<td>296.79</td>
+<td>383.32</td>
+<td>423.22</td>
+<td>424.14</td>
+<td>382.46</td>
+</tr>
+<tr>
+<th>3</th>
+<td>Consumer Defensive</td>
+<td>125.78</td>
+<td>119.62</td>
+<td>135.95</td>
+<td>137.95</td>
+<td>132.23</td>
+<td>138.42</td>
+</tr>
+<tr>
+<th>4</th>
+<td>Energy</td>
+<td>25.07</td>
+<td>31.99</td>
+<td>36.07</td>
+<td>37.97</td>
+<td>34.42</td>
+<td>40.00</td>
+</tr>
+<tr>
+<th>5</th>
+<td>Financial Services</td>
+<td>64.25</td>
+<td>66.01</td>
+<td>79.92</td>
+<td>99.19</td>
+<td>125.30</td>
+<td>127.33</td>
+</tr>
+<tr>
+<th>6</th>
+<td>Healthcare</td>
+<td>136.39</td>
+<td>157.01</td>
+<td>177.90</td>
+<td>189.54</td>
+<td>247.28</td>
+<td>265.22</td>
+</tr>
+<tr>
+<th>7</th>
+<td>Industrials</td>
+<td>89.13</td>
+<td>92.61</td>
+<td>116.08</td>
+<td>163.54</td>
+<td>286.22</td>
+<td>321.53</td>
+</tr>
+<tr>
+<th>8</th>
+<td>Technology</td>
+<td>599.48</td>
+<td>452.04</td>
+<td>408.80</td>
+<td>473.39</td>
+<td>506.48</td>
+<td>517.70</td>
+</tr>
+<tr>
+<th>9</th>
+<td>Utilities</td>
+<td>9.17</td>
+<td>7.89</td>
+<td>8.54</td>
+<td>9.44</td>
+<td>11.79</td>
+<td>14.28</td>
+</tr>
+</tbody>
 </table>
 
 ### Parameterized Queries
@@ -2485,197 +2610,196 @@ display(result)
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>66881</td>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1194.8</td>
-      <td>1202.2</td>
-      <td>1187.8</td>
-      <td>1190.8</td>
-      <td>1190.8</td>
-      <td>128223</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>66733</td>
-      <td>ASML.AS</td>
-      <td>2026-03-11</td>
-      <td>1188.4</td>
-      <td>1210.8</td>
-      <td>1174.0</td>
-      <td>1198.8</td>
-      <td>1198.8</td>
-      <td>562904</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>66732</td>
-      <td>ASML.AS</td>
-      <td>2026-03-10</td>
-      <td>1188.4</td>
-      <td>1208.4</td>
-      <td>1172.2</td>
-      <td>1200.0</td>
-      <td>1200.0</td>
-      <td>800815</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>66731</td>
-      <td>ASML.AS</td>
-      <td>2026-03-09</td>
-      <td>1072.0</td>
-      <td>1147.6</td>
-      <td>1060.2</td>
-      <td>1147.6</td>
-      <td>1147.6</td>
-      <td>689086</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>64732</td>
-      <td>ASML.AS</td>
-      <td>2026-03-06</td>
-      <td>1186.0</td>
-      <td>1192.6</td>
-      <td>1112.8</td>
-      <td>1147.0</td>
-      <td>1147.0</td>
-      <td>857271</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>66881</td>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.2</td>
+<td>1187.8</td>
+<td>1190.8</td>
+<td>1190.8</td>
+<td>128223</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>66733</td>
+<td>ASML.AS</td>
+<td>2026-03-11</td>
+<td>1188.4</td>
+<td>1210.8</td>
+<td>1174.0</td>
+<td>1198.8</td>
+<td>1198.8</td>
+<td>562904</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>66732</td>
+<td>ASML.AS</td>
+<td>2026-03-10</td>
+<td>1188.4</td>
+<td>1208.4</td>
+<td>1172.2</td>
+<td>1200.0</td>
+<td>1200.0</td>
+<td>800815</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>66731</td>
+<td>ASML.AS</td>
+<td>2026-03-09</td>
+<td>1072.0</td>
+<td>1147.6</td>
+<td>1060.2</td>
+<td>1147.6</td>
+<td>1147.6</td>
+<td>689086</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>4</th>
+<td>64732</td>
+<td>ASML.AS</td>
+<td>2026-03-06</td>
+<td>1186.0</td>
+<td>1192.6</td>
+<td>1112.8</td>
+<td>1147.0</td>
+<td>1147.0</td>
+<td>857271</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-      <th>is_filled</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>66885</td>
-      <td>SAP.DE</td>
-      <td>2026-03-12</td>
-      <td>163.00</td>
-      <td>166.74</td>
-      <td>162.80</td>
-      <td>166.52</td>
-      <td>166.52</td>
-      <td>806722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>66745</td>
-      <td>SAP.DE</td>
-      <td>2026-03-11</td>
-      <td>167.10</td>
-      <td>168.96</td>
-      <td>163.02</td>
-      <td>165.44</td>
-      <td>165.44</td>
-      <td>2953782</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>66744</td>
-      <td>SAP.DE</td>
-      <td>2026-03-10</td>
-      <td>171.60</td>
-      <td>172.88</td>
-      <td>166.46</td>
-      <td>169.60</td>
-      <td>169.60</td>
-      <td>3187246</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>66743</td>
-      <td>SAP.DE</td>
-      <td>2026-03-09</td>
-      <td>173.72</td>
-      <td>173.86</td>
-      <td>168.52</td>
-      <td>171.88</td>
-      <td>171.88</td>
-      <td>1990823</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>64740</td>
-      <td>SAP.DE</td>
-      <td>2026-03-06</td>
-      <td>173.66</td>
-      <td>175.10</td>
-      <td>170.24</td>
-      <td>172.74</td>
-      <td>172.74</td>
-      <td>3347221</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>False</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+<th>is_filled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>66885</td>
+<td>SAP.DE</td>
+<td>2026-03-12</td>
+<td>163.00</td>
+<td>166.74</td>
+<td>162.80</td>
+<td>166.52</td>
+<td>166.52</td>
+<td>806722</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>66745</td>
+<td>SAP.DE</td>
+<td>2026-03-11</td>
+<td>167.10</td>
+<td>168.96</td>
+<td>163.02</td>
+<td>165.44</td>
+<td>165.44</td>
+<td>2953782</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>66744</td>
+<td>SAP.DE</td>
+<td>2026-03-10</td>
+<td>171.60</td>
+<td>172.88</td>
+<td>166.46</td>
+<td>169.60</td>
+<td>169.60</td>
+<td>3187246</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>66743</td>
+<td>SAP.DE</td>
+<td>2026-03-09</td>
+<td>173.72</td>
+<td>173.86</td>
+<td>168.52</td>
+<td>171.88</td>
+<td>171.88</td>
+<td>1990823</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>4</th>
+<td>64740</td>
+<td>SAP.DE</td>
+<td>2026-03-06</td>
+<td>173.66</td>
+<td>175.10</td>
+<td>170.24</td>
+<td>172.74</td>
+<td>172.74</td>
+<td>3347221</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+</tbody>
 </table>
 
 ### Transactions & DDL
@@ -2705,64 +2829,63 @@ db.execute("DROP TABLE _test")
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>name</th>
-      <th>score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>alpha</td>
-      <td>0.9</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>beta</td>
-      <td>0.7</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3</td>
-      <td>gamma</td>
-      <td>0.5</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>name</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>alpha</td>
+<td>0.9</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>beta</td>
+<td>0.7</td>
+</tr>
+<tr>
+<th>2</th>
+<td>3</td>
+<td>gamma</td>
+<td>0.5</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>name</th>
-      <th>score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>alpha</td>
-      <td>0.95</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>beta</td>
-      <td>0.70</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>name</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>alpha</td>
+<td>0.95</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>beta</td>
+<td>0.70</td>
+</tr>
+</tbody>
 </table>
 
-    After rollback: 2 rows
+After rollback: 2 rows
 
-    <_duckdb.DuckDBPyConnection at 0x1e428aaf430>
+<_duckdb.DuckDBPyConnection at 0x1e428aaf430>
 
 ### Performance: DuckDB vs Pandas vs Polars
 
@@ -2808,7 +2931,7 @@ print(f"Pandas:  {t_pandas:.3f}s")
 print(f"Polars:  {t_polars:.3f}s")
 ```
 
-    DuckDB:  0.007s
+DuckDB:  0.007s
     Pandas:  0.011s
     Polars:  0.003s
 
@@ -2830,185 +2953,183 @@ display(db.execute("""
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>eurostoxx50_ohlcv</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>index_dim</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>scores_daily</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>v_stock_summary</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>eurostoxx50_ohlcv</td>
+</tr>
+<tr>
+<th>1</th>
+<td>index_dim</td>
+</tr>
+<tr>
+<th>2</th>
+<td>scores_daily</td>
+</tr>
+<tr>
+<th>3</th>
+<td>v_stock_summary</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>column_name</th>
-      <th>column_type</th>
-      <th>null</th>
-      <th>key</th>
-      <th>default</th>
-      <th>extra</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>id</td>
-      <td>BIGINT</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>symbol</td>
-      <td>VARCHAR</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>date</td>
-      <td>DATE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>open</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>high</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>low</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>close</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>adj_close</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>volume</td>
-      <td>BIGINT</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>dividends</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>stock_splits</td>
-      <td>DOUBLE</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>is_filled</td>
-      <td>BOOLEAN</td>
-      <td>YES</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>column_name</th>
+<th>column_type</th>
+<th>null</th>
+<th>key</th>
+<th>default</th>
+<th>extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>id</td>
+<td>BIGINT</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>1</th>
+<td>symbol</td>
+<td>VARCHAR</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>2</th>
+<td>date</td>
+<td>DATE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>3</th>
+<td>open</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>4</th>
+<td>high</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>5</th>
+<td>low</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>6</th>
+<td>close</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>7</th>
+<td>adj_close</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>8</th>
+<td>volume</td>
+<td>BIGINT</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>9</th>
+<td>dividends</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>10</th>
+<td>stock_splits</td>
+<td>DOUBLE</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+<tr>
+<th>11</th>
+<td>is_filled</td>
+<td>BOOLEAN</td>
+<td>YES</td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+</tr>
+</tbody>
 </table>
-
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>table_name</th>
-      <th>estimated_size</th>
-      <th>column_count</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>eurostoxx50_ohlcv</td>
-      <td>66355</td>
-      <td>12</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>scores_daily</td>
-      <td>466</td>
-      <td>36</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>index_dim</td>
-      <td>169</td>
-      <td>26</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>table_name</th>
+<th>estimated_size</th>
+<th>column_count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>eurostoxx50_ohlcv</td>
+<td>66355</td>
+<td>12</td>
+</tr>
+<tr>
+<th>1</th>
+<td>scores_daily</td>
+<td>466</td>
+<td>36</td>
+</tr>
+<tr>
+<th>2</th>
+<td>index_dim</td>
+<td>169</td>
+<td>26</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -3019,7 +3140,7 @@ db.execute("DROP MACRO IF EXISTS sma")
 print("DuckDB cleanup done")
 ```
 
-    DuckDB cleanup done
+DuckDB cleanup done
 
 ### DuckDB Summary
 
@@ -3054,6 +3175,7 @@ print("DuckDB cleanup done")
 | SQL dialect | Standard SQL | PostgreSQL-like |
 
 ---
+
 ## Part 2: SQL Server Integration
 
 Connect Pandas and Polars directly to SQL Server tables for reading, writing, and querying.
@@ -3120,7 +3242,7 @@ with pyodbc.connect(PYODBC_CONN) as conn:
 print("Connection OK")
 ```
 
-    Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236.2 (X64) 
+Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236.2 (X64)
     	Jan 22 20
     Connection OK
 
@@ -3168,103 +3290,103 @@ print(f"dtypes:\n{df.dtypes}")
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>_ingested_at</th>
-      <th>symbol</th>
-      <th>date</th>
-      <th>open</th>
-      <th>high</th>
-      <th>low</th>
-      <th>close</th>
-      <th>adj_close</th>
-      <th>volume</th>
-      <th>dividends</th>
-      <th>stock_splits</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>66728</td>
-      <td>2026-03-12 12:45:00.017366</td>
-      <td>ASML.AS</td>
-      <td>2026-03-12</td>
-      <td>1194.8</td>
-      <td>1202.20</td>
-      <td>1187.8</td>
-      <td>1190.80</td>
-      <td>1190.80</td>
-      <td>128223</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>66732</td>
-      <td>2026-03-12 12:45:00.017366</td>
-      <td>MC.PA</td>
-      <td>2026-03-12</td>
-      <td>495.3</td>
-      <td>497.40</td>
-      <td>491.6</td>
-      <td>494.35</td>
-      <td>494.35</td>
-      <td>171997</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>66736</td>
-      <td>2026-03-12 12:45:00.017366</td>
-      <td>RMS.PA</td>
-      <td>2026-03-12</td>
-      <td>1900.0</td>
-      <td>1918.50</td>
-      <td>1894.0</td>
-      <td>1906.00</td>
-      <td>1906.00</td>
-      <td>18681</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>66740</td>
-      <td>2026-03-12 12:45:00.017366</td>
-      <td>OR.PA</td>
-      <td>2026-03-12</td>
-      <td>361.1</td>
-      <td>362.30</td>
-      <td>357.8</td>
-      <td>360.80</td>
-      <td>360.80</td>
-      <td>82621</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>66744</td>
-      <td>2026-03-12 12:45:00.017366</td>
-      <td>SAP.DE</td>
-      <td>2026-03-12</td>
-      <td>163.0</td>
-      <td>166.74</td>
-      <td>162.8</td>
-      <td>166.52</td>
-      <td>166.52</td>
-      <td>806722</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>_ingested_at</th>
+<th>symbol</th>
+<th>date</th>
+<th>open</th>
+<th>high</th>
+<th>low</th>
+<th>close</th>
+<th>adj_close</th>
+<th>volume</th>
+<th>dividends</th>
+<th>stock_splits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>66728</td>
+<td>2026-03-12 12:45:00.017366</td>
+<td>ASML.AS</td>
+<td>2026-03-12</td>
+<td>1194.8</td>
+<td>1202.20</td>
+<td>1187.8</td>
+<td>1190.80</td>
+<td>1190.80</td>
+<td>128223</td>
+<td>0.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>1</th>
+<td>66732</td>
+<td>2026-03-12 12:45:00.017366</td>
+<td>MC.PA</td>
+<td>2026-03-12</td>
+<td>495.3</td>
+<td>497.40</td>
+<td>491.6</td>
+<td>494.35</td>
+<td>494.35</td>
+<td>171997</td>
+<td>0.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>66736</td>
+<td>2026-03-12 12:45:00.017366</td>
+<td>RMS.PA</td>
+<td>2026-03-12</td>
+<td>1900.0</td>
+<td>1918.50</td>
+<td>1894.0</td>
+<td>1906.00</td>
+<td>1906.00</td>
+<td>18681</td>
+<td>0.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>66740</td>
+<td>2026-03-12 12:45:00.017366</td>
+<td>OR.PA</td>
+<td>2026-03-12</td>
+<td>361.1</td>
+<td>362.30</td>
+<td>357.8</td>
+<td>360.80</td>
+<td>360.80</td>
+<td>82621</td>
+<td>0.0</td>
+<td>0.0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>66744</td>
+<td>2026-03-12 12:45:00.017366</td>
+<td>SAP.DE</td>
+<td>2026-03-12</td>
+<td>163.0</td>
+<td>166.74</td>
+<td>162.8</td>
+<td>166.52</td>
+<td>166.52</td>
+<td>806722</td>
+<td>0.0</td>
+<td>0.0</td>
+</tr>
+</tbody>
 </table>
 
-    dtypes:
+dtypes:
     id                       int64
     _ingested_at    datetime64[ns]
     symbol                  object
@@ -3292,25 +3414,25 @@ print(f"Shape: {df.shape}")
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>date</th>
-      <th>close</th>
-      <th>volume</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2026-03-12</td>
-      <td>1190.8</td>
-      <td>128223</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>date</th>
+<th>close</th>
+<th>volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2026-03-12</td>
+<td>1190.8</td>
+<td>128223</td>
+</tr>
+</tbody>
 </table>
 
-    Shape: (1, 3)
+Shape: (1, 3)
 
 ```python
 # Read entire table (shorthand)
@@ -3319,10 +3441,10 @@ print(f"Columns: \n{list(df.columns)}")
 print(f"\nShape: \n{df.shape}")
 ```
 
-    Columns: 
+Columns:
     ['id', '_index', '_ingested_at', 'symbol', 'long_name', 'short_name', 'sector', 'sector_key', 'industry', 'industry_key', 'country', 'city', 'website', 'long_business_summary', 'exchange', 'full_exchange_name', 'exchange_timezone_name', 'exchange_timezone_short', 'currency', 'financial_currency', 'quote_type', 'market', 'range_start', 'price_data_start']
-    
-    Shape: 
+
+Shape:
     (169, 24)
 
 #### Polars | pl.read_database()
@@ -3338,7 +3460,7 @@ print(f"Schema: {df.schema}")
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>_ingested_at</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr><tr><td>i64</td><td>datetime[μs]</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>66728</td><td>2026-03-12 12:45:00.017366</td><td>ASML.AS</td><td>2026-03-12</td><td>1194.8</td><td>1202.2</td><td>1187.8</td><td>1190.8</td><td>1190.8</td><td>128223</td><td>0.0</td><td>0.0</td></tr><tr><td>66732</td><td>2026-03-12 12:45:00.017366</td><td>MC.PA</td><td>2026-03-12</td><td>495.3</td><td>497.4</td><td>491.6</td><td>494.35</td><td>494.35</td><td>171997</td><td>0.0</td><td>0.0</td></tr><tr><td>66736</td><td>2026-03-12 12:45:00.017366</td><td>RMS.PA</td><td>2026-03-12</td><td>1900.0</td><td>1918.5</td><td>1894.0</td><td>1906.0</td><td>1906.0</td><td>18681</td><td>0.0</td><td>0.0</td></tr><tr><td>66740</td><td>2026-03-12 12:45:00.017366</td><td>OR.PA</td><td>2026-03-12</td><td>361.1</td><td>362.3</td><td>357.8</td><td>360.8</td><td>360.8</td><td>82621</td><td>0.0</td><td>0.0</td></tr><tr><td>66744</td><td>2026-03-12 12:45:00.017366</td><td>SAP.DE</td><td>2026-03-12</td><td>163.0</td><td>166.74</td><td>162.8</td><td>166.52</td><td>166.52</td><td>806722</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
 
-    Schema: Schema({'id': Int64, '_ingested_at': Datetime(time_unit='us', time_zone=None), 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64})
+Schema: Schema({'id': Int64, '_ingested_at': Datetime(time_unit='us', time_zone=None), 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64})
 
 ```python
 # Filtered query
@@ -3352,7 +3474,7 @@ print(f"Shape: {df.shape}")
 
 <div><!-- shape: (1, 4) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>ASML.AS</td><td>1190.8</td><td>128223</td></tr></tbody></table></div>
 
-    Shape: (1, 4)
+Shape: (1, 4)
 
 ```python
 # Polars with SQLAlchemy engine
@@ -3378,7 +3500,7 @@ for chunk in pd.read_sql("SELECT * FROM bronze.eurostoxx50_ohlcv", ENGINE, chunk
 print(f"Read {total:,} rows in chunks of 10,000")
 ```
 
-    Read 50 rows in chunks of 10,000
+Read 50 rows in chunks of 10,000
 
 #### Polars | Batch reading with OFFSET/FETCH
 
@@ -3394,7 +3516,7 @@ df = pl.read_database(
 print(f"First batch: {df.shape}")
 ```
 
-    First batch: (50, 12)
+First batch: (50, 12)
 
 ## Writing to SQL Server
 
@@ -3451,31 +3573,31 @@ print("Written to _test_pandas")
 display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
 ```
 
-    Written to _test_pandas
+Written to _test_pandas
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>score</th>
-      <th>date</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>TEST.XX</td>
-      <td>0.42</td>
-      <td>2024-01-01</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>TEST.YY</td>
-      <td>0.73</td>
-      <td>2024-01-02</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>score</th>
+<th>date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>TEST.XX</td>
+<td>0.42</td>
+<td>2024-01-01</td>
+</tr>
+<tr>
+<th>1</th>
+<td>TEST.YY</td>
+<td>0.73</td>
+<td>2024-01-02</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -3502,7 +3624,7 @@ with ENGINE.connect() as conn:
         print(f"  {row[0]:15s}: {row[1]}")
 ```
 
-    Written with explicit types
+Written with explicit types
       symbol         : nvarchar
       score          : float
       date           : date
@@ -3519,40 +3641,40 @@ display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>score</th>
-      <th>date</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>TEST.XX</td>
-      <td>0.42</td>
-      <td>2024-01-01</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>TEST.YY</td>
-      <td>0.73</td>
-      <td>2024-01-02</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>TEST.ZZ</td>
-      <td>0.55</td>
-      <td>2024-01-03</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>TEST.ZZ</td>
-      <td>0.55</td>
-      <td>2024-01-03</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>score</th>
+<th>date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>TEST.XX</td>
+<td>0.42</td>
+<td>2024-01-01</td>
+</tr>
+<tr>
+<th>1</th>
+<td>TEST.YY</td>
+<td>0.73</td>
+<td>2024-01-02</td>
+</tr>
+<tr>
+<th>2</th>
+<td>TEST.ZZ</td>
+<td>0.55</td>
+<td>2024-01-03</td>
+</tr>
+<tr>
+<th>3</th>
+<td>TEST.ZZ</td>
+<td>0.55</td>
+<td>2024-01-03</td>
+</tr>
+</tbody>
 </table>
 
 #### Polars | Write via Pandas bridge and pyodbc fast_executemany
@@ -3572,7 +3694,7 @@ print("Polars → Pandas → SQL Server")
 display(pl.read_database("SELECT * FROM dbo._test_polars", connection=ENGINE))
 ```
 
-    Polars → Pandas → SQL Server
+Polars → Pandas → SQL Server
 
 <div><!-- shape: (2, 3) --><table><thead><tr><th>symbol</th><th>score</th><th>date</th></tr><tr><td>str</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>PL_TEST.XX</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>PL_TEST.YY</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
 
@@ -3596,7 +3718,7 @@ print(f"Bulk inserted {len(rows)} rows")
 display(pl.read_database("SELECT * FROM dbo._test_bulk", connection=ENGINE))
 ```
 
-    Bulk inserted 2 rows
+Bulk inserted 2 rows
 
 <div><!-- shape: (2, 3) --><table><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>PL_TEST.XX</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>PL_TEST.YY</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
 
@@ -3621,28 +3743,28 @@ display(pd.read_sql("SELECT * FROM dbo._test_exec", ENGINE))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>id</th>
-      <th>name</th>
-      <th>value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>alpha</td>
-      <td>1.1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>beta</td>
-      <td>2.2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>id</th>
+<th>name</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>1</td>
+<td>alpha</td>
+<td>1.1</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2</td>
+<td>beta</td>
+<td>2.2</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -3662,7 +3784,7 @@ with pyodbc.connect(PYODBC_CONN) as conn:
     print(f"Tables ({len(tables)}): {tables[:10]}...")
 ```
 
-    Total rows: 50
+Total rows: 50
     Tables (27): ['_test_bulk', '_test_exec', '_test_pandas', '_test_pandas_typed', '_test_polars', 'dim_country', 'dim_index', 'eurostoxx50_ohlcv', 'eurostoxx50_ohlcv', 'index_dim']...
 
 ## Stored Procedures
@@ -3697,65 +3819,65 @@ display(df)
 #### Top 10 stocks by avg close (stored procedure)
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>symbol</th>
-      <th>avg_close</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>RMS.PA</td>
-      <td>1906.00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>RHM.DE</td>
-      <td>1551.50</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ASML.AS</td>
-      <td>1190.80</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ADYEN.AS</td>
-      <td>925.70</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>ARGX.BR</td>
-      <td>626.60</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>MUV2.DE</td>
-      <td>526.20</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>MC.PA</td>
-      <td>494.35</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>OR.PA</td>
-      <td>360.80</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ALV.DE</td>
-      <td>348.70</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>SAF.PA</td>
-      <td>315.40</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>symbol</th>
+<th>avg_close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>RMS.PA</td>
+<td>1906.00</td>
+</tr>
+<tr>
+<th>1</th>
+<td>RHM.DE</td>
+<td>1551.50</td>
+</tr>
+<tr>
+<th>2</th>
+<td>ASML.AS</td>
+<td>1190.80</td>
+</tr>
+<tr>
+<th>3</th>
+<td>ADYEN.AS</td>
+<td>925.70</td>
+</tr>
+<tr>
+<th>4</th>
+<td>ARGX.BR</td>
+<td>626.60</td>
+</tr>
+<tr>
+<th>5</th>
+<td>MUV2.DE</td>
+<td>526.20</td>
+</tr>
+<tr>
+<th>6</th>
+<td>MC.PA</td>
+<td>494.35</td>
+</tr>
+<tr>
+<th>7</th>
+<td>OR.PA</td>
+<td>360.80</td>
+</tr>
+<tr>
+<th>8</th>
+<td>ALV.DE</td>
+<td>348.70</td>
+</tr>
+<tr>
+<th>9</th>
+<td>SAF.PA</td>
+<td>315.40</td>
+</tr>
+</tbody>
 </table>
 
 ## Schema Inspection
@@ -3775,150 +3897,150 @@ display(pd.read_sql(query, ENGINE))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>TABLE_NAME</th>
-      <th>row_count</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>eurostoxx50_ohlcv</td>
-      <td>66355</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>stoxxusa50_ohlcv</td>
-      <td>65100</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>stoxxasia50_ohlcv</td>
-      <td>64045</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>trading_calendar</td>
-      <td>29335</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>oil20_ohlcv</td>
-      <td>24738</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>index_performance</td>
-      <td>5281</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>scores_daily</td>
-      <td>466</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>signals_daily</td>
-      <td>466</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>dim_country</td>
-      <td>212</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>signals_quarterly</td>
-      <td>177</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>scores_quarterly</td>
-      <td>170</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>index_dim</td>
-      <td>169</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>index_dim</td>
-      <td>169</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>signals_daily</td>
-      <td>169</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>signals_quarterly</td>
-      <td>169</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>eurostoxx50_ohlcv</td>
-      <td>50</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>stoxxusa50_ohlcv</td>
-      <td>50</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>stoxxasia50_ohlcv</td>
-      <td>50</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>pulse</td>
-      <td>40</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>pulse_tickers</td>
-      <td>40</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>oil20_ohlcv</td>
-      <td>19</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>dim_index</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>_test_pandas</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>_test_exec</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>_test_pandas_typed</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>_test_polars</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>_test_bulk</td>
-      <td>2</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>TABLE_NAME</th>
+<th>row_count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>eurostoxx50_ohlcv</td>
+<td>66355</td>
+</tr>
+<tr>
+<th>1</th>
+<td>stoxxusa50_ohlcv</td>
+<td>65100</td>
+</tr>
+<tr>
+<th>2</th>
+<td>stoxxasia50_ohlcv</td>
+<td>64045</td>
+</tr>
+<tr>
+<th>3</th>
+<td>trading_calendar</td>
+<td>29335</td>
+</tr>
+<tr>
+<th>4</th>
+<td>oil20_ohlcv</td>
+<td>24738</td>
+</tr>
+<tr>
+<th>5</th>
+<td>index_performance</td>
+<td>5281</td>
+</tr>
+<tr>
+<th>6</th>
+<td>scores_daily</td>
+<td>466</td>
+</tr>
+<tr>
+<th>7</th>
+<td>signals_daily</td>
+<td>466</td>
+</tr>
+<tr>
+<th>8</th>
+<td>dim_country</td>
+<td>212</td>
+</tr>
+<tr>
+<th>9</th>
+<td>signals_quarterly</td>
+<td>177</td>
+</tr>
+<tr>
+<th>10</th>
+<td>scores_quarterly</td>
+<td>170</td>
+</tr>
+<tr>
+<th>11</th>
+<td>index_dim</td>
+<td>169</td>
+</tr>
+<tr>
+<th>12</th>
+<td>index_dim</td>
+<td>169</td>
+</tr>
+<tr>
+<th>13</th>
+<td>signals_daily</td>
+<td>169</td>
+</tr>
+<tr>
+<th>14</th>
+<td>signals_quarterly</td>
+<td>169</td>
+</tr>
+<tr>
+<th>15</th>
+<td>eurostoxx50_ohlcv</td>
+<td>50</td>
+</tr>
+<tr>
+<th>16</th>
+<td>stoxxusa50_ohlcv</td>
+<td>50</td>
+</tr>
+<tr>
+<th>17</th>
+<td>stoxxasia50_ohlcv</td>
+<td>50</td>
+</tr>
+<tr>
+<th>18</th>
+<td>pulse</td>
+<td>40</td>
+</tr>
+<tr>
+<th>19</th>
+<td>pulse_tickers</td>
+<td>40</td>
+</tr>
+<tr>
+<th>20</th>
+<td>oil20_ohlcv</td>
+<td>19</td>
+</tr>
+<tr>
+<th>21</th>
+<td>dim_index</td>
+<td>4</td>
+</tr>
+<tr>
+<th>22</th>
+<td>_test_pandas</td>
+<td>4</td>
+</tr>
+<tr>
+<th>23</th>
+<td>_test_exec</td>
+<td>2</td>
+</tr>
+<tr>
+<th>24</th>
+<td>_test_pandas_typed</td>
+<td>2</td>
+</tr>
+<tr>
+<th>25</th>
+<td>_test_polars</td>
+<td>2</td>
+</tr>
+<tr>
+<th>26</th>
+<td>_test_bulk</td>
+<td>2</td>
+</tr>
+</tbody>
 </table>
 
 ```python
@@ -3938,114 +4060,114 @@ display(pd.read_sql(query, ENGINE))
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>COLUMN_NAME</th>
-      <th>DATA_TYPE</th>
-      <th>CHARACTER_MAXIMUM_LENGTH</th>
-      <th>IS_NULLABLE</th>
-      <th>COLUMN_DEFAULT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>id</td>
-      <td>int</td>
-      <td>NaN</td>
-      <td>NO</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>_ingested_at</td>
-      <td>datetime2</td>
-      <td>NaN</td>
-      <td>NO</td>
-      <td>(sysutcdatetime())</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>symbol</td>
-      <td>varchar</td>
-      <td>20.0</td>
-      <td>NO</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>date</td>
-      <td>date</td>
-      <td>NaN</td>
-      <td>NO</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>open</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>high</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>low</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>close</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>adj_close</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>volume</td>
-      <td>bigint</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>dividends</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>stock_splits</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td>YES</td>
-      <td>None</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th></th>
+<th>COLUMN_NAME</th>
+<th>DATA_TYPE</th>
+<th>CHARACTER_MAXIMUM_LENGTH</th>
+<th>IS_NULLABLE</th>
+<th>COLUMN_DEFAULT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>id</td>
+<td>int</td>
+<td>NaN</td>
+<td>NO</td>
+<td>None</td>
+</tr>
+<tr>
+<th>1</th>
+<td>_ingested_at</td>
+<td>datetime2</td>
+<td>NaN</td>
+<td>NO</td>
+<td>(sysutcdatetime())</td>
+</tr>
+<tr>
+<th>2</th>
+<td>symbol</td>
+<td>varchar</td>
+<td>20.0</td>
+<td>NO</td>
+<td>None</td>
+</tr>
+<tr>
+<th>3</th>
+<td>date</td>
+<td>date</td>
+<td>NaN</td>
+<td>NO</td>
+<td>None</td>
+</tr>
+<tr>
+<th>4</th>
+<td>open</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>5</th>
+<td>high</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>6</th>
+<td>low</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>7</th>
+<td>close</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>8</th>
+<td>adj_close</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>9</th>
+<td>volume</td>
+<td>bigint</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>10</th>
+<td>dividends</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+<tr>
+<th>11</th>
+<td>stock_splits</td>
+<td>float</td>
+<td>NaN</td>
+<td>YES</td>
+<td>None</td>
+</tr>
+</tbody>
 </table>
 
 ## Performance: SQLAlchemy vs pyodbc (Pandas vs Polars)
@@ -4074,7 +4196,7 @@ print(f"SQLAlchemy (Pandas): {t_sa:.2f}s — {df_sa.shape}")
 print(f"pyodbc     (Pandas): {t_py:.2f}s — {df_py.shape}")
 ```
 
-    SQLAlchemy (Polars): 0.00s — (50, 12)
+SQLAlchemy (Polars): 0.00s — (50, 12)
     SQLAlchemy (Pandas): 0.00s — (50, 12)
     pyodbc     (Pandas): 0.00s — (50, 12)
 
@@ -4089,7 +4211,7 @@ with ENGINE.begin() as conn:
 print("Test tables and procedures cleaned up")
 ```
 
-    Test tables and procedures cleaned up
+Test tables and procedures cleaned up
 
 ## Summary
 
@@ -4106,24 +4228,23 @@ print("Test tables and procedures cleaned up")
 | Stored procs | `pd.read_sql("EXEC sp_name", engine)` | `pl.read_database("EXEC sp_name", uri)` |
 | Speed | Moderate | Similar speed via SQLAlchemy/pyodbc |
 
-
 ---
 
-## When to use DataFrame-SQL interfaces
-
-- **Polars SQLContext** — when team members are SQL-fluent and the data is already in memory. Avoids learning the full Polars expression API for one-off queries.
-- **DuckDB** — when analytical queries require CTEs, window functions, or set operations that are more naturally expressed in SQL than in DataFrame expressions.
-- **SQLAlchemy + Pandas** — when reading from or writing to a relational database in a Python pipeline. The standard approach for database-backed ETL.
-- **pyodbc** — when you need cursor-level control: stored procedures with output parameters, bulk insert with `fast_executemany`, or non-standard SQL Server features.
-
-## When not to use (Limits)
-
-| Scenario | Why it fails | Better approach |
-|---|---|---|
-| Querying data larger than RAM via SQLContext/DuckDB | Both operate on in-memory DataFrames — no streaming or pagination by default | Push the query to the database server; use OFFSET/FETCH for batched reads |
-| High-concurrency transactional writes | DataFrames are batch-oriented — no row-level locking or transaction isolation | Use an ORM (SQLAlchemy with sessions) or database-native transactions |
-| Real-time CDC or streaming ingestion | DataFrame reads are snapshots — no change tracking or incremental loading | Use database CDC features, Debezium, or Kafka Connect |
-| Complex stored procedure orchestration | DataFrame tools execute stored procedures but don't manage dependencies or error handling across multiple procedures | Use a database-native workflow (SQL Agent, dbt, Airflow) |
+> [!example] Database Interface Fit
+>
+> > [!success] Applicability
+> >
+> > - **Polars SQLContext** — when team members are SQL-fluent and the data is already in memory. Avoids learning the full Polars expression API for one-off queries.
+> > - **DuckDB** — when analytical queries require CTEs, window functions, or set operations that are more naturally expressed in SQL than in DataFrame expressions.
+> > - **SQLAlchemy + Pandas** — when reading from or writing to a relational database in a Python pipeline. The standard approach for database-backed ETL.
+> > - **pyodbc** — when you need cursor-level control: stored procedures with output parameters, bulk insert with `fast_executemany`, or non-standard SQL Server features.
+>
+> > [!failure] Limitations
+> >
+> > - **Querying data larger than RAM via SQLContext/DuckDB** — Both operate on in-memory DataFrames — no streaming or pagination by default. Better approach: Push the query to the database server; use OFFSET/FETCH for batched reads
+> > - **High-concurrency transactional writes** — DataFrames are batch-oriented — no row-level locking or transaction isolation. Better approach: Use an ORM (SQLAlchemy with sessions) or database-native transactions
+> > - **Real-time CDC or streaming ingestion** — DataFrame reads are snapshots — no change tracking or incremental loading. Better approach: Use database CDC features, Debezium, or Kafka Connect
+> > - **Complex stored procedure orchestration** — DataFrame tools execute stored procedures but don't manage dependencies or error handling across multiple procedures. Better approach: Use a database-native workflow (SQL Agent, dbt, Airflow)
 
 ## Warnings
 
@@ -4162,4 +4283,3 @@ print("Test tables and procedures cleaned up")
 | `DataError: string or binary data would be truncated` | DataFrame string column exceeds the database column's `VARCHAR(N)` limit | Increase the column size in the database, or truncate strings before insert |
 | DuckDB query returns wrong types | DuckDB infers types independently from Polars/Pandas | Cast columns explicitly in the SQL query |
 | `read_sql()` returns empty DataFrame | Query returns no rows, or wrong database/schema targeted | Run the query directly in the database client to verify |
-

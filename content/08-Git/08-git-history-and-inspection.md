@@ -12,37 +12,270 @@ tags:
 >
 > --- **William Faulkner**, *Requiem for a Nun* (1951)
 
-Git records every change as an immutable snapshot in a directed acyclic graph (DAG). The inspection tools --- `git log`, `git diff`, `git blame`, `git show`, `git bisect`, and `git reflog` --- let you traverse that graph to answer operational questions: what changed, who changed it, when, why, and where a regression began. These are the commands you reach for during code review, debugging, incident response, and compliance audits.
+> [!abstract]- Summary
+>
+> Explains Git's inspection toolbox for tracing what changed, who changed it, and where regressions entered the history graph by combining `git log`, `git diff`, `git blame`, `git show`, `git reflog`, and `git bisect`.
+>
+> **History model and graph inspection**
+> - Defines commits, parents, DAG traversal, references, and reflog scope before using `git log` views to read branch topology, commit metadata, and integration history
+> - Distinguishes object identity from working-tree state so the note's commands answer investigation questions without mutating the repository unnecessarily
+>
+> **Comparing and attributing changes**
+> - Uses `git diff` for file, branch, and commit comparisons, `git show` for object inspection, and `git blame` for line-level authorship and context tracing
+> - Connects those tools to practical questions such as what changed, where it changed, who introduced it, and whether the current branch differs from the last reviewed baseline
+>
+> **Recovery-grade inspection workflows**
+> - Applies `git reflog` to rewritten or lost history, uses `git bisect` to isolate regressions efficiently, and explains how to inspect rebased or force-pushed branches after history changes
+> - Organizes the commands into repeatable investigation workflows for incidents, regressions, and audit questions
+>
+> **Operations and safety**
+> - Warnings: reading stale refs, blaming generated or reformatted lines naively, losing context after rewritten history, and running mutation commands when inspection alone is enough
+> - Recommendations: fetch before comparing to remotes, inspect with commit ranges deliberately, use bisect on reproducible tests only, and lean on reflog before assuming work is lost
+> - Troubleshooting: workflows for missing commits, misleading blame output, hard-to-read diffs, and regression hunting across rewritten history
 
-## Key Definitions
+> [!note]- Glossary
+>
+> **commit**
+> - An immutable snapshot of the entire repository at a point in time. Each commit stores a tree (directory structure), author, committer, timestamp, message, and one or more parent commit references.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **SHA (hash)**
+> - A 40-character hexadecimal string (SHA-1) that uniquely identifies a commit, tree, or blob object. Git commands accept short prefixes (7+ characters) when unambiguous.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **HEAD**
+> - A symbolic reference pointing to the currently checked-out commit. Usually points to a branch name, which in turn points to a commit SHA.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **ref**
+> - A human-readable name that resolves to a SHA. Branches (`main`), tags (`v1.0.0`), and `HEAD` are all refs.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **DAG (directed acyclic graph)**
+> - The data structure formed by commits and their parent pointers. Each commit points backward to its parent(s), creating a graph that can branch and merge but never cycle.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **range (`A..B`)**
+> - The set of commits reachable from B but not from A. Reads as "everything B has that A does not."
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **symmetric difference (`A...B`)**
+> - The set of commits reachable from either A or B, but not both. Shows what diverged on both sides since their common ancestor.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **merge base**
+> - The most recent common ancestor of two branches. Git computes it automatically when you use `...` (three-dot) notation.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **diff**
+> - A textual representation of the changes between two states --- working directory, staging area (index), commits, or branches.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **unified diff**
+> - The standard diff format showing removed lines (prefixed `-`, red) and added lines (prefixed `+`, green) with surrounding context lines.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **hunk**
+> - A contiguous block of changed lines within a unified diff, introduced by an `@@` header showing line numbers.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] Pointer semantics matter
+> >
+> > Git stores this as reference state rather than as a second copy of files. Many confusing behaviors come from moving refs while file contents stay the same.
+>
+> ---
+>
+> **blame**
+> - Line-by-line annotation of a file showing which commit last modified each line, along with the author and date.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **pickaxe (`-S`)**
+> - A `git log` filter that finds commits where the number of occurrences of a given string changed --- detecting when code was introduced or removed.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **reflog**
+> - A local-only log of every position HEAD (or a branch tip) has occupied. Records checkouts, commits, rebases, resets, and amends. Not shared via push/fetch.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!warning] History rewrite risk
+> >
+> > This changes or depends on rewritten history. Verify branch ownership and remote state before using the destructive variant of any related command.
+>
+> ---
+>
+> **bisect**
+> - A binary-search algorithm that finds the exact commit introducing a regression by iteratively halving the commit range between a known-good and known-bad state.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **patch (`-p`)**
+> - The full diff output appended to each commit in `git log -p`, showing exactly what changed in every file.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **staging area (index)**
+> - An intermediate state between the working directory and the next commit. `git add` moves changes into the index; `git commit` snapshots the index.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **working directory**
+> - The actual files on disk. Changes here are "unstaged" until added to the index.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **range-diff**
+> - A diff-of-diffs that compares two versions of a patch series (e.g., before and after a rebase), showing which commits were added, dropped, or modified between iterations.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **cherry**
+> - A Git command that compares patches by content (not SHA) to identify which commits from one branch have already been applied to another, accounting for cherry-picks.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!danger] Security boundary
+> >
+> > This term touches authentication, identity, or trust. Treat it as secret or policy material rather than as ordinary repository metadata.
+>
+> ---
+>
+> **mailmap**
+> - A `.mailmap` file in the repository root that maps alternate author names and emails to a canonical identity, so contribution counts and blame attribution are accurate across identity changes.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation read or change this part of Git's state directly, and misunderstanding it leads to the wrong command or the wrong safety assumption.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
+>
+> ---
+>
+> **partial clone**
+> - A clone created with `--filter=blob:none` that downloads all commits and trees but defers blob (file content) downloads until accessed. Preserves full commit history while reducing initial clone size.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Scale and workflow tradeoff
+> >
+> > This feature improves developer ergonomics or repository scale, but it adds assumptions that automation and teammates also need to understand.
+>
+> ---
+>
+> **shallow clone**
+> - A clone created with `--depth N` that contains only the last N commits. Breaks bisect, deep blame, and range-based inspection.
+> - It matters in this note because the workflows for history inspection, incident investigation, and regression isolation ask you to choose or interpret this operation deliberately instead of treating nearby Git commands as interchangeable.
+>
+> > [!info] Operational nuance
+> >
+> > Treat this as a concrete Git object, state, or workflow term rather than as a loose synonym. The commands in the note behave differently depending on this exact meaning.
 
-Every term used in this page is defined here. Refer back to this table when a term appears for the first time in a section.
-
-| Term | Definition |
-|---|---|
-| **commit** | An immutable snapshot of the entire repository at a point in time. Each commit stores a tree (directory structure), author, committer, timestamp, message, and one or more parent commit references. |
-| **SHA (hash)** | A 40-character hexadecimal string (SHA-1) that uniquely identifies a commit, tree, or blob object. Git commands accept short prefixes (7+ characters) when unambiguous. |
-| **HEAD** | A symbolic reference pointing to the currently checked-out commit. Usually points to a branch name, which in turn points to a commit SHA. |
-| **ref** | A human-readable name that resolves to a SHA. Branches (`main`), tags (`v1.0.0`), and `HEAD` are all refs. |
-| **DAG (directed acyclic graph)** | The data structure formed by commits and their parent pointers. Each commit points backward to its parent(s), creating a graph that can branch and merge but never cycle. |
-| **range (`A..B`)** | The set of commits reachable from B but not from A. Reads as "everything B has that A does not." |
-| **symmetric difference (`A...B`)** | The set of commits reachable from either A or B, but not both. Shows what diverged on both sides since their common ancestor. |
-| **merge base** | The most recent common ancestor of two branches. Git computes it automatically when you use `...` (three-dot) notation. |
-| **diff** | A textual representation of the changes between two states --- working directory, staging area (index), commits, or branches. |
-| **unified diff** | The standard diff format showing removed lines (prefixed `-`, red) and added lines (prefixed `+`, green) with surrounding context lines. |
-| **hunk** | A contiguous block of changed lines within a unified diff, introduced by an `@@` header showing line numbers. |
-| **blame** | Line-by-line annotation of a file showing which commit last modified each line, along with the author and date. |
-| **pickaxe (`-S`)** | A `git log` filter that finds commits where the number of occurrences of a given string changed --- detecting when code was introduced or removed. |
-| **reflog** | A local-only log of every position HEAD (or a branch tip) has occupied. Records checkouts, commits, rebases, resets, and amends. Not shared via push/fetch. |
-| **bisect** | A binary-search algorithm that finds the exact commit introducing a regression by iteratively halving the commit range between a known-good and known-bad state. |
-| **patch (`-p`)** | The full diff output appended to each commit in `git log -p`, showing exactly what changed in every file. |
-| **staging area (index)** | An intermediate state between the working directory and the next commit. `git add` moves changes into the index; `git commit` snapshots the index. |
-| **working directory** | The actual files on disk. Changes here are "unstaged" until added to the index. |
-| **range-diff** | A diff-of-diffs that compares two versions of a patch series (e.g., before and after a rebase), showing which commits were added, dropped, or modified between iterations. |
-| **cherry** | A Git command that compares patches by content (not SHA) to identify which commits from one branch have already been applied to another, accounting for cherry-picks. |
-| **mailmap** | A `.mailmap` file in the repository root that maps alternate author names and emails to a canonical identity, so contribution counts and blame attribution are accurate across identity changes. |
-| **partial clone** | A clone created with `--filter=blob:none` that downloads all commits and trees but defers blob (file content) downloads until accessed. Preserves full commit history while reducing initial clone size. |
-| **shallow clone** | A clone created with `--depth N` that contains only the last N commits. Breaks bisect, deep blame, and range-based inspection. |
+> [!example] Investigation Fit
+>
+> > [!success] Appropriate
+> >
+> > - Use this note for regression debugging, integration-history review, ownership audits, and reconstruction of what happened after resets, rebases, or force-pushes.
+> > - Use it when the goal is to inspect commits, ranges, blame, reflog, or bisect state without mutating the repository further.
+> > - Use it to turn vague questions like "what changed?" or "where did this break?" into a repeatable evidence-gathering workflow.
+>
+> > [!failure] Inappropriate
+> >
+> > - Do not treat inspection tooling as a substitute for branch protection, code review, or repository governance.
+> > - Do not rewrite broad history just to make inspection easier; use ranges, reflog, and bisect to investigate first.
+> > - Do not rely on blame or stale local refs without checking context, fetch state, and history-rewrite boundaries.
 
 ## Conceptual Model
 
@@ -164,28 +397,28 @@ git log --oneline --graph --all -25
 * 4baa9a6 chore: update .gitignore with data-engineering patterns, add sample data
 * 35c16f7 ops: set log level to INFO for production
 *   cbcd74c merge: resolve config.py conflict — keep reduced TTL and connection limit, add retry settings
-|\  
+|\
 | * eadb609 feat: update cache TTL and add retry settings
 * | 2eff67c fix: reduce cache TTL and add connection limit
-|/  
+|/
 | * 3fcc865 test: add data quality checks for pipeline
-|/  
+|/
 * 5644c58 feat: update settings for production (#8)
 | * 74d200e feat: update settings for production
-|/  
+|/
 * bb3d362 feat: add application settings
 * 7baef30 feat: add portfolio risk calculator (#7)
 * 2c8edad feat: add momentum signal module (#1)
 * 5b59a9b feat: add config validation utilities (#6)
 | * 85e45dd feat: add portfolio risk calculator
-|/  
+|/
 | * 48aa5ee feat: add config validation utilities
-|/  
+|/
 * 52aa8e6 feat: add Terraform VPC for data platform
 *   0c2ffa5 Merge pull request #4 from alp78/feat/airflow-scheduler
-|\  
+|\
 | * 349ecf7 feat: add daily OHLCV ingestion DAG
-|/  
+|/
 ```
 
 The `*` marks each commit. The `|`, `/`, and `\` characters draw the branch lines. Where two lines converge into a single `*`, a merge occurred (e.g., `cbcd74c`). Where a line diverges, a branch was created.
@@ -755,18 +988,18 @@ git blame src/pipeline.py
 
 ```text
 71f876ed (alp78 2026-04-12 15:35:30 +0200  1) """Stock data pipeline — daily ingestion and transformation."""
-71f876ed (alp78 2026-04-12 15:35:30 +0200  2) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  2)
 71f876ed (alp78 2026-04-12 15:35:30 +0200  3) import logging
-71f876ed (alp78 2026-04-12 15:35:30 +0200  4) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  4)
 71f876ed (alp78 2026-04-12 15:35:30 +0200  5) logger = logging.getLogger(__name__)
-71f876ed (alp78 2026-04-12 15:35:30 +0200  6) 
-71f876ed (alp78 2026-04-12 15:35:30 +0200  7) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200  6)
+71f876ed (alp78 2026-04-12 15:35:30 +0200  7)
 71f876ed (alp78 2026-04-12 15:35:30 +0200  8) def fetch_prices(ticker: str) -> dict:
 71f876ed (alp78 2026-04-12 15:35:30 +0200  9)     """Fetch end-of-day prices for a given ticker."""
 71f876ed (alp78 2026-04-12 15:35:30 +0200 10)     logger.info("Fetching prices for %s", ticker)
 71f876ed (alp78 2026-04-12 15:35:30 +0200 11)     return {"ticker": ticker, "close": 42.50, "volume": 1_200_000}
-71f876ed (alp78 2026-04-12 15:35:30 +0200 12) 
-71f876ed (alp78 2026-04-12 15:35:30 +0200 13) 
+71f876ed (alp78 2026-04-12 15:35:30 +0200 12)
+71f876ed (alp78 2026-04-12 15:35:30 +0200 13)
 3dfc084a (alp   2026-04-12 16:16:28 +0200 14) def transform(raw: dict[str, object]) -> dict[str, object]:
 71f876ed (alp78 2026-04-12 15:35:30 +0200 15)     """Normalize and validate raw price data."""
 71f876ed (alp78 2026-04-12 15:35:30 +0200 16)     return {
@@ -776,8 +1009,8 @@ git blame src/pipeline.py
 07a7f46e (alp78 2026-04-12 16:20:09 +0200 20)         "currency": raw.get("currency", "USD"),
 07a7f46e (alp78 2026-04-12 16:20:09 +0200 21)         "source": "yfinance",
 71f876ed (alp78 2026-04-12 15:35:30 +0200 22)     }
-2c8edad0 (alp   2026-04-12 17:45:59 +0200 23) 
-2c8edad0 (alp   2026-04-12 17:45:59 +0200 24) 
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 23)
+2c8edad0 (alp   2026-04-12 17:45:59 +0200 24)
 2c8edad0 (alp   2026-04-12 17:45:59 +0200 25) def validate(record: dict) -> bool:
 2c8edad0 (alp   2026-04-12 17:45:59 +0200 26)     """Validate a transformed record before loading."""
 2c8edad0 (alp   2026-04-12 17:45:59 +0200 27)     required = {"ticker", "close_price", "volume"}
@@ -1254,7 +1487,7 @@ git range-diff --creation-factor=100 35c16f7..demo/range-diff-v1 35c16f7..demo/r
 2:  36d4c1b = 2:  e685b34 feat: add sector weighting to ESG
 3:  008814a ! 3:  903013b feat: add governance bonus parameter
     @@ src/esg_adjustment.py
-      
+
       ADJUSTMENT_FACTOR = 1.05
       SECTOR_WEIGHT = 0.3
     -+GOVERNANCE_BONUS = 0.1
