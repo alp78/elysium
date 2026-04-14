@@ -14,131 +14,76 @@ status: complete
 
 # IAP Tunneling
 
-> [!quote]
+> [!quote] Zero Trust
+>
 > "Trust is a vulnerability. Zero Trust eliminates trust from digital systems because it provides no value to an organisation."
 >
 > — **John Kindervag** (creator of Zero Trust at Forrester)
 
 > [!abstract]- Summary
-> IAP (Identity-Aware Proxy) is Google Cloud's authenticated TCP proxy that gives secure access to private GCE VMs over HTTPS port 443 — no public IP, no VPN, no bastion host required.
 >
-> - **How IAP tunneling works** — HTTPS proxy model; traffic flows workstation → `gcloud` → IAP proxy → VM internal IP; VM sees only GCP-internal peer addresses (`35.235.240.0/20`), never your public IP
-> - **IAP tunnel commands** — `gcloud compute ssh --tunnel-through-iap` for interactive SSH; `gcloud compute start-iap-tunnel <vm> <remote-port> --local-host-port=127.0.0.1:<local-port>` for TCP port forwarding to SQL Server, PostgreSQL, Airflow, and other services
-> - **Required GCP configuration** — VPC firewall rule allowing TCP from `35.235.240.0/20` to the target port; `roles/iap.tunnelResourceAccessor` IAM role bound to the user or service account; Cloud IAP API enabled
-> - **Connecting clients through the tunnel** — SSMS connects to `127.0.0.1,<local-port>`; `sqlcmd`, pgAdmin, DBeaver, and `scp`/`rsync` work identically through the forwarded port
-> - **Debugging IAP tunnels** — four root causes in order: IAP API disabled, missing IAM role, missing firewall rule, VM stopped; add `--iap-tunnel-disable-connection-check` to suppress idle-timeout drops
-> - **Verifying the tunnel from both ends** — `Get-NetTCPConnection`/`ss -tlnp` on the local machine confirms the listener; `ss -tnp | grep :<port>` on the VM confirms active connections from the IAP proxy IP
-> - **IAP vs Cloud VPN vs bastion host** — IAP is free, zero-infrastructure, per-user IAM-scoped, and audited via Cloud Audit Logs; preferred for individual developer and on-demand access
-> - **Operations and safety** — tunnels are per-VM per-port; `start-iap-tunnel` blocks the terminal (use `&` or a separate window); IAP enforces a 10-minute idle timeout at the proxy layer; `0.0.0.0` binding exposes the tunnel on your local network
+> IAP TCP forwarding lets `gcloud` proxy SSH and arbitrary TCP traffic to private Compute Engine instances over HTTPS, without assigning a public IP to the VM.
+>
+> - Use `gcloud compute ssh --tunnel-through-iap` for SSH and `gcloud compute start-iap-tunnel` for database or web-service port forwarding.
+> - Enable the Cloud IAP API, allow ingress from `35.235.240.0/20`, and grant `roles/iap.tunnelResourceAccessor`; SSH users still need the VM's normal SSH access path.
+> - Prefer `127.0.0.1` or `localhost` for local binds and run one tunnel per VM and per remote port.
+> - IAP disconnects idle sessions after one hour; `--iap-tunnel-disable-connection-check` only skips the initial client-side connection check.
 
 > [!note]- Glossary
+>
 > **IAP (Identity-Aware Proxy)**
+> - Google Cloud service that authenticates and authorizes TCP access before traffic reaches a private resource.
+> - For TCP forwarding, `gcloud` wraps SSH or arbitrary TCP traffic in HTTPS on port `443`.
+> - Comparable managed access patterns are AWS Systems Manager Session Manager (`aws ssm start-session`) and Azure Bastion (`az network bastion tunnel`).
 >
-> - A GCP service that authenticates and authorizes every TCP connection based on the user's Google identity and IAM bindings, without requiring a VPN or public IP on the target VM.
-> - Wraps SSH and arbitrary TCP traffic in HTTPS (port 443), making it a zero-infrastructure replacement for VPNs and bastion hosts for developer and administrative access.
->
-> > [!info] Platform parity
-> >
-> > IAP is a GCP-only service. The AWS equivalent is SSM Session Manager (`aws ssm start-session`); the Azure equivalent is Azure Bastion (`az network bastion tunnel`). All three proxy authenticated TCP over HTTPS without exposing the VM publicly.
->
->  ---
+> ---
 >
 > **IAP tunnel**
+> - Ephemeral TCP channel from your local machine to one remote VM port, relayed by Google's IAP proxy.
+> - Tunnels do not create general network reachability. One tunnel targets one VM and one remote port.
+> - Idle tunnels disconnect after one hour. Clients that hold long-lived sessions must tolerate reconnects or send their own keepalives.
 >
-> - A secure, per-connection TCP channel from your local machine to a specific VM port, routed through Google's IAP proxy over HTTPS and authenticated with your `gcloud` OAuth token.
-> - Tunnels are ephemeral and must be started manually for each session; each tunnel targets exactly one VM and one port and does not provide persistent network access.
->
-> > [!warning] 10-minute idle timeout
-> >
-> > IAP closes tunnels after 10 minutes of inactivity at the proxy layer. Use `--iap-tunnel-disable-connection-check` or configure your SQL client to send TCP keepalives to avoid silent drops.
->
->  ---
+> ---
 >
 > **`gcloud compute start-iap-tunnel`**
+> - Opens a local listener and forwards that local port to a remote VM port through IAP.
+> - Use `--local-host-port=127.0.0.1:<port>` when a client must reconnect to a predictable local port.
+> - `--network` and `--region` apply only when the destination is specified by IP address or FQDN instead of a Compute Engine instance name.
 >
-> - The `gcloud` CLI command that opens an IAP TCP tunnel to a specific VM and port and exposes it as a local port on your machine.
-> - Syntax: `gcloud compute start-iap-tunnel <vm> <remote-port> --local-host-port=127.0.0.1:<local-port> --zone=<zone>`; the command runs in the foreground — use `&` or a separate terminal.
->
-> > [!info] Multiple simultaneous tunnels
-> >
-> > Each invocation is an independent process. Run one per service (SQL Server on 1435, Airflow on 8080, PostgreSQL on 5432) in separate terminals — they do not interfere.
->
->  ---
+> ---
 >
 > **`gcloud compute ssh --tunnel-through-iap`**
+> - Builds an IAP tunnel and launches SSH through it in one step.
+> - Tunnel authorization and SSH authorization are separate. The user needs IAP tunnel permission plus the VM's normal SSH access method, such as OS Login or metadata-managed SSH keys.
 >
-> - A convenience command that combines IAP tunnel creation and SSH session establishment into a single call, without requiring a public IP or a pre-existing tunnel.
-> - Use `--command="<cmd>"` to run a single non-interactive command on the VM and return its output locally; the SSH session closes when the command exits.
+> ---
 >
-> > [!info] Windows and Linux parity
-> >
-> > `gcloud compute ssh` works identically on Windows (PowerShell) and Linux (bash). On Windows, `gcloud` uses the bundled `ssh.exe` from the Cloud SDK; no additional SSH client installation is needed.
+> **`35.235.240.0/20`**
+> - IPv4 range from which IAP forwards traffic into your VPC.
+> - Firewall rules must allow this source range to the target port, such as `22` for SSH or `1433` for SQL Server.
+> - On dual-stack targets, Google Cloud also documents `2600:2d00:1:7::/64` for IPv6 IAP forwarding.
 >
->  ---
->
-> **`35.235.240.0/20` (IAP source IP range)**
->
-> - The CIDR block from which Google's IAP proxy forwards traffic to your VMs inside the VPC.
-> - Every IAP-enabled target VM must have a VPC ingress firewall rule allowing TCP from this range on the required port (e.g., 22 for SSH, 1433 for SQL Server); without it, IAP authentication succeeds but the TCP connection never reaches the VM.
->
-> > [!info] What the VM sees
-> >
-> > The VM's connection table (`ss -tnp`) shows peer IPs in `10.x.x.x` or `35.235.240.0/20` — never your workstation's public IP. IAP terminates the outer tunnel at its proxy; the VM sees only internal GCP traffic.
->
->  ---
+> ---
 >
 > **`roles/iap.tunnelResourceAccessor`**
+> - IAM role that grants `iap.tunnelInstances.accessViaIAP`.
+> - Required for IAP TCP forwarding, but not sufficient by itself for Linux SSH access.
 >
-> - The IAM role that grants `iap.tunnelInstances.accessTunnelResourceAccessor`, the permission required to open IAP tunnels to a resource.
-> - Must be bound to every user or service account that needs tunnel access; without it, `gcloud compute start-iap-tunnel` fails with a permissions error immediately — scope the binding to specific VMs rather than the entire project for least-privilege.
->
-> > [!info] Verify the binding
-> >
-> > `gcloud projects get-iam-policy <project> --format=json | grep -A 2 tunnelResourceAccessor` — an empty result means the role is not granted.
->
->  ---
->
-> **`--local-host-port`**
->
-> - The `start-iap-tunnel` flag that sets the local interface and port the tunnel listener binds to (e.g., `127.0.0.1:1435`).
-> - Use `127.0.0.1` to restrict access to the local machine only; use `0.0.0.0` only when another machine on your network must route through your tunnel — this exposes the tunnel on all interfaces.
->
-> > [!danger] Port collision risk
-> >
-> > Using the same local port as the remote port (e.g., `1433:1433`) fails with "address already in use" if a local SQL Server Express is installed. Always use a non-conflicting local port such as `1435`.
->
->  ---
+> ---
 >
 > **`--iap-tunnel-disable-connection-check`**
->
-> - A `gcloud compute start-iap-tunnel` flag that suppresses gcloud's own idle-connection polling, preventing the client-side check from interfering with keepalive behavior and reducing spurious tunnel drops.
-> - Does not disable the IAP proxy's own 10-minute idle timeout — it only removes the gcloud-layer check; pair with TCP keepalives in the SQL client for maximum tunnel stability.
->
-> > [!info] Safe for all tunnels
-> >
-> > Add this flag to any long-running tunnel (SSMS sessions, Airflow UI, overnight queries). It has no negative side effects and is safe to include in every tunnel command.
->
->  ---
->
-> **Cloud IAP API (`iap.googleapis.com`)**
->
-> - The GCP project-level API that must be enabled before any IAP tunnel can be opened; if disabled, `gcloud compute start-iap-tunnel` hangs indefinitely without error output.
-> - Enable with `gcloud services enable iap.googleapis.com`; verify with `gcloud services list --enabled | grep iap`.
->
-> > [!info] AWS parity — no API enablement step
-> >
-> > All GCP APIs must be explicitly enabled per project. The AWS equivalent (SSM Session Manager) requires the SSM Agent running on the instance and the `ssm:StartSession` IAM permission — no separate API enablement step is needed.
+> - Disables `gcloud`'s immediate connection test after the tunnel starts.
+> - Does not change IAP's one-hour inactivity timeout.
 
-Identity-Aware Proxy (IAP) is Google Cloud's way to let you access VMs that have no public IP. It's the backbone of secure GCE connectivity: your SSH sessions, database connections, and even SSMS all travel through IAP when configured correctly. Understanding how IAP tunneling works at the network level — not just "run this gcloud command" — is what separates debugging in minutes from debugging in hours.
+Identity-Aware Proxy (IAP) TCP forwarding is the Google Cloud access pattern for private Compute Engine instances when you want audited, per-user access without a public IP, a bastion host, or a full network-level VPN. The control plane is identity-aware; the data plane is still ordinary TCP once the proxy authorizes the connection.
 
 ## How IAP tunneling works
 
-IAP acts as an identity-aware reverse proxy sitting between your workstation and any GCP VM. All traffic flows over HTTPS on port 443 — no VPN, no public IP on the VM. The tunnel is authenticated with your Google identity and authorized by IAM before any byte of application data is forwarded.
+IAP sits between `gcloud` on your workstation and the target VM. `gcloud` authenticates with your Google identity, asks IAP to open a tunnel, and then relays the application protocol through that HTTPS session.
 
-### How IAP tunneling works | network path | workstation to VM
+### Network path from workstation to VM
 
-The diagram below shows the full path a SQL Server connection takes through an IAP tunnel, from SSMS on your workstation to the VM's port 1433.
-
+*This diagram shows a local SQL Server client reaching a private VM through an IAP tunnel.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
@@ -168,371 +113,586 @@ flowchart TD
     style GCLOUD fill:#1a1a2e,stroke:#e0af68,color:#fff
 ```
 
-**Step by step:**
-1. gcloud opens a local listener on 127.0.0.1:1435 (your machine)
-2. SSMS connects to 127.0.0.1:1435 (thinks it's a local SQL Server)
-3. gcloud wraps the TCP traffic in HTTPS and sends it to Google's IAP proxy
-4. IAP proxy verifies your Google identity (OAuth token from gcloud auth)
-5. IAP proxy checks IAM: does this user have `iap.tunnelInstances.accessTunnelResourceAccessor`?
-6. If authorized, IAP forwards the traffic over GCP's internal network to the VM
-7. Traffic arrives at the VM's port 1433 as a normal TCP connection from within the VPC
-8. SQL Server processes the query and sends the response back through the same tunnel
+1. `gcloud` opens a local listener such as `127.0.0.1:1435`.
+2. Your client connects to that local port.
+3. `gcloud` sends the TCP stream to IAP over HTTPS on port `443`.
+4. IAP checks your Google identity and IAM bindings.
+5. If the request is authorized, IAP forwards the traffic across Google's network to the VM's internal address and target port.
+6. The VM sees the connection as arriving from a Google-managed address, not from your workstation's public IP.
 
-> [!info] The VM never sees your real IP
->
-> The VM never sees your workstation's IP address. It sees a connection from an IP in the GCP internal network (typically in the `10.x.x.x` or `35.235.240.0/20` range). That's why `ss -tnp` on the VM shows a VPC-internal peer address, not your home IP.
+## Required configuration
 
-> [!tip] Related pattern
->
-> IAP requires the `iap.tunnelResourceAccessor` IAM role — see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/networking).
+Every successful IAP tunnel depends on three separate controls: the API must be enabled, IAM must authorize tunnel creation, and the VPC firewall must allow IAP's source range to reach the target port.
 
-## PowerShell / Linux | gcloud | IAP tunnel commands
+### Enable the Cloud IAP API
 
-`gcloud` is a cross-platform CLI that runs identically on Windows (PowerShell) and Linux (bash). All `gcloud compute ssh` and `gcloud compute start-iap-tunnel` commands in this section work on both platforms without modification. Behavioral differences between platforms are noted inline where they apply.
+If `iap.googleapis.com` is disabled, tunnel setup fails before the data plane is established.
 
-### PowerShell / Linux | gcloud compute ssh | SSH through IAP
+*This command lists enabled services and filters for the Cloud IAP API.*
+```bash
+gcloud services list --enabled | grep iap
+```
+```text
+iap.googleapis.com                    Cloud Identity-Aware Proxy API
+```
 
-`gcloud compute ssh` with `--tunnel-through-iap` is the standard way to reach a Compute Engine VM that has no public IP. Under the hood, it opens an IAP tunnel on an ephemeral port, then runs SSH through it — combining tunnel creation and interactive SSH session into a single command.
+*This command enables the Cloud IAP API for the active project.*
+```bash
+gcloud services enable iap.googleapis.com
+```
+```text
+The command returns an operation summary and exits after the API is enabled.
+```
 
-For additional SSH patterns including OS Login and metadata-managed keys, see [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer).
+### Grant tunnel access separately from SSH access
 
-#### Open an interactive SSH session through IAP
+Grant `roles/iap.tunnelResourceAccessor` to the user or service account that must create the tunnel. For Linux SSH, also grant whatever the VM uses for SSH authorization. On OS Login-enabled VMs that usually means OS Login roles; on metadata-key setups it means the user must be allowed to use the configured SSH keys.
 
-The command below opens a terminal session on `data-pipeline-sql` without requiring a public IP or a bastion host.
+*This command grants IAP tunnel access at the project level.*
+```bash
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member=user:USER_EMAIL \
+    --role=roles/iap.tunnelResourceAccessor
+```
+```text
+The binding is added to the project IAM policy. Scope the binding more narrowly when project-wide tunnel access is too broad.
+```
 
+### Allow IAP traffic through the firewall
+
+IAP authentication succeeds before the VM sees any packets. If the firewall blocks IAP's source range, the tunnel can open but the application connection still fails.
+
+*This command allows IAP to reach SSH on tagged instances.*
+```bash
+gcloud compute firewall-rules create allow-iap-ssh \
+    --direction=INGRESS \
+    --action=ALLOW \
+    --rules=tcp:22 \
+    --source-ranges=35.235.240.0/20 \
+    --target-tags=allow-iap-ssh
+```
+```text
+Adjust the TCP port and target tag for the service you are exposing through IAP.
+```
+
+### Understand connection boundaries
+
+- IAP tunnels are per VM and per remote port. SSH on port `22` and SQL Server on port `1433` require separate tunnels.
+- `gcloud compute start-iap-tunnel` stays in the foreground. Closing that process closes the tunnel.
+- The documented inactivity timeout is one hour. Plan for reconnects if an application stays idle longer than that.
+- Prefer a loopback bind such as `127.0.0.1:1435`. Use `0.0.0.0` only when another machine must reach your local listener through your workstation.
+- Avoid reusing `1433` locally if your workstation already runs SQL Server. Pick a free local port such as `1435`.
+
+## SSH and file transfer through IAP
+
+Use `gcloud compute ssh` when the end goal is an SSH session and `gcloud compute scp` when the end goal is file transfer. Both commands use the same IAP tunnel authorization path.
+
+### PowerShell
+
+#### Open an interactive SSH session
+
+**When to run:** You need an interactive shell on a private VM.
+**Trigger:** The instance has no external IP or access must stay on the IAP control path.
+**Context:** Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method.
+**Purpose:** Open SSH through IAP without managing a separate local tunnel.
+
+*This PowerShell command opens an interactive SSH session through IAP.*
+```powershell
+gcloud compute ssh data-pipeline-sql `
+    --zone=europe-west1-b `
+    --tunnel-through-iap
+```
+```text
+Interactive shell opens and stays attached to the remote session until you exit.
+```
+
+#### Run one remote command through IAP
+
+**When to run:** You need a quick state check instead of a full shell.
+**Trigger:** The task is a single command such as checking a service or reading a file.
+**Context:** Uses the same IAP and SSH authorization requirements as an interactive session.
+**Purpose:** Execute one command remotely and return the output locally.
+
+*This PowerShell command runs a remote service-status check through IAP.*
+```powershell
+gcloud compute ssh data-pipeline-sql `
+    --zone=europe-west1-b `
+    --tunnel-through-iap `
+    --command="systemctl status mssql-server"
+```
+```text
+The command prints the remote `systemctl` output locally and then closes the SSH session.
+```
+
+#### Copy a file through IAP
+
+**When to run:** You need to transfer a file to or from a private VM.
+**Trigger:** The instance is reachable only through IAP and the transfer fits the SSH/SCP path.
+**Context:** File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`.
+**Purpose:** Copy files without opening a public SSH endpoint.
+
+*This PowerShell command copies a local file to the VM through IAP-backed SCP.*
+```powershell
+gcloud compute scp `
+    --tunnel-through-iap `
+    --zone=europe-west1-b `
+    .\local_file `
+    data-pipeline-sql:~/
+```
+```text
+The copy runs over the temporary IAP-backed SSH tunnel and exits when the transfer completes.
+```
+
+### Linux
+
+#### Open an interactive SSH session
+
+**When to run:** You need an interactive shell on a private VM.
+**Trigger:** The instance has no external IP or access must stay on the IAP control path.
+**Context:** Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method.
+**Purpose:** Open SSH through IAP without managing a separate local tunnel.
+
+*This bash command opens an interactive SSH session through IAP.*
 ```bash
 gcloud compute ssh data-pipeline-sql \
     --zone=europe-west1-b \
     --tunnel-through-iap
 ```
+```text
+Interactive shell opens and stays attached to the remote session until you exit.
+```
 
-#### Run a single command on the VM through IAP
+#### Run one remote command through IAP
 
-Use `--command` to execute a non-interactive command and return the output locally. The SSH session closes as soon as the command exits.
+**When to run:** You need a quick state check instead of a full shell.
+**Trigger:** The task is a single command such as checking a service or reading a file.
+**Context:** Uses the same IAP and SSH authorization requirements as an interactive session.
+**Purpose:** Execute one command remotely and return the output locally.
 
+*This bash command runs a remote service-status check through IAP.*
 ```bash
 gcloud compute ssh data-pipeline-sql \
     --zone=europe-west1-b \
     --tunnel-through-iap \
     --command="systemctl status mssql-server"
 ```
+```text
+The command prints the remote `systemctl` output locally and then closes the SSH session.
+```
 
-| Flag | Syntax | Description |
-|---|---|---|
-| `--tunnel-through-iap` | `gcloud compute ssh VM --tunnel-through-iap` | Route the SSH connection through IAP instead of a public IP |
-| `--zone` | `--zone=europe-west1-b` | Zone where the VM resides |
-| `--command` | `--command="<cmd>"` | Run a single non-interactive command and return its output |
-| `--ssh-flag` | `--ssh-flag="-L 5432:localhost:5432"` | Pass additional raw flags to the underlying `ssh` binary |
-| `--project` | `--project=my-gcp-project` | Override the active gcloud project for this command |
+#### Copy a file through IAP
 
-### PowerShell / Linux | gcloud compute start-iap-tunnel | port forwarding
+**When to run:** You need to transfer a file to or from a private VM.
+**Trigger:** The instance is reachable only through IAP and the transfer fits the SSH/SCP path.
+**Context:** File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`.
+**Purpose:** Copy files without opening a public SSH endpoint.
 
-`start-iap-tunnel` creates a persistent TCP tunnel that maps a local port on your machine to a remote port on a VM. Unlike `gcloud compute ssh`, this does not open a shell — it holds the tunnel open so other applications (SSMS, pgAdmin, a browser) can connect through it. The tunnel process stays in the foreground and must remain running: closing the terminal closes the tunnel.
+*This bash command copies a local file to the VM through IAP-backed SCP.*
+```bash
+gcloud compute scp \
+    --tunnel-through-iap \
+    --zone=europe-west1-b \
+    ./local_file \
+    data-pipeline-sql:~/
+```
+```text
+The copy runs over the temporary IAP-backed SSH tunnel and exits when the transfer completes.
+```
 
-#### Forward a specific port through IAP
+## Forward arbitrary TCP ports through IAP
 
-The command below maps local port 1435 to port 1433 on `data-pipeline-sql`, so SSMS can connect to `127.0.0.1,1435` as if the SQL Server were local.
+Use `gcloud compute start-iap-tunnel` when the client is not SSH-aware, such as SSMS, pgAdmin, Airflow in a browser, or a local health-check tool.
 
+### PowerShell
+
+#### Forward a loopback port to SQL Server
+
+**When to run:** A local application must reach a service listening on a private VM.
+**Trigger:** The service is not SSH itself, but it is reachable over TCP once the tunnel exists.
+**Context:** The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure.
+**Purpose:** Expose a private VM port as a local listener on your workstation.
+
+*This PowerShell command forwards local port `1435` to SQL Server on port `1433` through IAP.*
+```powershell
+gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
+    --local-host-port=127.0.0.1:1435 `
+    --zone=europe-west1-b
+```
+```text
+The process stays in the foreground while the tunnel is active. Connect SSMS to `127.0.0.1,1435`.
+```
+
+#### Skip the immediate connection check
+
+**When to run:** You want `gcloud` to skip its initial connection probe after creating the tunnel.
+**Trigger:** The service is slow to accept the first connection or you want to remove the client-side startup check.
+**Context:** This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP.
+**Purpose:** Start the tunnel without the immediate post-bind connection test.
+
+*This PowerShell command starts the tunnel and disables the initial client-side connection check.*
+```powershell
+gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
+    --local-host-port=127.0.0.1:1435 `
+    --zone=europe-west1-b `
+    --iap-tunnel-disable-connection-check
+```
+```text
+Tunnel startup skips the immediate connection probe, but idle sessions still time out after one hour of inactivity.
+```
+
+#### Run multiple tunnels in parallel
+
+**When to run:** You need more than one private service at the same time.
+**Trigger:** A workflow uses multiple remote ports, such as SQL Server and an Airflow UI.
+**Context:** Each tunnel is a separate foreground process and owns its own local port.
+**Purpose:** Keep multiple service-specific tunnels open at once.
+
+*These PowerShell commands are meant to run in separate terminals, one tunnel per window.*
+```powershell
+# Terminal 1
+gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
+    --local-host-port=127.0.0.1:1435 `
+    --zone=europe-west1-b
+
+# Terminal 2
+gcloud compute start-iap-tunnel data-pipeline-airflow 8080 `
+    --local-host-port=127.0.0.1:8080 `
+    --zone=europe-west1-b
+```
+```text
+Each terminal keeps one tunnel process attached. Closing that terminal closes only its matching tunnel.
+```
+
+### Linux
+
+#### Forward a loopback port to SQL Server
+
+**When to run:** A local application must reach a service listening on a private VM.
+**Trigger:** The service is not SSH itself, but it is reachable over TCP once the tunnel exists.
+**Context:** The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure.
+**Purpose:** Expose a private VM port as a local listener on your workstation.
+
+*This bash command forwards local port `1435` to SQL Server on port `1433` through IAP.*
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --local-host-port=127.0.0.1:1435 \
     --zone=europe-west1-b
 ```
+```text
+The process stays in the foreground while the tunnel is active. Connect SSMS or `sqlcmd` to `127.0.0.1:1435`.
+```
 
-> [!tip] Port mapping explained
->
-> | Parameter | Meaning |
-> |---|---|
-> | `data-pipeline-sql` | VM instance name |
-> | `1433` | Remote port on the VM (SQL Server listens here) |
-> | `0.0.0.0` | Listen on all interfaces (needed if other machines connect to you) |
-> | `127.0.0.1` | Listen on loopback only (more secure, default if omitted) |
-> | `1435` | Local port on your machine (any free port — does not need to match remote) |
->
-> After running: connect via SSMS → `127.0.0.1,1435`. For sqlcmd through the tunnel, see [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage).
+#### Skip the immediate connection check
 
-> [!danger] IAP 10-minute idle timeout
->
-> IAP closes tunnels after 10 minutes of inactivity. If you open SSMS, run a query, then go to lunch, your connection is dead when you return — and any in-progress transaction is rolled back.
+**When to run:** You want `gcloud` to skip its initial connection probe after creating the tunnel.
+**Trigger:** The service is slow to accept the first connection or you want to remove the client-side startup check.
+**Context:** This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP.
+**Purpose:** Start the tunnel without the immediate post-bind connection test.
 
-> [!success] Mitigating the idle timeout
->
-> - Add `--iap-tunnel-disable-connection-check` to the tunnel command (see the dedicated step below).
-> - Configure your SQL client to send TCP keepalives (SSMS: Connection Properties → Connection Timeout = 0).
-> - For long-running queries: use `nohup` or `screen` on the VM instead of running them through the tunnel.
-
-> [!warning] `0.0.0.0` exposes the tunnel to your local network
->
-> Using `0.0.0.0` means any device on your local network can connect to your tunnel. On a corporate network or shared WiFi, this exposes your database tunnel to other machines.
-
-> [!success] Use `127.0.0.1` unless sharing is intentional
->
-> Use `--local-host-port=127.0.0.1:1435` unless you specifically need another machine to route through your tunnel.
-
-#### Disable idle connection check to prevent timeout drops
-
-The `--iap-tunnel-disable-connection-check` flag suppresses the idle-timeout mechanism at the gcloud layer, keeping the tunnel open even during periods of inactivity.
-
+*This bash command starts the tunnel and disables the initial client-side connection check.*
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --local-host-port=127.0.0.1:1435 \
     --zone=europe-west1-b \
     --iap-tunnel-disable-connection-check
 ```
+```text
+Tunnel startup skips the immediate connection probe, but idle sessions still time out after one hour of inactivity.
+```
 
-#### Run multiple tunnels simultaneously
+#### Run multiple tunnels in parallel
 
-Each `start-iap-tunnel` command is an independent process. Run as many as needed in separate terminals — they do not interfere with each other. A typical development session tunnels to two or three services at once.
+**When to run:** You need more than one private service at the same time.
+**Trigger:** A workflow uses multiple remote ports, such as SQL Server and an Airflow UI.
+**Context:** Each tunnel is a separate foreground process and owns its own local port.
+**Purpose:** Keep multiple service-specific tunnels open at once.
 
+*These bash commands are meant to run in separate terminals, one tunnel per window.*
 ```bash
-# Terminal 1: SQL Server
+# Terminal 1
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
-    --local-host-port=127.0.0.1:1435 --zone=europe-west1-b
-```
+    --local-host-port=127.0.0.1:1435 \
+    --zone=europe-west1-b
 
-```bash
-# Terminal 2: Airflow webserver
+# Terminal 2
 gcloud compute start-iap-tunnel data-pipeline-airflow 8080 \
-    --local-host-port=127.0.0.1:8080 --zone=europe-west1-b
+    --local-host-port=127.0.0.1:8080 \
+    --zone=europe-west1-b
+```
+```text
+Each terminal keeps one tunnel process attached. Closing that terminal closes only its matching tunnel.
 ```
 
-```bash
-# Terminal 3: PostgreSQL (Airflow metadata)
-gcloud compute start-iap-tunnel data-pipeline-airflow 5432 \
-    --local-host-port=127.0.0.1:5432 --zone=europe-west1-b
+## Troubleshoot common failures
+
+Work through control-plane checks first. Most failures happen before the target service sees any traffic.
+
+### PowerShell control-plane checks
+
+#### Check whether the Cloud IAP API is enabled
+
+**When to run:** `start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable.
+**Trigger:** The tunnel never stabilizes or the project was created recently.
+**Context:** API enablement is project-scoped.
+**Purpose:** Confirm that the project allows IAP TCP forwarding requests.
+
+*This PowerShell command lists enabled services and filters for the IAP API.*
+```powershell
+gcloud services list --enabled | Select-String 'iap'
 ```
-
-> [!tip] Port collision anti-pattern
->
-> If you use the same local port as the remote port (e.g., `1433:1433`) and you have a local SQL Server Express installed, the tunnel fails with "address already in use." Always pick a non-standard local port like `1435` for tunneled services.
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `--local-host-port` | `--local-host-port=127.0.0.1:1435` | Local interface and port to bind the tunnel listener |
-| `--zone` | `--zone=europe-west1-b` | Zone where the target VM resides |
-| `--iap-tunnel-disable-connection-check` | (flag only) | Disable idle-timeout connection checks to keep long-running tunnels alive |
-| `--project` | `--project=my-gcp-project` | Override the active gcloud project for this command |
-| `--network` | `--network=my-vpc` | Specify the VPC network when the project has multiple networks |
-
-## Debugging IAP tunnels
-
-When an IAP tunnel fails, the failure mode is usually one of four root causes: the IAP API is not enabled, the user lacks the required IAM permission, the firewall rule is missing or misconfigured, or the VM is stopped. Work through them in order — firewall is the most common.
-
-### Debugging IAP tunnels | symptom | `start-iap-tunnel` hangs without output
-
-When `start-iap-tunnel` hangs without printing anything, it is waiting for IAP to accept the connection. The four most common causes are listed below.
-
-#### Check whether the IAP API is enabled
-
-If the Cloud IAP API is disabled in the project, the tunnel command hangs indefinitely. The command below lists all enabled APIs and filters for `iap`.
-
-```bash
-gcloud services list --enabled | grep iap
-```
-
 ```text
 iap.googleapis.com                    Cloud Identity-Aware Proxy API
 ```
 
-An empty result means the API is disabled. Enable it with `gcloud services enable iap.googleapis.com`.
+#### Check whether the tunnel role is granted
 
-#### Check IAM permission for IAP tunnel access
+**When to run:** `gcloud` returns a permission error before the tunnel opens.
+**Trigger:** The caller recently changed identities, projects, or IAM bindings.
+**Context:** Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access.
+**Purpose:** Verify that the effective IAM policy contains the IAP tunnel role.
 
-The user or service account must have the `roles/iap.tunnelResourceAccessor` role (which grants `iap.tunnelInstances.accessTunnelResourceAccessor`) on the project or the specific tunnel resource.
-
-```bash
-gcloud projects get-iam-policy YOUR_PROJECT --format=json | \
-    grep -A 2 "tunnelResourceAccessor"
+*This PowerShell command inspects the project IAM policy for the IAP tunnel role.*
+```powershell
+gcloud projects get-iam-policy YOUR_PROJECT --format=json `
+| ConvertFrom-Json `
+| Select-Object -ExpandProperty bindings `
+| Where-Object { $_.role -eq 'roles/iap.tunnelResourceAccessor' }
 ```
-
 ```text
-      "role": "roles/iap.tunnelResourceAccessor"
+An empty result means no binding matched the IAP tunnel role in the returned policy.
 ```
 
-An empty result means the binding is missing. Add it in the IAM console or via `gcloud projects add-iam-policy-binding`.
+#### Check whether the firewall rule allows IAP traffic
 
-#### Check the firewall rule for IAP's source IP range
+**When to run:** The tunnel opens, but the application cannot connect.
+**Trigger:** IAM is correct and the VM exists, but the remote service still looks unreachable.
+**Context:** IAP forwards traffic from `35.235.240.0/20`.
+**Purpose:** Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
 
-IAP forwards traffic from the `35.235.240.0/20` CIDR block. If no firewall rule allows traffic from this range on the target port, the tunnel appears to open but the connection never reaches the VM.
-
-```bash
-gcloud compute firewall-rules list \
-    --format="table(name,sourceRanges,allowed)" | grep 35.235.240
+*This PowerShell command lists firewall rules and filters for the IAP IPv4 range.*
+```powershell
+gcloud compute firewall-rules list --format="table(name,sourceRanges,allowed)" `
+| Select-String '35.235.240.0/20'
 ```
-
 ```text
 allow-iap-ingress  35.235.240.0/20  tcp:22,tcp:1433
 ```
 
-An empty result means the firewall rule is missing. The rule must allow inbound TCP on the port you are tunneling (e.g., 22 for SSH, 1433 for SQL Server) from `35.235.240.0/20`.
-
 #### Check whether the VM is running
 
-The tunnel cannot reach a stopped VM. The command below returns the current power state of the instance.
+**When to run:** The target looks unreachable even though project-level configuration appears correct.
+**Trigger:** The instance may have been stopped manually or by automation.
+**Context:** Tunnel creation does not start a stopped VM.
+**Purpose:** Confirm the instance power state before debugging anything deeper.
 
-```bash
-gcloud compute instances describe data-pipeline-sql \
-    --zone=europe-west1-b --format="value(status)"
+*This PowerShell command returns the Compute Engine instance status.*
+```powershell
+gcloud compute instances describe data-pipeline-sql `
+    --zone=europe-west1-b `
+    --format="value(status)"
 ```
-
 ```text
 RUNNING
 ```
 
-If the output is `TERMINATED` or `STOPPED`, start the VM with `gcloud compute instances start data-pipeline-sql --zone=europe-west1-b`.
+### Linux control-plane checks
 
-### Debugging IAP tunnels | symptom | tunnel opens but connections fail
+#### Check whether the Cloud IAP API is enabled
 
-When the tunnel process starts successfully (no hang, no immediate error) but the application cannot connect, the tunnel is up but the service is not listening on the expected port inside the VM. SSH into the VM and verify directly.
+**When to run:** `start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable.
+**Trigger:** The tunnel never stabilizes or the project was created recently.
+**Context:** API enablement is project-scoped.
+**Purpose:** Confirm that the project allows IAP TCP forwarding requests.
 
-#### Verify the target service is listening on the expected port
+*This bash command lists enabled services and filters for the IAP API.*
+```bash
+gcloud services list --enabled | grep iap
+```
+```text
+iap.googleapis.com                    Cloud Identity-Aware Proxy API
+```
 
-The command below SSHes through IAP and checks which processes are listening on port 1433 inside the VM.
+#### Check whether the tunnel role is granted
 
+**When to run:** `gcloud` returns a permission error before the tunnel opens.
+**Trigger:** The caller recently changed identities, projects, or IAM bindings.
+**Context:** Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access.
+**Purpose:** Verify that the effective IAM policy contains the IAP tunnel role.
+
+*This bash command inspects the project IAM policy for the IAP tunnel role.*
+```bash
+gcloud projects get-iam-policy YOUR_PROJECT --format=json | \
+    grep -A 2 "roles/iap.tunnelResourceAccessor"
+```
+```text
+      "role": "roles/iap.tunnelResourceAccessor"
+```
+
+#### Check whether the firewall rule allows IAP traffic
+
+**When to run:** The tunnel opens, but the application cannot connect.
+**Trigger:** IAM is correct and the VM exists, but the remote service still looks unreachable.
+**Context:** IAP forwards traffic from `35.235.240.0/20`.
+**Purpose:** Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
+
+*This bash command lists firewall rules and filters for the IAP IPv4 range.*
+```bash
+gcloud compute firewall-rules list \
+    --format="table(name,sourceRanges,allowed)" | grep 35.235.240
+```
+```text
+allow-iap-ingress  35.235.240.0/20  tcp:22,tcp:1433
+```
+
+#### Check whether the VM is running
+
+**When to run:** The target looks unreachable even though project-level configuration appears correct.
+**Trigger:** The instance may have been stopped manually or by automation.
+**Context:** Tunnel creation does not start a stopped VM.
+**Purpose:** Confirm the instance power state before debugging anything deeper.
+
+*This bash command returns the Compute Engine instance status.*
+```bash
+gcloud compute instances describe data-pipeline-sql \
+    --zone=europe-west1-b \
+    --format="value(status)"
+```
+```text
+RUNNING
+```
+
+### Linux VM-side data-plane check
+
+#### Check whether the target service is listening on the expected port
+
+**When to run:** The tunnel is up, but the client still cannot complete the application connection.
+**Trigger:** Firewall, IAM, and instance-state checks already passed.
+**Context:** This command runs on the VM through IAP-backed SSH.
+**Purpose:** Confirm that the service is actually listening on the remote port you are tunneling.
+
+*This bash command opens an IAP-backed SSH session long enough to inspect listening sockets on the VM.*
 ```bash
 gcloud compute ssh data-pipeline-sql \
     --zone=europe-west1-b \
     --tunnel-through-iap \
     --command="ss -tlnp | grep 1433"
 ```
-
 ```text
 LISTEN 0 128 0.0.0.0:1433 0.0.0.0:* users:(("sqlservr",pid=1234,fd=67))
 ```
 
-An empty result means SQL Server is not listening on 1433 — check `systemctl status mssql-server` inside the VM.
+### Inactivity disconnects after an hour
 
-### Debugging IAP tunnels | symptom | tunnel drops after inactivity
+If a tunnel drops after a long idle period, treat that as normal IAP behavior before investigating anything more exotic.
 
-IAP enforces a 10-minute idle timeout at the proxy layer. The `--iap-tunnel-disable-connection-check` flag disables gcloud's own connection-check polling, which can interfere with the keepalive behavior. See the dedicated step in the commands section above.
+- IAP disconnects idle sessions after one hour.
+- `--iap-tunnel-disable-connection-check` does not change that timeout.
+- For database clients and browser sessions, plan for reconnects and use application-level keepalives when the client supports them.
+- For long-running work, run the process on the VM and use the tunnel only for control or inspection.
 
-## Verifying the IAP tunnel from both ends
+## Verify a live tunnel
 
-Verification should happen at both the local listener (your machine) and the VM's connection table, giving you a full picture of the tunnel's health from end to end.
+Once the tunnel starts, verify the local listener first and the remote connection path second.
 
-### Verifying IAP tunnels | PowerShell | local listener check
+### PowerShell local checks
 
-On Windows, PowerShell can inspect the local TCP listener and test connectivity to the tunnel port without any additional tools.
+#### Check the local listener
 
-#### Check the local tunnel listener port in PowerShell
+**When to run:** Immediately after `start-iap-tunnel` binds the local port.
+**Trigger:** You want to confirm that the local listener exists before testing the remote service.
+**Context:** The owning process is usually `gcloud.exe` or its Python wrapper from the Cloud SDK.
+**Purpose:** Verify that the expected local port is listening.
 
-This confirms gcloud has bound the local listener successfully. The owning process will be `gcloud.exe` or `python.exe` depending on your gcloud installation.
-
+*This PowerShell command shows the listening socket on the chosen local port.*
 ```powershell
-Get-NetTCPConnection -LocalPort 1435 -State Listen
+Get-NetTCPConnection -LocalPort 1435 -State Listen |
+    Select-Object LocalAddress, LocalPort, State, OwningProcess
 ```
-
 ```text
-LocalAddress  LocalPort RemoteAddress RemotePort State  OwningProcess
-0.0.0.0       1435      0.0.0.0       0          Listen 18432
+Look for a listening socket on the chosen port owned by `gcloud.exe` or the Cloud SDK Python wrapper. With a loopback bind, `LocalAddress` should usually be `127.0.0.1` or `::1`.
 ```
 
-#### Test connectivity to the local tunnel port in PowerShell
+#### Test local reachability
 
-`True` means the tunnel listener is reachable. `False` means the tunnel process died or the port is wrong.
+**When to run:** After the listener appears bound locally.
+**Trigger:** You want to distinguish a dead local tunnel from a remote service problem.
+**Context:** This verifies only the local listener, not the application protocol behind it.
+**Purpose:** Confirm that the workstation can reach the local tunnel port.
 
+*This PowerShell command tests whether the local tunnel listener is reachable.*
 ```powershell
 Test-NetConnection -ComputerName 127.0.0.1 -Port 1435 -InformationLevel Quiet
 ```
-
 ```text
 True
 ```
 
-### Verifying IAP tunnels | Linux | local listener check
+### Linux local checks
 
-On Linux, `ss` and `nc` serve the same verification purposes as the PowerShell cmdlets above.
+#### Check the local listener
 
-#### Check the local tunnel listener port in bash
+**When to run:** Immediately after `start-iap-tunnel` binds the local port.
+**Trigger:** You want to confirm that the local listener exists before testing the remote service.
+**Context:** The owning process is usually `gcloud` or the Cloud SDK Python wrapper.
+**Purpose:** Verify that the expected local port is listening.
 
+*This bash command shows the listening socket on the chosen local port.*
 ```bash
 ss -tlnp | grep 1435
 ```
-
 ```text
-LISTEN 0 128 0.0.0.0:1435 0.0.0.0:* users:(("gcloud",pid=5621,fd=3))
+Look for a listening socket on the chosen port owned by `gcloud`. With a loopback bind, the address should normally be `127.0.0.1:1435` or `[::1]:1435`.
 ```
 
-#### Test connectivity to the local tunnel port in bash
+#### Test local reachability
 
+**When to run:** After the listener appears bound locally.
+**Trigger:** You want to distinguish a dead local tunnel from a remote service problem.
+**Context:** This verifies only the local listener, not the application protocol behind it.
+**Purpose:** Confirm that the workstation can reach the local tunnel port.
+
+*This bash command tests whether the local tunnel listener is reachable.*
 ```bash
 nc -zv 127.0.0.1 1435
 ```
-
 ```text
 Connection to 127.0.0.1 1435 port [tcp/*] succeeded!
 ```
 
-### Verifying IAP tunnels | Linux | VM-side connection check
+### Linux VM-side checks
 
-Run on the VM (via `gcloud compute ssh --tunnel-through-iap`) to inspect what is connected to the target port from IAP's internal IP range.
+#### Check active connections on the target port
 
-#### Check active connections on the VM's target port
+**When to run:** The local tunnel exists and the application has already tried to connect.
+**Trigger:** You need to confirm whether traffic is reaching the VM.
+**Context:** Run this on the VM through `gcloud compute ssh --tunnel-through-iap`.
+**Purpose:** Confirm that the target port shows established connections from Google's internal forwarding path.
 
+*This bash command inspects established connections on the VM's target port.*
 ```bash
 ss -tnp | grep :1433
 ```
-
 ```text
 ESTAB  0  0  10.0.0.3:1433  10.0.0.24:56434
 ESTAB  0  0  10.0.0.3:1433  10.0.0.24:26733
 ```
 
-`10.0.0.3` is the VM's internal IP. `10.0.0.24` is the IAP proxy's internal IP within GCP's VPC — not your workstation's public IP. Each `ESTAB` line represents one active connection (for example, two SSMS query windows). You will never see your workstation's public IP here: IAP terminates the tunnel at its proxy and the VM only sees internal GCP traffic.
+The remote peer is a Google-managed address inside the VPC, not your workstation's public IP. That is the expected result for IAP TCP forwarding.
 
-## IAP vs Cloud VPN vs bastion host
+## Choose between IAP, Cloud VPN, and a bastion host
 
-Three patterns exist for reaching private VMs in GCP. The right choice depends on the number of users, the number of services, and whether infrastructure cost is a concern.
+Use IAP when you need per-user access to a small number of private services and do not want to expose or manage additional network entry points. Use Cloud VPN when the requirement is network-level connectivity between sites or environments. Use a bastion host only when a workload cannot use IAP or a legacy process still depends on a jump box.
 
-> [!tip] Choosing the right access pattern
->
-> | Approach | Setup Complexity | Cost | Security | Use Case |
-> |----------|-----------------|------|----------|----------|
-> | **IAP Tunnel** | Low (just gcloud) | Free | High (Google-managed auth, per-user IAM) | Individual developer access, on-demand |
-> | **Cloud VPN** | Medium (Terraform) | ~$35/month per tunnel | Medium (network-level, all-or-nothing) | Site-to-site, when many services need access |
-> | **Bastion Host** | Medium (extra VM) | VM cost (~$25/month) | Medium (single point of entry) | Legacy setups, when IAP isn't available |
->
-> For a small team accessing a few VMs, IAP is always the right choice. Zero infrastructure to maintain, zero cost, and per-user audit logging via Cloud Audit Logs.
-
-
-
-## Warnings
-
-> [!danger] IAP tunnel requires a VPC firewall rule for the IAP IP range
->
-> Even with correct IAM permissions, tunnels fail if the VPC firewall does not allow TCP from `35.235.240.0/20` to the target VM port. This is the most common IAP setup failure.
-
-> [!warning] IAP tunnels are per-connection, not per-network
->
-> Each tunnel targets one VM and one port. To access multiple services, you need multiple tunnels running simultaneously. This is by design for security (least-privilege access).
-
-> [!warning] Tunnel commands block the terminal
->
-> `gcloud compute start-iap-tunnel` runs in the foreground. Use `&` to background it, or run in a separate terminal. Remember to close tunnels when done.
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| SSH to a private VM | `gcloud compute ssh <vm> --zone=<zone> --tunnel-through-iap`. |
-| SQL Server access | `gcloud compute start-iap-tunnel <vm> 1433 --local-host-port=localhost:1433 --zone=<zone>`. Connect SSMS to `localhost,1433`. |
-| File transfer to private VM | `gcloud compute scp --tunnel-through-iap --zone=<zone> local_file <vm>:~/`. |
-| Required firewall rule | `gcloud compute firewall-rules create allow-iap --direction=INGRESS --action=ALLOW --rules=tcp:<port> --source-ranges=35.235.240.0/20 --target-tags=<tag>`. |
-| Required IAM role | `gcloud projects add-iam-policy-binding <project> --member=user:<email> --role=roles/iap.tunnelResourceAccessor`. |
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "Permission denied" when starting tunnel | Missing `roles/iap.tunnelResourceAccessor` IAM role. | Grant the role to the user or service account. |
-| Tunnel starts but connection times out | VPC firewall rule missing for IAP IP range `35.235.240.0/20`. | Create a firewall rule allowing TCP from `35.235.240.0/20` to the target port. |
-| "Could not fetch resource" error | Wrong VM name, wrong zone, or VM is stopped. | Verify with `gcloud compute instances list`. Start the VM if stopped. |
-| SSMS cannot connect through tunnel | Tunnel is running but SSMS is connecting to the wrong port, or SQL Server is not listening. | Verify tunnel local port matches SSMS connection string. Check `ss -tlnp` on the VM. |
-| Tunnel drops after a period of inactivity | IAP has an idle timeout (default varies). | Keep the connection active with periodic traffic, or restart the tunnel when needed. |
+| Approach | Access scope | Infrastructure to manage | Best fit |
+|---|---|---|---|
+| **IAP tunnel** | Per user, per resource, per connection | None beyond IAM, firewall, and API enablement | Operator access to private VMs and individual service ports |
+| **Cloud VPN** | Network-level connectivity | VPN gateway, routing, and shared network policy | Site-to-site or many-service connectivity |
+| **Bastion host** | SSH or port forwarding through an extra VM | Bastion VM, patching, keys, and hardening | Legacy access paths that cannot use IAP |
 
 ## Cross-references
-- [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — Where IAP tunnels fit in the overall connection pattern framework
-- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — IAP firewall rule for `35.235.240.0/20` on port 22
-- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — diagnose IAP tunnel failures step by step
-- [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) — verify IAP connections visible on the VM side
-- [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — full guide: IAP + SQL Server, Airflow, BigQuery
+
+- [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) - Where IAP tunnels fit in the overall connection pattern framework
+- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) - Firewall design patterns for ingress rules such as `35.235.240.0/20`
+- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) - Stepwise diagnosis for failed TCP paths
+- [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) - Inspect listening sockets and active connections on Linux
+- [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) - Broader access patterns for GCP-managed services and private hosts

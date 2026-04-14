@@ -214,6 +214,11 @@ Python strings are sequences of Unicode code points. Single quotes and double qu
 
 `str` is Python's only text type — there is no separate `char` type. A single character is simply a string of length 1. Single quotes (`'...'`) and double quotes (`"..."`) produce identical `str` objects. Choose whichever avoids internal escaping.
 
+**When to run:** Use this when literal syntax or quote choice is the actual question.
+**Trigger:** Reach for it when embedded quotes or escapes make the spelling unclear.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show that single-quoted and double-quoted literals produce equal `str` values.
+
 *This example imports the modules used later in the note and declares equivalent single-quoted and double-quoted strings.*
 
 ```python
@@ -238,6 +243,11 @@ True
 #### Create multiline and raw strings
 
 Triple-quoted strings (`"""..."""` or `'''...'''`) preserve embedded newlines. Raw strings (`r"..."`) treat backslashes as literal characters — essential for regex patterns and Windows file paths. Both can be combined (`r"""..."""`).
+
+**When to run:** Use this when you need multiline text or preserved backslashes.
+**Trigger:** Reach for it when writing regex patterns, Windows paths, or doc-like literals.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show newline preservation and raw-string escape handling.
 
 *This example creates triple-quoted multiline strings and raw strings, then prints their rendered values.*
 
@@ -276,6 +286,11 @@ Methods for converting other types to strings, assembling strings from parts, an
 
 `str()` calls the object's `__str__` method (or `__repr__` as fallback) to produce a human-readable string representation. Unlike C#'s `ToString()`, `str(None)` returns the string `"None"` rather than throwing.
 
+**When to run:** Use this when non-string values must cross into a text boundary.
+**Trigger:** Reach for it when numbers, booleans, containers, or `None` need display form.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the default `str()` representations for common Python values.
+
 *This example converts common Python values to strings and prints their quoted representations.*
 
 ```python
@@ -298,6 +313,11 @@ print(repr(str(None)))
 
 The `*` operator repeats a string *n* times — a feature C# lacks. The `+` operator concatenates strings. The compiler does not optimize `+` in loops, so reserve it for small fixed concatenations.
 
+**When to run:** Use this when assembling a few fixed fragments or repeating a token.
+**Trigger:** Reach for it when literal repetition is simpler than a loop or `join()`.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show `*` repetition and small-scale `+` concatenation.
+
 *This example repeats a substring and concatenates a few fixed string literals with `+`.*
 
 ```python
@@ -312,11 +332,12 @@ print(repr('hello' + ' ' + 'world'))
 
 #### Check for empty strings and truthiness
 
-Empty strings are falsy in Python — `bool('')` returns `False`. This means you can test for emptiness with `if not s:` instead of `if s == ""` or `if len(s) == 0`. Any non-empty string is truthy.
+Empty strings are falsy in Python — `bool('')` returns `False`. This means you can test for emptiness with `if not s:` instead of `if s == ""` or `if len(s) == 0`. Any non-empty string is truthy. Prefer `if not s:` as the default spelling; it is the idiomatic boolean test and also treats `None` as falsy when the surrounding API allows both `None` and `""`.
 
-> [!tip] Idiomatic emptiness check
->
-> Prefer `if not s:` over `if s == ""` or `if len(s) == 0`. The boolean test is the idiomatic Python convention and handles `None` gracefully when combined with `if not s:` (both `None` and `""` are falsy).
+**When to run:** Use this when control flow depends on whether text is present.
+**Trigger:** Reach for it when deciding between truthiness, equality, and length checks.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the boolean behavior of empty and non-empty strings.
 
 *This example checks an empty string by equality, length, and boolean truthiness.*
 
@@ -342,14 +363,12 @@ The single most important property of Python strings — every operation that ap
 #### Understand string immutability and its implications
 
 Once a `str` is created, its character sequence cannot change. Item assignment (`s[0] = 'H'`) raises `TypeError`. Any transformation — `upper()`, `replace()`, slicing, or concatenation — allocates a new `str` on the heap. The original is unchanged and becomes eligible for garbage collection if no other reference points to it.
+Avoid `+=` as the default inside loops because repeated growth can force repeated copying of the accumulated text. For repeated assembly, use `"".join()` when fragments already exist in a collection and `io.StringIO` when text is emitted incrementally. Reserve `+` for a few fixed fragments.
 
-> [!warning] Anti-pattern — concatenation in loops
->
-> Each `+=` in a loop creates a new string object, copying all previous characters. For *n* iterations this is O(n²) in both time and allocations. CPython may optimize simple cases, but this is not guaranteed.
-
-> [!success] Correct pattern
->
-> Use `"".join()` for loop-based construction, or `io.StringIO` for incremental writes. Reserve `+` for small, fixed concatenations (2–5 parts).
+**When to run:** Use this when an in-place mutation instinct would be wrong.
+**Trigger:** Reach for it when translating from mutable-text APIs or debugging `TypeError`.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show that rewriting one character position creates a new string.
 
 *This example rebuilds a string by slicing because Python strings cannot be modified in place.*
 
@@ -364,6 +383,8 @@ Hello
 ```
 
 The diagram below shows what happens in memory. The variable `s` is reassigned to point to a new string object; the original `"hello"` is not modified — it becomes unreachable and is collected by the GC.
+
+*This diagram shows reassignment from the original string object to the newly allocated result.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -400,15 +421,12 @@ Direct character access by position, substring extraction via slicing, and strid
 #### Access characters and substrings by index and slice
 
 Python strings support 0-based indexing with `[]`, negative indexing from the end, and slice syntax `[start:stop:step]` with full stride support. Slicing never raises an exception — out-of-range indices are silently clamped.
+In practice, `s[i]` reads one character, `s[-1]` reads the last character, `s[a:b]` returns a right-exclusive slice, `s[::2]` applies a stride, and `s[::-1]` reverses the string. For structured extraction, prefer `split`, `partition`, or regex over manual index math.
 
-> [!info] Indexing and slicing
->
-> - `s[i]` — access by index (0-based)
-> - `s[-1]` — last character (eliminates `len(s)-1`)
-> - `s[a:b]` — slice from `a` to `b` (right-exclusive)
-> - `s[::2]` — every 2nd char; `s[::-1]` — reverse
-> - Slicing never raises `IndexError` — out-of-range indices are silently clamped
-> - For pattern extraction, use regex or split instead of index math
+**When to run:** Use this when direct character access or fixed-position slices are appropriate.
+**Trigger:** Reach for it when index math is simpler than delimiter parsing or regex.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show zero-based indexing, negative indexing, and common slice forms.
 
 *This example reads individual characters and common slices, including negative indices and reversed order.*
 
@@ -450,10 +468,12 @@ Python slicing silently clamps out-of-range indices — no exception is raised. 
 #### Handle out-of-range access and iterate characters
 
 Slicing beyond the string length returns as many characters as available — `s[0:100]` returns the full string without error. Direct index access (`s[100]`) raises `IndexError`. Use `for ch in s` for simple iteration or `enumerate()` for index-value pairs (equivalent to C#'s LINQ `Select` with index).
+This mismatch is intentional: indexing requires a valid position, while slicing clamps bounds and returns the available span.
 
-> [!info] Slicing vs indexing — different error behavior
->
-> `s[100]` raises `IndexError`, but `s[0:100]` silently returns the whole string. This is by design — slicing is intended to be forgiving, while indexing expects a valid position.
+**When to run:** Use this when a boundary might exceed the string length.
+**Trigger:** Reach for it when choosing between forgiving slicing and strict indexing.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show slice clamping and character iteration with `enumerate()`.
 
 *This example shows slice clamping, iterates over characters, and prints indexes with `enumerate()`.*
 
@@ -488,14 +508,12 @@ Methods for changing letter case. Python provides `upper()`, `lower()`, `title()
 #### Convert case with upper, lower, title, capitalize, swapcase, casefold
 
 Python provides six case-conversion methods. `upper()` and `lower()` convert all characters. `title()` capitalizes the first letter of each word, while `capitalize()` only capitalizes the first character of the string. `swapcase()` inverts case, and `casefold()` performs aggressive Unicode-aware lowering for case-insensitive comparison.
+Use `casefold()` rather than `lower()` for caseless comparison, especially with non-ASCII text such as `"Straße"`. `title()` and `capitalize()` encode different word-boundary behavior, and all six methods apply Unicode casing rules without exposing locale-specific tuning through the `str` API.
 
-> [!info] Case methods
->
-> - `casefold()` — more aggressive than `lower()`, handles Unicode (`"Straße"` → `"strasse"`)
-> - Use `casefold()` for case-insensitive comparison, not `lower()`
-> - `title()` / `capitalize()` — handle word boundaries automatically
-> - All methods are Unicode-aware
-> - For locale-sensitive rules (Turkish `i`), use the `locale` module
+**When to run:** Use this when normalizing or presenting text with specific casing.
+**Trigger:** Reach for it when case-insensitive comparison or title casing is required.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the main case-conversion methods and `casefold()` behavior.
 
 *This example applies the main case-conversion methods, including Unicode-aware `casefold()`.*
 
@@ -527,9 +545,15 @@ Methods for stripping leading/trailing whitespace (or custom characters) and pad
 
 `strip()` removes whitespace from both ends; `lstrip()`/`rstrip()` from one side. Pass a string argument to strip specific characters. `ljust`/`rjust`/`center` pad to a target width — Python adds `center()` and `zfill()` which C# lacks natively.
 
+**When to run:** Use this when cleaning input or formatting fixed-width output.
+**Trigger:** Reach for it when whitespace, padding, or zero-fill behavior matters.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show trimming and width-filling helpers on representative text.
+
 *This example trims whitespace and pads strings with alignment and zero-fill helpers.*
 
 ```python
+s = "  Hello, World!  "
 print(repr(s.strip()))
 print(repr(s.lstrip()))
 print(repr(s.rstrip()))
@@ -560,10 +584,12 @@ Python provides built-in `str.isXxx()` methods — unlike C# where you must comb
 #### Test string content with isalpha, isdigit, isnumeric, and more
 
 Python provides built-in `str.isXxx()` methods that return `True` if all characters satisfy the condition and the string is non-empty. Notable distinctions: `isnumeric()` is broader than `isdigit()` (it includes fractions like `½`), `isdecimal()` is the strictest (only `0-9`), and `isprintable()` returns `False` for control characters like `\n`.
+For parsing numbers, `isdecimal()` is the strictest choice; `isdigit()` also accepts superscripts and subscripts, while `isnumeric()` is broader still and includes values such as `½`.
 
-> [!tip] isdigit vs isnumeric vs isdecimal
->
-> `isdecimal()` accepts only `0-9` characters. `isdigit()` also accepts superscripts and subscripts. `isnumeric()` is the broadest — it includes fractions like `½` and Roman numerals. For parsing numbers, `isdecimal()` is usually what you want.
+**When to run:** Use this when validating text before parsing or branching on it.
+**Trigger:** Reach for it when the code depends on digits, identifiers, whitespace, or printable text.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the behavior of the common `isXxx()` predicates.
 
 *This example runs the common string content-check methods and prints their boolean results.*
 
@@ -611,6 +637,11 @@ Methods for finding substrings by position or existence.
 
 `find` returns the 0-based position of the first occurrence (or `-1` if not found). `index` is identical but raises `ValueError` instead of returning `-1`. `rfind`/`rindex` search from the right. `count` returns the number of non-overlapping occurrences. The `in` operator is the idiomatic way to check for substring existence.
 
+**When to run:** Use this when locating substrings or checking presence without regex.
+**Trigger:** Reach for it when you need positions, counts, or prefix/suffix tests.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Compare `find()`, `index()`, `count()`, `startswith()`, and `endswith()`.
+
 *This example searches for substrings, counts matches, and compares `find()` with `index()`.*
 
 ```python
@@ -644,11 +675,12 @@ Python strings support direct comparison with `<`, `>`, `==` using lexicographic
 
 #### Compare strings for ordering
 
-Python's comparison operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) compare strings lexicographically by Unicode code point — equivalent to C#'s `StringComparison.Ordinal`. For locale-aware sorting (e.g., German ä near a), use `locale.strcoll`. For custom sort keys, use `functools.cmp_to_key`.
+Python's comparison operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) compare strings lexicographically by Unicode code point — equivalent to C#'s `StringComparison.Ordinal`. For locale-aware sorting (e.g., German ä near a), use `locale.strcoll`. For custom sort keys, use `functools.cmp_to_key`. Python has no built-in case-insensitive comparison operator, so normalize both sides with `casefold()` when equality must remain Unicode-correct.
 
-> [!info] C# parity
->
-> Python's `<` operator is closest to ordinal string comparison in C#. There is no built-in case-insensitive comparison operator; use `s1.casefold() == s2.casefold()` when equality must be Unicode-correct.
+**When to run:** Use this when code depends on lexical order or equality semantics.
+**Trigger:** Reach for it when sorting text or comparing case-sensitive versus caseless values.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show default lexicographic ordering and `casefold()` equality.
 
 *This example compares strings for lexical ordering, case sensitivity, and case-insensitive equality.*
 
@@ -675,6 +707,11 @@ Methods for substituting substrings, tokenizing strings into arrays, and reassem
 #### Replace substrings and split strings
 
 `replace` substitutes occurrences and accepts an optional max-count parameter (unlike C# which always replaces all). `split` tokenizes on a delimiter — with no arguments it splits on any whitespace and strips empties, equivalent to C#'s `Split(null, RemoveEmptyEntries)`. `rsplit` splits from the right. `splitlines` handles all line endings (`\n`, `\r\n`, `\r`). `partition`/`rpartition` split into exactly three parts `(before, sep, after)`.
+
+**When to run:** Use this when tokenizing or rewriting structured text without regex.
+**Trigger:** Reach for it when delimiter behavior matters more than arbitrary pattern matching.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show replacement, whitespace splitting, right splits, and partitions.
 
 *This example replaces substrings and splits text into lists and tuples with several string methods.*
 
@@ -717,6 +754,11 @@ print(csv.rpartition(','))
 
 `str.join(iterable)` is called on the separator string, not on the list — the opposite of C#'s `string.Join(separator, collection)`. `expandtabs` replaces tab characters with spaces aligned to tab stops.
 
+**When to run:** Use this when fragments already exist and need recomposition.
+**Trigger:** Reach for it when building display text from a list or expanding tabs for alignment.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show separator-driven `join()` and `expandtabs()`.
+
 *This example rejoins a list of strings with different separators and expands tab characters to spaces.*
 
 ```python
@@ -744,11 +786,12 @@ Converting between strings and bytes, and performing character-level replacement
 
 #### Translate characters and encode to bytes
 
-`str.maketrans` builds a translation table mapping characters to replacements (or `None` for deletion). `translate` applies the table in a single pass — faster than chained `replace` calls for multiple substitutions. `encode` converts a `str` to `bytes` using a specified codec; `bytes.decode` reverses the process.
+`str.maketrans` builds a translation table mapping characters to replacements (or `None` for deletion). `translate` applies the table in a single pass — faster than chained `replace` calls for multiple substitutions. `encode` converts a `str` to `bytes` using a specified codec; `bytes.decode` reverses the process. C# has no direct equivalent of `str.translate` or `str.maketrans`; the closest options are `Regex.Replace` with a character class or a manual `StringBuilder` loop.
 
-> [!info] C# parity
->
-> C# has no direct equivalent of `str.translate` or `str.maketrans`. The closest approaches are `Regex.Replace` with a character class or a manual loop with `StringBuilder`.
+**When to run:** Use this when applying character-level substitution or crossing the text/bytes boundary.
+**Trigger:** Reach for it when cleanup requires many single-character rewrites or explicit encoding.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show `maketrans()`, `translate()`, and basic encoding to bytes.
 
 *This example translates characters with `maketrans()` and converts text to UTF-8 and ASCII bytes.*
 
@@ -780,22 +823,14 @@ The three standard ways to embed values into strings.
 
 #### Embed values with f-strings, format(), and % operator
 
-> [!info] f-string syntax
->
-> - `f"..."` embeds any expression in `{braces}`
-> - Format specifiers: `f"{n:.2f}"` | method calls: `f"{s.upper()}"` | expressions: `f"{a + 1}"`
-> - Prefer f-strings when the template is a literal in source code
-> - Use `.format()` when the template string is stored dynamically
+f-strings (`f""`, Python 3.6+) are the preferred approach when the template is a literal in source code. They accept arbitrary expressions inside `{...}`, including format specifiers such as `f"{n:.2f}"`, method calls such as `f"{name.upper()}"`, and arithmetic such as `f"{age + 1}"`.
 
-> [!danger] Injection risk
->
-> Never use f-strings in SQL or shell commands — use parameterized queries. For logging, use `logger.info("msg %s", val)` for lazy evaluation.
+Use `str.format()` when the template string is stored in a variable. Keep `%` formatting for legacy interfaces such as logging, where `logger.info("User %s logged in", username)` preserves lazy formatting. Do not build SQL or shell commands with f-strings or `.format()` from untrusted input; use parameterized queries and argument vectors instead.
 
-> [!success] Correct pattern
->
-> Use parameterized queries for SQL: `cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))`. For logging, use lazy `%s` formatting: `logger.info("User %s logged in", username)` — the string is only built if the log level is active.
-
-f-strings (`f""`, Python 3.6+) are the preferred approach — any expression inside `{...}` is evaluated at runtime. `str.format()` uses numbered or named placeholders and is useful when the format string is stored in a variable. The `%` operator is the legacy C-style approach, still common in logging.
+**When to run:** Use this when rendering values into human-readable strings.
+**Trigger:** Reach for it when choosing between f-strings, `.format()`, and legacy `%` formatting.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the three interpolation mechanisms on the same values.
 
 *This example formats the same values with f-strings, `str.format()`, and the legacy `%` operator.*
 
@@ -833,6 +868,11 @@ Format specifiers inside f-string braces control numeric display: `{value:.2f}`,
 
 The table below summarizes the specifiers used in the examples and the output they produce.
 
+**When to run:** Use this when precision, grouping, radix, or percentage output matters.
+**Trigger:** Reach for it when a raw numeric value must be rendered for humans.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the most common numeric format specifiers in one place.
+
 | Specifier | Meaning | Example |
 |---|---|---|
 | `.2f` | Fixed-point, 2 decimals | `1234567.89` |
@@ -849,6 +889,8 @@ The table below summarizes the specifiers used in the examples and the output th
 *This example formats numbers with precision, grouping, scientific notation, percentages, and integer radix specifiers.*
 
 ```python
+n = 1234567.89123
+pct = 0.856
 print(f"{n:.2f}")
 print(f"{n:.0f}")
 print(f"{n:,.2f}")
@@ -888,7 +930,12 @@ Controlling field width for tabular output and formatting numbers according to l
 
 #### Align strings and format currencies by locale
 
-f-string alignment uses `<` (left), `>` (right), `^` (center) with an optional fill character. For locale-aware currency, Python's `locale` module depends on system locale availability. The `babel` library is more reliable and portable for production currency formatting.
+f-string alignment uses `<` (left), `>` (right), `^` (center) with an optional fill character. For locale-aware currency, Python's `locale` module depends on system locale availability and host-specific locale names. The `babel` library is more reliable and portable for production currency formatting.
+
+**When to run:** Use this when fixed-width output or locale-aware currency formatting is required.
+**Trigger:** Reach for it when alignment must be visible or a host locale may affect formatting.
+**Context:** Local Python REPL, script, or notebook cell; `locale` and `babel` behavior depends on host availability.
+**Purpose:** Show alignment specifiers and the environment-sensitive currency paths.
 
 *This example aligns text inside fixed-width fields and formats currency through `locale` and `babel` when available.*
 
@@ -904,7 +951,7 @@ print(f"{42:d}")
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     print(locale.currency(1234567.89, grouping=True))
-except:
+except locale.Error:
     print("(locale not available)")
 
 try:
@@ -933,6 +980,8 @@ BRL: R$ 1.234.567,89
 
 Strategies for building strings without the O(n²) penalty of repeated concatenation. `"".join()` for collections, `io.StringIO` for incremental writes, and `+` for small fixed concatenations.
 
+*This decision diagram maps the usual choice between `+`, `"".join()`, and `io.StringIO`.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -956,13 +1005,7 @@ flowchart TD
     F -->|No| H["Use ''.join()<br/>with generator expr"]
 ```
 
-> [!warning] Don't use += in loops
->
-> Each iteration copies the growing string into a new object. CPython may optimize simple cases, but this is not guaranteed. Always consider the building strategy for more than ~10 concatenations. For 2–5 concatenations, `+` is fine.
-
-> [!success] Correct pattern
->
-> Use `"".join(parts)` for O(n) string assembly: `result = "".join(str(i) for i in range(50000))`. For incremental writes, use `io.StringIO`: `buf = io.StringIO(); buf.write(...); result = buf.getvalue()`.
+Use `+` or f-strings for a few fixed fragments. Once construction moves into a loop or a collection, switch to `"".join()` or `io.StringIO` to avoid repeated copying of the accumulated text.
 
 ### join() and io.StringIO
 
@@ -971,6 +1014,11 @@ Python's equivalents of C#'s `StringBuilder` and `string.Join`.
 #### Compare += vs join() performance
 
 The benchmark below demonstrates the difference: 50,000 `+=` operations are materially slower than a single `"".join()` call because `join` pre-calculates the final size and copies each part exactly once.
+
+**When to run:** Use this when a string-building hot path is suspected to be allocation-heavy.
+**Trigger:** Reach for it when loop-based concatenation starts to dominate runtime.
+**Context:** Local Python REPL, script, or notebook cell; timing is environment-sensitive but the direction should be stable.
+**Purpose:** Compare repeated `+=` against a single `join()` pass.
 
 *This example times repeated `+=` concatenation against `"".join()` and reports a deterministic faster/slower comparison.*
 
@@ -997,7 +1045,12 @@ join faster? True
 
 #### Build strings with io.StringIO and list accumulation
 
-`io.StringIO` provides a file-like write interface for incremental string building — the Python equivalent of C#'s `StringBuilder`. Alternatively, accumulate parts in a `list` and call `"".join()` at the end. Generator expressions inside `join()` are the most concise pattern.
+`io.StringIO` provides a file-like write interface for incremental string building — the Python equivalent of C#'s `StringBuilder`. Alternatively, accumulate parts in a `list` and call `"".join()` at the end. Generator expressions inside `join()` are the most concise pattern, and unlike C# there is no `ReadOnlySpan<char>`-style zero-allocation slice for text: every `str` slice allocates a new string, while `memoryview` applies only to bytes.
+
+**When to run:** Use this when text is emitted incrementally or fragments are accumulated first.
+**Trigger:** Reach for it when a loop or writer-style API produces many small pieces.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show `io.StringIO`, list accumulation, and generator-based `join()`.
 
 *This example builds strings with `io.StringIO`, a list plus `join()`, and a generator expression.*
 
@@ -1027,13 +1080,14 @@ print(repr(result))
 'item_0, item_1, item_2, item_3, item_4'
 ```
 
-> [!info] C# parity — no zero-copy string slicing
->
-> C# offers `ReadOnlySpan<char>` and `string.Create` for zero-allocation string processing. Python has no equivalent for text strings: every slice creates a new `str` object. `memoryview` applies to bytes, not to `str`.
-
 #### Use + for small fixed concatenations
 
 For 2–5 known parts, the `+` operator is perfectly readable and efficient. Python does not optimize `+` in loops, but for small fixed concatenations the overhead is negligible.
+
+**When to run:** Use this when only a few known fragments must be combined.
+**Trigger:** Reach for it when `join()` would add ceremony without reducing allocations materially.
+**Context:** Local Python REPL, script, or notebook cell.
+**Purpose:** Show the readable fixed-fragment case where `+` is appropriate.
 
 *This example concatenates a few fixed string parts with `+`, which is appropriate for small constant assemblies.*
 
@@ -1058,7 +1112,12 @@ Finding patterns in text and extracting matched groups.
 
 #### Find matches with re.search, findall, finditer, match, fullmatch
 
-`re.search` scans the entire string and returns the first match (or `None`). `re.findall` returns all non-overlapping matches as a list of strings. `re.finditer` yields match objects for iteration with position info. `re.match` only matches at the **start** of the string. `re.fullmatch` requires the **entire** string to match.
+`re.search` scans the entire string and returns the first match (or `None`). `re.findall` returns all non-overlapping matches as a list of strings. `re.finditer` yields match objects for iteration with position info. `re.match` only matches at the **start** of the string. `re.fullmatch` requires the **entire** string to match. When extracting structured tokens from prose, make the boundary explicit so trailing sentence punctuation is not consumed.
+
+**When to run:** Use this when pattern search must scan text rather than split on fixed delimiters.
+**Trigger:** Reach for it when you need first match, all matches, iterator-based matches, or full-string validation.
+**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
+**Purpose:** Compare `search()`, `findall()`, `finditer()`, `match()`, and `fullmatch()`.
 
 *This example searches text with the main `re` matching functions and prints the matches they return.*
 
@@ -1070,7 +1129,7 @@ if match:
     print(f"Found: {match.group()} at [{match.start()}:{match.end()}]")
 
 phones = re.findall(r'\d{3}-\d{3}-\d{4}', text)
-emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.]+', text)
+emails = re.findall(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+', text)
 print(phones)
 print(emails)
 
@@ -1086,7 +1145,7 @@ print(bool(re.fullmatch(r'\d+', '123a5')))
 ```text
 Found: 123-456-7890 at [59:71]
 ['123-456-7890', '987-654-3210']
-['support@email.com', 'sales@company.org.']
+['support@email.com', 'sales@company.org']
   123-456-7890 at [59:71]
   987-654-3210 at [75:87]
 True
@@ -1099,16 +1158,23 @@ False
 
 Parentheses `(...)` create numbered capture groups accessible via `match.group(1)`, `match.group(2)`, etc. (`group(0)` is the full match). `match.groups()` returns all groups as a tuple. Named groups `(?P<name>...)` use the `P<>` syntax (unlike C#'s `<>`) and are accessed via `match.group('name')` or `match.groupdict()`.
 
+**When to run:** Use this when a regex must return structured subfields rather than just a whole match.
+**Trigger:** Reach for it when the pattern needs user, domain, area code, or other named components.
+**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
+**Purpose:** Show numbered capture groups and named-group access.
+
 *This example extracts numbered and named regex capture groups from a phone number and an email address.*
 
 ```python
+text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
+
 match = re.search(r'(\d{3})-(\d{3})-(\d{4})', text)
 if match:
     print(f"Full:     {match.group(0)}")
     print(f"Groups:   {match.groups()}")
     print(f"Area:     {match.group(1)}")
 
-match = re.search(r'(?P<user>[\w.+-]+)@(?P<domain>[\w-]+\.[\w.]+)', text)
+match = re.search(r'(?P<user>[\w.+-]+)@(?P<domain>[\w-]+(?:\.[\w-]+)+)', text)
 if match:
     print(f"User:     {match.group('user')}")
     print(f"Domain:   {match.group('domain')}")
@@ -1132,9 +1198,16 @@ Transforming text with pattern-based replacement, splitting on patterns, and pre
 
 `re.sub` substitutes matches — pass a string for static replacement, a lambda for dynamic transformation, or `\1`/`\2` backreferences for group rearrangement. `re.split` tokenizes on a pattern instead of a fixed delimiter. `re.compile` pre-compiles a pattern into a reusable object — the Python equivalent of C#'s `new Regex(..., Compiled)`.
 
+**When to run:** Use this when a regex must transform, tokenize, or be reused several times.
+**Trigger:** Reach for it when fixed-string methods no longer express the rule cleanly.
+**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
+**Purpose:** Show `sub()`, `split()`, and `compile()` on the same sample text.
+
 *This example replaces matches, splits text by regex, and reuses a compiled pattern.*
 
 ```python
+text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
+
 print(re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text))
 
 print(re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3"))
@@ -1166,6 +1239,8 @@ Quick-reference tables for regex syntax elements.
 #### Regex syntax — characters, quantifiers, anchors, groups
 
 A condensed reference for Python's `re` module syntax. Named groups use `(?P<name>...)` (with `P`) — unlike C#'s `(?<name>...)`.
+
+*This reference block summarizes the core Python `re` tokens used across the examples.*
 
 ```text
 CHARACTERS
@@ -1207,7 +1282,12 @@ CHARACTER CLASSES
 
 #### Control matching with re flags
 
-`re.IGNORECASE` enables case-insensitive matching. `re.MULTILINE` makes `^` and `$` match line boundaries. `re.DOTALL` makes `.` match newline characters. `re.VERBOSE` allows formatting patterns with whitespace and inline `#` comments for readability — the Python equivalent of C#'s `IgnorePatternWhitespace`.
+`re.IGNORECASE` enables case-insensitive matching. `re.MULTILINE` makes `^` and `$` match line boundaries. `re.DOTALL` makes `.` match newline characters. `re.VERBOSE` allows formatting patterns with whitespace and inline `#` comments for readability — the Python equivalent of C#'s `IgnorePatternWhitespace`. Relative to C#, `re.compile()` is the closest analogue to `[GeneratedRegex]`, but compilation still happens at runtime rather than during the build.
+
+**When to run:** Use this when default regex behavior misses case, newline, or readability requirements.
+**Trigger:** Reach for it when anchors, dot matching, or commented patterns need to change.
+**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
+**Purpose:** Show the practical effect of `IGNORECASE`, `MULTILINE`, `DOTALL`, and `VERBOSE`.
 
 *This example applies common regex flags such as `IGNORECASE`, `MULTILINE`, `DOTALL`, and `VERBOSE`.*
 
@@ -1237,10 +1317,6 @@ True
 ['Hello', 'HELLO']
 ```
 
-> [!info] C# parity — no source-generated regex
->
-> C# (.NET 7+) offers `[GeneratedRegex]` for compile-time regex generation. Python's `re.compile()` is the closest equivalent — it caches the compiled pattern at runtime. There is no build-time code generation for Python regex.
-
 ### Validation patterns
 
 Ready-to-use validation patterns for frequently matched formats.
@@ -1249,13 +1325,18 @@ Ready-to-use validation patterns for frequently matched formats.
 
 The table below collects compact patterns that are frequently reused in validation helpers and data-cleaning code.
 
+**When to run:** Use this when you need a compact starting point for common validation helpers.
+**Trigger:** Reach for it when scaffolding an email, URL, date, time, or password check.
+**Context:** Local Python REPL, script, or notebook cell; these are starter patterns, not full RFC validators.
+**Purpose:** Print the reusable pattern set so it is easy to compare or copy.
+
 | Pattern | Regex |
 |---|---|
-| Email | `^[\w.+-]+@[\w-]+\.[\w.]+$` |
+| Email | `^[\w.+-]+@[\w-]+(?:\.[\w-]+)+$` |
 | URL | `https?://[\w./\-?=&#]+` |
 | IPv4 | `\b\d{1,3}(\.\d{1,3}){3}\b` |
-| Date (YYYY-MM-DD) | `\d{4}-(?:0[1-9]\|1[0-2])-(?:0[1-9]\|[12]\d\|3[01])` |
-| Time (HH:MM) | `(?:[01]\d\|2[0-3]):[0-5]\d` |
+| Date (YYYY-MM-DD) | `\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])` |
+| Time (HH:MM) | `(?:[01]\d|2[0-3]):[0-5]\d` |
 | Hex color | `^#[0-9a-fA-F]{6}$` |
 | Phone (US) | `\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}` |
 | Zip code (US) | `\d{5}(-\d{4})?` |
@@ -1265,7 +1346,7 @@ The table below collects compact patterns that are frequently reused in validati
 
 ```python
 patterns = {
-    "email":          r'^[\w.+-]+@[\w-]+\.[\w.]+$',
+    "email":          r'^[\w.+-]+@[\w-]+(?:\.[\w-]+)+$',
     "URL":            r'https?://[\w./\-?=&#]+',
     "IPv4":           r'\b\d{1,3}(\.\d{1,3}){3}\b',
     "date YYYY-MM-DD":r'\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])',
@@ -1280,7 +1361,7 @@ for name, pat in patterns.items():
 ```
 
 ```text
-email               : ^[\w.+-]+@[\w-]+\.[\w.]+$
+email               : ^[\w.+-]+@[\w-]+(?:\.[\w-]+)+$
 URL                 : https?://[\w./\-?=&#]+
 IPv4                : \b\d{1,3}(\.\d{1,3}){3}\b
 date YYYY-MM-DD     : \d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])
@@ -1297,25 +1378,43 @@ Summarizes the workloads where Python's string model is a strong fit and the cas
 
 ### Appropriate workloads
 
-The table below identifies string-heavy workloads where Python's built-in APIs remain expressive and operationally efficient.
+Python strings are a good fit when the workload is text-first and the hot path still lives comfortably at the application layer.
 
-| Workload profile | Why Python fits |
-|---|---|
-| Text parsing and transformation | `split`, `strip`, `replace`, `translate`, and slicing cover the majority of routine text-cleaning operations with minimal ceremony. |
-| Regex-centric extraction and validation | `re` plus raw strings and named groups provides compact pattern matching and field extraction. |
-| Data cleaning in pipelines | Column normalization, whitespace cleanup, header parsing, and semi-structured record extraction map directly to the standard `str` API. |
-| Template and report assembly | f-strings, format specifiers, and `join()` support fast iteration on textual output without external templating machinery. |
+#### Text parsing and transformation
+
+Use the built-in `str` methods directly for delimiter handling, whitespace cleanup, token normalization, and light reshaping. `split`, `strip`, `replace`, `translate`, and slicing cover most routine text-cleaning work without extra abstractions.
+
+#### Regex-centric extraction and validation
+
+Use `re` when the boundary definition is pattern-driven rather than delimiter-driven. Raw strings, named groups, and `finditer` keep extraction and validation logic compact while still exposing match positions and captured fields.
+
+#### Data cleaning in pipelines
+
+The standard string API maps well to header cleanup, column normalization, semi-structured record parsing, and similar ETL preparation tasks. It remains expressive as long as the workload is still row-oriented Python rather than a vectorized data frame hot path.
+
+#### Template and report assembly
+
+Use f-strings, format specifiers, and `join()` when the output is text-first and the assembly logic is straightforward. This is the natural fit for report lines, human-readable summaries, generated snippets, and lightweight templates.
 
 ### Constraints and trade-offs
 
-The next table highlights the cases where Python strings become a bottleneck or require stricter operational boundaries.
+Python strings stop being the best abstraction when allocation cost, binary boundaries, or security rules dominate the design.
 
-| Constraint | Impact | Preferred mitigation |
-|---|---|---|
-| High-throughput per-row string processing | Repeated allocations and interpreter overhead dominate in large hot loops. | Use vectorized string operations in Polars or Pandas, or move the hot path to a lower-level runtime. |
-| Binary protocol parsing | Decoding too early adds overhead and can blur byte-level boundaries. | Keep the workload in `bytes` or `memoryview` until the text boundary is explicit. |
-| Locale-dependent presentation | `locale` availability and locale names vary across hosts. | Use `babel` or keep formatting in the presentation layer. |
-| Security-sensitive command assembly | Manual interpolation creates SQL, shell, or HTML injection risk. | Use parameterized APIs, argument vectors, or templating layers with explicit escaping rules. |
+#### High-throughput per-row string processing
+
+Large hot loops magnify interpreter overhead and repeated allocations. When per-row text manipulation becomes the bottleneck, move the hot path to vectorized string operations in Polars or Pandas, or shift it to a lower-level runtime.
+
+#### Binary protocol parsing
+
+Decoding too early adds overhead and can blur byte-level boundaries. Keep the workload in `bytes` or `memoryview` until the text boundary is explicit, then decode once at the boundary you control.
+
+#### Locale-dependent presentation
+
+Host locale availability and locale naming differ across operating systems. Treat locale-sensitive formatting as a presentation concern, or use `babel` when the rendered output must stay portable across environments.
+
+#### Security-sensitive command assembly
+
+Manual interpolation creates SQL, shell, or HTML injection risk. Use parameterized APIs, argument vectors, or templating layers with explicit escaping rules instead of splicing untrusted data into command text.
 
 ## Engineering Practices
 
@@ -1323,17 +1422,35 @@ These conventions consolidate the page's repeated guidance into one operational 
 
 ### Core conventions
 
-The table below captures the default choices that keep Python string code predictable in production.
+These defaults keep Python string code predictable in production.
 
-| Practice | Operational rule | Benefit |
-|---|---|---|
-| Prefer f-strings for literal templates | Use `.format()` when the template string is dynamic and reserve `%` formatting for legacy logging interfaces. | Keeps interpolation concise without losing the cases where deferred formatting is required. |
-| Use `casefold()` for caseless equality | Avoid `lower()` when text may contain non-ASCII characters. | Preserves Unicode-correct comparison semantics. |
-| Use `"".join()` or `io.StringIO` for repeated assembly | Reserve `+` for a small fixed number of fragments. | Avoids quadratic copying and reduces allocation churn. |
-| Compile reused regex patterns | Store hot-path or shared patterns in `re.compile()` objects. | Reduces repeated parsing and centralizes pattern maintenance. |
-| Write regex as raw strings | Let backslashes reach the regex engine unchanged. | Prevents accidental Python escape processing. |
-| Prefer semantic helpers over manual slicing | Use `removeprefix()`, `removesuffix()`, and `partition()` when their intent matches the task. | Improves readability and reduces off-by-one handling. |
-| Prefer `babel` for portable locale formatting | Treat `locale` as a host-dependent integration surface. | Keeps presentation behavior consistent across environments. |
+#### Prefer f-strings for literal templates
+
+Use `.format()` when the template string is dynamic and reserve `%` formatting for legacy logging interfaces. This keeps interpolation concise without giving up deferred-formatting cases that still matter in real systems.
+
+#### Use `casefold()` for caseless equality
+
+Avoid `lower()` when text may contain non-ASCII characters. `casefold()` preserves Unicode-correct comparison semantics and handles cases such as `"Straße"` more reliably.
+
+#### Use `"".join()` or `io.StringIO` for repeated assembly
+
+Reserve `+` for a small fixed number of fragments. Switching to `join()` or `StringIO` avoids quadratic copying and reduces allocation churn as the output grows.
+
+#### Compile reused regex patterns
+
+Store hot-path or shared patterns in `re.compile()` objects. This reduces repeated parsing and gives the code one obvious place to maintain the pattern and its flags.
+
+#### Write regex as raw strings
+
+Let backslashes reach the regex engine unchanged. Raw strings prevent accidental Python escape processing from corrupting the intended pattern.
+
+#### Prefer semantic helpers over manual slicing
+
+Use `removeprefix()`, `removesuffix()`, and `partition()` when their intent matches the task. They communicate intent more clearly than index math and reduce off-by-one handling.
+
+#### Prefer `babel` for portable locale formatting
+
+Treat `locale` as a host-dependent integration surface. `babel` keeps presentation behavior more consistent across environments that do not share the same installed locales.
 
 ## Troubleshooting
 
@@ -1341,18 +1458,45 @@ Maps common string and regex failures to their immediate cause and the first cor
 
 ### Diagnostic reference
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `TypeError: 'str' object does not support item assignment` | Tried `s[0] = 'H'` on an immutable string | Create a new string instead: `s = 'H' + s[1:]` |
-| `IndexError: string index out of range` | Accessed `s[i]` where `i >= len(s)` | Use `s[i:i+1]` (returns empty string if out of range) or check bounds |
-| `re.error: bad escape` | Used a normal string that altered or invalidated the regex escape before it reached the regex engine | Write the pattern as a raw string, for example `r"\bword\b"` |
-| `AttributeError: 'list' object has no attribute 'join'` | Called `join()` on the list instead of the separator | Reverse: `", ".join(parts)` not `parts.join(", ")` |
-| `UnicodeEncodeError` | Tried to encode a string with characters outside the target codec | Specify the correct encoding or use `errors='replace'`/`'ignore'` |
-| `UnicodeDecodeError` | Tried to decode bytes with the wrong codec | Detect encoding with `chardet` or specify the correct codec |
-| Case-insensitive match fails for non-ASCII | Used `lower()` instead of `casefold()` | Use `casefold()` for Unicode-aware comparison |
-| `re.match` doesn't find pattern in middle of string | `match()` only checks the start of the string | Use `re.search()` to scan the entire string |
-| Regex greedy match captures too much | `.*` is greedy by default — matches as much as possible | Use lazy quantifier `.*?` or be more specific with character classes |
-| `locale.Error: unsupported locale setting` | Requested locale not installed on the system | Install the locale or use `babel` for portable formatting |
+#### `TypeError: 'str' object does not support item assignment`
+
+Cause: attempted in-place mutation such as `s[0] = 'H'` on an immutable string. Fix: create a new string instead, for example `s = 'H' + s[1:]`.
+
+#### `IndexError: string index out of range`
+
+Cause: accessed `s[i]` where `i >= len(s)`. Fix: check bounds first or use `s[i:i+1]` when an empty string is acceptable for the out-of-range case.
+
+#### `re.error: bad escape`
+
+Cause: a normal Python string altered or invalidated the regex escape before it reached the regex engine. Fix: write the pattern as a raw string, for example `r"\bword\b"`.
+
+#### `AttributeError: 'list' object has no attribute 'join'`
+
+Cause: called `join()` on the list instead of on the separator string. Fix: reverse the call order and write `", ".join(parts)`.
+
+#### `UnicodeEncodeError`
+
+Cause: attempted to encode text containing characters that are outside the target codec. Fix: choose the correct encoding explicitly or add `errors='replace'` or `errors='ignore'` when loss is acceptable.
+
+#### `UnicodeDecodeError`
+
+Cause: attempted to decode bytes with the wrong codec. Fix: identify the correct encoding at the boundary, or use a detector such as `chardet` when the source is uncontrolled.
+
+#### Case-insensitive match fails for non-ASCII text
+
+Cause: normalized with `lower()` instead of `casefold()`. Fix: use `casefold()` for Unicode-aware comparison semantics.
+
+#### `re.match` does not find a pattern in the middle of the string
+
+Cause: `match()` only checks position `0`. Fix: use `re.search()` when the pattern can appear anywhere in the input.
+
+#### Regex greedy match captures too much
+
+Cause: `.*` is greedy by default and keeps consuming until the latest viable boundary. Fix: use the lazy quantifier `.*?` or replace it with a tighter character class.
+
+#### `locale.Error: unsupported locale setting`
+
+Cause: the requested locale is not installed on the host. Fix: install the locale or switch to `babel` when formatting must remain portable.
 
 ## Related Topics
 

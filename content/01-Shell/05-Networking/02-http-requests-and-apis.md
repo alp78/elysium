@@ -8,13 +8,14 @@ aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebReque
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-14
 status: complete
 ---
 
 # HTTP Requests and APIs
 
-> [!quote]
+> [!quote]- Daniel Stenberg on curl
+>
 > "I just wanted it to do Internet transfers good, fast and reliably and that's what I worked on making reality."
 >
 > — **Daniel Stenberg** (creator of curl)
@@ -25,7 +26,7 @@ status: complete
 >
 > - **Linux curl tools** — GET/POST/PUT/PATCH/DELETE with `-H` headers and `-d` bodies; bearer token and Basic Auth; production downloads with `--retry`, `--connect-timeout`, `--max-time`, `-f`; `-w` timing breakdown across DNS, TCP, TLS, and TTFB phases; wget for recursive and resumable downloads; tool selection guidance (curl vs wget vs Python requests).
 > - **PowerShell HTTP request tools** — `Invoke-RestMethod` for auto-deserialized JSON/XML objects; `Invoke-WebRequest` for file downloads with `-OutFile`; `-MaximumRetryCount` / `-RetryIntervalSec` (PS 7+); Base64-encoded Basic Auth; `ConvertTo-Json` / `ConvertFrom-Json` for body serialization.
-> - **Operations and safety** — when to use CLI tools (API testing, health checks, debugging, one-off downloads) vs language SDKs (production pipelines, pagination, rate limiting); warnings on silent exit-0 failures, token hardcoding, and missing `Content-Type`; troubleshooting table for 401/403/connection-refused/JSON parse errors.
+> - **Operations and diagnostics** — quick GETs, JSON POSTs, health checks, verbose debugging, runtime bearer-token resolution, JSON inspection, and platform-specific handling for HTTP errors, authentication failures, connection refusals, and non-JSON responses.
 
 > [!note]- Glossary
 >
@@ -33,9 +34,7 @@ status: complete
 > - Command-line tool for transferring data over network protocols such as HTTP, HTTPS, FTP, and SFTP, with behavior controlled by command-line options.
 > - Used for scripted API calls, authenticated requests, uploads, downloads, custom headers, and low-level timing and response inspection.
 >
-> > [!warning] curl exits 0 on HTTP 4xx/5xx by default
-> >
-> > Without `-f`, a 404 or 500 response can still be written to a file and the script continues unaware. Use `curl -f` or inspect `-w '%{http_code}'` in production scripts.
+> - By default, `curl` exits `0` on HTTP `4xx` and `5xx` responses unless you add `-f` or inspect `-w '%{http_code}'`.
 >
 > ---
 >
@@ -43,9 +42,7 @@ status: complete
 > - Request verb that tells the server what operation the client is asking to perform, such as `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.
 > - Used to express API intent correctly; using the wrong method commonly results in `405 Method Not Allowed` or behavior different from what the caller expected.
 >
-> > [!info] PUT vs PATCH
-> >
-> > Most REST APIs use `PATCH` for partial updates. Sending `PUT` with only part of a resource may overwrite unspecified fields, depending on the server implementation.
+> - Most REST APIs use `PATCH` for partial updates. Sending `PUT` with only part of a resource may overwrite unspecified fields, depending on the server implementation.
 >
 > ---
 >
@@ -53,9 +50,7 @@ status: complete
 > - Three-digit response code indicating the outcome of the request: `2xx` success, `3xx` redirection, `4xx` client error, `5xx` server error.
 > - Used to drive control flow in scripts, especially for retry logic, alerting, and distinguishing permanent request errors from transient service failures.
 >
-> > [!tip] Not all non-200 codes are failures
-> >
-> > `201 Created`, `202 Accepted`, and `204 No Content` are successful responses. Treat the full `2xx` range as success unless the API contract says otherwise; use `-L` with curl to follow redirects when appropriate.
+> - Treat the full `2xx` range as success unless the API contract says otherwise; use `-L` with `curl` when redirects are part of the normal path.
 >
 > ---
 >
@@ -63,9 +58,7 @@ status: complete
 > - Credential sent in the HTTP `Authorization` header as `Bearer <token>`, commonly used by OAuth 2.0 APIs and other token-based authentication schemes.
 > - Used to authenticate API requests without embedding a username and password in every call; tokens are usually short-lived and should be resolved at runtime.
 >
-> > [!danger] Hardcoded tokens leak into version control and shell history
-> >
-> > Resolve at runtime: `curl -H "Authorization: Bearer $(gcloud auth print-access-token)" https://api/endpoint`.
+> - Resolve bearer tokens at runtime rather than hardcoding them into scripts, shell history, or version control.
 >
 > ---
 >
@@ -73,9 +66,7 @@ status: complete
 > - Text-based structured data format built from objects and arrays, widely used for REST API request and response bodies.
 > - Used to send and receive structured payloads in a format that both machines and humans can inspect easily.
 >
-> > [!warning] Missing Content-Type on POST requests
-> >
-> > Always set `-H 'Content-Type: application/json'` when sending JSON. Without it, the server may reject the request or parse the body incorrectly.
+> - Set `Content-Type: application/json` when sending JSON bodies or the server may reject or misparse the request.
 >
 > ---
 >
@@ -83,9 +74,7 @@ status: complete
 > - Command-line JSON processor for selecting, transforming, validating, and reformatting JSON using its own query language.
 > - Used in shell scripts to extract fields from API responses, reshape payloads, and validate that a response is valid JSON before further processing.
 >
-> > [!tip] Validate API response format before parsing
-> >
-> > If `jq` fails with a parse error, the server may have returned an HTML error page or plain text instead of JSON. Add `-v` to curl to inspect the raw response and headers.
+> - If `jq` reports a parse error, inspect the raw response with `curl -v` because the server may have returned HTML or plain text instead of JSON.
 >
 > ---
 >
@@ -93,9 +82,7 @@ status: complete
 > - Command-line downloader oriented toward retrieving files and directory trees, with built-in support for resuming and recursive download workflows.
 > - Used primarily for file retrieval rather than API interaction, especially when resumable downloads or recursive mirroring are required.
 >
-> > [!tip] Choose curl for APIs, wget for file downloads
-> >
-> > `wget` is strong for downloading files and mirrors. For scripted API calls with JSON bodies, custom headers, and response metrics, `curl` is usually the better tool.
+> - Prefer `curl` for APIs and `wget` for file-centric workflows such as resumable downloads or recursive mirroring.
 >
 > ---
 >
@@ -103,9 +90,7 @@ status: complete
 > - PowerShell cmdlet for sending HTTP requests and automatically deserializing JSON or XML responses into .NET objects when possible.
 > - Used for API interactions in PowerShell when the caller wants structured response objects rather than raw response text.
 >
-> > [!warning] Invoke-RestMethod throws on HTTP errors
-> >
-> > Unlike curl, `Invoke-RestMethod` treats many HTTP error responses as exceptions. Use `try/catch` and set `$ErrorActionPreference = 'Stop'` for predictable automation behavior.
+> - `Invoke-RestMethod` treats many HTTP error responses as exceptions, so use `try/catch` with `$ErrorActionPreference = 'Stop'` in automation.
 >
 > ---
 >
@@ -113,9 +98,7 @@ status: complete
 > - PowerShell cmdlet that returns an HTTP response object containing status, headers, and body content, with support for saving the response directly to disk.
 > - Used when the raw response metadata matters or when downloading files with `-OutFile` is more appropriate than automatic deserialization.
 >
-> > [!info] Retry parameters require PowerShell 7+
-> >
-> > `-MaximumRetryCount` and `-RetryIntervalSec` are not available in Windows PowerShell 5.1. Use an explicit retry loop for cross-version compatibility.
+> - `-MaximumRetryCount` and `-RetryIntervalSec` require PowerShell 7+. Use an explicit retry loop on Windows PowerShell 5.1.
 >
 > ---
 >
@@ -123,12 +106,11 @@ status: complete
 > - Cryptographic protocol used by HTTPS to provide server authentication, confidentiality, and integrity for data in transit.
 > - Used to secure HTTP communication; handshake timing can also help diagnose certificate-chain or connection-establishment problems.
 >
-> > [!tip] Inspect TLS details with curl -v
-> >
-> > `curl -v https://endpoint` prints handshake details, negotiated protocol information, and certificate information. Use it to diagnose certificate errors, expired certs, and SNI mismatches.
+> - `curl -v https://endpoint` exposes TLS negotiation details that help diagnose certificate, expiry, and SNI problems.
 
 Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the standard command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For REST API design patterns including pagination, error handling, and idempotency, see the [Data Architecture section](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
 
+*Request lifecycle phases that `curl` timing variables expose during a single HTTPS request.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 sequenceDiagram
@@ -155,6 +137,12 @@ The simplest invocation sends a GET request and prints the response body to stdo
 
 #### Send a GET request
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Fetch a JSON document and print the response body to stdout.*
 ```bash
 curl https://api.example.com/data
 ```
@@ -165,6 +153,12 @@ curl https://api.example.com/data
 
 #### Send a GET request in verbose mode
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Inspect request headers, response headers, and TLS handshake details for one request.*
 ```bash
 curl -v https://api.example.com/data
 ```
@@ -182,8 +176,14 @@ curl -v https://api.example.com/data
 
 #### Check HTTP status code only
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-s` silences the progress meter, `-o /dev/null` discards the response body, and `-w` prints a format string at completion. This pattern is used in monitoring scripts and health checks where only the status code matters.
 
+*Return only the final HTTP status code for a health check.*
 ```bash
 curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
 ```
@@ -192,15 +192,20 @@ curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
 200
 ```
 
-> [!warning] curl does not follow redirects by default
+> [!warning] `curl` does not follow redirects by default
 >
-> A `301` or `302` response causes curl to return the redirect HTML, not the final resource. Without `-L`, a health check against a load balancer that redirects HTTP → HTTPS returns `301`, not the actual service health status.
+> A `301` or `302` response causes `curl` to return the redirect target instead of the final resource. Without `-L`, a health check against a load balancer that redirects HTTP to HTTPS reports the redirect, not the actual service status.
 
-> [!success] Add `-L` to follow redirects automatically
->
-> ```bash
-> curl -s -o /dev/null -w "%{http_code}" -L https://api.example.com/health
-> ```
+Use `-L` when the endpoint redirects before returning a final health status.
+
+*Follow redirects before checking the final status code.*
+```bash
+curl -s -o /dev/null -w "%{http_code}" -L https://api.example.com/health
+```
+
+```text
+200
+```
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -218,8 +223,14 @@ HTTP requests frequently require custom headers (authentication tokens, content-
 
 #### Send a POST request with a JSON body
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-X POST` sets the HTTP method. `-H "Content-Type: application/json"` tells the server the body is JSON. `-H "Authorization: Bearer $API_TOKEN"` injects the token from an environment variable. `-d` provides the raw body string.
 
+*Send a JSON webhook payload with an explicit content type and bearer token.*
 ```bash
 curl -X POST https://api.example.com/webhook \
   -H "Content-Type: application/json" \
@@ -233,8 +244,14 @@ curl -X POST https://api.example.com/webhook \
 
 #### Send a POST request with a JSON body from a file
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 When the body is complex or templated, store it in a file and reference it with `@`. This keeps the curl command readable and allows the file to be version-controlled.
 
+*Read a JSON request body from `payload.json` instead of embedding it inline.*
 ```bash
 curl -X POST https://api.example.com/webhook \
   -H "Content-Type: application/json" \
@@ -244,14 +261,26 @@ curl -X POST https://api.example.com/webhook \
 
 #### Upload a file with PUT
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-T` uploads a local file as the request body without base64 encoding, suitable for binary uploads (backups, archives).
 
+*Upload a local file as the full `PUT` request body.*
 ```bash
 curl -X PUT -T backup.sql.gz https://storage.example.com/backups/
 ```
 
 #### Send a PATCH request
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Patch a subset of fields on an existing resource.*
 ```bash
 curl -X PATCH https://api.example.com/records/42 \
   -H "Content-Type: application/json" \
@@ -261,8 +290,14 @@ curl -X PATCH https://api.example.com/records/42 \
 
 #### Use basic authentication
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-u user:password` sends HTTP Basic Auth credentials, encoded as a Base64 header automatically by curl.
 
+*Send HTTP Basic Auth credentials without constructing the header manually.*
 ```bash
 curl -u "$API_USER:$API_PASS" https://api.example.com/protected
 ```
@@ -284,8 +319,14 @@ Production scripts must defend against transient network failures, slow servers,
 
 #### Download a file with retry and timeout
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-f` causes curl to fail with a non-zero exit code on HTTP errors (4xx, 5xx) instead of saving the error HTML. `-S` ensures errors are shown even when `-s` (silent) is active. `--retry` retries on transient failures (connection refused, 5xx). `--retry-delay` waits between attempts. `--connect-timeout` limits the TCP connection phase. `--max-time` limits the entire transfer.
 
+*Download a file with retry, connection timeout, and total timeout limits.*
 ```bash
 curl -fSL \
   --retry 3 \
@@ -300,20 +341,30 @@ curl -fSL \
 >
 > Without `-f`, curl exits with code 0 even when the server returns a 404 or 500. The downloaded file contains the HTML error page. The pipeline continues unaware.
 
-> [!success] Always use `-f` in production download scripts
->
-> With `-f`, curl exits non-zero on HTTP errors. Combine with `set -e` in bash to abort the pipeline immediately on failure.
->
-> ```bash
-> set -e
-> curl -fSL --retry 3 --connect-timeout 10 --max-time 300 \
->   -o data.csv https://data-provider.com/export/latest.csv
-> ```
+Use this pattern in scripts that must abort immediately on HTTP failures.
+
+*Fail the shell early when the server responds with an HTTP error.*
+```bash
+set -e
+curl -fSL --retry 3 --connect-timeout 10 --max-time 300 \
+  -o data.csv https://data-provider.com/export/latest.csv
+echo "download complete"
+```
+
+```text
+download complete
+```
 
 #### Resume an interrupted download
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-C -` instructs curl to detect the already-downloaded byte offset and resume from that position. The server must support the `Range` header for this to work.
 
+*Resume a partial download from the server-reported byte offset.*
 ```bash
 curl -C - -o data.csv https://data-provider.com/export/latest.csv
 ```
@@ -336,6 +387,12 @@ The `-w` format string can print per-phase timing metrics after a transfer compl
 
 #### Print timing metrics for a request
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Print `curl` timing phases for DNS, TCP, TLS, first byte, and total duration.*
 ```bash
 curl -s -o /dev/null \
   -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTLS: %{time_appconnect}s\nFirst byte: %{time_starttransfer}s\nTotal: %{time_total}s\n" \
@@ -375,20 +432,38 @@ Each metric covers a cumulative phase from request start. The derived server pro
 
 #### Download a file
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Download a file into the current directory using the remote filename.*
 ```bash
 wget https://data-provider.com/export/latest.csv
 ```
 
 #### Resume an interrupted download
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-c` (continue) sends a `Range` header so the server resumes from the last byte offset. Useful for large files on unreliable connections.
 
+*Resume a previously interrupted file download.*
 ```bash
 wget -c https://data-provider.com/export/large-dataset.csv
 ```
 
 #### Download with retry and timeout
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Retry a download and cap the per-request timeout.*
 ```bash
 wget --tries=3 --timeout=30 --wait=5 \
   -O data.csv \
@@ -397,8 +472,14 @@ wget --tries=3 --timeout=30 --wait=5 \
 
 #### Mirror a directory tree
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-r` enables recursive download, `-np` prevents ascending to parent directories, `-nH` strips the hostname from the local path.
 
+*Mirror a directory tree without recreating the host directory locally.*
 ```bash
 wget -r -np -nH https://data-provider.com/reports/2025/
 ```
@@ -418,11 +499,11 @@ wget -r -np -nH https://data-provider.com/reports/2025/
 
 ### Linux | curl vs wget | tool selection
 
-> [!tip] Choosing between curl, wget, and Python requests
->
-> - **curl**: Best for one-off requests, debugging, health checks, API calls, and scripts. Supports every protocol and custom headers. Use in bash pipeline scripts.
-> - **wget**: Best for downloading files, particularly when resuming is needed (`-c`) or recursive mirroring is required. Simpler syntax for file downloads.
-> - **Python requests / httpx**: Best for complex API interactions (pagination, OAuth flows, session management, retries with backoff). Use in pipeline code — see [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for httpx, requests, and async HTTP patterns.
+Choose the tool based on the dominant operation rather than habit.
+
+- `curl`: best for one-off requests, debugging, health checks, API calls, and scripts with custom headers or bodies.
+- `wget`: best for file retrieval, especially when resumable downloads or recursive mirroring are required.
+- `Python requests` / `httpx`: best for complex API interactions such as pagination, OAuth flows, session management, and explicit retry policies. See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for code-level HTTP clients.
 
 ## PowerShell HTTP request tools
 
@@ -434,6 +515,12 @@ PowerShell ships two cmdlets for HTTP: `Invoke-RestMethod` and `Invoke-WebReques
 
 #### Send a GET request
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Issue a GET request and let PowerShell deserialize the response body.*
 ```powershell
 Invoke-RestMethod -Uri "https://api.example.com/data"
 ```
@@ -446,6 +533,12 @@ ok         1024
 
 #### Send a GET request with an authorization header
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Pass an Authorization header and read a property from the returned object.*
 ```powershell
 $response = Invoke-RestMethod -Uri "https://api.example.com/data" `
     -Headers @{ Authorization = "Bearer $token" }
@@ -458,8 +551,14 @@ $response.records
 
 #### Check HTTP status code only
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `Invoke-WebRequest` exposes the `StatusCode` property. Use it when you need the status without processing the body.
 
+*Read only the status code from an HTTP response.*
 ```powershell
 $r = Invoke-WebRequest -Uri "https://api.example.com/health" -Method Head
 $r.StatusCode
@@ -483,8 +582,14 @@ $r.StatusCode
 
 #### Send a POST request with a JSON body
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 Convert a hashtable to JSON with `ConvertTo-Json` before passing it as the body. PowerShell's pipeline makes nested object serialization straightforward.
 
+*Serialize a hashtable to JSON and send it as a POST body.*
 ```powershell
 $body = @{
     event  = "pipeline_complete"
@@ -506,6 +611,12 @@ evt_123     True
 
 #### Send a PATCH request
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+*Serialize a small JSON body and patch a resource in place.*
 ```powershell
 $body = @{ status = "archived" } | ConvertTo-Json
 
@@ -518,8 +629,14 @@ Invoke-RestMethod -Uri "https://api.example.com/records/42" `
 
 #### Use basic authentication
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 Encode credentials as a Base64 Basic Auth header manually, since `Invoke-RestMethod` does not have a dedicated `-Credential` flag for HTTP Basic Auth against arbitrary APIs.
 
+*Construct a Basic Auth header manually before sending the request.*
 ```powershell
 $encoded = [Convert]::ToBase64String(
     [Text.Encoding]::ASCII.GetBytes("$env:API_USER`:$env:API_PASS")
@@ -545,8 +662,14 @@ Invoke-RestMethod -Uri "https://api.example.com/protected" `
 
 #### Download a file with retry (PowerShell 7+)
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 `-MaximumRetryCount` and `-RetryIntervalSec` were introduced in PowerShell 7. They automatically retry on transient HTTP errors (429, 5xx) and network timeouts.
 
+*Retry a file download automatically in PowerShell 7 or later.*
 ```powershell
 Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
     -OutFile "data.csv" `
@@ -556,27 +679,39 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
 
 > [!warning] Retry parameters require PowerShell 7+
 >
-> `-MaximumRetryCount` and `-RetryIntervalSec` do not exist in Windows PowerShell 5.1. The command fails silently — the parameters are ignored with no error in some builds, or throw a parameter binding error in others.
+> `-MaximumRetryCount` and `-RetryIntervalSec` are not available in Windows PowerShell 5.1. Use an explicit retry loop when you need cross-version compatibility.
 
-> [!success] Wrap downloads in a retry loop for PowerShell 5.1 compatibility
->
-> ```powershell
-> $maxAttempts = 3
-> for ($i = 1; $i -le $maxAttempts; $i++) {
->     try {
->         Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv"
->         break
->     } catch {
->         if ($i -eq $maxAttempts) { throw }
->         Start-Sleep -Seconds 5
->     }
-> }
-> ```
+Use this loop on Windows PowerShell 5.1 or when you need explicit retry control.
+
+*Retry a download manually for cross-version compatibility.*
+```powershell
+$maxAttempts = 3
+for ($i = 1; $i -le $maxAttempts; $i++) {
+    try {
+        Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv"
+        break
+    } catch {
+        if ($i -eq $maxAttempts) { throw }
+        Start-Sleep -Seconds 5
+    }
+}
+"download complete"
+```
+
+```text
+download complete
+```
 
 #### Set a timeout on a download
 
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
 PowerShell 7 uses `System.Net.Http.HttpClient` internally. The `-TimeoutSec` parameter sets the request timeout in seconds.
 
+*Set an overall timeout for a file download request.*
 ```powershell
 Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
     -OutFile "data.csv" `
@@ -591,43 +726,286 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
 | `-TimeoutSec` | `-TimeoutSec 300` | Abort if no response within N seconds |
 | `-PassThru` | `-PassThru` | Return the response object when using `-OutFile` |
 
+## Operational patterns
 
+Use these platform-specific patterns for the common workflows that show up repeatedly in shell automation and incident response.
 
-## Warnings
+### Linux | curl | common operations
 
-> [!warning] `curl` exits 0 on HTTP errors by default
->
-> `curl https://api.example.com/missing` returns exit code 0 even though the server responded with 404. Use `curl -f` to fail on HTTP errors, or capture the status code: `curl -s -o /dev/null -w '%{http_code}'`.
+#### Quick GET and JSON inspection
 
-> [!warning] Never hardcode authentication tokens in scripts
->
-> Tokens expire and secrets in scripts leak into version control and shell history. Resolve tokens at runtime: `curl -H "Authorization: Bearer $(gcloud auth print-access-token)"`.
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
 
-> [!warning] Missing Content-Type header on POST requests
->
-> POSTing JSON without `-H 'Content-Type: application/json'` causes many APIs to reject the request or parse the body as form data. Always set the content type explicitly.
+Pipe the response to `jq` when you want structured inspection instead of raw output.
 
-## Recommendations
+*Fetch a JSON document quietly and pretty-print it with `jq`.*
+```bash
+curl -s https://api.example.com/endpoint | jq '.'
+```
 
-| Scenario | Recommendation |
-|---|---|
-| Quick GET request | `curl -s https://api.example.com/endpoint \| jq '.'` for formatted JSON output. |
-| POST with JSON body | `curl -X POST -H 'Content-Type: application/json' -d '{"key":"value"}' https://api/endpoint`. |
-| Health check in scripts | `curl -sf -o /dev/null -w '%{http_code}' https://service/health` -- returns status code, fails on error. |
-| Debug request/response | `curl -v https://endpoint` shows full headers, TLS info, and timing. |
-| Bearer token auth | `curl -H "Authorization: Bearer $(gcloud auth print-access-token)" https://api/endpoint`. |
-| PowerShell API call | `Invoke-RestMethod -Uri "https://api/endpoint" -Headers @{Authorization = "Bearer $token"}`. |
-| Parse JSON response | Pipe to `jq`: `curl -s https://api/data \| jq '.results[] \| {name, value}'`. |
+```text
+{
+  "status": "ok",
+  "records": 1024
+}
+```
 
-## Troubleshooting
+#### POST JSON with an explicit content type
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| curl returns 0 but response is an error | curl exits 0 on HTTP 4xx/5xx by default. | Use `curl -f` or check `-w '%{http_code}'` in scripts. |
-| "401 Unauthorized" | Invalid or expired authentication token. | Refresh the token. For GCP: `gcloud auth print-access-token`. Check token scope and audience. |
-| "403 Forbidden" | Valid authentication but insufficient permissions. | Check IAM roles, API scopes, or API key restrictions. |
-| "Connection refused" on localhost | The service is not running or is listening on a different port. | Check `ss -tlnp` or `Get-NetTCPConnection` for the actual listen port. |
-| JSON parse error from `jq` | API returned non-JSON response (HTML error page, empty body). | Add `-v` to curl to see the raw response. Check Content-Type header. |
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+Set `Content-Type: application/json` even when the body is obvious to a human reader. The server uses the header, not the payload shape, to choose its parser.
+
+*Send a compact JSON body to an API endpoint.*
+```bash
+curl -sS -X POST https://api.example.com/endpoint \
+  -H 'Content-Type: application/json' \
+  -d '{"key":"value"}'
+```
+
+```text
+{"accepted":true}
+```
+
+#### Health checks in scripts
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+Use `-s` to suppress progress output, `-f` to make HTTP errors fail the command, and `-w` to emit only the status code. Add `-L` if redirects are part of the expected path.
+
+*Return only the HTTP status code and fail the script on HTTP errors.*
+```bash
+curl -sf -o /dev/null -w '%{http_code}\n' https://service.example.com/health
+```
+
+```text
+200
+```
+
+#### Verbose request debugging
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+Verbose mode is the fastest way to inspect redirects, TLS negotiation, response headers, and protocol-level failures from a single command.
+
+*Inspect request and response metadata for a single failing call.*
+```bash
+curl -v https://api.example.com/endpoint
+```
+
+```text
+> GET /endpoint HTTP/2
+< HTTP/2 200
+< content-type: application/json
+```
+
+#### Runtime bearer-token authentication
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+Resolve the token when you make the call rather than storing it in the script body.
+
+*Fetch a runtime access token and use it immediately in the `Authorization` header.*
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  https://api.example.com/endpoint
+```
+
+```text
+{"user":"svc-pipeline","scopes":["read:data"]}
+```
+
+### PowerShell | Invoke-RestMethod | common operations
+
+#### Authenticated API call
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+`Invoke-RestMethod` returns objects, so the normal pattern is to send the request and then select the property you need.
+
+*Call an API with a bearer token and read a property from the deserialized response.*
+```powershell
+$response = Invoke-RestMethod -Uri "https://api.example.com/endpoint" `
+    -Headers @{ Authorization = "Bearer $env:API_TOKEN" }
+$response.records
+```
+
+```text
+1024
+```
+
+#### Select JSON fields directly from the response object
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+For PowerShell workflows, prefer property access or `Select-Object` over text parsing because the cmdlet already converted the JSON to objects.
+
+*Project selected fields from a JSON response without piping through a text parser.*
+```powershell
+Invoke-RestMethod -Uri "https://api.example.com/data" |
+    Select-Object status, records
+```
+
+```text
+status records
+------ -------
+ok        1024
+```
+
+## Diagnostics
+
+Use these checks when a request fails and you need to decide whether the problem is the client, authentication, transport, or the service itself.
+
+### Linux | curl | HTTP and response diagnostics
+
+#### Make HTTP errors fail the command
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+`curl` succeeds at the process level unless you ask it to fail on HTTP errors. That behavior is useful for manual inspection but dangerous in automation.
+
+*Force `curl` to return a non-zero exit code on an HTTP error response.*
+```bash
+curl -fsS -o /dev/null https://api.example.com/missing
+echo $?
+```
+
+```text
+curl: (22) The requested URL returned error: 404
+22
+```
+
+#### Diagnose `401 Unauthorized` and `403 Forbidden`
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+Capture the response headers first. A `401` usually means the token is missing, expired, or wrong for the audience. A `403` usually means the token is valid but lacks the required permission.
+
+*Print the response headers so you can distinguish authentication from authorization failures.*
+```bash
+curl -sS -D - -o /dev/null \
+  -H "Authorization: Bearer $API_TOKEN" \
+  https://api.example.com/protected
+```
+
+```text
+HTTP/2 401
+www-authenticate: Bearer error="invalid_token"
+```
+
+#### Check the local listener for `connection refused`
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+If localhost refuses the connection, confirm that the service is actually listening on the expected port before debugging the HTTP client.
+
+*Inspect listening TCP sockets on the expected local port.*
+```bash
+ss -tlnp | grep ':8080 '
+```
+
+```text
+LISTEN 0 4096 127.0.0.1:8080 0.0.0.0:* users:(("myservice",pid=1234,fd=7))
+```
+
+#### Inspect non-JSON responses before piping to `jq`
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+`jq` parse failures often mean the server returned HTML, plain text, or an empty body instead of JSON. Check headers and file type before assuming the payload is structured data.
+
+*Capture headers and inspect the body format before parsing the response as JSON.*
+```bash
+curl -sS -D headers.txt https://api.example.com/data -o response.bin
+head -n 5 headers.txt
+file response.bin
+```
+
+```text
+HTTP/2 200
+content-type: text/html; charset=utf-8
+response.bin: HTML document, ASCII text
+```
+
+### PowerShell | Invoke-* | HTTP and local diagnostics
+
+#### Capture the HTTP status in `try/catch`
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+PowerShell throws on many HTTP failures, so the diagnostic pattern is to catch the exception and inspect the status code directly. The same pattern distinguishes `401` from `403`.
+
+*Catch a failed web request and print the HTTP status code.*
+```powershell
+try {
+    Invoke-RestMethod -Uri "https://api.example.com/protected" `
+        -Headers @{ Authorization = "Bearer $env:API_TOKEN" } `
+        -ErrorAction Stop
+} catch {
+    [int]$_.Exception.Response.StatusCode
+}
+```
+
+```text
+401
+```
+
+#### Check the local listener on Windows
+
+**When to run:** Use this leaf for the operation named in the heading.
+**Trigger:** You need this exact request pattern or diagnostic check.
+**Context:** Replace the example URL, credential, path, file name, or port with real values.
+**Purpose:** Exercise the command shape safely and inspect the resulting behavior.
+
+When a localhost request fails with connection refusal, verify the listening port and owning process before changing the client command.
+
+*Inspect Windows listening sockets on the expected local port.*
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 8080 |
+    Select-Object LocalAddress, LocalPort, OwningProcess
+```
+
+```text
+LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+127.0.0.1         8080          1234
+```
 
 ## Cross-references
 - [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — test TCP reachability before HTTP calls
